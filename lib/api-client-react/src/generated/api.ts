@@ -81,12 +81,17 @@ import type {
   LibraryExport,
   ListContentEscalationsParams,
   ListCustomerSupportCasesParams,
+  ListManualLibraryParams,
   ListPublicCatalogueParams,
   ListStaffPrivacyCases200,
   ListStaffPrivacyCasesParams,
   ListStaffSupportCasesParams,
   ListTasksPageParams,
   ListWorkspaceDataExportsParams,
+  ManualLibraryAction,
+  ManualLibraryDraft,
+  ManualLibraryPage,
+  ManualLibraryRevision,
   PaymentConcern,
   PaymentConcernAction,
   PaymentConcernInput,
@@ -5191,6 +5196,563 @@ export function useVerifySessionMfa<TData = Awaited<ReturnType<typeof verifySess
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getVerifySessionMfaQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListManualLibraryUrl = (params?: ListManualLibraryParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/manual-library?${stringifiedParams}` : `/api/admin/manual-library`
+}
+
+export const listManualLibrary = async (params?: ListManualLibraryParams, options?: Parameters<typeof customFetch>[1]): Promise<ManualLibraryPage> => {
+
+  return customFetch<ManualLibraryPage>(getListManualLibraryUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListManualLibraryQueryKey = (params?: ListManualLibraryParams,) => {
+    return [
+    "listManualLibrary", ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListManualLibraryQueryOptions = <TData = Awaited<ReturnType<typeof listManualLibrary>>, TError = ErrorType<void>>(params?: ListManualLibraryParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listManualLibrary>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListManualLibraryQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listManualLibrary>>> = ({ signal }) => listManualLibrary(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listManualLibrary>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListManualLibraryQueryResult = NonNullable<Awaited<ReturnType<typeof listManualLibrary>>>
+export type ListManualLibraryQueryError = ErrorType<void>
+
+
+export function useListManualLibrary<TData = Awaited<ReturnType<typeof listManualLibrary>>, TError = ErrorType<void>>(
+ params: undefined |  ListManualLibraryParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listManualLibrary>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listManualLibrary>>,
+          TError,
+          Awaited<ReturnType<typeof listManualLibrary>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListManualLibrary<TData = Awaited<ReturnType<typeof listManualLibrary>>, TError = ErrorType<void>>(
+ params?: ListManualLibraryParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listManualLibrary>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listManualLibrary>>,
+          TError,
+          Awaited<ReturnType<typeof listManualLibrary>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListManualLibrary<TData = Awaited<ReturnType<typeof listManualLibrary>>, TError = ErrorType<void>>(
+ params?: ListManualLibraryParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listManualLibrary>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListManualLibrary<TData = Awaited<ReturnType<typeof listManualLibrary>>, TError = ErrorType<void>>(
+ params?: ListManualLibraryParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listManualLibrary>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListManualLibraryQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetManualLibraryRevisionUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/manual-library/${encodeURIComponent(String(id))}`
+}
+
+export const getManualLibraryRevision = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<ManualLibraryRevision> => {
+
+  return customFetch<ManualLibraryRevision>(getGetManualLibraryRevisionUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetManualLibraryRevisionQueryKey = (id: string,) => {
+    return [
+    "getManualLibraryRevision", ...(id ? [id] : [])
+    ] as const;
+    }
+
+
+export const getGetManualLibraryRevisionQueryOptions = <TData = Awaited<ReturnType<typeof getManualLibraryRevision>>, TError = ErrorType<void>>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getManualLibraryRevision>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetManualLibraryRevisionQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getManualLibraryRevision>>> = ({ signal }) => getManualLibraryRevision(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getManualLibraryRevision>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetManualLibraryRevisionQueryResult = NonNullable<Awaited<ReturnType<typeof getManualLibraryRevision>>>
+export type GetManualLibraryRevisionQueryError = ErrorType<void>
+
+
+export function useGetManualLibraryRevision<TData = Awaited<ReturnType<typeof getManualLibraryRevision>>, TError = ErrorType<void>>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getManualLibraryRevision>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getManualLibraryRevision>>,
+          TError,
+          Awaited<ReturnType<typeof getManualLibraryRevision>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetManualLibraryRevision<TData = Awaited<ReturnType<typeof getManualLibraryRevision>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getManualLibraryRevision>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getManualLibraryRevision>>,
+          TError,
+          Awaited<ReturnType<typeof getManualLibraryRevision>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetManualLibraryRevision<TData = Awaited<ReturnType<typeof getManualLibraryRevision>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getManualLibraryRevision>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetManualLibraryRevision<TData = Awaited<ReturnType<typeof getManualLibraryRevision>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getManualLibraryRevision>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetManualLibraryRevisionQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSaveManualLibraryDraftUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/manual-library/${encodeURIComponent(String(id))}/drafts`
+}
+
+export const saveManualLibraryDraft = async (id: string,
+    manualLibraryDraft: ManualLibraryDraft, options?: Parameters<typeof customFetch>[1]): Promise<ManualLibraryRevision> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ManualLibraryRevision>(getSaveManualLibraryDraftUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/vnd.valo.manual-draft+json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(manualLibraryDraft)
+  }
+);}
+
+
+
+
+
+export const getSaveManualLibraryDraftMutationKey = () => ['saveManualLibraryDraft'] as const;
+
+export const getSaveManualLibraryDraftMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveManualLibraryDraft>>, TError,SaveManualLibraryDraftMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof saveManualLibraryDraft>>, TError,SaveManualLibraryDraftMutationVariables, TContext> => {
+
+const mutationKey = getSaveManualLibraryDraftMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof saveManualLibraryDraft>>, SaveManualLibraryDraftMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  saveManualLibraryDraft(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SaveManualLibraryDraftMutationResult = NonNullable<Awaited<ReturnType<typeof saveManualLibraryDraft>>>
+    export type SaveManualLibraryDraftMutationBody = BodyType<ManualLibraryDraft>
+    export type SaveManualLibraryDraftMutationError = ErrorType<void>
+    export type SaveManualLibraryDraftMutationVariables = {id: string;data: BodyType<ManualLibraryDraft>}
+
+    export const useSaveManualLibraryDraft = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveManualLibraryDraft>>, TError,SaveManualLibraryDraftMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof saveManualLibraryDraft>>,
+        TError,
+        SaveManualLibraryDraftMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSaveManualLibraryDraftMutationOptions(options), queryClient);
+    }
+
+export const getActOnManualLibraryUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/manual-library/${encodeURIComponent(String(id))}/actions`
+}
+
+export const actOnManualLibrary = async (id: string,
+    manualLibraryAction: ManualLibraryAction, options?: Parameters<typeof customFetch>[1]): Promise<ManualLibraryRevision> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ManualLibraryRevision>(getActOnManualLibraryUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(manualLibraryAction)
+  }
+);}
+
+
+
+
+
+export const getActOnManualLibraryMutationKey = () => ['actOnManualLibrary'] as const;
+
+export const getActOnManualLibraryMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actOnManualLibrary>>, TError,ActOnManualLibraryMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof actOnManualLibrary>>, TError,ActOnManualLibraryMutationVariables, TContext> => {
+
+const mutationKey = getActOnManualLibraryMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof actOnManualLibrary>>, ActOnManualLibraryMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  actOnManualLibrary(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ActOnManualLibraryMutationResult = NonNullable<Awaited<ReturnType<typeof actOnManualLibrary>>>
+    export type ActOnManualLibraryMutationBody = BodyType<ManualLibraryAction>
+    export type ActOnManualLibraryMutationError = ErrorType<void>
+    export type ActOnManualLibraryMutationVariables = {id: string;data: BodyType<ManualLibraryAction>}
+
+    export const useActOnManualLibrary = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actOnManualLibrary>>, TError,ActOnManualLibraryMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof actOnManualLibrary>>,
+        TError,
+        ActOnManualLibraryMutationVariables,
+        TContext
+      > => {
+      return useMutation(getActOnManualLibraryMutationOptions(options), queryClient);
+    }
+
+export const getPreviewManualLibraryFileUrl = (id: string,
+    version: number,) => {
+
+
+
+
+  return `/api/admin/manual-library/${encodeURIComponent(String(id))}/revisions/${encodeURIComponent(String(version))}/file`
+}
+
+export const previewManualLibraryFile = async (id: string,
+    version: number, options?: Parameters<typeof customFetch>[1]): Promise<Blob> => {
+
+  return customFetch<Blob>(getPreviewManualLibraryFileUrl(id,version),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getPreviewManualLibraryFileQueryKey = (id: string,
+    version: number,) => {
+    return [
+    "previewManualLibraryFile", ...(version ? [version] : []), ...(id ? [id] : [])
+    ] as const;
+    }
+
+
+export const getPreviewManualLibraryFileQueryOptions = <TData = Awaited<ReturnType<typeof previewManualLibraryFile>>, TError = ErrorType<void>>(id: string,
+    version: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof previewManualLibraryFile>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getPreviewManualLibraryFileQueryKey(id,version);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof previewManualLibraryFile>>> = ({ signal }) => previewManualLibraryFile(id,version, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined && version !== null && version !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof previewManualLibraryFile>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type PreviewManualLibraryFileQueryResult = NonNullable<Awaited<ReturnType<typeof previewManualLibraryFile>>>
+export type PreviewManualLibraryFileQueryError = ErrorType<void>
+
+
+export function usePreviewManualLibraryFile<TData = Awaited<ReturnType<typeof previewManualLibraryFile>>, TError = ErrorType<void>>(
+ id: string,
+    version: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof previewManualLibraryFile>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof previewManualLibraryFile>>,
+          TError,
+          Awaited<ReturnType<typeof previewManualLibraryFile>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePreviewManualLibraryFile<TData = Awaited<ReturnType<typeof previewManualLibraryFile>>, TError = ErrorType<void>>(
+ id: string,
+    version: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof previewManualLibraryFile>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof previewManualLibraryFile>>,
+          TError,
+          Awaited<ReturnType<typeof previewManualLibraryFile>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePreviewManualLibraryFile<TData = Awaited<ReturnType<typeof previewManualLibraryFile>>, TError = ErrorType<void>>(
+ id: string,
+    version: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof previewManualLibraryFile>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePreviewManualLibraryFile<TData = Awaited<ReturnType<typeof previewManualLibraryFile>>, TError = ErrorType<void>>(
+ id: string,
+    version: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof previewManualLibraryFile>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getPreviewManualLibraryFileQueryOptions(id,version,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getDownloadManualTemplateUrl = (id: string,) => {
+
+
+
+
+  return `/api/account/manual-templates/${encodeURIComponent(String(id))}/download`
+}
+
+export const downloadManualTemplate = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<Blob> => {
+
+  return customFetch<Blob>(getDownloadManualTemplateUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getDownloadManualTemplateQueryKey = (id: string,) => {
+    return [
+    "downloadManualTemplate", ...(id ? [id] : [])
+    ] as const;
+    }
+
+
+export const getDownloadManualTemplateQueryOptions = <TData = Awaited<ReturnType<typeof downloadManualTemplate>>, TError = ErrorType<void>>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadManualTemplate>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getDownloadManualTemplateQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof downloadManualTemplate>>> = ({ signal }) => downloadManualTemplate(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof downloadManualTemplate>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type DownloadManualTemplateQueryResult = NonNullable<Awaited<ReturnType<typeof downloadManualTemplate>>>
+export type DownloadManualTemplateQueryError = ErrorType<void>
+
+
+export function useDownloadManualTemplate<TData = Awaited<ReturnType<typeof downloadManualTemplate>>, TError = ErrorType<void>>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadManualTemplate>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof downloadManualTemplate>>,
+          TError,
+          Awaited<ReturnType<typeof downloadManualTemplate>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDownloadManualTemplate<TData = Awaited<ReturnType<typeof downloadManualTemplate>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadManualTemplate>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof downloadManualTemplate>>,
+          TError,
+          Awaited<ReturnType<typeof downloadManualTemplate>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDownloadManualTemplate<TData = Awaited<ReturnType<typeof downloadManualTemplate>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadManualTemplate>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDownloadManualTemplate<TData = Awaited<ReturnType<typeof downloadManualTemplate>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadManualTemplate>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getDownloadManualTemplateQueryOptions(id,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

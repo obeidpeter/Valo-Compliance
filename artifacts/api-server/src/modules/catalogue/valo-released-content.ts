@@ -25,6 +25,8 @@ import {
 } from "./valo-catalogue";
 import { setting } from "../../platform/settings";
 import { lockSourceState, sourceTargetAllowed } from "../sources";
+import { releasedManualEntries } from "../manual-library";
+import { manualCatalogue, manualResource, manualResourceKind, manualTemplate } from "./manual-presentation";
 export function releaseVisible(
   row: typeof valoContentVersions.$inferSelect,
   policyHash: string,
@@ -136,9 +138,15 @@ export function projectReleasedResource(row: typeof valoContentVersions.$inferSe
   };
 }
 export async function releasedResources() {
-  return (await liveReleasedVersions())
-    .filter((r) => publicationSchema.parse(r.bundle).candidate.contentClass !== "general_template")
-    .map(projectReleasedResource);
+  const [existing, manual] = await Promise.all([liveReleasedVersions(), releasedManualEntries()]);
+  return [
+    ...existing
+      .filter((r) => publicationSchema.parse(r.bundle).candidate.contentClass !== "general_template")
+      .map(projectReleasedResource),
+    ...manual
+      .filter((row) => row.kind === "practical_guide" || row.kind === "industry_introduction")
+      .map(manualResource),
+  ];
 }
 export function operationalPresentation(templateId: string) {
   if (templateId === "TPL-07")
@@ -168,8 +176,9 @@ export function operationalPresentation(templateId: string) {
   };
 }
 export async function liveCoverage() {
-  return coveragePlan(
-    (await liveReleasedVersions()).map((row) => {
+  const [existing, manual] = await Promise.all([liveReleasedVersions(), releasedManualEntries()]);
+  return coveragePlan([
+    ...existing.map((row) => {
       const c = publicationSchema.parse(row.bundle).candidate;
       return {
         id: row.templateId,
@@ -179,7 +188,14 @@ export async function liveCoverage() {
         sourceCheckedAt: c.sourceCheckDate,
       };
     }),
-  );
+    ...manual.map((row) => ({
+      id: row.slug,
+      kind: row.kind === "template" ? ("template" as const) : manualResourceKind(row),
+      industrySlugs: row.industry ? [row.industry] : [],
+      locationIds: [],
+      sourceCheckedAt: null,
+    })),
+  ]);
 }
 export function projectReleasedCatalogue(
   rows: (typeof valoContentVersions.$inferSelect)[],
@@ -262,8 +278,8 @@ export function directorySearchItems(): ReleasedLibraryItem[] {
   ];
 }
 export async function releasedCatalogue(query: CatalogueQuery = {}) {
-  const all = await liveReleasedVersions();
-  const items = projectReleasedCatalogue(all);
+  const [all, manual] = await Promise.all([liveReleasedVersions(), releasedManualEntries()]);
+  const items = [...projectReleasedCatalogue(all), ...manual.map(manualCatalogue)];
   return {
     ...paginateReleasedItems([...items, ...directorySearchItems()], query),
     heldTemplates: Math.max(
@@ -273,6 +289,11 @@ export async function releasedCatalogue(query: CatalogueQuery = {}) {
   };
 }
 export async function releasedTemplate(slug: string) {
+  if (slug.startsWith("manual-")) {
+    const [row] = await releasedManualEntries(slug);
+    if (!row || row.kind !== "template") throw new ValoProblem(404, "This template is unavailable.");
+    return manualTemplate(row);
+  }
   const row = (await liveOperationalVersions()).find((r) => r.slug === slug);
   if (!row)
     throw new ValoProblem(

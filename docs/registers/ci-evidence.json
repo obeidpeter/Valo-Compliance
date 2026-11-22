@@ -82,8 +82,8 @@
       "requirement": "WRK-005",
       "job": "foundation",
       "file": "scripts/src/valo/r1-boundaries.test.ts",
-      "test": "R1 has no way to upload a file: the API takes JSON only and the web app has no file input",
-      "proves": "Every request body in the API contract is JSON with no field carrying file bytes, task inputs hold only structured fields, the API parses JSON bodies only and depends on no upload parser, and the web app has no file input, drop zone or file reader."
+      "test": "R1 customer workspaces have no evidence upload and only the Content staff editor accepts a document",
+      "proves": "Customer request schemas accept no file bytes. Task inputs hold only structured fields. The staff editorial draft is the only JSON request carrying document bytes, and the web app exposes its file picker only on the staff screen."
     },
     {
       "requirement": "PAY-010",

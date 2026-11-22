@@ -14,7 +14,7 @@ import {
 import { GuidanceTabs } from "@/components/guidance-tabs";
 import { PublicLink as Link } from "@/components/public-link";
 import { EmptyState, ErrorState, Notice, PageHeader, Skel } from "@/components/states";
-import { ResourceCard, liveContent } from "@/components/resource-parts";
+import { PlainText, ResourceCard, liveContent } from "@/components/resource-parts";
 import { industryTemplatesParams } from "@/lib/catalogue-requests";
 import { formatCount } from "@/lib/format";
 import { industryName } from "@/lib/library-filters";
@@ -108,7 +108,9 @@ export function IndustryDetail({
     },
   });
   const ind = coverage.data?.industries.find((i) => i.slug === slug);
-  const resources = (res.data ?? []).filter((r) => r.industrySlugs.includes(slug));
+  const matching = (res.data ?? []).filter((r) => r.industrySlugs.includes(slug));
+  const intro = matching.find((r) => r.kind === "industry_introduction");
+  const resources = matching.filter((r) => r.kind !== "industry_introduction");
   const templates = tpl.data?.items ?? [];
 
   return (
@@ -132,6 +134,14 @@ export function IndustryDetail({
         )}
       </div>
 
+      {intro && !res.isError && (
+        <section className="mb-10 max-w-2xl" aria-labelledby="industry-introduction">
+          <h2 className="font-display text-2xl" id="industry-introduction">
+            {intro.title}
+          </h2>
+          <PlainText text={intro.body} className="mt-4 grid gap-4 leading-relaxed" />
+        </section>
+      )}
       <section aria-labelledby="ind-guidance" className="mt-2">
         <h2 id="ind-guidance" className="flex items-center gap-2 font-display text-2xl">
           <Scale className="h-5 w-5 text-primary" aria-hidden /> Guidance
@@ -149,6 +159,10 @@ export function IndustryDetail({
                 </li>
               ))}
             </ul>
+          ) : intro ? (
+            <p className="text-sm text-muted-foreground">
+              Further guides for this industry will appear here.
+            </p>
           ) : (
             <EmptyState
               title="No guidance is published for this industry"

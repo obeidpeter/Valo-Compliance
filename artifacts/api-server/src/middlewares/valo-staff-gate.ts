@@ -12,7 +12,7 @@ import { ValoProblem } from "../platform/valo-problem";
  * assignment currency and recent MFA, exactly as before.
  */
 export function makeStaffGate(authenticate = verifiedStaffSession): RequestHandler {
-  return async (req, _res, next) => {
+  return async (req, res, next) => {
     try {
       const actor = await authenticate(req);
       const [assignment] = await db
@@ -25,6 +25,7 @@ export function makeStaffGate(authenticate = verifiedStaffSession): RequestHandl
           403,
           "Staff permission is required. Customer sign-in does not grant staff access.",
         );
+      res.locals.verifiedStaff = actor;
       next();
     } catch (error) {
       next(error);

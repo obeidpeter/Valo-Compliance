@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
-import { join, relative } from "node:path";
+import { join, relative, sep } from "node:path";
 import { test } from "node:test";
 import { parse } from "yaml";
 import { repositoryRoot } from "./architecture-check";
@@ -16,7 +16,7 @@ function sourceFiles(directory: string, extensions: RegExp): string[] {
       const path = join(folder, entry.name);
       if (entry.isDirectory()) walk(path);
       else if (extensions.test(entry.name) && !/\.test\.tsx?$/.test(entry.name))
-        found.push(relative(repositoryRoot, path));
+        found.push(relative(repositoryRoot, path).split(sep).join("/"));
     }
   };
   walk(join(repositoryRoot, directory));
@@ -27,41 +27,65 @@ type Schema = { [key: string]: unknown };
 type Operation = { requestBody?: { content?: Record<string, { schema?: Schema }> } };
 
 /** Every request schema value that would carry file bytes. */
-function fileFields(schema: unknown, path: string, found: string[]) {
-  if (Array.isArray(schema)) schema.forEach((value, index) => fileFields(value, `${path}[${index}]`, found));
+function fileFields(
+  schema: unknown,
+  path: string,
+  found: string[],
+  schemas: Record<string, Schema>,
+  seen = new Set<string>(),
+) {
+  if (Array.isArray(schema))
+    schema.forEach((value, index) => fileFields(value, `${path}[${index}]`, found, schemas, seen));
   else if (schema && typeof schema === "object") {
     const fields = schema as Schema;
+    if (
+      typeof fields.$ref === "string" &&
+      fields.$ref.startsWith("#/components/schemas/") &&
+      !seen.has(fields.$ref)
+    ) {
+      const name = fields.$ref.slice("#/components/schemas/".length);
+      assert.ok(schemas[name], "referenced request schema exists");
+      fileFields(schemas[name], path, found, schemas, new Set([...seen, fields.$ref]));
+    }
     if (
       ["binary", "byte"].includes(String(fields.format)) ||
       fields.contentEncoding ||
       fields.contentMediaType
     )
       found.push(path);
-    for (const [key, value] of Object.entries(fields)) fileFields(value, `${path}.${key}`, found);
+    for (const [key, value] of Object.entries(fields))
+      fileFields(value, `${path}.${key}`, found, schemas, seen);
   }
 }
 
 // WRK-005: "R1 stores structured task notes and references, not uploaded identity or regulatory
 // evidence files", accepted when "upload controls are absent or disabled". Evidence uploads are R2
 // and need malware scanning, access controls and retention review first.
-test("R1 has no way to upload a file: the API takes JSON only and the web app has no file input", () => {
+test("R1 customer workspaces have no evidence upload and only the Content staff editor accepts a document", () => {
   const spec = parse(read("lib/api-spec/openapi.yaml")) as {
     paths: Record<string, Record<string, Operation>>;
     components: { schemas: Record<string, { additionalProperties?: unknown; properties?: Schema }> };
   };
-  const bodyTypes = new Set<string>();
+  const editor = "POST /admin/manual-library/{id}/drafts";
+  const documentInputs: string[] = [];
   const carriesFiles: string[] = [];
   let bodies = 0;
   for (const [path, item] of Object.entries(spec.paths))
     for (const [method, operation] of Object.entries(item))
       for (const [type, media] of Object.entries(operation?.requestBody?.content ?? {})) {
         bodies++;
-        bodyTypes.add(type);
-        fileFields(media.schema, `${method.toUpperCase()} ${path}`, carriesFiles);
+        const operationKey = method.toUpperCase() + " " + path;
+        if (type === "application/vnd.valo.manual-draft+json") documentInputs.push(operationKey);
+        else assert.equal(type, "application/json", operationKey);
+        fileFields(media.schema, operationKey, carriesFiles, spec.components.schemas);
       }
   assert.ok(bodies > 40, "the contract's request bodies were read");
-  assert.deepEqual([...bodyTypes], ["application/json"]);
-  assert.deepEqual(carriesFiles, [], "no request field carries file bytes");
+  assert.deepEqual(documentInputs, [editor]);
+  assert.deepEqual(
+    carriesFiles,
+    [editor + ".properties.upload.properties.base64"],
+    "only the staff draft endpoint receives document bytes",
+  );
   // A task holds a title, notes, dates and references to an assessment or rule, nothing else.
   for (const [name, fields] of [
     ["TaskInput", ["assessmentId", "dateConfirmed", "dueDate", "notes", "ruleId", "title"]],
@@ -111,7 +135,7 @@ test("R1 has no way to upload a file: the API takes JSON only and the web app ha
     );
   }
 
-  // The web app offers no file input, drop zone or file reader.
+  // The staff component is the only document picker, and only the staff screen imports it.
   const web = [
     ...sourceFiles("artifacts/valo/src", /\.tsx?$/),
     ...sourceFiles("artifacts/valo/app", /\.tsx?$/),
@@ -123,7 +147,11 @@ test("R1 has no way to upload a file: the API takes JSON only and the web app ha
         read(file),
       ),
     ),
-    [],
+    ["artifacts/valo/src/components/manual-library-editor.tsx"],
+  );
+  assert.deepEqual(
+    web.filter((file) => read(file).includes('from "@/components/manual-library-editor"')),
+    ["artifacts/valo/src/screens/staff.tsx"],
   );
 });
 

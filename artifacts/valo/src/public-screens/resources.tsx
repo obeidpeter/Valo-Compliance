@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { ArrowLeft, BookOpen, ExternalLink, FileX } from "lucide-react";
 import {
   useListReleasedResources,
@@ -20,6 +21,7 @@ import {
 } from "@/components/resource-parts";
 import { describeError } from "@/lib/describe-error";
 import { formatCount, formatDay } from "@/lib/format";
+import { industryName } from "@/lib/library-filters";
 import { fromServer } from "@/lib/server-data";
 import { ANY_DOCUMENT, signUpFor } from "@/lib/start";
 
@@ -30,6 +32,18 @@ export function Resources({ initial }: { initial?: ReleasedResource[] | undefine
     query: { queryKey: getListReleasedResourcesQueryKey(), ...liveContent, ...fromServer(initial) },
   });
   const items = q.data ?? [];
+  const [selectedIndustry, setIndustry] = useState("");
+  const industries = [...new Set(items.flatMap((r) => r.industrySlugs))].sort();
+  const hasGeneral = items.some((r) => r.industrySlugs.length === 0);
+  const selected =
+    industries.includes(selectedIndustry) || (selectedIndustry === "general" && hasGeneral)
+      ? selectedIndustry
+      : "";
+  const visible = selected
+    ? items.filter((r) =>
+        selected === "general" ? r.industrySlugs.length === 0 : r.industrySlugs.includes(selected),
+      )
+    : items;
   return (
     <div className="mx-auto max-w-7xl px-5 py-14 lg:px-8">
       <GuidanceTabs current="/resources" />
@@ -47,11 +61,36 @@ export function Resources({ initial }: { initial?: ReleasedResource[] | undefine
         <ErrorState error={q.error} onRetry={() => q.refetch()} />
       ) : items.length > 0 ? (
         <>
-          <p className="mb-4 text-sm text-muted-foreground" data-testid="text-resource-count">
-            {formatCount(items.length)} guide{items.length === 1 ? "" : "s"}
+          {industries.length > 0 && (
+            <div className="mb-4">
+              <label htmlFor="guide-industry" className="block text-sm font-medium">
+                Filter guides by industry
+              </label>
+              <select
+                className="mt-1 rounded-lg border border-border bg-background p-2"
+                id="guide-industry"
+                value={selected}
+                onChange={(e) => setIndustry(e.target.value)}
+              >
+                <option value="">All industries</option>
+                {hasGeneral && <option value="general">General business</option>}
+                {industries.map((slug) => (
+                  <option key={slug} value={slug}>
+                    {industryName(slug.replaceAll("-", " "))}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          <p
+            className="mb-4 text-sm text-muted-foreground"
+            aria-live="polite"
+            data-testid="text-resource-count"
+          >
+            {formatCount(visible.length)} guide{visible.length === 1 ? "" : "s"}
           </p>
           <ul className="grid gap-3 md:grid-cols-2">
-            {items.map((r) => (
+            {visible.map((r) => (
               <li key={r.id} data-testid={"card-resource-" + r.id}>
                 <ResourceCard r={r} />
               </li>
@@ -159,26 +198,30 @@ export function ResourceDetail({
               >
                 {r.title}
               </h1>
-              <p className="mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">{r.summary}</p>
+              {r.publicationMethod !== "manual" && (
+                <p className="mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">{r.summary}</p>
+              )}
               <PlainText
                 text={r.body}
                 className="mt-10 grid max-w-2xl gap-4 font-display text-[1.1rem] leading-relaxed"
               />
-              <section className="mt-10 grid gap-6 border-t border-border pt-8 text-sm leading-relaxed">
-                <div>
-                  <h2 className="eyebrow">What it covers</h2>
-                  <p className="mt-2 whitespace-pre-line">{r.scope}</p>
-                </div>
-                <div>
-                  <h2 className="eyebrow">Limits you should know</h2>
-                  <p className="mt-2 whitespace-pre-line" data-testid="text-resource-limitations">
-                    {r.limitations}
-                  </p>
-                </div>
-              </section>
+              {r.publicationMethod !== "manual" && (
+                <section className="mt-10 grid gap-6 border-t border-border pt-8 text-sm leading-relaxed">
+                  <div>
+                    <h2 className="eyebrow">What it covers</h2>
+                    <p className="mt-2 whitespace-pre-line">{r.scope}</p>
+                  </div>
+                  <div>
+                    <h2 className="eyebrow">Limits you should know</h2>
+                    <p className="mt-2 whitespace-pre-line" data-testid="text-resource-limitations">
+                      {r.limitations}
+                    </p>
+                  </div>
+                </section>
+              )}
             </div>
             <aside className="grid gap-4 lg:sticky lg:top-24 lg:self-start">
-              {(r.sources.length > 0 || r.kind !== "guide") && (
+              {r.publicationMethod !== "manual" && (r.sources.length > 0 || r.kind !== "guide") && (
                 <div className="surface p-5">
                   <p className="eyebrow">Sources</p>
                   {r.sources.length ? (
@@ -211,7 +254,9 @@ export function ResourceDetail({
                   )}
                 </div>
               )}
-              <Notice title="How it was written and checked">
+              <Notice
+                title={r.publicationMethod === "manual" ? "Publisher" : "How it was written and checked"}
+              >
                 <p className="whitespace-pre-line">{r.disclosure}</p>
               </Notice>
             </aside>

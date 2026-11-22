@@ -3,8 +3,11 @@ import {
   projectReleasedCatalogue,
   directorySearchItems,
 } from "./valo-released-content";
+import { releasedManualEntries } from "../manual-library";
+import { manualCatalogue } from "./manual-presentation";
 export async function publicDiscovery() {
-  const released = projectReleasedCatalogue(await liveReleasedVersions());
+  const [existing, manual] = await Promise.all([liveReleasedVersions(), releasedManualEntries()]);
+  const released = [...projectReleasedCatalogue(existing), ...manual.map(manualCatalogue)];
   return {
     items: [...released, ...directorySearchItems()]
       .map((i) => ({

@@ -1,0 +1,98 @@
+import express, { Router, type Request, type Response } from "express";
+import { z } from "zod";
+import { GetManualLibraryRevisionResponse, ListManualLibraryResponse } from "@workspace/api-zod";
+import { verifiedStaffSession } from "../lib/valo-managed-session";
+import { mutationOriginFor, sameOriginMutation } from "../middlewares/valo-identity";
+import { requestComplexityLimit } from "../platform/request-complexity";
+import { exportMime } from "../lib/valo-render";
+import type { SourceStaffActor } from "../modules/sources";
+import {
+  authorizeManualEditor,
+  listManualLibrary,
+  getManualRevision,
+  saveManualDraft,
+  actOnManualRevision,
+  privateManualFile,
+  releasedManualFile,
+} from "../modules/manual-library";
+
+const uuid = z
+  .string()
+  .uuid()
+  .transform((value) => value.toLowerCase());
+function sendFile(res: Response, file: Awaited<ReturnType<typeof releasedManualFile>>) {
+  res.set({
+    "Content-Type": exportMime[file.format],
+    "Content-Disposition": 'attachment; filename="' + file.filename + '"',
+    "X-Content-Type-Options": "nosniff",
+    "Cache-Control": "private, no-store",
+  });
+  res.send(file.bytes);
+}
+export function createManualLibraryRouter(
+  authenticate: (req: Request) => Promise<SourceStaffActor> = verifiedStaffSession,
+) {
+  const router = Router();
+  router.use("/admin/manual-library", async (req, res, next) => {
+    res.set("Cache-Control", "private, no-store");
+    res.locals.manualEditor = res.locals.verifiedStaff ?? (await authenticate(req));
+    await authorizeManualEditor(res.locals.manualEditor);
+    next();
+  });
+  router.get("/admin/manual-library", async (req, res) => {
+    res.json(
+      ListManualLibraryResponse.parse(
+        await listManualLibrary(
+          res.locals.manualEditor,
+          z.coerce.number().int().min(1).max(10000).default(1).parse(req.query.page),
+        ),
+      ),
+    );
+  });
+  router.get("/admin/manual-library/:id", async (req, res) => {
+    res.json(
+      GetManualLibraryRevisionResponse.parse(
+        await getManualRevision(res.locals.manualEditor, uuid.parse(req.params.id)),
+      ),
+    );
+  });
+  // Only verified content staff can reach the larger parser. All other JSON routes keep their normal limit.
+  const draftMedia = "application/vnd.valo.manual-draft+json";
+  router.post(
+    "/admin/manual-library/:id/drafts",
+    mutationOriginFor(draftMedia),
+    express.json({ type: draftMedia, limit: "3mb", inflate: false }),
+    requestComplexityLimit,
+    async (req, res) => {
+      res.json(
+        GetManualLibraryRevisionResponse.parse(
+          await saveManualDraft(res.locals.manualEditor, uuid.parse(req.params.id), req.body),
+        ),
+      );
+    },
+  );
+  router.post("/admin/manual-library/:id/actions", sameOriginMutation, async (req, res) => {
+    res.json(
+      GetManualLibraryRevisionResponse.parse(
+        await actOnManualRevision(res.locals.manualEditor, uuid.parse(req.params.id), req.body),
+      ),
+    );
+  });
+  router.get("/admin/manual-library/:id/revisions/:version/file", async (req, res) => {
+    sendFile(
+      res,
+      await privateManualFile(
+        res.locals.manualEditor,
+        uuid.parse(req.params.id),
+        z.coerce.number().int().positive().parse(req.params.version),
+      ),
+    );
+  });
+  router.get("/account/manual-templates/:id/download", async (req, res) => {
+    res.set("Cache-Control", "private, no-store");
+    // A verified customer session is sufficient. Staff privileges are only used for private previews.
+    await authenticate(req);
+    sendFile(res, await releasedManualFile(uuid.parse(req.params.id)));
+  });
+  return router;
+}

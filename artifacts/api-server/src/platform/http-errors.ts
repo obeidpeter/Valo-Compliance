@@ -31,6 +31,16 @@ export const onError: ErrorRequestHandler = (error: unknown, req, res, _next) =>
       return;
     }
     if (error.type === "entity.too.large") {
+      if (
+        "limit" in error &&
+        error.limit === 3 * 1024 * 1024 &&
+        req.is("application/vnd.valo.manual-draft+json")
+      ) {
+        res.status(413).json({
+          error: "Choose a Word or PDF file up to 2 MB and keep the text within 60,000 characters.",
+        });
+        return;
+      }
       res
         .status(413)
         .json({ error: "That is too much to send at once (the limit is 128 KB). Shorten it and try again." });

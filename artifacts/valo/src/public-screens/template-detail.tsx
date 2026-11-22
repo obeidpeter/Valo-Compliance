@@ -6,11 +6,13 @@ import {
   useGetReleasedTemplate,
   useCreateTemplateDraft,
   downloadReleasedTemplate,
+  downloadManualTemplate,
   type ReleasedTemplate,
 } from "@workspace/api-client-react";
 import { PublicLink as Link } from "@/components/public-link";
 import { describeError } from "@/lib/describe-error";
 import { basePath } from "@/lib/env";
+import { formatDay } from "@/lib/format";
 import { fromServer } from "@/lib/server-data";
 import { EmptyState, ErrorState, Notice, Skel } from "@/components/states";
 import { SaveTemplateButton } from "@/components/saved-templates";
@@ -50,7 +52,10 @@ function CustomerActions({ t }: { t: ReleasedTemplate }) {
     setBusy(format);
     setDlError(null);
     try {
-      const res: unknown = await downloadReleasedTemplate(t.id, format);
+      const res: unknown =
+        t.publicationMethod === "manual"
+          ? await downloadManualTemplate(t.id)
+          : await downloadReleasedTemplate(t.id, format);
       const blob = res instanceof Blob ? res : new Blob([res as BlobPart]);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -75,22 +80,26 @@ function CustomerActions({ t }: { t: ReleasedTemplate }) {
   const createErr = create.isError ? describeError(create.error) : null;
   return (
     <div className="grid gap-3">
-      <SaveTemplateButton releaseId={t.id} templateId={t.templateId} />
-      <button
-        className="btn btn-primary w-full"
-        disabled={create.isPending}
-        onClick={() => create.mutate({ id: t.id })}
-        data-testid="button-create-draft"
-      >
-        <FilePlus2 className="h-4 w-4" aria-hidden />
-        {create.isPending ? "Making your copy…" : "Make my own copy"}
-      </button>
-      {createErr && (
-        <p role="alert" className="text-sm text-red-800" data-testid="text-draft-error">
-          {createErr.kind === "notFound"
-            ? "This template was withdrawn before your copy was made. Nothing was saved."
-            : createErr.message}
-        </p>
+      {t.publicationMethod !== "manual" && (
+        <>
+          <SaveTemplateButton releaseId={t.id} templateId={t.templateId} />
+          <button
+            className="btn btn-primary w-full"
+            disabled={create.isPending}
+            onClick={() => create.mutate({ id: t.id })}
+            data-testid="button-create-draft"
+          >
+            <FilePlus2 className="h-4 w-4" aria-hidden />
+            {create.isPending ? "Making your copy…" : "Make my own copy"}
+          </button>
+          {createErr && (
+            <p role="alert" className="text-sm text-red-800" data-testid="text-draft-error">
+              {createErr.kind === "notFound"
+                ? "This template was withdrawn before your copy was made. Nothing was saved."
+                : createErr.message}
+            </p>
+          )}
+        </>
       )}
       {t.formats.length > 0 && (
         <div className="flex flex-wrap gap-2">
@@ -103,7 +112,9 @@ function CustomerActions({ t }: { t: ReleasedTemplate }) {
               data-testid={"button-download-" + f}
             >
               <Download className="h-4 w-4" aria-hidden />
-              {busy === f ? "Preparing…" : `Blank ${f === "docx" ? "Word file" : f.toUpperCase()}`}
+              {busy === f
+                ? "Preparing…"
+                : `${t.publicationMethod === "manual" ? "Download" : "Blank"} ${f === "docx" ? "Word file" : f.toUpperCase()}`}
             </button>
           ))}
         </div>
@@ -183,7 +194,9 @@ export function TemplateDetail({
               <h1 className="font-display mt-4 text-4xl leading-tight sm:text-5xl" data-testid="text-title">
                 {t.title}
               </h1>
-              <p className="mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">{t.summary}</p>
+              {t.publicationMethod !== "manual" && (
+                <p className="mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">{t.summary}</p>
+              )}
 
               <section className="mt-10" aria-labelledby="preview-heading">
                 <h2 id="preview-heading" className="eyebrow">
@@ -201,9 +214,11 @@ export function TemplateDetail({
                         </p>
                       ))}
                     </div>
-                    <p className="mt-6 border-t border-dashed border-border pt-4 text-xs text-muted-foreground">
-                      Part of the template. All of it opens in your own copy.
-                    </p>
+                    {t.publicationMethod !== "manual" && (
+                      <p className="mt-6 border-t border-dashed border-border pt-4 text-xs text-muted-foreground">
+                        Part of the template. All of it opens in your own copy.
+                      </p>
+                    )}
                   </div>
                 ) : (
                   <p className="mt-3 text-sm text-muted-foreground">This template has no preview.</p>
@@ -219,15 +234,16 @@ export function TemplateDetail({
                 ) : (
                   <>
                     <p className="text-sm text-muted-foreground">
-                      Sign in to make your own copy or download the blank file. Your copy is kept in your own
-                      workspace.
+                      {t.publicationMethod === "manual"
+                        ? "Sign in to download the template."
+                        : "Sign in to make your own copy or download the blank file. Your copy is kept in your own workspace."}
                     </p>
                     <Link href="/sign-in" className="btn btn-primary w-full" data-testid="link-sign-in">
                       Sign in to continue
                     </Link>
                   </>
                 )}
-                {!t.commercialLicenceAccepted && (
+                {t.publicationMethod !== "manual" && !t.commercialLicenceAccepted && (
                   <Notice title="Not for sale">
                     Commercial licence terms have not been accepted for this template, so it is not sold or
                     offered as a paid product.
@@ -243,13 +259,21 @@ export function TemplateDetail({
             </aside>
 
             <div className="min-w-0 lg:col-start-1">
-              <ReleaseNotices
-                reviewedAt={t.reviewedAt}
-                reviewBy={t.reviewBy}
-                disclosure={t.disclosure}
-                scope={t.scope}
-                limitations={t.limitations}
-              />
+              {t.publicationMethod === "manual" ? (
+                <p className="text-sm text-muted-foreground">
+                  {t.disclosure} Published {formatDay(t.reviewedAt)}.
+                </p>
+              ) : (
+                t.reviewBy && (
+                  <ReleaseNotices
+                    reviewedAt={t.reviewedAt}
+                    reviewBy={t.reviewBy}
+                    disclosure={t.disclosure}
+                    scope={t.scope}
+                    limitations={t.limitations}
+                  />
+                )
+              )}
             </div>
           </article>
         ) : (

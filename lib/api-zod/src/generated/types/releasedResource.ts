@@ -7,12 +7,14 @@
  */
 import type { PublicSourceReference } from './publicSourceReference';
 import type { ReleasedResourceKind } from './releasedResourceKind';
+import type { ReleasedResourcePublicationMethod } from './releasedResourcePublicationMethod';
 
 export interface ReleasedResource {
   id: string;
   slug: string;
   title: string;
   kind: ReleasedResourceKind;
+  publicationMethod?: ReleasedResourcePublicationMethod;
   industrySlugs: string[];
   summary: string;
   body: string;

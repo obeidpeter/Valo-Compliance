@@ -20,6 +20,7 @@ import {
   type Api,
 } from "../test-support/app-in-browser";
 import { oldWordsIn } from "../test-support/old-words";
+import { answers as publicAnswers } from "../test-support/public-answers";
 
 /**
  * NFR-006: "WCAG 2.2 AA target across critical flows; keyboard, visible focus, screen-reader labels,
@@ -296,6 +297,20 @@ const answers: Record<string, unknown> = {
   [`GET /workspace/account`]: api.GetCustomerAccountResponse.parse({
     workspaceId: WORKSPACE,
     privacyRequests: [{ reference: "PRV-SYNTH-1", request: "export", status: "verified", createdAt: at(14) }],
+  }),
+  "GET /public/coverage": publicAnswers["GET /public/coverage"],
+  "GET /admin/manual-library": api.ListManualLibraryResponse.parse({
+    items: [
+      {
+        itemId: "00000000-0000-4000-8000-00000000a601",
+        title: "Synthetic regulatory draft",
+        kind: "regulatory_article",
+        version: 1,
+        state: "draft",
+        industry: null,
+      },
+    ],
+    hasMore: false,
   }),
   [`GET /admin/operations`]: (query: URLSearchParams) =>
     api.GetStaffOperationsResponse.parse({

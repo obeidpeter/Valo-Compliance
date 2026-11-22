@@ -30,6 +30,17 @@ import { lockSourceState, recordSourceImpact, bindReleasedSources } from "../sou
 import { publicationCheckTime } from "./operational-restrictions";
 import { finalOperationalPublicationCheck } from "./publication-final-check";
 type PublicationTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+const regulatorySourceHold = "REGULATORY_ARTICLE_AWAITING_OWNER_SOURCE_CHECK";
+
+/** Reviews attest to the submitted evidence. Releasing a new regulatory article also needs the owner's source check. */
+export function evaluateOperationalRelease(bundle: unknown) {
+  const evidence = evaluatePublication(bundle);
+  const candidate = publicationSchema.safeParse(bundle);
+  if (candidate.success && candidate.data.candidate.contentClass === "sourced_guidance")
+    return { ...evidence, decision: "hold" as const, reasons: [...evidence.reasons, regulatorySourceHold] };
+  return evidence;
+}
+
 export type ReleaseAttestations = {
   sourceSnapshots?: Record<string, string>;
   provenance: ArtifactRef;
@@ -296,6 +307,7 @@ export async function publishOperationalVersionInTransaction(tx: PublicationTx, 
   const { valoContentVersions, valoPublicationAudit } = await import("@workspace/db");
   const { row, bundle } = await validateOperationalVersionInTransaction(tx, id);
   if (row.status === "published") return { id, decision: "published" as const, idempotent: true };
+  if (bundle.candidate.contentClass === "sourced_guidance") throw Error(regulatorySourceHold);
   await tx
     .update(valoContentVersions)
     .set({ status: "published", publishedAt: new Date() })
@@ -378,7 +390,7 @@ export async function recordActualPublicationHold(id: string, failureCode?: stri
       .where(eq(valoContentVersions.id, id))
       .for("update");
     if (!row || row.status !== "candidate") throw Error("CANDIDATE_REQUIRED");
-    const decision = evaluatePublication(row.bundle);
+    const decision = evaluateOperationalRelease(row.bundle);
     if (decision.decision !== "hold") throw Error("NO_FAILED_GATE_TO_RECORD");
     await tx.update(valoContentVersions).set({ status: "held" }).where(eq(valoContentVersions.id, id));
     const reasons = [...decision.reasons, ...(failureCode ? [failureCode] : [])];

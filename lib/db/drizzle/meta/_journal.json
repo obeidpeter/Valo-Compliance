@@ -316,6 +316,13 @@
       "when": 1795287805850,
       "tag": "20261121190325_publisher_login",
       "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1795351272299,
+      "tag": "20261122124112_manual_library",
+      "breakpoints": true
     }
   ]
 }

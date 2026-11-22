@@ -51,35 +51,38 @@ export const verifiedWorkspace: RequestHandler = async (req, res, next) => {
   }
 };
 
-export const sameOriginMutation: RequestHandler = (req, res, next) => {
-  if (["GET", "HEAD", "OPTIONS"].includes(req.method)) {
+export function mutationOriginFor(mediaType: string): RequestHandler {
+  return (req, res, next) => {
+    if (["GET", "HEAD", "OPTIONS"].includes(req.method)) {
+      next();
+      return;
+    }
+    const origin = req.get("origin");
+    const trusted = trustedSiteOrigin();
+    if (!trusted) {
+      res.status(503).json({
+        code: "ORIGIN_CONFIGURATION_UNAVAILABLE",
+        error: "Valo is not set up to accept changes at the moment. Nothing was saved. Try again later.",
+      });
+      return;
+    }
+    const sameOrigin = permittedMutationOrigin(origin, trusted);
+    const site = req.get("sec-fetch-site");
+    if (!sameOrigin || (site && !["same-origin", "none"].includes(site)) || !req.is(mediaType)) {
+      req.log?.warn({
+        event: "origin.rejected",
+        forwardedHostPresent: Boolean(req.get("x-forwarded-host")),
+        forwardedProtocolPresent: Boolean(req.get("x-forwarded-proto")),
+        multiHopForwardedHost: Boolean(req.get("x-forwarded-host")?.includes(",")),
+      });
+      res.status(403).json({
+        code: "UNTRUSTED_ORIGIN",
+        error:
+          "This request was not sent the way Valo's own pages send one, so it was refused. Nothing was saved. Reload the page and try again.",
+      });
+      return;
+    }
     next();
-    return;
-  }
-  const origin = req.get("origin");
-  const trusted = trustedSiteOrigin();
-  if (!trusted) {
-    res.status(503).json({
-      code: "ORIGIN_CONFIGURATION_UNAVAILABLE",
-      error: "Valo is not set up to accept changes at the moment. Nothing was saved. Try again later.",
-    });
-    return;
-  }
-  const sameOrigin = permittedMutationOrigin(origin, trusted);
-  const site = req.get("sec-fetch-site");
-  if (!sameOrigin || (site && !["same-origin", "none"].includes(site)) || !req.is("application/json")) {
-    req.log?.warn({
-      event: "origin.rejected",
-      forwardedHostPresent: Boolean(req.get("x-forwarded-host")),
-      forwardedProtocolPresent: Boolean(req.get("x-forwarded-proto")),
-      multiHopForwardedHost: Boolean(req.get("x-forwarded-host")?.includes(",")),
-    });
-    res.status(403).json({
-      code: "UNTRUSTED_ORIGIN",
-      error:
-        "This request was not sent the way Valo's own pages send one, so it was refused. Nothing was saved. Reload the page and try again.",
-    });
-    return;
-  }
-  next();
-};
+  };
+}
+export const sameOriginMutation = mutationOriginFor("application/json");

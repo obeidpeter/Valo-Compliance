@@ -22,3 +22,4 @@ never edited after acceptance; a later record supersedes an earlier one.
 | [0015](0015-run-the-editorial-cases.md) | Run the 60 editorial evaluation cases (EDP-010) | Accepted |
 | [0016](0016-record-independent-review.md) | Record the independent reviewer's decisions on the acceptance cases | Proposed |
 | [0017](0017-clear-guidance-holds.md) | What clears each of guidance's six standing holds | Proposed |
+| [0018](0018-manual-library-publishing.md) | Manual publishing for practical guides, industry introductions and templates | Accepted |
