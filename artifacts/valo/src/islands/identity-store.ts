@@ -8,7 +8,13 @@ import { useSyncExternalStore } from "react";
 export type Identity =
   | { status: "unknown" }
   | { status: "signed-out" }
-  | { status: "signed-in"; email: string; initials: string; signOut: () => Promise<unknown> };
+  | {
+      status: "signed-in";
+      sessionId: string;
+      email: string;
+      initials: string;
+      signOut: () => Promise<unknown>;
+    };
 
 const UNKNOWN: Identity = { status: "unknown" };
 let current: Identity = UNKNOWN;

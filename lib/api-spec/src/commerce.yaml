@@ -1,5 +1,17 @@
 # Purchases, orders, receipts, refunds, payment concerns and disputes.
 paths:
+  /workspace/owned-template-editions:
+    get:
+      operationId: listOwnedTemplateEditions
+      tags: [workspace]
+      responses:
+        "200":
+          description: Edition IDs with active, verified purchases in the signed-in workspace. Each file request checks access again.
+          content:
+            application/json:
+              schema: { type: array, items: { type: string, format: uuid } }
+        "401": { description: Sign-in required }
+        "403": { description: Active workspace access required }
   /workspace/purchases:
     get:
       operationId: getCustomerPurchases

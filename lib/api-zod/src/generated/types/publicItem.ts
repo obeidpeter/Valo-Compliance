@@ -26,6 +26,8 @@ export interface PublicItem {
   priceId?: string;
   /** Same-origin authenticated attachment path for this released free edition. */
   freeDownloadPath?: string;
+  /** Same-origin attachment path requiring an active workspace purchase of this released edition. */
+  premiumDownloadPath?: string;
   reviewedAt?: string;
   href?: string;
   reason?: string;

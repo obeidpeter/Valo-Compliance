@@ -7,14 +7,16 @@ import {
   useListPublicCatalogue,
   getListPublicCatalogueQueryKey,
   useGetPublicCoverage,
+  getListOwnedTemplateEditionsQueryKey,
+  useListOwnedTemplateEditions,
   type CataloguePage,
   type PublicCoverage,
 } from "@workspace/api-client-react";
 import { PublicLink as Link } from "@/components/public-link";
+import { PremiumTemplateCardAction } from "@/components/premium-template-card-action";
 import { EmptyState, ErrorState, Notice, PageHeader, Skel } from "@/components/states";
 import { useIdentity } from "@/islands/identity-store";
 import { formatCount, formatNaira } from "@/lib/format";
-import { templateCheckoutPath } from "@/lib/template-checkout";
 import { templateDownloadSignInPath } from "@/lib/template-download";
 import {
   catalogueParams,
@@ -51,7 +53,8 @@ export function Library({
   // The server's results are for the address the page was first opened at.
   const serverResults = search === initialSearch ? initialCatalogue : undefined;
   const [draft, setDraft] = useState(q);
-  const signedIn = useIdentity().status === "signed-in";
+  const identity = useIdentity();
+  const signedIn = identity.status === "signed-in";
   useEffect(() => setDraft(q), [q]);
 
   const params = catalogueParams(filters);
@@ -67,6 +70,18 @@ export function Library({
   const coverage = useGetPublicCoverage({
     query: { retry: false, staleTime: 60000, ...(initialCoverage ? { initialData: initialCoverage } : {}) },
   });
+  const ownership = useListOwnedTemplateEditions({
+    query: {
+      queryKey: [...getListOwnedTemplateEditionsQueryKey(), signedIn ? identity.sessionId : null],
+      enabled:
+        signedIn && !!cat.data?.items.some((item) => item.type === "template" && item.access === "premium"),
+      gcTime: 0,
+      retry: false,
+      refetchInterval: 15000,
+      refetchOnWindowFocus: true,
+    },
+  });
+  const owned = new Set(signedIn && ownership.isSuccess ? ownership.data : []);
   const unknownIndustry = !!industry && !coverage.data?.industries.some((i) => i.slug === industry);
   const industryNames = new Map((coverage.data?.industries ?? []).map((i) => [i.slug, i.title] as const));
 
@@ -293,16 +308,8 @@ export function Library({
                     <p className="font-display mt-3 text-xl">{industryName(it.title)}</p>
                     <p className="mt-1 text-sm text-muted-foreground">{it.summary}</p>
                   </Link>
-                  {it.type === "template" && it.access === "premium" && it.priceId && (
-                    <div className="px-5 pb-5">
-                      <Link
-                        href={templateCheckoutPath(it.priceId)}
-                        className="btn btn-primary btn-sm"
-                        data-testid="card-checkout"
-                      >
-                        Go to checkout<span className="sr-only"> for {it.title}</span>
-                      </Link>
-                    </div>
+                  {it.type === "template" && it.access === "premium" && (
+                    <PremiumTemplateCardAction item={it} owned={owned} />
                   )}
                   {it.type === "template" && it.access === "free" && it.freeDownloadPath && (
                     <div className="px-5 pb-5">

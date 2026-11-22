@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
+import { eq, sql } from "drizzle-orm";
 import {
   GetManualLibraryRevisionResponse,
   GetReleasedTemplateResponse,
+  ListOwnedTemplateEditionsResponse,
   ListPublicCatalogueResponse,
 } from "@workspace/api-zod";
 import { wordFromText } from "../modules/manual-library/files";
@@ -55,6 +57,12 @@ export async function exercisePremiumManualTemplate(call: Call, editor: string) 
     other = "synthetic-other-premium-reader-" + itemId;
   const download = (edition: string, identity: string) =>
     call("/workspace/manual-premium-templates/" + edition + "/download", undefined, identity);
+  const owned = async (identity: string) => {
+    const response = await call("/workspace/owned-template-editions", undefined, identity);
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get("cache-control"), "private, no-store");
+    return ListOwnedTemplateEditionsResponse.parse(await response.json());
+  };
   const priceId = randomUUID();
   const price = {
     id: priceId,
@@ -108,6 +116,9 @@ export async function exercisePremiumManualTemplate(call: Call, editor: string) 
   assert.equal(card.amountKobo, detail.offer.amountKobo);
   assert.equal(card.priceId, detail.offer.id);
   assert.equal(card.freeDownloadPath, undefined);
+  assert.equal(card.premiumDownloadPath, "/api/workspace/manual-premium-templates/" + first.id + "/download");
+  assert.equal((await call("/workspace/owned-template-editions", undefined, "")).status, 401);
+  assert.deepEqual(await owned(reader), []);
   assert.deepEqual(detail.preview, [data.body]);
   assert.equal((await call("/public/resources/manual-" + itemId)).status, 404);
   assert.equal(
@@ -126,6 +137,7 @@ export async function exercisePremiumManualTemplate(call: Call, editor: string) 
       }),
     );
   const order = await orderFor(account);
+  assert.deepEqual(await owned(reader), []);
   assert.equal((await download(first.id, reader)).status, 403);
   const verified = {
     id: String(Number.parseInt(randomUUID().replaceAll("-", "").slice(0, 12), 16)),
@@ -137,12 +149,15 @@ export async function exercisePremiumManualTemplate(call: Call, editor: string) 
     metadata: { valoOrderId: order.id, workspaceId: account.workspaceId },
   };
   await settleVerifiedOrder(order.id, verified);
+  assert.deepEqual(await owned(reader), [first.id]);
+  assert.deepEqual(await owned(other), []);
   const file = await download(first.id, reader);
   assert.equal(file.status, 200);
   assert.equal(file.headers.get("cache-control"), "private, no-store");
   assert.deepEqual(Buffer.from(await file.arrayBuffer()), bytes);
   assert.equal((await download(first.id, other)).status, 403);
   await settleVerifiedOrder(order.id, { ...verified, status: "reversed" });
+  assert.deepEqual(await owned(reader), []);
   assert.equal((await download(first.id, reader)).status, 403);
   // Keep a different workspace's genuine test entitlement active across replacement.
   const secondBuyer = await resolveWorkspace(other);
@@ -153,6 +168,15 @@ export async function exercisePremiumManualTemplate(call: Call, editor: string) 
     reference: secondOrder.reference,
     metadata: { valoOrderId: secondOrder.id, workspaceId: secondBuyer.workspaceId },
   });
+  assert.equal((await download(first.id, other)).status, 200);
+  const newPrice = { ...price, id: randomUUID(), amountKobo: 11000, effectiveFrom: new Date() };
+  await db
+    .update(valoPrices)
+    .set({ effectiveTo: sql`now()` })
+    .where(eq(valoPrices.id, priceId));
+  await db.insert(valoPrices).values(newPrice);
+  assert.equal((await libraryCard())?.priceId, newPrice.id);
+  assert.deepEqual(await owned(other), [first.id]);
   assert.equal((await download(first.id, other)).status, 200);
   const next = await readRevision(
     await draft({ ...data, requestId: randomUUID(), baseVersion: 1, fileMode: "keep", upload: undefined }),
@@ -168,6 +192,8 @@ export async function exercisePremiumManualTemplate(call: Call, editor: string) 
   assert.equal(replacedCard.amountKobo, undefined);
   assert.equal(replacedCard.priceId, undefined);
   assert.equal(replacedCard.freeDownloadPath, undefined);
+  assert.deepEqual(await owned(other), [first.id]);
+  assert.notEqual(replacedCard.id, first.id);
   assert.equal(await productVisible(), false);
   assert.equal((await download(first.id, reader)).status, 403);
   assert.equal((await download(next.id, reader)).status, 403);

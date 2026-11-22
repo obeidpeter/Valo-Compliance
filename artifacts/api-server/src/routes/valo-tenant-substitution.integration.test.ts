@@ -1073,6 +1073,7 @@ test(
           "GET /workspace/documents": {},
           "GET /workspace/privacy-cases": {},
           "GET /workspace/purchases": {},
+          "GET /workspace/owned-template-editions": {},
           "GET /workspace/reminder-preferences": {},
           "GET /workspace/reminders": {},
           "GET /workspace/saved-templates": {},
