@@ -292,12 +292,7 @@ function PurchaseHistoryContent() {
     [busy, setBusy] = useState(false),
     [error, setError] = useState<string | null>(null);
   const [keys] = useState(() => new Map<string, string>());
-  const [savedOrder, setSavedOrder] = useState<{ priceId: string; order: CommerceOrder } | null>(null);
   const products = (q.data?.products ?? []).filter((p) => !directCheckout || p.id === offerId);
-  const checkoutOrder =
-    savedOrder && savedOrder.priceId === offerId
-      ? (q.data?.orders.find((o) => o.id === savedOrder.order.id) ?? savedOrder.order)
-      : undefined;
   const refresh = () => qc.invalidateQueries({ queryKey: getGetCustomerPurchasesQueryKey() });
   return (
     <div className="mx-auto max-w-6xl px-5 py-10 lg:px-8">
@@ -371,12 +366,11 @@ function PurchaseHistoryContent() {
                           setError(null);
                           try {
                             if (!keys.has(p.id)) keys.set(p.id, crypto.randomUUID());
-                            const order = await createCommerceOrder({
+                            await createCommerceOrder({
                               priceId: p.id,
                               acceptedLicenceVersion: p.licenceVersion,
                               requestKey: keys.get(p.id)!,
                             });
-                            if (directCheckout) setSavedOrder({ priceId: p.id, order });
                             await refresh();
                           } catch (e) {
                             setError(describeError(e).message);
@@ -398,9 +392,7 @@ function PurchaseHistoryContent() {
               </p>
             )}
           </section>
-          {directCheckout ? (
-            checkoutOrder && <OrderCard order={checkoutOrder} changed={refresh} />
-          ) : (
+          {(!directCheckout || Boolean(q.data?.orders.length)) && (
             <section aria-labelledby="purchase-history">
               <h2 id="purchase-history" className="font-display mb-4 text-2xl">
                 Your orders
