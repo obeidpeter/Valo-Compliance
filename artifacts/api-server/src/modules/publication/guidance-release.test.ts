@@ -2,14 +2,21 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { digest, evaluatePublication, sha256, type PublicationBundle } from "@workspace/valo-core";
+import {
+  allSourceLeads,
+  digest,
+  evaluatePublication,
+  sha256,
+  type PublicationBundle,
+} from "@workspace/valo-core";
 import {
   AMENDMENT_RECORD_DAYS,
   guideAmendmentRecords,
   guideSourceDecision,
   type AmendmentRecord,
 } from "./guidance-amendments";
-import { buildGuideCandidate, guideClaimScopeProblems, mappedGuideIds } from "./guidance-bundle";
+import { buildGuideCandidate, guideClaimScopeProblems, repositoryBuiltGuideIds } from "./guidance-bundle";
+import { capturedTexts } from "./guidance-captured-texts";
 import {
   GUIDE_SHARED_WORDS_LIMIT,
   comparedWords,
@@ -155,7 +162,7 @@ test("a guide explains official text and does not copy it: the longest shared ru
   assert.equal(longestSharedRun("", "some words").words, 0);
 
   let longest = 0;
-  for (const id of mappedGuideIds) {
+  for (const id of repositoryBuiltGuideIds) {
     const built = await buildGuideCandidate(id, 1, passages, day);
     const measure = measureCandidateCopying(built);
     assert.equal(measure.limitWords, GUIDE_SHARED_WORDS_LIMIT);
@@ -202,12 +209,35 @@ test("each amendment record matches the retained texts it describes", () => {
   ];
   const cama = guideAmendmentRecords.find((r) => r.instrument === "CAC-CAMA-2020")!,
     ntaa = guideAmendmentRecords.find((r) => r.instrument === "NASS-NTAA-2025")!;
-  assert.equal(guideAmendmentRecords.length, 2);
+  assert.equal(guideAmendmentRecords.length, 2 + capturedTexts.length);
 
-  // Each record describes the very file the retained passages were read from.
-  for (const record of guideAmendmentRecords) {
+  // Each record of an Act kept in the repository describes the very file its passages were read from.
+  for (const record of [cama, ntaa]) {
     const fetched = retrieval.find((r) => r.url === record.url);
     assert.equal(fetched?.rawSHA256, record.rawSha256, record.title);
+  }
+  // Each text read only from captures has a record of its own. The record describes the file at
+  // the address of the text's lead, under the checksum the drafts' source evidence recorded for it
+  // on 14 November 2026, and gives the day the text's passages are dated from.
+  const evidence = (
+    retained("docs/content-candidates/source-evidence/privacy-consumer-sources.json") as {
+      sources: { url: string; pdfSha256: string }[];
+    }
+  ).sources;
+  for (const text of capturedTexts) {
+    const record = guideAmendmentRecords.find((r) => r.instrument === text.id);
+    assert.ok(record, text.id);
+    assert.equal(record.url, allSourceLeads.find((lead) => lead.id === text.leadId)?.url, text.id);
+    assert.equal(evidence.find((source) => source.url === record.url)?.pdfSha256, record.rawSha256, text.id);
+    assert.equal(record.commencement.effectiveFrom, text.effectiveFrom, text.id);
+    assert.equal(record.title, text.title);
+    assert.deepEqual(record.notRead, [], text.id);
+    assert.ok(
+      record.conflicts.every((conflict) => !conflict.open),
+      text.id,
+    );
+  }
+  for (const record of guideAmendmentRecords) {
     assert.ok((guidanceOfficialHosts as readonly string[]).includes(new URL(record.url).hostname));
     assert.ok(record.searches.length >= 2, record.title);
     for (const search of record.searches) {
@@ -427,7 +457,7 @@ test("a source is marked current only on the strength of its text's amendment re
   assert.ok(!approvedIn(passage("CAMA-814"), day, strayHost));
 });
 
-test("today the gate holds each mapped guide for the owner's approval, and two guides for an unbound sentence too", async () => {
+test("today the gate holds each guide built from the repository for the owner's approval, and two guides for an unbound sentence too", async () => {
   // What rests on the owner's approval of the policy: the policy itself, the rights record whose
   // basis it is, and the two mechanical checks that read them.
   const waitsOnApproval = [
@@ -439,7 +469,7 @@ test("today the gate holds each mapped guide for the owner's approval, and two g
   ];
   // GUD-05 and GUD-08 each rest in part on an official page that is not kept in the repository.
   const unboundSentence = ["legal_scope_unverified", "material_uncertainty"];
-  for (const id of mappedGuideIds) {
+  for (const id of repositoryBuiltGuideIds) {
     const { bundle, eligibility, rightsProblems } = await assembled(id);
     assert.equal(eligibility.decision, "hold", id);
     // Apart from the two reviews, these are the reasons, and there is no other.

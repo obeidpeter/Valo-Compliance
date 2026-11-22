@@ -214,10 +214,13 @@ export function decidedSource(
 const BUDGET_OFFICE = "https://budgetoffice.gov.ng/index.php";
 const NASS_ACTS_LIST =
   "https://nass.gov.ng/documents/magazine_track/?draw=1&start=0&length=500&search%5Bvalue%5D=&search%5Bregex%5D=false";
+const NASS_BILL_TRACKER =
+  "https://nass.gov.ng/documents/bill_track/?draw=1&start=0&length=3000&search%5Bvalue%5D=&search%5Bregex%5D=false";
 
 /**
- * The amendment records held today, for the two Acts GUD-01 to GUD-10 quote. Each says what was
- * done and what was not: see `notRead`, `comparedSections` and `limits`.
+ * The amendment records held today: for the two Acts GUD-01 to GUD-10 quote, and for the Act and
+ * the directive GUD-11 to GUD-15 quote. Each says what was done and what was not: see `notRead`,
+ * `comparedSections`, `conflicts` and `limits`.
  */
 export const guideAmendmentRecords: readonly AmendmentRecord[] = [
   {
@@ -502,5 +505,108 @@ export const guideAmendmentRecords: readonly AmendmentRecord[] = [
     ],
     limits:
       "The search covers the National Assembly's published list and the other three revenue Acts of 2025 on the days shown. The Gazette copy is a scanned image: sections 4, 7, 11, 31 and 33 and three definitions of section 147 were compared with it by reading its page images, and no other section was. No Gazette index was searched and no court decision was looked for.",
+  },
+  {
+    instrument: "NDPC-NDPA-2023",
+    title: "Nigeria Data Protection Act 2023",
+    url: "https://ndpc.gov.ng/wp-content/uploads/2024/03/Nigeria_Data_Protection_Act_2023.pdf",
+    rawSha256: "5bfb22cf7b344e92ecca9b80decf73db694a0d1000c4f42188f46e047d8df075",
+    commencement: { printed: "[12th Day of June, 2023]", effectiveFrom: "2023-06-12T00:00:00+01:00" },
+    searches: [
+      {
+        place: "National Assembly: its list of Acts and publications",
+        url: NASS_ACTS_LIST,
+        searchedAt: "2026-11-22T00:03:51Z",
+        rawSha256: "25274f83bbd57258cfa1e835ff7ba50fbe14e22227b3c9f5c154bb5c5810872e",
+        found:
+          "182 entries. None names the Nigeria Data Protection Act. The list does not hold every Act: it does not hold this one.",
+      },
+      {
+        place: "National Assembly: its bill tracker",
+        url: NASS_BILL_TRACKER,
+        searchedAt: "2026-11-22T00:05:45Z",
+        rawSha256: "7b5d0c91b99792af3adde4395df027d64a1dd7090092d8ea8b73e569584c08f6",
+        found:
+          "2,660 bills. One names the Act: SB.648, a Senate bill to make social media platforms keep offices in Nigeria. The tracker shows its first reading on 21 November 2024 and its second on 18 March 2025, and no committee stage or third reading.",
+      },
+      {
+        place: "Nigeria Data Protection Commission: its resources page",
+        url: "https://ndpc.gov.ng/resources/",
+        searchedAt: "2026-11-22T00:04:12Z",
+        rawSha256: "e2e1be060ea62c5c0477e8e89c9c2d4d6488d2335d095acd532f86fb79a6ca55",
+        found:
+          "25 documents. The Act is offered at the address this copy was fetched from. No amending Act is among them.",
+      },
+      {
+        place: "National Assembly: Nigeria Tax Administration Act 2025",
+        url: "https://nass.gov.ng/documents/download/11250",
+        searchedAt: "2026-11-21T17:50:37Z",
+        rawSha256: "eb3ea717052f48492cc6441ad23f9e7ac2ad4782395db1c391580cc1adef20e2",
+        found:
+          "The Act names data protection once, in section 142, which leaves other Acts on data protection as they are. It changes nothing in the Nigeria Data Protection Act.",
+      },
+    ],
+    amendments: [],
+    notRead: [],
+    conflicts: [
+      {
+        about: "a bill before the Senate to amend the Act",
+        sections: "all",
+        open: false,
+        note: "SB.648 would add duties for social media platforms. A bill changes nothing until it is passed and assented to, and the National Assembly's tracker shows no third reading. A web search on 22 November 2026 found press reports of July 2026 about a bill of this kind, and none saying it had been passed; those reports are not official and were read only as search results. The bill's own file came back empty that day and was not read. If it becomes law, this record is out of date and every passage of the Act must be read again.",
+      },
+    ],
+    limits:
+      "The search covers the National Assembly's published list and its bill tracker, the Commission's resources page and the Nigeria Tax Administration Act 2025, on the days shown. The National Assembly's list does not hold every Act. No Gazette index was searched, no court decision was looked for, and the bill before the Senate was not read.",
+  },
+  {
+    instrument: "NDPC-GAID-2025",
+    title: "Nigeria Data Protection Act General Application and Implementation Directive 2025",
+    url: "https://ndpc.gov.ng/wp-content/uploads/2025/07/NDP-ACT-GAID-2025-MARCH-20TH.pdf",
+    rawSha256: "e4359e90c9a11cd772f9605c797d6f36af000c58a27bfba251fa37a89824cc5a",
+    // The directive prints the day it was issued and no day for taking effect. The later day
+    // reported for it is used: see `conflicts`.
+    commencement: {
+      printed: "Issued under my hand this 20th Day of March, 2025",
+      effectiveFrom: "2025-09-19T00:00:00+01:00",
+    },
+    searches: [
+      {
+        place: "Nigeria Data Protection Commission: its resources page",
+        url: "https://ndpc.gov.ng/resources/",
+        searchedAt: "2026-11-22T00:04:12Z",
+        rawSha256: "e2e1be060ea62c5c0477e8e89c9c2d4d6488d2335d095acd532f86fb79a6ca55",
+        found:
+          "25 documents. The directive is offered at the address this copy was fetched from. No later edition of it and no amending directive is among them.",
+      },
+      {
+        place: "Nigeria Data Protection Commission: its home page",
+        url: "https://ndpc.gov.ng/",
+        searchedAt: "2026-11-22T00:04:00Z",
+        rawSha256: "99e6cfb34fcf50712134c9e7b1ca88e274da3f5cb7d745c1ee52c9e48853d3ef",
+        found:
+          "The page links to the directive at the same address. No line of the page mentions an amendment or a later directive.",
+      },
+      {
+        place: "Nigeria Data Protection Commission: its guidance notice of 26 June 2026",
+        url: "https://ndpc.gov.ng/wp-content/uploads/2026/06/Guidance-Notice-on-CPD-for-Data-Protection-Officers.pdf",
+        searchedAt: "2026-11-22T00:04:37Z",
+        rawSha256: "4ad25919d158653eb5037f3ebfafe83d80666161eeb7c40742cbdf73cc8bbc2d",
+        found:
+          "Guidance on Article 14 and Schedule 3 of the directive, the assessment of data protection officers. It does not say that it amends the directive.",
+      },
+    ],
+    amendments: [],
+    notRead: [],
+    conflicts: [
+      {
+        about: "the day the directive took effect",
+        sections: "all",
+        open: false,
+        note: "The directive prints the day it was issued, 20 March 2025, and no day for taking effect. A web search on 22 November 2026 found law firms' notes and press reports saying the Commission set 19 September 2025. No statement of that day was found on the Commission's own site. The later day is used here: on either account the directive is in force from it. No guide states when the directive took effect.",
+      },
+    ],
+    limits:
+      "The search covers the Commission's home page, its resources page and its guidance notice of 26 June 2026, on the day shown. The Commission's news pages were not read through. No Gazette index was searched and no court decision was looked for. Whether the Commission has said anything elsewhere that changes how the directive applies was not established.",
   },
 ];

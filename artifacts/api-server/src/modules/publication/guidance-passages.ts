@@ -13,8 +13,11 @@ import { publicationWorkspaceRoot } from "./operational-policy";
  */
 export type GuideInstrument = {
   id: string;
-  /** An Act can be amended by a later one; an official page says what it says when it is read. */
-  kind: "act" | "official_page";
+  /**
+   * An Act can be amended by a later one, and a regulator's directive or guideline can be amended
+   * or replaced by a later one. An official page says what it says when it is read.
+   */
+  kind: "act" | "regulatory_document" | "official_page";
   url: string;
   /** The SHA-256 of the file the passages were extracted from; null for a page kept as text only. */
   rawSha256: string | null;

@@ -11,13 +11,15 @@ import {
   capturedGuidePassages,
   developmentPublicationOnly,
   guidancePolicy,
-  guideCaptureLeads,
   guideOpenReasons,
+  guidePassageIds,
   guideSourceSnapshots,
   inspectOperationalExports,
   loadChatGPTPermission,
   mappedGuideIds,
+  passageLead,
   putPublicationArtifact,
+  retainedGuidePassages,
   savePreparedCandidate,
   type GuideCapture,
   type ReleaseAttestations,
@@ -74,7 +76,10 @@ export async function prepareGuideCandidateRelease(
   const versions = await db.select().from(valoContentVersions).where(eq(valoContentVersions.templateId, id));
   const version = Math.max(0, ...versions.map((r) => r.version)) + 1;
   // The passages come from the captures the daily check holds, read before anything else is done.
-  const captures = options.captures ?? (await currentSourceCaptures(guideCaptureLeads, now));
+  // Only the addresses this guide's own passages are read from are asked for.
+  const retained = retainedGuidePassages();
+  const leads = [...new Set(guidePassageIds(id).flatMap((passage) => passageLead(passage, retained) ?? []))];
+  const captures = options.captures ?? (await currentSourceCaptures(leads, now));
   const built = await buildGuideCandidate(id, version, capturedGuidePassages(captures), now);
   const { policy, authority } = await guidancePolicy();
   const applicability = await loadChatGPTPermission(snapshot, built.provenance);

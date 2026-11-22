@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { sha256 } from "@workspace/valo-core";
 import { guideAmendmentRecords } from "./guidance-amendments";
-import { mappedGuideIds } from "./guidance-bundle";
+import { repositoryBuiltGuideIds } from "./guidance-bundle";
 import { assembledGuide } from "./guidance-release.fixtures";
 import { guideAmendmentBasis, guideReviewInputs } from "./guidance-review-inputs";
 
@@ -139,8 +139,8 @@ test("the rights and provenance parts say what was measured and what was confirm
   );
 });
 
-test("every mapped guide's review inputs can be made, and none carries a reviewer's verdict", async () => {
-  for (const id of mappedGuideIds) {
+test("the review inputs of each guide built from the repository can be made, and none carries a reviewer's verdict", async () => {
+  for (const id of repositoryBuiltGuideIds) {
     const { rightsInput, provenanceInput } = await inputsFor(id);
     const sent = JSON.stringify({ rightsInput, provenanceInput });
     assert.doesNotMatch(sent, /"(?:verdict|reviews|otherReview|reviewerVerdict)"/, id);

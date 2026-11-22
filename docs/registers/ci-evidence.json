@@ -1269,6 +1269,13 @@
       "proves": "A guide built from captures is held when a capture lacks a passage it quotes, and when the captured file is not the one the Act's amendment record describes; the captures in this test are made from the passages kept in the repository, not fetched."
     },
     {
+      "requirement": "EDP-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/guidance-captures.test.ts",
+      "test": "such a passage is supplied only from a capture of its own text's address",
+      "proves": "A passage of an official text that is not kept in the repository is supplied only from a capture of that text's own address whose words between the recorded places have the recorded checksum; a capture of another address or with other words supplies nothing. The words in this test are made up."
+    },
+    {
       "requirement": "EDP-003",
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/editorial/pipeline-contract.test.ts",
@@ -1304,6 +1311,13 @@
       "proves": "A guide's claim map fails to build when it leaves a sentence of the guide unplaced, changes a word of one, gives a sentence about the law nothing to rest on, quotes words that are not in the passage, states a number the quoted words do not contain, or names a section or printed page the passage is not."
     },
     {
+      "requirement": "EDP-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/guidance-claims-captured.test.ts",
+      "test": "the five privacy guides are mapped, and each map places every sentence of its guide",
+      "proves": "For each of the five privacy guides, every word of the guide is placed in its claim map and every sentence about the law names a passage; with no passage supplied each such sentence is reported as not bound and no claim is made. The test has no official words to read, so it does not show that a quotation is in the official text."
+    },
+    {
       "requirement": "EDP-004",
       "job": "foundation",
       "file": "scripts/src/valo/publication.test.ts",
@@ -1321,14 +1335,14 @@
       "requirement": "EDP-004",
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/editorial/guidance-review-requests.test.ts",
-      "test": "every mapped guide's two review requests are within the guides' limit",
-      "proves": "For each of the ten mapped guides the factual and the challenge request are made separately, each carries the guide's sources whole and the amendment basis of each Act it quotes, and each is within the size limit the guidance policy states for a guide's review; nothing is sent."
+      "test": "the two review requests of each guide built from the repository are within the guides' limit",
+      "proves": "For each of the ten guides whose passages the repository keeps, the factual and the challenge request are made separately, each carries the guide's sources whole and the amendment basis of each Act it quotes, and each is within the size limit the guidance policy states for a guide's review; nothing is sent."
     },
     {
       "requirement": "EDP-004",
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/publication/guidance-review-inputs.test.ts",
-      "test": "every mapped guide's review inputs can be made, and none carries a reviewer's verdict",
+      "test": "the review inputs of each guide built from the repository can be made, and none carries a reviewer's verdict",
       "proves": "What a guide's two reviewers are given beside the candidate and its sources holds no field for a verdict or another review."
     },
     {
@@ -1433,8 +1447,8 @@
       "requirement": "EDP-006",
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/publication/guidance-release.test.ts",
-      "test": "today the gate holds each mapped guide for the owner's approval, and two guides for an unbound sentence too",
-      "proves": "For each of the ten mapped guides the ten mechanical checks are measured from the candidate itself: eight pass, the scope and rights checks fail while the owner has not approved the policy, and the gate holds the guide for that and, for two guides, a sentence left unbound, and for no other reason apart from its two missing reviews."
+      "test": "today the gate holds each guide built from the repository for the owner's approval, and two guides for an unbound sentence too",
+      "proves": "For each of the ten guides whose passages the repository keeps, the ten mechanical checks are measured from the candidate itself: eight pass, the scope and rights checks fail while the owner has not approved the policy, and the gate holds the guide for that and, for two guides, a sentence left unbound, and for no other reason apart from its two missing reviews."
     },
     {
       "requirement": "EDP-007",

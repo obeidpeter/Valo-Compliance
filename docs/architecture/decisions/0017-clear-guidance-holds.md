@@ -170,6 +170,59 @@ page images. It is not legal review.
   the next one. The guides that quote Acts alone are not affected: both Acts' files returned their
   recorded checksums. The check now compares a page's words (see point 2).
 
+### Facts gathered while the privacy guides were mapped (22 November 2026)
+
+- **Five more guides are mapped.** GUD-11 to GUD-15, the privacy guides, each have a claim map:
+  93 sentences in all. They rest on the Nigeria Data Protection Act 2023 and on the Commission's
+  General Application and Implementation Directive 2025.
+- **Their official words are not kept in the repository.** For these two texts the repository
+  keeps only where each passage starts and ends, and the checksum of its words (33 passages,
+  `guidance-captured-texts.ts`). A passage is read from a capture of the official address and
+  supplied only when its words have that checksum. This is the route decision 7 gives for texts
+  that are not Acts. It is used for the Act as well, so these five guides do not wait for the
+  owner's answer on decision 7.
+- **What a test can show, and what it cannot.** A test in CI shows that every word of each guide
+  is placed and that every sentence about the law names a recorded passage. No test in CI can show
+  that a quotation is in the official text: the text is not there to read.
+- **The check made outside the tests.** On 22 November 2026, on the build machine, each of the
+  five guides was built with the repository's own code from the two official files as fetched on
+  21 November (their checksums are the ones the drafts' evidence recorded). Every sentence about
+  the law was bound and every source was marked current. With the owner's approval supposed, in
+  that run only, the gate named nothing but the two reviews. No guide repeats more than six words
+  in a row from a passage it cites. A different version of the extractor in the real environment
+  could read a file differently; nothing would then bind, and the guide would stay held.
+- **Sizes.** The five guides' reviews measure between 46,146 and 62,242 by the cautious count,
+  within the 64,000 limit. GUD-12 first measured 78,675, because its map cited whole sections
+  where it quotes one clause. Its passages were narrowed to what it quotes. The limit was not
+  changed. GUD-12 is now within the limit by about 1,750: a longer amendment record could put it
+  over, and it would then be held unsent until its map cites less.
+- **The search for later amendments.** The National Assembly's list of Acts (182 entries) names
+  no Act that amends the Data Protection Act; the list does not hold every Act. Its bill tracker
+  lists one bill that names the Act, SB.648, with a second reading on 18 March 2025 and no third
+  reading. Press reports of July 2026 describe a bill of this kind, and none found says it was
+  passed. The bill itself was not read: its file came back empty. The Commission's resources page
+  offers the Act and the directive at the addresses these copies were fetched from, and nothing
+  that amends either. A guidance notice of 26 June 2026 concerns Article 14 and Schedule 3 of the
+  directive, which no guide quotes. No Gazette index was searched.
+- **When the directive took effect.** The directive prints the day it was issued, 20 March 2025,
+  and no day for taking effect. Law firms' notes and press reports say the Commission set
+  19 September 2025. That statement was not found on the Commission's own site. The later day is
+  used: on either account the directive is in force from it.
+- **Three things found in the texts of the other fifteen guides.**
+  - *The consumer protection Act.* The Commission's copy is a scan. The words the extractor reads
+    from it contain many errors: letters for digits in section numbers, and misread words in the
+    sections themselves. GUD-16 to GUD-18 rest on it. A sentence can be bound word for word only
+    where the scan was read correctly, and the reviewers would be given the misread words. This
+    needs a clean official copy, or a decision on how a text like this is quoted.
+  - *A pension circular.* The circular listed with the employment guides' sources is an image
+    with no words the extractor can read. The daily check could not capture it. Whether any
+    sentence of a guide rests on it has not been checked yet.
+  - *The Labour Act.* GUD-27 to GUD-30 rest on the copy at the investment commission's address.
+    The build machine's own way of fetching got no answer from that address on 21 and
+    22 November 2026: the connection closed. Fetched another way on 22 November 2026, the address
+    returned the file, with the checksum the drafts' evidence recorded. The drafts' notes say the
+    address's listing calls the file a reference copy. No amendment record has been made for it.
+
 ## Proposal
 
 Each hold becomes a condition the guide's own route checks. A guide that fails one stays held.
@@ -374,7 +427,8 @@ command that publishes.
     released under is still the guidance policy as approved, and the provider's permission for its
     wording is still current, as for a template).
 11. Claim maps for GUD-11 to GUD-30, from the official files whose checksums match the recorded
-    ones.
+    ones (built for GUD-11 to GUD-15, the privacy guides, with an amendment record for each of
+    their two texts. GUD-16 to GUD-30 are not mapped: see the three things found in their texts).
 
 ## Decisions for the product owner
 
@@ -401,4 +455,7 @@ the code counts the policy as approved only while the file is exactly the one ap
    passages of the other Acts the guides quote may be kept the same way. Unless told otherwise,
    passages of texts that are not Acts (the NAFDAC guidelines, one of which says on its page 2 that
    commercial reproduction needs permission, and the data protection directive) will not be put in
-   the repository: those guides will be bound by checksum to private captures.
+   the repository: those guides will be bound by checksum to private captures. The privacy guides
+   are bound that way already, the Data Protection Act included, so they do not wait for this
+   answer. If passages of that Act may be kept in the repository, a test could then check their
+   quotations in CI, as it does for the first ten guides.

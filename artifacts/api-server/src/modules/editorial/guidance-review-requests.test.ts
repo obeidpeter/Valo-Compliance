@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { sha256 } from "@workspace/valo-core";
-import { mappedGuideIds } from "../publication/guidance-bundle";
+import { repositoryBuiltGuideIds } from "../publication/guidance-bundle";
 import { GUIDE_REVIEW_INPUT_CEILING } from "../publication/guidance-policy";
 import { assembledGuide } from "../publication/guidance-release.fixtures";
 import { guideReviewInputs } from "../publication/guidance-review-inputs";
@@ -91,9 +91,11 @@ test("a guide's review has a size limit of its own, and a template's keeps the l
   assert.equal(reviewInputCeiling({ contentClass: "general_template" }), REVIEW_INPUT_CEILING);
 });
 
-test("every mapped guide's two review requests are within the guides' limit", async () => {
+// The ten guides whose passages the repository keeps. A guide whose texts are not kept there is
+// measured from captures, outside the tests.
+test("the two review requests of each guide built from the repository are within the guides' limit", async () => {
   const measured: number[] = [];
-  for (const id of mappedGuideIds) {
+  for (const id of repositoryBuiltGuideIds) {
     const { guide, requests } = await requestsFor(id);
     assert.deepEqual(
       requests.map((r) => r.role),

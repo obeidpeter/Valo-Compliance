@@ -22,7 +22,7 @@ import type { GuideRightsRecord } from "./guidance-rights";
 
 type Passages = GuideClaimScope["passages"];
 
-/** For each Act a guide quotes, what its amendment record holds about the sections quoted. */
+/** For each Act or directive a guide quotes, what its amendment record holds about what is quoted. */
 export function guideAmendmentBasis(
   passages: Passages,
   records: readonly AmendmentRecord[] = guideAmendmentRecords,

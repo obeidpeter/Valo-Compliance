@@ -2,6 +2,7 @@ import { candidateDigest, digest, disclosure, type PublicationBundle } from "@wo
 import { decidedSource, guideSourceDecision, type AmendmentRecord } from "./guidance-amendments";
 import { guidanceCandidate } from "./guidance-candidate";
 import { buildGuideClaims, type GuideClaimMap } from "./guidance-claim-map";
+import { privacyClaimMaps } from "./guidance-claims-privacy";
 import { registrationTaxClaimMaps } from "./guidance-claims-registration-tax";
 import { guideReferences } from "./guidance-document";
 import {
@@ -13,8 +14,26 @@ import {
 import { readGuidanceIntake } from "./operational-intake";
 
 /** Every guide with a claim map. A guide without one cannot be built. */
-export const guideClaimMaps: readonly GuideClaimMap[] = [...registrationTaxClaimMaps];
+export const guideClaimMaps: readonly GuideClaimMap[] = [...registrationTaxClaimMaps, ...privacyClaimMaps];
 export const mappedGuideIds = guideClaimMaps.map((m) => m.id);
+/**
+ * The guides that can be built from the repository alone: most of their passages are kept in it.
+ * Every other mapped guide rests on texts that are not kept, and is built only from captures.
+ */
+export const repositoryBuiltGuideIds = registrationTaxClaimMaps.map((m) => m.id);
+
+/** Every passage a guide's claim map names. */
+export function guidePassageIds(id: string) {
+  const map = guideClaimMaps.find((m) => m.id === id);
+  if (!map) throw Error(`GUIDE_CLAIM_MAP_MISSING:${id}`);
+  return [
+    ...new Set(
+      map.sentences
+        .flatMap((sentence) => ("support" in sentence ? (sentence.support ?? []) : []))
+        .map((s) => s.passage),
+    ),
+  ];
+}
 
 /** The conditions a draft's own editorial notes give for the guide to apply, where it records them. */
 function applicability(sourceText: string, id: string, title: string) {
