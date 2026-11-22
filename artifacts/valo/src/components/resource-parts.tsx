@@ -34,7 +34,7 @@ export function PlainText({
 }: {
   text: string;
   className?: string;
-  sourceUrls?: readonly string[];
+  sourceUrls?: readonly string[] | undefined;
 }) {
   const paras = text
     .split(/\n{2,}/)
