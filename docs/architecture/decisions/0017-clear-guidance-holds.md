@@ -364,9 +364,10 @@ command that publishes.
 8. The same review route templates use, opened to guides (built: a package of its own kind for
    guide review pairs, which the owner approves apart from templates; the plan, the manifest and
    the checks made before anything is sent all take a guide. A test now takes a guide the whole
-   way in a disposable copy of the database: prepared from a stored capture, its two reviews run
-   through the real dispatcher with a stand-in for the model, released by the real publisher, and
-   shown on the site only while the supposed approval stands).
+   way in a disposable copy of the database: prepared from a stored capture, its pair of reviews
+   admitted only under an approved package of guide reviews (the approvals are made up in the
+   test), the two reviews run through the real dispatcher with a stand-in for the model, released
+   by the real publisher, and shown on the site only while the supposed approval stands).
 9. The daily check compares a page's words, not its bytes (built).
 10. A released guide on the site (found already built: a released guide is listed as a free guide
     with its own page, apart from the templates. Added: it is shown only while the policy it was
