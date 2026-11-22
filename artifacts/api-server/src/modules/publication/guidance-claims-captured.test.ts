@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { allSourceLeads } from "@workspace/valo-core";
-import { guideAmendmentRecords } from "./guidance-amendments";
+import { guideAmendmentRecords, guideSourceDecision } from "./guidance-amendments";
 import {
   buildGuideCandidate,
   guideClaimMaps,
@@ -12,10 +12,11 @@ import {
 import { capturedPassages, capturedTexts } from "./guidance-captured-texts";
 import { passageLead } from "./guidance-captures";
 import { buildGuideClaims, type GuideClaimMap } from "./guidance-claim-map";
+import { employmentClaimMaps } from "./guidance-claims-employment";
 import { foodClaimMaps } from "./guidance-claims-food";
 import { privacyClaimMaps } from "./guidance-claims-privacy";
 import { guideBodyBlocks } from "./guidance-document";
-import { retainedGuidePassages } from "./guidance-passages";
+import { retainedGuidePassages, type GuidePassage } from "./guidance-passages";
 import { guidanceOfficialHosts } from "./guidance-policy";
 import { readGuidanceIntake } from "./operational-intake";
 
@@ -87,10 +88,28 @@ test("the eight food guides are mapped, and each map places every sentence of it
     );
 });
 
+test("the four employment guides are mapped, and each map places every sentence of its guide", async () => {
+  assert.deepEqual(
+    employmentClaimMaps.map((m) => m.id),
+    ["GUD-27", "GUD-28", "GUD-29", "GUD-30"],
+  );
+  await placesEverySentence(employmentClaimMaps, "employment");
+  for (const m of employmentClaimMaps) {
+    // Each of these guides says what the Labour Act says once, and reads it more than once.
+    assert.equal(m.sentences.filter((s) => s.kind === "source_statement").length, 1, m.id);
+    assert.ok(m.sentences.filter((s) => s.kind === "interpretation").length >= 2, m.id);
+    // All they rest on is the one copy of the Labour Act.
+    assert.ok(
+      supports(m).every((s) => s.passage.startsWith("LABOUR-")),
+      m.id,
+    );
+  }
+});
+
 test("these are all the guides whose texts are not kept in the repository", () => {
   assert.deepEqual(
     capturedMaps.map((m) => m.id),
-    [...privacyClaimMaps, ...foodClaimMaps].map((m) => m.id),
+    [...privacyClaimMaps, ...foodClaimMaps, ...employmentClaimMaps].map((m) => m.id),
   );
   assert.equal(mappedGuideIds.length, repositoryBuiltGuideIds.length + capturedMaps.length);
 });
@@ -108,10 +127,20 @@ test("every passage these guides name is recorded with its place and checksum, a
     const text = capturedTexts.find((t) => t.id === p.text);
     assert.ok(text, `${p.id} belongs to a recorded text`);
     // A passage of an Act names its section, and starts at the section's number: a locator that
-    // names the section is checked against the passage's first words.
-    if (text.kind === "act" && !/“/.test(p.from)) {
+    // names the section is checked against the passage's first words. Two kinds of passage start
+    // elsewhere: a definition, which starts at the term defined, and a passage of a section whose
+    // heading this copy numbers wrongly, which its text's record must say.
+    if (text.kind === "act" && !/^[“"]/.test(p.from)) {
       assert.equal(p.sections.length, 1, p.id);
-      assert.ok(p.from.startsWith(`${p.sections[0]}.`), p.id);
+      const section = p.sections[0]!;
+      const misnumbered = guideAmendmentRecords
+        .find((r) => r.instrument === text.id)
+        ?.conflicts.some(
+          (c) =>
+            /numbers some headings/.test(c.about) && c.sections !== "all" && c.sections.includes(section),
+        );
+      if (misnumbered) assert.ok(!/^\d/.test(p.from), `${p.id} is placed by its heading's words`);
+      else assert.ok(p.from.startsWith(`${section}.`), p.id);
     }
     assert.equal(passageLead(p.id, retained), text.leadId);
   }
@@ -138,6 +167,68 @@ test("each text read only from captures is at a known official address and has a
     assert.ok(
       capturedPassages.some((p) => p.text === text.id),
       `${text.id} has a passage`,
+    );
+  }
+});
+
+test("the Labour Act is read from a reference copy, so every passage of it is held", () => {
+  const text = capturedTexts.find((t) => t.id === "NIPC-LABOUR-ACT")!;
+  const record = guideAmendmentRecords.find((r) => r.instrument === text.id)!;
+  // The record is of the copy at the lead's address, and it says what the publisher says of it.
+  assert.equal(record.url, allSourceLeads.find((l) => l.id === text.leadId)!.url);
+  assert.match(record.searches[0]!.found, /The authoritative version remains with the issuing authority/);
+  assert.deepEqual(
+    record.conflicts.filter((c) => c.open).map((c) => [c.about, c.sections, c.aboutTheCopy]),
+    [["whether this copy can stand for the Act", "all", true]],
+  );
+  assert.deepEqual(
+    record.notRead.map((unread) => unread.title),
+    ["Trade Union (Amendment) Act 2005"],
+  );
+  // Whatever words a capture of that very file supplies, no passage of this copy is marked current,
+  // and none is confirmed as the Act's operative text.
+  const passagesOfIt = capturedPassages.filter((p) => p.text === text.id);
+  assert.equal(passagesOfIt.length, 5);
+  for (const p of passagesOfIt) {
+    const supplied: GuidePassage = {
+      id: p.id,
+      recordedLocator: p.recordedLocator,
+      text: "Stand-in words: the official words are not kept in the repository.",
+      hash: p.sha256,
+      sections: [...p.sections],
+      instrument: {
+        id: text.id,
+        kind: text.kind,
+        url: record.url,
+        rawSha256: record.rawSha256,
+        title: text.title,
+        issuingBody: text.issuingBody,
+        retrievedAt: "2026-11-22T08:00:00.000Z",
+        effectiveFrom: text.effectiveFrom,
+      },
+    };
+    const decision = guideSourceDecision(supplied, new Date("2026-11-22T08:00:00Z"));
+    assert.deepEqual(
+      [decision.status, decision.operativeTextConfirmed, decision.amendmentsResolved],
+      ["held", false, false],
+      p.id,
+    );
+    assert.deepEqual(
+      decision.reasons,
+      [
+        "an open question touches this passage: whether this copy can stand for the Act",
+        `not yet read, and able to amend this text: Trade Union (Amendment) Act 2005 (${record.notRead[0]!.why})`,
+      ],
+      p.id,
+    );
+  }
+  // No other text read from captures has an open question or anything left unread.
+  for (const other of guideAmendmentRecords) {
+    if (other.instrument === text.id || !capturedTexts.some((t) => t.id === other.instrument)) continue;
+    assert.deepEqual(other.notRead, [], other.instrument);
+    assert.ok(
+      other.conflicts.every((c) => !c.open),
+      other.instrument,
     );
   }
 });

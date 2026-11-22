@@ -18,10 +18,11 @@ test("coordinating mappings and resolutions do not become implementation or cont
 });
 test("additional source leads deduplicate URLs without changing the 24 original IDs", () => {
   assert.equal(finalSourceContext.references.length, 24);
-  // 24 original, four supplementary, three for the business-name rule and two for the tax guides.
-  assert.equal(allSourceLeads.length, 41);
-  assert.equal(new Set(allSourceLeads.map((s) => s.url)).size, 41);
-  assert.equal(new Set(allSourceLeads.map((s) => s.id)).size, 41);
+  // 24 original, four supplementary, three for the business-name rule, two for the tax guides, eight
+  // for the food guides' guidelines and one for the employment guides' Act.
+  assert.equal(allSourceLeads.length, 42);
+  assert.equal(new Set(allSourceLeads.map((s) => s.url)).size, 42);
+  assert.equal(new Set(allSourceLeads.map((s) => s.id)).size, 42);
   for (const id of ["CAC-BN-PROCESS", "NIPC-BFA-2022", "NCC-COPYRIGHT", "NASS-NTAA-2025", "NRS-TAXID-HOW"])
     assert.equal(allSourceLeads.filter((s) => s.id === id).length, 1);
   // Every lead is an https address.
