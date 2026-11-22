@@ -99,6 +99,10 @@ the repository root with `NODE_ENV=development`; each refuses a deployment.
    publisher, which rechecks every gate. If a gate fails, it records the hold instead. Run again
    after a stop, it finishes a saved candidate's publication or reports its saved status.
 
+A guide that says what the law requires takes the same steps 2 to 5, under a package of its own
+kind and after its own preparation. [Preparing a guide for its two reviews](guidance-preparation.md)
+says what differs.
+
 A candidate past its review date, or one whose version ID or version number is already saved, is
 refused from step 2 on; prepare it again. For content that is not general, the two reviews also
 answer EDP-005's enhanced checks. A check passes only when both reviews pass it and quote a passage
