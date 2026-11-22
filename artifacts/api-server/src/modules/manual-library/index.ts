@@ -6,8 +6,6 @@ import type { SourceStaffActor } from "../sources";
 import { ValoProblem } from "../../platform/valo-problem";
 import { assertDevelopmentRuntime, isDevelopmentRuntime } from "../../platform/valo-development-runtime";
 import type { EditorialFile } from "./files";
-export { listOwnerGuidance, decideOwnerGuidance, refreshOwnerSources } from "./owner-guidance";
-export { checkManualRegulatorySources, manualGuidanceIds } from "./regulatory-evidence";
 
 type Revision = typeof valoManualLibrary.$inferSelect;
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];

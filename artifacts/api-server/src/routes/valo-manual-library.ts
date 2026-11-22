@@ -12,6 +12,7 @@ import { mutationOriginFor, sameOriginMutation } from "../middlewares/valo-ident
 import { requestComplexityLimit } from "../platform/request-complexity";
 import { exportMime } from "../lib/valo-render";
 import type { SourceStaffActor } from "../modules/sources";
+import { listOwnerGuidance, decideOwnerGuidance, refreshOwnerSources } from "../modules/manual-guidance";
 import {
   authorizeManualEditor,
   listManualLibrary,
@@ -20,9 +21,6 @@ import {
   actOnManualRevision,
   privateManualFile,
   releasedManualFile,
-  listOwnerGuidance,
-  decideOwnerGuidance,
-  refreshOwnerSources,
 } from "../modules/manual-library";
 
 const uuid = z

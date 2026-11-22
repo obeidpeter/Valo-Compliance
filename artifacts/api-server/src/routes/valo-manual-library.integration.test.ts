@@ -19,7 +19,7 @@ import {
 } from "@workspace/api-zod";
 
 test("consumer Gazette checks bind the exact reviewed pages and expire when the amendment search expires", async () => {
-  const { checkConsumerGazette } = await import("../modules/manual-library/consumer-gazette");
+  const { checkConsumerGazette } = await import("../modules/manual-guidance/consumer-gazette");
   const { readGuidanceIntake } = await import("../modules/publication");
   const observed = {
     url: "https://fccpc.gov.ng/wp-content/uploads/2022/07/FCCPA-2018.pdf",

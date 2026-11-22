@@ -1,4 +1,4 @@
-import { checkManualRegulatorySources, manualGuidanceIds } from "../modules/manual-library";
+import { checkManualRegulatorySources, manualGuidanceIds } from "../modules/manual-guidance";
 import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
 
 async function main() {
