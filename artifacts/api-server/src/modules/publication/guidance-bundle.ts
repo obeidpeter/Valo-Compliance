@@ -79,6 +79,7 @@ export async function buildGuideCandidate(
   passages: GuidePassages = retainedGuidePassages(),
   now = new Date(),
   records?: readonly AmendmentRecord[],
+  sourceWorkflow: "reviewed" | "manual" = "reviewed",
 ) {
   const map = guideClaimMaps.find((m) => m.id === id);
   if (!map) throw Error(`GUIDE_CLAIM_MAP_MISSING:${id}`);
@@ -93,7 +94,13 @@ export async function buildGuideCandidate(
     if (!passage) throw Error(`GUIDE_SOURCE_PASSAGE_MISSING:${id}:${source.id}`);
     used.push(passage);
     const quotes = built.claims.filter((c) => c.sourceId === source.id).map((c) => c.quote);
-    const decision = guideSourceDecision(passage, now, records, quotes);
+    const decision = guideSourceDecision(
+      passage,
+      now,
+      records,
+      quotes,
+      id === "GUD-08" && sourceWorkflow === "manual",
+    );
     if (decision.status !== "approved")
       notCurrent.push(
         `${id}: ${source.title} (${source.id}) is not marked current: ${decision.reasons.join("; ")}.`,

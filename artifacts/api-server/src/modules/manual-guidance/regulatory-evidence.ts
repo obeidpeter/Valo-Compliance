@@ -6,7 +6,6 @@ import {
   buildGuideCandidate,
   AMENDMENT_RECORD_DAYS,
   guideAmendmentRecords,
-  capturedGuidePassages,
   guidePassageIds,
   mappedGuideIds,
   passageLead,
@@ -14,6 +13,7 @@ import {
 } from "../publication";
 import { readManualOfficialSource, referenceFor } from "../sources";
 import { consumerGazetteLead, hasConsumerReading, checkConsumerGazette } from "./consumer-gazette";
+import { compareManualEmployment, hasMinistryComparison, manualCheckedPassages } from "./source-comparisons";
 
 type Capture = Awaited<ReturnType<typeof readManualOfficialSource>>;
 export const manualGuidanceIds = Array.from(
@@ -34,8 +34,10 @@ const neededLeads = (id: string) =>
         ...new Set(
           guidePassageIds(id)
             .map((p) => passageLead(p))
+            .map((lead) => (id === "GUD-08" && lead === "NRS-TAXID-HOW" ? "JRB-TAXID-HOW" : lead))
             .filter((v): v is string => Boolean(v)),
         ),
+        ...(hasMinistryComparison(id) ? ["NELEX-LABOUR-ACT"] : []),
       ]
     : hasConsumerReading(id)
       ? [consumerGazetteLead]
@@ -65,7 +67,7 @@ export async function checkManualRegulatorySources(ids: readonly string[]) {
     }
   }
   const evaluatedAt = new Date();
-  const passages = capturedGuidePassages(captures);
+  const passages = manualCheckedPassages(captures);
   const results = [];
   const { db, valoManualRegulatoryChecks } = await import("@workspace/db");
   for (const id of idsToCheck) {
@@ -87,7 +89,10 @@ export async function checkManualRegulatorySources(ids: readonly string[]) {
       holds.push("Valo has no verified sentence-to-source map for this article.");
     else {
       try {
-        const proof = await buildGuideCandidate(id, 1, passages, evaluatedAt);
+        const comparison = compareManualEmployment(id, captures, passages);
+        holds.push(...comparison.holds);
+        sources.push(...comparison.sources);
+        const proof = await buildGuideCandidate(id, 1, passages, evaluatedAt, comparison.records, "manual");
         holds.push(...proof.candidate.missingEvidence);
         for (const ref of proof.sources) {
           const location = proof.claimScope.passages.find((p) => p.id === ref.id);

@@ -1,7 +1,13 @@
 export * from "./checker";
 export { finalSourceContext } from "./reference-leads.generated";
 export { coordinatingRefinement, additionalSourceLeads } from "./coordinating.generated";
-export { allSourceLeads, businessNameSourceLeads, guidanceSourceLeads } from "./research-source-leads";
+export {
+  allSourceLeads,
+  businessNameSourceLeads,
+  guidanceSourceLeads,
+  manualJointTaxIdUrl,
+  manualMinistryLabourUrl,
+} from "./research-source-leads";
 export * from "./catalogue";
 export * from "./publication";
 export * from "./coverage";
