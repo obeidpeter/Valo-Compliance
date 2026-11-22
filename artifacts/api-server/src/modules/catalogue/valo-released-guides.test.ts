@@ -109,7 +109,7 @@ test("a published guide is shown only while its policy stands, its sources are c
       operationalPolicy: async () => ({
         policy: { hash: "the templates' policy, which no guide answers to" },
       }),
-      practicalGuidePolicy: async () => {
+      practicalGuideReleasePolicy: async () => {
         throw Error("Unexpected practical policy read for regulatory guidance");
       },
       guidancePolicy: async () => {

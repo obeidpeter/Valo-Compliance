@@ -14,7 +14,11 @@ import { developmentPublicationOnly, operationalPolicy } from "./operational-pol
 import { enhancedChecksFromReviews, operationalReviewSchemaFor } from "./operational-review-contract";
 import { templateCandidate } from "./operational-content";
 import type { GuideClaimScope } from "./guidance-bundle";
-import { practicalGuideCandidate, practicalGuidePolicy, readPracticalGuideIntake } from "./practical-guide";
+import {
+  practicalGuideCandidate,
+  practicalGuideReleasePolicy,
+  readPracticalGuideIntake,
+} from "./practical-guide";
 import { guidanceCandidate } from "./guidance-candidate";
 import { guideReferences } from "./guidance-document";
 import { guideMechanicalChecks } from "./guidance-mechanical";
@@ -70,11 +74,12 @@ export async function validateOperationalVersionInTransaction(
   const guide = bundle.candidate.contentClass === "sourced_guidance";
   const practical = bundle.candidate.contentClass === "practical_guide";
   const trusted = practical
-    ? await practicalGuidePolicy()
+    ? await practicalGuideReleasePolicy(bundle.candidate)
     : guide
       ? await guidancePolicy()
       : await operationalPolicy();
   if (
+    !trusted ||
     !policy ||
     policy.hash !== trusted.policy.hash ||
     digest(policy.policy) !== digest(bundle.policy) ||
