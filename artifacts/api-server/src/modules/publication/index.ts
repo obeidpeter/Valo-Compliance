@@ -25,6 +25,7 @@ export * from "./guidance-release";
 export * from "./guidance-review-inputs";
 export * from "./guidance-rights";
 export * from "./inference-operational-coverage";
+export * from "./industry-review-packet";
 export * from "./operational-authoring-contract";
 export * from "./operational-content";
 export * from "./operational-export-inspection";
