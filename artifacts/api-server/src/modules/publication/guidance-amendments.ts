@@ -894,12 +894,20 @@ export const guideAmendmentRecords: readonly AmendmentRecord[] = [
         found:
           "2,660 bills. Four name the Labour Act: two House bills of 2019 to amend it (HB.05, first reading 3 July 2019, and HB.222, first reading 23 July 2019) and two Senate bills with no dates (one to repeal sections 55, 56, 57 and 58(2), and a Labor Act (Amendment) Bill 2009). A Labour Standards Bill 2008 is also listed, with no dates. The tracker shows no second or third reading for any of the five.",
       },
+      {
+        place: "National Assembly: Trade Unions (Amendment) Bill 2004 (SB.91)",
+        url: "https://nass.gov.ng/documents/download/806",
+        searchedAt: "2026-11-22T02:09:03Z",
+        rawSha256: "6b33d4daa691a15509ebebda6fe5b40077479910b4f5b0826648009f3af088aa",
+        found:
+          "A bill of 2004 on the subject of the Act of 2005 that could not be read. The tracker lists it twice, with no dates, and does not show whether it is the bill that Act came from. Its three pages were read in full; the file breaks off in the middle of its explanatory note. It amends sections 12, 16A, 17, 30 and 42 of the Trade Unions Act and deletes its Part III. It does not name the Labour Act. Its new section 16A lets an employer deduct union contributions from a worker's wages with the worker's express consent. A bill can change before it is passed.",
+      },
     ],
     amendments: [],
     notRead: [
       {
         title: "Trade Union (Amendment) Act 2005",
-        why: "by its title it amends the Trade Unions Act, which section 5 of the Labour Act refers to. The file the National Assembly's site serves for it is damaged: 17 words of it could be read on 22 November 2026. Whether it changes the Labour Act is not known",
+        why: "by its title it amends the Trade Unions Act, which section 5 of the Labour Act refers to. The file the National Assembly's site serves for it is damaged: 17 words of it could be read on 22 November 2026. A bill of 2004 on the same subject was read and does not name the Labour Act, but a bill is not the Act as passed. Whether the Act changes the Labour Act is not known",
       },
     ],
     conflicts: [
@@ -916,8 +924,14 @@ export const guideAmendmentRecords: readonly AmendmentRecord[] = [
         open: false,
         note: 'The headings of sections 5, 6 and 7 are numbered 1, 2 and 3 in this copy. Its arrangement of sections at the front lists them as 5, 6 and 7, and the headings before and after are numbered 4 and 8. In section 7(2)(b) a stray "(c)" stands in the middle of a sentence. In section 91, the last two paragraphs of the definition of "worker" are lettered (a) and (b) where the second copy letters them (e) and (f). The passages of sections 5 and 7 are placed by their headings\' words, not by number.',
       },
+      {
+        about: "a later bill on deducting union contributions, the subject of section 5(3) and (4)",
+        sections: ["5"],
+        open: false,
+        note: "The Trade Unions (Amendment) Bill 2004 gives the Trade Unions Act a new section 16A: an employer may deduct union contributions from a worker's wages with the worker's express consent. Section 5(3) and (4) of the Labour Act are about the same deductions. The bill does not change the Labour Act's words, and no guide quotes subsection (3) or (4). Whether a later provision of that kind changes how those two subsections apply is a legal question this record does not answer.",
+      },
     ],
     limits:
-      "The search covers the commission's listing and the file's own address, the National Assembly's published list of Acts and its bill tracker, on the days shown. The National Assembly's list does not hold every Act. Three Acts in it were searched for the Labour Act's name and not otherwise read. Whether an Act on another subject changes the Labour Act in passing was not looked for. Regulations made under the Act, state laws, the National Minimum Wage Act as it now stands and court decisions were not looked for. No Gazette index was searched. The comparison with a second copy covers only the five passages the guides quote, and neither copy is the Gazette's.",
+      "The search covers the commission's listing and the file's own address, the National Assembly's published list of Acts and its bill tracker, on the days shown. The National Assembly's list does not hold every Act. Three Acts in it were searched for the Labour Act's name and not otherwise read, and one bill was read. Whether an Act on another subject changes the Labour Act in passing was not looked for. Regulations made under the Act, state laws, the National Minimum Wage Act as it now stands and court decisions were not looked for. No Gazette index was searched. The comparison with a second copy covers only the five passages the guides quote, and neither copy is the Gazette's.",
   },
 ];

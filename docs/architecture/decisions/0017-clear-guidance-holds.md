@@ -290,7 +290,12 @@ page images. It is not legal review.
   Labour Act 2003 and the National Minimum Wage (Amendment) Acts of 2000 and 2011. Those words
   occur only in the first, as part of its own name and of the Dock Labour Act's, which it repeals.
   The fourth, the Trade Union (Amendment) Act 2005, could not be read: the file the National
-  Assembly's site serves for it is damaged. The bill tracker lists four bills that name the Labour Act and a Labour
+  Assembly's site serves for it is damaged. A Trade Unions (Amendment) Bill of 2004 on the same
+  site was read in full instead. It amends five sections of the Trade Unions Act, deletes one
+  Part of it and does not name the Labour Act. One of its sections is about deducting union
+  contributions from wages with the worker's consent, which is the subject of section 5(3) and
+  (4) of the Labour Act; no guide quotes those two subsections. A bill is not the Act as passed,
+  so the Act stays listed as unread. The bill tracker lists four bills that name the Labour Act and a Labour
   Standards Bill 2008, none with a second or third reading. No Gazette index was searched.
 - **How the record holds these guides.** The Labour Act's amendment record carries the question
   about the copy as open, and lists the Act that could not be read. An open question about a copy
@@ -298,7 +303,7 @@ page images. It is not legal review.
   reviewer says this copy's words are confirmed. A test shows every passage of this copy is held
   whatever a capture supplies. Supposing, in one run on the build machine only, the question
   settled, the unread Act read and the owner's approval given, the gate named nothing but the two
-  reviews, and the four reviews measured between 33,949 and 37,359.
+  reviews, and the four reviews measured between 34,817 and 38,227.
 - **The other two files listed with these guides' sources.** The pension circular (an image the
   extractor cannot read) and the Pension Reform Act 2014. No sentence of the four guides rests on
   either: the drafts' claims cite only the Labour Act, and so do the maps. The unreadable circular
@@ -562,8 +567,9 @@ the code counts the policy as approved only while the file is exactly the one ap
    it was compared with. Or name an authoritative copy, such as a volume of the Laws of the
    Federation, and have the five passages compared with it. Or leave the four guides unpublished.
    Under the first two, someone must also read the Trade Union (Amendment) Act 2005, whose file
-   on the National Assembly's site is damaged, and say whether it changes the Labour Act. Until
-   then the record keeps both open and the four guides stay held.
+   on the National Assembly's site is damaged, and say whether it changes the Labour Act. The
+   bill of 2004 on the same subject was read and does not name the Labour Act, but a bill is not
+   the Act as passed. Until then the record keeps both open and the four guides stay held.
 9. **The consumer protection Act's copy.** The three consumer guides rest on an Act whose only
    official copy is a scan. The words the extractor reads from it are wrong in many places, so no
    quotation can be checked and a reviewer would be given misread words. Choose one. Obtain a
