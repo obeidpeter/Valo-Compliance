@@ -33,6 +33,7 @@ owner has approved the guidance policy: it then prints what holds the guide and 
    | `NAFDAC-FSAN-GDL-008-03` | NAFDAC guideline: food hygienic practices | GUD-24 |
    | `NAFDAC-IE-GDL-001-02` | NAFDAC guideline: handling and disposal of unwholesome regulated products | GUD-25 |
    | `NAFDAC-FRR-GDL-003-01` | NAFDAC guideline: advertisement of food products | GUD-26 |
+   | `NIPC-LABOUR-ACT` | Labour Act, the investment commission's reference copy | GUD-27 to GUD-30 |
 
    The command asks only for the addresses the guide it is given rests on.
 
@@ -61,15 +62,21 @@ Run it from `artifacts/api-server`, with the guide and the path of the terms fil
 NODE_ENV=development tsx src/scripts/finite-inference-run.ts --prepare-guide-candidate GUD-01 /path/to/terms.json
 ```
 
-Only GUD-01 to GUD-15 and GUD-19 to GUD-26 have a claim map today, so only they can be named.
+Only GUD-01 to GUD-15 and GUD-19 to GUD-30 have a claim map today, so only they can be named.
 
 The words of the two Acts GUD-01 to GUD-10 quote are kept in the repository. The words of the data
-protection Act, the directive and the eight food guidelines are not: for GUD-11 to GUD-15 and
-GUD-19 to GUD-26 the repository keeps only where each passage starts and ends and the checksum of
-its words. Such a guide is built only from a capture.
+protection Act, the directive, the eight food guidelines and the Labour Act are not: for GUD-11 to
+GUD-15 and GUD-19 to GUD-30 the repository keeps only where each passage starts and ends and the
+checksum of its words. Such a guide is built only from a capture.
 If no capture supplies any of its passages, the command stops with `GUIDE_HAS_NO_BOUND_SOURCE`:
 its addresses are not watched yet, their captures are older than a day, or the files read
-differently from the way they read on 21 November 2026.
+differently from the way they read on 21 November 2026 (22 November for the Labour Act).
+
+GUD-27 to GUD-30, the employment guides, can be named and will come back held. Their only source
+is a copy of the Labour Act that its publisher calls a reference copy, and one Act that might
+change it could not be read. The amendment record carries both, so no passage of that copy is
+marked current. The command prints `source_unresolved` for each passage. They stay held until the
+owner decides about the copy (decision 0017, decision 8) and the record is changed to say so.
 
 ## What it prints
 
@@ -87,7 +94,7 @@ Reasons you are likely to see:
 | --- | --- |
 | `policy_not_owner_approved` | The owner has not approved the policy file as it stands. |
 | `rights_not_cleared`, `check_not_passed:rights` | The rights record rests on the policy's point 7, so it waits for the same approval. Or the guide repeats more than 20 words in a row from a passage. `rightsProblems` says which. |
-| `legal_scope_unverified`, `material_uncertainty` | A sentence about the law is not bound, or a source is not marked current. `missingEvidence` lists each one. The usual cause is a missing or stale capture. |
+| `legal_scope_unverified`, `material_uncertainty`, `source_unresolved:<passage>` | A sentence about the law is not bound, or a source is not marked current. `missingEvidence` lists each one. The usual cause is a missing or stale capture. For the employment guides it is the open question about their copy of the Labour Act. |
 | `check_not_passed:scope` | The candidate's claims no longer match its claim map and its sources. |
 | `export_inspection_failed` | The Word or PDF file did not read back as the candidate. |
 
@@ -125,5 +132,6 @@ record describes. That is deliberate: someone has to read the new file and write
   different bytes each time they are fetched while saying the same words. The daily check compares
   a web page by its words, so that alone holds nothing. If a page's words change, what rests on it
   is held until it is prepared and reviewed again.
-- **Seven guides have no claim map yet**: GUD-16 to GUD-18 (consumer protection) and GUD-27 to
-  GUD-30 (employment).
+- **Four guides are mapped and held by their source**: GUD-27 to GUD-30 (employment). See above.
+- **Three guides have no claim map yet**: GUD-16 to GUD-18 (consumer protection). The only
+  official copy of their Act is a scan the extractor misreads (decision 0017, decision 9).
