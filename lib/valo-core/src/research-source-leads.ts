@@ -1,5 +1,8 @@
 import { allSourceLeads as baseline } from "./coordinating.generated";
 
+export const manualJointTaxIdUrl = "https://taxid.jrb.gov.ng/how-it-works";
+export const manualMinistryLabourUrl = "https://nelex.gov.ng/documents/LABOUR_ACT.pdf";
+
 /** Issue evidence is a retrieval lead, never publication or currentness approval. */
 export const businessNameSourceLeads = [
   {
@@ -35,6 +38,23 @@ export const businessNameSourceLeads = [
  * lets the address be fetched and watched; it approves nothing and says nothing is current.
  */
 export const guidanceSourceLeads = [
+  {
+    id: "JRB-TAXID-HOW",
+    title: "Joint Revenue Board: how Tax ID retrieval works",
+    url: manualJointTaxIdUrl,
+    category: "regulatory",
+    baselineNotes: "Joint issuer’s portal explanation for the manual source check of GUD-08.",
+    sourceLocator: "https://lirs.gov.ng/assets/docs/taxid_live.pdf",
+  },
+  {
+    id: "NELEX-LABOUR-ACT",
+    title: "Federal Ministry of Labour and Employment: Labour Act",
+    url: manualMinistryLabourUrl,
+    category: "regulatory",
+    baselineNotes:
+      "The Ministry’s resource for checking the five statutory passages used by the employment guides.",
+    sourceLocator: "https://nelex.gov.ng/",
+  },
   {
     id: "FCCPC-GAZETTE-2018",
     title: "Federal Competition and Consumer Protection Act 2018",

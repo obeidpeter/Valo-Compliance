@@ -19,10 +19,19 @@ test("coordinating mappings and resolutions do not become implementation or cont
 test("additional source leads deduplicate URLs without changing the 24 original IDs", () => {
   assert.equal(finalSourceContext.references.length, 24);
   // 24 original, four supplementary, three for the business-name rule, two for the tax guides, eight
-  // for the food guides' guidelines, one employment Act and one consumer-protection Gazette.
-  assert.equal(allSourceLeads.length, 43);
-  assert.equal(new Set(allSourceLeads.map((s) => s.url)).size, 43);
-  assert.equal(new Set(allSourceLeads.map((s) => s.id)).size, 43);
+  // for the food guides' guidelines, one employment Act, one consumer-protection Gazette and two
+  // manual guide sources from the Joint Revenue Board and the issuing Labour Ministry.
+  assert.equal(allSourceLeads.length, 45);
+  assert.equal(new Set(allSourceLeads.map((s) => s.url)).size, 45);
+  assert.equal(new Set(allSourceLeads.map((s) => s.id)).size, 45);
+  assert.equal(
+    allSourceLeads.find((s) => s.id === "JRB-TAXID-HOW")?.url,
+    "https://taxid.jrb.gov.ng/how-it-works",
+  );
+  assert.equal(
+    allSourceLeads.find((s) => s.id === "NELEX-LABOUR-ACT")?.url,
+    "https://nelex.gov.ng/documents/LABOUR_ACT.pdf",
+  );
   assert.equal(
     allSourceLeads.find((s) => s.id === "FCCPC-GAZETTE-2018")?.url,
     "https://fccpc.gov.ng/wp-content/uploads/2022/07/FCCPA-2018.pdf",

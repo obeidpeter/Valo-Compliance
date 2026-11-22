@@ -1,4 +1,4 @@
-import type { PublicationBundle } from "@workspace/valo-core";
+import { manualJointTaxIdUrl, type PublicationBundle } from "@workspace/valo-core";
 import type { GuidePassage } from "./guidance-passages";
 import { guidanceOfficialHosts } from "./guidance-policy";
 
@@ -122,10 +122,16 @@ export function guideSourceDecision(
   records: readonly AmendmentRecord[] = guideAmendmentRecords,
   /** The quotations a guide binds to the passage, where the caller knows them. */
   quotes?: readonly string[],
+  useJointTaxPage = false,
 ): SourceDecision {
   const text = passage.instrument;
   if (text.kind === "official_page") {
-    const official = onOfficialHost(text.url);
+    const jointPage =
+      useJointTaxPage &&
+      passage.id === "TAXID-HOW-IT-WORKS" &&
+      text.id === "JRB-TAXID-HOW" &&
+      text.url === manualJointTaxIdUrl;
+    const official = onOfficialHost(text.url) || jointPage;
     return {
       status: official ? "approved" : "held",
       operativeTextConfirmed: official,
