@@ -123,8 +123,12 @@ record describes. That is deliberate: someone has to read the new file and write
   stored capture. Its pair of reviews is refused while no package is approved, refused under an
   approved package of template reviews, and admitted under an approved package of guide reviews.
   The two reviews then go through the real dispatcher, and the publish step releases the guide
-  through the real publisher. The command lines themselves have not been run for a guide. No guide
-  has been through any of this for real.
+  through the real publisher. One command line has been run for a guide, as a process in a test:
+  the preparing command, against a database that holds no watch on the guide's address. It stops
+  with `GUIDE_HAS_NO_BOUND_SOURCE` and keeps nothing, and it refuses a guide with no claim map and
+  a call without the terms file. Before 22 November 2026 it printed only
+  `FINITE_INFERENCE_RUN_FAILED` there. The other command lines have not been run for a guide. No
+  guide has been through any of this for real.
 - **Publication.** The publisher makes every check again at release, including that each source is
   still the capture its address serves. A test passes a prepared guide through all of those checks
   in a database transaction that is rolled back. No guide has been published.

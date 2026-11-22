@@ -1,10 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { sql } from "drizzle-orm";
 import { digest, mandatoryEnhancedChecks, sha256, type PublicationBundle } from "@workspace/valo-core";
 import type { ArtifactRef } from "../publication/publication-artifacts";
@@ -458,5 +460,68 @@ test(
       sql`select count(*)::int as n from valo_source_snapshots where raw_object_key='synthetic-in-memory'`,
     );
     assert.equal(snapshots.rows[0]!.n, 0);
+  },
+);
+
+/**
+ * The operator's own command for preparing a guide, run as a process against the same database.
+ *
+ * Only the provider's terms are stood in for: controlled pages in a file. The database holds no
+ * watch on the official address this guide rests on, as a new environment would not. So nothing can
+ * be bound, and the command has to stop and say why in words an operator can look up.
+ */
+test(
+  "run as a process, the guide command stops with a plain reason when no capture supplies a guide's passages",
+  { skip: process.env.VALO_RUN_DB_TESTS !== "synthetic-development-only", timeout: 300_000 },
+  async (t) => {
+    const { db } = await import("@workspace/db");
+    const { controlledTermsSnapshot } = await import("../publication/guidance-release.fixtures");
+    const { guidePassageIds } = await import("../publication/guidance-bundle");
+    const { passageLead } = await import("../publication/guidance-captures");
+    const folder = await mkdtemp(join(tmpdir(), "valo-guide-command-"));
+    t.after(() => rm(folder, { recursive: true, force: true }));
+    const termsPath = join(folder, "terms.json");
+    await writeFile(termsPath, JSON.stringify(controlledTermsSnapshot(new Date(Date.now() - 3_600_000))));
+    const command = fileURLToPath(new URL("../../scripts/finite-inference-run.ts", import.meta.url));
+    const run = (...args: string[]) =>
+      spawnSync(process.execPath, ["--import", import.meta.resolve("tsx"), command, ...args], {
+        encoding: "utf8",
+        timeout: 120_000,
+        env: { ...process.env, NODE_ENV: "development" },
+      });
+
+    // GUD-20 rests on one guideline, whose words are not kept in the repository, and no test watches
+    // that address.
+    const guide = "GUD-20";
+    const leads = [...new Set(guidePassageIds(guide).map((passage) => passageLead(passage)))];
+    assert.deepEqual(leads, ["NAFDAC-FSAN-GDL-001-03"]);
+    const watched = await db.execute(
+      sql`select count(*)::int as n from valo_source_watches where source_id=${leads[0]}`,
+    );
+    assert.equal(watched.rows[0]!.n, 0);
+
+    const stopped = run("--prepare-guide-candidate", guide, termsPath);
+    assert.equal(stopped.status, 1, stopped.stderr);
+    assert.match(stopped.stderr, /^GUIDE_HAS_NO_BOUND_SOURCE$/m);
+    assert.doesNotMatch(stopped.stderr, /FINITE_INFERENCE_RUN_FAILED/);
+    assert.equal(stopped.stdout, "", "nothing is reported as prepared");
+
+    // A guide with no claim map, and a call without the terms file, are refused as arguments.
+    for (const args of [["GUD-16", termsPath], [guide]]) {
+      const refused = run("--prepare-guide-candidate", ...args);
+      assert.equal(refused.status, 1, refused.stderr);
+      assert.match(refused.stderr, /^FINITE_RUN_ARGUMENTS_INVALID$/m);
+      assert.equal(refused.stdout, "");
+    }
+
+    // Nothing was kept: no version of the guide and no prepared candidate.
+    const versions = await db.execute(
+      sql`select count(*)::int as n from valo_content_versions where template_id=${guide}`,
+    );
+    assert.equal(versions.rows[0]!.n, 0);
+    const candidates = await db.execute(
+      sql`select count(*)::int as n from valo_prepared_candidates where template_id=${guide}`,
+    );
+    assert.equal(candidates.rows[0]!.n, 0);
   },
 );

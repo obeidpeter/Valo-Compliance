@@ -307,6 +307,16 @@ page images. It is not legal review.
   commission's host. Whether the daily check in the real environment can fetch the file is not
   known. If it cannot, no capture exists and these guides cannot be bound there.
 
+### One fact about the preparing command (22 November 2026)
+
+- **It said too little when it stopped.** Where no capture supplies any of a guide's passages,
+  which is how every new environment starts, the command printed only
+  `FINITE_INFERENCE_RUN_FAILED`. It prints a reason only when the reason is a plain code, and this
+  one carried the guide's ID. It now stops with `GUIDE_HAS_NO_BOUND_SOURCE`, as the guide note
+  says. A database test runs the command as a process to show it, and shows the command refusing
+  a guide with no claim map. This is the first time a guide's command line has been run at all.
+  The other command lines have still not been run for a guide.
+
 ## Proposal
 
 Each hold becomes a condition the guide's own route checks. A guide that fails one stays held.
