@@ -143,9 +143,7 @@ export async function releasedResources() {
     ...existing
       .filter((r) => publicationSchema.parse(r.bundle).candidate.contentClass !== "general_template")
       .map(projectReleasedResource),
-    ...manual
-      .filter((row) => row.kind === "practical_guide" || row.kind === "industry_introduction")
-      .map(manualResource),
+    ...manual.filter((row) => row.kind !== "template").map(manualResource),
   ];
 }
 export function operationalPresentation(templateId: string) {
@@ -193,7 +191,7 @@ export async function liveCoverage() {
       kind: row.kind === "template" ? ("template" as const) : manualResourceKind(row),
       industrySlugs: row.industry ? [row.industry] : [],
       locationIds: [],
-      sourceCheckedAt: null,
+      sourceCheckedAt: row.sourceCheckedAt?.toISOString() ?? null,
     })),
   ]);
 }

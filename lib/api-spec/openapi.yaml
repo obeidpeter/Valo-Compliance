@@ -694,6 +694,41 @@ paths:
               schema: { $ref: "#/components/schemas/SessionMfaVerification" }
         "403":
           description: A second factor must be set up (MFA_ENROLLMENT_REQUIRED) or both factors verified again (MFA_REVERIFICATION_REQUIRED).
+  /admin/owner-guidance:
+    get:
+      operationId: listOwnerGuidance
+      tags: [staff]
+      parameters:
+        - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+      responses:
+        '200': { description: Regulatory drafts and their latest source checks, content: { application/json: { schema: { $ref: '#/components/schemas/OwnerGuidancePage' } } } }
+        '403': { description: Recently verified development owner required }
+  /admin/owner-guidance/{id}/source-check:
+    post:
+      operationId: refreshOwnerGuidance
+      tags: [staff]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/OwnerGuidanceRevision' } } }
+      responses:
+        '200': { description: Official source check recorded, content: { application/json: { schema: { $ref: '#/components/schemas/OwnerGuidanceCheck' } } } }
+        '403': { description: Recently verified development owner required }
+        '409': { description: No matching registered article }
+  /admin/owner-guidance/{id}/decisions:
+    post:
+      operationId: decideOwnerGuidance
+      tags: [staff]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/OwnerGuidanceDecision' } } }
+      responses:
+        '200': { description: Confirmed regulatory revision, content: { application/json: { schema: { $ref: '#/components/schemas/OwnerGuidanceReceipt' } } } }
+        '403': { description: Recently verified development owner required }
+        '409': { description: The revision or source evidence changed }
   /admin/manual-library: {"get":{"operationId":"listManualLibrary","tags":["staff"],"parameters":[{"name":"page","in":"query","required":false,"schema":{"type":"integer","minimum":1,"default":1}}],"responses":{"200":{"description":"Current editorial record","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ManualLibraryPage"}}}},"401":{"description":"Sign in required"},"403":{"description":"Access denied"},"404":{"description":"Unavailable"},"409":{"description":"Revision conflict or source hold"}}}}
   /admin/manual-library/{id}: {"get":{"operationId":"getManualLibraryRevision","tags":["staff"],"parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string","format":"uuid"}}],"responses":{"200":{"description":"Current editorial record","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ManualLibraryRevision"}}}},"401":{"description":"Sign in required"},"403":{"description":"Access denied"},"404":{"description":"Unavailable"},"409":{"description":"Revision conflict or source hold"}}}}
   /admin/manual-library/{id}/drafts: {"post":{"operationId":"saveManualLibraryDraft","tags":["staff"],"parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string","format":"uuid"}}],"requestBody":{"required":true,"content":{"application/vnd.valo.manual-draft+json":{"schema":{"$ref":"#/components/schemas/ManualLibraryDraft"}}}},"responses":{"200":{"description":"Current editorial record","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ManualLibraryRevision"}}}},"401":{"description":"Sign in required"},"403":{"description":"Access denied"},"404":{"description":"Unavailable"},"409":{"description":"Revision conflict or source hold"}}}}
@@ -1488,6 +1523,13 @@ components:
           schema:
             $ref: "#/components/schemas/ApiProblem"
   schemas:
+    PublicSourceReference:
+      type: object
+      required: [url, title, locator]
+      properties:
+        url: { type: string }
+        title: { type: string }
+        locator: { type: string }
     AccessSupportAck:
       type: object
       required: [reference, message, delivery]
@@ -1688,13 +1730,6 @@ components:
         scope: { type: string }
         limitations: { type: string }
         sources: { type: array, items: { $ref: "#/components/schemas/PublicSourceReference" } }
-    PublicSourceReference:
-      type: object
-      required: [url, title, locator]
-      properties:
-        url: { type: string }
-        title: { type: string }
-        locator: { type: string }
     IndustryCoverage:
       type: object
       required: [id, slug, title, deeperPackTarget, enhancedEvidenceRequired, coverageState, evidenceState, sourceCheckedAt, publishedItems]
@@ -2384,6 +2419,61 @@ components:
       properties:
         verified: { type: boolean, enum: [true] }
         checkedAt: { type: string, format: date-time }
+    OwnerGuidanceRevision:
+      type: object
+      required: [version, digest]
+      properties:
+        version: { type: integer, minimum: 1 }
+        digest: { type: string, pattern: '^[a-f0-9]{64}$' }
+    OwnerGuidanceCheck:
+      type: object
+      required: [id, sources, holds]
+      properties:
+        id: { type: string }
+        sources: { type: integer, minimum: 0 }
+        holds: { type: array, items: { type: string } }
+    OwnerGuidancePage:
+      type: object
+      required: [items, hasMore]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/OwnerGuidanceItem' } }
+        hasMore: { type: boolean }
+    OwnerGuidanceItem:
+      type: object
+      required: [itemId, version, digest, title, body, state, checkId, checkedAt, holds, sources, live]
+      properties:
+        itemId: { type: string, format: uuid }
+        version: { type: integer }
+        digest: { type: string }
+        title: { type: string }
+        body: { type: string }
+        state: { type: string, enum: [draft, published, withdrawn, replaced] }
+        checkId: { type: [string, 'null'] }
+        checkedAt: { type: [string, 'null'] }
+        holds: { type: array, items: { type: string } }
+        sources: { type: array, items: { $ref: '#/components/schemas/PublicSourceReference' } }
+        live:
+          anyOf:
+            - type: object
+              required: [version, digest]
+              properties: { version: {type: integer}, digest: {type: string} }
+            - {type: 'null'}
+    OwnerGuidanceDecision:
+      type: object
+      required: [action, version, digest, checkId, confirmed]
+      properties:
+        action: { type: string, enum: [publish, withdraw] }
+        version: { type: integer, minimum: 1 }
+        digest: { type: string, pattern: '^[a-f0-9]{64}$' }
+        checkId: { anyOf: [{type: string, format: uuid}, {type: 'null'}] }
+        confirmed: { type: boolean, enum: [true] }
+    OwnerGuidanceReceipt:
+      type: object
+      required: [itemId, version, state]
+      properties:
+        itemId: {type: string, format: uuid}
+        version: {type: integer}
+        state: {type: string, enum: [published, withdrawn]}
     ManualLibraryEntry: {"type":"object","required":["itemId","version","title","kind","state","industry"],"properties":{"itemId":{"type":"string","format":"uuid"},"version":{"type":"integer"},"title":{"type":"string"},"kind":{"type":"string","enum":["practical_guide","industry_introduction","template","regulatory_article"]},"state":{"type":"string","enum":["draft","published","replaced","withdrawn"]},"industry":{"type":["string","null"]}}}
     ManualLibraryPage: {"type":"object","required":["items","hasMore"],"properties":{"items":{"type":"array","items":{"$ref":"#/components/schemas/ManualLibraryEntry"}},"hasMore":{"type":"boolean"}}}
     ManualLibraryRevision: {"type":"object","required":["itemId","version","title","kind","state","industry","id","digest","body","fileFormat","createdBy","createdAt","publishedAt","publishedBy","live"],"properties":{"itemId":{"type":"string","format":"uuid"},"version":{"type":"integer"},"title":{"type":"string"},"kind":{"type":"string","enum":["practical_guide","industry_introduction","template","regulatory_article"]},"state":{"type":"string","enum":["draft","published","replaced","withdrawn"]},"industry":{"type":["string","null"]},"id":{"type":"string","format":"uuid"},"digest":{"type":"string","pattern":"^[0-9a-f]{64}$"},"body":{"type":"string"},"fileFormat":{"type":["string","null"],"enum":["docx","pdf",null]},"createdBy":{"type":"string"},"createdAt":{"type":"string"},"publishedAt":{"type":["string","null"]},"publishedBy":{"type":["string","null"]},"live":{"anyOf":[{"type":"object","required":["version","digest"],"properties":{"version":{"type":"integer"},"digest":{"type":"string","pattern":"^[0-9a-f]{64}$"}}},{"type":"null"}]}}}

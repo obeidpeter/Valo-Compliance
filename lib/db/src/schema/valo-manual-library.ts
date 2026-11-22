@@ -2,8 +2,10 @@ import { sql } from "drizzle-orm";
 import {
   check,
   customType,
+  foreignKey,
   index,
   integer,
+  jsonb,
   pgTable,
   text,
   timestamp,
@@ -12,6 +14,46 @@ import {
 } from "drizzle-orm/pg-core";
 
 const bytes = customType<{ data: Buffer; driverData: Buffer }>({ dataType: () => "bytea" });
+
+export type ManualRegulatorySource = {
+  url: string;
+  title: string;
+  locator: string;
+  rawSha256: string;
+  validThrough: string;
+  retrievedAt: string;
+  retrieval: "official_url" | "retained_official_pdf";
+};
+
+/** Each source check records its own result, including unsuccessful checks. */
+export const valoManualRegulatoryChecks = pgTable(
+  "valo_manual_regulatory_checks",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    candidateId: text("candidate_id").notNull(),
+    title: text("title").notNull(),
+    bodySha256: text("body_sha256").notNull(),
+    evidenceSha256: text("evidence_sha256").notNull(),
+    checkedAt: timestamp("checked_at", { withTimezone: true }).notNull(),
+    sources: jsonb("sources").$type<ManualRegulatorySource[]>().notNull(),
+    holds: text("holds").array().notNull(),
+  },
+  (t) => [
+    index("valo_manual_regulatory_checked").on(t.candidateId, t.checkedAt, t.id),
+    check(
+      "valo_manual_regulatory_candidate",
+      sql`${t.candidateId} ~ '^GUD-(0[1-9]|[12][0-9]|30)$' AND length(${t.title}) BETWEEN 1 AND 140`,
+    ),
+    check(
+      "valo_manual_regulatory_hashes",
+      sql`${t.bodySha256} ~ '^[a-f0-9]{64}$' AND ${t.evidenceSha256} ~ '^[a-f0-9]{64}$'`,
+    ),
+    check(
+      "valo_manual_regulatory_references",
+      sql`jsonb_typeof(${t.sources}) = 'array' AND (cardinality(${t.holds}) > 0 OR jsonb_array_length(${t.sources}) > 0)`,
+    ),
+  ],
+);
 
 /** A private editorial revision. Its immutable text and attachment are the exact staff preview. */
 export const valoManualLibrary = pgTable(
@@ -39,8 +81,14 @@ export const valoManualLibrary = pgTable(
     publishedAt: timestamp("published_at", { withTimezone: true }),
     closedBy: text("closed_by"),
     closedAt: timestamp("closed_at", { withTimezone: true }),
+    regulatoryCheckId: uuid("regulatory_check_id"),
   },
   (t) => [
+    foreignKey({
+      name: "valo_manual_regulatory_check_fk",
+      columns: [t.regulatoryCheckId],
+      foreignColumns: [valoManualRegulatoryChecks.id],
+    }),
     uniqueIndex("valo_manual_item_version").on(t.itemId, t.version),
     uniqueIndex("valo_manual_one_release")
       .on(t.itemId)
@@ -55,7 +103,7 @@ export const valoManualLibrary = pgTable(
     ),
     check(
       "valo_manual_state",
-      sql`${t.state} IN ('draft','published','replaced','withdrawn') AND (${t.kind} <> 'regulatory_article' OR ${t.state} = 'draft')`,
+      sql`${t.state} IN ('draft','published','replaced','withdrawn') AND ((${t.kind} = 'regulatory_article' AND ${t.state} <> 'draft') = (${t.regulatoryCheckId} IS NOT NULL))`,
     ),
     check(
       "valo_manual_identity",

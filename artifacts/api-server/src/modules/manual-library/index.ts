@@ -1,4 +1,4 @@
-import { and, desc, eq, getTableColumns, sql } from "drizzle-orm";
+import { and, desc, eq, getTableColumns, ne, or, sql } from "drizzle-orm";
 import { coveragePlan, digest, sha256 } from "@workspace/valo-core";
 import { ActOnManualLibraryBody, SaveManualLibraryDraftBody } from "@workspace/api-zod";
 import type { db, valoManualLibrary } from "@workspace/db";
@@ -282,22 +282,54 @@ export async function releasedManualFile(id: string) {
 /** Existing readers may still run against the schema preceding the additive migration. */
 export async function releasedManualEntries(slug?: string) {
   if (!isDevelopmentRuntime()) return [];
-  const { db, valoManualLibrary: t } = await import("@workspace/db");
+  const { guidancePolicy } = await import("../publication");
+  const { policy } = await guidancePolicy();
+  const regulatoryEnabled =
+    policy.ownerApproved &&
+    policy.allowedClasses.includes("sourced_guidance") &&
+    policy.jurisdictions.includes("NG");
+  const { db, valoManualLibrary: t, valoManualRegulatoryChecks: c } = await import("@workspace/db");
   const {
     fileBytes: _bytes,
     createdBy: _creator,
     closedBy: _closer,
     publishedBy: _editor,
+    regulatoryCheckId: _privateCheck,
     ...fields
   } = getTableColumns(t);
+  const released = and(eq(t.state, "published"), slug ? eq(t.slug, slug) : undefined);
   try {
     return await db
-      .select(fields)
+      .select({ ...fields, regulatorySources: c.sources, sourceCheckedAt: c.checkedAt })
       .from(t)
-      .where(and(eq(t.state, "published"), slug ? eq(t.slug, slug) : undefined))
+      .leftJoin(c, eq(c.id, t.regulatoryCheckId))
+      .where(
+        and(
+          released,
+          or(
+            ne(t.kind, "regulatory_article"),
+            sql`${regulatoryEnabled} and (
+        select newest.evidence_sha256 = ${c.evidenceSha256} and cardinality(newest.holds) = 0
+          and newest.checked_at between clock_timestamp() - interval '30 days' and clock_timestamp()
+          and not exists (select from jsonb_array_elements(newest.sources) ref where coalesce((ref->>'validThrough')::timestamptz,'-infinity') <= clock_timestamp())
+        from valo_manual_regulatory_checks newest where newest.candidate_id = ${c.candidateId}
+        order by newest.checked_at desc, newest.id desc limit 1) is true`,
+          ),
+        ),
+      )
       .orderBy(desc(t.publishedAt), t.itemId);
   } catch (error) {
-    if (pgError(error).code === "42P01") return [];
-    throw error;
+    if (!["42P01", "42703"].includes(pgError(error).code ?? "")) throw error;
+    try {
+      const prior = await db
+        .select(fields)
+        .from(t)
+        .where(and(released, ne(t.kind, "regulatory_article")))
+        .orderBy(desc(t.publishedAt), t.itemId);
+      return prior.map((row) => ({ ...row, regulatorySources: null, sourceCheckedAt: null }));
+    } catch (priorError) {
+      if (pgError(priorError).code === "42P01") return [];
+      throw priorError;
+    }
   }
 }

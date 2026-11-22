@@ -18,7 +18,15 @@ The application requires an active Content role and recent MFA. It records the e
 
 Readers can filter Guides by industry. An industry introduction also appears on its category page. Templates appear in Documents, and signed-in readers can download their published file. The publication date is identified as editorial publication. Industry introductions contribute no source-check dates or regulatory evidence. Previously reviewed releases continue to use their recorded evidence and existing file access rules.
 
-Existing project drafts can be pasted or uploaded individually. The editor saves regulatory drafts privately. Both the API and PostgreSQL enforce the regulatory hold, including new releases through the earlier sourced-guidance publisher. Enabling regulatory publication after the owner's source check requires a separate change.
+Existing project drafts can be pasted or uploaded individually. The Content editor saves regulatory drafts privately. The original manual-library migration held regulatory publication pending the owner's separate decision.
+
+## Owner sign-off for regulatory articles on development
+
+On 22 November 2026 the owner approved a separate $0 path for Nigerian regulatory articles. A Content editor saves the draft. The designated development owner opens **Staff → System → Regulatory source sign-off** with recent MFA, chooses the article and reads the exact version and linked passages. **Check official sources** refreshes the evidence. When every claim clears, the owner can confirm the version and select **Sign off and publish this version**. The same screen allows withdrawal.
+
+Migration `20261122160736_manual_regulatory_source_signoff` links each release to an immutable source check. The owner must be a different account from the editor who prepared the draft. New or edited text needs a matching check. Official sources must have been retrieved within the past 24 hours for sign-off. The checker can verify a retained official Data Protection Commission PDF against its registered edition and original retrieval receipt. The three consumer articles use a page-by-page reading of the registered Gazette scan.
+
+Readers see the official links, passage locations, date, scope and limits. A subsequent check that finds changed evidence or unresolved claims hides the article. An expired amendment record also hides it. While the worker is paused, the owner can refresh sources from Staff, or an operator can check all registered drafts with `pnpm --filter @workspace/api-server guidance:check-manual-sources --all`. The command records the results. Publication still requires the owner's separate action.
 
 ## Development rollout and rollback
 

@@ -128,12 +128,12 @@ export function passageLead(
  * sentences that rest on it stay unbound. A page's passage is the page as captured.
  */
 export function capturedGuidePassages(
-  captures: readonly GuideCapture[],
+  captures: readonly Omit<GuideCapture, "snapshotId">[],
   retained: GuidePassages = retainedGuidePassages(),
   records: CapturedRecords = recorded,
 ): GuidePassages {
   const byLead = new Map(captures.map((capture) => [capture.leadId, capture]));
-  const read = (capture: GuideCapture) => new Date(capture.checkedAt).toISOString();
+  const read = (capture: Pick<GuideCapture, "checkedAt">) => new Date(capture.checkedAt).toISOString();
   return (id): GuidePassage | undefined => {
     const page = pagePassages[id];
     if (page) {

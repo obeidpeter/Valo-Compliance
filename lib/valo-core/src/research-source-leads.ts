@@ -36,6 +36,15 @@ export const businessNameSourceLeads = [
  */
 export const guidanceSourceLeads = [
   {
+    id: "FCCPC-GAZETTE-2018",
+    title: "Federal Competition and Consumer Protection Act 2018",
+    url: "https://fccpc.gov.ng/wp-content/uploads/2022/07/FCCPA-2018.pdf",
+    category: "regulatory",
+    baselineNotes:
+      "Scanned Official Gazette. Consumer guidance uses the printed pages and the checksum of the inspected edition.",
+    sourceLocator: "https://fccpc.gov.ng/resources-library/fccpa/",
+  },
+  {
     id: "NASS-NTAA-2025",
     title: "Nigeria Tax Administration Act 2025, National Assembly copy",
     url: "https://nass.gov.ng/documents/download/11250",

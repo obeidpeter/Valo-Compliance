@@ -82,6 +82,7 @@ import type {
   ListContentEscalationsParams,
   ListCustomerSupportCasesParams,
   ListManualLibraryParams,
+  ListOwnerGuidanceParams,
   ListPublicCatalogueParams,
   ListStaffPrivacyCases200,
   ListStaffPrivacyCasesParams,
@@ -92,6 +93,11 @@ import type {
   ManualLibraryDraft,
   ManualLibraryPage,
   ManualLibraryRevision,
+  OwnerGuidanceCheck,
+  OwnerGuidanceDecision,
+  OwnerGuidancePage,
+  OwnerGuidanceReceipt,
+  OwnerGuidanceRevision,
   PaymentConcern,
   PaymentConcernAction,
   PaymentConcernInput,
@@ -5207,6 +5213,273 @@ export function useVerifySessionMfa<TData = Awaited<ReturnType<typeof verifySess
 
 
 
+
+export const getListOwnerGuidanceUrl = (params?: ListOwnerGuidanceParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/owner-guidance?${stringifiedParams}` : `/api/admin/owner-guidance`
+}
+
+export const listOwnerGuidance = async (params?: ListOwnerGuidanceParams, options?: Parameters<typeof customFetch>[1]): Promise<OwnerGuidancePage> => {
+
+  return customFetch<OwnerGuidancePage>(getListOwnerGuidanceUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListOwnerGuidanceQueryKey = (params?: ListOwnerGuidanceParams,) => {
+    return [
+    "listOwnerGuidance", ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListOwnerGuidanceQueryOptions = <TData = Awaited<ReturnType<typeof listOwnerGuidance>>, TError = ErrorType<void>>(params?: ListOwnerGuidanceParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOwnerGuidance>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListOwnerGuidanceQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listOwnerGuidance>>> = ({ signal }) => listOwnerGuidance(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listOwnerGuidance>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListOwnerGuidanceQueryResult = NonNullable<Awaited<ReturnType<typeof listOwnerGuidance>>>
+export type ListOwnerGuidanceQueryError = ErrorType<void>
+
+
+export function useListOwnerGuidance<TData = Awaited<ReturnType<typeof listOwnerGuidance>>, TError = ErrorType<void>>(
+ params: undefined |  ListOwnerGuidanceParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOwnerGuidance>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listOwnerGuidance>>,
+          TError,
+          Awaited<ReturnType<typeof listOwnerGuidance>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListOwnerGuidance<TData = Awaited<ReturnType<typeof listOwnerGuidance>>, TError = ErrorType<void>>(
+ params?: ListOwnerGuidanceParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOwnerGuidance>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listOwnerGuidance>>,
+          TError,
+          Awaited<ReturnType<typeof listOwnerGuidance>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListOwnerGuidance<TData = Awaited<ReturnType<typeof listOwnerGuidance>>, TError = ErrorType<void>>(
+ params?: ListOwnerGuidanceParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOwnerGuidance>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListOwnerGuidance<TData = Awaited<ReturnType<typeof listOwnerGuidance>>, TError = ErrorType<void>>(
+ params?: ListOwnerGuidanceParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOwnerGuidance>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListOwnerGuidanceQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getRefreshOwnerGuidanceUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/owner-guidance/${encodeURIComponent(String(id))}/source-check`
+}
+
+export const refreshOwnerGuidance = async (id: string,
+    ownerGuidanceRevision: OwnerGuidanceRevision, options?: Parameters<typeof customFetch>[1]): Promise<OwnerGuidanceCheck> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<OwnerGuidanceCheck>(getRefreshOwnerGuidanceUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ownerGuidanceRevision)
+  }
+);}
+
+
+
+
+
+export const getRefreshOwnerGuidanceMutationKey = () => ['refreshOwnerGuidance'] as const;
+
+export const getRefreshOwnerGuidanceMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof refreshOwnerGuidance>>, TError,RefreshOwnerGuidanceMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof refreshOwnerGuidance>>, TError,RefreshOwnerGuidanceMutationVariables, TContext> => {
+
+const mutationKey = getRefreshOwnerGuidanceMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof refreshOwnerGuidance>>, RefreshOwnerGuidanceMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  refreshOwnerGuidance(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RefreshOwnerGuidanceMutationResult = NonNullable<Awaited<ReturnType<typeof refreshOwnerGuidance>>>
+    export type RefreshOwnerGuidanceMutationBody = BodyType<OwnerGuidanceRevision>
+    export type RefreshOwnerGuidanceMutationError = ErrorType<void>
+    export type RefreshOwnerGuidanceMutationVariables = {id: string;data: BodyType<OwnerGuidanceRevision>}
+
+    export const useRefreshOwnerGuidance = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof refreshOwnerGuidance>>, TError,RefreshOwnerGuidanceMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof refreshOwnerGuidance>>,
+        TError,
+        RefreshOwnerGuidanceMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRefreshOwnerGuidanceMutationOptions(options), queryClient);
+    }
+
+export const getDecideOwnerGuidanceUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/owner-guidance/${encodeURIComponent(String(id))}/decisions`
+}
+
+export const decideOwnerGuidance = async (id: string,
+    ownerGuidanceDecision: OwnerGuidanceDecision, options?: Parameters<typeof customFetch>[1]): Promise<OwnerGuidanceReceipt> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<OwnerGuidanceReceipt>(getDecideOwnerGuidanceUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ownerGuidanceDecision)
+  }
+);}
+
+
+
+
+
+export const getDecideOwnerGuidanceMutationKey = () => ['decideOwnerGuidance'] as const;
+
+export const getDecideOwnerGuidanceMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof decideOwnerGuidance>>, TError,DecideOwnerGuidanceMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof decideOwnerGuidance>>, TError,DecideOwnerGuidanceMutationVariables, TContext> => {
+
+const mutationKey = getDecideOwnerGuidanceMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof decideOwnerGuidance>>, DecideOwnerGuidanceMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  decideOwnerGuidance(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DecideOwnerGuidanceMutationResult = NonNullable<Awaited<ReturnType<typeof decideOwnerGuidance>>>
+    export type DecideOwnerGuidanceMutationBody = BodyType<OwnerGuidanceDecision>
+    export type DecideOwnerGuidanceMutationError = ErrorType<void>
+    export type DecideOwnerGuidanceMutationVariables = {id: string;data: BodyType<OwnerGuidanceDecision>}
+
+    export const useDecideOwnerGuidance = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof decideOwnerGuidance>>, TError,DecideOwnerGuidanceMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof decideOwnerGuidance>>,
+        TError,
+        DecideOwnerGuidanceMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDecideOwnerGuidanceMutationOptions(options), queryClient);
+    }
 
 export const getListManualLibraryUrl = (params?: ListManualLibraryParams,) => {
   const normalizedParams = new URLSearchParams();

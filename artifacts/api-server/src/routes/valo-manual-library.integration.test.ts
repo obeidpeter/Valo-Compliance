@@ -8,6 +8,7 @@ import { coveragePlan } from "@workspace/valo-core";
 import { strToU8, unzipSync, zipSync } from "fflate";
 import { ValoProblem } from "../platform/valo-problem";
 import { wordFromText } from "../modules/manual-library/files";
+import { exerciseManualRegulatoryOwner } from "../test-support/manual-regulatory-owner";
 import {
   GetManualLibraryRevisionResponse,
   GetPublicCoverageResponse,
@@ -17,8 +18,33 @@ import {
   ListPublicCatalogueResponse,
 } from "@workspace/api-zod";
 
+test("consumer Gazette checks bind the exact reviewed pages and expire when the amendment search expires", async () => {
+  const { checkConsumerGazette } = await import("../modules/manual-guidance/consumer-gazette");
+  const { readGuidanceIntake } = await import("../modules/publication");
+  const observed = {
+    url: "https://fccpc.gov.ng/wp-content/uploads/2022/07/FCCPA-2018.pdf",
+    leadId: "FCCPC-GAZETTE-2018",
+    rawChecksum: "aa942cdef860387e8f984de52666e5683d12d6e2813cb47b10335e0bf82a07f5",
+    checkedAt: "2026-11-22T17:00:00Z",
+    text: "Unused OCR",
+    retrieval: "official_url" as const,
+  };
+  const reviewedAt = new Date(observed.checkedAt);
+  for (const id of ["GUD-16", "GUD-17", "GUD-18"]) {
+    const { section } = await readGuidanceIntake(id);
+    assert.deepEqual(checkConsumerGazette(id, section.body, observed, reviewedAt).holds, []);
+    assert.ok(checkConsumerGazette(id, section.body + " correction", observed, reviewedAt).holds.length);
+    assert.ok(
+      checkConsumerGazette(id, section.body, { ...observed, rawChecksum: "c".repeat(64) }, reviewedAt).holds
+        .length,
+    );
+    assert.ok(checkConsumerGazette(id, section.body, observed, new Date("2027-01-01")).holds.length);
+  }
+});
+
 function samplePdf(text: string) {
-  const stream = "BT /F1 12 Tf 50 700 Td (" + text + ") Tj ET";
+  const lines = Array.from({ length: 9 }, () => "(" + text + ") Tj T*").join("\n");
+  const stream = "BT /F1 12 Tf 14 TL 50 700 Td\n" + lines + "\nET";
   const objects = [
     "<< /Type /Catalog /Pages 2 0 R >>",
     "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
@@ -44,6 +70,49 @@ function samplePdf(text: string) {
     "\n%%EOF\n";
   return Buffer.from(pdf);
 }
+test(
+  "retained official PDFs keep their retrieval date and require the pinned edition",
+  { skip: process.env.VALO_RUN_DB_TESTS !== "synthetic-development-only" },
+  async () => {
+    const { readRetainedOfficialPdf, referenceFor } = await import("../modules/sources");
+    const { mkdtemp, writeFile, rm } = await import("node:fs/promises");
+    const { join } = await import("node:path");
+    const { tmpdir } = await import("node:os");
+    const { createHash } = await import("node:crypto");
+    const folder = await mkdtemp(join(tmpdir(), "valo-synthetic-source-"));
+    try {
+      const bytes = samplePdf("Synthetic official source check"),
+        rawSha256 = createHash("sha256").update(bytes).digest("hex");
+      const retrievedAt = "2026-11-22T11:00:00Z",
+        now = new Date("2026-11-22T12:00:00Z");
+      const receipt = {
+        leadId: "S04",
+        url: referenceFor("S04").url,
+        httpStatus: 200,
+        rawSha256,
+        retrievedAt,
+      };
+      await writeFile(join(folder, "S04.pdf"), bytes);
+      await writeFile(join(folder, "S04.json"), JSON.stringify(receipt));
+      const found = await readRetainedOfficialPdf("S04", folder, rawSha256, now);
+      assert.equal(found.retrieval, "retained_official_pdf");
+      assert.equal(Date.parse(found.checkedAt), Date.parse(retrievedAt));
+      assert.match(found.text, /Synthetic official source check/);
+      await assert.rejects(readRetainedOfficialPdf("S04", folder, "a".repeat(64), now), /BINDING_INVALID/);
+      await assert.rejects(
+        readRetainedOfficialPdf("S04", folder, rawSha256, new Date(+now + 86_400_000)),
+        /BINDING_INVALID/,
+      );
+      await writeFile(
+        join(folder, "S04.json"),
+        JSON.stringify({ ...receipt, url: "https://example.invalid/wrong" }),
+      );
+      await assert.rejects(readRetainedOfficialPdf("S04", folder, rawSha256, now), /BINDING_INVALID/);
+    } finally {
+      await rm(folder, { recursive: true, force: true });
+    }
+  },
+);
 test(
   "manual publishing through staff HTTP routes and public readers",
   { skip: process.env.VALO_RUN_DB_TESTS !== "synthetic-development-only", timeout: 90000 },
@@ -252,7 +321,7 @@ test(
             "update valo_manual_library set state='published',published_at=now(),published_by=$2 where id=$1",
             [r.id, editor],
           ),
-          /Invalid editorial transition/,
+          /current source check of this exact draft/,
         );
         await assert.rejects(
           pool.query("update valo_manual_library set kind='practical_guide' where id=$1", [r.id]),
@@ -261,6 +330,10 @@ test(
         await assert.rejects(pool.query("delete from valo_manual_library where id=$1", [r.id]), /immutable/);
         assert.equal((await call("/public/resources/manual-" + id)).status, 404);
       },
+    );
+    await t.test(
+      "a distinct verified owner may release only the exact source-checked regulatory revision",
+      () => exerciseManualRegulatoryOwner(call, editor),
     );
     await t.test("Word and PDF previews, original template downloads and withdrawal", async () => {
       const text = "Synthetic delivery checklist";

@@ -1,4 +1,5 @@
 import { StaffRoleAdministration } from "@/components/staff-role-administration";
+import { OwnerRegulatoryGuidance } from "@/components/owner-regulatory-guidance";
 import { MfaVerification } from "@/components/mfa-verification";
 import { useState } from "react";
 import { Link } from "wouter";
@@ -134,6 +135,7 @@ export default function StaffPage() {
             {area === "system" && <StaffRoleAdministration />}
             {area === "content" && <ManualLibraryEditor onDirtyChange={setManualDirty} />}
             {(area === "content" || area === "system") && <SourceSafetyControls key={area} area={area} />}
+            {area === "system" && <OwnerRegulatoryGuidance />}
             {area === "content" && <ContentEscalations onDirtyChange={setContentDirty} />}
             {area === "content" && (
               <details className="mt-6">
