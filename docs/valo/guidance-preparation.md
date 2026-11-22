@@ -55,9 +55,8 @@ then prints what holds the guide and keeps no candidate.
 5. **The owner's approval of the guidance policy.** Given on 22 November 2026 for
    `docs/valo/policies/guidance-publication-policy.md` as it stands, and held in the code as that
    file's checksum. Any edit to the file ends it until the owner approves the new text, and every
-   guide is then held. The file's own first paragraph still calls the policy proposed: it was
-   written before the approval and cannot be changed without ending it
-   ([decision 0017](../architecture/decisions/0017-clear-guidance-holds.md), decision 10).
+   guide is then held
+   ([decision 0017](../architecture/decisions/0017-clear-guidance-holds.md) records the approval).
 
 ## The command
 

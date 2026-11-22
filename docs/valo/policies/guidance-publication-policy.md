@@ -1,8 +1,9 @@
 # Guidance publication policy
 
-Status: **proposed. The product owner has not approved this policy.** No guide can be published
-under it until the owner approves it and the approval is recorded in this file
-([decision 0017](../../architecture/decisions/0017-clear-guidance-holds.md)).
+Status: **this text is the policy only while its checksum is the one the product owner approved.**
+The code holds that checksum, and
+[decision 0017](../../architecture/decisions/0017-clear-guidance-holds.md) records each approval.
+No guide can be published under a text of this file that the owner has not approved.
 
 This policy is for guides that say what Nigerian national rules require. The owner's recorded
 authority for templates ([operational-publication-authority.md](operational-publication-authority.md))
@@ -87,10 +88,11 @@ Approving this file publishes nothing and spends nothing.
 
 - The publisher accepts a guide only under this policy, never under the templates' policy.
 - The policy counts as approved only while this file is, byte for byte, the file the owner
-  approved. The approved file's SHA-256 is kept in `guidance-policy.ts`; it is empty today. Any
-  later edit to this file ends the approval until the owner approves the new text.
-- Until then every guide is held with the reason `policy_not_owner_approved`, and its rights record
-  is not cleared, because the basis of that record is point 7.
+  approved. The approved file's SHA-256 is kept in `guidance-policy.ts`. Any later edit to this
+  file ends the approval until the owner approves the new text.
+- While this file is not the approved text, every guide is held with the reason
+  `policy_not_owner_approved`, and its rights record is not cleared, because the basis of that
+  record is point 7.
 - A published guide is shown on the site only while this file is still the file the owner approved.
   After any edit to this file, every published guide leaves the site until it has been released
   again under the newly approved text.

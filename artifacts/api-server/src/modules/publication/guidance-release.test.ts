@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import {
   allSourceLeads,
@@ -87,9 +87,19 @@ test("the guidance policy is read from its file, which is the text the owner app
   assert.equal(guidancePolicyApprovedHash(), sha256(policyFile));
   assert.equal(
     guidancePolicyApprovedHash(),
-    "5fd56570e44a8ae136be36e5022aa062932b6c058d19fa09594450d67b49727f",
-    "the checksum the owner named on 22 November 2026",
+    "0dcd5221c7e075c8839df3f527fe639c2e2311d9e00f642dcfb8b0fee41a0a1b",
+    "the checksum the owner named on 22 November 2026, for the corrected text",
   );
+  // What the file says about its own approval is true whether or not a text of it is approved. The
+  // first text the owner approved still called itself proposed; this one does not.
+  assert.match(
+    policyFile,
+    /Status: \*\*this text is the policy only while its checksum is the one the product owner approved\.\*\*/,
+  );
+  for (const stale of ["has not approved this policy", "it is empty today", "recorded in this file"])
+    assert.ok(!policyFile.includes(stale), stale);
+  // No proposal is left beside it: the approved file is the only text of the policy.
+  assert.ok(!existsSync(resolve(root, "docs/valo/policies/guidance-publication-policy.proposed.md")));
   const { policy, authority } = await guidancePolicy();
   assert.equal(policy.ownerApproved, true);
   // With no approval recorded, the same file is not an approved policy.
@@ -148,60 +158,6 @@ test("the guidance policy is read from its file, which is the text the owner app
   assert.equal(numbered.length, 13);
   for (const point of numbered)
     assert.ok(decision.includes(point), `decision 0017 has: ${point.slice(0, 60)}`);
-});
-
-test("the proposed text of the policy file changes only what the file says about its own approval", async () => {
-  // The approved file's first paragraph was written before the approval and still calls the policy
-  // proposed. It cannot be corrected without ending the approval, so a corrected text is kept beside
-  // it as a proposal for the owner. This is the checksum put to the owner.
-  const proposed = read("docs/valo/policies/guidance-publication-policy.proposed.md");
-  assert.equal(sha256(proposed), "0dcd5221c7e075c8839df3f527fe639c2e2311d9e00f642dcfb8b0fee41a0a1b");
-  // It is a proposal and nothing more: the approval recorded is not of it, so it is not the policy.
-  assert.notEqual(sha256(proposed), guidancePolicyApprovedHash());
-  assert.equal((await guidancePolicy({ read: supposedFile(proposed) })).policy.ownerApproved, false);
-
-  // The thirteen points, the host list and what approving the file means are the same, word for
-  // word, in both files.
-  const part = (text: string, from: string, to: string) => {
-    const [, after] = text.split(from);
-    assert.ok(after !== undefined && after.includes(to), `${from} is followed by ${to}`);
-    return after.split(to)[0]!;
-  };
-  for (const [from, to] of [
-    ["## The policy", "## The official hosts"],
-    ["## The official hosts", "## What approving this file means"],
-    ["## What approving this file means", "## How the code holds to this file"],
-  ] as const)
-    assert.equal(part(proposed, from, to), part(policyFile, from, to), from);
-  // Line for line, the two files differ in two places only: the status paragraph at the top, and
-  // two sentences on how the code holds the file.
-  const lines = (text: string) => text.split("\n");
-  const only = (a: string[], b: string[]) => a.filter((line) => !b.includes(line));
-  assert.deepEqual(only(lines(policyFile), lines(proposed)), [
-    "Status: **proposed. The product owner has not approved this policy.** No guide can be published",
-    "under it until the owner approves it and the approval is recorded in this file",
-    "([decision 0017](../../architecture/decisions/0017-clear-guidance-holds.md)).",
-    "  approved. The approved file's SHA-256 is kept in `guidance-policy.ts`; it is empty today. Any",
-    "  later edit to this file ends the approval until the owner approves the new text.",
-    "- Until then every guide is held with the reason `policy_not_owner_approved`, and its rights record",
-    "  is not cleared, because the basis of that record is point 7.",
-  ]);
-  assert.deepEqual(only(lines(proposed), lines(policyFile)), [
-    "Status: **this text is the policy only while its checksum is the one the product owner approved.**",
-    "The code holds that checksum, and",
-    "[decision 0017](../../architecture/decisions/0017-clear-guidance-holds.md) records each approval.",
-    "No guide can be published under a text of this file that the owner has not approved.",
-    "  approved. The approved file's SHA-256 is kept in `guidance-policy.ts`. Any later edit to this",
-    "  file ends the approval until the owner approves the new text.",
-    "- While this file is not the approved text, every guide is held with the reason",
-    "  `policy_not_owner_approved`, and its rights record is not cleared, because the basis of that",
-    "  record is point 7.",
-  ]);
-  // Were the owner to approve it, the code would accept it as it accepts the approved file: it keeps
-  // every sentence and every host the code depends on.
-  const ifApproved = await guidancePolicy({ read: supposedFile(proposed), approvedHash: sha256(proposed) });
-  assert.equal(ifApproved.policy.ownerApproved, true);
-  assert.notEqual(ifApproved.policy.version, (await guidancePolicy()).policy.version);
 });
 
 test("a guide explains official text and does not copy it: the longest shared run is measured", async () => {

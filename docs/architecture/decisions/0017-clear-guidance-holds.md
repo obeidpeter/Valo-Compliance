@@ -1,8 +1,8 @@
 # 0017 — What clears each of guidance's six standing holds
 
 Date: 2026-11-21. Status: **proposed, with the policy approved**. On 22 November 2026 the product
-owner approved the policy file, which answers decisions 1 to 4 and 6 below. Decisions 5 and 7 to 10
-are open. No guide is published.
+owner approved the policy file, which answers decisions 1 to 4, 6 and 10 below. Decisions 5 and 7
+to 9 are open. No guide is published.
 
 On 21 November 2026 the product owner asked for work to start on all six holds at once, so that the
 prepared guides can be published. That request starts the work. It does not approve the policy, the
@@ -328,18 +328,33 @@ page images. It is not legal review.
 
 ### The owner's approval of the policy file (22 November 2026)
 
-- **What the owner approved.** On 22 November 2026 the product owner wrote: "I approve the file
-  with checksum 5fd56570e44a8ae136be36e5022aa062932b6c058d19fa09594450d67b49727f". That is the
-  SHA-256 of `docs/valo/policies/guidance-publication-policy.md` as it stood on the integration
-  branch that day, and as it stands now.
-- **What that covers.** The file says what approving it means: the thirteen points and the host
-  list; the standard for calling a source current; the basis of a guide's rights record; that the
-  thirty drafts were written in the owner's own ChatGPT account; two AI reviews before a guide is
-  first published and two more every 30 days; and a review of up to 64,000 by the cautious count.
-  So decisions 1 to 4 and 6 below are answered.
-- **How it is recorded.** `guidancePolicyApprovedHash` now returns that checksum, so the code
-  counts the file as approved while it is byte for byte that text. The file itself was not
-  changed: any edit would end the approval.
+- **What the owner approved.** On 22 November 2026 the product owner approved the policy file,
+  `docs/valo/policies/guidance-publication-policy.md`, twice, each time by its checksum. The file
+  as it stands is the second text, and the code holds its checksum:
+  0dcd5221c7e075c8839df3f527fe639c2e2311d9e00f642dcfb8b0fee41a0a1b.
+- **The first approval.** The owner wrote: "I approve the file with checksum
+  5fd56570e44a8ae136be36e5022aa062932b6c058d19fa09594450d67b49727f". That was the file as it then
+  stood. Its first paragraph had been written before any approval. It still called the policy
+  proposed and said the approval would be recorded in the file, and a sentence lower down said
+  the checksum in the code "is empty today". None of that could be put right without changing the
+  file, and any change ends an approval.
+- **The second approval.** A corrected text was put beside the file as a proposal, with a test
+  showing that it differed from the approved file only in those statements: the thirteen points,
+  the host list and what approving the file means were word for word the same. The owner then
+  wrote: "I approve the file with checksum
+  0dcd5221c7e075c8839df3f527fe639c2e2311d9e00f642dcfb8b0fee41a0a1b". The corrected text replaced
+  the file byte for byte, and the proposal was removed. What the file says about its own approval
+  is now true whether or not a text of it is approved. Nothing was reviewed or published under the
+  first text.
+- **What the approval covers.** The file says what approving it means: the thirteen points and
+  the host list; the standard for calling a source current; the basis of a guide's rights record;
+  that the thirty drafts were written in the owner's own ChatGPT account; two AI reviews before a
+  guide is first published and two more every 30 days; and a review of up to 64,000 by the
+  cautious count. So decisions 1 to 4 and 6 below are answered, and decision 10 with the second
+  approval.
+- **How it is recorded.** `guidancePolicyApprovedHash` returns the second checksum, so the code
+  counts the file as approved while it is byte for byte that text. Any edit to the file ends the
+  approval until the owner approves the new text.
 - **What it does not do.** It publishes nothing and spends nothing. A guide still needs its
   captures, its two reviews inside an allocation the owner approves separately, and the publisher
   login, all in the real environment. Publication under this policy is in the development
@@ -349,21 +364,6 @@ page images. It is not legal review.
   eight guides whose passages the repository keeps in full. GUD-05 and GUD-08 also wait on a page
   that is read only from a capture. The four employment guides are still held by their source
   (decision 8), and the three consumer guides are not mapped (decision 9).
-- **A fault in the approved text, which only the owner can correct.** The file's first paragraph
-  was written before the approval. It still says the policy is proposed and not approved, and it
-  says the approval is recorded in the file. Lower down the file says its checksum in the code "is
-  empty today". None of that can be put right without changing the file, and any change ends the
-  approval. Until the owner decides, the approval is recorded here and in the code, and the file
-  keeps those three stale statements.
-- **The correction proposed.** `docs/valo/policies/guidance-publication-policy.proposed.md` is the
-  same file with only those statements changed, to wording that stays true whether or not the
-  text is approved. A test shows that the two files differ in those lines and nowhere else, and
-  that the thirteen points, the host list and what approving the file means are word for word the
-  same. Its SHA-256 is 0dcd5221c7e075c8839df3f527fe639c2e2311d9e00f642dcfb8b0fee41a0a1b. It is a
-  proposal and has no effect: the code reads only the approved file. If the owner approves that
-  checksum, the proposed text replaces the file and the code holds the new checksum (decision
-  10). The cheap time to do it is before any guide is reviewed: once a guide is published, a
-  change to the file takes it off the site until it is released again.
 
 ## Proposal
 
@@ -582,7 +582,8 @@ thirteen points. Approving that file settles decisions 1 to 4 and 6 together: th
 the code counts the policy as approved only while the file is exactly the one approved.
 
 **Answered on 22 November 2026:** the owner approved the file by its checksum, so decisions 1 to 4
-and 6 are settled as the file states them. They are kept below as they were put.
+and 6 are settled as the file states them, and decision 10 by the owner's second approval. They
+are kept below as they were put.
 
 1. **The policy.** Approve the thirteen points above, or change them.
 2. **"Current".** Accept the amendment record of point 2 as the standard, knowing it cannot prove
@@ -622,9 +623,7 @@ and 6 are settled as the file states them. They are kept below as they were put.
    be checked and a reviewer would be given misread words. Choose one. Obtain a clean official
    copy, from the Commission or the Gazette. Or leave the three guides unpublished. Quoting from
    the misread words is not proposed.
-10. **The policy file's first paragraph.** The text the owner approved still calls itself proposed
-    and says its approval is recorded in the file. Choose one. Approve the corrected text beside
-    it, `guidance-publication-policy.proposed.md`, by its checksum
-    `0dcd5221c7e075c8839df3f527fe639c2e2311d9e00f642dcfb8b0fee41a0a1b`: it changes only those
-    statements. Or leave the approved file as it is, with the stale statements explained here.
-    Nothing else depends on this, and it is cheapest to settle before any guide is reviewed.
+10. **The policy file's first paragraph.** The first text the owner approved still called itself
+    proposed and said its approval was recorded in the file. The owner was asked to approve a
+    corrected text by its checksum, or to leave the file as it was. **Answered on 22 November
+    2026:** the owner approved the corrected text, which is now the file.
