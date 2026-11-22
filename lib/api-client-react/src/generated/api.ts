@@ -1603,6 +1603,100 @@ export function useDownloadReleasedTemplate<TData = Awaited<ReturnType<typeof do
 
 
 
+export const getListOwnedTemplateEditionsUrl = () => {
+
+
+
+
+  return `/api/workspace/owned-template-editions`
+}
+
+export const listOwnedTemplateEditions = async ( options?: Parameters<typeof customFetch>[1]): Promise<string[]> => {
+
+  return customFetch<string[]>(getListOwnedTemplateEditionsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListOwnedTemplateEditionsQueryKey = () => {
+    return [
+    "listOwnedTemplateEditions"
+    ] as const;
+    }
+
+
+export const getListOwnedTemplateEditionsQueryOptions = <TData = Awaited<ReturnType<typeof listOwnedTemplateEditions>>, TError = ErrorType<void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOwnedTemplateEditions>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListOwnedTemplateEditionsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listOwnedTemplateEditions>>> = ({ signal }) => listOwnedTemplateEditions({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listOwnedTemplateEditions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListOwnedTemplateEditionsQueryResult = NonNullable<Awaited<ReturnType<typeof listOwnedTemplateEditions>>>
+export type ListOwnedTemplateEditionsQueryError = ErrorType<void>
+
+
+export function useListOwnedTemplateEditions<TData = Awaited<ReturnType<typeof listOwnedTemplateEditions>>, TError = ErrorType<void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOwnedTemplateEditions>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listOwnedTemplateEditions>>,
+          TError,
+          Awaited<ReturnType<typeof listOwnedTemplateEditions>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListOwnedTemplateEditions<TData = Awaited<ReturnType<typeof listOwnedTemplateEditions>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOwnedTemplateEditions>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listOwnedTemplateEditions>>,
+          TError,
+          Awaited<ReturnType<typeof listOwnedTemplateEditions>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListOwnedTemplateEditions<TData = Awaited<ReturnType<typeof listOwnedTemplateEditions>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOwnedTemplateEditions>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListOwnedTemplateEditions<TData = Awaited<ReturnType<typeof listOwnedTemplateEditions>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOwnedTemplateEditions>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListOwnedTemplateEditionsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export const getGetCustomerPurchasesUrl = () => {
 
 

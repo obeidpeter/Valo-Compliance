@@ -2,6 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import {
   GetCustomerPurchasesResponse,
+  ListOwnedTemplateEditionsResponse,
   CreateCommerceOrderResponse,
   StartCommerceCheckoutResponse,
   RefreshCommerceOrderResponse,
@@ -19,6 +20,11 @@ commerceRouter.use("/workspace", (_req, res, next) => {
 });
 commerceRouter.get("/workspace/purchases", async (_req, res) => {
   res.json(GetCustomerPurchasesResponse.parse(await commerce.purchases(res.locals.valoActor)));
+});
+commerceRouter.get("/workspace/owned-template-editions", async (_req, res) => {
+  res.json(
+    ListOwnedTemplateEditionsResponse.parse(await commerce.ownedTemplateEditions(res.locals.valoActor)),
+  );
 });
 commerceRouter.post("/workspace/orders", async (req, res) => {
   res

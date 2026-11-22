@@ -151,14 +151,19 @@ test(
     app.use(express.json({ limit: "128kb", inflate: false }));
     app.use("/admin", makeStaffGate(authenticate));
     app.use(createManualLibraryRouter(authenticate));
-    app.use("/workspace/manual-premium-templates", async (req, res, next) => {
-      const session = await authenticate(req);
-      const { resolveWorkspace } = await import("../modules/workspaces");
-      const { runInWorkspaceScope } = await import("@workspace/db");
-      res.locals.valoActor = await resolveWorkspace(session.identityId);
-      runInWorkspaceScope(res.locals.valoActor.workspaceId, next);
-    });
+    app.use(
+      ["/workspace/manual-premium-templates", "/workspace/owned-template-editions"],
+      async (req, res, next) => {
+        const session = await authenticate(req);
+        const { resolveWorkspace } = await import("../modules/workspaces");
+        const { runInWorkspaceScope } = await import("@workspace/db");
+        res.locals.valoActor = await resolveWorkspace(session.identityId);
+        runInWorkspaceScope(res.locals.valoActor.workspaceId, next);
+      },
+    );
     app.use(premiumManualTemplateRouter);
+    const { commerceRouter } = await import("./valo-commerce");
+    app.use(commerceRouter);
     const { staffOperations } = await import("../modules/staff");
     const { createSourceControlsRouter } = await import("./valo-source-controls");
     const { makeSupportOperationsRouter } = await import("./valo-support-lifecycle");

@@ -234,6 +234,7 @@ export function projectReleasedCatalogue(
     }
     const document = documentInput.parse(JSON.parse(publicationSchema.parse(r.bundle).candidate.body));
     const free = isFreeBaselineTemplate(r.templateId);
+    const file = "/api/workspace/templates/" + r.id + "/files/docx";
     return {
       id: r.id,
       slug: r.slug,
@@ -243,7 +244,7 @@ export function projectReleasedCatalogue(
       templateId: r.templateId,
       category: templateCategory(r.templateId),
       access: free ? ("free" as const) : ("premium" as const),
-      ...(free && { freeDownloadPath: "/api/workspace/templates/" + r.id + "/files/docx" }),
+      ...(free ? { freeDownloadPath: file } : { premiumDownloadPath: file }),
       reviewedAt: c.sourceCheckDate,
       href: "/library/" + encodeURIComponent(r.slug),
       summary: operationalPresentation(r.templateId).summary,

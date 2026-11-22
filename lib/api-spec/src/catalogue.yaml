@@ -221,6 +221,7 @@ schemas:
       amountKobo: { type: integer, minimum: 1, description: Current approved NGN price in kobo for a released premium template edition. }
       priceId: { type: string, format: uuid, description: Current approved checkout offer for this premium edition. }
       freeDownloadPath: { type: string, description: Same-origin authenticated attachment path for this released free edition. }
+      premiumDownloadPath: { type: string, description: Same-origin attachment path requiring an active workspace purchase of this released edition. }
       reviewedAt: { type: string }
       href: { type: string }
       reason: { type: string }

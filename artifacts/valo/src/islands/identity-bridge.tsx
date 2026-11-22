@@ -12,20 +12,24 @@ function Publish() {
     user = useUser(),
     clerk = useClerk();
   useEffect(() => {
-    if (!auth.isLoaded || !user.isLoaded) return;
+    if (!auth.isLoaded || !user.isLoaded) {
+      publishIdentity({ status: "unknown" });
+      return;
+    }
     const signedIn = auth.userId && user.user && user.user.id === auth.userId ? user.user : null;
-    if (!signedIn) {
+    if (!signedIn || !auth.sessionId) {
       publishIdentity({ status: "signed-out" });
       return;
     }
     const email = signedIn.primaryEmailAddress?.emailAddress ?? "";
     publishIdentity({
       status: "signed-in",
+      sessionId: auth.sessionId,
       email,
       initials: (signedIn.firstName?.[0] ?? email[0] ?? "V").toUpperCase(),
       signOut: () => clerk.signOut({ redirectUrl: basePath || "/" }),
     });
-  }, [auth.isLoaded, auth.userId, user.isLoaded, user.user, clerk]);
+  }, [auth.isLoaded, auth.userId, auth.sessionId, user.isLoaded, user.user, clerk]);
   return null;
 }
 

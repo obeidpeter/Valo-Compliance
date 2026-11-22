@@ -138,6 +138,23 @@ async function commercialOffers() {
 export async function commerceProducts() {
   return (await commercialOffers()).map((offer) => offer.product);
 }
+/** Ownership follows the edition and the terms originally purchased, even after its sale price changes. */
+export async function ownedTemplateEditions(actor: WorkspaceActor) {
+  return db.transaction(async (tx) => {
+    await authorizeWorkspaceWrite(tx, actor);
+    const { rows } = await tx.execute<{ edition: string }>(sql`
+      select distinct e.content_version_id as edition
+      from public.valo_entitlements e
+      join public.valo_orders o on o.id = e.order_id and o.workspace_id = e.workspace_id
+      join public.valo_prices p on p.id = o.price_id and p.content_version_id = e.content_version_id
+      where e.workspace_id = ${actor.workspaceId}::uuid and e.status = 'active'
+        and o.status = 'verified_success' and length(o.provider_transaction_id) > 0
+        and o.line->>'contentVersionId' = e.content_version_id::text
+        and o.line->>'licenceVersion' = p.licence_version and length(p.approval_reference) > 0
+      order by e.content_version_id`);
+    return rows.map((row) => row.edition);
+  });
+}
 export async function purchases(actor: WorkspaceActor) {
   const listing = await db.transaction(async (tx) => {
     await authorizeWorkspaceWrite(tx, actor);

@@ -13,6 +13,7 @@ export type ReleasedLibraryItem = {
   amountKobo?: number;
   priceId?: string;
   freeDownloadPath?: string;
+  premiumDownloadPath?: string;
   reviewedAt?: string;
   href?: string;
 };

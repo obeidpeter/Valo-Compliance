@@ -527,10 +527,11 @@ test("library cards show approved naira prices and free access before and after 
   const [free, priced, unpriced] = items;
   const priceId = "aa66f97d-bc68-4623-94b1-4a055278ee64";
   const checkout = "/workspace/purchases?offer=" + priceId;
+  const purchaserFile = "/api/workspace/templates/" + priced!.id + "/files/docx";
   const signIn = "/sign-in?start=download-" + free!.id + "-" + free!.slug;
   catalogueItems = [
     { ...free!, access: "free", freeDownloadPath: "/api/workspace/templates/" + free!.id + "/files/docx" },
-    { ...priced!, access: "premium", amountKobo: 400000, priceId },
+    { ...priced!, access: "premium", amountKobo: 400000, priceId, premiumDownloadPath: purchaserFile },
     { ...unpriced!, access: "premium" },
   ];
   try {
@@ -541,6 +542,7 @@ test("library cards show approved naira prices and free access before and after 
     ].map((match) => match[1]);
     assert.deepEqual(labels, ["Free", "Premium · ₦4,000.00", "Premium"]);
     assert.ok(html.includes('href="' + checkout + '"'));
+    assert.ok(!html.includes('href="' + purchaserFile + '"'));
     assert.ok(html.includes('href="' + signIn + '"'));
     const { page, close } = await web.phone(address);
     try {

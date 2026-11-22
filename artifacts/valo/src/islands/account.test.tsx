@@ -13,6 +13,7 @@ import type { Identity } from "./identity-store";
  */
 const signedIn: Identity = {
   status: "signed-in",
+  sessionId: "synthetic-header-session",
   email: "synthetic-header@example.test",
   initials: "S",
   signOut: async () => undefined,
