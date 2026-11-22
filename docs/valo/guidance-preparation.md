@@ -4,8 +4,9 @@ This note is for the person who runs commands in the development environment. It
 turning a guide's retained draft into a candidate that is ready for its two AI reviews
 ([decision 0017](../architecture/decisions/0017-clear-guidance-holds.md)).
 
-The command calls no AI model, approves nothing and publishes nothing. It can be run before the
-owner has approved the guidance policy: it then prints what holds the guide and keeps no candidate.
+The command calls no AI model, approves nothing and publishes nothing. The owner approved the
+guidance policy on 22 November 2026. If the policy file is edited, that approval ends: the command
+then prints what holds the guide and keeps no candidate.
 
 ## What must be in place
 
@@ -51,8 +52,12 @@ owner has approved the guidance policy: it then prints what holds the guide and 
    now say before any template or guide is prepared. The command has not yet been run against the
    provider's site from the development environment. Run from a build machine with a plain
    request, the five pages were served on 21 November 2026 and held all five sentences.
-5. **The owner's approval of the guidance policy**, recorded as
-   `docs/valo/policies/guidance-publication-policy.md` describes. Without it every guide is held.
+5. **The owner's approval of the guidance policy.** Given on 22 November 2026 for
+   `docs/valo/policies/guidance-publication-policy.md` as it stands, and held in the code as that
+   file's checksum. Any edit to the file ends it until the owner approves the new text, and every
+   guide is then held. The file's own first paragraph still calls the policy proposed: it was
+   written before the approval and cannot be changed without ending it
+   ([decision 0017](../architecture/decisions/0017-clear-guidance-holds.md), decision 10).
 
 ## The command
 
@@ -92,7 +97,7 @@ Reasons you are likely to see:
 
 | Reason | What it means |
 | --- | --- |
-| `policy_not_owner_approved` | The owner has not approved the policy file as it stands. |
+| `policy_not_owner_approved` | The policy file is not the text the owner approved on 22 November 2026: it has been edited since. |
 | `rights_not_cleared`, `check_not_passed:rights` | The rights record rests on the policy's point 7, so it waits for the same approval. Or the guide repeats more than 20 words in a row from a passage. `rightsProblems` says which. |
 | `legal_scope_unverified`, `material_uncertainty`, `source_unresolved:<passage>` | A sentence about the law is not bound, or a source is not marked current. `missingEvidence` lists each one. The usual cause is a missing or stale capture. For the employment guides it is the open question about their copy of the Labour Act. |
 | `check_not_passed:scope` | The candidate's claims no longer match its claim map and its sources. |
