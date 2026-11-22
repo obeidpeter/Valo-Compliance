@@ -83,7 +83,7 @@ async function scopedPracticalPolicy(scope: typeof releaseScope | typeof reminde
   return { policy, authority: [...base.authority, { ...ref, text }] };
 }
 
-/** The publisher and catalogue use only the scope approved for release. */
+/** The invoice and quotation policy is retained for their existing versions. */
 export function practicalGuidePolicy() {
   return scopedPracticalPolicy(releaseScope);
 }
@@ -92,6 +92,30 @@ export function practicalGuidePreparationPolicy(id: string) {
   return reminderInventoryGuideIds.some((article) => article === id)
     ? scopedPracticalPolicy(reminderInventoryScope)
     : practicalGuidePolicy();
+}
+
+/** Release authority is checked separately so the reviewed bundle keeps its original policy hash. */
+export async function practicalGuideReleasePolicy({
+  id,
+  version,
+}: Pick<PublicationBundle["candidate"], "id" | "version">) {
+  if (!isPracticalGuideId(id)) return null;
+  if (invoiceQuotationGuideIds.some((article) => article === id)) return practicalGuidePolicy();
+  if (version !== 1 || !reminderInventoryGuideIds.some((article) => article === id)) return null;
+  const decision = resolve(
+    publicationWorkspaceRoot(),
+    "docs/valo/policies/practical-reminder-inventory-release.md",
+  );
+  try {
+    if (
+      sha256(await readFile(decision)) !== "1d2aff95c58f5bea7ae9ec2c3fd65935a9846982bda079111ecff0f4799a65f4"
+    )
+      return null;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    return null;
+  }
+  return scopedPracticalPolicy(reminderInventoryScope);
 }
 
 /** Extraction is limited to byte-pinned sections. Editorial suggestions never become

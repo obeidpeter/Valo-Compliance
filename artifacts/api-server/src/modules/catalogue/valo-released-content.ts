@@ -4,7 +4,7 @@ import { evaluatePublication, publicationSchema, coveragePlan } from "@workspace
 import {
   developmentPublicationOnly,
   operationalPolicy,
-  practicalGuidePolicy,
+  practicalGuideReleasePolicy,
   getPublicationArtifact,
   type ArtifactRef,
   currentOperationalPermission,
@@ -58,7 +58,6 @@ export async function liveReleasedVersions() {
   const currentPolicy = await operationalPolicy();
   // The guidance policy as it stands, read when the first published guide is met.
   let currentGuidance: Awaited<ReturnType<typeof guidancePolicy>>["policy"] | undefined;
-  let practicalPolicy: Awaited<ReturnType<typeof practicalGuidePolicy>>["policy"] | undefined;
   const rows = await db
     .select({ content: valoContentVersions, policy: valoPublicationPolicies })
     .from(valoContentVersions)
@@ -75,10 +74,10 @@ export async function liveReleasedVersions() {
     if (candidate.evidenceMode === "original_operational") {
       const policy =
         candidate.contentClass === "practical_guide"
-          ? (practicalPolicy ??= (await practicalGuidePolicy()).policy)
+          ? (await practicalGuideReleasePolicy(candidate))?.policy
           : currentPolicy.policy;
       if (
-        !policy.ownerApproved ||
+        !policy?.ownerApproved ||
         r.policy.hash !== policy.hash ||
         !(await currentOperationalPermission(r.content))
       )

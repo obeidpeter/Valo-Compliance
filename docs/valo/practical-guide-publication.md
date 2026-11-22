@@ -42,7 +42,7 @@ Both candidates should say `awaiting_reviews`. Check that the private report con
 
 ### Prepare the payment reminder and inventory register
 
-Use the same capture and candidate commands with `GUIDE-C03` and `GUIDE-C04`. Supply those two new artifact references to `--prepare new --reminder-inventory-pairs`, then run `--verify-prepared` with the returned report ID and hash. Confirm both pairs are ready and the report has zero holds. Present the new package and its maximum reservation to the owner before recording an approval or admitting work. The invoice and quotation package has a different identity. Release authority for the reminder and inventory register requires a separate decision.
+Use the same capture and candidate commands with `GUIDE-C03` and `GUIDE-C04`. Supply those two new artifact references to `--prepare new --reminder-inventory-pairs`, then run `--verify-prepared` with the returned report ID and hash. Confirm both pairs are ready and the report has zero holds. Present the new package and its maximum reservation to the owner before recording an approval or admitting work. The invoice and quotation package has a different identity. The [22 November development publication decision](policies/practical-reminder-inventory-release.md) covers version 1 of each new article when both of its reviews pass. After publication, check the Guides index and open `/resources/follow-up-an-unpaid-invoice` and `/resources/keep-an-inventory-register`.
 
 ## Review and publish
 

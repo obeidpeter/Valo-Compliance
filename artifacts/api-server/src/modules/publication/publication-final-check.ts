@@ -1,5 +1,5 @@
 import { evaluatePublication, type PublicationBundle } from "@workspace/valo-core";
-import { practicalGuidePolicy } from "./practical-guide";
+import { practicalGuideReleasePolicy } from "./practical-guide";
 import { guidancePolicy } from "./guidance-policy";
 import { operationalPolicy } from "./operational-policy";
 import { publicationCheckTime } from "./operational-restrictions";
@@ -13,15 +13,14 @@ export async function finalOperationalPublicationCheck(
   rightsValidUntil: string,
   requestedTime?: Date,
 ) {
-  // A guide's policy is the guidance policy; everything else is released under the templates' one.
   const current =
       bundle.candidate.contentClass === "practical_guide"
-        ? await practicalGuidePolicy()
+        ? await practicalGuideReleasePolicy(bundle.candidate)
         : bundle.candidate.contentClass === "sourced_guidance"
           ? await guidancePolicy()
           : await operationalPolicy(),
     now = publicationCheckTime(requestedTime);
-  if (current.policy.hash !== initialPolicyHash) throw Error("POLICY_CHANGED_DURING_VALIDATION");
+  if (!current || current.policy.hash !== initialPolicyHash) throw Error("POLICY_CHANGED_DURING_VALIDATION");
   if (
     +reviewBy <= +now ||
     Date.parse(rightsValidUntil) <= +now ||

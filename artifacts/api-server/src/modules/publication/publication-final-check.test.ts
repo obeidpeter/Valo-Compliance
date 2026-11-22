@@ -5,8 +5,50 @@ import { join, dirname } from "node:path";
 import { tmpdir } from "node:os";
 import { GUIDANCE_POLICY_PATH, guidancePolicy } from "./guidance-policy";
 import { operationalPolicy, publicationWorkspaceRoot } from "./operational-policy";
+import { practicalGuidePreparationPolicy, practicalGuideReleasePolicy } from "./practical-guide";
 import { finalOperationalPublicationCheck } from "./publication-final-check";
 import { heldSourceBundle } from "../sources/valo-source-controls.fixtures";
+
+test("the reminder and inventory release decision covers only their first reviewed versions and can be withdrawn", async () => {
+  const root = publicationWorkspaceRoot();
+  const original = process.cwd();
+  const folder = await mkdtemp(join(tmpdir(), "valo-practical-release-decision-"));
+  const decision = "docs/valo/policies/practical-reminder-inventory-release.md";
+  const next = [
+    { id: "GUIDE-C03", version: 1 },
+    { id: "GUIDE-C04", version: 1 },
+  ];
+  try {
+    for (const path of [
+      "docs/specification/master-execution-prompt.txt",
+      "docs/valo/policies/operational-publication-authority.md",
+      "docs/valo/policies/practical-business-guides.md",
+      "docs/valo/policies/practical-reminder-inventory-preparation.md",
+    ]) {
+      await mkdir(dirname(join(folder, path)), { recursive: true });
+      await copyFile(join(root, path), join(folder, path));
+    }
+    process.chdir(folder);
+    const first = { id: "GUIDE-C01", version: 1 };
+    const firstPolicy = await practicalGuidePreparationPolicy(first.id);
+    assert.equal((await practicalGuideReleasePolicy(first))?.policy.hash, firstPolicy.policy.hash);
+    for (const draft of next) assert.equal(await practicalGuideReleasePolicy(draft), null);
+    await copyFile(join(root, decision), join(folder, decision));
+    for (const draft of next) {
+      const reviewed = await practicalGuidePreparationPolicy(draft.id);
+      assert.notEqual(reviewed.policy.hash, firstPolicy.policy.hash);
+      assert.equal((await practicalGuideReleasePolicy(draft))?.policy.hash, reviewed.policy.hash);
+      assert.equal(await practicalGuideReleasePolicy({ ...draft, version: 2 }), null);
+    }
+    assert.equal(await practicalGuideReleasePolicy({ id: "GUIDE-C05", version: 1 }), null);
+    await writeFile(join(folder, decision), "Controlled withdrawal in the isolated policy test.");
+    for (const draft of next) assert.equal(await practicalGuideReleasePolicy(draft), null);
+    assert.equal((await practicalGuideReleasePolicy(first))?.policy.hash, firstPolicy.policy.hash);
+  } finally {
+    process.chdir(original);
+    await rm(folder, { recursive: true, force: true });
+  }
+});
 
 // The fixture is a form here: the templates' policy governs a form, and the guidance policy a guide.
 test("final check observes evidence expiry after earlier work and refuses backdating", async () => {

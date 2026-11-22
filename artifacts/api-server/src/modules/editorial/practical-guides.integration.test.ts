@@ -236,12 +236,8 @@ test(
               );
               throw Error("ROLLBACK_AFTER_PUBLISHER_CHECKS");
             });
-          if (firstRelease) {
-            await assert.rejects(check([]), /INDEPENDENT_REVIEWS_MISSING/);
-            await assert.rejects(check(refs), /ROLLBACK_AFTER_PUBLISHER_CHECKS/);
-          } else {
-            await assert.rejects(check(refs), /POLICY_NOT_TRUSTED/);
-          }
+          await assert.rejects(check([]), /INDEPENDENT_REVIEWS_MISSING/);
+          await assert.rejects(check(refs), /ROLLBACK_AFTER_PUBLISHER_CHECKS/);
           assert.ok(!(await releasedResources()).some((r) => r.id === result.id));
         } finally {
           await db.execute(sql`delete from valo_prepared_candidates where version_id=${result.id}::uuid`);
