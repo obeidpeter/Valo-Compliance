@@ -92,10 +92,12 @@ record describes. That is deliberate: someone has to read the new file and write
      version with its reviews and hands it to the publisher, or records the hold.
 
   What stands behind these steps has been run for a guide in a test, in a disposable copy of the
-  database with a stand-in for the model: the guide is prepared from a stored capture, its two
-  reviews go through the real dispatcher, and the publish step releases it through the real
-  publisher. The command lines themselves, and the admission of a guide's pair under an approved
-  package, have not been run for a guide. No guide has been through any of this for real.
+  database with a stand-in for the model and made-up approvals. The guide is prepared from a
+  stored capture. Its pair of reviews is refused while no package is approved, refused under an
+  approved package of template reviews, and admitted under an approved package of guide reviews.
+  The two reviews then go through the real dispatcher, and the publish step releases the guide
+  through the real publisher. The command lines themselves have not been run for a guide. No guide
+  has been through any of this for real.
 - **Publication.** The publisher makes every check again at release, including that each source is
   still the capture its address serves. A test passes a prepared guide through all of those checks
   in a database transaction that is rolled back. No guide has been published.
