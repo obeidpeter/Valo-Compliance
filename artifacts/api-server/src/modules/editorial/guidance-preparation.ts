@@ -80,7 +80,15 @@ export async function prepareGuideCandidateRelease(
   const retained = retainedGuidePassages();
   const leads = [...new Set(guidePassageIds(id).flatMap((passage) => passageLead(passage, retained) ?? []))];
   const captures = options.captures ?? (await currentSourceCaptures(leads, now));
-  const built = await buildGuideCandidate(id, version, capturedGuidePassages(captures), now);
+  // With no passage supplied the build stops, naming the guide. The operator's command prints a
+  // reason only when it is a plain code, so the guide's ID, which the operator gave, is left off.
+  const built = await buildGuideCandidate(id, version, capturedGuidePassages(captures), now).catch(
+    (error: unknown) => {
+      if (error instanceof Error && error.message === `GUIDE_HAS_NO_BOUND_SOURCE:${id}`)
+        throw Error("GUIDE_HAS_NO_BOUND_SOURCE");
+      throw error;
+    },
+  );
   const { policy, authority } = await guidancePolicy();
   const applicability = await loadChatGPTPermission(snapshot, built.provenance);
   assertPermissionRoute(applicability.record, false);
