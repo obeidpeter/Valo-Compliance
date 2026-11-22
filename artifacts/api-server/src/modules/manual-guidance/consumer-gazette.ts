@@ -118,6 +118,8 @@ export function checkConsumerGazette(
         locator: reading.locator,
         rawSha256: capture.rawChecksum,
         validThrough,
+        retrievedAt: capture.checkedAt,
+        retrieval: capture.retrieval,
       },
     ],
     holds: [],

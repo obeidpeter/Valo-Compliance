@@ -88,6 +88,8 @@ export async function exerciseManualRegulatoryOwner(call: Call, editor: string) 
       url: "https://example.invalid/instrument",
       locator: "Section 1",
       rawSha256: sha256("synthetic file"),
+      retrievedAt: new Date().toISOString(),
+      retrieval: "official_url" as const,
       validThrough: new Date(Date.now() + 86_400_000).toISOString(),
     };
     const check = async (holds: string[], text = body, checkedAt = new Date(Date.now() + offset++)) => {

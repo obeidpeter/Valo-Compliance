@@ -21,6 +21,8 @@ export type ManualRegulatorySource = {
   locator: string;
   rawSha256: string;
   validThrough: string;
+  retrievedAt: string;
+  retrieval: "official_url" | "retained_official_pdf";
 };
 
 /** Each source check records its own result, including unsuccessful checks. */

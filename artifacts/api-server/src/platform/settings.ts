@@ -226,6 +226,11 @@ export const SETTINGS = {
     group: "Editorial",
     description: "`recorded` reuses the recorded original authoring run instead of new drafting.",
   },
+  VALO_MANUAL_OFFICIAL_CAPTURE_DIR: {
+    group: "Editorial",
+    description:
+      "Private development directory for operator-retained NDPC PDFs and their dated official retrieval receipts.",
+  },
   VALO_EDITORIAL_LIFECYCLE_DATABASE_URL: {
     group: "Editorial",
     description:

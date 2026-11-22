@@ -51,7 +51,11 @@ function holdsFor(check: Check | undefined, row: { title: string; body: string }
   if (
     Date.now() - +check.checkedAt > 86_400_000 ||
     +check.checkedAt > Date.now() ||
-    check.sources.some((s) => !(Date.parse(s.validThrough) > Date.now()))
+    check.sources.some(
+      (s) =>
+        !(Date.parse(s.validThrough) > Date.now()) ||
+        !(Date.parse(s.retrievedAt) <= Date.now() && Date.parse(s.retrievedAt) > Date.now() - 86_400_000),
+    )
   )
     return ["Refresh the official sources before signing this version."];
   return check.holds;

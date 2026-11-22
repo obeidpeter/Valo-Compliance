@@ -12,7 +12,7 @@ import {
   passageLead,
   readGuidanceIntake,
 } from "../publication";
-import { readManualOfficialSource } from "../sources";
+import { readManualOfficialSource, referenceFor } from "../sources";
 import { consumerGazetteLead, hasConsumerReading, checkConsumerGazette } from "./consumer-gazette";
 
 type Capture = Awaited<ReturnType<typeof readManualOfficialSource>>;
@@ -53,7 +53,12 @@ export async function checkManualRegulatorySources(ids: readonly string[]) {
   const failed = new Set<string>();
   for (let i = 0; i < leads.length; i += 3) {
     const group = leads.slice(i, i + 3);
-    const reads = await Promise.allSettled(group.map(readManualOfficialSource));
+    const reads = await Promise.allSettled(
+      group.map((lead) => {
+        const pinned = guideAmendmentRecords.find((r) => r.url === referenceFor(lead).url);
+        return readManualOfficialSource(lead, pinned?.rawSha256);
+      }),
+    );
     for (const [idx, read] of reads.entries()) {
       if (read.status === "fulfilled") captures.push(read.value);
       else failed.add(group[idx]!);
@@ -100,6 +105,8 @@ export async function checkManualRegulatorySources(ids: readonly string[]) {
             title: ref.title,
             locator: location.recordedLocator,
             rawSha256: capture.rawChecksum,
+            retrievedAt: capture.checkedAt,
+            retrieval: capture.retrieval,
             validThrough: new Date(lastSearch + AMENDMENT_RECORD_DAYS * 86_400_000).toISOString(),
           });
         }
