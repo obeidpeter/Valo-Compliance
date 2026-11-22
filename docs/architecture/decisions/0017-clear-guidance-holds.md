@@ -213,7 +213,9 @@ page images. It is not legal review.
     from it contain many errors: letters for digits in section numbers, and misread words in the
     sections themselves. GUD-16 to GUD-18 rest on it. A sentence can be bound word for word only
     where the scan was read correctly, and the reviewers would be given the misread words. This
-    needs a clean official copy, or a decision on how a text like this is quoted.
+    needs a clean official copy, or a decision on how a text like this is quoted. The investment
+    commission's site serves the Act too. Fetched on 22 November 2026, its file is the same scan,
+    byte for byte, so it offers no cleaner copy.
   - *A pension circular.* The circular listed with the employment guides' sources is an image
     with no words the extractor can read. The daily check could not capture it. Whether any
     sentence of a guide rests on it had not been checked when this was written. It has since: none
@@ -571,7 +573,8 @@ the code counts the policy as approved only while the file is exactly the one ap
    bill of 2004 on the same subject was read and does not name the Labour Act, but a bill is not
    the Act as passed. Until then the record keeps both open and the four guides stay held.
 9. **The consumer protection Act's copy.** The three consumer guides rest on an Act whose only
-   official copy is a scan. The words the extractor reads from it are wrong in many places, so no
-   quotation can be checked and a reviewer would be given misread words. Choose one. Obtain a
-   clean official copy, from the Commission or the Gazette. Or leave the three guides unpublished.
-   Quoting from the misread words is not proposed.
+   official copy is a scan. The Commission's site and the investment commission's site serve the
+   same file. The words the extractor reads from it are wrong in many places, so no quotation can
+   be checked and a reviewer would be given misread words. Choose one. Obtain a clean official
+   copy, from the Commission or the Gazette. Or leave the three guides unpublished. Quoting from
+   the misread words is not proposed.
