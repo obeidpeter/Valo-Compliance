@@ -33,7 +33,7 @@ import { lockSourceState, sourceTargetAllowed } from "../sources";
 import { isManualTemplate, releasedManualEntries } from "../manual-library";
 import { manualCatalogue, manualResource, manualResourceKind, manualTemplate } from "./manual-presentation";
 import {
-  approvedAmountsForEditions,
+  approvedPricesForEditions,
   isFreeBaselineTemplate,
   offerForReleasedEdition,
 } from "./template-prices";
@@ -233,6 +233,7 @@ export function projectReleasedCatalogue(
       };
     }
     const document = documentInput.parse(JSON.parse(publicationSchema.parse(r.bundle).candidate.body));
+    const free = isFreeBaselineTemplate(r.templateId);
     return {
       id: r.id,
       slug: r.slug,
@@ -241,7 +242,8 @@ export function projectReleasedCatalogue(
       industry: c.coverage?.industrySlugs.join(",") || "All industries",
       templateId: r.templateId,
       category: templateCategory(r.templateId),
-      access: isFreeBaselineTemplate(r.templateId) ? ("free" as const) : ("premium" as const),
+      access: free ? ("free" as const) : ("premium" as const),
+      ...(free && { freeDownloadPath: "/api/workspace/templates/" + r.id + "/files/docx" }),
       reviewedAt: c.sourceCheckDate,
       href: "/library/" + encodeURIComponent(r.slug),
       summary: operationalPresentation(r.templateId).summary,
@@ -293,14 +295,14 @@ export async function releasedCatalogue(query: CatalogueQuery = {}) {
     manual.filter((row) => isManualTemplate(row.kind)).map((row) => row.title.toLowerCase()),
   );
   const page = paginateReleasedItems([...items, ...directorySearchItems()], query);
-  const prices = await approvedAmountsForEditions(
+  const prices = await approvedPricesForEditions(
     page.items.filter((item) => item.type === "template" && item.access === "premium").map((item) => item.id),
   );
   return {
     ...page,
     items: page.items.map((item) => {
-      const amountKobo = prices.get(item.id);
-      return amountKobo === undefined ? item : { ...item, amountKobo };
+      const price = prices.get(item.id);
+      return price ? { ...item, ...price } : item;
     }),
     heldTemplates: baselineTemplates.filter(
       (entry) => !reviewedIds.has(entry.id) && !manualTitles.has(entry.title.toLowerCase()),
@@ -322,7 +324,8 @@ export async function releasedTemplate(slug: string) {
     );
   const bundle = publicationSchema.parse(row.bundle),
     document = documentInput.parse(JSON.parse(bundle.candidate.body));
-  const offer = isFreeBaselineTemplate(row.templateId) ? undefined : await offerForReleasedEdition(row.id);
+  const free = isFreeBaselineTemplate(row.templateId);
+  const offer = free ? undefined : await offerForReleasedEdition(row.id);
   return {
     id: row.id,
     templateId: row.templateId,
@@ -338,6 +341,7 @@ export async function releasedTemplate(slug: string) {
     preview: operationalPresentation(row.templateId).preview,
     developmentOnly: true,
     commercialLicenceAccepted: false,
+    ...(free && { access: "free" as const }),
     ...(offer && { access: "premium" as const, offer }),
     formats: ["docx", "pdf"] as const,
   };

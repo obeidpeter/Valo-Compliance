@@ -376,6 +376,12 @@ test(
         );
         assert.equal(projection.reviewBy, null);
         assert.deepEqual(projection.formats, [format]);
+        const listing = ListPublicCatalogueResponse.parse(
+          await ok(await call("/public/catalogue?type=template&access=free")),
+        );
+        const card = listing.items.find((entry) => entry.id === r.id);
+        assert.equal(card?.freeDownloadPath, "/api" + download);
+        assert.equal(card.priceId, undefined);
         assert.equal((await call(download, undefined, "")).status, 401);
         const original = await call(download, undefined, "synthetic-reader", { "x-test-mfa": "stale" });
         assert.equal(original.status, 200);

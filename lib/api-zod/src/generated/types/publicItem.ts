@@ -22,6 +22,10 @@ export interface PublicItem {
      * @minimum 1
      */
   amountKobo?: number;
+  /** Current approved checkout offer for this premium edition. */
+  priceId?: string;
+  /** Same-origin authenticated attachment path for this released free edition. */
+  freeDownloadPath?: string;
   reviewedAt?: string;
   href?: string;
   reason?: string;

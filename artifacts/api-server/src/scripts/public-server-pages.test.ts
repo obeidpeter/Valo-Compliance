@@ -525,9 +525,12 @@ test("a server-rendered page reached inside the browser app without a full load 
 
 test("library cards show approved naira prices and free access before and after filtering", async () => {
   const [free, priced, unpriced] = items;
+  const priceId = "aa66f97d-bc68-4623-94b1-4a055278ee64";
+  const checkout = "/workspace/purchases?offer=" + priceId;
+  const signIn = "/sign-in?start=download-" + free!.id + "-" + free!.slug;
   catalogueItems = [
-    { ...free!, access: "free" },
-    { ...priced!, access: "premium", amountKobo: 400000 },
+    { ...free!, access: "free", freeDownloadPath: "/api/workspace/templates/" + free!.id + "/files/docx" },
+    { ...priced!, access: "premium", amountKobo: 400000, priceId },
     { ...unpriced!, access: "premium" },
   ];
   try {
@@ -537,13 +540,20 @@ test("library cards show approved naira prices and free access before and after 
       ...html.replaceAll("<!-- -->", "").matchAll(/data-testid="card-access">([^<]*)<\/span>/g),
     ].map((match) => match[1]);
     assert.deepEqual(labels, ["Free", "Premium · ₦4,000.00", "Premium"]);
+    assert.ok(html.includes('href="' + checkout + '"'));
+    assert.ok(html.includes('href="' + signIn + '"'));
     const { page, close } = await web.phone(address);
     try {
       await ready(page);
+      await expect(page.locator('li[data-testid^="card-item-"] a a')).toHaveCount(0);
       await page.getByTestId("select-access").selectOption("premium");
       await expect(page.getByTestId("card-access")).toHaveText(["Premium · ₦4,000.00", "Premium"]);
+      await expect(page.getByTestId("card-checkout")).toHaveAttribute("href", checkout);
+      await expect(page.getByTestId("card-download")).toHaveCount(0);
       await page.getByTestId("select-access").selectOption("free");
       await expect(page.getByTestId("card-access")).toHaveText(["Free"]);
+      await expect(page.getByTestId("card-download")).toHaveAttribute("href", signIn);
+      await expect(page.getByTestId("card-checkout")).toHaveCount(0);
     } finally {
       await close();
     }

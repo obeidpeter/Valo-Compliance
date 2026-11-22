@@ -1,6 +1,7 @@
 import { GUIDED_TEMPLATE_IDS, type GuidedTemplateId } from "@workspace/valo-core/guided";
 import { ANY_DOCUMENT } from "./start";
 import { checkoutStartPath } from "./template-checkout";
+import { downloadStartPath } from "./template-download";
 
 /**
  * The everyday tasks the landing page offers, in the customer's words. Each names the documents it
@@ -54,7 +55,9 @@ export const landingTask = (id: string | null | undefined): LandingTask | undefi
 export function startPath(start: string | null | undefined): string | undefined {
   if (start === ANY_DOCUMENT) return "/workspace/documents/new";
   const task = landingTask(start);
-  return task ? "/workspace/documents/new?start=" + task.id : checkoutStartPath(start);
+  return task
+    ? "/workspace/documents/new?start=" + task.id
+    : (checkoutStartPath(start) ?? downloadStartPath(start));
 }
 
 /** The documents the landing page's opening sentence names: invoices, quotations, receipts and
