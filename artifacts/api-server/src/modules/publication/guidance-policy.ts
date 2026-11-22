@@ -25,12 +25,12 @@ const RESTRICTIONS_PATH = "docs/valo/policies/operational-publication-restrictio
  * approval. Change this only on the owner's explicit, current approval of a file's exact text, and
  * for no other reason. Any edit of the file ends the approval until the owner approves the new text.
  *
- * The approved text's own first paragraph was written before the approval and still calls the
- * policy proposed. It cannot be corrected without ending the approval: decision 0017 says what is
- * proposed for it.
+ * This is the second text the owner approved that day. The first, 5fd56570…727f, still called
+ * itself proposed in its first paragraph; the owner then approved this one, which differs only in
+ * what the file says about its own approval. Nothing was reviewed or published under the first.
  */
 export function guidancePolicyApprovedHash(): string | null {
-  return "5fd56570e44a8ae136be36e5022aa062932b6c058d19fa09594450d67b49727f";
+  return "0dcd5221c7e075c8839df3f527fe639c2e2311d9e00f642dcfb8b0fee41a0a1b";
 }
 
 /** The hosts the policy file lists. A guide's sources, its links and the places searched for later
