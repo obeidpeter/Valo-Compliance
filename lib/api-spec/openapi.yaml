@@ -1524,6 +1524,17 @@ components:
           schema:
             $ref: "#/components/schemas/ApiProblem"
   schemas:
+    TemplateOffer:
+      type: object
+      required: [id, title, amountKobo, currency, licenceVersion, licenceText, taxTreatment]
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        amountKobo: { type: integer }
+        currency: { type: string }
+        licenceVersion: { type: string }
+        licenceText: { type: string }
+        taxTreatment: { type: string }
     PublicSourceReference:
       type: object
       required: [url, title, locator]
@@ -1818,6 +1829,7 @@ components:
         preview: { type: array, items: { type: string } }
         developmentOnly: { type: boolean }
         commercialLicenceAccepted: { type: boolean }
+        offer: { $ref: "#/components/schemas/TemplateOffer" }
         formats: { type: array, items: { type: string, enum: [docx, pdf] } }
     CataloguePage:
       type: object
@@ -1846,17 +1858,7 @@ components:
         orders: { type: array, items: { $ref: "#/components/schemas/CommerceOrder" } }
         products:
           type: array
-          items:
-            type: object
-            required: [id, title, amountKobo, currency, licenceVersion, licenceText, taxTreatment]
-            properties:
-              id: { type: string }
-              title: { type: string }
-              amountKobo: { type: integer }
-              currency: { type: string }
-              licenceVersion: { type: string }
-              licenceText: { type: string }
-              taxTreatment: { type: string }
+          items: { $ref: "#/components/schemas/TemplateOffer" }
     CommerceOrderInput:
       type: object
       required: [priceId, acceptedLicenceVersion, requestKey]

@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { PaymentConcerns } from "@/components/payment-concerns";
 import { CustomerDisputeInformation, DisputeFormsBoundary } from "@/components/dispute-workflows";
 import { useQueryClient } from "@tanstack/react-query";
-import { Link } from "wouter";
+import { Link, useSearch } from "wouter";
 import { ShoppingBag } from "lucide-react";
 import {
   useGetCustomerPurchases,
@@ -278,6 +278,8 @@ export function PurchaseHistoryPage() {
   );
 }
 function PurchaseHistoryContent() {
+  const offerId = new URLSearchParams(useSearch()).get("offer");
+  const directCheckout = offerId !== null;
   const qc = useQueryClient(),
     q = useGetCustomerPurchases({
       query: {
@@ -290,17 +292,26 @@ function PurchaseHistoryContent() {
     [busy, setBusy] = useState(false),
     [error, setError] = useState<string | null>(null);
   const [keys] = useState(() => new Map<string, string>());
+  const products = (q.data?.products ?? []).filter((p) => !directCheckout || p.id === offerId);
   const refresh = () => qc.invalidateQueries({ queryKey: getGetCustomerPurchasesQueryKey() });
   return (
     <div className="mx-auto max-w-6xl px-5 py-10 lg:px-8">
       <WorkspaceNav />
       <header className="mb-8">
         <p className="eyebrow">Your workspace</p>
-        <h1 className="font-display mt-2 text-4xl">Purchases and licences</h1>
-        <p className="mt-3 max-w-2xl text-muted-foreground" data-testid="text-purchases-message">
-          Your orders, their receipts and the licences you accepted are listed here. A saved order is not
-          proof of payment, and neither is coming back from the payment page.
-        </p>
+        <h1 className="font-display mt-2 text-4xl">
+          {directCheckout ? "Template checkout" : "Purchases and licences"}
+        </h1>
+        {directCheckout ? (
+          <Link href="/workspace/purchases" className="mt-3 inline-block text-primary underline">
+            View all purchases and licences
+          </Link>
+        ) : (
+          <p className="mt-3 max-w-2xl text-muted-foreground" data-testid="text-purchases-message">
+            Your orders, their receipts and the licences you accepted are listed here. A saved order is not
+            proof of payment, and neither is coming back from the payment page.
+          </p>
+        )}
       </header>
       <Notice title="Real payments are switched off" className="mb-6">
         Where a checkout is offered here, it is a test, in Paystack's test mode. Do not enter a real card, or
@@ -315,19 +326,20 @@ function PurchaseHistoryContent() {
         <>
           <section className="mb-8" aria-labelledby="purchase-choices">
             <h2 id="purchase-choices" className="font-display mb-4 text-2xl">
-              Documents you can buy
+              {directCheckout ? "Your selected template" : "Documents you can buy"}
             </h2>
-            {!q.data?.products.length ? (
+            {!products.length ? (
               <p
                 className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground"
                 data-testid="text-nothing-to-buy"
               >
-                Nothing can be bought yet. A document is listed here once it is published with a price and a
-                licence. The documents you have made, and their files, stay in your workspace.
+                {directCheckout
+                  ? "This offer is unavailable. Open the template again to see its current price and licence."
+                  : "Nothing can be bought yet. A document is listed here once it is published with a price and a licence. The documents you have made, and their files, stay in your workspace."}
               </p>
             ) : (
-              <ul className="grid gap-4 sm:grid-cols-2">
-                {q.data.products.map((p) => (
+              <ul className={directCheckout ? "max-w-2xl" : "grid gap-4 sm:grid-cols-2"}>
+                {products.map((p) => (
                   <li key={p.id} className="rounded-2xl border bg-card p-5">
                     <h3 className="font-semibold">
                       {p.title} · {formatNaira(p.amountKobo)}
@@ -380,31 +392,33 @@ function PurchaseHistoryContent() {
               </p>
             )}
           </section>
-          <section aria-labelledby="purchase-history">
-            <h2 id="purchase-history" className="font-display mb-4 text-2xl">
-              Your orders
-            </h2>
-            {!q.data?.orders.length ? (
-              <EmptyState
-                mark={<ShoppingBag className="h-5 w-5" />}
-                title="No orders yet"
-                action={
-                  <Link href="/workspace" className="btn btn-primary">
-                    Back to Home
-                  </Link>
-                }
-              >
-                An order appears here once you choose a document to buy and accept its licence. Saving an
-                order does not pay for it.
-              </EmptyState>
-            ) : (
-              <div className="space-y-4">
-                {q.data.orders.map((order) => (
-                  <OrderCard key={order.id} order={order} changed={refresh} />
-                ))}
-              </div>
-            )}
-          </section>
+          {(!directCheckout || Boolean(q.data?.orders.length)) && (
+            <section aria-labelledby="purchase-history">
+              <h2 id="purchase-history" className="font-display mb-4 text-2xl">
+                Your orders
+              </h2>
+              {!q.data?.orders.length ? (
+                <EmptyState
+                  mark={<ShoppingBag className="h-5 w-5" />}
+                  title="No orders yet"
+                  action={
+                    <Link href="/workspace" className="btn btn-primary">
+                      Back to Home
+                    </Link>
+                  }
+                >
+                  An order appears here once you choose a document to buy and accept its licence. Saving an
+                  order does not pay for it.
+                </EmptyState>
+              ) : (
+                <div className="space-y-4">
+                  {q.data.orders.map((order) => (
+                    <OrderCard key={order.id} order={order} changed={refresh} />
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
         </>
       )}
     </div>

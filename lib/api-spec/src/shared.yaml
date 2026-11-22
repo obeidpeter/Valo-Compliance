@@ -1,5 +1,16 @@
 # Schemas that more than one module, or a shared response, uses.
 schemas:
+  TemplateOffer:
+    type: object
+    required: [id, title, amountKobo, currency, licenceVersion, licenceText, taxTreatment]
+    properties:
+      id: { type: string, format: uuid }
+      title: { type: string }
+      amountKobo: { type: integer }
+      currency: { type: string }
+      licenceVersion: { type: string }
+      licenceText: { type: string }
+      taxTreatment: { type: string }
   PublicSourceReference:
     type: object
     required: [url, title, locator]

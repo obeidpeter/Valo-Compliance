@@ -6,7 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type CustomerPurchasesProductsItem = {
+export interface TemplateOffer {
   id: string;
   title: string;
   amountKobo: number;
@@ -14,4 +14,4 @@ export type CustomerPurchasesProductsItem = {
   licenceVersion: string;
   licenceText: string;
   taxTreatment: string;
-};
+}

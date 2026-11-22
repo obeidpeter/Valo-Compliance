@@ -8,6 +8,7 @@
 import type { ReleasedTemplateAccess } from './releasedTemplateAccess';
 import type { ReleasedTemplateFormatsItem } from './releasedTemplateFormatsItem';
 import type { ReleasedTemplatePublicationMethod } from './releasedTemplatePublicationMethod';
+import type { TemplateOffer } from './templateOffer';
 
 export interface ReleasedTemplate {
   id: string;
@@ -27,5 +28,6 @@ export interface ReleasedTemplate {
   preview: string[];
   developmentOnly: boolean;
   commercialLicenceAccepted: boolean;
+  offer?: TemplateOffer;
   formats: ReleasedTemplateFormatsItem[];
 }

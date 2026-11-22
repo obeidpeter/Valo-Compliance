@@ -13,7 +13,8 @@ import {
 import { PublicLink as Link } from "@/components/public-link";
 import { describeError } from "@/lib/describe-error";
 import { basePath } from "@/lib/env";
-import { formatDay } from "@/lib/format";
+import { formatDay, formatNaira } from "@/lib/format";
+import { templateCheckoutPath } from "@/lib/template-checkout";
 import { fromServer } from "@/lib/server-data";
 import { EmptyState, ErrorState, Notice, Skel } from "@/components/states";
 import { SaveTemplateButton } from "@/components/saved-templates";
@@ -234,6 +235,17 @@ export function TemplateDetail({
             <aside className="lg:sticky lg:top-24 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-start">
               <div className="surface grid gap-4 p-5">
                 <p className="font-display text-xl">Use this template</p>
+                {t.offer && (
+                  <>
+                    <p className="font-display text-3xl" data-testid="template-price">
+                      {formatNaira(t.offer.amountKobo)}
+                    </p>
+                    <p className="text-sm text-muted-foreground">{t.offer.taxTreatment}</p>
+                    <Link href={templateCheckoutPath(t.offer.id)} className="btn btn-primary w-full">
+                      Go to checkout
+                    </Link>
+                  </>
+                )}
                 {t.access === "premium" && (
                   <p className="text-sm text-muted-foreground">
                     Downloading this version requires an active purchase in your workspace.
@@ -241,7 +253,7 @@ export function TemplateDetail({
                 )}
                 {signedIn ? (
                   <CustomerActions t={t} />
-                ) : (
+                ) : !t.offer ? (
                   <>
                     <p className="text-sm text-muted-foreground">
                       {t.publicationMethod === "manual"
@@ -252,8 +264,8 @@ export function TemplateDetail({
                       Sign in to continue
                     </Link>
                   </>
-                )}
-                {t.publicationMethod !== "manual" && !t.commercialLicenceAccepted && (
+                ) : null}
+                {t.publicationMethod !== "manual" && !t.commercialLicenceAccepted && !t.offer && (
                   <Notice title="Not for sale">
                     Commercial licence terms have not been accepted for this template, so it is not sold or
                     offered as a paid product.
@@ -269,6 +281,14 @@ export function TemplateDetail({
             </aside>
 
             <div className="min-w-0 lg:col-start-1">
+              {t.offer && (
+                <section className="mb-8" aria-labelledby="licence-heading">
+                  <h2 id="licence-heading" className="font-display text-2xl">
+                    Licence terms · version {t.offer.licenceVersion}
+                  </h2>
+                  <p className="mt-3 whitespace-pre-line leading-relaxed">{t.offer.licenceText}</p>
+                </section>
+              )}
               {t.publicationMethod === "manual" ? (
                 <p className="text-sm text-muted-foreground">
                   {t.disclosure} Published {formatDay(t.reviewedAt)}.

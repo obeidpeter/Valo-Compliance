@@ -811,6 +811,15 @@ export const GetReleasedTemplateResponse = zod.object({
   "preview": zod.array(zod.string()),
   "developmentOnly": zod.boolean(),
   "commercialLicenceAccepted": zod.boolean(),
+  "offer": zod.object({
+  "id": zod.uuid(),
+  "title": zod.string(),
+  "amountKobo": zod.int(),
+  "currency": zod.string(),
+  "licenceVersion": zod.string(),
+  "licenceText": zod.string(),
+  "taxTreatment": zod.string()
+}).optional(),
   "formats": zod.array(zod.enum(['docx', 'pdf']))
 })
 
@@ -1168,7 +1177,7 @@ export const GetCustomerPurchasesResponse = zod.object({
   "disputeStatus": zod.string().nullable()
 })),
   "products": zod.array(zod.object({
-  "id": zod.string(),
+  "id": zod.uuid(),
   "title": zod.string(),
   "amountKobo": zod.int(),
   "currency": zod.string(),

@@ -15,7 +15,7 @@ import {
   valoWorkspaces,
 } from "@workspace/db";
 import { z } from "zod";
-import { liveOperationalVersions } from "../catalogue";
+import { activeTemplatePrices, isFreeBaselineTemplate, liveOperationalVersions } from "../catalogue";
 import { authorizeWorkspaceWrite, type WorkspaceActor } from "../workspaces";
 import { ValoProblem } from "../../platform/valo-problem";
 import { consumeQuota, quotaSubjectHash } from "../../lib/valo-quota";
@@ -122,10 +122,8 @@ async function presentOrder(tx: Tx, order: typeof valoOrders.$inferSelect) {
  * pooled connections, so call it outside transactions: a caller that holds a transaction's
  * connection while it waits for another lets enough concurrent requests exhaust the pool. */
 async function commercialOffers() {
-  const [released, prices] = await Promise.all([liveOperationalVersions(), db.select().from(valoPrices)]);
-  const reviewedIds = new Set(
-    released.filter((v) => !/^TPL-(0[1-9]|1[0-2])$/.test(v.templateId)).map((v) => v.id),
-  );
+  const [released, prices] = await Promise.all([liveOperationalVersions(), activeTemplatePrices()]);
+  const reviewedIds = new Set(released.filter((v) => !isFreeBaselineTemplate(v.templateId)).map((v) => v.id));
   const manualIds = new Set<string>();
   if (prices.length && isDevelopmentRuntime()) {
     const { rows } = await db.execute<{ edition: string }>(
@@ -133,27 +131,9 @@ async function commercialOffers() {
     );
     for (const { edition } of rows) manualIds.add(edition);
   }
-  const now = Date.now();
   return prices
-    .filter(
-      (p) =>
-        (reviewedIds.has(p.contentVersionId) || manualIds.has(p.contentVersionId)) &&
-        Boolean(p.approvalReference) &&
-        +p.effectiveFrom <= now &&
-        (!p.effectiveTo || +p.effectiveTo > now),
-    )
-    .map((p) => ({
-      manual: manualIds.has(p.contentVersionId),
-      product: {
-        id: p.id,
-        title: p.title,
-        amountKobo: p.amountKobo,
-        currency: p.currency,
-        licenceVersion: p.licenceVersion,
-        licenceText: p.licenceText,
-        taxTreatment: p.taxTreatment,
-      },
-    }));
+    .filter(({ edition }) => reviewedIds.has(edition) || manualIds.has(edition))
+    .map(({ edition, product }) => ({ manual: manualIds.has(edition), product }));
 }
 export async function commerceProducts() {
   return (await commercialOffers()).map((offer) => offer.product);
