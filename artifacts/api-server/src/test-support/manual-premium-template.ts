@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { GetManualLibraryRevisionResponse, GetReleasedTemplateResponse } from "@workspace/api-zod";
+import {
+  GetManualLibraryRevisionResponse,
+  GetReleasedTemplateResponse,
+  ListPublicCatalogueResponse,
+} from "@workspace/api-zod";
 import { wordFromText } from "../modules/manual-library/files";
 
 type Call = (path: string, body?: unknown, actor?: string) => Promise<Response>;
@@ -23,6 +27,13 @@ export async function exercisePremiumManualTemplate(call: Call, editor: string) 
     upload: { format: "docx", base64: bytes.toString("base64") },
   };
   const draft = (value: unknown) => call(path + "/drafts", value, editor);
+  const libraryCard = async () => {
+    const response = await call("/public/catalogue?type=template&access=premium&q=Service%20agreement");
+    assert.equal(response.status, 200);
+    return ListPublicCatalogueResponse.parse(await response.json()).items.find(
+      (i) => i.slug === "manual-" + itemId,
+    );
+  };
   const readRevision = async (response: Response) => {
     assert.equal(response.status, 200);
     return GetManualLibraryRevisionResponse.parse(await response.json());
@@ -58,6 +69,7 @@ export async function exercisePremiumManualTemplate(call: Call, editor: string) 
   };
   await db.insert(valoPrices).values([
     price,
+    { ...price, id: randomUUID(), amountKobo: 9000, effectiveFrom: new Date(Date.now() - 172800000) },
     { ...price, id: randomUUID(), amountKobo: 12000, effectiveFrom: new Date(Date.now() + 86400000) },
     {
       ...price,
@@ -72,6 +84,7 @@ export async function exercisePremiumManualTemplate(call: Call, editor: string) 
       (await commerceProducts()).some((p) => p.id === priceId),
     );
   assert.equal(await productVisible(), false);
+  assert.equal(await libraryCard(), undefined);
   await readRevision(await act("publish", first));
   const detail = GetReleasedTemplateResponse.parse(
     await (await call("/public/templates/manual-" + itemId)).json(),
@@ -90,6 +103,9 @@ export async function exercisePremiumManualTemplate(call: Call, editor: string) 
     (await commerceProducts()).find((p) => p.id === priceId),
   );
   assert.deepEqual(detail.offer, buyerOffer);
+  const card = await libraryCard();
+  assert.equal(card?.id, first.id);
+  assert.equal(card.amountKobo, detail.offer.amountKobo);
   assert.deepEqual(detail.preview, [data.body]);
   assert.equal((await call("/public/resources/manual-" + itemId)).status, 404);
   assert.equal(
@@ -145,11 +161,15 @@ export async function exercisePremiumManualTemplate(call: Call, editor: string) 
   );
   assert.equal(replacement.id, next.id);
   assert.equal(replacement.offer, undefined);
+  const replacedCard = await libraryCard();
+  assert.equal(replacedCard?.id, next.id);
+  assert.equal(replacedCard.amountKobo, undefined);
   assert.equal(await productVisible(), false);
   assert.equal((await download(first.id, reader)).status, 403);
   assert.equal((await download(next.id, reader)).status, 403);
   assert.equal((await download(first.id, other)).status, 403);
   assert.equal((await download(next.id, other)).status, 403);
   await readRevision(await act("withdraw", next));
+  assert.equal(await libraryCard(), undefined);
   assert.equal((await call("/public/templates/manual-" + itemId)).status, 404);
 }

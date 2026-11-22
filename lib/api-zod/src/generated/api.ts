@@ -765,6 +765,9 @@ export const ListPublicCatalogueQueryParams = zod.object({
   "page": zod.coerce.number().int().min(1).default(listPublicCatalogueQueryPageDefault)
 })
 
+
+
+
 export const ListPublicCatalogueResponse = zod.object({
   "items": zod.array(zod.object({
   "id": zod.string(),
@@ -776,6 +779,7 @@ export const ListPublicCatalogueResponse = zod.object({
   "templateId": zod.string().optional(),
   "category": zod.string().optional(),
   "access": zod.enum(['free', 'premium']).optional(),
+  "amountKobo": zod.int().min(1).optional().describe('Current approved NGN price in kobo for a released premium template edition.'),
   "reviewedAt": zod.string().optional(),
   "href": zod.string().optional(),
   "reason": zod.string().optional()
@@ -824,6 +828,8 @@ export const GetReleasedTemplateResponse = zod.object({
 })
 
 
+
+
 export const listSavedTemplatesResponseItemsMax = 200;
 
 
@@ -840,6 +846,7 @@ export const ListSavedTemplatesResponse = zod.object({
   "templateId": zod.string().optional(),
   "category": zod.string().optional(),
   "access": zod.enum(['free', 'premium']).optional(),
+  "amountKobo": zod.int().min(1).optional().describe('Current approved NGN price in kobo for a released premium template edition.'),
   "reviewedAt": zod.string().optional(),
   "href": zod.string().optional(),
   "reason": zod.string().optional()
@@ -860,6 +867,7 @@ export const ListSavedTemplatesResponse = zod.object({
   "templateId": zod.string().optional(),
   "category": zod.string().optional(),
   "access": zod.enum(['free', 'premium']).optional(),
+  "amountKobo": zod.int().min(1).optional().describe('Current approved NGN price in kobo for a released premium template edition.'),
   "reviewedAt": zod.string().optional(),
   "href": zod.string().optional(),
   "reason": zod.string().optional()
@@ -871,6 +879,8 @@ export const ListSavedTemplatesResponse = zod.object({
 export const SaveReleasedTemplateParams = zod.object({
   "id": zod.uuid()
 })
+
+
 
 export const saveReleasedTemplateResponseItemsMax = 200;
 
@@ -888,6 +898,7 @@ export const SaveReleasedTemplateResponse = zod.object({
   "templateId": zod.string().optional(),
   "category": zod.string().optional(),
   "access": zod.enum(['free', 'premium']).optional(),
+  "amountKobo": zod.int().min(1).optional().describe('Current approved NGN price in kobo for a released premium template edition.'),
   "reviewedAt": zod.string().optional(),
   "href": zod.string().optional(),
   "reason": zod.string().optional()
@@ -908,6 +919,7 @@ export const SaveReleasedTemplateResponse = zod.object({
   "templateId": zod.string().optional(),
   "category": zod.string().optional(),
   "access": zod.enum(['free', 'premium']).optional(),
+  "amountKobo": zod.int().min(1).optional().describe('Current approved NGN price in kobo for a released premium template edition.'),
   "reviewedAt": zod.string().optional(),
   "href": zod.string().optional(),
   "reason": zod.string().optional()
@@ -926,6 +938,8 @@ export const UnsaveTemplateParams = zod.object({
   "templateId": zod.coerce.string().max(unsaveTemplatePathTemplateIdMax).regex(unsaveTemplatePathTemplateIdRegExp)
 })
 
+
+
 export const unsaveTemplateResponseItemsMax = 200;
 
 
@@ -942,6 +956,7 @@ export const UnsaveTemplateResponse = zod.object({
   "templateId": zod.string().optional(),
   "category": zod.string().optional(),
   "access": zod.enum(['free', 'premium']).optional(),
+  "amountKobo": zod.int().min(1).optional().describe('Current approved NGN price in kobo for a released premium template edition.'),
   "reviewedAt": zod.string().optional(),
   "href": zod.string().optional(),
   "reason": zod.string().optional()
@@ -962,12 +977,16 @@ export const UnsaveTemplateResponse = zod.object({
   "templateId": zod.string().optional(),
   "category": zod.string().optional(),
   "access": zod.enum(['free', 'premium']).optional(),
+  "amountKobo": zod.int().min(1).optional().describe('Current approved NGN price in kobo for a released premium template edition.'),
   "reviewedAt": zod.string().optional(),
   "href": zod.string().optional(),
   "reason": zod.string().optional()
 }),zod.null()])
 })).max(unsaveTemplateResponseItemsMax)
 })
+
+
+
 
 
 export const ListOperationalRecommendationsResponse = zod.object({
@@ -981,6 +1000,7 @@ export const ListOperationalRecommendationsResponse = zod.object({
   "templateId": zod.string().optional(),
   "category": zod.string().optional(),
   "access": zod.enum(['free', 'premium']).optional(),
+  "amountKobo": zod.int().min(1).optional().describe('Current approved NGN price in kobo for a released premium template edition.'),
   "reviewedAt": zod.string().optional(),
   "href": zod.string().optional(),
   "reason": zod.string().optional()

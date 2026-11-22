@@ -12,7 +12,7 @@ import {
 } from "@workspace/api-client-react";
 import { PublicLink as Link } from "@/components/public-link";
 import { EmptyState, ErrorState, Notice, PageHeader, Skel } from "@/components/states";
-import { formatCount } from "@/lib/format";
+import { formatCount, formatNaira } from "@/lib/format";
 import {
   catalogueParams,
   industryLabel,
@@ -276,7 +276,13 @@ export function Library({
                         <span className="pill pill-ink">{industryLabel(it.industry, industryNames)}</span>
                       )}
                       {it.access && (
-                        <span className="pill pill-ink">{it.access === "premium" ? "Premium" : "Free"}</span>
+                        <span className="pill pill-ink" data-testid="card-access">
+                          {it.access === "premium" ? "Premium" : "Free"}
+                          {it.type === "template" &&
+                            it.access === "premium" &&
+                            it.amountKobo !== undefined &&
+                            ` · ${formatNaira(it.amountKobo)}`}
+                        </span>
                       )}
                     </div>
                     {/* An industry page is listed under the industry's name, which is in lower case. */}

@@ -416,6 +416,11 @@ export interface PublicItem {
   templateId?: string;
   category?: string;
   access?: PublicItemAccess;
+  /**
+     * Current approved NGN price in kobo for a released premium template edition.
+     * @minimum 1
+     */
+  amountKobo?: number;
   reviewedAt?: string;
   href?: string;
   reason?: string;
