@@ -1257,6 +1257,13 @@
     {
       "requirement": "EDP-002",
       "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/guidance-claims-captured.test.ts",
+      "test": "the Labour Act is read from a reference copy, so every passage of it is held",
+      "proves": "Every passage of the Labour Act the employment guides quote is held and is not confirmed as the Act's operative text, whatever words a capture of the recorded file supplies: the copy's amendment record carries an open question about the copy, which its publisher calls a reference copy, and one Act that could not be read. No other text read from captures has an open question or anything left unread."
+    },
+    {
+      "requirement": "EDP-002",
+      "job": "foundation",
       "file": "artifacts/api-server/src/modules/publication/guidance-captures.test.ts",
       "test": "a passage of an Act is supplied only when today's capture of the Act holds it word for word",
       "proves": "When a guide is prepared, a passage of an Act is taken only from a capture of the Act's official address that holds it word for word, dated and checksummed from that capture; a capture that lacks it, differs by one character or is of another address supplies nothing, and the sentences resting on it stay unbound."
@@ -1323,6 +1330,13 @@
       "file": "artifacts/api-server/src/modules/publication/guidance-claims-captured.test.ts",
       "test": "the eight food guides are mapped, and each map places every sentence of its guide",
       "proves": "For each of the eight food guides, every word of the guide is placed in its claim map and every sentence that says what a guideline says names a passage; with no passage supplied each such sentence is reported as not bound and no claim is made. The test has no official words to read, so it does not show that a quotation is in a guideline."
+    },
+    {
+      "requirement": "EDP-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/guidance-claims-captured.test.ts",
+      "test": "the four employment guides are mapped, and each map places every sentence of its guide",
+      "proves": "For each of the four employment guides, every word of the guide is placed in its claim map and every sentence about the Labour Act names a passage; with no passage supplied each such sentence is reported as not bound and no claim is made. The test has no official words to read, so it does not show that a quotation is in the Act."
     },
     {
       "requirement": "EDP-004",

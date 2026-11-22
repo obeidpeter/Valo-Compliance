@@ -216,12 +216,14 @@ page images. It is not legal review.
     needs a clean official copy, or a decision on how a text like this is quoted.
   - *A pension circular.* The circular listed with the employment guides' sources is an image
     with no words the extractor can read. The daily check could not capture it. Whether any
-    sentence of a guide rests on it has not been checked yet.
+    sentence of a guide rests on it had not been checked when this was written. It has since: none
+    does (see the employment guides' facts below).
   - *The Labour Act.* GUD-27 to GUD-30 rest on the copy at the investment commission's address.
     The build machine's own way of fetching got no answer from that address on 21 and
     22 November 2026: the connection closed. Fetched another way on 22 November 2026, the address
     returned the file, with the checksum the drafts' evidence recorded. The drafts' notes say the
-    address's listing calls the file a reference copy. No amendment record has been made for it.
+    address's listing calls the file a reference copy. No amendment record had been made for it
+    when this was written. One has since (see the employment guides' facts below).
 
 ### Facts gathered while the food guides were mapped (22 November 2026)
 
@@ -248,6 +250,62 @@ page images. It is not legal review.
   a staff strength of 1 to 5 in one place and 1 to 9 in another. The registration guideline gives
   its processing time as "one hundred and twenty (180) working days". GUD-19 and GUD-21 tell the
   reader not to rely on either number.
+
+### Facts gathered while the employment guides were mapped (22 November 2026)
+
+- **Four more guides are mapped.** GUD-27 to GUD-30, the employment guides, each have a claim map:
+  84 sentences in all. Each says what the Labour Act says once and reads it a few times. The rest
+  is a way of working. They rest on five passages of the Act: sections 5, 7, 18 and 54, and the
+  definition of "worker" in section 91. The passages are recorded by place and checksum, as for
+  the privacy and food guides.
+- **They can be bound, and they are held.** Built with the repository's own code from the file as
+  fetched on 22 November 2026 (its checksum is the one the drafts' evidence recorded), each of
+  the four guides had every sentence about the Act bound. No source was marked current, so the
+  gate held all four and none could be prepared for its reviews. That is the intended result: see
+  the next four points.
+- **The copy is a reference copy.** The file is at the investment commission's address. The
+  commission's listing names the Federal Ministry of Labour and Employment and says: "This
+  document is provided for reference. The authoritative version remains with the issuing
+  authority." The file is typed, not scanned. Its own details say it was made from a Word
+  document on 25 November 2011. It has typing slips: the headings of sections 5, 6 and 7 are
+  numbered 1, 2 and 3, a stray "(c)" stands in the middle of section 7(2)(b), and the last two
+  paragraphs of the definition of "worker" are lettered (a) and (b).
+- **No other copy was found on an official host in the policy.** The National Assembly's list of
+  Acts does not hold the Labour Act. A web search found copies on three other hosts, none in the
+  policy: a legislative advocacy centre's laws site, a commercial law site and the National
+  Library's repository.
+- **The five passages were compared with one of those copies.** The National Library's repository
+  holds a compendium of labour laws of the National Industrial Court, a Word document that heads
+  its text "LABOUR ACT, CAP L1, LFN 2004". A program compared the five passages word by word,
+  ignoring capital letters, line breaks, where a heading is printed and the notes printed beside
+  the text. Both copies give 1 August 1971 as the commencement. They differ in spelling; in a
+  small word such as "the", "a", "of", "any" or "made" that one copy has and the other lacks, in
+  fifteen places; in "24 months" against "twenty-four months" (section 18); in "Schedule 3"
+  against "the Third Schedule" (section 5); in "anyone month" against "any month" (section 5); in
+  punctuation; and in the lettering above. No other word differs. Which copy has the Act's own
+  words in those places was not established. Neither is the Gazette's.
+- **The search for later amendments.** The National Assembly's list (182 entries) names no Act
+  that amends the Labour Act. Four entries have labour, wages or trade unions in their titles.
+  Three were fetched and searched by program for the Labour Act's name: the Nigerian Maritime
+  Labour Act 2003 and the National Minimum Wage (Amendment) Acts of 2000 and 2011. Those words
+  occur only in the first, as part of its own name and of the Dock Labour Act's, which it repeals.
+  The fourth, the Trade Union (Amendment) Act 2005, could not be read: the file the National
+  Assembly's site serves for it is damaged. The bill tracker lists four bills that name the Labour Act and a Labour
+  Standards Bill 2008, none with a second or third reading. No Gazette index was searched.
+- **How the record holds these guides.** The Labour Act's amendment record carries the question
+  about the copy as open, and lists the Act that could not be read. An open question about a copy
+  itself now also leaves its passages unconfirmed as the operative text, so nothing given to a
+  reviewer says this copy's words are confirmed. A test shows every passage of this copy is held
+  whatever a capture supplies. Supposing, in one run on the build machine only, the question
+  settled, the unread Act read and the owner's approval given, the gate named nothing but the two
+  reviews, and the four reviews measured between 33,949 and 37,359.
+- **The other two files listed with these guides' sources.** The pension circular (an image the
+  extractor cannot read) and the Pension Reform Act 2014. No sentence of the four guides rests on
+  either: the drafts' claims cite only the Labour Act, and so do the maps. The unreadable circular
+  therefore holds nothing.
+- **Fetching the file.** The build machine's own way of fetching still gets no answer from the
+  commission's host. Whether the daily check in the real environment can fetch the file is not
+  known. If it cannot, no capture exists and these guides cannot be bound there.
 
 ## Proposal
 
@@ -453,9 +511,11 @@ command that publishes.
     released under is still the guidance policy as approved, and the provider's permission for its
     wording is still current, as for a template).
 11. Claim maps for GUD-11 to GUD-30, from the official files whose checksums match the recorded
-    ones (built for GUD-11 to GUD-15, the privacy guides, and GUD-19 to GUD-26, the food guides,
-    with an amendment record for each of their ten texts. GUD-16 to GUD-18 and GUD-27 to GUD-30
-    are not mapped: see the three things found in their texts).
+    ones (built for GUD-11 to GUD-15, the privacy guides, GUD-19 to GUD-26, the food guides, and
+    GUD-27 to GUD-30, the employment guides, with an amendment record for each of their eleven
+    texts. The employment guides are held by an open question about their copy of the Labour Act:
+    decision 8. GUD-16 to GUD-18 are not mapped, because the only official copy of the consumer
+    protection Act is a scan the extractor misreads: decision 9).
 
 ## Decisions for the product owner
 
@@ -486,3 +546,16 @@ the code counts the policy as approved only while the file is exactly the one ap
    are bound that way already, the Data Protection Act included, so they do not wait for this
    answer. If passages of that Act may be kept in the repository, a test could then check their
    quotations in CI, as it does for the first ten guides.
+8. **The Labour Act's copy.** The four employment guides quote the investment commission's copy,
+   which the commission itself calls a reference copy. Choose one. Accept that copy as the source
+   for these four guides, knowing its typing slips and the small differences from the second copy
+   it was compared with. Or name an authoritative copy, such as a volume of the Laws of the
+   Federation, and have the five passages compared with it. Or leave the four guides unpublished.
+   Under the first two, someone must also read the Trade Union (Amendment) Act 2005, whose file
+   on the National Assembly's site is damaged, and say whether it changes the Labour Act. Until
+   then the record keeps both open and the four guides stay held.
+9. **The consumer protection Act's copy.** The three consumer guides rest on an Act whose only
+   official copy is a scan. The words the extractor reads from it are wrong in many places, so no
+   quotation can be checked and a reviewer would be given misread words. Choose one. Obtain a
+   clean official copy, from the Commission or the Gazette. Or leave the three guides unpublished.
+   Quoting from the misread words is not proposed.

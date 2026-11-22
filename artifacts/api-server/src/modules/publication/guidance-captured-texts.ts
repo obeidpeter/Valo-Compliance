@@ -6,9 +6,10 @@ import type { GuideInstrument } from "./guidance-passages";
  * The first ten guides rest on passages of two Acts that are kept in the repository. For every
  * other text, only a passage's place and checksum are kept here: the words it starts and ends with,
  * and the SHA-256 of its words as the project's extractor read them from the official file on
- * 21 November 2026 (decision 0017, decision 7 for the owner). The words themselves are read from a
- * capture of the official address. A capture that does not hold exactly those words supplies no
- * passage, and the sentences of a guide that rest on it stay unbound.
+ * 21 November 2026, or on 22 November 2026 for the Labour Act (decision 0017, decision 7 for the
+ * owner). The words themselves are read from a capture of the official address. A capture that
+ * does not hold exactly those words supplies no passage, and the sentences of a guide that rest on
+ * it stay unbound.
  *
  * Nothing here says a text is current. That is the work of its amendment record
  * (guidance-amendments.ts).
@@ -124,6 +125,16 @@ export const capturedTexts: readonly CapturedText[] = [
     title: "Guidelines for Advertisement of Food Products in Nigeria",
     issuingBody: "National Agency for Food and Drug Administration and Control",
     effectiveFrom: "2026-03-01T00:00:00+01:00",
+  },
+  {
+    id: "NIPC-LABOUR-ACT",
+    kind: "act",
+    leadId: "NIPC-LABOUR-ACT",
+    title: "Labour Act",
+    // The commission that publishes this copy calls it a reference copy. Its amendment record
+    // carries that as an open question, so no passage of it is marked current.
+    issuingBody: "Nigerian Investment Promotion Commission (reference copy)",
+    effectiveFrom: "1971-08-01T00:00:00+01:00",
   },
 ];
 
@@ -632,5 +643,50 @@ export const capturedPassages: readonly CapturedPassage[] = [
     "3. Documentation",
     "3.2.7. Any other means (script/artwork/storyboard),",
     "d3c1e59b9cb8015364bc8527f9a7790cc076887fe6791384c1c0c33dc131806f",
+  ),
+  p(
+    "LABOUR-5",
+    "NIPC-LABOUR-ACT",
+    ["5"],
+    "section 5 in the Act's arrangement of sections, headed “Deductions (including deductions for overpayment of wages)”; this copy numbers the heading 1",
+    "Deductions (including deductions for overpayment of wages)\n   (1) Except where it is expressly permitted",
+    "third of the wages of the worker for that month.",
+    "8ddad1f53139ce3b51774829fd5d585c3270274b31259048f5880ddc5f3bd468",
+  ),
+  p(
+    "LABOUR-7",
+    "NIPC-LABOUR-ACT",
+    ["7"],
+    "section 7 in the Act's arrangement of sections, headed “Written particulars of terms of employment”; this copy numbers the heading 3",
+    "Written particulars of terms of employment\n    (1) Not later than three months",
+    "he has a copy of that written contract.",
+    "7e9f4fc35f0b73db8d6a3914364b6b1273b55f6e16460c3e1b6e2f4a52f249e8",
+  ),
+  p(
+    "LABOUR-18",
+    "NIPC-LABOUR-ACT",
+    ["18"],
+    "section 18, Annual holidays with pay",
+    "18. Annual holidays with pay\n",
+    "portion to full pay for one week at his normal rate as that period bears to twelve months.",
+    "5ebafee1aa34f70e23dfb2ab0500eb925feeec991765ddb93d6399c526f7c935",
+  ),
+  p(
+    "LABOUR-54",
+    "NIPC-LABOUR-ACT",
+    ["54"],
+    "section 54, Maternity protection",
+    "54. Maternity protection\n",
+    "legitimate child.",
+    "da7bdc9ff71805133b044cb826bba09c87e74a14d42fcae8fbb8bda6b483c3e9",
+  ),
+  p(
+    "LABOUR-91-worker",
+    "NIPC-LABOUR-ACT",
+    ["91"],
+    "section 91, “worker”",
+    '"worker" means any person who has entered into or works under a contract with an',
+    "chant shipping or civil aviation apply;",
+    "baf28970c5b23d6e7894e1cf2091806cc73d3c5229e7d90ed240cda984190126",
   ),
 ];

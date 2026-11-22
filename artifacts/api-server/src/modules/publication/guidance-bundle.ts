@@ -2,6 +2,7 @@ import { candidateDigest, digest, disclosure, type PublicationBundle } from "@wo
 import { decidedSource, guideSourceDecision, type AmendmentRecord } from "./guidance-amendments";
 import { guidanceCandidate } from "./guidance-candidate";
 import { buildGuideClaims, type GuideClaimMap } from "./guidance-claim-map";
+import { employmentClaimMaps } from "./guidance-claims-employment";
 import { foodClaimMaps } from "./guidance-claims-food";
 import { privacyClaimMaps } from "./guidance-claims-privacy";
 import { registrationTaxClaimMaps } from "./guidance-claims-registration-tax";
@@ -19,6 +20,7 @@ export const guideClaimMaps: readonly GuideClaimMap[] = [
   ...registrationTaxClaimMaps,
   ...privacyClaimMaps,
   ...foodClaimMaps,
+  ...employmentClaimMaps,
 ];
 export const mappedGuideIds = guideClaimMaps.map((m) => m.id);
 /**

@@ -128,5 +128,14 @@ export const guidanceSourceLeads = [
       "The edition GUD-26 quotes. A later edition is a different text; see its amendment record.",
     sourceLocator: "docs/architecture/decisions/0017-clear-guidance-holds.md",
   },
+  {
+    id: "NIPC-LABOUR-ACT",
+    title: "Labour Act — NIPC reference copy",
+    url: "https://m.nipc.gov.ng/assets/resources/labour-act/labour-act.pdf",
+    category: "regulatory",
+    baselineNotes:
+      "The copy GUD-27 to GUD-30 quote. The commission lists it for reference and says the authoritative version remains with the issuing authority; see its amendment record.",
+    sourceLocator: "docs/architecture/decisions/0017-clear-guidance-holds.md",
+  },
 ] as const;
 export const allSourceLeads = [...baseline, ...businessNameSourceLeads, ...guidanceSourceLeads];

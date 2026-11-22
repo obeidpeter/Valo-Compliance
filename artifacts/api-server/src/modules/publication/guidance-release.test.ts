@@ -231,6 +231,12 @@ test("each amendment record matches the retained texts it describes", () => {
         sha256: string;
       }[]
     ).map((source) => ({ url: source.url, pdfSha256: source.sha256 })),
+    ...(
+      retained("docs/content-candidates/source-evidence/employment-sources.json") as {
+        url: string;
+        sha256: string;
+      }[]
+    ).map((source) => ({ url: source.url, pdfSha256: source.sha256 })),
   ];
   for (const text of capturedTexts) {
     const record = guideAmendmentRecords.find((r) => r.instrument === text.id);
@@ -239,11 +245,10 @@ test("each amendment record matches the retained texts it describes", () => {
     assert.equal(evidence.find((source) => source.url === record.url)?.pdfSha256, record.rawSha256, text.id);
     assert.equal(record.commencement.effectiveFrom, text.effectiveFrom, text.id);
     assert.equal(record.title, text.title);
-    assert.deepEqual(record.notRead, [], text.id);
-    assert.ok(
-      record.conflicts.every((conflict) => !conflict.open),
-      text.id,
-    );
+    // One text has an open question and an Act left unread: the reference copy of the Labour Act.
+    // guidance-claims-captured.test.ts shows that every passage of it is held.
+    const settled = record.notRead.length === 0 && record.conflicts.every((conflict) => !conflict.open);
+    assert.equal(settled, text.id !== "NIPC-LABOUR-ACT", text.id);
   }
   for (const record of guideAmendmentRecords) {
     assert.ok((guidanceOfficialHosts as readonly string[]).includes(new URL(record.url).hostname));
@@ -435,6 +440,27 @@ test("a source is marked current only on the strength of its text's amendment re
     ]).reasons.join(" "),
     /an open question touches this passage: the day the Act commenced/,
   );
+  // An open question about the copy itself also leaves the passage unconfirmed as the operative
+  // text. One about anything else leaves the text confirmed and its amendments unresolved.
+  const questioned = (aboutTheCopy: boolean) => {
+    const decision = guideSourceDecision(passage("CAMA-814"), day, [
+      {
+        ...record("CAC-CAMA-2020"),
+        conflicts: [
+          {
+            about: "supposed for this test",
+            sections: "all",
+            open: true,
+            note: "Supposed for this test.",
+            ...(aboutTheCopy ? { aboutTheCopy: true as const } : {}),
+          },
+        ],
+      },
+    ]);
+    return [decision.status, decision.operativeTextConfirmed, decision.amendmentsResolved];
+  };
+  assert.deepEqual(questioned(true), ["held", false, false]);
+  assert.deepEqual(questioned(false), ["held", true, false]);
 
   // A record lasts 30 days from its oldest search, and a search cannot be dated ahead.
   const lastDay = new Date(Date.parse("2026-11-21T17:50:37Z") + AMENDMENT_RECORD_DAYS * 86_400_000 - 1000);

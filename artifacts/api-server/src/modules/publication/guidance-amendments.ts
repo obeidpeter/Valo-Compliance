@@ -72,8 +72,19 @@ export type AmendmentRecord = {
       only?: readonly string[];
     }
   >;
-  /** Differences and open questions. An open one holds every passage of the sections it names. */
-  conflicts: readonly { about: string; sections: readonly string[] | "all"; open: boolean; note: string }[];
+  /**
+   * Differences and open questions. An open one holds every passage of the sections it names. An
+   * open one about the copy itself, not about a later amendment, also leaves those passages
+   * unconfirmed as the operative text.
+   */
+  conflicts: readonly {
+    about: string;
+    sections: readonly string[] | "all";
+    open: boolean;
+    note: string;
+    /** The question is whether this copy has the text's own words. */
+    aboutTheCopy?: true;
+  }[];
   limits: string;
 };
 
@@ -185,7 +196,9 @@ export function guideSourceDecision(
   for (const conflict of record.conflicts) {
     if (!conflict.open) continue;
     if (conflict.sections === "all" || passage.sections.some((s) => conflict.sections.includes(s)))
-      reasons.push(`an open question touches this passage: ${conflict.about}`);
+      (conflict.aboutTheCopy ? textReasons : reasons).push(
+        `an open question touches this passage: ${conflict.about}`,
+      );
   }
 
   const operativeTextConfirmed = textReasons.length === 0;
@@ -223,8 +236,10 @@ const NASS_BILL_TRACKER =
 
 /**
  * The amendment records held today: for the two Acts GUD-01 to GUD-10 quote, for the Act and the
- * directive GUD-11 to GUD-15 quote, and for the eight guidelines GUD-19 to GUD-26 quote. Each says what was done and what was not: see `notRead`,
- * `comparedSections`, `conflicts` and `limits`.
+ * directive GUD-11 to GUD-15 quote, for the eight guidelines GUD-19 to GUD-26 quote, and for the
+ * copy of the Labour Act GUD-27 to GUD-30 quote. Each says what was done and what was not: see
+ * `notRead`, `comparedSections`, `conflicts` and `limits`. The Labour Act's record carries an open
+ * question and an Act not yet read, so its passages are held.
  */
 export const guideAmendmentRecords: readonly AmendmentRecord[] = [
   {
@@ -839,5 +854,70 @@ export const guideAmendmentRecords: readonly AmendmentRecord[] = [
     notRead: [],
     conflicts: [],
     limits: NAFDAC_GUIDELINE_LIMITS,
+  },
+  {
+    instrument: "NIPC-LABOUR-ACT",
+    title: "Labour Act",
+    url: "https://m.nipc.gov.ng/assets/resources/labour-act/labour-act.pdf",
+    rawSha256: "ee8bf3aa6607d6322327b51cc882f139d3e9a3c5bff9243b360dc122daae3eb6",
+    commencement: { printed: "[1st August, 1971]", effectiveFrom: "1971-08-01T00:00:00+01:00" },
+    searches: [
+      {
+        place: "Nigerian Investment Promotion Commission: its listing of this file",
+        url: "https://m.nipc.gov.ng/external-resources/labour-act",
+        searchedAt: "2026-11-22T00:47:42Z",
+        rawSha256: "42e997e683ea028229fbea363c3ab9f33719e65edafd0af11db509251cde4295",
+        found:
+          'The page lists the file as the Labour Act, under the Federal Ministry of Labour and Employment, with the date 1/03/19. It says: "This document is provided for reference. The authoritative version remains with the issuing authority." It names no amending Act and no other edition.',
+      },
+      {
+        place: "Nigerian Investment Promotion Commission: the file's own address",
+        url: "https://m.nipc.gov.ng/assets/resources/labour-act/labour-act.pdf",
+        searchedAt: "2026-11-22T00:21:46Z",
+        rawSha256: "ee8bf3aa6607d6322327b51cc882f139d3e9a3c5bff9243b360dc122daae3eb6",
+        found:
+          "The address returned the file the drafts' source evidence recorded on 14 November 2026, by its checksum. The file's own details say it was made from a Word document on 25 November 2011.",
+      },
+      {
+        place: "National Assembly: its list of Acts and publications",
+        url: NASS_ACTS_LIST,
+        searchedAt: "2026-11-22T00:03:51Z",
+        rawSha256: "25274f83bbd57258cfa1e835ff7ba50fbe14e22227b3c9f5c154bb5c5810872e",
+        found:
+          "182 entries. None is the Labour Act, and none says by its title that it amends it. Four have labour, wages or trade unions in their titles. Three of them were fetched from the same site on 22 November 2026 and searched by program for the Labour Act's name: the Nigerian Maritime Labour Act 2003, a scan the program reads imperfectly, which repeals the Nigerian Dock Labour Act 1999, and the National Minimum Wage (Amendment) Acts of 2000 and 2011, which amend the National Minimum Wage Act. In the three, those words occur only in the first, as part of its own name and of the Dock Labour Act's. The fourth, the Trade Union (Amendment) Act 2005, could not be read. The list does not hold every Act.",
+      },
+      {
+        place: "National Assembly: its bill tracker",
+        url: NASS_BILL_TRACKER,
+        searchedAt: "2026-11-22T00:05:45Z",
+        rawSha256: "7b5d0c91b99792af3adde4395df027d64a1dd7090092d8ea8b73e569584c08f6",
+        found:
+          "2,660 bills. Four name the Labour Act: two House bills of 2019 to amend it (HB.05, first reading 3 July 2019, and HB.222, first reading 23 July 2019) and two Senate bills with no dates (one to repeal sections 55, 56, 57 and 58(2), and a Labor Act (Amendment) Bill 2009). A Labour Standards Bill 2008 is also listed, with no dates. The tracker shows no second or third reading for any of the five.",
+      },
+    ],
+    amendments: [],
+    notRead: [
+      {
+        title: "Trade Union (Amendment) Act 2005",
+        why: "by its title it amends the Trade Unions Act, which section 5 of the Labour Act refers to. The file the National Assembly's site serves for it is damaged: 17 words of it could be read on 22 November 2026. Whether it changes the Labour Act is not known",
+      },
+    ],
+    conflicts: [
+      {
+        about: "whether this copy can stand for the Act",
+        sections: "all",
+        open: true,
+        aboutTheCopy: true,
+        note: 'The commission that publishes this copy says it is provided for reference and that the authoritative version remains with the issuing authority. The file is typed, not scanned, and carries typing slips (see the next note). No copy of the Act was found on another official host in the policy: the National Assembly\'s list does not hold it. A web search on 22 November 2026 found copies on hosts that are not in the policy. One of them was compared with this copy: a compendium of labour laws of the National Industrial Court, held in the National Library\'s repository (https://nigeriareposit.nln.gov.ng/bitstreams/3fe91e63-2ec7-43ea-a8e0-f72b49f9ef7f/download, fetched on 22 November 2026, SHA-256 f1d9e71fa01003e43e1beb67c0df3cc464636a848aa7cb98270017c4d991e096), which heads its text "LABOUR ACT, CAP L1, LFN 2004". A program compared the five passages the guides quote word by word, ignoring capital letters, line breaks, where a heading is printed and the notes printed beside the text. Both copies give 1 August 1971 as the commencement. They differ in spelling (such as "authorised" here and "authorized" there); in a small word such as "the", "a", "of", "any" or "made" that one copy has and the other lacks, in fifteen places; in "24 months" here and "twenty-four months" there (section 18); in "Schedule 3" here and "the Third Schedule" there (section 5); in "anyone month" here and "any month" there (section 5); in punctuation; and in the lettering the next note describes. No other word differs. Which copy has the Act\'s own words in those places was not established. This question stays open until the product owner accepts a reference copy as the source for these guides, or names an authoritative copy and the passages are compared with it.',
+      },
+      {
+        about: "this copy numbers some headings and paragraphs wrongly",
+        sections: ["5", "7", "91"],
+        open: false,
+        note: 'The headings of sections 5, 6 and 7 are numbered 1, 2 and 3 in this copy. Its arrangement of sections at the front lists them as 5, 6 and 7, and the headings before and after are numbered 4 and 8. In section 7(2)(b) a stray "(c)" stands in the middle of a sentence. In section 91, the last two paragraphs of the definition of "worker" are lettered (a) and (b) where the second copy letters them (e) and (f). The passages of sections 5 and 7 are placed by their headings\' words, not by number.',
+      },
+    ],
+    limits:
+      "The search covers the commission's listing and the file's own address, the National Assembly's published list of Acts and its bill tracker, on the days shown. The National Assembly's list does not hold every Act. Three Acts in it were searched for the Labour Act's name and not otherwise read. Whether an Act on another subject changes the Labour Act in passing was not looked for. Regulations made under the Act, state laws, the National Minimum Wage Act as it now stands and court decisions were not looked for. No Gazette index was searched. The comparison with a second copy covers only the five passages the guides quote, and neither copy is the Gazette's.",
   },
 ];
