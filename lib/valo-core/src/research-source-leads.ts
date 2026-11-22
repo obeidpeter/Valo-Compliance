@@ -52,5 +52,81 @@ export const guidanceSourceLeads = [
     baselineNotes: "An official service page GUD-08 describes. A page says what it says when it is read.",
     sourceLocator: "docs/architecture/decisions/0017-clear-guidance-holds.md",
   },
+  {
+    id: "NAFDAC-FSAN-GDL-004-03",
+    title:
+      "NAFDAC: Guidelines for Production Inspection of Micro Scale Food Manufacturing Facilities in Nigeria (New Applicants)",
+    url: "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FSAN/2025-2030/Guidelines-for-Inspection-of-Micro-Scale-Enterprises-in-Nigeria.pdf",
+    category: "regulatory",
+    baselineNotes:
+      "The edition GUD-19 quotes. A later edition is a different text; see its amendment record.",
+    sourceLocator: "docs/architecture/decisions/0017-clear-guidance-holds.md",
+  },
+  {
+    id: "NAFDAC-FSAN-GDL-005-03",
+    title:
+      "NAFDAC: Guidelines for Production Inspection of Small Scale Food Enterprises in Nigeria (New Applicants)",
+    url: "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FSAN/2025-2030/Guidelines-for-Inspection-of-Small-Scale-Enterprises.pdf",
+    category: "regulatory",
+    baselineNotes:
+      "The edition GUD-19 quotes. A later edition is a different text; see its amendment record.",
+    sourceLocator: "docs/architecture/decisions/0017-clear-guidance-holds.md",
+  },
+  {
+    id: "NAFDAC-FSAN-GDL-001-03",
+    title:
+      "NAFDAC: Guidelines for Inspection and Requirements for Pre-packaged Food Manufacturing/Packaging Facilities in Nigeria",
+    url: "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FSAN/2025-2030/Guideline-for-Inspection-and-Requirements-for-Pre-Packaged-Food-Facilities-in-Nigeria.pdf",
+    category: "regulatory",
+    baselineNotes:
+      "The edition GUD-19 and GUD-20 quote. A later edition is a different text; see its amendment record.",
+    sourceLocator: "docs/architecture/decisions/0017-clear-guidance-holds.md",
+  },
+  {
+    id: "NAFDAC-FRRA-GDL-002-01",
+    title: "NAFDAC: Guidelines for Registration of Pre-packaged Food Products Made in Nigeria",
+    url: "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FR_and_R/Guidelines-for-Registration-of-Food-Products-Made-in-Nigeria.pdf",
+    category: "regulatory",
+    baselineNotes:
+      "The edition GUD-21 and GUD-26 quote. A later edition is a different text; see its amendment record.",
+    sourceLocator: "docs/architecture/decisions/0017-clear-guidance-holds.md",
+  },
+  {
+    id: "NAFDAC-FSAN-GDL-006-03",
+    title: "NAFDAC: Current Good Manufacturing Practice Guidelines for Food and Food Products (Revised)",
+    url: "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FSAN/2025-2030/Current-Good-Manufacturing-Practice-Guidelines-for-Food-and-Food-Products.pdf",
+    category: "regulatory",
+    baselineNotes:
+      "The edition GUD-22 and GUD-23 quote. A later edition is a different text; see its amendment record.",
+    sourceLocator: "docs/architecture/decisions/0017-clear-guidance-holds.md",
+  },
+  {
+    id: "NAFDAC-FSAN-GDL-008-03",
+    title: "NAFDAC: NAFDAC Guidelines for Food Hygienic Practices (NGFHP)",
+    url: "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FSAN/2025-2030/NAFDAC-Guidelines-for-Food-Hygienic-Practices.pdf",
+    category: "regulatory",
+    baselineNotes:
+      "The edition GUD-24 quotes. A later edition is a different text; see its amendment record.",
+    sourceLocator: "docs/architecture/decisions/0017-clear-guidance-holds.md",
+  },
+  {
+    id: "NAFDAC-IE-GDL-001-02",
+    title:
+      "NAFDAC: Guidelines for Handling and Disposal of Unwholesome Medicines and NAFDAC Regulated Products in Nigeria",
+    url: "https://www.nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/INVESTIGATION_ENFORCEMENT_GUIDELINES/Guidelines-for-Handling-and-Disposal-of-Unwholesome-Medicines-and-Other-NAFDAC-Regulated-Products.pdf",
+    category: "regulatory",
+    baselineNotes:
+      "The edition GUD-25 quotes. A later edition is a different text; see its amendment record.",
+    sourceLocator: "docs/architecture/decisions/0017-clear-guidance-holds.md",
+  },
+  {
+    id: "NAFDAC-FRR-GDL-003-01",
+    title: "NAFDAC: Guidelines for Advertisement of Food Products in Nigeria",
+    url: "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FR_and_R/Guidelines-for-Advertisement-Control-of-Food-Products-in-Nigeria-Revised.pdf",
+    category: "regulatory",
+    baselineNotes:
+      "The edition GUD-26 quotes. A later edition is a different text; see its amendment record.",
+    sourceLocator: "docs/architecture/decisions/0017-clear-guidance-holds.md",
+  },
 ] as const;
 export const allSourceLeads = [...baseline, ...businessNameSourceLeads, ...guidanceSourceLeads];

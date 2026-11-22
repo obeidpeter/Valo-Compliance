@@ -214,12 +214,16 @@ export function decidedSource(
 const BUDGET_OFFICE = "https://budgetoffice.gov.ng/index.php";
 const NASS_ACTS_LIST =
   "https://nass.gov.ng/documents/magazine_track/?draw=1&start=0&length=500&search%5Bvalue%5D=&search%5Bregex%5D=false";
+const NAFDAC_GUIDELINES_INDEX = "https://nafdac.gov.ng/regulatory-resources/guidelines/";
+// What each record of a food regulator's guideline did not do.
+const NAFDAC_GUIDELINE_LIMITS =
+  "The search covers the regulator's own guidelines index and the guideline's own address, on the days shown. The index calls most copies uncontrolled; what that means for a copy's standing was not established. Whether a regulation or an Act made since changes what the guideline says was not looked for. No Gazette index was searched and no court decision was looked for.";
 const NASS_BILL_TRACKER =
   "https://nass.gov.ng/documents/bill_track/?draw=1&start=0&length=3000&search%5Bvalue%5D=&search%5Bregex%5D=false";
 
 /**
- * The amendment records held today: for the two Acts GUD-01 to GUD-10 quote, and for the Act and
- * the directive GUD-11 to GUD-15 quote. Each says what was done and what was not: see `notRead`,
+ * The amendment records held today: for the two Acts GUD-01 to GUD-10 quote, for the Act and the
+ * directive GUD-11 to GUD-15 quote, and for the eight guidelines GUD-19 to GUD-26 quote. Each says what was done and what was not: see `notRead`,
  * `comparedSections`, `conflicts` and `limits`.
  */
 export const guideAmendmentRecords: readonly AmendmentRecord[] = [
@@ -608,5 +612,232 @@ export const guideAmendmentRecords: readonly AmendmentRecord[] = [
     ],
     limits:
       "The search covers the Commission's home page, its resources page and its guidance notice of 26 June 2026, on the day shown. The Commission's news pages were not read through. No Gazette index was searched and no court decision was looked for. Whether the Commission has said anything elsewhere that changes how the directive applies was not established.",
+  },
+  {
+    instrument: "NAFDAC-FSAN-GDL-004-03",
+    title:
+      "Guidelines for Production Inspection of Micro Scale Food Manufacturing Facilities in Nigeria (New Applicants)",
+    url: "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FSAN/2025-2030/Guidelines-for-Inspection-of-Micro-Scale-Enterprises-in-Nigeria.pdf",
+    rawSha256: "e886bb426318c246fe0795fd3861e0c1b90f95629f6ac67aed4acb5c79f757d3",
+    commencement: { printed: "Effective Date: 13/10/2025", effectiveFrom: "2025-10-13T00:00:00+01:00" },
+    searches: [
+      {
+        place: "NAFDAC: its guidelines index",
+        url: NAFDAC_GUIDELINES_INDEX,
+        searchedAt: "2026-11-22T00:40:42Z",
+        rawSha256: "f008dbaa73a937c84adc523aaea54017aabeed2389893469edaf4fcbe367cc99",
+        found:
+          'The page\'s table is filled by script from the same site. Read in a browser, its data lists 171 guidelines. This one is listed once, at the address this copy was fetched from, with the status "Uncontrolled" and a review date of 12 October 2030. No other edition of it is listed.',
+      },
+      {
+        place: "NAFDAC: the guideline's own address",
+        url: "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FSAN/2025-2030/Guidelines-for-Inspection-of-Micro-Scale-Enterprises-in-Nigeria.pdf",
+        searchedAt: "2026-11-21T17:50:23Z",
+        rawSha256: "e886bb426318c246fe0795fd3861e0c1b90f95629f6ac67aed4acb5c79f757d3",
+        found: "The address returned the same file as on 14 November 2026.",
+      },
+    ],
+    amendments: [],
+    notRead: [],
+    conflicts: [],
+    limits: NAFDAC_GUIDELINE_LIMITS,
+  },
+  {
+    instrument: "NAFDAC-FSAN-GDL-005-03",
+    title: "Guidelines for Production Inspection of Small Scale Food Enterprises in Nigeria (New Applicants)",
+    url: "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FSAN/2025-2030/Guidelines-for-Inspection-of-Small-Scale-Enterprises.pdf",
+    rawSha256: "ed0eb2e3c7a93cefc8ceb7be1e49485c07f41d3b67bf5638c66e43649e71108b",
+    commencement: { printed: "Effective Date: 13/10/2025", effectiveFrom: "2025-10-13T00:00:00+01:00" },
+    searches: [
+      {
+        place: "NAFDAC: its guidelines index",
+        url: NAFDAC_GUIDELINES_INDEX,
+        searchedAt: "2026-11-22T00:40:42Z",
+        rawSha256: "f008dbaa73a937c84adc523aaea54017aabeed2389893469edaf4fcbe367cc99",
+        found:
+          'The page\'s table is filled by script from the same site. Read in a browser, its data lists 171 guidelines. This one is listed once, at the address this copy was fetched from, with the status "Uncontrolled" and a review date of 12 October 2030. No other edition of it is listed.',
+      },
+      {
+        place: "NAFDAC: the guideline's own address",
+        url: "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FSAN/2025-2030/Guidelines-for-Inspection-of-Small-Scale-Enterprises.pdf",
+        searchedAt: "2026-11-21T17:50:21Z",
+        rawSha256: "ed0eb2e3c7a93cefc8ceb7be1e49485c07f41d3b67bf5638c66e43649e71108b",
+        found: "The address returned the same file as on 14 November 2026.",
+      },
+    ],
+    amendments: [],
+    notRead: [],
+    conflicts: [],
+    limits: NAFDAC_GUIDELINE_LIMITS,
+  },
+  {
+    instrument: "NAFDAC-FSAN-GDL-001-03",
+    title:
+      "Guidelines for Inspection and Requirements for Pre-packaged Food Manufacturing/Packaging Facilities in Nigeria",
+    url: "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FSAN/2025-2030/Guideline-for-Inspection-and-Requirements-for-Pre-Packaged-Food-Facilities-in-Nigeria.pdf",
+    rawSha256: "73d97cf33bce46abd7a49a0861a1d1b2d2882f641d2c2418855bec96c4e0a01e",
+    commencement: { printed: "Effective Date: 22/10/2025", effectiveFrom: "2025-10-22T00:00:00+01:00" },
+    searches: [
+      {
+        place: "NAFDAC: its guidelines index",
+        url: NAFDAC_GUIDELINES_INDEX,
+        searchedAt: "2026-11-22T00:40:42Z",
+        rawSha256: "f008dbaa73a937c84adc523aaea54017aabeed2389893469edaf4fcbe367cc99",
+        found:
+          'The page\'s table is filled by script from the same site. Read in a browser, its data lists 171 guidelines. This one is listed once, at the address this copy was fetched from, with the status "Uncontrolled" and a review date of 21 October 2030. No other edition of it is listed.',
+      },
+      {
+        place: "NAFDAC: the guideline's own address",
+        url: "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FSAN/2025-2030/Guideline-for-Inspection-and-Requirements-for-Pre-Packaged-Food-Facilities-in-Nigeria.pdf",
+        searchedAt: "2026-11-21T17:50:25Z",
+        rawSha256: "73d97cf33bce46abd7a49a0861a1d1b2d2882f641d2c2418855bec96c4e0a01e",
+        found: "The address returned the same file as on 14 November 2026.",
+      },
+    ],
+    amendments: [],
+    notRead: [],
+    conflicts: [],
+    limits: NAFDAC_GUIDELINE_LIMITS,
+  },
+  {
+    instrument: "NAFDAC-FRRA-GDL-002-01",
+    title: "Guidelines for Registration of Pre-packaged Food Products Made in Nigeria",
+    url: "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FR_and_R/Guidelines-for-Registration-of-Food-Products-Made-in-Nigeria.pdf",
+    rawSha256: "cd126bb61bd7593b35d1a1ea4ef4f2ee6ce294cbc538cd777a63b1c72bf8204a",
+    commencement: { printed: "Effective Date: 01/03/2026", effectiveFrom: "2026-03-01T00:00:00+01:00" },
+    searches: [
+      {
+        place: "NAFDAC: its guidelines index",
+        url: NAFDAC_GUIDELINES_INDEX,
+        searchedAt: "2026-11-22T00:40:42Z",
+        rawSha256: "f008dbaa73a937c84adc523aaea54017aabeed2389893469edaf4fcbe367cc99",
+        found:
+          'The page\'s table is filled by script from the same site. Read in a browser, its data lists 171 guidelines. This one is listed once, at the address this copy was fetched from, with the status "Published (Uncontrolled)" and a review date of 28 February 2031. No other edition of it is listed.',
+      },
+      {
+        place: "NAFDAC: the guideline's own address",
+        url: "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FR_and_R/Guidelines-for-Registration-of-Food-Products-Made-in-Nigeria.pdf",
+        searchedAt: "2026-11-21T17:50:24Z",
+        rawSha256: "cd126bb61bd7593b35d1a1ea4ef4f2ee6ce294cbc538cd777a63b1c72bf8204a",
+        found: "The address returned the same file as on 14 November 2026.",
+      },
+    ],
+    amendments: [],
+    notRead: [],
+    conflicts: [],
+    limits: NAFDAC_GUIDELINE_LIMITS,
+  },
+  {
+    instrument: "NAFDAC-FSAN-GDL-006-03",
+    title: "Current Good Manufacturing Practice Guidelines for Food and Food Products (Revised)",
+    url: "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FSAN/2025-2030/Current-Good-Manufacturing-Practice-Guidelines-for-Food-and-Food-Products.pdf",
+    rawSha256: "c01d8664329296b37977144d5c1c224576e56e29d87a0e234e71912f430f0f42",
+    commencement: { printed: "Effective Date: 13/10/2025", effectiveFrom: "2025-10-13T00:00:00+01:00" },
+    searches: [
+      {
+        place: "NAFDAC: its guidelines index",
+        url: NAFDAC_GUIDELINES_INDEX,
+        searchedAt: "2026-11-22T00:40:42Z",
+        rawSha256: "f008dbaa73a937c84adc523aaea54017aabeed2389893469edaf4fcbe367cc99",
+        found:
+          'The page\'s table is filled by script from the same site. Read in a browser, its data lists 171 guidelines. This one is listed once, at the address this copy was fetched from, with the status "Uncontrolled" and a review date of 12 October 2030. No other edition of it is listed.',
+      },
+      {
+        place: "NAFDAC: the guideline's own address",
+        url: "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FSAN/2025-2030/Current-Good-Manufacturing-Practice-Guidelines-for-Food-and-Food-Products.pdf",
+        searchedAt: "2026-11-21T17:50:17Z",
+        rawSha256: "c01d8664329296b37977144d5c1c224576e56e29d87a0e234e71912f430f0f42",
+        found: "The address returned the same file as on 14 November 2026.",
+      },
+    ],
+    amendments: [],
+    notRead: [],
+    conflicts: [],
+    limits: NAFDAC_GUIDELINE_LIMITS,
+  },
+  {
+    instrument: "NAFDAC-FSAN-GDL-008-03",
+    title: "NAFDAC Guidelines for Food Hygienic Practices (NGFHP)",
+    url: "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FSAN/2025-2030/NAFDAC-Guidelines-for-Food-Hygienic-Practices.pdf",
+    rawSha256: "f65f8912782749003aa7a2d09ad934480f9f799de671fe5e94a1fbdf7e1d7974",
+    commencement: { printed: "Effective Date: 13/10/2025", effectiveFrom: "2025-10-13T00:00:00+01:00" },
+    searches: [
+      {
+        place: "NAFDAC: its guidelines index",
+        url: NAFDAC_GUIDELINES_INDEX,
+        searchedAt: "2026-11-22T00:40:42Z",
+        rawSha256: "f008dbaa73a937c84adc523aaea54017aabeed2389893469edaf4fcbe367cc99",
+        found:
+          'The page\'s table is filled by script from the same site. Read in a browser, its data lists 171 guidelines. This one is listed once, at the address this copy was fetched from, with the status "Uncontrolled" and a review date of 12 October 2030. No other edition of it is listed.',
+      },
+      {
+        place: "NAFDAC: the guideline's own address",
+        url: "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FSAN/2025-2030/NAFDAC-Guidelines-for-Food-Hygienic-Practices.pdf",
+        searchedAt: "2026-11-21T17:50:19Z",
+        rawSha256: "f65f8912782749003aa7a2d09ad934480f9f799de671fe5e94a1fbdf7e1d7974",
+        found: "The address returned the same file as on 14 November 2026.",
+      },
+    ],
+    amendments: [],
+    notRead: [],
+    conflicts: [],
+    limits: NAFDAC_GUIDELINE_LIMITS,
+  },
+  {
+    instrument: "NAFDAC-IE-GDL-001-02",
+    title:
+      "Guidelines for Handling and Disposal of Unwholesome Medicines and NAFDAC Regulated Products in Nigeria",
+    url: "https://www.nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/INVESTIGATION_ENFORCEMENT_GUIDELINES/Guidelines-for-Handling-and-Disposal-of-Unwholesome-Medicines-and-Other-NAFDAC-Regulated-Products.pdf",
+    rawSha256: "5af7328e2d8b26dcaed2ddc493dce02d20b01b759dfb124a11ca2aed3ba4d239",
+    commencement: { printed: "Effective Date: 26/11/2024", effectiveFrom: "2024-11-26T00:00:00+01:00" },
+    searches: [
+      {
+        place: "NAFDAC: its guidelines index",
+        url: NAFDAC_GUIDELINES_INDEX,
+        searchedAt: "2026-11-22T00:40:42Z",
+        rawSha256: "f008dbaa73a937c84adc523aaea54017aabeed2389893469edaf4fcbe367cc99",
+        found:
+          'The page\'s table is filled by script from the same site. Read in a browser, its data lists 171 guidelines. This one is listed once, at the address this copy was fetched from, with the status "Published" and a review date of 25 November 2029. No other edition of it is listed.',
+      },
+      {
+        place: "NAFDAC: the guideline's own address",
+        url: "https://www.nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/INVESTIGATION_ENFORCEMENT_GUIDELINES/Guidelines-for-Handling-and-Disposal-of-Unwholesome-Medicines-and-Other-NAFDAC-Regulated-Products.pdf",
+        searchedAt: "2026-11-21T17:50:26Z",
+        rawSha256: "5af7328e2d8b26dcaed2ddc493dce02d20b01b759dfb124a11ca2aed3ba4d239",
+        found: "The address returned the same file as on 14 November 2026.",
+      },
+    ],
+    amendments: [],
+    notRead: [],
+    conflicts: [],
+    limits: NAFDAC_GUIDELINE_LIMITS,
+  },
+  {
+    instrument: "NAFDAC-FRR-GDL-003-01",
+    title: "Guidelines for Advertisement of Food Products in Nigeria",
+    url: "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FR_and_R/Guidelines-for-Advertisement-Control-of-Food-Products-in-Nigeria-Revised.pdf",
+    rawSha256: "31c5bb7228b000f51de736bcf9610fd5e2fa97b17a6b0d549083b958641f87ce",
+    commencement: { printed: "Effective Date: 01/03/2026", effectiveFrom: "2026-03-01T00:00:00+01:00" },
+    searches: [
+      {
+        place: "NAFDAC: its guidelines index",
+        url: NAFDAC_GUIDELINES_INDEX,
+        searchedAt: "2026-11-22T00:40:42Z",
+        rawSha256: "f008dbaa73a937c84adc523aaea54017aabeed2389893469edaf4fcbe367cc99",
+        found:
+          'The page\'s table is filled by script from the same site. Read in a browser, its data lists 171 guidelines. This one is listed once, at the address this copy was fetched from, with the status "Published (Uncontrolled)" and a review date of 28 February 2031. No other edition of it is listed.',
+      },
+      {
+        place: "NAFDAC: the guideline's own address",
+        url: "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FR_and_R/Guidelines-for-Advertisement-Control-of-Food-Products-in-Nigeria-Revised.pdf",
+        searchedAt: "2026-11-21T17:50:25Z",
+        rawSha256: "31c5bb7228b000f51de736bcf9610fd5e2fa97b17a6b0d549083b958641f87ce",
+        found: "The address returned the same file as on 14 November 2026.",
+      },
+    ],
+    amendments: [],
+    notRead: [],
+    conflicts: [],
+    limits: NAFDAC_GUIDELINE_LIMITS,
   },
 ];

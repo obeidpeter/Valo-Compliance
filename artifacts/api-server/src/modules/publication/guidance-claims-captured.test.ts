@@ -11,7 +11,8 @@ import {
 } from "./guidance-bundle";
 import { capturedPassages, capturedTexts } from "./guidance-captured-texts";
 import { passageLead } from "./guidance-captures";
-import { buildGuideClaims } from "./guidance-claim-map";
+import { buildGuideClaims, type GuideClaimMap } from "./guidance-claim-map";
+import { foodClaimMaps } from "./guidance-claims-food";
 import { privacyClaimMaps } from "./guidance-claims-privacy";
 import { guideBodyBlocks } from "./guidance-document";
 import { retainedGuidePassages } from "./guidance-passages";
@@ -32,18 +33,10 @@ const body = async (id: string) => (await readGuidanceIntake(id)).section.body;
 const supports = (m: (typeof capturedMaps)[number]) =>
   m.sentences.flatMap((s) => ("support" in s ? (s.support ?? []) : []));
 
-test("the five privacy guides are mapped, and each map places every sentence of its guide", async () => {
-  assert.deepEqual(
-    privacyClaimMaps.map((m) => m.id),
-    ["GUD-11", "GUD-12", "GUD-13", "GUD-14", "GUD-15"],
-  );
-  assert.deepEqual(
-    capturedMaps.map((m) => m.id),
-    privacyClaimMaps.map((m) => m.id),
-  );
-  assert.equal(mappedGuideIds.length, repositoryBuiltGuideIds.length + capturedMaps.length);
-  for (const m of capturedMaps) {
-    assert.equal(m.risk, "privacy");
+/** Every word of each guide is placed, and each sentence about the law names something to rest on. */
+async function placesEverySentence(maps: readonly GuideClaimMap[], risk: GuideClaimMap["risk"]) {
+  for (const m of maps) {
+    assert.equal(m.risk, risk, m.id);
     const text = guideBodyBlocks(m.id, await body(m.id))
       .map((b) => b.text)
       .join("\n");
@@ -58,7 +51,7 @@ test("the five privacy guides are mapped, and each map places every sentence of 
       m.sentences.length,
       m.id,
     );
-    assert.ok(built.scope.byKind.source_statement >= 3, `${m.id} states what its sources say`);
+    assert.ok(built.scope.byKind.source_statement >= 1, `${m.id} states what a source says`);
     assert.deepEqual(built.claims, []);
     assert.deepEqual(built.sources, []);
     assert.equal(built.missingEvidence.length, supports(m).length, m.id);
@@ -67,6 +60,39 @@ test("the five privacy guides are mapped, and each map places every sentence of 
     for (const s of m.sentences)
       if (s.kind === "source_statement" || s.kind === "interpretation") assert.ok(s.support.length, s.text);
   }
+}
+
+test("the five privacy guides are mapped, and each map places every sentence of its guide", async () => {
+  assert.deepEqual(
+    privacyClaimMaps.map((m) => m.id),
+    ["GUD-11", "GUD-12", "GUD-13", "GUD-14", "GUD-15"],
+  );
+  await placesEverySentence(privacyClaimMaps, "privacy");
+  // Each privacy guide says what the Act or the directive says at least three times.
+  for (const m of privacyClaimMaps)
+    assert.ok(m.sentences.filter((s) => s.kind === "source_statement").length >= 3, m.id);
+});
+
+test("the eight food guides are mapped, and each map places every sentence of its guide", async () => {
+  assert.deepEqual(
+    foodClaimMaps.map((m) => m.id),
+    ["GUD-19", "GUD-20", "GUD-21", "GUD-22", "GUD-23", "GUD-24", "GUD-25", "GUD-26"],
+  );
+  await placesEverySentence(foodClaimMaps, "regulated_sector");
+  // Most of what these guides say is a way of working, not a statement about the law.
+  for (const m of foodClaimMaps)
+    assert.ok(
+      m.sentences.filter((s) => s.kind === "optional_practice").length > m.sentences.length / 2,
+      m.id,
+    );
+});
+
+test("these are all the guides whose texts are not kept in the repository", () => {
+  assert.deepEqual(
+    capturedMaps.map((m) => m.id),
+    [...privacyClaimMaps, ...foodClaimMaps].map((m) => m.id),
+  );
+  assert.equal(mappedGuideIds.length, repositoryBuiltGuideIds.length + capturedMaps.length);
 });
 
 test("every passage these guides name is recorded with its place and checksum, and nothing else is recorded", () => {

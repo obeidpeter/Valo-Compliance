@@ -2,6 +2,7 @@ import { candidateDigest, digest, disclosure, type PublicationBundle } from "@wo
 import { decidedSource, guideSourceDecision, type AmendmentRecord } from "./guidance-amendments";
 import { guidanceCandidate } from "./guidance-candidate";
 import { buildGuideClaims, type GuideClaimMap } from "./guidance-claim-map";
+import { foodClaimMaps } from "./guidance-claims-food";
 import { privacyClaimMaps } from "./guidance-claims-privacy";
 import { registrationTaxClaimMaps } from "./guidance-claims-registration-tax";
 import { guideReferences } from "./guidance-document";
@@ -14,7 +15,11 @@ import {
 import { readGuidanceIntake } from "./operational-intake";
 
 /** Every guide with a claim map. A guide without one cannot be built. */
-export const guideClaimMaps: readonly GuideClaimMap[] = [...registrationTaxClaimMaps, ...privacyClaimMaps];
+export const guideClaimMaps: readonly GuideClaimMap[] = [
+  ...registrationTaxClaimMaps,
+  ...privacyClaimMaps,
+  ...foodClaimMaps,
+];
 export const mappedGuideIds = guideClaimMaps.map((m) => m.id);
 /**
  * The guides that can be built from the repository alone: most of their passages are kept in it.
