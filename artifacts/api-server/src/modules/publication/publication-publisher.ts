@@ -14,6 +14,7 @@ import { developmentPublicationOnly, operationalPolicy } from "./operational-pol
 import { enhancedChecksFromReviews, operationalReviewSchemaFor } from "./operational-review-contract";
 import { templateCandidate } from "./operational-content";
 import type { GuideClaimScope } from "./guidance-bundle";
+import { practicalGuideCandidate, practicalGuidePolicy, readPracticalGuideIntake } from "./practical-guide";
 import { guidanceCandidate } from "./guidance-candidate";
 import { guideReferences } from "./guidance-document";
 import { guideMechanicalChecks } from "./guidance-mechanical";
@@ -67,7 +68,12 @@ export async function validateOperationalVersionInTransaction(
   // A guide says what the law requires, so it is released only under the guidance policy, which the
   // owner approves on its own (decision 0017). The templates' policy never releases one.
   const guide = bundle.candidate.contentClass === "sourced_guidance";
-  const trusted = guide ? await guidancePolicy() : await operationalPolicy();
+  const practical = bundle.candidate.contentClass === "practical_guide";
+  const trusted = practical
+    ? await practicalGuidePolicy()
+    : guide
+      ? await guidancePolicy()
+      : await operationalPolicy();
   if (
     !policy ||
     policy.hash !== trusted.policy.hash ||
@@ -104,8 +110,9 @@ export async function validateOperationalVersionInTransaction(
     recorded = { original: formMarkdown(output), provenance };
   } else if (provenance.path !== chatGPTSourcePath) {
     const { readTemplateIntake, readGuidanceIntake } = await import("./operational-intake");
-    const intake =
-      bundle.candidate.contentClass === "general_template"
+    const intake = practical
+      ? await readPracticalGuideIntake(bundle.candidate.id, row.version)
+      : bundle.candidate.contentClass === "general_template"
         ? await readTemplateIntake(bundle.candidate.id, row.version)
         : await readGuidanceIntake(bundle.candidate.id, row.version);
     if (intake.sourceHash !== provenance.hash || sha256(intake.provenance.note) !== provenance.noteHash)
@@ -113,8 +120,14 @@ export async function validateOperationalVersionInTransaction(
     recorded = { original: intake.section.body, provenance };
   }
   // A guide lists the sources its claims point to, so it is rebuilt with them.
-  const original =
-    bundle.candidate.contentClass === "sourced_guidance"
+  const original = practical
+    ? await practicalGuideCandidate(
+        bundle.candidate.id,
+        row.version,
+        new Date(bundle.candidate.sourceCheckDate),
+        recorded,
+      )
+    : bundle.candidate.contentClass === "sourced_guidance"
       ? await guidanceCandidate(
           bundle.candidate.id,
           row.version,
@@ -158,6 +171,7 @@ export async function validateOperationalVersionInTransaction(
     digest(rights) !== bundle.rights.evidenceHash ||
     bundle.rights.evidence !== JSON.stringify(rights) ||
     // A form's record is for an original form that quotes no law; a guide's is its own kind.
+    (practical && (rights.kind !== "practical-business-guide-v1" || Boolean(provenance.generation))) ||
     (guide
       ? rights.kind !== "valo-guide-rights-1" || rights.sourcedGuidance !== true
       : !rights.originalOperationalOnly) ||

@@ -1,10 +1,12 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { isPracticalGuideId, practicalGuideIds } from "@workspace/valo-core";
 import { createHash } from "node:crypto";
 import {
   additionalInferenceAllocation,
   inferenceProposal,
   inferenceTimestamp,
+  tokenCost,
   requestDigest,
 } from "./inference-budget";
 import type { FiniteManifest, FiniteWork } from "./inference-types";
@@ -50,10 +52,19 @@ export const finitePackagePreparers = {
   templatePairs: ["operational-template-pair-v1"],
   editorialCases: ["editorial-case-pair-v1"],
   guidePairs: ["guide-review-pair-v1"],
+  practicalPairs: ["practical-business-guide-pair-v1"],
 } as const;
 export type FinitePackagePreparers = (typeof finitePackagePreparers)[keyof typeof finitePackagePreparers];
 const preparerSet = (value: unknown) =>
   Object.values(finitePackagePreparers).find((set) => requestDigest(set) === requestDigest(value));
+export const practicalReviewLimits = {
+  articleIds: practicalGuideIds,
+  maximumCalls: practicalGuideIds.length * 2,
+  maximumReservationNanoUsd: (
+    BigInt(practicalGuideIds.length * 2) *
+    tokenCost(inferenceProposal.fallback.inputTokens, inferenceProposal.fallback.outputTokens)
+  ).toString(),
+} as const;
 const scopePaths = [
   "docs/registers/content-inventory.json",
   "docs/content-candidates/r1-content-intake-manifest.json",
@@ -93,9 +104,10 @@ export async function prepareFiniteAllocationPackage(
   now = new Date(),
   preparers: FinitePackagePreparers = finitePackagePreparers.templatePairs,
 ): Promise<FiniteAllocationPackage> {
-  if (!preparerSet(preparers)) throw Error("PACKAGE_PREPARERS_INVALID");
-  const editorialCases = preparers === finitePackagePreparers.editorialCases;
-  const guidePairs = preparers === finitePackagePreparers.guidePairs;
+  const selected = preparerSet(preparers);
+  if (!selected) throw Error("PACKAGE_PREPARERS_INVALID");
+  const editorialCases = selected === finitePackagePreparers.editorialCases;
+  const guidePairs = selected === finitePackagePreparers.guidePairs;
   const sources = await Promise.all(
     scopePaths.map(async (path) => {
       const bytes = await readFile(resolve(root, path));
@@ -146,23 +158,29 @@ export async function prepareFiniteAllocationPackage(
     laneAttemptLimits: { publication: 216, editorial_evaluation: 68, checker_challenge: 80, customer: 94 },
     allowedRoles: ["factual", "challenge", "customer"],
     supportedPreparers: [...preparers] as unknown as FinitePackagePreparers,
-    holds: editorialCases
-      ? [
-          "Supported editorial case pairs: the case-bound editorial cases whose candidates are built from retained text; each pair is rebuilt from the pinned files and rechecked before admission and dispatch.",
-          "Template review pairs, customer cases, other content and other evaluation lanes are outside this package.",
-          "The allocation is a maximum additional spend, not a guarantee of completing every permitted attempt.",
-        ]
-      : guidePairs
+    holds:
+      selected === finitePackagePreparers.practicalPairs
         ? [
-            `Supported guide review pairs: ${mappedGuideIds.join(", ")}; each requires a prepared candidate bound to current captures of its official sources, under the guidance policy as the owner approved it.`,
-            "Template review pairs, editorial cases, customer cases and other content are outside this package.",
-            "The allocation is a maximum additional spend, not a guarantee of completing every permitted attempt.",
+            "One factual review and one independent challenge per article, for GUIDE-C01 and GUIDE-C02 only.",
+            "Four provider calls at most. Each article can be admitted once. No retries or other work are covered.",
           ]
-        : [
-            `Supported exact operational preparers: ${operationalInferenceTemplateIds.join(", ")}; each requires a saved candidate and verified private evidence.`,
-            "Other content and all evaluation lanes require their real request preparers and eligibility checks before delegated admission.",
-            "The allocation is a maximum additional spend, not a guarantee of completing every permitted attempt.",
-          ],
+        : editorialCases
+          ? [
+              "Supported editorial case pairs: the case-bound editorial cases whose candidates are built from retained text; each pair is rebuilt from the pinned files and rechecked before admission and dispatch.",
+              "Template review pairs, customer cases, other content and other evaluation lanes are outside this package.",
+              "The allocation is a maximum additional spend, not a guarantee of completing every permitted attempt.",
+            ]
+          : guidePairs
+            ? [
+                `Supported guide review pairs: ${mappedGuideIds.join(", ")}; each requires a prepared candidate bound to current captures of its official sources, under the guidance policy as the owner approved it.`,
+                "Template review pairs, editorial cases, customer cases and other content are outside this package.",
+                "The allocation is a maximum additional spend, not a guarantee of completing every permitted attempt.",
+              ]
+            : [
+                `Supported exact operational preparers: ${operationalInferenceTemplateIds.join(", ")}; each requires a saved candidate and verified private evidence.`,
+                "Other content and all evaluation lanes require their real request preparers and eligibility checks before delegated admission.",
+                "The allocation is a maximum additional spend, not a guarantee of completing every permitted attempt.",
+              ],
   };
 }
 export function allocationPackageId(value: FiniteAllocationPackage) {
@@ -232,6 +250,33 @@ export function assertWorkPackageMembership(
   validateAllocationPackage(pkg);
   if (!pkg.allowedRoles.includes(work.role) || (work.role === "customer" && work.lane !== "customer"))
     throw Error("WORK_OUTSIDE_PACKAGE");
+  const practical = preparerSet(pkg.supportedPreparers) === finitePackagePreparers.practicalPairs;
+  if (practical) {
+    const source = pkg.sourceFiles.find((file) => file.path === scopePaths[5]);
+    if (
+      !contentId ||
+      !isPracticalGuideId(contentId) ||
+      workContentId(work) !== contentId ||
+      !work.pair ||
+      !["factual", "challenge"].includes(work.role) ||
+      work.retryOf !== undefined ||
+      !work.bindings.candidateVersionId ||
+      !work.bindings.operationalPlan ||
+      work.bindings.caseId !== null ||
+      work.bindings.corpus !== null ||
+      !source ||
+      requestDigest(work.bindings.sourceFiles) !== requestDigest([source]) ||
+      !pkg.namedContentSections.some(
+        (s) =>
+          s.category === "practical-guide" &&
+          s.sourcePath === source.path &&
+          s.heading.startsWith(contentId + " — "),
+      )
+    )
+      throw Error("WORK_OUTSIDE_PACKAGE");
+    return;
+  }
+  if (contentId && isPracticalGuideId(contentId)) throw Error("WORK_OUTSIDE_PACKAGE");
   // An editorial-case package admits its case pairs and nothing else; no other package admits them.
   // The binding checks rebuild each pair from the case preparer before admission and dispatch.
   const editorialCases =
@@ -318,6 +363,22 @@ async function packageRow(c: import("pg").PoolClient, schema: string, id: string
     const ids = new Set([...intake.templates, ...intake.guidance].map((x) => x.id));
     if (pkg.contentIds.some((id) => !ids.has(id))) throw Error("ALLOCATION_PACKAGE_CONTENT_IDENTITY_CHANGED");
     const sections = actual.slice(5).flatMap((x) => namedSections(x.source.path, x.bytes.toString()));
+    if (
+      preparerSet(pkg.supportedPreparers) === finitePackagePreparers.practicalPairs &&
+      (sha(actual[5]!.bytes) !== actual[5]!.source.sha256 ||
+        practicalGuideIds.some((id) => {
+          const section = pkg.namedContentSections.find((s) => s.heading.startsWith(id + " — "));
+          return (
+            !section ||
+            !sections.some(
+              (current) =>
+                current.identity === section.identity &&
+                current.baselineSectionSha256 === section.baselineSectionSha256,
+            )
+          );
+        }))
+    )
+      throw Error("ALLOCATION_PACKAGE_SOURCE_CHANGED");
     if (pkg.namedContentSections.some((s) => !sections.some((current) => current.identity === s.identity)))
       throw Error("ALLOCATION_PACKAGE_CONTENT_IDENTITY_CHANGED");
   }
@@ -346,6 +407,23 @@ export async function readApprovedFiniteAllocationPackage(
   } finally {
     c.release();
   }
+}
+function practicalPairId(pkg: FiniteAllocationPackage, works: FiniteWork[]) {
+  if (preparerSet(pkg.supportedPreparers) !== finitePackagePreparers.practicalPairs) return null;
+  const [first, second] = works;
+  if (
+    works.length !== 2 ||
+    !first ||
+    !second ||
+    !first.pair ||
+    first.pair !== second.pair ||
+    first.role === second.role ||
+    first.candidateHash !== second.candidateHash ||
+    !first.bindings.candidateArtifact ||
+    requestDigest(first.bindings) !== requestDigest(second.bindings)
+  )
+    throw Error("PRACTICAL_GUIDE_REVIEW_PAIR_REQUIRED");
+  return first.bindings.candidateArtifact.templateId;
 }
 export async function assertDelegatedBatchAuthority(
   c: import("pg").PoolClient,
@@ -376,6 +454,7 @@ export async function assertDelegatedBatchAuthority(
   )
     throw Error("DELEGATED_APPROVAL_BINDING_INVALID");
   if (admitting) {
+    practicalPairId(pkg, child.manifest.works);
     for (const work of child.manifest.works) {
       assertWorkPackageMembership(work, pkg, workContentId(work));
     }
@@ -409,6 +488,17 @@ export async function registerPreparedInferenceSubmanifest(
     if (!Number.isFinite(expiry) || expiry <= Date.now() || expiry > inferenceTimestamp(row.expires_at))
       throw Error("SUBMANIFEST_EXPIRY_INVALID");
     for (const work of admitted.works) assertWorkPackageMembership(work, pkg, workContentId(work));
+    const article = practicalPairId(pkg, admitted.works);
+    if (article) {
+      // store.mutate holds the allocation row lock until commit, including concurrent admissions.
+      const earlier = await c.query(
+        `SELECT 1 FROM "${store.schemaName()}".valo_inference_batches
+         WHERE manifest->>'packageId'=$1 AND manifest_hash<>$2
+           AND manifest->'works'->0->'bindings'->'candidateArtifact'->>'templateId'=$3 LIMIT 1`,
+        [packageId, manifestHash, article],
+      );
+      if (earlier.rowCount) throw Error("PRACTICAL_GUIDE_PAIR_ALREADY_ADMITTED");
+    }
     const reference = `delegate:${requestDigest({ packageId, packageHash: row.manifest_hash, manifestHash })}`;
     await c.query(
       `INSERT INTO "${store.schemaName()}".valo_inference_batches

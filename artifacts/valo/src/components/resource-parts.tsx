@@ -19,13 +19,26 @@ export function PlainText({ text, className }: { text: string; className?: strin
     .filter(Boolean);
   return (
     <div className={className}>
-      {paras.map((p, i) => (
-        <p key={i} className="whitespace-pre-line">
-          {p}
-        </p>
-      ))}
+      {paras.map((p, i) => {
+        const lines = p.split("\n");
+        return lines.every((line) => line.startsWith("• ")) ? (
+          <ul key={i} className="list-disc space-y-1 pl-5">
+            {lines.map((line, j) => (
+              <li key={j}>{line.slice(2)}</li>
+            ))}
+          </ul>
+        ) : (
+          <p key={i} className="whitespace-pre-line">
+            {p}
+          </p>
+        );
+      })}
     </div>
   );
+}
+
+export function resourceCheckLabel(r: ReleasedResource) {
+  return r.kind === "guide" && r.sources.length === 0 ? "Draft and evidence checked" : "Sources checked";
 }
 
 export function ResourceCard({ r }: { r: ReleasedResource }) {
@@ -37,13 +50,17 @@ export function ResourceCard({ r }: { r: ReleasedResource }) {
     >
       <div className="flex flex-wrap items-center gap-2">
         <span className="pill pill-forest">{KIND_LABEL[r.kind] ?? r.kind}</span>
-        <span className="pill pill-ink">
-          {r.sources.length} source{r.sources.length === 1 ? "" : "s"}
-        </span>
+        {r.sources.length > 0 && (
+          <span className="pill pill-ink">
+            {r.sources.length} source{r.sources.length === 1 ? "" : "s"}
+          </span>
+        )}
       </div>
       <p className="font-display mt-3 text-xl">{r.title}</p>
       <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{r.summary}</p>
-      <p className="mt-3 text-xs text-muted-foreground">Sources checked {formatDay(r.reviewedAt)}</p>
+      <p className="mt-3 text-xs text-muted-foreground">
+        {resourceCheckLabel(r)} {formatDay(r.reviewedAt)}
+      </p>
     </Link>
   );
 }

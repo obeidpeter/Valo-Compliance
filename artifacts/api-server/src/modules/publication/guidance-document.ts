@@ -1,4 +1,4 @@
-import { disclosure, type PublicationBundle } from "@workspace/valo-core";
+import { disclosure, isPracticalGuideId, type PublicationBundle } from "@workspace/valo-core";
 import { printedCalendarDate } from "@workspace/valo-core/guided-runtime";
 import { GUIDE_PART_PREFIX } from "../../lib/valo-guide-notices";
 import { documentInput } from "../../lib/valo-validation";
@@ -48,10 +48,11 @@ const bullet = /^\s*-\s+/;
  * every link written out as its words followed by its address. Anything else a draft might hold (a
  * heading, a table, emphasis marks, a link that is not https) is refused, not printed as marks. */
 export function guideBodyBlocks(id: string, body: string): Block[] {
-  if (!guideId.test(id)) throw Error("GUIDANCE_ID_REQUIRED");
+  if (!guideId.test(id) && !isPracticalGuideId(id)) throw Error("GUIDANCE_ID_REQUIRED");
   const blocks: Block[] = [];
+  const blockPrefix = isPracticalGuideId(id) ? `article-${id.slice(-3).toLowerCase()}` : id.toLowerCase();
   const add = (type: Block["type"], text: string) =>
-    blocks.push({ id: `${id.toLowerCase()}-${blocks.length + 1}`, type, text, rows: [] });
+    blocks.push({ id: `${blockPrefix}-${blocks.length + 1}`, type, text, rows: [] });
   for (const part of body
     .split(/\n\s*\n/)
     .map((p) => p.trim())
@@ -150,7 +151,7 @@ export function guidanceReleaseDocument(input: {
         paragraph(GUIDE_PART.reviewMeaning, GUIDE_REVIEW_MEANING),
         paragraph(
           GUIDE_PART.sourcesChecked,
-          `${GUIDE_LABEL.sourcesChecked}: ${lagosDay(sourcesCheckedAt)} (${sourcesCheckedAt}).`,
+          `${isPracticalGuideId(section.id) ? "Draft and evidence checked" : GUIDE_LABEL.sourcesChecked}: ${lagosDay(sourcesCheckedAt)} (${sourcesCheckedAt}).`,
         ),
       ],
       selectedClauses: [],

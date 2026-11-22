@@ -24,6 +24,7 @@ import type {
 } from "./inference-types";
 export type { CompletionTransport, FiniteManifest, FiniteWork } from "./inference-types";
 import { assertDelegatedBatchAuthority } from "./inference-allocation-package";
+import { isPracticalGuideId } from "@workspace/valo-core";
 import { assertFiniteWorkShape } from "./inference-work-shape";
 import { assertManagedRatePolicy } from "./inference-price-evidence";
 type Context = { batchId: string; key: string | null; lane: BudgetLane; pair?: string; rootKey?: string };
@@ -83,6 +84,12 @@ export class FiniteInferenceDispatcher {
     const keys = new Set<string>();
     for (const work of manifest.works) {
       assertFiniteWorkShape(work);
+      if (
+        work.bindings.candidateArtifact &&
+        isPracticalGuideId(work.bindings.candidateArtifact.templateId) &&
+        !manifest.packageId
+      )
+        throw Error("PRACTICAL_GUIDE_PACKAGE_REQUIRED");
       if (
         !work.key ||
         keys.has(work.key) ||

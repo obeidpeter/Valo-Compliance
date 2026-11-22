@@ -4,6 +4,11 @@ import { z } from "zod";
 export const disclosure =
   "AI drafted and reviewed; not reviewed by a Nigerian legal, tax or sector specialist";
 export const sha256 = (text: string | Uint8Array): string => createHash("sha256").update(text).digest("hex");
+/** The original business articles selected for the first development release. */
+export const practicalGuideIds = ["GUIDE-C01", "GUIDE-C02"] as const;
+export function isPracticalGuideId(id: string): id is (typeof practicalGuideIds)[number] {
+  return practicalGuideIds.some((value) => value === id);
+}
 const nonempty = z.string().trim().min(1);
 const hash = z.string().regex(/^[a-f0-9]{64}$/);
 const date = z.string().datetime({ offset: true });
@@ -33,7 +38,7 @@ export const publicationSchema = z
         version: z.number().int().positive(),
         body: nonempty,
         hash,
-        contentClass: z.enum(["general_template", "sourced_guidance"]),
+        contentClass: z.enum(["general_template", "sourced_guidance", "practical_guide"]),
         jurisdiction: nonempty,
         risk: z.enum([
           "general",
@@ -250,9 +255,23 @@ export function evaluatePublication(input: unknown, now = new Date()) {
   fail(!b.policy.risks.includes(c.risk), "risk_outside_policy");
   fail(c.unresolvedMaterialIssues.length > 0 || c.missingEvidence.length > 0, "material_uncertainty");
   const operational = c.evidenceMode === "original_operational";
+  const practical = c.contentClass === "practical_guide";
+  if (practical || isPracticalGuideId(c.id)) {
+    fail(
+      !practical ||
+        !isPracticalGuideId(c.id) ||
+        !operational ||
+        c.coverage?.kind !== "guide" ||
+        c.jurisdiction !== "NG" ||
+        c.coverage.industrySlugs.length !== 0 ||
+        c.coverage.locationIds.length !== 0 ||
+        b.policy.developmentOnly !== true,
+      "practical_guide_scope_mismatch",
+    );
+  }
   if (operational) {
     fail(
-      c.contentClass !== "general_template" ||
+      (!practical && c.contentClass !== "general_template") ||
         c.risk !== "general" ||
         c.claims.length !== 0 ||
         c.legalScopeStatus !== "not_applicable" ||

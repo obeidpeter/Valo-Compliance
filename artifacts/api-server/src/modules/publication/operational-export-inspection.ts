@@ -6,7 +6,7 @@ import { promisify } from "node:util";
 import { unzipSync, strFromU8 } from "fflate";
 import { candidateDigest, digest, sha256, type PublicationBundle } from "@workspace/valo-core";
 import { documentInput } from "../../lib/valo-validation";
-import { GUIDANCE_NOTICE } from "../../lib/valo-guide-notices";
+import { GUIDANCE_NOTICE, PRACTICAL_GUIDE_NOTICE } from "../../lib/valo-guide-notices";
 import { TEMPLATE_NOTICE } from "../../lib/valo-render";
 const execFile = promisify(execCallback);
 const compact = (s: string) => s.normalize("NFKC").replace(/\s+/g, "");
@@ -25,7 +25,11 @@ const decodeXML = (s: string) =>
 export async function inspectOperationalExports(
   candidate: PublicationBundle["candidate"],
   files: { docx: Buffer; pdf: Buffer },
-  notice: string = candidate.contentClass === "sourced_guidance" ? GUIDANCE_NOTICE : TEMPLATE_NOTICE,
+  notice: string = candidate.contentClass === "practical_guide"
+    ? PRACTICAL_GUIDE_NOTICE
+    : candidate.contentClass === "sourced_guidance"
+      ? GUIDANCE_NOTICE
+      : TEMPLATE_NOTICE,
 ) {
   if (candidateDigest(candidate) !== candidate.hash || Buffer.byteLength(candidate.body) > 256 * 1024)
     throw Error("EXPORT_CANDIDATE_BINDING_INVALID");

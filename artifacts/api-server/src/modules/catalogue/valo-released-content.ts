@@ -4,6 +4,7 @@ import { evaluatePublication, publicationSchema, coveragePlan } from "@workspace
 import {
   developmentPublicationOnly,
   operationalPolicy,
+  practicalGuidePolicy,
   getPublicationArtifact,
   type ArtifactRef,
   currentOperationalPermission,
@@ -57,6 +58,7 @@ export async function liveReleasedVersions() {
   const currentPolicy = await operationalPolicy();
   // The guidance policy as it stands, read when the first published guide is met.
   let currentGuidance: Awaited<ReturnType<typeof guidancePolicy>>["policy"] | undefined;
+  let practicalPolicy: Awaited<ReturnType<typeof practicalGuidePolicy>>["policy"] | undefined;
   const rows = await db
     .select({ content: valoContentVersions, policy: valoPublicationPolicies })
     .from(valoContentVersions)
@@ -70,11 +72,18 @@ export async function liveReleasedVersions() {
     )
       continue;
     const candidate = publicationSchema.parse(r.content.bundle).candidate;
-    if (
-      candidate.evidenceMode === "original_operational" &&
-      (r.policy.hash !== currentPolicy.policy.hash || !(await currentOperationalPermission(r.content)))
-    )
-      continue;
+    if (candidate.evidenceMode === "original_operational") {
+      const policy =
+        candidate.contentClass === "practical_guide"
+          ? (practicalPolicy ??= (await practicalGuidePolicy()).policy)
+          : currentPolicy.policy;
+      if (
+        !policy.ownerApproved ||
+        r.policy.hash !== policy.hash ||
+        !(await currentOperationalPermission(r.content))
+      )
+        continue;
+    }
     // A guide answers to the guidance policy, as a template answers to the templates' one, and its
     // wording rests on the same kind of provider permission, which must still be current.
     if (candidate.contentClass === "sourced_guidance") {
@@ -99,7 +108,7 @@ export async function liveOperationalVersions() {
 export function projectReleasedResource(row: typeof valoContentVersions.$inferSelect) {
   const b = publicationSchema.parse(row.bundle),
     c = b.candidate;
-  if (c.contentClass !== "sourced_guidance") throw new Error("Not a released resource class");
+  if (c.contentClass === "general_template") throw new Error("Not a released resource class");
   // A guide prepared through the publisher carries its document; the page shows the guide's own
   // words out of it. Any other body is shown as the text it is.
   const guide = guidePageText(c.body);
@@ -129,7 +138,7 @@ export function projectReleasedResource(row: typeof valoContentVersions.$inferSe
 }
 export async function releasedResources() {
   return (await liveReleasedVersions())
-    .filter((r) => publicationSchema.parse(r.bundle).candidate.contentClass === "sourced_guidance")
+    .filter((r) => publicationSchema.parse(r.bundle).candidate.contentClass !== "general_template")
     .map(projectReleasedResource);
 }
 export function operationalPresentation(templateId: string) {
@@ -192,7 +201,9 @@ export function projectReleasedCatalogue(
             ? "Industry guidance"
             : resource.kind === "location_pack"
               ? "Location guidance"
-              : "Business guidance",
+              : c.contentClass === "practical_guide"
+                ? "Practical business guides"
+                : "Business guidance",
         access: "free" as const,
         reviewedAt: resource.reviewedAt,
         href: "/resources/" + encodeURIComponent(r.slug),

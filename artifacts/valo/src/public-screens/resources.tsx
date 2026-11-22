@@ -11,7 +11,13 @@ import {
 import { GuidanceTabs } from "@/components/guidance-tabs";
 import { PublicLink as Link } from "@/components/public-link";
 import { EmptyState, ErrorState, Notice, PageHeader, Skel } from "@/components/states";
-import { KIND_LABEL, PlainText, ResourceCard, liveContent } from "@/components/resource-parts";
+import {
+  KIND_LABEL,
+  PlainText,
+  ResourceCard,
+  resourceCheckLabel,
+  liveContent,
+} from "@/components/resource-parts";
 import { describeError } from "@/lib/describe-error";
 import { formatCount, formatDay } from "@/lib/format";
 import { fromServer } from "@/lib/server-data";
@@ -28,8 +34,8 @@ export function Resources({ initial }: { initial?: ReleasedResource[] | undefine
     <div className="mx-auto max-w-7xl px-5 py-14 lg:px-8">
       <GuidanceTabs current="/resources" />
       <PageHeader eyebrow="Guidance" title="Guides">
-        A guide explains one topic in plain language. It appears here once it is published with its official
-        sources, what it covers and its limits.
+        Find practical steps for everyday business tasks and guidance on regulatory topics. Each guide
+        explains what it covers and links to any official sources it uses.
       </PageHeader>
       {q.isLoading ? (
         <div className="grid gap-3 md:grid-cols-2" aria-busy="true">
@@ -143,7 +149,9 @@ export function ResourceDetail({
             <div className="min-w-0">
               <div className="flex flex-wrap gap-2">
                 <span className="pill pill-forest">{KIND_LABEL[r.kind] ?? r.kind}</span>
-                <span className="pill pill-ink">Sources checked {formatDay(r.reviewedAt)}</span>
+                <span className="pill pill-ink">
+                  {resourceCheckLabel(r)} {formatDay(r.reviewedAt)}
+                </span>
               </div>
               <h1
                 className="font-display mt-4 text-4xl leading-tight sm:text-5xl"
@@ -170,35 +178,39 @@ export function ResourceDetail({
               </section>
             </div>
             <aside className="grid gap-4 lg:sticky lg:top-24 lg:self-start">
-              <div className="surface p-5">
-                <p className="eyebrow">Sources</p>
-                {r.sources.length ? (
-                  <ul className="mt-3 divide-y divide-border">
-                    {r.sources.map((s, i) => (
-                      <li key={i} className="py-3">
-                        <a
-                          href={s.url}
-                          target="_blank"
-                          rel="noopener noreferrer nofollow"
-                          className="group flex items-start justify-between gap-3"
-                          data-testid={"link-resource-source-" + i}
-                        >
-                          <span>
-                            <span className="block text-sm font-medium group-hover:underline">{s.title}</span>
-                            <span className="block text-xs text-muted-foreground">{s.locator}</span>
-                          </span>
-                          <ExternalLink
-                            className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground"
-                            aria-hidden
-                          />
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="mt-2 text-sm text-muted-foreground">This guide lists no sources.</p>
-                )}
-              </div>
+              {(r.sources.length > 0 || r.kind !== "guide") && (
+                <div className="surface p-5">
+                  <p className="eyebrow">Sources</p>
+                  {r.sources.length ? (
+                    <ul className="mt-3 divide-y divide-border">
+                      {r.sources.map((s, i) => (
+                        <li key={i} className="py-3">
+                          <a
+                            href={s.url}
+                            target="_blank"
+                            rel="noopener noreferrer nofollow"
+                            className="group flex items-start justify-between gap-3"
+                            data-testid={"link-resource-source-" + i}
+                          >
+                            <span>
+                              <span className="block text-sm font-medium group-hover:underline">
+                                {s.title}
+                              </span>
+                              <span className="block text-xs text-muted-foreground">{s.locator}</span>
+                            </span>
+                            <ExternalLink
+                              className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground"
+                              aria-hidden
+                            />
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="mt-2 text-sm text-muted-foreground">This guide lists no sources.</p>
+                  )}
+                </div>
+              )}
               <Notice title="How it was written and checked">
                 <p className="whitespace-pre-line">{r.disclosure}</p>
               </Notice>

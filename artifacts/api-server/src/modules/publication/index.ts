@@ -34,6 +34,7 @@ export * from "./operational-policy";
 export * from "./operational-read-permission";
 export * from "./operational-review-contract";
 export * from "./prepared-candidate";
+export * from "./practical-guide";
 export * from "./original-content-adapter";
 export * from "./publication-artifacts";
 export * from "./publication-publisher";

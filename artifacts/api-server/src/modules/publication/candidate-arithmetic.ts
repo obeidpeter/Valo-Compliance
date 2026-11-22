@@ -19,7 +19,37 @@ export function candidateArithmetic(candidate: PublicationBundle["candidate"]) {
     expected: string;
     pass: boolean;
   }[] = [];
-  if (candidate.id === "TPL-07") {
+  if (candidate.id === "GUIDE-C01") {
+    const example = /fictional sale of three notebooks at ₦([\d,]+) each has a line amount of ₦([\d,]+)/.exec(
+      normalized,
+    );
+    const unit = example ? BigInt(example[1]!.replaceAll(",", "")) : null;
+    const total = example ? BigInt(example[2]!.replaceAll(",", "")) : null;
+    const actual = unit === null ? null : 3n * unit;
+    expressions.push({
+      text: example?.[0] ?? "",
+      hash: sha256(example?.[0] ?? ""),
+      actual: actual?.toString() ?? null,
+      expected: "6000",
+      pass:
+        unit === 2000n &&
+        total === 6000n &&
+        actual === total &&
+        normalized.includes("quantity multiplied by unit price"),
+    });
+  } else if (candidate.id === "GUIDE-C02") {
+    const sample =
+      /fictional printing request, “(\d+) a5 booklets, (\d+) pages each, black-and-white interior, customer supplies final artwork”/.exec(
+        normalized,
+      );
+    expressions.push({
+      text: sample?.[0] ?? "",
+      hash: sha256(sample?.[0] ?? ""),
+      actual: sample ? sample[1] + " × " + sample[2] : null,
+      expected: "200 × 12",
+      pass: sample?.[1] === "200" && sample[2] === "12",
+    });
+  } else if (candidate.id === "TPL-07") {
     const expression =
       normalized.match(/new running quantity\s*=\s*([^.\n]+)/)?.[1]?.trim() ??
       normalized.match(/closing (?:quantity|balance)\s*=\s*([^.\n]+)/)?.[1]?.trim() ??

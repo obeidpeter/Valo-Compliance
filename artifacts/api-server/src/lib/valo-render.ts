@@ -20,7 +20,12 @@ import {
   printedCalendarDate,
 } from "@workspace/valo-core/guided-runtime";
 import { chromiumLaunchPath } from "../platform/chromium";
-import { GUIDANCE_DRAFT_NOTICE, GUIDANCE_NOTICE, GUIDE_PART_PREFIX } from "./valo-guide-notices";
+import {
+  GUIDANCE_DRAFT_NOTICE,
+  GUIDANCE_NOTICE,
+  GUIDE_PART_PREFIX,
+  PRACTICAL_GUIDE_NOTICE,
+} from "./valo-guide-notices";
 
 /** Names how a document is rendered. A file is made once for a saved version, kind and render
  * version, so the name changes whenever the same saved version would print differently. Version 4:
@@ -39,8 +44,15 @@ export const TEMPLATE_NOTICE =
 export const PURCHASE_NOTICE =
   "VALO DEVELOPMENT PURCHASE RECEIPT — server-verified test transaction record only. Not proof of delivery, bank outcome, a government tax invoice or official approval.";
 export { GUIDANCE_NOTICE, GUIDANCE_DRAFT_NOTICE, GUIDE_PART_PREFIX };
-type RenderMode = "business_draft" | "template_sample" | "purchase_receipt" | "guidance" | "guidance_draft";
-const guide = (mode: RenderMode) => mode === "guidance" || mode === "guidance_draft";
+type RenderMode =
+  | "business_draft"
+  | "template_sample"
+  | "purchase_receipt"
+  | "guidance"
+  | "guidance_draft"
+  | "practical_guide";
+const guide = (mode: RenderMode) =>
+  mode === "guidance" || mode === "guidance_draft" || mode === "practical_guide";
 /** A named part's name and the rest of its text, or nothing when the block is not one. */
 function guidePart(mode: RenderMode, block: { id: string; type: string; text: string }) {
   if (!guide(mode) || block.type !== "paragraph" || !block.id.startsWith(GUIDE_PART_PREFIX)) return null;
@@ -54,11 +66,13 @@ const noticeFor = (mode: RenderMode) =>
     ? PURCHASE_NOTICE
     : mode === "template_sample"
       ? TEMPLATE_NOTICE
-      : mode === "guidance"
-        ? GUIDANCE_NOTICE
-        : mode === "guidance_draft"
-          ? GUIDANCE_DRAFT_NOTICE
-          : DRAFT_NOTICE;
+      : mode === "practical_guide"
+        ? PRACTICAL_GUIDE_NOTICE
+        : mode === "guidance"
+          ? GUIDANCE_NOTICE
+          : mode === "guidance_draft"
+            ? GUIDANCE_DRAFT_NOTICE
+            : DRAFT_NOTICE;
 export const exportMime = {
   docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   pdf: "application/pdf",

@@ -94,6 +94,9 @@ test("template downloads read storage outside the transaction that holds the sou
         return permitted;
       },
       // No guide is among this test's versions; the guidance policy is never read.
+      practicalGuidePolicy: async () => {
+        throw Error("Unexpected practical policy read for a template");
+      },
       guidancePolicy: async () => {
         record("guidance policy file");
         return { policy: { hash: "guidance-policy-hash", ownerApproved: false } };

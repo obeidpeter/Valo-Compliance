@@ -15,7 +15,7 @@ export function developmentPublicationOnly() {
   if (setting("NODE_ENV") !== "development" || setting("REPLIT_DEPLOYMENT"))
     throw Error("DEVELOPMENT_PUBLICATION_ONLY");
 }
-export async function operationalPolicy() {
+export async function operationalPolicy(scope?: "practical_guide") {
   const refs = [
     {
       path: "docs/specification/master-execution-prompt.txt",
@@ -44,7 +44,7 @@ export async function operationalPolicy() {
   const body = {
     version: "r1-evidence-gated-development-2",
     ownerApproved: true,
-    allowedClasses: ["general_template", "sourced_guidance"],
+    allowedClasses: ["general_template", "sourced_guidance", ...(scope ? [scope] : [])],
     jurisdictions: ["NG", "NG-LA", "NG-FC", "NG-BY"],
     risks: ["general", "tax", "employment", "privacy", "governance", "contracts", "regulated_sector"],
     officialHosts: [
