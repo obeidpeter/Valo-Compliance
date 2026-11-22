@@ -32,6 +32,7 @@ import { setting } from "../../platform/settings";
 import { lockSourceState, sourceTargetAllowed } from "../sources";
 import { isManualTemplate, releasedManualEntries } from "../manual-library";
 import { manualCatalogue, manualResource, manualResourceKind, manualTemplate } from "./manual-presentation";
+import { isFreeBaselineTemplate, offerForReleasedEdition } from "./template-prices";
 export function releaseVisible(
   row: typeof valoContentVersions.$inferSelect,
   policyHash: string,
@@ -236,7 +237,7 @@ export function projectReleasedCatalogue(
       industry: c.coverage?.industrySlugs.join(",") || "All industries",
       templateId: r.templateId,
       category: templateCategory(r.templateId),
-      access: /^TPL-(0[1-9]|1[0-2])$/.test(r.templateId) ? ("free" as const) : ("premium" as const),
+      access: isFreeBaselineTemplate(r.templateId) ? ("free" as const) : ("premium" as const),
       reviewedAt: c.sourceCheckDate,
       href: "/library/" + encodeURIComponent(r.slug),
       summary: operationalPresentation(r.templateId).summary,
@@ -298,7 +299,8 @@ export async function releasedTemplate(slug: string) {
   if (slug.startsWith("manual-")) {
     const [row] = await releasedManualEntries(slug);
     if (!row || !isManualTemplate(row.kind)) throw new ValoProblem(404, "This template is unavailable.");
-    return manualTemplate(row);
+    const offer = row.kind === "premium_template" ? await offerForReleasedEdition(row.id) : undefined;
+    return { ...manualTemplate(row), offer };
   }
   const row = (await liveOperationalVersions()).find((r) => r.slug === slug);
   if (!row)
@@ -308,6 +310,7 @@ export async function releasedTemplate(slug: string) {
     );
   const bundle = publicationSchema.parse(row.bundle),
     document = documentInput.parse(JSON.parse(bundle.candidate.body));
+  const offer = isFreeBaselineTemplate(row.templateId) ? undefined : await offerForReleasedEdition(row.id);
   return {
     id: row.id,
     templateId: row.templateId,
@@ -323,6 +326,7 @@ export async function releasedTemplate(slug: string) {
     preview: operationalPresentation(row.templateId).preview,
     developmentOnly: true,
     commercialLicenceAccepted: false,
+    ...(offer && { access: "premium" as const, offer }),
     formats: ["docx", "pdf"] as const,
   };
 }
@@ -408,7 +412,7 @@ export async function requirePurchaseForPricedMaster(
 ) {
   const { valoEntitlements, valoPrices } = await import("@workspace/db");
   // Baseline TPL-01..12 are always free; a price record cannot silently change that contract.
-  if (/^TPL-(0[1-9]|1[0-2])$/.test(row.templateId)) return;
+  if (isFreeBaselineTemplate(row.templateId)) return;
   const [price] = await tx
     .select({ id: valoPrices.id })
     .from(valoPrices)

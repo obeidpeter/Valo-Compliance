@@ -5,6 +5,16 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export interface TemplateOffer {
+  id: string;
+  title: string;
+  amountKobo: number;
+  currency: string;
+  licenceVersion: string;
+  licenceText: string;
+  taxTreatment: string;
+}
+
 export interface PublicSourceReference {
   url: string;
   title: string;
@@ -468,6 +478,7 @@ export interface ReleasedTemplate {
   preview: string[];
   developmentOnly: boolean;
   commercialLicenceAccepted: boolean;
+  offer?: TemplateOffer;
   formats: ReleasedTemplateFormatsItem[];
 }
 
@@ -586,16 +597,6 @@ export interface FinanceDisputeLink {
   providerId: string;
 }
 
-export type CustomerPurchasesProductsItem = {
-  id: string;
-  title: string;
-  amountKobo: number;
-  currency: string;
-  licenceVersion: string;
-  licenceText: string;
-  taxTreatment: string;
-};
-
 export type CommerceOrderStatus = typeof CommerceOrderStatus[keyof typeof CommerceOrderStatus];
 
 
@@ -662,7 +663,7 @@ export interface CustomerPurchases {
   message: string;
   livePaymentsEnabled: boolean;
   orders: CommerceOrder[];
-  products: CustomerPurchasesProductsItem[];
+  products: TemplateOffer[];
 }
 
 export interface CommerceOrderInput {

@@ -45,7 +45,7 @@ export async function exercisePremiumManualTemplate(call: Call, editor: string) 
   const download = (edition: string, identity: string) =>
     call("/workspace/manual-premium-templates/" + edition + "/download", undefined, identity);
   const priceId = randomUUID();
-  await db.insert(valoPrices).values({
+  const price = {
     id: priceId,
     contentVersionId: first.id,
     title: "Synthetic premium fixture",
@@ -55,7 +55,18 @@ export async function exercisePremiumManualTemplate(call: Call, editor: string) 
     taxTreatment: "Synthetic",
     approvalReference: "LOCAL_TEST_ONLY",
     effectiveFrom: new Date(),
-  });
+  };
+  await db.insert(valoPrices).values([
+    price,
+    { ...price, id: randomUUID(), amountKobo: 12000, effectiveFrom: new Date(Date.now() + 86400000) },
+    {
+      ...price,
+      id: randomUUID(),
+      amountKobo: 8000,
+      effectiveFrom: new Date(Date.now() - 86400000),
+      effectiveTo: new Date(Date.now() - 1000),
+    },
+  ]);
   const productVisible = () =>
     runInWorkspaceScope(account.workspaceId, async () =>
       (await commerceProducts()).some((p) => p.id === priceId),
@@ -66,6 +77,19 @@ export async function exercisePremiumManualTemplate(call: Call, editor: string) 
     await (await call("/public/templates/manual-" + itemId)).json(),
   );
   assert.equal(detail.access, "premium");
+  assert.deepEqual(detail.offer, {
+    id: priceId,
+    title: price.title,
+    amountKobo: 10000,
+    currency: "NGN",
+    licenceVersion: "fixture-1",
+    licenceText: "Test use only",
+    taxTreatment: "Synthetic",
+  });
+  const buyerOffer = await runInWorkspaceScope(account.workspaceId, async () =>
+    (await commerceProducts()).find((p) => p.id === priceId),
+  );
+  assert.deepEqual(detail.offer, buyerOffer);
   assert.deepEqual(detail.preview, [data.body]);
   assert.equal((await call("/public/resources/manual-" + itemId)).status, 404);
   assert.equal(
@@ -116,6 +140,11 @@ export async function exercisePremiumManualTemplate(call: Call, editor: string) 
     await draft({ ...data, requestId: randomUUID(), baseVersion: 1, fileMode: "keep", upload: undefined }),
   );
   await readRevision(await act("publish", next));
+  const replacement = GetReleasedTemplateResponse.parse(
+    await (await call("/public/templates/manual-" + itemId)).json(),
+  );
+  assert.equal(replacement.id, next.id);
+  assert.equal(replacement.offer, undefined);
   assert.equal(await productVisible(), false);
   assert.equal((await download(first.id, reader)).status, 403);
   assert.equal((await download(next.id, reader)).status, 403);

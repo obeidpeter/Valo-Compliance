@@ -243,17 +243,7 @@ schemas:
       orders: { type: array, items: { $ref: "#/components/schemas/CommerceOrder" } }
       products:
         type: array
-        items:
-          type: object
-          required: [id, title, amountKobo, currency, licenceVersion, licenceText, taxTreatment]
-          properties:
-            id: { type: string }
-            title: { type: string }
-            amountKobo: { type: integer }
-            currency: { type: string }
-            licenceVersion: { type: string }
-            licenceText: { type: string }
-            taxTreatment: { type: string }
+        items: { $ref: "#/components/schemas/TemplateOffer" }
   CommerceOrderInput:
     type: object
     required: [priceId, acceptedLicenceVersion, requestKey]

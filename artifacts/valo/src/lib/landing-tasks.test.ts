@@ -4,6 +4,21 @@ import { GUIDED_TEMPLATE_IDS } from "@workspace/valo-core/guided";
 import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
 import { NAMED_IN_LEAD, landingTask, landingTasks, startPath } from "./landing-tasks";
 import { ANY_DOCUMENT, signUpFor } from "./start";
+import { checkoutSignInPath, templateCheckoutPath } from "./template-checkout";
+
+test("a checkout link carries only the selected price through sign-in and sign-up", () => {
+  const id = "684762b8-d9c3-4061-9348-b5bb6036d580";
+  const checkout = templateCheckoutPath(id);
+  const signIn = checkoutSignInPath(checkout.split("?")[1]!);
+  const start = new URL(signIn, "https://valo.example").searchParams.get("start");
+  assert.equal(signIn, "/sign-in?start=checkout-" + id);
+  assert.equal(startPath(start), checkout);
+  assert.equal(signUpFor(start!), "/sign-up?start=checkout-" + id);
+  for (const bad of ["", "another", id + "/other"]) {
+    assert.equal(checkoutSignInPath("offer=" + encodeURIComponent(bad)), "/sign-in");
+    assert.equal(startPath("checkout-" + bad), undefined);
+  }
+});
 
 /** What each task's documents are called in the workspace's starter. A task's words on the landing
  * page were written for these documents: when one is renamed, its task's words are due a look. */

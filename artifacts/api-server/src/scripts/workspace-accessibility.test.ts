@@ -2869,6 +2869,55 @@ test("the account screen names the sign-in service as the contact page does, and
   }
 });
 
+test("a direct checkout shows only the chosen price and leaves an obsolete link unavailable", async () => {
+  const id = "4dad9357-4a4f-409f-aebf-96b997932d0a";
+  const otherId = "6e9721a8-eee0-41c1-a4dc-6285e5afcd73";
+  const offer = {
+    id,
+    title: "Synthetic service agreement",
+    currency: "NGN",
+    amountKobo: 400000,
+    licenceVersion: "1.0",
+    licenceText: "Synthetic single-business licence.",
+    taxTreatment: "Final test price.",
+  };
+  const { page, errors, unknown, close } = await phone(
+    "/workspace/purchases?offer=" + id,
+    except({
+      "GET /workspace/purchases": api.GetCustomerPurchasesResponse.parse({
+        available: true,
+        message: "Synthetic checkout.",
+        livePaymentsEnabled: false,
+        orders: [],
+        products: [offer, { ...offer, id: otherId, title: "Other synthetic template" }],
+      }),
+    }),
+  );
+  try {
+    await ready(page);
+    await expect(page.getByRole("heading", { name: "Template checkout" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Synthetic service agreement · ₦4,000.00" }),
+    ).toBeVisible();
+    await expect(page.getByText("Other synthetic template", { exact: false })).toHaveCount(0);
+    await page.getByText("Licence · 1.0", { exact: true }).click();
+    await expect(page.getByText(offer.licenceText, { exact: true })).toBeVisible();
+    const save = page.getByRole("button", { name: "Save test order" });
+    await expect(save).toBeDisabled();
+    await page
+      .getByRole("checkbox", { name: "I accept this version of the licence for this business." })
+      .check();
+    await expect(save).toBeEnabled();
+    await page.goto(new URL("/workspace/purchases?offer=unavailable", page.url()).href);
+    await expect(page.getByTestId("text-nothing-to-buy")).toContainText("This offer is unavailable");
+    await expect(save).toHaveCount(0);
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
+
 // The purchases screen with nothing for sale and nothing ordered, which is how it opens while no
 // document is published with a price. The other tests give the screen an order, so its list with
 // no order had never been drawn.
