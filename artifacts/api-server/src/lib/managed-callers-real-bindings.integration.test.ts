@@ -916,11 +916,12 @@ test(
         },
       );
       // Decision 0017: a guide takes the same route. The owner's approval of the guidance policy is
-      // supposed for this subtest only, the captures are made from the passages kept in the
-      // repository, and the model is the stand-in above. The release happens in this disposable
-      // schema, which is dropped; no guide is published anywhere else.
+      // supposed for this subtest only, the approvals of AI spending are synthetic ones recorded in
+      // this schema, the captures are made from the passages kept in the repository, and the model
+      // is the stand-in above. The release happens in this disposable schema, which is dropped; no
+      // guide is published anywhere else.
       await t.test(
-        "a prepared guide's two reviews run through the same dispatcher and the publish command releases it, in this disposable schema",
+        "a prepared guide's two reviews are admitted only under an approval of guide reviews, run through the same dispatcher, and the publish command releases it, in this disposable schema",
         async () => {
           await reset();
           const { prepareGuideCandidateRelease } = await import("../modules/editorial/guidance-preparation");
@@ -937,13 +938,13 @@ test(
           const { REVIEW_INPUT_CEILING } = await import("../modules/editorial/review-meter");
           const guide = "GUD-02",
             clockBefore = Date.now();
-          // The amendment records a guide's sources rest on were made on 21 November 2026, after
-          // this test's fixed clock, so the subtest runs just after the last of their searches. Its
-          // clock must not be ahead of the real one: the database stamps a review attempt with the
-          // real time, and the dispatcher treats an attempt stamped before its plan was made as one
-          // left unfinished by an earlier run.
-          t.mock.timers.setTime(Date.parse("2026-11-21T20:30:00Z"));
-          assert.ok(Date.now() > clockBefore, "the subtest's clock is later than the test's");
+          // This subtest runs on the real clock, where the others run on a fixed one. The database
+          // stamps an approval, an admission and a review attempt with the real time, and the
+          // dispatcher compares each stamp with the application's clock: under a fixed clock a
+          // pair admitted under an approval could never be sent. The amendment records a guide's
+          // sources rest on were made on 21 November 2026, after the fixed clock.
+          t.mock.timers.reset();
+          assert.ok(Date.now() > clockBefore, "the real clock is later than the test's fixed one");
           guideApproval.supposed = true;
           try {
             const now = new Date(),
@@ -1007,7 +1008,64 @@ test(
               ],
               plan,
             });
-            const id = await seed(manifest),
+
+            // The pair is admitted under an approval, as the operator's admit command admits it.
+            // The approvals are made up: synthetic packages, approved in this disposable schema
+            // with the approval command's own function. Admission makes the dispatcher's checks on
+            // both requests again and calls no model.
+            const {
+              allocationPackageId,
+              approveFiniteAllocationPackage,
+              finitePackagePreparers,
+              prepareFiniteAllocationPackage,
+              registerPreparedInferenceSubmanifest,
+              revokeFiniteAllocationPackage,
+            } = await import("../modules/ai/inference-allocation-package");
+            const packageOf = (kind: keyof typeof finitePackagePreparers) =>
+              prepareFiniteAllocationPackage(new Date(Date.now() - 60_000), finitePackagePreparers[kind]);
+            const approve = (pkg: Awaited<ReturnType<typeof packageOf>>) =>
+              approveFiniteAllocationPackage(
+                scoped,
+                pkg,
+                {
+                  confirmPackageId: allocationPackageId(pkg),
+                  approvedBy: "synthetic-owner",
+                  reference: "Synthetic approval in a disposable schema, not the owner's",
+                  hours: 1,
+                },
+                schema,
+              );
+            const admit = (packageId: string, packageExpiresAt: string) =>
+              registerPreparedInferenceSubmanifest(
+                store,
+                { ...manifest, packageId },
+                new Date(
+                  Math.min(Date.parse(packageExpiresAt), Date.parse(plan.manifest.expiresAt)),
+                ).toISOString(),
+                assertFiniteWorkBindings,
+              );
+            const callsBeforeAdmission = calls;
+            // A package of the guides' kind that nobody has approved admits nothing.
+            const guidePackage = await packageOf("guidePairs");
+            await assert.rejects(
+              admit(allocationPackageId(guidePackage), new Date(Date.now() + 3_600_000).toISOString()),
+              /ALLOCATION_PACKAGE_NOT_AUTHORIZED/,
+            );
+            // An approval of template reviews does not admit a guide's reviews.
+            const templates = await approve(await packageOf("templatePairs"));
+            await assert.rejects(
+              admit(templates.packageId, templates.expiresAt),
+              /PACKAGE_EXECUTABLE_PREPARER_UNAVAILABLE/,
+            );
+            await revokeFiniteAllocationPackage(scoped, templates.packageId, schema);
+            // An approval of guide reviews does.
+            const guides = await approve(guidePackage);
+            const admitted = await admit(guides.packageId, guides.expiresAt);
+            assert.equal(admitted.packageId, guides.packageId);
+            assert.match(admitted.batchId, /^finite-submanifest:[a-f0-9]{64}$/);
+            assert.equal(calls, callsBeforeAdmission, "approving and admitting call no model");
+            assert.equal((await state()).entries.length, 0, "and reserve nothing");
+            const id = admitted.batchId,
               pair = manifest.works[0]!.pair!;
 
             // The stand-in answers each request with a pass and the five enhanced checks, each
@@ -1044,6 +1102,14 @@ test(
             );
             assert.equal(reviews.length, 2, JSON.stringify(attempts.rows));
             assert.equal(calls - before, 2, "one call to the stand-in for each review");
+            // Both were charged to the batch admitted under the guides' approval.
+            assert.deepEqual(
+              (await state()).entries.map((e) => [e.runKey.startsWith(`${id}:`), e.lane, e.status]),
+              [
+                [true, "publication", "settled"],
+                [true, "publication", "settled"],
+              ],
+            );
             // What was sent is what was planned: a guide's request, larger than a template's may be.
             const sent = captured.slice(sentBefore);
             assert.deepEqual(
@@ -1105,7 +1171,7 @@ test(
             );
           } finally {
             guideApproval.supposed = false;
-            t.mock.timers.setTime(clockBefore);
+            t.mock.timers.enable({ apis: ["Date"], now: clockBefore });
           }
         },
       );
