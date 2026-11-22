@@ -89,6 +89,10 @@ test("a published guide is shown only while its policy stands, its sources are c
     valoContentVersions: { id: "content.id", policyId: "content.policy", status: "content.status" },
     valoPublicationPolicies: { id: "policy.id", hash: "policy.hash" },
   };
+  // This fixture contains one sourced guide and no manually published entries.
+  t.mock.module(new URL("../manual-library/index.ts", import.meta.url).href, {
+    namedExports: { releasedManualEntries: async () => [] },
+  });
   t.mock.module("@workspace/db", {
     namedExports: {
       ...tables,

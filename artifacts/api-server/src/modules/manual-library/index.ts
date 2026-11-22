@@ -2,10 +2,10 @@ import { and, desc, eq, getTableColumns, sql } from "drizzle-orm";
 import { coveragePlan, digest, sha256 } from "@workspace/valo-core";
 import { ActOnManualLibraryBody, SaveManualLibraryDraftBody } from "@workspace/api-zod";
 import type { db, valoManualLibrary } from "@workspace/db";
-import { requireSourceStaff, type SourceStaffActor } from "../sources";
+import type { SourceStaffActor } from "../sources";
 import { ValoProblem } from "../../platform/valo-problem";
 import { assertDevelopmentRuntime, isDevelopmentRuntime } from "../../platform/valo-development-runtime";
-import { readEditorialUpload, wordFromText, type EditorialFile } from "./files";
+import type { EditorialFile } from "./files";
 
 type Revision = typeof valoManualLibrary.$inferSelect;
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -48,7 +48,7 @@ function pgError(error: unknown) {
 }
 async function withEditor<T>(actor: SourceStaffActor, work: (tx: Tx) => Promise<T>, itemId?: string) {
   assertDevelopmentRuntime();
-  const { db } = await import("@workspace/db");
+  const [{ db }, { requireSourceStaff }] = await Promise.all([import("@workspace/db"), import("../sources")]);
   try {
     return await db.transaction(async (tx) => {
       if (itemId) await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${itemId}::text,811))`);
@@ -118,6 +118,7 @@ function hasControlCharacters(value: string, multiline = false) {
   return false;
 }
 export async function saveManualDraft(actor: SourceStaffActor, itemId: string, value: unknown) {
+  const { readEditorialUpload, wordFromText } = await import("./files");
   const input = SaveManualLibraryDraftBody.strict().parse(value);
   const title = input.title.trim();
   if (!title || hasControlCharacters(title)) throw new ValoProblem(422, "Enter a title on one line.");
