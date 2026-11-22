@@ -12,6 +12,8 @@ Open a saved entry to make a correction. Readers see the current release until a
 
 ## Editorial authority
 
+Staff document uploads serve the editorial workflow. Customer workspaces continue to use structured notes and references under WRK-005. The boundary test checks every request schema, including referenced schemas, and identifies the staff screen as the only document picker.
+
 The application requires an active Content role and recent MFA. It records the editor and date for each saved, published and withdrawn version. It uses the existing database, a separate item identity, and a fingerprint of the previewed text and attachment. Every revision keeps its original content type. A new public version requires an explicit staff action. The editing routes make no AI calls and create no review allocations or worker jobs.
 
 Readers can filter Guides by industry. An industry introduction also appears on its category page. Templates appear in Documents, and signed-in readers can download their published file. The publication date is identified as editorial publication. Industry introductions contribute no source-check dates or regulatory evidence. Previously reviewed releases continue to use their recorded evidence and existing file access rules.
