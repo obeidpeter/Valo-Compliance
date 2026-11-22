@@ -11,11 +11,12 @@ import {
 import { guidanceReleaseDocument } from "./guidance-document";
 import { operationalPolicy, publicationWorkspaceRoot } from "./operational-policy";
 import type { OperationalProvenance } from "./operational-content";
+import { originalProvenanceNote, practicalDraftPath } from "../../lib/retained-content-sections";
 
-export const practicalSourcePath = "docs/content-candidates/practical-guide-candidates.md";
-export const practicalProvenancePath = "docs/content-candidates/chatgpt-content-provenance-rights.md";
+export const practicalSourcePath = practicalDraftPath;
+export const practicalProvenancePath = originalProvenanceNote.path;
 const sourceHash = "229728d08404c45f1bd98318fb0960396a85e78b36ffb1dc22779f1457e9ed82";
-const provenanceNoteHash = "57080e5d1a4105c3b3545b8e94f65662eb8e1d5ce08f2b88154fcfc345aca616";
+const provenanceNoteHash = originalProvenanceNote.sha256;
 const releaseScope = {
   path: "docs/valo/policies/practical-business-guides.md",
   hash: "217faa97d037e3114d6328f6b60e5875d696918bdcebbbb12e5d7aff7f3b7b44",

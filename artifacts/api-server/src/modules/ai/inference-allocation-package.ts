@@ -17,6 +17,12 @@ import type { FiniteManifest, FiniteWork } from "./inference-types";
 import type { InferenceBudgetStore } from "./inference-budget-store";
 import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
 import {
+  industryDraftPath,
+  practicalDraftPath,
+  retainedContentSections,
+  type NamedContentSection,
+} from "../../lib/retained-content-sections";
+import {
   mappedGuideIds,
   operationalInferenceTemplateIds,
   supportsOperationalInferenceTemplate,
@@ -24,13 +30,6 @@ import {
 const root = resolve(import.meta.dirname, "../../../../..");
 const sha = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
 type SourceRef = { path: string; sha256: string };
-type NamedContentSection = {
-  identity: string;
-  sourcePath: string;
-  heading: string;
-  baselineSectionSha256: string;
-  category: "practical-guide" | "industry-landing" | "industry-deeper-pack";
-};
 export type FiniteAllocationPackage = {
   version: 3;
   kind: "finite-inference-package";
@@ -88,32 +87,11 @@ const scopePaths = [
   "docs/evaluation-candidates/editorial.json",
   "docs/evaluation-candidates/checker.json",
   "docs/evaluation-candidates/customer-ai.json",
-  "docs/content-candidates/practical-guide-candidates.md",
-  "docs/content-candidates/industry-content-candidates.md",
+  practicalDraftPath,
+  industryDraftPath,
 ] as const;
-function namedSections(path: string, body: string): NamedContentSection[] {
-  const headers = [...body.matchAll(/^#{1,3} .+$/gm)];
-  return headers.flatMap((match, index): NamedContentSection[] => {
-    const heading = match[0].replace(/^#+ /, ""),
-      isGuide = path === scopePaths[5] && /^## GUIDE-C\d{2} — /.test(match[0]);
-    const industry = path === scopePaths[6] && match[0].startsWith("### ");
-    if (!isGuide && !industry) return [];
-    return [
-      {
-        identity: `${path}#${heading}`,
-        sourcePath: path,
-        heading,
-        baselineSectionSha256: sha(
-          Buffer.from(body.slice(match.index, headers[index + 1]?.index ?? body.length)),
-        ),
-        category: isGuide
-          ? "practical-guide"
-          : heading.endsWith(" — deeper pack")
-            ? "industry-deeper-pack"
-            : "industry-landing",
-      },
-    ];
-  });
+function namedSections(path: string, body: string) {
+  return retainedContentSections(path, body).map(({ section }) => section);
 }
 /** Reads the actual finite inventory/corpora. Scope is not readiness: unfinished
  * preparers remain held, and actual source/rights/currentness gates still run. */
