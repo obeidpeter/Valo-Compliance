@@ -12,6 +12,7 @@ export type ReleasedResourceKind = typeof ReleasedResourceKind[keyof typeof Rele
 export const ReleasedResourceKind = {
   guidance: 'guidance',
   guide: 'guide',
+  industry_introduction: 'industry_introduction',
   industry_pack: 'industry_pack',
   location_pack: 'location_pack',
 } as const;

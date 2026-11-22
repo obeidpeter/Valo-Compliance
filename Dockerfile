@@ -43,6 +43,7 @@ COPY --from=api-build /repo/artifacts/api-server/node_modules ./node_modules
 COPY --from=api-build /repo/artifacts/api-server/dist ./dist
 # Chromium and its system libraries for PDF rendering, matching the locked Playwright.
 RUN node node_modules/playwright/cli.js install --with-deps chromium \
+ && apt-get update && apt-get install -y --no-install-recommends poppler-utils \
  && ln -s "$(node -e "process.stdout.write(require('playwright').chromium.executablePath())")" "$CHROMIUM_EXECUTABLE_PATH" \
  && rm -rf /var/lib/apt/lists/*
 USER node

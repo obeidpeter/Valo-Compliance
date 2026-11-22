@@ -4,29 +4,31 @@ import { baselineTemplates, additionalCandidates, contentReadiness } from "./cat
 /** Facts are supplied only after live publication eligibility checks, never from inventory rows. */
 export type ReleasedCoverageFact = {
   id: string;
-  kind: "template" | "guidance" | "guide" | "industry_pack" | "location_pack";
+  kind: "template" | "guidance" | "guide" | "industry_introduction" | "industry_pack" | "location_pack";
   industrySlugs: string[];
   locationIds: string[];
-  sourceCheckedAt: string;
+  sourceCheckedAt: string | null;
 };
 export function coveragePlan(released: ReleasedCoverageFact[] = []) {
   const c = contentReadiness();
   const distinct = [...new Map(released.map((r) => [r.id, r])).values()];
-  const regulatory = distinct.filter((r) => r.kind !== "template");
+  const articles = distinct.filter((r) => r.kind !== "template");
+  const regulatory = articles.filter((r) => r.sourceCheckedAt !== null);
   return {
     industries: c.industryTaxonomy.map((title, index) => {
       const slug = title.replaceAll("/", "-").replaceAll(" ", "-");
-      const matches = regulatory.filter((r) => r.industrySlugs.includes(slug));
+      const matches = articles.filter((r) => r.industrySlugs.includes(slug));
+      const evidence = regulatory.filter((r) => r.industrySlugs.includes(slug));
       return {
         id: `IND-${String(index + 1).padStart(2, "0")}`,
         slug: title.replaceAll("/", "-").replaceAll(" ", "-"),
         title,
         deeperPackTarget: (c.deeperPacks as readonly string[]).includes(title),
         enhancedEvidenceRequired: ["healthcare", "financial services", "energy"].includes(title),
-        coverageState: matches.length ? "partial" : "held",
-        evidenceState: matches.length ? "released_evidence" : "no_released_evidence",
+        coverageState: evidence.length ? "partial" : "held",
+        evidenceState: evidence.length ? "released_evidence" : "no_released_evidence",
         sourceCheckedAt:
-          matches
+          evidence
             .map((r) => r.sourceCheckedAt)
             .sort()
             .at(-1) ?? null,

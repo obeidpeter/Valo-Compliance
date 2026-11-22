@@ -159,26 +159,30 @@ export function ResourceDetail({
               >
                 {r.title}
               </h1>
-              <p className="mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">{r.summary}</p>
+              {r.publicationMethod !== "manual" && (
+                <p className="mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">{r.summary}</p>
+              )}
               <PlainText
                 text={r.body}
                 className="mt-10 grid max-w-2xl gap-4 font-display text-[1.1rem] leading-relaxed"
               />
-              <section className="mt-10 grid gap-6 border-t border-border pt-8 text-sm leading-relaxed">
-                <div>
-                  <h2 className="eyebrow">What it covers</h2>
-                  <p className="mt-2 whitespace-pre-line">{r.scope}</p>
-                </div>
-                <div>
-                  <h2 className="eyebrow">Limits you should know</h2>
-                  <p className="mt-2 whitespace-pre-line" data-testid="text-resource-limitations">
-                    {r.limitations}
-                  </p>
-                </div>
-              </section>
+              {r.publicationMethod !== "manual" && (
+                <section className="mt-10 grid gap-6 border-t border-border pt-8 text-sm leading-relaxed">
+                  <div>
+                    <h2 className="eyebrow">What it covers</h2>
+                    <p className="mt-2 whitespace-pre-line">{r.scope}</p>
+                  </div>
+                  <div>
+                    <h2 className="eyebrow">Limits you should know</h2>
+                    <p className="mt-2 whitespace-pre-line" data-testid="text-resource-limitations">
+                      {r.limitations}
+                    </p>
+                  </div>
+                </section>
+              )}
             </div>
             <aside className="grid gap-4 lg:sticky lg:top-24 lg:self-start">
-              {(r.sources.length > 0 || r.kind !== "guide") && (
+              {r.publicationMethod !== "manual" && (r.sources.length > 0 || r.kind !== "guide") && (
                 <div className="surface p-5">
                   <p className="eyebrow">Sources</p>
                   {r.sources.length ? (
@@ -211,7 +215,9 @@ export function ResourceDetail({
                   )}
                 </div>
               )}
-              <Notice title="How it was written and checked">
+              <Notice
+                title={r.publicationMethod === "manual" ? "Publisher" : "How it was written and checked"}
+              >
                 <p className="whitespace-pre-line">{r.disclosure}</p>
               </Notice>
             </aside>

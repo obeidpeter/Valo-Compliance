@@ -166,7 +166,8 @@ schemas:
       id: { type: string }
       slug: { type: string }
       title: { type: string }
-      kind: { type: string, enum: [guidance, guide, industry_pack, location_pack] }
+      kind: { type: string, enum: [guidance, guide, industry_introduction, industry_pack, location_pack] }
+      publicationMethod: { type: string, enum: [manual] }
       industrySlugs: { type: array, items: { type: string } }
       summary: { type: string }
       body: { type: string }
@@ -260,7 +261,8 @@ schemas:
       summary: { type: string }
       version: { type: integer }
       reviewedAt: { type: string, format: date-time }
-      reviewBy: { type: string, format: date-time }
+      reviewBy: { type: [string, "null"], format: date-time }
+      publicationMethod: { type: string, enum: [manual] }
       disclosure: { type: string }
       scope: { type: string }
       limitations: { type: string }

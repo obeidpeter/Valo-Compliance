@@ -17,6 +17,7 @@ import { SupportRecords } from "@/components/support-records";
 import { StaffSupportCases } from "@/components/staff-support-cases";
 import { ContentEscalations } from "@/components/content-escalations";
 import { PreparedCandidates } from "@/components/prepared-candidates";
+import { ManualLibraryEditor } from "@/components/manual-library-editor";
 
 const AREAS: { v: Area; l: string }[] = [
   { v: GetStaffOperationsArea.content, l: "Content" },
@@ -36,6 +37,7 @@ export default function StaffPage() {
   const [area, setArea] = useState<Area>("content");
   const [supportDirty, setSupportDirty] = useState(false);
   const [contentDirty, setContentDirty] = useState(false);
+  const [manualDirty, setManualDirty] = useState(false);
   const params = { area };
   const q = useGetStaffOperations(params, {
     query: { queryKey: getGetStaffOperationsQueryKey(params), refetchInterval: 15000, retry: false },
@@ -65,7 +67,7 @@ export default function StaffPage() {
             key={a.v}
             type="button"
             aria-pressed={area === a.v}
-            disabled={(supportDirty || contentDirty) && area !== a.v}
+            disabled={(supportDirty || contentDirty || manualDirty) && area !== a.v}
             onClick={() => setArea(a.v)}
             className={cn(
               "rounded-full border px-4 py-1.5 text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
@@ -130,9 +132,15 @@ export default function StaffPage() {
             </p>
             {area === "finance" && <FinanceRefunds />}
             {area === "system" && <StaffRoleAdministration />}
+            {area === "content" && <ManualLibraryEditor onDirtyChange={setManualDirty} />}
             {(area === "content" || area === "system") && <SourceSafetyControls key={area} area={area} />}
             {area === "content" && <ContentEscalations onDirtyChange={setContentDirty} />}
-            {area === "content" && <PreparedCandidates candidates={q.data.preparedCandidates ?? []} />}
+            {area === "content" && (
+              <details className="mt-6">
+                <summary className="cursor-pointer">Previously prepared review candidates</summary>
+                <PreparedCandidates candidates={q.data.preparedCandidates ?? []} />
+              </details>
+            )}
             {area === "support" ? (
               <>
                 <StaffSupportCases onDirtyChange={setSupportDirty} />

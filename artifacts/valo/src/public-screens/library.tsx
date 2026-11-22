@@ -194,7 +194,7 @@ export function Library({
           >
             <option value="relevance">Relevance</option>
             <option value="name">Name</option>
-            <option value="recently_checked">Recently checked</option>
+            <option value="recently_checked">Most recent</option>
           </select>
         </label>
       </div>

@@ -296,6 +296,8 @@ export async function publishOperationalVersionInTransaction(tx: PublicationTx, 
   const { valoContentVersions, valoPublicationAudit } = await import("@workspace/db");
   const { row, bundle } = await validateOperationalVersionInTransaction(tx, id);
   if (row.status === "published") return { id, decision: "published" as const, idempotent: true };
+  if (bundle.candidate.contentClass === "sourced_guidance")
+    throw Error("REGULATORY_ARTICLE_AWAITING_OWNER_SOURCE_CHECK");
   await tx
     .update(valoContentVersions)
     .set({ status: "published", publishedAt: new Date() })

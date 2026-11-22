@@ -672,7 +672,8 @@ export const ListReleasedResourcesResponseItem = zod.object({
   "id": zod.string(),
   "slug": zod.string(),
   "title": zod.string(),
-  "kind": zod.enum(['guidance', 'guide', 'industry_pack', 'location_pack']),
+  "kind": zod.enum(['guidance', 'guide', 'industry_introduction', 'industry_pack', 'location_pack']),
+  "publicationMethod": zod.enum(['manual']).optional(),
   "industrySlugs": zod.array(zod.string()),
   "summary": zod.string(),
   "body": zod.string(),
@@ -701,7 +702,8 @@ export const GetReleasedResourceResponse = zod.object({
   "id": zod.string(),
   "slug": zod.string(),
   "title": zod.string(),
-  "kind": zod.enum(['guidance', 'guide', 'industry_pack', 'location_pack']),
+  "kind": zod.enum(['guidance', 'guide', 'industry_introduction', 'industry_pack', 'location_pack']),
+  "publicationMethod": zod.enum(['manual']).optional(),
   "industrySlugs": zod.array(zod.string()),
   "summary": zod.string(),
   "body": zod.string(),
@@ -800,7 +802,8 @@ export const GetReleasedTemplateResponse = zod.object({
   "summary": zod.string(),
   "version": zod.int(),
   "reviewedAt": zod.coerce.date(),
-  "reviewBy": zod.coerce.date(),
+  "reviewBy": zod.coerce.date().nullable(),
+  "publicationMethod": zod.enum(['manual']).optional(),
   "disclosure": zod.string(),
   "scope": zod.string(),
   "limitations": zod.string(),
@@ -3279,6 +3282,166 @@ export const VerifySessionMfaResponse = zod.object({
   "verified": zod.literal(true),
   "checkedAt": zod.coerce.date()
 })
+
+
+export const listManualLibraryQueryPageDefault = 1;
+
+
+
+export const ListManualLibraryQueryParams = zod.object({
+  "page": zod.coerce.number().int().min(1).default(listManualLibraryQueryPageDefault)
+})
+
+export const ListManualLibraryResponse = zod.object({
+  "items": zod.array(zod.object({
+  "itemId": zod.uuid(),
+  "version": zod.int(),
+  "title": zod.string(),
+  "kind": zod.enum(['practical_guide', 'industry_introduction', 'template', 'regulatory_article']),
+  "state": zod.enum(['draft', 'published', 'replaced', 'withdrawn']),
+  "industry": zod.string().nullable()
+})),
+  "hasMore": zod.boolean()
+})
+
+
+export const GetManualLibraryRevisionParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const getManualLibraryRevisionResponseDigestRegExp = new RegExp('^[0-9a-f]{64}$');
+export const getManualLibraryRevisionResponseLiveOneDigestRegExp = new RegExp('^[0-9a-f]{64}$');
+
+
+export const GetManualLibraryRevisionResponse = zod.object({
+  "itemId": zod.uuid(),
+  "version": zod.int(),
+  "title": zod.string(),
+  "kind": zod.enum(['practical_guide', 'industry_introduction', 'template', 'regulatory_article']),
+  "state": zod.enum(['draft', 'published', 'replaced', 'withdrawn']),
+  "industry": zod.string().nullable(),
+  "id": zod.uuid(),
+  "digest": zod.string().regex(getManualLibraryRevisionResponseDigestRegExp),
+  "body": zod.string(),
+  "fileFormat": zod.union([zod.literal('docx'),zod.literal('pdf'),zod.literal(null)]).nullable(),
+  "createdBy": zod.string(),
+  "createdAt": zod.string(),
+  "publishedAt": zod.string().nullable(),
+  "publishedBy": zod.string().nullable(),
+  "live": zod.union([zod.object({
+  "version": zod.int(),
+  "digest": zod.string().regex(getManualLibraryRevisionResponseLiveOneDigestRegExp)
+}),zod.null()])
+})
+
+
+export const SaveManualLibraryDraftParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const saveManualLibraryDraftBodyBaseVersionMin = 0;
+
+export const saveManualLibraryDraftBodyTitleMax = 140;
+
+export const saveManualLibraryDraftBodyBodyMax = 60000;
+
+export const saveManualLibraryDraftBodyUploadBase64Max = 2796204;
+
+
+
+export const SaveManualLibraryDraftBody = zod.object({
+  "requestId": zod.uuid(),
+  "baseVersion": zod.int().min(saveManualLibraryDraftBodyBaseVersionMin),
+  "title": zod.string().min(1).max(saveManualLibraryDraftBodyTitleMax),
+  "kind": zod.enum(['practical_guide', 'industry_introduction', 'template', 'regulatory_article']),
+  "industry": zod.string().nullable(),
+  "body": zod.string().max(saveManualLibraryDraftBodyBodyMax),
+  "fileMode": zod.enum(['text', 'upload', 'keep']),
+  "upload": zod.object({
+  "format": zod.enum(['docx', 'pdf']),
+  "base64": zod.string().max(saveManualLibraryDraftBodyUploadBase64Max)
+}).optional()
+})
+
+export const saveManualLibraryDraftResponseDigestRegExp = new RegExp('^[0-9a-f]{64}$');
+export const saveManualLibraryDraftResponseLiveOneDigestRegExp = new RegExp('^[0-9a-f]{64}$');
+
+
+export const SaveManualLibraryDraftResponse = zod.object({
+  "itemId": zod.uuid(),
+  "version": zod.int(),
+  "title": zod.string(),
+  "kind": zod.enum(['practical_guide', 'industry_introduction', 'template', 'regulatory_article']),
+  "state": zod.enum(['draft', 'published', 'replaced', 'withdrawn']),
+  "industry": zod.string().nullable(),
+  "id": zod.uuid(),
+  "digest": zod.string().regex(saveManualLibraryDraftResponseDigestRegExp),
+  "body": zod.string(),
+  "fileFormat": zod.union([zod.literal('docx'),zod.literal('pdf'),zod.literal(null)]).nullable(),
+  "createdBy": zod.string(),
+  "createdAt": zod.string(),
+  "publishedAt": zod.string().nullable(),
+  "publishedBy": zod.string().nullable(),
+  "live": zod.union([zod.object({
+  "version": zod.int(),
+  "digest": zod.string().regex(saveManualLibraryDraftResponseLiveOneDigestRegExp)
+}),zod.null()])
+})
+
+
+export const ActOnManualLibraryParams = zod.object({
+  "id": zod.uuid()
+})
+
+
+export const actOnManualLibraryBodyDigestRegExp = new RegExp('^[0-9a-f]{64}$');
+
+
+export const ActOnManualLibraryBody = zod.object({
+  "action": zod.enum(['publish', 'withdraw']),
+  "version": zod.int().min(1),
+  "digest": zod.string().regex(actOnManualLibraryBodyDigestRegExp)
+})
+
+export const actOnManualLibraryResponseDigestRegExp = new RegExp('^[0-9a-f]{64}$');
+export const actOnManualLibraryResponseLiveOneDigestRegExp = new RegExp('^[0-9a-f]{64}$');
+
+
+export const ActOnManualLibraryResponse = zod.object({
+  "itemId": zod.uuid(),
+  "version": zod.int(),
+  "title": zod.string(),
+  "kind": zod.enum(['practical_guide', 'industry_introduction', 'template', 'regulatory_article']),
+  "state": zod.enum(['draft', 'published', 'replaced', 'withdrawn']),
+  "industry": zod.string().nullable(),
+  "id": zod.uuid(),
+  "digest": zod.string().regex(actOnManualLibraryResponseDigestRegExp),
+  "body": zod.string(),
+  "fileFormat": zod.union([zod.literal('docx'),zod.literal('pdf'),zod.literal(null)]).nullable(),
+  "createdBy": zod.string(),
+  "createdAt": zod.string(),
+  "publishedAt": zod.string().nullable(),
+  "publishedBy": zod.string().nullable(),
+  "live": zod.union([zod.object({
+  "version": zod.int(),
+  "digest": zod.string().regex(actOnManualLibraryResponseLiveOneDigestRegExp)
+}),zod.null()])
+})
+
+
+export const PreviewManualLibraryFileParams = zod.object({
+  "id": zod.uuid(),
+  "version": zod.coerce.number().int()
+})
+
+export const PreviewManualLibraryFileResponse = zod.unknown()
+
+
+export const DownloadManualTemplateParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const DownloadManualTemplateResponse = zod.unknown()
 
 
 export const GetBuildStatusResponse = zod.object({

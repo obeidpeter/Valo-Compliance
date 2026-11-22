@@ -5,6 +5,7 @@ import { formatDay } from "@/lib/format";
 export const KIND_LABEL: Record<ReleasedResourceKind, string> = {
   guidance: "Guidance",
   guide: "Practical guide",
+  industry_introduction: "Industry introduction",
   industry_pack: "Industry pack",
   location_pack: "Location pack",
 };
@@ -38,6 +39,7 @@ export function PlainText({ text, className }: { text: string; className?: strin
 }
 
 export function resourceCheckLabel(r: ReleasedResource) {
+  if (r.publicationMethod === "manual") return "Published";
   return r.kind === "guide" && r.sources.length === 0 ? "Draft and evidence checked" : "Sources checked";
 }
 

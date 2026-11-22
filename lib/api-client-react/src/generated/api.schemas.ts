@@ -326,8 +326,16 @@ export type ReleasedResourceKind = typeof ReleasedResourceKind[keyof typeof Rele
 export const ReleasedResourceKind = {
   guidance: 'guidance',
   guide: 'guide',
+  industry_introduction: 'industry_introduction',
   industry_pack: 'industry_pack',
   location_pack: 'location_pack',
+} as const;
+
+export type ReleasedResourcePublicationMethod = typeof ReleasedResourcePublicationMethod[keyof typeof ReleasedResourcePublicationMethod];
+
+
+export const ReleasedResourcePublicationMethod = {
+  manual: 'manual',
 } as const;
 
 export interface PublicSourceReference {
@@ -341,6 +349,7 @@ export interface ReleasedResource {
   slug: string;
   title: string;
   kind: ReleasedResourceKind;
+  publicationMethod?: ReleasedResourcePublicationMethod;
   industrySlugs: string[];
   summary: string;
   body: string;
@@ -418,6 +427,13 @@ export interface SavedTemplates {
   items: SavedTemplatesItemsItem[];
 }
 
+export type ReleasedTemplatePublicationMethod = typeof ReleasedTemplatePublicationMethod[keyof typeof ReleasedTemplatePublicationMethod];
+
+
+export const ReleasedTemplatePublicationMethod = {
+  manual: 'manual',
+} as const;
+
 export type ReleasedTemplateFormatsItem = typeof ReleasedTemplateFormatsItem[keyof typeof ReleasedTemplateFormatsItem];
 
 
@@ -434,7 +450,9 @@ export interface ReleasedTemplate {
   summary: string;
   version: number;
   reviewedAt: string;
-  reviewBy: string;
+  /** @nullable */
+  reviewBy: string | null;
+  publicationMethod?: ReleasedTemplatePublicationMethod;
   disclosure: string;
   scope: string;
   limitations: string;
@@ -1458,6 +1476,168 @@ export interface LibraryExport {
 export interface SessionMfaVerification {
   verified: true;
   checkedAt: string;
+}
+
+export type ManualLibraryEntryKind = typeof ManualLibraryEntryKind[keyof typeof ManualLibraryEntryKind];
+
+
+export const ManualLibraryEntryKind = {
+  practical_guide: 'practical_guide',
+  industry_introduction: 'industry_introduction',
+  template: 'template',
+  regulatory_article: 'regulatory_article',
+} as const;
+
+export type ManualLibraryEntryState = typeof ManualLibraryEntryState[keyof typeof ManualLibraryEntryState];
+
+
+export const ManualLibraryEntryState = {
+  draft: 'draft',
+  published: 'published',
+  replaced: 'replaced',
+  withdrawn: 'withdrawn',
+} as const;
+
+export interface ManualLibraryEntry {
+  itemId: string;
+  version: number;
+  title: string;
+  kind: ManualLibraryEntryKind;
+  state: ManualLibraryEntryState;
+  /** @nullable */
+  industry: string | null;
+}
+
+export interface ManualLibraryPage {
+  items: ManualLibraryEntry[];
+  hasMore: boolean;
+}
+
+export type ManualLibraryRevisionKind = typeof ManualLibraryRevisionKind[keyof typeof ManualLibraryRevisionKind];
+
+
+export const ManualLibraryRevisionKind = {
+  practical_guide: 'practical_guide',
+  industry_introduction: 'industry_introduction',
+  template: 'template',
+  regulatory_article: 'regulatory_article',
+} as const;
+
+export type ManualLibraryRevisionState = typeof ManualLibraryRevisionState[keyof typeof ManualLibraryRevisionState];
+
+
+export const ManualLibraryRevisionState = {
+  draft: 'draft',
+  published: 'published',
+  replaced: 'replaced',
+  withdrawn: 'withdrawn',
+} as const;
+
+/**
+ * @nullable
+ */
+export type ManualLibraryRevisionFileFormat = typeof ManualLibraryRevisionFileFormat[keyof typeof ManualLibraryRevisionFileFormat] | null;
+
+
+export const ManualLibraryRevisionFileFormat = {
+  docx: 'docx',
+  pdf: 'pdf',
+} as const;
+
+export type ManualLibraryRevisionLive = {
+  version: number;
+  /** @pattern ^[0-9a-f]{64}$ */
+  digest: string;
+} | null;
+
+export interface ManualLibraryRevision {
+  itemId: string;
+  version: number;
+  title: string;
+  kind: ManualLibraryRevisionKind;
+  state: ManualLibraryRevisionState;
+  /** @nullable */
+  industry: string | null;
+  id: string;
+  /** @pattern ^[0-9a-f]{64}$ */
+  digest: string;
+  body: string;
+  /** @nullable */
+  fileFormat: ManualLibraryRevisionFileFormat;
+  createdBy: string;
+  createdAt: string;
+  /** @nullable */
+  publishedAt: string | null;
+  /** @nullable */
+  publishedBy: string | null;
+  live: ManualLibraryRevisionLive;
+}
+
+export type ManualLibraryDraftKind = typeof ManualLibraryDraftKind[keyof typeof ManualLibraryDraftKind];
+
+
+export const ManualLibraryDraftKind = {
+  practical_guide: 'practical_guide',
+  industry_introduction: 'industry_introduction',
+  template: 'template',
+  regulatory_article: 'regulatory_article',
+} as const;
+
+export type ManualLibraryDraftFileMode = typeof ManualLibraryDraftFileMode[keyof typeof ManualLibraryDraftFileMode];
+
+
+export const ManualLibraryDraftFileMode = {
+  text: 'text',
+  upload: 'upload',
+  keep: 'keep',
+} as const;
+
+export type ManualLibraryDraftUploadFormat = typeof ManualLibraryDraftUploadFormat[keyof typeof ManualLibraryDraftUploadFormat];
+
+
+export const ManualLibraryDraftUploadFormat = {
+  docx: 'docx',
+  pdf: 'pdf',
+} as const;
+
+export type ManualLibraryDraftUpload = {
+  format: ManualLibraryDraftUploadFormat;
+  /** @maxLength 2796204 */
+  base64: string;
+};
+
+export interface ManualLibraryDraft {
+  requestId: string;
+  /** @minimum 0 */
+  baseVersion: number;
+  /**
+     * @minLength 1
+     * @maxLength 140
+     */
+  title: string;
+  kind: ManualLibraryDraftKind;
+  /** @nullable */
+  industry: string | null;
+  /** @maxLength 60000 */
+  body: string;
+  fileMode: ManualLibraryDraftFileMode;
+  upload?: ManualLibraryDraftUpload;
+}
+
+export type ManualLibraryActionAction = typeof ManualLibraryActionAction[keyof typeof ManualLibraryActionAction];
+
+
+export const ManualLibraryActionAction = {
+  publish: 'publish',
+  withdraw: 'withdraw',
+} as const;
+
+export interface ManualLibraryAction {
+  action: ManualLibraryActionAction;
+  /** @minimum 1 */
+  version: number;
+  /** @pattern ^[0-9a-f]{64}$ */
+  digest: string;
 }
 
 export interface BuildStatus {
@@ -3470,6 +3650,11 @@ export type GetCorrectionNoticesParams = {
    * @minimum 1
    * @maximum 10000
    */
+  page?: number;
+};
+
+export type ListManualLibraryParams = {
+  /** @minimum 1 */
   page?: number;
 };
 

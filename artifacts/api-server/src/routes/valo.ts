@@ -48,12 +48,14 @@ import { supportCustomerRouter, supportOperationsRouter } from "./valo-support-l
 import { customerPaymentConcernsRouter, financePaymentConcernsRouter } from "./valo-payment-concerns";
 import { createSessionVerificationRouter } from "./valo-session-verification";
 import { makeStaffGate } from "../middlewares/valo-staff-gate";
+import { createManualLibraryRouter } from "./valo-manual-library";
 import { sourceControlsRouter, correctionNoticesRouter } from "./valo-source-controls";
 const router = Router();
 router.use(createSessionVerificationRouter());
 router.use(publicAccessRouter);
 // Refuse accounts without any active staff assignment before staff routes read input.
 router.use("/admin", makeStaffGate());
+router.use(createManualLibraryRouter());
 router.use(staffOperationsRouter);
 router.use(sourceControlsRouter);
 router.use(supportOperationsRouter);
