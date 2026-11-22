@@ -188,7 +188,16 @@ test("the prepared candidate's artifact is required, exact and part of work iden
   assert.equal(changed.works[0]!.bindings.candidateArtifact!.templateId, "TPL-12");
 });
 test("a prepared candidate may be a template or a guide, named by its exact ID", () => {
-  for (const id of ["TPL-07", "TPL-12", "GUD-01", "GUD-30", "GUIDE-C01", "GUIDE-C02"]) {
+  for (const id of [
+    "TPL-07",
+    "TPL-12",
+    "GUD-01",
+    "GUD-30",
+    "GUIDE-C01",
+    "GUIDE-C02",
+    "GUIDE-C03",
+    "GUIDE-C04",
+  ]) {
     const value = input();
     value.candidateArtifact.templateId = id;
     const manifest = prepareOperationalFiniteManifest(value, now);
@@ -200,7 +209,7 @@ test("a prepared candidate may be a template or a guide, named by its exact ID",
       ],
     );
   }
-  for (const id of ["GUD-1", "GUD-001", "GUIDE-C03", "GUIDE-C1", "gud-01", "GUD-01 ", "RULE-01", ""]) {
+  for (const id of ["GUD-1", "GUD-001", "GUIDE-C05", "GUIDE-C1", "gud-01", "GUD-01 ", "RULE-01", ""]) {
     const value = input();
     value.candidateArtifact.templateId = id;
     assert.throws(() => prepareOperationalFiniteManifest(value, now), /FINITE_PREPARATION_BINDING_INVALID/);

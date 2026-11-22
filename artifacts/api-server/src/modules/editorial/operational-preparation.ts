@@ -14,7 +14,7 @@ import { renderDocument } from "../../lib/valo-render";
 import {
   templateCandidate,
   practicalGuideCandidate,
-  practicalGuidePolicy,
+  practicalGuidePreparationPolicy,
   practicalGuideSlug,
   readPracticalGuideIntake,
   type OperationalProvenance,
@@ -79,7 +79,9 @@ async function prepareRelease(templateId: string, snapshotPath: string, requestR
   if (!applicability.verified) throw Error("PROVIDER_RIGHTS_APPLICABILITY_UNVERIFIED");
   assertPermissionRoute(applicability.record, useRecordedAuthoring);
   const now = new Date(),
-    { policy, authority } = practical ? await practicalGuidePolicy() : await operationalPolicy();
+    { policy, authority } = practical
+      ? await practicalGuidePreparationPolicy(templateId)
+      : await operationalPolicy();
   await db
     .insert(valoPublicationPolicies)
     .values({ id: policy.version, hash: policy.hash, policy, authority })

@@ -40,6 +40,10 @@ pnpm exec tsx src/scripts/finite-inference-run.ts --verify-prepared "$REPORT_ART
 
 Both candidates should say `awaiting_reviews`. Check that the private report contains two prepared pairs and zero holds. The file and section hashes, original prose, provider permission, worked examples and exported DOCX and PDF must pass for the same article. A newer edit requires fresh evidence. The checks use a provider-terms capture less than 24 hours old at preparation.
 
+### Prepare the payment reminder and inventory register
+
+Use the same capture and candidate commands with `GUIDE-C03` and `GUIDE-C04`. Supply those two new artifact references to `--prepare new --reminder-inventory-pairs`, then run `--verify-prepared` with the returned report ID and hash. Confirm both pairs are ready and the report has zero holds. Present the new package and its maximum reservation to the owner before recording an approval or admitting work. The invoice and quotation package has a different identity. Release authority for the reminder and inventory register requires a separate decision.
+
 ## Review and publish
 
 Take the exact `package` object and package ID from the verified private report to the owner. The two pairs allow four provider calls, with a combined maximum reservation of **USD 1.4822016** under the versioned rate calculation, including its 10% uplift. Each call can reserve up to USD 0.3705504. The existing allocation’s shared ceiling also applies. Changed pricing, an expired approval or an unresolved hold requires a new decision before dispatch. Preparing and verifying the packet makes zero provider calls.

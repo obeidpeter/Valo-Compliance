@@ -1,6 +1,10 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { isPracticalGuideId, practicalGuideIds } from "@workspace/valo-core";
+import {
+  invoiceQuotationGuideIds,
+  isPracticalGuideId,
+  reminderInventoryGuideIds,
+} from "@workspace/valo-core";
 import { createHash } from "node:crypto";
 import {
   additionalInferenceAllocation,
@@ -53,18 +57,31 @@ export const finitePackagePreparers = {
   editorialCases: ["editorial-case-pair-v1"],
   guidePairs: ["guide-review-pair-v1"],
   practicalPairs: ["practical-business-guide-pair-v1"],
+  reminderInventoryPairs: ["practical-reminder-inventory-pair-v1"],
 } as const;
 export type FinitePackagePreparers = (typeof finitePackagePreparers)[keyof typeof finitePackagePreparers];
 const preparerSet = (value: unknown) =>
   Object.values(finitePackagePreparers).find((set) => requestDigest(set) === requestDigest(value));
-export const practicalReviewLimits = {
-  articleIds: practicalGuideIds,
-  maximumCalls: practicalGuideIds.length * 2,
-  maximumReservationNanoUsd: (
-    BigInt(practicalGuideIds.length * 2) *
-    tokenCost(inferenceProposal.fallback.inputTokens, inferenceProposal.fallback.outputTokens)
-  ).toString(),
-} as const;
+function reviewLimits(articleIds: readonly string[]) {
+  const maximumCalls = articleIds.length * 2;
+  return {
+    articleIds,
+    maximumCalls,
+    maximumReservationNanoUsd: (
+      BigInt(maximumCalls) *
+      tokenCost(inferenceProposal.fallback.inputTokens, inferenceProposal.fallback.outputTokens)
+    ).toString(),
+  };
+}
+export const practicalReviewLimits = reviewLimits(invoiceQuotationGuideIds);
+const reminderInventoryReviewLimits = reviewLimits(reminderInventoryGuideIds);
+/** Source files contain all twelve drafts. Only the selected preparer's two IDs can be admitted. */
+export function practicalReviewLimitsFor(preparers: FinitePackagePreparers) {
+  const selected = preparerSet(preparers);
+  if (selected === finitePackagePreparers.practicalPairs) return practicalReviewLimits;
+  if (selected === finitePackagePreparers.reminderInventoryPairs) return reminderInventoryReviewLimits;
+  return undefined;
+}
 const scopePaths = [
   "docs/registers/content-inventory.json",
   "docs/content-candidates/r1-content-intake-manifest.json",
@@ -108,6 +125,7 @@ export async function prepareFiniteAllocationPackage(
   if (!selected) throw Error("PACKAGE_PREPARERS_INVALID");
   const editorialCases = selected === finitePackagePreparers.editorialCases;
   const guidePairs = selected === finitePackagePreparers.guidePairs;
+  const practical = practicalReviewLimitsFor(selected);
   const sources = await Promise.all(
     scopePaths.map(async (path) => {
       const bytes = await readFile(resolve(root, path));
@@ -158,29 +176,28 @@ export async function prepareFiniteAllocationPackage(
     laneAttemptLimits: { publication: 216, editorial_evaluation: 68, checker_challenge: 80, customer: 94 },
     allowedRoles: ["factual", "challenge", "customer"],
     supportedPreparers: [...preparers] as unknown as FinitePackagePreparers,
-    holds:
-      selected === finitePackagePreparers.practicalPairs
+    holds: practical
+      ? [
+          `One factual review and one independent challenge per article, for ${practical.articleIds.join(" and ")} only.`,
+          "Four provider calls at most. Each article can be admitted once. No retries or other work are covered.",
+        ]
+      : editorialCases
         ? [
-            "One factual review and one independent challenge per article, for GUIDE-C01 and GUIDE-C02 only.",
-            "Four provider calls at most. Each article can be admitted once. No retries or other work are covered.",
+            "Supported editorial case pairs: the case-bound editorial cases whose candidates are built from retained text; each pair is rebuilt from the pinned files and rechecked before admission and dispatch.",
+            "Template review pairs, customer cases, other content and other evaluation lanes are outside this package.",
+            "The allocation is a maximum additional spend, not a guarantee of completing every permitted attempt.",
           ]
-        : editorialCases
+        : guidePairs
           ? [
-              "Supported editorial case pairs: the case-bound editorial cases whose candidates are built from retained text; each pair is rebuilt from the pinned files and rechecked before admission and dispatch.",
-              "Template review pairs, customer cases, other content and other evaluation lanes are outside this package.",
+              `Supported guide review pairs: ${mappedGuideIds.join(", ")}; each requires a prepared candidate bound to current captures of its official sources, under the guidance policy as the owner approved it.`,
+              "Template review pairs, editorial cases, customer cases and other content are outside this package.",
               "The allocation is a maximum additional spend, not a guarantee of completing every permitted attempt.",
             ]
-          : guidePairs
-            ? [
-                `Supported guide review pairs: ${mappedGuideIds.join(", ")}; each requires a prepared candidate bound to current captures of its official sources, under the guidance policy as the owner approved it.`,
-                "Template review pairs, editorial cases, customer cases and other content are outside this package.",
-                "The allocation is a maximum additional spend, not a guarantee of completing every permitted attempt.",
-              ]
-            : [
-                `Supported exact operational preparers: ${operationalInferenceTemplateIds.join(", ")}; each requires a saved candidate and verified private evidence.`,
-                "Other content and all evaluation lanes require their real request preparers and eligibility checks before delegated admission.",
-                "The allocation is a maximum additional spend, not a guarantee of completing every permitted attempt.",
-              ],
+          : [
+              `Supported exact operational preparers: ${operationalInferenceTemplateIds.join(", ")}; each requires a saved candidate and verified private evidence.`,
+              "Other content and all evaluation lanes require their real request preparers and eligibility checks before delegated admission.",
+              "The allocation is a maximum additional spend, not a guarantee of completing every permitted attempt.",
+            ],
   };
 }
 export function allocationPackageId(value: FiniteAllocationPackage) {
@@ -250,12 +267,12 @@ export function assertWorkPackageMembership(
   validateAllocationPackage(pkg);
   if (!pkg.allowedRoles.includes(work.role) || (work.role === "customer" && work.lane !== "customer"))
     throw Error("WORK_OUTSIDE_PACKAGE");
-  const practical = preparerSet(pkg.supportedPreparers) === finitePackagePreparers.practicalPairs;
+  const practical = practicalReviewLimitsFor(pkg.supportedPreparers);
   if (practical) {
     const source = pkg.sourceFiles.find((file) => file.path === scopePaths[5]);
     if (
       !contentId ||
-      !isPracticalGuideId(contentId) ||
+      !practical.articleIds.includes(contentId) ||
       workContentId(work) !== contentId ||
       !work.pair ||
       !["factual", "challenge"].includes(work.role) ||
@@ -363,10 +380,11 @@ async function packageRow(c: import("pg").PoolClient, schema: string, id: string
     const ids = new Set([...intake.templates, ...intake.guidance].map((x) => x.id));
     if (pkg.contentIds.some((id) => !ids.has(id))) throw Error("ALLOCATION_PACKAGE_CONTENT_IDENTITY_CHANGED");
     const sections = actual.slice(5).flatMap((x) => namedSections(x.source.path, x.bytes.toString()));
+    const practical = practicalReviewLimitsFor(pkg.supportedPreparers);
     if (
-      preparerSet(pkg.supportedPreparers) === finitePackagePreparers.practicalPairs &&
+      practical &&
       (sha(actual[5]!.bytes) !== actual[5]!.source.sha256 ||
-        practicalGuideIds.some((id) => {
+        practical.articleIds.some((id) => {
           const section = pkg.namedContentSections.find((s) => s.heading.startsWith(id + " — "));
           return (
             !section ||
@@ -409,7 +427,7 @@ export async function readApprovedFiniteAllocationPackage(
   }
 }
 function practicalPairId(pkg: FiniteAllocationPackage, works: FiniteWork[]) {
-  if (preparerSet(pkg.supportedPreparers) !== finitePackagePreparers.practicalPairs) return null;
+  if (!practicalReviewLimitsFor(pkg.supportedPreparers)) return null;
   const [first, second] = works;
   if (
     works.length !== 2 ||

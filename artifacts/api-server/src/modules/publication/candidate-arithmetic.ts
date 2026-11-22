@@ -49,6 +49,31 @@ export function candidateArithmetic(candidate: PublicationBundle["candidate"]) {
       expected: "200 × 12",
       pass: sample?.[1] === "200" && sample[2] === "12",
     });
+  } else if (candidate.id === "GUIDE-C03") {
+    const sample =
+      /fictional example is: “our records currently show ₦([\d,]+) outstanding on invoice (inv-\d+)\./.exec(
+        normalized,
+      );
+    expressions.push({
+      text: sample?.[0] ?? "",
+      hash: sha256(sample?.[0] ?? ""),
+      actual: sample ? `${sample[1]} / ${sample[2]}` : null,
+      expected: "18,000 / inv-024",
+      pass: sample?.[1] === "18,000" && sample[2] === "inv-024",
+    });
+  } else if (candidate.id === "GUIDE-C04") {
+    const sample =
+      /fictional fabric shop, a register might show “blue cotton, roll (b\d+), (\w+)\.” a sale of (\w+) (\w+) is then recorded in the same unit/.exec(
+        normalized,
+      );
+    expressions.push({
+      text: sample?.[0] ?? "",
+      hash: sha256(sample?.[0] ?? ""),
+      actual: sample ? `${sample[1]} / ${sample[2]} / ${sample[3]} ${sample[4]}` : null,
+      expected: "b17 / metres / five metres",
+      pass:
+        sample?.[1] === "b17" && sample[2] === "metres" && sample[3] === "five" && sample[4] === sample[2],
+    });
   } else if (candidate.id === "TPL-07") {
     const expression =
       normalized.match(/new running quantity\s*=\s*([^.\n]+)/)?.[1]?.trim() ??

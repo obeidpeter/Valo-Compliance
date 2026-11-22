@@ -16,7 +16,7 @@ import type { ArtifactRef } from "../publication/publication-artifacts";
 import type { ReleaseAttestations } from "../publication/publication-publisher";
 
 test(
-  "invoice and quotation reach only their blind reviews and the publisher rechecks their articles and exports",
+  "practical guides reach only their own blind reviews and the publisher requires release authority",
   {
     skip: process.env.VALO_RUN_DB_TESTS !== "synthetic-development-only",
     timeout: 180000,
@@ -50,6 +50,7 @@ test(
       finitePackagePreparers,
       assertWorkPackageMembership,
       practicalReviewLimits,
+      practicalReviewLimitsFor,
     } = await import("../ai/inference-allocation-package");
     const { validateOperationalVersionInTransaction } = await import("../publication/publication-publisher");
     const { projectReleasedResource, projectReleasedCatalogue, releaseVisible, releasedResources } =
@@ -67,14 +68,23 @@ test(
       await pool.end();
     });
     const pkg = await prepareFiniteAllocationPackage(now, finitePackagePreparers.practicalPairs);
+    const next = await prepareFiniteAllocationPackage(now, finitePackagePreparers.reminderInventoryPairs);
+    const nextLimits = practicalReviewLimitsFor(next.supportedPreparers);
+    assert.deepEqual(practicalReviewLimits.articleIds, ["GUIDE-C01", "GUIDE-C02"]);
+    assert.deepEqual(nextLimits, {
+      articleIds: ["GUIDE-C03", "GUIDE-C04"],
+      maximumCalls: 4,
+      maximumReservationNanoUsd: "1482201600",
+    });
     const templates = await prepareFiniteAllocationPackage(now);
     const regulatory = await prepareFiniteAllocationPackage(now, finitePackagePreparers.guidePairs);
     assert.equal(practicalReviewLimits.maximumCalls, 4);
     assert.equal(practicalReviewLimits.maximumReservationNanoUsd, "1482201600");
-    await assert.rejects(prepareOperationalCandidateRelease("GUIDE-C03", snapshot), /PREPARER_UNAVAILABLE/);
+    await assert.rejects(prepareOperationalCandidateRelease("GUIDE-C05", snapshot), /PREPARER_UNAVAILABLE/);
 
     for (const id of practicalGuideIds) {
       await t.test(id, async () => {
+        const firstRelease = practicalReviewLimits.articleIds.includes(id);
         const draft = await readPracticalGuideIntake(id);
         const result = await prepareOperationalCandidateRelease(id, snapshot);
         assert.equal(
@@ -101,10 +111,14 @@ test(
             "review_required:factual",
           ]);
           assert.ok(!candidate.body.includes("Suggested related template"));
-          const alteredBody =
-            id === "GUIDE-C01"
-              ? candidate.body.replace("₦6,000", "₦5,000")
-              : candidate.body.replace("200 A5", "201 A5");
+          const alterations = {
+            "GUIDE-C01": ["₦6,000", "₦5,000"],
+            "GUIDE-C02": ["200 A5", "201 A5"],
+            "GUIDE-C03": ["INV-024", "INV-042"],
+            "GUIDE-C04": ["sale of five metres", "sale of five rolls"],
+          } as const;
+          const [original, changed] = alterations[id];
+          const alteredBody = candidate.body.replace(original, changed);
           assert.equal(candidateArithmetic({ ...candidate, body: alteredBody }).pass, false);
           const plan = await saveOperationalReviewPlan(
             candidate,
@@ -125,15 +139,17 @@ test(
           });
           for (const work of manifest.works) {
             await assertFiniteWorkBindings(work);
-            assertWorkPackageMembership(work, pkg, id);
-            for (const other of [templates, regulatory])
+            const allowed = firstRelease ? pkg : next;
+            assertWorkPackageMembership(work, allowed, id);
+            for (const other of [templates, regulatory, firstRelease ? next : pkg])
               assert.throws(() => assertWorkPackageMembership(work, other, id), /WORK_OUTSIDE_PACKAGE/);
             assert.throws(
-              () => assertWorkPackageMembership({ ...work, retryOf: work.key }, pkg, id),
+              () => assertWorkPackageMembership({ ...work, retryOf: work.key }, allowed, id),
               /WORK_OUTSIDE_PACKAGE/,
             );
             assert.throws(
-              () => assertWorkPackageMembership(work, pkg, id === "GUIDE-C01" ? "GUIDE-C02" : "GUIDE-C01"),
+              () =>
+                assertWorkPackageMembership(work, allowed, id === "GUIDE-C01" ? "GUIDE-C02" : "GUIDE-C01"),
               /WORK_OUTSIDE_PACKAGE/,
             );
           }
@@ -220,8 +236,12 @@ test(
               );
               throw Error("ROLLBACK_AFTER_PUBLISHER_CHECKS");
             });
-          await assert.rejects(check([]), /INDEPENDENT_REVIEWS_MISSING/);
-          await assert.rejects(check(refs), /ROLLBACK_AFTER_PUBLISHER_CHECKS/);
+          if (firstRelease) {
+            await assert.rejects(check([]), /INDEPENDENT_REVIEWS_MISSING/);
+            await assert.rejects(check(refs), /ROLLBACK_AFTER_PUBLISHER_CHECKS/);
+          } else {
+            await assert.rejects(check(refs), /POLICY_NOT_TRUSTED/);
+          }
           assert.ok(!(await releasedResources()).some((r) => r.id === result.id));
         } finally {
           await db.execute(sql`delete from valo_prepared_candidates where version_id=${result.id}::uuid`);

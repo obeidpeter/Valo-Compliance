@@ -62,12 +62,12 @@ test("a publication review names the exact prepared candidate it reads", () => {
   }
 });
 test("a publication review may read a prepared template or a prepared guide", () => {
-  for (const id of ["TPL-12", "GUD-01", "GUD-30", "GUIDE-C01", "GUIDE-C02"]) {
+  for (const id of ["TPL-12", "GUD-01", "GUD-30", "GUIDE-C01", "GUIDE-C02", "GUIDE-C03", "GUIDE-C04"]) {
     const w = work("publication");
     w.bindings.candidateArtifact!.templateId = id;
     assert.doesNotThrow(() => assertFiniteWorkShape(w));
   }
-  for (const id of ["GUD-1", "GUD-001", "GUIDE-C03", "GUIDE-C1", "gud-01", ""]) {
+  for (const id of ["GUD-1", "GUD-001", "GUIDE-C05", "GUIDE-C1", "gud-01", ""]) {
     const w = work("publication");
     w.bindings.candidateArtifact!.templateId = id;
     assert.throws(() => assertFiniteWorkShape(w), /PUBLICATION_CANDIDATE_REQUIRED/);

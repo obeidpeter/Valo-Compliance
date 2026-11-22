@@ -7,7 +7,7 @@ import {
   MAX_PACKAGE_APPROVAL_HOURS,
   prepareFiniteAllocationPackage,
   finitePackagePreparers,
-  practicalReviewLimits,
+  practicalReviewLimitsFor,
   revokeFiniteAllocationPackage,
   validateAllocationPackage,
   type FiniteAllocationPackage,
@@ -19,7 +19,7 @@ import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
  * `approve` authorizes spending up to the allocation's cap, so only the product owner runs it, or an
  * operator on their written instruction. Building or testing this command spends nothing.
  *
- *   tsx src/scripts/finite-allocation-approval.ts prepare <package.json> [--editorial-cases | --guide-pairs | --practical-guide-pairs]
+ *   tsx src/scripts/finite-allocation-approval.ts prepare <package.json> [--editorial-cases | --guide-pairs | --practical-guide-pairs | --reminder-inventory-pairs]
  *     Writes the current package to <package.json> and prints its id and limits. Writes nothing else.
  *     The package admits the template review pairs, or with --editorial-cases only the case-bound
  *     editorial cases' review pairs (decision 0015), or with --guide-pairs only the review pairs of
@@ -36,7 +36,7 @@ import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
  * Every mode needs NODE_ENV=development and refuses a deployment.
  */
 const usage =
-  "usage: finite-allocation-approval.ts prepare <package.json> [--editorial-cases | --guide-pairs | --practical-guide-pairs] | status | approve <package.json> --confirm <id> --approved-by <name> --reference <text> [--hours n] | revoke --confirm <id>";
+  "usage: finite-allocation-approval.ts prepare <package.json> [--editorial-cases | --guide-pairs | --practical-guide-pairs | --reminder-inventory-pairs] | status | approve <package.json> --confirm <id> --approved-by <name> --reference <text> [--hours n] | revoke --confirm <id>";
 const [mode, ...rest] = process.argv.slice(2);
 const option = (name: string) => {
   const index = rest.indexOf(name);
@@ -53,9 +53,7 @@ const limits = (pkg: FiniteAllocationPackage) => ({
   namedContentSections: pkg.namedContentSections.length,
   corpusCases: Object.fromEntries(pkg.corpora.map((c) => [c.name, c.cases.length])),
   supportedPreparers: pkg.supportedPreparers,
-  ...(pkg.supportedPreparers[0] === finitePackagePreparers.practicalPairs[0]
-    ? { practicalReviewLimits }
-    : {}),
+  practicalReviewLimits: practicalReviewLimitsFor(pkg.supportedPreparers),
   holds: pkg.holds,
   longestApprovalHours: MAX_PACKAGE_APPROVAL_HOURS,
 });
@@ -70,7 +68,8 @@ try {
       (choice !== undefined &&
         choice !== "--editorial-cases" &&
         choice !== "--guide-pairs" &&
-        choice !== "--practical-guide-pairs")
+        choice !== "--practical-guide-pairs" &&
+        choice !== "--reminder-inventory-pairs")
     )
       throw new Error(usage);
     const pkg = await prepareFiniteAllocationPackage(
@@ -79,9 +78,11 @@ try {
         ? finitePackagePreparers.editorialCases
         : choice === "--guide-pairs"
           ? finitePackagePreparers.guidePairs
-          : choice === "--practical-guide-pairs"
-            ? finitePackagePreparers.practicalPairs
-            : finitePackagePreparers.templatePairs,
+          : choice === "--reminder-inventory-pairs"
+            ? finitePackagePreparers.reminderInventoryPairs
+            : choice === "--practical-guide-pairs"
+              ? finitePackagePreparers.practicalPairs
+              : finitePackagePreparers.templatePairs,
     );
     validateAllocationPackage(pkg);
     // `wx` never overwrites: a package the owner may already have read stays as it was.

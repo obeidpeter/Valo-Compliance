@@ -3,7 +3,8 @@ import { resolve } from "node:path";
 import {
   digest,
   isPracticalGuideId,
-  practicalGuideIds,
+  invoiceQuotationGuideIds,
+  reminderInventoryGuideIds,
   sha256,
   type PublicationBundle,
 } from "@workspace/valo-core";
@@ -13,10 +14,22 @@ import type { OperationalProvenance } from "./operational-content";
 
 export const practicalSourcePath = "docs/content-candidates/practical-guide-candidates.md";
 export const practicalProvenancePath = "docs/content-candidates/chatgpt-content-provenance-rights.md";
-const policyPath = "docs/valo/policies/practical-business-guides.md";
 const sourceHash = "229728d08404c45f1bd98318fb0960396a85e78b36ffb1dc22779f1457e9ed82";
 const provenanceNoteHash = "57080e5d1a4105c3b3545b8e94f65662eb8e1d5ce08f2b88154fcfc345aca616";
-const policyScopeHash = "217faa97d037e3114d6328f6b60e5875d696918bdcebbbb12e5d7aff7f3b7b44";
+const releaseScope = {
+  path: "docs/valo/policies/practical-business-guides.md",
+  hash: "217faa97d037e3114d6328f6b60e5875d696918bdcebbbb12e5d7aff7f3b7b44",
+  quote: "This first release covers only the invoice article GUIDE-C01 and the quotation article GUIDE-C02.",
+  ids: invoiceQuotationGuideIds,
+  version: "practical-guides-dev-1",
+};
+const reminderInventoryScope = {
+  path: "docs/valo/policies/practical-reminder-inventory-preparation.md",
+  hash: "d204a025bf2dd7fcf390097fc191710601cef20622376e1e92878f526c65fd06",
+  quote: "This review scope covers GUIDE-C03 on payment reminders and GUIDE-C04 on inventory registers.",
+  ids: reminderInventoryGuideIds,
+  version: "practical-reminder-inventory-preparation-1",
+};
 const articles = {
   "GUIDE-C01": {
     slug: "prepare-an-invoice",
@@ -28,38 +41,60 @@ const articles = {
     sectionHash: "2f4f28b6b15ab1e0a3a9de502fe663f689627ec15101f07d5fdd32c87608cbdb",
     scope: "Describing a proposed order, explaining what the price includes and keeping track of revisions.",
   },
+  "GUIDE-C03": {
+    slug: "follow-up-an-unpaid-invoice",
+    sectionHash: "01ee9930d7851216e7228f002d31aa956caa857668b8ad1f653aaad7c3d7c1d2",
+    scope:
+      "Checking an outstanding balance, writing a payment reminder and recording the customer's response.",
+  },
+  "GUIDE-C04": {
+    slug: "keep-an-inventory-register",
+    sectionHash: "a48f3a0ddbab48c817621e7337b80f50dbcb070e1f57c66d67eb7da1b87b3582",
+    scope:
+      "Recording stock movements in consistent units and checking a physical count against the register.",
+  },
 } as const;
 export function practicalGuideSlug(id: string) {
   if (!isPracticalGuideId(id)) throw Error("PRACTICAL_GUIDE_OUTSIDE_SCOPE");
   return articles[id].slug;
 }
 
-export async function practicalGuidePolicy() {
+async function scopedPracticalPolicy(scope: typeof releaseScope | typeof reminderInventoryScope) {
   const base = await operationalPolicy("practical_guide");
-  const text = await readFile(resolve(publicationWorkspaceRoot(), policyPath), "utf8");
+  const text = await readFile(resolve(publicationWorkspaceRoot(), scope.path), "utf8");
   const fileHash = sha256(text);
   const { hash: foundationHash, ...foundation } = base.policy;
   const ref = {
-    path: policyPath,
+    path: scope.path,
     hash: fileHash,
-    quote:
-      "This first release covers only the invoice article GUIDE-C01 and the quotation article GUIDE-C02.",
+    quote: scope.quote,
   };
   const body = {
     ...foundation,
-    version: `practical-guides-dev-1:${fileHash.slice(0, 16)}:${foundationHash.slice(0, 16)}`,
-    ownerApproved: foundation.ownerApproved && fileHash === policyScopeHash && text.includes(ref.quote),
+    version: `${scope.version}:${fileHash.slice(0, 16)}:${foundationHash.slice(0, 16)}`,
+    ownerApproved: foundation.ownerApproved && fileHash === scope.hash && text.includes(ref.quote),
     allowedClasses: foundation.allowedClasses.includes("practical_guide") ? ["practical_guide"] : [],
     jurisdictions: foundation.jurisdictions.filter((j) => j === "NG"),
     risks: ["general"],
-    originalOperationalIds: [...practicalGuideIds],
+    originalOperationalIds: [...scope.ids],
     authorityRefs: [...(foundation.authorityRefs ?? []), ref],
   };
   const policy: PublicationBundle["policy"] = { ...body, hash: digest(body) };
   return { policy, authority: [...base.authority, { ...ref, text }] };
 }
 
-/** Extraction is limited to the two byte-pinned sections. Editorial suggestions never become
+/** The publisher and catalogue use only the scope approved for release. */
+export function practicalGuidePolicy() {
+  return scopedPracticalPolicy(releaseScope);
+}
+export function practicalGuidePreparationPolicy(id: string) {
+  if (!isPracticalGuideId(id)) throw Error("PRACTICAL_GUIDE_OUTSIDE_SCOPE");
+  return reminderInventoryGuideIds.some((article) => article === id)
+    ? scopedPracticalPolicy(reminderInventoryScope)
+    : practicalGuidePolicy();
+}
+
+/** Extraction is limited to byte-pinned sections. Editorial suggestions never become
  * links to held templates. The invoice's final next step is part of its reader-facing text. */
 export async function readPracticalGuideIntake(id: string, version = 1) {
   if (!isPracticalGuideId(id) || !Number.isSafeInteger(version) || version < 1)
@@ -135,7 +170,11 @@ export async function practicalGuideCandidate(
     throw Error("PRACTICAL_GUIDE_PROVENANCE_CHANGED");
   const scope = articles[id].scope;
   const limitations =
-    "The example is fictional. Confirm the facts, prices and arrangements of your own transaction. Tax treatment and legal obligations require separate verification.";
+    id === "GUIDE-C04"
+      ? "The fabric-shop example is fictional. Use your own item references, units and counts. A count alone does not establish ownership, quality or the reason for a difference."
+      : id === "GUIDE-C03"
+        ? "The amount and invoice reference are fictional. Verify the balance, due date and any dispute against your own records before contacting a customer."
+        : "The example is fictional. Confirm the facts, prices and arrangements of your own transaction. Tax treatment and legal obligations require separate verification.";
   const reviewedAt = now.toISOString(),
     reviewBy = new Date(+now + 30 * 86400000).toISOString();
   const document = guidanceReleaseDocument({

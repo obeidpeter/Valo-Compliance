@@ -14,7 +14,7 @@ import {
   templateCandidate,
   readPracticalGuideIntake,
   practicalGuideCandidate,
-  practicalGuidePolicy,
+  practicalGuidePreparationPolicy,
   guidanceCandidate,
   guidancePolicy,
   guideReviewInputs,
@@ -100,7 +100,9 @@ export async function readOperationalInferenceReadiness(binding: OperationalCand
   const intake = practical
       ? await readPracticalGuideIntake(row.templateId, row.version)
       : await readOperationalIntake(row.templateId, row.version),
-    { policy } = practical ? await practicalGuidePolicy() : await operationalPolicy();
+    { policy } = practical
+      ? await practicalGuidePreparationPolicy(row.templateId)
+      : await operationalPolicy();
   if (
     intake.sourceHash !== provenance.hash ||
     intake.manifestHash !== provenance.noteHash ||

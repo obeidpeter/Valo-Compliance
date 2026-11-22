@@ -1,3 +1,4 @@
+import { isPracticalGuideId } from "@workspace/valo-core";
 import {
   additionalInferenceAllocation,
   inferenceProposal,
@@ -43,7 +44,8 @@ export function prepareOperationalFiniteManifest(
     !/^[a-f0-9-]{36}$/.test(input.candidateArtifact.id) ||
     input.candidateArtifact.extension !== "json" ||
     // A template's ID or a guide's.
-    !/^(?:TPL-\d{2,3}|GUD-\d{2}|GUIDE-C0[12])$/.test(input.candidateArtifact.templateId) ||
+    (!/^(?:TPL-\d{2,3}|GUD-\d{2})$/.test(input.candidateArtifact.templateId) &&
+      !isPracticalGuideId(input.candidateArtifact.templateId)) ||
     ![
       input.candidateHash,
       input.bundleHash,
