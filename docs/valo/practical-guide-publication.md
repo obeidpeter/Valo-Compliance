@@ -6,7 +6,7 @@ The two articles come from `docs/content-candidates/practical-guide-candidates.m
 
 Use the existing development database. The article IDs fit the existing text columns. The required schema ends at `20261121190325_publisher_login`. An installation already at that revision needs no schema change for these articles.
 
-For an unjournalled development database at `0034_runtime_identity`, verify the target identity and file hashes against the release commit. Pause writes, the worker and editorial commands. Take a fresh encrypted backup of the database and private files, retain the current privacy journal independently, and restore into an isolated development target. Record the existing counts and preservation fingerprints before proceeding. See the [migration and rollback procedure](phase1-migration-plan.md).
+For an unjournalled development database at `0034_runtime_identity`, verify the target identity and file hashes against the release commit. Pause writes, the worker and editorial commands. Take a fresh encrypted backup of the database and private files, retain the current privacy journal independently, and restore into an isolated development target. Record the existing counts, preservation fingerprints, cluster role attributes, memberships and runtime pins before proceeding. See the [migration and rollback procedure](phase1-migration-plan.md).
 
 Apply only the confirmed pending files in journal order, in the transactions and with the lock limits specified by the individual runbooks. Check each file’s postconditions before the next. Keep the unjournalled database’s ledger as found.
 
@@ -22,7 +22,7 @@ Apply only the confirmed pending files in journal order, in the transactions and
 | 10 | `20261120002839_prepared_candidates` | [Prepared candidate index and grants](migration-prepared-candidates.md) |
 | 11 | `20261121190325_publisher_login` | [Publisher login and trigger](migration-publisher-login.md) |
 
-Provision the workspace login for the API and worker and the separate publisher login for the publishing command. Use the two login runbooks to verify their privileges. Compare the support and price backfills with the paused preflight, confirm financial records, retention deadlines and privacy controls, and run the signed-in workspace and public catalogue smoke tests. An interrupted file rolls back in its own transaction. If a committed change requires recovery, keep writes paused, use the verified pre-change restore, replay the latest independent privacy journal, and recheck the release pin, role grants and preservation fingerprints before reopening development.
+Provision the workspace login for the API and worker and the separate publisher login for the publishing command. Use the two login runbooks to verify their privileges. Compare the support and price backfills with the paused preflight, confirm financial records, retention deadlines and privacy controls, and run the signed-in workspace and public catalogue smoke tests. An interrupted file rolls back in its own transaction. If a committed change requires recovery, keep writes paused, use the verified pre-change restore, replay the latest independent privacy journal, and recheck the release pin, role grants and preservation fingerprints before reopening development. PostgreSQL database dumps exclude cluster roles. Reconcile any new login or membership with the pre-change record before directing traffic to the restored database.
 
 ## Prepare the two review pairs
 

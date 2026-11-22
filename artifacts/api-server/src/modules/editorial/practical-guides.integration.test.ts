@@ -187,20 +187,18 @@ test(
                 ...(current.row.attestations as ReleaseAttestations),
                 reviews,
               };
-              await tx
-                .insert(valoContentVersions)
-                .values({
-                  id: result.id,
-                  templateId: id,
-                  version: candidate.version,
-                  slug: practicalGuideSlug(id),
-                  policyId: reviewed.policy.version,
-                  candidateHash: candidate.hash,
-                  bundle: reviewed,
-                  attestations,
-                  status: "candidate",
-                  reviewBy: new Date(candidate.reviewBy!),
-                });
+              await tx.insert(valoContentVersions).values({
+                id: result.id,
+                templateId: id,
+                version: candidate.version,
+                slug: practicalGuideSlug(id),
+                policyId: reviewed.policy.version,
+                candidateHash: candidate.hash,
+                bundle: reviewed,
+                attestations,
+                status: "candidate",
+                reviewBy: new Date(candidate.reviewBy!),
+              });
               await tx.execute(sql`RESET ROLE`);
               const { row } = await validateOperationalVersionInTransaction(tx, result.id);
               assert.equal(await currentOperationalPermission(row), true);
