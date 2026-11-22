@@ -30,6 +30,7 @@ export function coveragePlan(released: ReleasedCoverageFact[] = []) {
         sourceCheckedAt:
           evidence
             .map((r) => r.sourceCheckedAt)
+            .filter((date): date is string => date !== null)
             .sort()
             .at(-1) ?? null,
         publishedItems: matches.length,

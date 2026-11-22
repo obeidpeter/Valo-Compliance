@@ -197,7 +197,10 @@ test(
         draft(id, { ...data, requestId: randomUUID(), baseVersion: 1, body }),
       );
       const concurrent = await Promise.all(changes);
-      assert.deepEqual(concurrent.map((r) => r.status).sort(), [200, 409]);
+      assert.deepEqual(
+        concurrent.map((r) => r.status).sort((a, b) => a - b),
+        [200, 409],
+      );
       const r2 = await revision(concurrent.find((r) => r.status === 200)!);
       assert.equal((await publicResource(id)).body, data.body);
       assert.equal((await act(id, "publish", r1)).status, 409);
@@ -367,13 +370,11 @@ test(
           await page.getByLabel("Content type").selectOption("industry_introduction");
           await page.getByLabel("Industry", { exact: true }).selectOption(industry);
           await page.getByLabel("Content source").selectOption("upload");
-          await page
-            .getByLabel("Word or PDF file")
-            .setInputFiles({
-              name: "intro.docx",
-              mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-              buffer: wordFromText(title, "Keep a dated delivery note.").bytes,
-            });
+          await page.getByLabel("Word or PDF file").setInputFiles({
+            name: "intro.docx",
+            mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            buffer: wordFromText(title, "Keep a dated delivery note.").bytes,
+          });
           await page.getByRole("button", { name: "Save draft and preview" }).click();
           const preview = page.getByRole("region", { name: "Saved preview" });
           await expect(preview).toContainText("Keep a dated delivery note.");

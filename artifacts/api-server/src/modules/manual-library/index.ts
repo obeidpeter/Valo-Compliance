@@ -111,10 +111,16 @@ export async function getManualRevision(actor: SourceStaffActor, itemId: string)
   );
 }
 const normalize = (s: string) => s.replace(/\r\n?/g, "\n").trim();
+function hasControlCharacters(value: string, multiline = false) {
+  for (const character of value)
+    if (character.charCodeAt(0) < 32 && !(multiline && (character === "\n" || character === "\t")))
+      return true;
+  return false;
+}
 export async function saveManualDraft(actor: SourceStaffActor, itemId: string, value: unknown) {
   const input = SaveManualLibraryDraftBody.strict().parse(value);
   const title = input.title.trim();
-  if (!title || /[\u0000-\u001f]/u.test(title)) throw new ValoProblem(422, "Enter a title on one line.");
+  if (!title || hasControlCharacters(title)) throw new ValoProblem(422, "Enter a title on one line.");
   if (
     (input.industry !== null && !sectors.has(input.industry)) ||
     (input.kind === "industry_introduction" && !input.industry)
@@ -129,7 +135,7 @@ export async function saveManualDraft(actor: SourceStaffActor, itemId: string, v
     ? await readEditorialUpload(input.upload.format, input.upload.base64)
     : undefined;
   const body = normalize(input.body || upload?.text || "");
-  if (!body || body.length > 60000 || /[\u0000-\u0008\u000b\u000c\u000e-\u001f]/u.test(body))
+  if (!body || body.length > 60000 || hasControlCharacters(body, true))
     throw new ValoProblem(
       422,
       "Provide readable text of up to 60,000 characters. For a scanned file, paste its text or a template description.",
