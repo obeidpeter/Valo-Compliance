@@ -47,7 +47,7 @@ export function AccountPage() {
         , and do that before deleting your sign-in account, because you will need to be signed in.
       </Notice>
       <MfaVerification />
-      <div className="overflow-x-auto" data-testid="account-profile">
+      <div className="-mx-5 overflow-x-auto sm:mx-0" data-testid="account-profile">
         <UserProfile routing="hash" />
       </div>
       <p className="mt-6 text-sm text-muted-foreground">

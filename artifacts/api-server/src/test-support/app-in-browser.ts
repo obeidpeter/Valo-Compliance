@@ -29,7 +29,8 @@ createRoot(document.getElementById("root")).render(<App />);
 // it has loaded. The provider's own sign-in, sign-up and account widgets are not drawn.
 const identities = {
   "signed-in": `
-import { createElement } from "react";
+import { createContext, createElement, useContext } from "react";
+const ProfileAppearance = createContext({});
 const user = {
   id: "user_synthetic_accessibility",
   firstName: "Synthetic",
@@ -38,7 +39,9 @@ const user = {
     verification: { status: "verified" },
   },
 };
-export function ClerkProvider({ children }) { return children; }
+export function ClerkProvider({ children, appearance }) {
+  return createElement(ProfileAppearance.Provider, { value: appearance.elements }, children);
+}
 export function Show({ when, children }) { return when === "signed-in" ? children : null; }
 export function useAuth() {
   return { isLoaded: true, isSignedIn: true, userId: user.id, sessionId: "sess_synthetic_accessibility" };
@@ -49,7 +52,11 @@ export function useReverification(action) { return action; }
 export function SignIn() { return null; }
 export function SignUp() { return null; }
 export function UserProfile() {
-  return createElement("p", null, "The identity provider's account settings, not drawn in this test.");
+  const { rootBox, cardBox } = useContext(ProfileAppearance);
+  return createElement("div", { className: "cl-userProfile-root cl-rootBox " + rootBox },
+    createElement("div", { className: "cl-cardBox " + cardBox },
+      createElement("div", { className: "cl-scrollBox" },
+        createElement("p", null, "The identity provider's account settings, not drawn in this test."))));
 }
 `,
   "signed-out": `
