@@ -64,8 +64,10 @@ const failed = (bundle: PublicationBundle) =>
 const kinds = (reasons: readonly string[]) =>
   [...new Set(reasons.map((r) => r.replace(/:(?!scope|rights).*$/, "")))].sort();
 
-/** The what-if: the owner's approval of the policy file as it stands. It exists only in this file. */
-const approvedPolicy = async () => (await guidancePolicy({ approvedHash: sha256(policyFile) })).policy;
+/** The policy as the owner approved it on 22 November 2026: the file as it stands. */
+const approvedPolicy = async () => (await guidancePolicy()).policy;
+/** The what-if: the same file with no approval recorded, as it stood before. Only tests suppose it. */
+const withoutApproval = async () => (await guidancePolicy({ approvedHash: null })).policy;
 /** The policy file as a test supposes it; there is no restriction file beside it. */
 const supposedFile = (text: string) => async (path: string) =>
   path === GUIDANCE_POLICY_PATH ? text : Promise.reject(Object.assign(Error("no file"), { code: "ENOENT" }));
@@ -80,11 +82,18 @@ const oneSectionCompared: AmendmentRecord[] = guideAmendmentRecords.map((r) =>
   r.comparedSections ? { ...r, comparedSections: { "31": r.comparedSections["31"]! } } : r,
 );
 
-test("the guidance policy is read from its file, and the owner has not approved it", async () => {
-  assert.equal(guidancePolicyApprovedHash(), null, "no approval is recorded");
+test("the guidance policy is read from its file, which is the text the owner approved", async () => {
+  // The approval recorded is of this file and no other: its checksum is the file's own.
+  assert.equal(guidancePolicyApprovedHash(), sha256(policyFile));
+  assert.equal(
+    guidancePolicyApprovedHash(),
+    "5fd56570e44a8ae136be36e5022aa062932b6c058d19fa09594450d67b49727f",
+    "the checksum the owner named on 22 November 2026",
+  );
   const { policy, authority } = await guidancePolicy();
-  assert.equal(policy.ownerApproved, false);
-  assert.match(policyFile, /Status: \*\*proposed\. The product owner has not approved this policy\.\*\*/);
+  assert.equal(policy.ownerApproved, true);
+  // With no approval recorded, the same file is not an approved policy.
+  assert.equal((await withoutApproval()).ownerApproved, false);
   assert.deepEqual(policy.allowedClasses, ["sourced_guidance"]);
   assert.deepEqual(policy.jurisdictions, ["NG"]);
   assert.ok(!policy.risks.includes("general"), "every guide takes the enhanced checks");
@@ -102,11 +111,13 @@ test("the guidance policy is read from its file, and the owner has not approved 
   assert.notEqual(policy.hash, templates.hash);
   assert.notEqual(policy.version, templates.version);
 
-  // An approval is the approved file's own hash. It approves that text and no other.
+  // An approval is the approved file's own hash. It approves that text and no other: with the
+  // approval as it is recorded, an edited file is not approved.
   const approved = await guidancePolicy({ approvedHash: sha256(policyFile) });
   assert.equal(approved.policy.ownerApproved, true);
+  assert.equal(approved.policy.hash, policy.hash, "the recorded approval is that approval");
   const edited = policyFile.replace("every 30 days", "every 60 days");
-  const afterEdit = await guidancePolicy({ approvedHash: sha256(policyFile), read: supposedFile(edited) });
+  const afterEdit = await guidancePolicy({ read: supposedFile(edited) });
   assert.equal(afterEdit.policy.ownerApproved, false, "an edit ends the approval");
   assert.notEqual(afterEdit.policy.version, approved.policy.version);
   // A file that drops a sentence the code depends on, or a host the code allows, is refused.
@@ -137,6 +148,60 @@ test("the guidance policy is read from its file, and the owner has not approved 
   assert.equal(numbered.length, 13);
   for (const point of numbered)
     assert.ok(decision.includes(point), `decision 0017 has: ${point.slice(0, 60)}`);
+});
+
+test("the proposed text of the policy file changes only what the file says about its own approval", async () => {
+  // The approved file's first paragraph was written before the approval and still calls the policy
+  // proposed. It cannot be corrected without ending the approval, so a corrected text is kept beside
+  // it as a proposal for the owner. This is the checksum put to the owner.
+  const proposed = read("docs/valo/policies/guidance-publication-policy.proposed.md");
+  assert.equal(sha256(proposed), "0dcd5221c7e075c8839df3f527fe639c2e2311d9e00f642dcfb8b0fee41a0a1b");
+  // It is a proposal and nothing more: the approval recorded is not of it, so it is not the policy.
+  assert.notEqual(sha256(proposed), guidancePolicyApprovedHash());
+  assert.equal((await guidancePolicy({ read: supposedFile(proposed) })).policy.ownerApproved, false);
+
+  // The thirteen points, the host list and what approving the file means are the same, word for
+  // word, in both files.
+  const part = (text: string, from: string, to: string) => {
+    const [, after] = text.split(from);
+    assert.ok(after !== undefined && after.includes(to), `${from} is followed by ${to}`);
+    return after.split(to)[0]!;
+  };
+  for (const [from, to] of [
+    ["## The policy", "## The official hosts"],
+    ["## The official hosts", "## What approving this file means"],
+    ["## What approving this file means", "## How the code holds to this file"],
+  ] as const)
+    assert.equal(part(proposed, from, to), part(policyFile, from, to), from);
+  // Line for line, the two files differ in two places only: the status paragraph at the top, and
+  // two sentences on how the code holds the file.
+  const lines = (text: string) => text.split("\n");
+  const only = (a: string[], b: string[]) => a.filter((line) => !b.includes(line));
+  assert.deepEqual(only(lines(policyFile), lines(proposed)), [
+    "Status: **proposed. The product owner has not approved this policy.** No guide can be published",
+    "under it until the owner approves it and the approval is recorded in this file",
+    "([decision 0017](../../architecture/decisions/0017-clear-guidance-holds.md)).",
+    "  approved. The approved file's SHA-256 is kept in `guidance-policy.ts`; it is empty today. Any",
+    "  later edit to this file ends the approval until the owner approves the new text.",
+    "- Until then every guide is held with the reason `policy_not_owner_approved`, and its rights record",
+    "  is not cleared, because the basis of that record is point 7.",
+  ]);
+  assert.deepEqual(only(lines(proposed), lines(policyFile)), [
+    "Status: **this text is the policy only while its checksum is the one the product owner approved.**",
+    "The code holds that checksum, and",
+    "[decision 0017](../../architecture/decisions/0017-clear-guidance-holds.md) records each approval.",
+    "No guide can be published under a text of this file that the owner has not approved.",
+    "  approved. The approved file's SHA-256 is kept in `guidance-policy.ts`. Any later edit to this",
+    "  file ends the approval until the owner approves the new text.",
+    "- While this file is not the approved text, every guide is held with the reason",
+    "  `policy_not_owner_approved`, and its rights record is not cleared, because the basis of that",
+    "  record is point 7.",
+  ]);
+  // Were the owner to approve it, the code would accept it as it accepts the approved file: it keeps
+  // every sentence and every host the code depends on.
+  const ifApproved = await guidancePolicy({ read: supposedFile(proposed), approvedHash: sha256(proposed) });
+  assert.equal(ifApproved.policy.ownerApproved, true);
+  assert.notEqual(ifApproved.policy.version, (await guidancePolicy()).policy.version);
 });
 
 test("a guide explains official text and does not copy it: the longest shared run is measured", async () => {
@@ -491,7 +556,9 @@ test("a source is marked current only on the strength of its text's amendment re
   assert.ok(!approvedIn(passage("CAMA-814"), day, strayHost));
 });
 
-test("today the gate holds each guide built from the repository for the owner's approval, and two guides for an unbound sentence too", async () => {
+test("without the owner's approval the gate holds each guide built from the repository for the policy and what rests on it", async () => {
+  // The what-if: the policy file with no approval recorded, as it stood until 22 November 2026.
+  const policy = await withoutApproval();
   // What rests on the owner's approval of the policy: the policy itself, the rights record whose
   // basis it is, and the two mechanical checks that read them.
   const waitsOnApproval = [
@@ -504,7 +571,7 @@ test("today the gate holds each guide built from the repository for the owner's 
   // GUD-05 and GUD-08 each rest in part on an official page that is not kept in the repository.
   const unboundSentence = ["legal_scope_unverified", "material_uncertainty"];
   for (const id of repositoryBuiltGuideIds) {
-    const { bundle, eligibility, rightsProblems } = await assembled(id);
+    const { bundle, eligibility, rightsProblems } = await assembled(id, { policy });
     assert.equal(eligibility.decision, "hold", id);
     // Apart from the two reviews, these are the reasons, and there is no other.
     const expected = ["GUD-05", "GUD-08"].includes(id)
@@ -520,7 +587,7 @@ test("today the gate holds each guide built from the repository for the owner's 
     );
     assert.ok(!eligibility.reasons.some((reason) => reason.startsWith("source_")), id);
     // Eight of the ten mechanical checks pass. The two that fail read the policy and the rights
-    // record, which wait on the owner.
+    // record, which would wait on the owner.
     assert.deepEqual(failed(bundle), ["scope", "rights"], id);
     // The rights record lacks one thing only: the owner's approval of its basis.
     assert.deepEqual(rightsProblems, ["rights_basis_not_approved_by_owner"], id);
@@ -529,7 +596,7 @@ test("today the gate holds each guide built from the repository for the owner's 
     assert.equal(bundle.manifest.status, "review");
   }
   // With an instrument left unread, the guides that quote its text are held on their sources too.
-  const held = await assembled("GUD-01", { records: withUnread });
+  const held = await assembled("GUD-01", { records: withUnread, policy });
   assert.deepEqual(
     kinds(guideOpenReasons(held.eligibility)),
     [...waitsOnApproval, ...unboundSentence, "source_unresolved"].sort(),
@@ -539,8 +606,10 @@ test("today the gate holds each guide built from the repository for the owner's 
   );
 });
 
-test("supposing the owner's approval, a fully bound guide lacks only its two reviews", async () => {
+test("today a fully bound guide lacks only its two reviews, and two guides wait on a page that is not kept in the repository", async () => {
+  // The policy as it stands: the owner approved the file on 22 November 2026.
   const policy = await approvedPolicy();
+  assert.equal(policy.ownerApproved, true);
   // Every sentence of these guides is bound to a retained passage.
   const bound = ["GUD-01", "GUD-02", "GUD-03", "GUD-04", "GUD-06", "GUD-07", "GUD-09", "GUD-10"];
   for (const id of bound) {

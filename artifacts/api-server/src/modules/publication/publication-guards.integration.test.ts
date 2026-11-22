@@ -378,18 +378,22 @@ test(
     assert.equal(bundle.policy.hash, guidance.policy.hash);
 
     // Under the guidance policy the publisher reaches the gate, which holds the guide: it has no
-    // reviews, and the owner has not approved the policy.
+    // reviews. The policy is the text the owner approved, so the policy is not among the reasons.
     const underGuidance = await save(bundle);
     await assert.rejects(
       () => publishOperationalVersion(underGuidance),
       (error: Error) => {
         assert.match(error.message, /^PUBLICATION_HELD:/);
         assert.match(error.message, /review_required:factual/);
-        assert.equal(/policy_not_owner_approved/.test(error.message), !guidance.policy.ownerApproved);
+        assert.doesNotMatch(error.message, /policy_not_owner_approved/);
         return true;
       },
     );
-    assert.equal(guidance.policy.ownerApproved, false, "no approval of the guidance policy is recorded");
+    assert.equal(
+      guidance.policy.ownerApproved,
+      true,
+      "the recorded approval is of the policy file as it stands",
+    );
     assert.equal(await status(underGuidance), "candidate");
 
     // The same guide bound to the templates' policy is refused before the gate is asked.

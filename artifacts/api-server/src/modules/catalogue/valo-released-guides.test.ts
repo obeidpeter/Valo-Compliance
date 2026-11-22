@@ -12,8 +12,8 @@ import { resolve } from "node:path";
  * released again.
  *
  * Nothing here is published and no database is used. The "published" guide is an object in memory:
- * GUD-01's real bundle, with the owner's approval supposed and two made-up reviews, which the real
- * gate calls eligible. The database, the source check and the provider-permission check are
+ * GUD-01's real bundle under the policy as the owner approved it, with two made-up reviews, which
+ * the real gate calls eligible. The database, the source check and the provider-permission check are
  * stand-ins; the rule itself and the gate are real.
  */
 test("a published guide is shown only while its policy stands, its sources are current and its permission is current", async (t) => {
@@ -31,10 +31,12 @@ test("a published guide is shown only while its policy stands, its sources are c
     resolve(publicationWorkspaceRoot(), policyModule.GUIDANCE_POLICY_PATH),
     "utf8",
   );
-  // The what-if: the owner's approval of the policy file as it stands. It exists only in this test.
-  const approved = (await policyModule.guidancePolicy({ approvedHash: sha256(policyFile) })).policy;
-  // The policy as it really stands today, and the policy after an edit that the owner approved anew.
-  const unapproved = (await policyModule.guidancePolicy()).policy;
+  // The policy as it stands: the owner approved the file on 22 November 2026.
+  const approved = (await policyModule.guidancePolicy()).policy;
+  assert.equal(policyModule.guidancePolicyApprovedHash(), sha256(policyFile));
+  // Two what-ifs: the same file with no approval recorded, and the policy after an edit that the
+  // owner approved anew.
+  const unapproved = (await policyModule.guidancePolicy({ approvedHash: null })).policy;
   const edited = `${policyFile}\nA line added after the guide was published.\n`;
   const approvedAfterEdit = (
     await policyModule.guidancePolicy({
@@ -146,7 +148,7 @@ test("a published guide is shown only while its policy stands, its sources are c
   // It is not among the templates, so no template path, price or purchase applies to it.
   assert.deepEqual(await released.liveOperationalVersions(), []);
 
-  // The owner's approval no longer stands (the policy as it really is today): not shown.
+  // The owner's approval does not stand (supposed for this test): not shown.
   world.guidance = unapproved;
   assert.deepEqual(await shown(), []);
   assert.deepEqual(await released.releasedResources(), []);

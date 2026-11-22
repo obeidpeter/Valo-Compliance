@@ -16,10 +16,10 @@ import type { ReleaseAttestations } from "../publication/publication-publisher";
  * A guide's whole route on a real database, short of a model call and short of a release: prepared
  * from captures, rebuilt for its reviews, and put through every check the publisher makes.
  *
- * Three things are stood in for, and the test says so where it does it. Private storage is a map in
+ * Two things are stood in for, and the test says so where it does it. Private storage is a map in
  * memory. The captures are the retained passages, set out as today's captures of their official
- * addresses would hold them. And the owner's approval of the guidance policy is supposed: without
- * it no guide reaches the publisher's deeper checks at all.
+ * addresses would hold them. The policy is the real one: the owner approved the policy file on
+ * 22 November 2026. The test also supposes that approval absent, to show what it holds.
  *
  * Nothing is published. The publisher's checks run in a transaction that is always rolled back, and
  * the two reviews are made up: no model is called.
@@ -60,25 +60,26 @@ test(
       },
     });
 
-    // The owner's approval, supposed: the policy file as it stands, counted as approved, under a
-    // version of its own so that it never meets the real, unapproved policy's row.
+    // The policy is the real one: the recorded approval is of the policy file as it stands. What
+    // the test can suppose is that approval absent: the same file with no approval recorded, under
+    // a version of its own so that it never meets the real policy's row.
     const real = await import("../publication/guidance-policy");
     const { publicationWorkspaceRoot } = await import("../publication/operational-policy");
     const policyFile = readFileSync(resolve(publicationWorkspaceRoot(), real.GUIDANCE_POLICY_PATH), "utf8");
-    assert.equal(real.guidancePolicyApprovedHash(), null, "no approval is recorded outside this test");
-    const supposedPolicy = async (options: Parameters<typeof real.guidancePolicy>[0] = {}) => {
-      const base = await real.guidancePolicy({ ...options, approvedHash: sha256(policyFile) });
-      const { hash: _unapprovedVersionHash, ...body } = base.policy;
-      const supposed = { ...body, version: `${body.version}/approval-supposed-in-a-test` };
+    assert.equal(real.guidancePolicyApprovedHash(), sha256(policyFile), "the approval is of this file");
+    const withoutApproval = async (options: Parameters<typeof real.guidancePolicy>[0] = {}) => {
+      const base = await real.guidancePolicy({ ...options, approvedHash: null });
+      const { hash: _approvedVersionHash, ...body } = base.policy;
+      const supposed = { ...body, version: `${body.version}/approval-absent-in-a-test` };
       return { policy: { ...supposed, hash: digest(supposed) }, authority: base.authority };
     };
-    // The supposition can be taken away again, which leaves the policy as it really stands today.
-    const approval = { supposed: true };
+    // The supposition is made where the test says so, and taken away again.
+    const approval = { absent: false };
     t.mock.module(new URL("../publication/guidance-policy.ts", import.meta.url).href, {
       namedExports: {
         ...real,
         guidancePolicy: (options?: Parameters<typeof real.guidancePolicy>[0]) =>
-          approval.supposed ? supposedPolicy(options) : real.guidancePolicy(options),
+          approval.absent ? withoutApproval(options) : real.guidancePolicy(options),
       },
     });
 
@@ -145,18 +146,19 @@ test(
     // Controlled pages holding the passages the provider-permission record looks for.
     await writeFile(termsPath, JSON.stringify(controlledTermsSnapshot(checkedAt)));
 
-    // 1. Prepared: with the approval supposed, the gate names nothing but the two reviews, so the
-    // candidate is kept as a private artifact with a row that lets staff find it.
+    // 1. Prepared: under the policy as the owner approved it, the gate names nothing but the two
+    // reviews, so the candidate is kept as a private artifact with a row that lets staff find it.
     const prepared = await prepareGuideCandidateRelease(guide, termsPath, { captures, now });
     assert.equal(prepared.state, "awaiting_reviews", prepared.reasons.join(", "));
     assert.ok(prepared.candidateArtifact && prepared.id);
     assert.deepEqual(prepared.failedChecks, []);
     assert.deepEqual(prepared.missingEvidence, []);
-    const { policy } = await supposedPolicy();
+    const { policy } = await real.guidancePolicy();
+    assert.equal(policy.ownerApproved, true);
     t.after(async () => {
       // The row that lets staff find the candidate is this test's own; it is taken away again. A
-      // policy row can never be changed or deleted, so the supposed policy's row stays in the test
-      // database under its own name. The publisher trusts only the policy it builds itself from the
+      // policy row can never be changed or deleted, so the policy's row stays in the test database.
+      // It is the real policy's row. The publisher trusts only the policy it builds itself from the
       // real file and the recorded approval, as the last check below shows.
       await db.execute(sql`delete from valo_prepared_candidates where version_id=${prepared.id}::uuid`);
     });
@@ -286,10 +288,11 @@ test(
       assert.throws(() => assertWorkPackageMembership(work, templatePackage, guide), /PREPARER_UNAVAILABLE/);
     }
 
-    // Without the owner's approval no review can be planned or sent. With the supposition taken
-    // away, the policy is the unapproved one it really is: the prepared guide is refused before any
-    // request is made from it, and the dispatcher's check refuses the pair already planned.
-    approval.supposed = false;
+    // Without the owner's approval no review could be planned or sent. Supposing the approval
+    // absent, the policy is no longer the one the guide was prepared under: the prepared guide is
+    // refused before any request is made from it, and the dispatcher's check refuses the pair
+    // already planned.
+    approval.absent = true;
     await assert.rejects(
       readOperationalInferenceReadiness({
         candidateVersionId: prepared.id,
@@ -303,7 +306,7 @@ test(
     assert.equal(unapproved.state, "held");
     assert.ok(unapproved.reasons.includes("policy_not_owner_approved"));
     assert.equal(unapproved.candidateArtifact, null);
-    approval.supposed = true;
+    approval.absent = false;
 
     // 3. Two reviews, made up: both pass, each answering the five enhanced checks from the guide's
     // own sources. No model was called.
@@ -445,11 +448,11 @@ test(
       "SOURCE_CURRENT_CAPTURE_REQUIRED",
     );
 
-    // And with the supposition taken away the publisher refuses the very version that passed: the
-    // policy it was prepared under is not the policy as it really stands.
-    approval.supposed = false;
+    // And supposing the approval absent, the publisher refuses the very version that passed: the
+    // policy it was prepared under would no longer be the policy as it stands.
+    approval.absent = true;
     assert.equal((await publisherChecks()).error, "POLICY_NOT_TRUSTED");
-    approval.supposed = true;
+    approval.absent = false;
 
     // Nothing was saved or published: no version of the guide exists, and no capture row remains.
     const versions = await db.execute(

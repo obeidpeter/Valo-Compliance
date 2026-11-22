@@ -201,33 +201,32 @@ test(
       t.mock.module(new URL("../modules/publication/publication-artifacts.ts", import.meta.url).href, {
         namedExports: { getPublicationArtifact: get, putPublicationArtifact: put },
       });
-      // A guide answers to the guidance policy, which the owner has not approved. The guide subtest
-      // at the end supposes that approval for its own length, under a version of its own; everywhere
-      // else the policy is as it really stands.
+      // A guide answers to the guidance policy, which the owner approved on 22 November 2026: the
+      // recorded approval is of the policy file as it stands. The guide subtest at the end supposes
+      // that approval absent for a moment, under a version of its own; everywhere else the policy is
+      // as it really stands.
       const realGuidancePolicy = await import("../modules/publication/guidance-policy");
       const { publicationWorkspaceRoot } = await import("../modules/publication/operational-policy");
-      const guideApproval = { supposed: false };
-      const supposedGuidancePolicy = async (
+      assert.equal(
+        realGuidancePolicy.guidancePolicyApprovedHash(),
+        sha(await readFile(join(publicationWorkspaceRoot(), realGuidancePolicy.GUIDANCE_POLICY_PATH))),
+        "the recorded approval is of the policy file as it stands",
+      );
+      const guideApproval = { absent: false };
+      const guidancePolicyWithoutApproval = async (
         options: Parameters<typeof realGuidancePolicy.guidancePolicy>[0] = {},
       ) => {
-        const text = await readFile(
-          join(publicationWorkspaceRoot(), realGuidancePolicy.GUIDANCE_POLICY_PATH),
-          "utf8",
-        );
-        const base = await realGuidancePolicy.guidancePolicy({
-          ...options,
-          approvedHash: sha(Buffer.from(text)),
-        });
-        const { hash: _unapprovedVersionHash, ...body } = base.policy;
-        const supposed = { ...body, version: `${body.version}/approval-supposed-in-a-test` };
+        const base = await realGuidancePolicy.guidancePolicy({ ...options, approvedHash: null });
+        const { hash: _approvedVersionHash, ...body } = base.policy;
+        const supposed = { ...body, version: `${body.version}/approval-absent-in-a-test` };
         return { policy: { ...supposed, hash: digest(supposed) }, authority: base.authority };
       };
       t.mock.module(new URL("../modules/publication/guidance-policy.ts", import.meta.url).href, {
         namedExports: {
           ...realGuidancePolicy,
           guidancePolicy: (options?: Parameters<typeof realGuidancePolicy.guidancePolicy>[0]) =>
-            guideApproval.supposed
-              ? supposedGuidancePolicy(options)
+            guideApproval.absent
+              ? guidancePolicyWithoutApproval(options)
               : realGuidancePolicy.guidancePolicy(options),
         },
       });
@@ -915,10 +914,9 @@ test(
           assert.equal((await state()).entries.length, 0);
         },
       );
-      // Decision 0017: a guide takes the same route. The owner's approval of the guidance policy is
-      // supposed for this subtest only, the approvals of AI spending are synthetic ones recorded in
-      // this schema, the captures are made from the passages kept in the repository, and the model
-      // is the stand-in above. The release happens in this disposable schema, which is dropped; no
+      // Decision 0017: a guide takes the same route. The policy is the one the owner approved. The
+      // approvals of AI spending are synthetic ones recorded in this schema, the captures are made
+      // from the passages kept in the repository, and the model is the stand-in above. The release happens in this disposable schema, which is dropped; no
       // guide is published anywhere else.
       await t.test(
         "a prepared guide's two reviews are admitted only under an approval of guide reviews, run through the same dispatcher, and the publish command releases it, in this disposable schema",
@@ -945,7 +943,6 @@ test(
           // sources rest on were made on 21 November 2026, after the fixed clock.
           t.mock.timers.reset();
           assert.ok(Date.now() > clockBefore, "the real clock is later than the test's fixed one");
-          guideApproval.supposed = true;
           try {
             const now = new Date(),
               checkedAt = new Date(+now - 3_600_000);
@@ -1138,7 +1135,9 @@ test(
             assert.equal(row.status, "published");
             assert.equal(row.bundle.candidate.id, guide);
             assert.equal(row.bundle.candidate.contentClass, "sourced_guidance");
-            assert.match(row.bundle.policy.version, /approval-supposed-in-a-test$/);
+            // It was released under the policy as the owner approved it, and no other.
+            assert.equal(row.bundle.policy.ownerApproved, true);
+            assert.equal(row.bundle.policy.hash, (await realGuidancePolicy.guidancePolicy()).policy.hash);
             assert.deepEqual(
               row.bundle.enhancedChecks.map((c: { name: string; result: string }) => [c.name, c.result]),
               mandatoryEnhancedChecks.map((name) => [name, "pass"]),
@@ -1157,20 +1156,21 @@ test(
             assert.equal(bound.rows.length, current.bundle.sources.length);
             assert.ok(bound.rows.every((b) => b.snapshot_id === snapshotId && b.raw_hash === rawChecksum));
 
-            // On the site: shown as a guide while the supposed approval stands, and not without it.
+            // On the site: shown as a guide while the owner's approval stands, and not without
+            // it. The approval's absence is supposed for a moment.
             assert.ok((await liveReleasedVersions()).some((version) => version.id === prepared.id));
             assert.deepEqual(
               (await releasedResources()).filter((r) => r.id === prepared.id).map((r) => r.slug),
               [await savedSlug(prepared.id)],
             );
-            guideApproval.supposed = false;
+            guideApproval.absent = true;
             assert.ok(!(await liveReleasedVersions()).some((version) => version.id === prepared.id));
             assert.deepEqual(
               (await releasedResources()).filter((r) => r.id === prepared.id),
               [],
             );
           } finally {
-            guideApproval.supposed = false;
+            guideApproval.absent = false;
             t.mock.timers.enable({ apis: ["Date"], now: clockBefore });
           }
         },
