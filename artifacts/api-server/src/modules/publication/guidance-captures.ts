@@ -1,5 +1,11 @@
 import { sha256 } from "@workspace/valo-core";
 import {
+  capturedPassages,
+  capturedTexts,
+  type CapturedPassage,
+  type CapturedText,
+} from "./guidance-captured-texts";
+import {
   retainedGuidePassages,
   type GuideInstrument,
   type GuidePassage,
@@ -65,22 +71,66 @@ const pagePassages: Record<
   },
 };
 
+/** The texts and passages kept only as a place and a checksum (guidance-captured-texts.ts). */
+export type CapturedRecords = { texts: readonly CapturedText[]; passages: readonly CapturedPassage[] };
+const recorded: CapturedRecords = { texts: capturedTexts, passages: capturedPassages };
+/** A recorded passage and the text it is a passage of. */
+function recordedPassage(id: string, records: CapturedRecords) {
+  const passage = records.passages.find((p) => p.id === id);
+  const of = passage && records.texts.find((text) => text.id === passage.text);
+  return passage && of ? { passage, of } : undefined;
+}
+
 /** Every lead a guide's passages can be read from. */
 export const guideCaptureLeads = [
-  ...new Set([...Object.values(guideActLeads), ...Object.values(pagePassages).map((p) => p.leadId)]),
+  ...new Set([
+    ...Object.values(guideActLeads),
+    ...Object.values(pagePassages).map((p) => p.leadId),
+    ...capturedTexts.map((text) => text.leadId),
+  ]),
 ];
+
+/**
+ * The words of a passage that is kept only as a place and a checksum, cut from a capture's text.
+ * Undefined unless the capture holds its opening words exactly once, its closing words after them,
+ * and the words between have the passage's checksum.
+ */
+export function cutCapturedPassage(text: string, passage: Pick<CapturedPassage, "from" | "to" | "sha256">) {
+  const start = text.indexOf(passage.from);
+  if (start < 0 || text.indexOf(passage.from, start + 1) >= 0) return undefined;
+  const end = text.indexOf(passage.to, start);
+  if (end < 0) return undefined;
+  const words = text.slice(start, end + passage.to.length).trim();
+  return sha256(words) === passage.sha256 ? words : undefined;
+}
+
+/** The lead whose capture a passage is read from, where the passage is known. */
+export function passageLead(
+  id: string,
+  retained: GuidePassages = retainedGuidePassages(),
+  records: CapturedRecords = recorded,
+) {
+  const page = pagePassages[id];
+  if (page) return page.leadId;
+  const bound = recordedPassage(id, records);
+  if (bound) return bound.of.leadId;
+  const kept = retained(id);
+  return kept?.instrument.kind === "act" ? guideActLeads[kept.instrument.id] : undefined;
+}
 
 /**
  * Passages read from the captures given.
  *
- * A passage of an Act is the retained passage, found word for word in today's capture of the Act
- * and dated and checksummed from that capture. If the capture does not hold it, the passage is not
- * supplied, and the guide's sentences that rest on it stay unbound. A page's passage is the page as
- * captured.
+ * A passage of an Act kept in the repository is the retained passage, found word for word in
+ * today's capture of the Act and dated and checksummed from that capture. A passage kept only as a
+ * place and a checksum is cut from today's capture of its text, and supplied only when its words
+ * have that checksum. If the capture does not hold a passage, it is not supplied, and the guide's
+ * sentences that rest on it stay unbound. A page's passage is the page as captured.
  */
 export function capturedGuidePassages(
   captures: readonly GuideCapture[],
   retained: GuidePassages = retainedGuidePassages(),
+  records: CapturedRecords = recorded,
 ): GuidePassages {
   const byLead = new Map(captures.map((capture) => [capture.leadId, capture]));
   const read = (capture: GuideCapture) => new Date(capture.checkedAt).toISOString();
@@ -104,6 +154,30 @@ export function capturedGuidePassages(
           retrievedAt: read(capture),
           // A page is known to say this from the time it was read.
           effectiveFrom: read(capture),
+        },
+      };
+    }
+    const bound = recordedPassage(id, records);
+    if (bound) {
+      const { passage, of } = bound;
+      const capture = byLead.get(of.leadId);
+      const words = capture && cutCapturedPassage(capture.text, passage);
+      if (!capture || !words) return undefined;
+      return {
+        id,
+        recordedLocator: passage.recordedLocator,
+        text: words,
+        hash: passage.sha256,
+        sections: [...passage.sections],
+        instrument: {
+          id: of.id,
+          kind: of.kind,
+          url: capture.url,
+          rawSha256: capture.rawChecksum,
+          title: of.title,
+          issuingBody: of.issuingBody,
+          retrievedAt: read(capture),
+          effectiveFrom: of.effectiveFrom,
         },
       };
     }

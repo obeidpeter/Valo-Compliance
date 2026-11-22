@@ -11,7 +11,7 @@ import type { valoContentVersions } from "@workspace/db";
 import { projectReleasedResource } from "../catalogue/valo-released-content";
 import { heldSourceBundle } from "../sources/valo-source-controls.fixtures";
 import { claimLocatorMatches } from "./claim-locator";
-import { buildGuideCandidate, guideClaimMaps, mappedGuideIds } from "./guidance-bundle";
+import { buildGuideCandidate, guideClaimMaps, repositoryBuiltGuideIds } from "./guidance-bundle";
 import { GUIDE_LIMITATIONS, GUIDE_SCOPE } from "./guidance-candidate";
 import {
   buildGuideClaims,
@@ -27,6 +27,9 @@ import { readGuidanceIntake } from "./operational-intake";
 const passages = retainedGuidePassages();
 const body = async (id: string) => (await readGuidanceIntake(id)).section.body;
 const map = (id: string) => guideClaimMaps.find((m) => m.id === id)!;
+// These tests build guides from the passages kept in the repository. The guides whose texts are
+// not kept there have tests of their own (guidance-claims-privacy.test.ts).
+const repositoryMaps = guideClaimMaps.filter((m) => repositoryBuiltGuideIds.includes(m.id));
 /** A guide's map with one sentence changed. */
 const changed = (id: string, index: number, change: (s: GuideSentence) => GuideSentence): GuideClaimMap => ({
   ...map(id),
@@ -40,10 +43,10 @@ const indexOf = (id: string, start: string) => {
 
 test("the ten registration and tax guides are mapped, and each map places every sentence of its guide", async () => {
   assert.deepEqual(
-    mappedGuideIds,
+    repositoryBuiltGuideIds,
     Array.from({ length: 10 }, (_, i) => `GUD-${String(i + 1).padStart(2, "0")}`),
   );
-  for (const m of guideClaimMaps) {
+  for (const m of repositoryMaps) {
     const text = guideBodyBlocks(m.id, await body(m.id))
       .map((b) => b.text)
       .join("\n");
@@ -62,7 +65,7 @@ test("the ten registration and tax guides are mapped, and each map places every 
 
 test("every quotation is word for word in its retained passage, at the place its locator gives", async () => {
   let claims = 0;
-  for (const m of guideClaimMaps) {
+  for (const m of repositoryMaps) {
     const built = buildGuideClaims(m, await body(m.id), passages);
     for (const claim of built.claims) {
       claims++;
@@ -249,7 +252,7 @@ test("a guide built from its map carries its sources' decisions and says what it
   const unboundLine = /is not among the passages supplied/;
   // The two guides that rest in part on an official page that is not kept in the repository.
   const unbound: Record<string, number> = { "GUD-05": 1, "GUD-08": 3 };
-  for (const id of mappedGuideIds) {
+  for (const id of repositoryBuiltGuideIds) {
     const built = await buildGuideCandidate(id, 1, passages, day);
     const c = publicationSchema.shape.candidate.parse(built.candidate);
     publicationSchema.shape.sources.parse(built.sources);
@@ -303,7 +306,7 @@ test("a guide built from its map carries its sources' decisions and says what it
   assert.ok(before.sources.some((s) => s.status === "held"));
   assert.equal(before.candidate.legalScopeStatus, "unverified");
   assert.ok(before.candidate.missingEvidence.some((line) => /is not marked current: /.test(line)));
-  await assert.rejects(() => buildGuideCandidate("GUD-11"), /GUIDE_CLAIM_MAP_MISSING:GUD-11/);
+  await assert.rejects(() => buildGuideCandidate("GUD-16"), /GUIDE_CLAIM_MAP_MISSING:GUD-16/);
 });
 
 test("the guide page shows a built guide's own words and its sources, not its document", async () => {

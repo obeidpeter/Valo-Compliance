@@ -14,7 +14,7 @@ import {
   closeRenderer,
   renderDocument,
 } from "../../lib/valo-render";
-import { buildGuideCandidate, mappedGuideIds } from "./guidance-bundle";
+import { buildGuideCandidate, repositoryBuiltGuideIds } from "./guidance-bundle";
 import { guidanceCandidate } from "./guidance-candidate";
 import {
   GUIDE_LABEL,
@@ -105,7 +105,7 @@ test("every draft guide prints as a guide in Word and PDF, and the files hold ev
   for (const id of guideIds) {
     // A guide with a claim map is printed as that map builds it, sources and all; any other is
     // printed from its words alone.
-    const mapped = mappedGuideIds.includes(id) ? await buildGuideCandidate(id) : null;
+    const mapped = repositoryBuiltGuideIds.includes(id) ? await buildGuideCandidate(id) : null;
     const document = mapped?.document ?? (await guidanceCandidate(id, 1, now)).document;
     const candidate = mapped?.candidate ?? inspected(id, await guidanceCandidate(id, 1, now));
     const files = {

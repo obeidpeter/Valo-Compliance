@@ -5,9 +5,12 @@ import { guideAmendmentRecords } from "./guidance-amendments";
 import { buildGuideCandidate, guideClaimMaps } from "./guidance-bundle";
 import {
   capturedGuidePassages,
+  cutCapturedPassage,
   guideActLeads,
   guideCaptureLeads,
   guideSourceSnapshots,
+  passageLead,
+  type CapturedRecords,
   type GuideCapture,
 } from "./guidance-captures";
 import { retainedGuidePassages } from "./guidance-passages";
@@ -54,6 +57,8 @@ test("each address a guide's passages are read from is a known official source",
     "NASS-NTAA-2025",
     "NRS-TAXID-HOW",
     "S03",
+    "S04",
+    "S05",
     "SV-010",
   ]);
   for (const id of guideCaptureLeads) {
@@ -176,4 +181,93 @@ test("a guide built from captures is bound to them, and lacks whatever they do n
     ),
   );
   assert.ok(guideClaimMaps.some((map) => map.id === "GUD-01"));
+});
+
+// Made-up words throughout: no official text is used here. The passage records stand for the ones
+// kept for texts that are not in the repository (guidance-captured-texts.ts).
+const madeUpText = [
+  "MADE-UP TEXT FOR A TEST",
+  "1. The first section says one thing.",
+  "   2. The second section says another thing,",
+  "over two lines, and ends here.",
+  "3. The third section follows.",
+].join("\n");
+const secondSection = "2. The second section says another thing,\nover two lines, and ends here.";
+const madeUpRecords: CapturedRecords = {
+  texts: [
+    {
+      id: "MADE-UP-TEXT",
+      kind: "regulatory_document",
+      leadId: "S05",
+      title: "A made-up directive",
+      issuingBody: "Nobody",
+      effectiveFrom: "2025-01-01T00:00:00+01:00",
+    },
+  ],
+  passages: [
+    {
+      id: "MADE-UP-2",
+      text: "MADE-UP-TEXT",
+      recordedLocator: "section 2",
+      sections: ["2"],
+      from: "2. The second section",
+      to: "and ends here.",
+      sha256: sha256(secondSection),
+    },
+  ],
+};
+
+test("a passage kept only as a place and a checksum is cut from a capture when its words have that checksum", () => {
+  const record = madeUpRecords.passages[0]!;
+  assert.equal(cutCapturedPassage(madeUpText, record), secondSection);
+  // One changed character between the two places, and nothing is supplied.
+  assert.equal(cutCapturedPassage(madeUpText.replace("another thing", "another  thing"), record), undefined);
+  // The opening words must occur exactly once, and the closing words after them.
+  assert.equal(cutCapturedPassage(`${madeUpText}\n${madeUpText}`, record), undefined);
+  assert.equal(cutCapturedPassage(madeUpText.replace("and ends here.", "and stops."), record), undefined);
+  assert.equal(cutCapturedPassage("another text altogether", record), undefined);
+  assert.equal(cutCapturedPassage("", record), undefined);
+});
+
+test("such a passage is supplied only from a capture of its own text's address", () => {
+  const capture = pageCapture("S05", madeUpText);
+  const passage = capturedGuidePassages([capture], retained, madeUpRecords)("MADE-UP-2")!;
+  assert.equal(passage.text, secondSection);
+  assert.equal(passage.hash, sha256(secondSection));
+  assert.deepEqual(passage.sections, ["2"]);
+  assert.equal(passage.recordedLocator, "section 2");
+  // The text is named, dated and checksummed from the capture; its kind and the day it is in force
+  // from are the record's.
+  assert.deepEqual(passage.instrument, {
+    id: "MADE-UP-TEXT",
+    kind: "regulatory_document",
+    url: capture.url,
+    rawSha256: capture.rawChecksum,
+    title: "A made-up directive",
+    issuingBody: "Nobody",
+    retrievedAt: checkedAt,
+    effectiveFrom: "2025-01-01T00:00:00+01:00",
+  });
+  assert.equal(passageLead("MADE-UP-2", retained, madeUpRecords), "S05");
+
+  // No capture of that address, a capture of another address, or a capture with other words.
+  assert.equal(capturedGuidePassages([], retained, madeUpRecords)("MADE-UP-2"), undefined);
+  assert.equal(
+    capturedGuidePassages([pageCapture("S04", madeUpText)], retained, madeUpRecords)("MADE-UP-2"),
+    undefined,
+  );
+  assert.equal(
+    capturedGuidePassages(
+      [pageCapture("S05", madeUpText.toUpperCase())],
+      retained,
+      madeUpRecords,
+    )("MADE-UP-2"),
+    undefined,
+  );
+  // A passage nobody recorded is not supplied, and has no address to be read from.
+  assert.equal(capturedGuidePassages([capture], retained, madeUpRecords)("MADE-UP-3"), undefined);
+  assert.equal(passageLead("MADE-UP-3", retained, madeUpRecords), undefined);
+  // The passages kept in the repository, and the pages, are read from their own addresses as before.
+  assert.equal(passageLead("CAMA-814", retained, madeUpRecords), "SV-010");
+  assert.equal(passageLead("CAC-PORTAL-NOTICE", retained, madeUpRecords), "S03");
 });
