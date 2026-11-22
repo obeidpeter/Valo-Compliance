@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { resolve } from "node:path";
-import { isPracticalGuideId, practicalGuideIds, publicationSchema } from "@workspace/valo-core";
+import { isPracticalGuideId, publicationSchema } from "@workspace/valo-core";
 import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
 import {
   mappedGuideIds,
@@ -20,7 +20,7 @@ import {
   registerPreparedInferenceSubmanifest,
   readApprovedFiniteAllocationPackage,
   finitePackagePreparers,
-  practicalReviewLimits,
+  practicalReviewLimitsFor,
 } from "../modules/ai";
 import type { FiniteManifest } from "../modules/ai";
 
@@ -444,21 +444,24 @@ async function main() {
             new Date(),
             preparationOptions!.guidePairs
               ? finitePackagePreparers.guidePairs
-              : preparationOptions!.practicalPairs
-                ? finitePackagePreparers.practicalPairs
-                : finitePackagePreparers.templatePairs,
+              : preparationOptions!.reminderInventoryPairs
+                ? finitePackagePreparers.reminderInventoryPairs
+                : preparationOptions!.practicalPairs
+                  ? finitePackagePreparers.practicalPairs
+                  : finitePackagePreparers.templatePairs,
           )),
         packageId = allocationPackageId(allocationPackage);
       // A package admits one kind of work: the templates' review pairs, or the guides'.
       const guidePackage =
         requestDigest(allocationPackage.supportedPreparers) ===
         requestDigest(finitePackagePreparers.guidePairs);
-      const practicalPackage =
-        allocationPackage.supportedPreparers[0] === finitePackagePreparers.practicalPairs[0];
+      const practicalReviewLimits = practicalReviewLimitsFor(allocationPackage.supportedPreparers);
+      const practicalPackage = !!practicalReviewLimits;
       if (
         allocationPackage.supportedPreparers[0] === finitePackagePreparers.editorialCases[0] ||
         (selection && (guidePackage || practicalPackage)) ||
-        (practicalPackage && preparationOptions!.candidates.length > practicalGuideIds.length)
+        (practicalReviewLimits &&
+          preparationOptions!.candidates.length > practicalReviewLimits.articleIds.length)
       )
         throw Error("FINITE_RUN_ARGUMENTS_INVALID");
       const practicalArticles = new Set<string>();
@@ -486,6 +489,8 @@ async function main() {
             }),
           );
           if (practical) {
+            if (!practicalReviewLimits?.articleIds.includes(saved.templateId))
+              throw Error("PRACTICAL_GUIDE_OUTSIDE_PACKAGE");
             if (practicalArticles.has(saved.templateId)) throw Error("DUPLICATE_PRACTICAL_GUIDE");
             practicalArticles.add(saved.templateId);
           }
@@ -588,12 +593,12 @@ async function main() {
         executableScope: selection
           ? "Exact operational pairs and explicitly listed supported customer attempts under one package"
           : practicalPackage
-            ? "one factual and challenge pair each for the invoice and quotation articles"
+            ? `one factual and challenge pair each for ${practicalReviewLimits.articleIds.join(" and ")}`
             : guidePackage
               ? "one exact review pair per verified prepared guide"
               : "one exact operational review pair per verified prepared candidate",
         supportedTemplateIds: guidePackage || practicalPackage ? [] : operationalInferenceTemplateIds,
-        supportedGuideIds: practicalPackage ? practicalGuideIds : guidePackage ? mappedGuideIds : [],
+        supportedGuideIds: practicalReviewLimits?.articleIds ?? (guidePackage ? mappedGuideIds : []),
         ...(practicalPackage ? { practicalReviewLimits } : {}),
         candidatesInspected: preparationOptions!.candidates.length,
         proposals: prepared,
@@ -604,7 +609,7 @@ async function main() {
         providerCalls: 0,
         approvalRowsWritten: 0,
         nonpublicationCorpora: practicalPackage
-          ? "This package only admits the invoice and quotation review pairs."
+          ? `This package only admits the review pairs for ${practicalReviewLimits.articleIds.join(" and ")}.`
           : "Original 80/60/60 rosters remain frozen; only listed supported customer attempts are prepared. Editorial/checker preparers remain held.",
         excluded: ["authoring", "real customer confidential data", "production", "payments", "emails"],
         readiness: prepared.length

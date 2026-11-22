@@ -4,8 +4,9 @@ import { z } from "zod";
 export const disclosure =
   "AI drafted and reviewed; not reviewed by a Nigerian legal, tax or sector specialist";
 export const sha256 = (text: string | Uint8Array): string => createHash("sha256").update(text).digest("hex");
-/** The original business articles selected for the first development release. */
-export const practicalGuideIds = ["GUIDE-C01", "GUIDE-C02"] as const;
+export const invoiceQuotationGuideIds = ["GUIDE-C01", "GUIDE-C02"] as const;
+export const reminderInventoryGuideIds = ["GUIDE-C03", "GUIDE-C04"] as const;
+export const practicalGuideIds = [...invoiceQuotationGuideIds, ...reminderInventoryGuideIds] as const;
 export function isPracticalGuideId(id: string): id is (typeof practicalGuideIds)[number] {
   return practicalGuideIds.some((value) => value === id);
 }

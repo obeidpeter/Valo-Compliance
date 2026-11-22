@@ -1,3 +1,4 @@
+import { isPracticalGuideId } from "@workspace/valo-core";
 import type { FiniteWork } from "./inference-types";
 /** Admission is to a particular role and corpus, never a caller's lane label. */
 export function assertFiniteWorkShape(work: FiniteWork) {
@@ -19,7 +20,7 @@ export function assertFiniteWorkShape(work: FiniteWork) {
       !/^[a-f0-9]{64}$/.test(candidate.hash) ||
       candidate.extension !== "json" ||
       // A template's ID or a guide's.
-      !/^(?:TPL-\d{2,3}|GUD-\d{2}|GUIDE-C0[12])$/.test(candidate.templateId)
+      (!/^(?:TPL-\d{2,3}|GUD-\d{2})$/.test(candidate.templateId) && !isPracticalGuideId(candidate.templateId))
     )
       throw Error("PUBLICATION_CANDIDATE_REQUIRED");
   } else if (binding.candidateArtifact) throw Error("CANDIDATE_ARTIFACT_OUTSIDE_PUBLICATION");

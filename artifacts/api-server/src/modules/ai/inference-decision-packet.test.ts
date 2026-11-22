@@ -73,6 +73,17 @@ async function mixed(retry = true) {
 test("preparation options preserve explicit retries and never accept approval or quota assertions", () => {
   const packageId = `finite-package:${"e".repeat(64)}`;
   assert.equal(parseFinitePreparationOptions(["--practical-guide-pairs"]).practicalPairs, true);
+  assert.equal(parseFinitePreparationOptions(["--reminder-inventory-pairs"]).reminderInventoryPairs, true);
+  for (const option of [
+    "--practical-guide-pairs",
+    "--guide-pairs",
+    "--with-schema-retry",
+    `--package=${packageId}`,
+  ])
+    assert.throws(
+      () => parseFinitePreparationOptions(["--reminder-inventory-pairs", option]),
+      /FINITE_PREPARATION_OPTIONS_INVALID/,
+    );
   for (const option of ["--guide-pairs", "--with-schema-retry", `--package=${packageId}`])
     assert.throws(
       () => parseFinitePreparationOptions(["--practical-guide-pairs", option]),
