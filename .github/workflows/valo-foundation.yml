@@ -125,6 +125,8 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-workspace-download
       - name: Prove finite inference scope, actual callers and disabled entry without network
         run: pnpm --filter @workspace/api-server test:valo-finite-entry
+      - name: Verify the private industry guide review packets against their retained drafts
+        run: pnpm --filter @workspace/api-server test:valo-industry-guide-reviews
       - name: Prove read-only inference capacity and historical-exposure inspection
         run: pnpm --filter @workspace/api-server test:valo-budget-inspection
       - name: Prove original lifecycle admission and final publication expiry/scope checks
