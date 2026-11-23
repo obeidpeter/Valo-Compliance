@@ -25,10 +25,22 @@ if (!process.env.DATABASE_URL) {
  * stop answering.
  */
 export const POOL_ACQUIRE_TIMEOUT_MS = 10_000;
+export const DEFAULT_POOL_MAX = 10;
+export const MAX_CONFIGURED_POOL_SIZE = 100;
 /** Codes set on the timeout errors. pg reports them with a message only, and logs never
  * keep messages. */
 export const POOL_ACQUIRE_TIMEOUT_CODE = "DB_POOL_ACQUIRE_TIMEOUT";
 export const CONNECT_TIMEOUT_CODE = "DB_CONNECT_TIMEOUT";
+
+/** Parses an explicit pool size (1–100) or falls back when unset. Refuses invalid values. */
+export function configuredPoolMax(raw: string | undefined, fallback = DEFAULT_POOL_MAX): number {
+  if (raw === undefined || raw === "") return fallback;
+  if (raw.trim() !== raw || !/^[1-9][0-9]{0,2}$/.test(raw)) throw Error("INVALID_DB_POOL_MAX");
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value < 1 || value > MAX_CONFIGURED_POOL_SIZE)
+    throw Error("INVALID_DB_POOL_MAX");
+  return value;
+}
 
 function withTimeoutCode(error: Error) {
   // The exact messages pg-pool uses for each kind of timeout.
@@ -161,9 +173,18 @@ export function createPool(options: pg.PoolConfig = {}, customerOptions: pg.Pool
     ...options,
   };
   return new ValoPool(
-    { connectionString: process.env.DATABASE_URL, ...shared },
+    {
+      connectionString: process.env.DATABASE_URL,
+      max: configuredPoolMax(process.env.VALO_DB_POOL_MAX, DEFAULT_POOL_MAX),
+      ...shared,
+    },
     // Customer requests connect as the workspace login, which can only become the scoped role.
-    { ...shared, connectionString: process.env.VALO_CUSTOMER_DATABASE_URL, ...customerOptions },
+    {
+      ...shared,
+      connectionString: process.env.VALO_CUSTOMER_DATABASE_URL,
+      max: configuredPoolMax(process.env.VALO_CUSTOMER_DB_POOL_MAX, DEFAULT_POOL_MAX),
+      ...customerOptions,
+    },
   );
 }
 

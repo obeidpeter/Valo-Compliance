@@ -36,7 +36,13 @@ import {
   recordOperationalAlerts,
 } from "../modules/operations";
 import { assertRecoveryEffectsAllowed } from "../platform/valo-recovery-effects";
-import { WorkerHealth, workerHealthServer, drainWithDeadline } from "../platform/valo-worker-health";
+import {
+  MaintenanceGate,
+  WorkerHealth,
+  workerHealthServer,
+  drainWithDeadline,
+  exportWorkerConcurrency,
+} from "../platform/valo-worker-health";
 import { environment, setting } from "../platform/settings";
 
 await initializeApplicationRuntime();
@@ -128,35 +134,44 @@ startup = (async () => {
   await publishHeartbeat();
   await boss.start();
   if (stopping) return;
-  await boss.work(EXPORT_QUEUE, { batchSize: 1, pollingIntervalSeconds: 1 }, async (jobs) => {
-    for (const entry of jobs) {
-      const input = payload.parse(entry.data);
-      const faultHarness =
-        setting("NODE_ENV") === "development" &&
-        !setting("REPLIT_DEPLOYMENT") &&
-        setting("VALO_RUN_EXPORT_CRASH_TESTS") === "synthetic-development-only" &&
-        process.send &&
-        setting("VALO_EXPORT_CRASH_JOB") === input.jobId;
-      await executeExport(
-        input.jobId,
-        input.workspaceId,
-        entry.id,
-        faultHarness
-          ? async (stage) => {
-              if (stage !== setting("VALO_EXPORT_CRASH_STAGE")) return;
-              const [owned] = await db
-                .select()
-                .from(valoExportJobs)
-                .where(eq(valoExportJobs.id, input.jobId));
-              if (!owned?.requestedBy.startsWith("synthetic-export-crash-"))
-                throw Error("OWNED_SYNTHETIC_JOB_REQUIRED");
-              process.send!({ stage });
-              await new Promise<void>((resolve) => process.once("message", () => resolve()));
-            }
-          : undefined,
-      );
-    }
-  });
+  const exportConcurrency = exportWorkerConcurrency(
+    setting("VALO_EXPORT_CONCURRENCY"),
+    pool.options.max ?? 10,
+    operationsEnabled ? OPERATIONAL_DOMAINS.length : 0,
+  );
+  await boss.work(
+    EXPORT_QUEUE,
+    { batchSize: 1, localConcurrency: exportConcurrency, pollingIntervalSeconds: 1 },
+    async (jobs) => {
+      for (const entry of jobs) {
+        const input = payload.parse(entry.data);
+        const faultHarness =
+          setting("NODE_ENV") === "development" &&
+          !setting("REPLIT_DEPLOYMENT") &&
+          setting("VALO_RUN_EXPORT_CRASH_TESTS") === "synthetic-development-only" &&
+          process.send &&
+          setting("VALO_EXPORT_CRASH_JOB") === input.jobId;
+        await executeExport(
+          input.jobId,
+          input.workspaceId,
+          entry.id,
+          faultHarness
+            ? async (stage) => {
+                if (stage !== setting("VALO_EXPORT_CRASH_STAGE")) return;
+                const [owned] = await db
+                  .select()
+                  .from(valoExportJobs)
+                  .where(eq(valoExportJobs.id, input.jobId));
+                if (!owned?.requestedBy.startsWith("synthetic-export-crash-"))
+                  throw Error("OWNED_SYNTHETIC_JOB_REQUIRED");
+                process.send!({ stage });
+                await new Promise<void>((resolve) => process.once("message", () => resolve()));
+              }
+            : undefined,
+        );
+      }
+    },
+  );
   await boss.work(WORKSPACE_EXPORT_QUEUE, { batchSize: 1, pollingIntervalSeconds: 1 }, async (entries) => {
     for (const entry of entries) {
       const input = payload.parse(entry.data);
@@ -174,6 +189,7 @@ startup = (async () => {
     );
 })();
 let operationalCheckedAt = 0;
+const maintenance = new MaintenanceGate();
 async function dispatch() {
   developmentExportsOnly();
   if (dispatching) return;
@@ -227,19 +243,23 @@ async function dispatch() {
       const keys = new Set((await pool.query(scheduleQuery)).rows.map((r) => r.key));
       if (OPERATIONAL_DOMAINS.some((domain) => !keys.has(domain))) throw Error("WORKER_SCHEDULES_MISSING");
     }
-    await recoverAbandonedExports();
-    const retention = await expireGeneratedExports();
-    if (retention.failed) logger.error({ event: "export.retention_binding_failed", count: retention.failed });
-    const cleanup = await reconcileExportOrphans();
-    if (cleanup.failed) logger.error({ event: "export.orphan_cleanup_failed", count: cleanup.failed });
-    if (cleanup.privacyHeld)
-      logger.error({ event: "privacy.erasure_replay_held", count: cleanup.privacyHeld });
-    try {
-      const privateData = await cleanupWorkspaceExports();
-      if (privateData.failed)
-        logger.error({ event: "workspace_export.cleanup_pending", count: privateData.failed });
-    } catch (error) {
-      logger.error({ event: "workspace_export.cleanup_failed", err: error });
+    if (maintenance.due()) {
+      await recoverAbandonedExports();
+      const retention = await expireGeneratedExports();
+      if (retention.failed)
+        logger.error({ event: "export.retention_binding_failed", count: retention.failed });
+      const cleanup = await reconcileExportOrphans();
+      if (cleanup.failed) logger.error({ event: "export.orphan_cleanup_failed", count: cleanup.failed });
+      if (cleanup.privacyHeld)
+        logger.error({ event: "privacy.erasure_replay_held", count: cleanup.privacyHeld });
+      try {
+        const privateData = await cleanupWorkspaceExports();
+        if (privateData.failed)
+          logger.error({ event: "workspace_export.cleanup_pending", count: privateData.failed });
+      } catch (error) {
+        logger.error({ event: "workspace_export.cleanup_failed", err: error });
+      }
+      maintenance.mark();
     }
     for (const job of await pendingWorkspaceExports()) {
       if (stopping) break;
