@@ -13,7 +13,7 @@
     },
     {
       "id": "KI-003",
-      "summary": "No template or guidance version is published. A template or guide publishes only with two passing AI reviews, which run only inside an owner-approved finite AI allocation in the real environment, and none is approved. The publish command (decision 0014) has run only on synthetic reviews in a disposable database. The owner approved the guidance publication policy on 22 November 2026 and 27 guides (GUD-01 to GUD-15 and GUD-19 to GUD-30) have claim maps and preparers that run the enhanced high-risk checks, but real-environment captures, the publisher login, and approved AI review allocations are still required; GUD-27 to GUD-30 remain held on the Labour Act reference copy and unread Trade Union (Amendment) Act 2005 (decision 0017, point 8), and GUD-16 to GUD-18 are unmapped pending a clean official copy of the FCCPA (point 9).",
+      "summary": "No template or guidance version is published. Publishing needs two passing AI reviews under an owner-approved finite AI allocation on the real environment; none is approved and decision 0014's publish command has run only on synthetic reviews. The guidance policy was approved on 22 November 2026 and 27 guides (GUD-01 to GUD-15, GUD-19 to GUD-30) are mapped, pending real captures, publisher login and AI reviews; GUD-27 to GUD-30 await Labour/Trade Union texts and GUD-16 to GUD-18 await FCCPA text (decision 0017, points 8-9).",
       "requirements": ["EDP-005"]
     },
     {
