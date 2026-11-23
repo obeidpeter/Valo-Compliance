@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider, MutationCache } from "@tanstack/react
 import { installRequestScopeProvider, expiredAccountRequest } from "@workspace/api-client-react";
 import { AccountEpoch } from "./account-epoch-context";
 import { resetAccountToasts } from "@/hooks/use-toast";
+import { clearCheckerHandoff } from "@/lib/checker-handoff";
 export { useAccountEpoch } from "./account-epoch-context";
 
 function AccountState({ children, onInvalidated }: { children: ReactNode; onInvalidated: () => void }) {
@@ -102,14 +103,19 @@ export function AccountStateBoundary({
     const prior = previous.current;
     if (prior !== session) {
       // oxlint-disable-next-line unicorn/require-post-message-target-origin -- a BroadcastChannel, which takes no target origin
-      if (prior) channel?.postMessage({ type: "session-ended", session: prior });
+      if (prior) {
+        clearCheckerHandoff();
+        channel?.postMessage({ type: "session-ended", session: prior });
+      }
       previous.current = session ?? null;
       setBlocked(null);
     }
     if (channel)
       channel.onmessage = (event) => {
-        if (session && event.data?.type === "session-ended" && event.data.session === session)
+        if (session && event.data?.type === "session-ended" && event.data.session === session) {
+          clearCheckerHandoff();
           flushSync(() => setBlocked(session));
+        }
       };
     return () => channel?.close();
   }, [identityKey, session]);

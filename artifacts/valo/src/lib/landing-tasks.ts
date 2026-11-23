@@ -1,5 +1,5 @@
 import { GUIDED_TEMPLATE_IDS, type GuidedTemplateId } from "@workspace/valo-core/guided";
-import { ANY_DOCUMENT } from "./start";
+import { ANY_DOCUMENT, CHECKER_START } from "./start";
 import { checkoutStartPath } from "./template-checkout";
 import { downloadStartPath } from "./template-download";
 
@@ -54,6 +54,7 @@ export const landingTask = (id: string | null | undefined): LandingTask | undefi
  */
 export function startPath(start: string | null | undefined): string | undefined {
   if (start === ANY_DOCUMENT) return "/workspace/documents/new";
+  if (start === CHECKER_START) return "/workspace/checker";
   const task = landingTask(start);
   return task
     ? "/workspace/documents/new?start=" + task.id
