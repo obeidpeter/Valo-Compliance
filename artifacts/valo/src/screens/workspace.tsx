@@ -18,6 +18,7 @@ import { CorrectionNotices } from "@/components/correction-notices";
 import { DocumentList } from "@/components/document-list";
 import { FILE_FORMAT_NAMES } from "@/lib/file-formats";
 import { formatCount, formatDay } from "@/lib/format";
+import { formatProfileSummary } from "@/lib/profile-prefill";
 import { RESULT_LABELS, RESULT_TONES } from "@/lib/rich-checker";
 import { buildWorkspaceAttention } from "@/lib/workspace-attention";
 import { cn } from "@/lib/utils";
@@ -62,6 +63,7 @@ export default function WorkspaceHome() {
     ws.data &&
     ws.data.profileRevision > latestResult.profileRevision,
   );
+  const profileSummary = useMemo(() => (profile ? formatProfileSummary(profile) : null), [profile]);
   const showStarterMap = ws.isSuccess && documents === 0 && !profile;
   const upcomingTasks = (openTasks.data?.items ?? []).slice(0, 2);
   const openTaskCount = openTasks.data?.openCount ?? 0;
@@ -379,18 +381,15 @@ export default function WorkspaceHome() {
               <h2 id="home-profile-title" className="eyebrow">
                 Business profile
               </h2>
-              {profile ? (
+              {profile && profileSummary ? (
                 <>
                   <p className="font-display mt-4 text-2xl" data-testid="text-business-name">
                     {profile.businessName}
                   </p>
                   <dl className="mt-4 grid gap-2 text-sm">
-                    <Row k="Legal form" v={profile.legalForm.replace(/_/g, " ")} />
-                    <Row k="Registration" v={profile.registrationStatus} />
-                    <Row
-                      k="Location"
-                      v={[profile.lga, profile.state].filter(Boolean).join(", ") || "Not given"}
-                    />
+                    <Row k="Legal form" v={profileSummary.legalForm} />
+                    <Row k="Registration" v={profileSummary.registration} />
+                    <Row k="Location" v={profileSummary.location} />
                     <Row k="Activities" v={formatCount(profile.activities.length)} />
                   </dl>
                 </>
@@ -423,7 +422,7 @@ function Row({ k, v }: { k: string; v: string }) {
   return (
     <div className="flex justify-between gap-4 border-t border-border pt-2">
       <dt className="text-muted-foreground">{k}</dt>
-      <dd className="text-right capitalize">{v}</dd>
+      <dd className="text-right">{v}</dd>
     </div>
   );
 }
