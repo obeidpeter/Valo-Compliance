@@ -26,7 +26,8 @@ Run the applications (development only):
 
 ```sh
 pnpm --filter @workspace/api-server run dev   # API on $PORT
-pnpm --filter @workspace/valo run dev         # web app on $PORT
+pnpm --filter @workspace/valo run dev:compiled  # web app on $PORT, built once and then served
+pnpm --filter @workspace/valo run dev         # web app on $PORT, compiled page by page (instant reload)
 pnpm --filter @workspace/api-server run worker:dev
 ```
 
