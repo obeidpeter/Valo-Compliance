@@ -61,3 +61,33 @@ export async function currentSourceCaptures(
   }
   return captures;
 }
+
+/** A lead's watch as the daily source check left it: when it was last checked, and why that check
+ * failed, if it did. */
+export type SourceWatchState = { leadId: string; checkedAt: string | null; failureCode: string | null };
+
+/**
+ * The watch of each lead given, for a screen that says where each source stands: not watched (left
+ * out), watched and waiting for its first check, checked, or failed. It reads only the watches, so it
+ * runs anywhere a pooled read may; `reader` is for tests.
+ */
+export async function sourceWatchStates(
+  leadIds: readonly string[],
+  reader?: SourceReader,
+): Promise<SourceWatchState[]> {
+  if (!leadIds.length) return [];
+  const source = reader ?? (await import("@workspace/db")).db;
+  const rows = (
+    await source.execute(sql`select source_id, checked_at, failure_code from valo_source_watches
+      where source_id in (${sql.join(
+        leadIds.map((id) => sql`${id}`),
+        sql`, `,
+      )})
+      order by source_id`)
+  ).rows;
+  return rows.map((row) => ({
+    leadId: String(row.source_id),
+    checkedAt: row.checked_at ? new Date(sourceTime(row.checked_at)).toISOString() : null,
+    failureCode: row.failure_code ? String(row.failure_code) : null,
+  }));
+}

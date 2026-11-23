@@ -40,6 +40,8 @@ const latestStoredVersion = async (reader: Reader, ruleId: string) =>
 export async function planStoredRuleRelease(
   request: RuleReleaseRequest,
   now = new Date(),
+  /** The guidance policy as it stands, for an owner-signed rule (decision 0020). */
+  guidance?: { hash: string; ownerApproved: boolean },
 ): Promise<RuleReleasePlan> {
   const { db } = await import("@workspace/db");
   assertDevelopmentRuntime();
@@ -73,6 +75,7 @@ export async function planStoredRuleRelease(
       manifestHash: parsed.data.manifestHash,
     },
     now,
+    guidance,
   );
   return admissible
     ? plan

@@ -3205,6 +3205,160 @@ export const GetEditorialRecordResponse = zod.object({
 })
 
 
+/**
+ * Each rule as the owner would sign it now: what it tells a customer, its sources and their checks, its scenarios, how many saved results it would change, and what holds it. Read-only.
+ * @summary Requirements-checker rules prepared for the development owner's sign-off (decision 0020)
+ */
+
+export const listOwnerRulesResponseItemsItemManifestHashRegExp = new RegExp('^[a-f0-9]{64}$');
+export const listOwnerRulesResponseItemsItemProfilesRunMin = 0;
+
+export const listOwnerRulesResponseItemsItemChangedProfilesMin = 0;
+
+
+
+export const ListOwnerRulesResponse = zod.object({
+  "items": zod.array(zod.object({
+  "ruleId": zod.string(),
+  "title": zod.string(),
+  "reason": zod.string(),
+  "nextStep": zod.string(),
+  "appliesWhen": zod.string(),
+  "validFrom": zod.string(),
+  "validTo": zod.string().nullable(),
+  "risk": zod.string(),
+  "disclosure": zod.string(),
+  "version": zod.int().min(1),
+  "manifestHash": zod.string().regex(listOwnerRulesResponseItemsItemManifestHashRegExp),
+  "live": zod.union([zod.object({
+  "version": zod.int(),
+  "manifestHash": zod.string()
+}),zod.null()]),
+  "holds": zod.array(zod.string()),
+  "checks": zod.array(zod.object({
+  "id": zod.enum(['controlling_text', 'amendments', 'effective_dates', 'exceptions', 'jurisdiction']),
+  "label": zod.string()
+})),
+  "sources": zod.array(zod.object({
+  "title": zod.string(),
+  "url": zod.string().nullable(),
+  "locator": zod.string(),
+  "quote": zod.string(),
+  "watched": zod.boolean(),
+  "checkedAt": zod.string().nullable(),
+  "failure": zod.string().nullable(),
+  "current": zod.boolean()
+})),
+  "scenarios": zod.array(zod.object({
+  "id": zod.string(),
+  "critical": zod.boolean(),
+  "expectedLabel": zod.string().nullable(),
+  "actualLabel": zod.string().nullable(),
+  "passed": zod.boolean()
+})),
+  "profilesRun": zod.int().min(listOwnerRulesResponseItemsItemProfilesRunMin),
+  "changedProfiles": zod.int().min(listOwnerRulesResponseItemsItemChangedProfilesMin)
+}))
+})
+
+
+/**
+ * @summary Have the daily source check watch a prepared rule's official sources
+ */
+export const watchOwnerRuleSourcesPathRuleIdRegExp = new RegExp('^[A-Za-z0-9._-]{1,100}$');
+
+
+export const WatchOwnerRuleSourcesParams = zod.object({
+  "ruleId": zod.coerce.string().regex(watchOwnerRuleSourcesPathRuleIdRegExp)
+})
+
+export const WatchOwnerRuleSourcesBody = zod.object({
+  "watch": zod.enum(['official_sources'])
+})
+
+
+export const watchOwnerRuleSourcesResponseManifestHashRegExp = new RegExp('^[a-f0-9]{64}$');
+export const watchOwnerRuleSourcesResponseProfilesRunMin = 0;
+
+export const watchOwnerRuleSourcesResponseChangedProfilesMin = 0;
+
+
+
+export const WatchOwnerRuleSourcesResponse = zod.object({
+  "ruleId": zod.string(),
+  "title": zod.string(),
+  "reason": zod.string(),
+  "nextStep": zod.string(),
+  "appliesWhen": zod.string(),
+  "validFrom": zod.string(),
+  "validTo": zod.string().nullable(),
+  "risk": zod.string(),
+  "disclosure": zod.string(),
+  "version": zod.int().min(1),
+  "manifestHash": zod.string().regex(watchOwnerRuleSourcesResponseManifestHashRegExp),
+  "live": zod.union([zod.object({
+  "version": zod.int(),
+  "manifestHash": zod.string()
+}),zod.null()]),
+  "holds": zod.array(zod.string()),
+  "checks": zod.array(zod.object({
+  "id": zod.enum(['controlling_text', 'amendments', 'effective_dates', 'exceptions', 'jurisdiction']),
+  "label": zod.string()
+})),
+  "sources": zod.array(zod.object({
+  "title": zod.string(),
+  "url": zod.string().nullable(),
+  "locator": zod.string(),
+  "quote": zod.string(),
+  "watched": zod.boolean(),
+  "checkedAt": zod.string().nullable(),
+  "failure": zod.string().nullable(),
+  "current": zod.boolean()
+})),
+  "scenarios": zod.array(zod.object({
+  "id": zod.string(),
+  "critical": zod.boolean(),
+  "expectedLabel": zod.string().nullable(),
+  "actualLabel": zod.string().nullable(),
+  "passed": zod.boolean()
+})),
+  "profilesRun": zod.int().min(watchOwnerRuleSourcesResponseProfilesRunMin),
+  "changedProfiles": zod.int().min(watchOwnerRuleSourcesResponseChangedProfilesMin)
+})
+
+
+/**
+ * @summary Sign and release a prepared rule's version, or withdraw a released one
+ */
+export const decideOwnerRulePathRuleIdRegExp = new RegExp('^[A-Za-z0-9._-]{1,100}$');
+
+
+export const DecideOwnerRuleParams = zod.object({
+  "ruleId": zod.coerce.string().regex(decideOwnerRulePathRuleIdRegExp)
+})
+
+
+export const decideOwnerRuleBodyManifestHashRegExp = new RegExp('^[a-f0-9]{64}$');
+export const decideOwnerRuleBodyConfirmedChecksMax = 5;
+
+
+
+export const DecideOwnerRuleBody = zod.object({
+  "action": zod.enum(['sign', 'withdraw']),
+  "version": zod.int().min(1),
+  "manifestHash": zod.string().regex(decideOwnerRuleBodyManifestHashRegExp),
+  "confirmedChecks": zod.array(zod.enum(['controlling_text', 'amendments', 'effective_dates', 'exceptions', 'jurisdiction'])).max(decideOwnerRuleBodyConfirmedChecksMax),
+  "confirmed": zod.literal(true)
+})
+
+export const DecideOwnerRuleResponse = zod.object({
+  "ruleId": zod.string(),
+  "version": zod.int(),
+  "state": zod.enum(['published', 'withdrawn']),
+  "superseded": zod.array(zod.int())
+})
+
+
 export const getCorrectionNoticesQueryPageDefault = 1;
 export const getCorrectionNoticesQueryPageMax = 10000;
 

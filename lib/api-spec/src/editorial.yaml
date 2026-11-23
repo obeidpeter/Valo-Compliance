@@ -23,6 +23,63 @@ paths:
         "401": { description: Sign-in required }
         "403": { description: Active content role and recent MFA required }
         "404": { description: No such version }
+  /admin/owner-rules:
+    get:
+      operationId: listOwnerRules
+      tags: [staff]
+      summary: Requirements-checker rules prepared for the development owner's sign-off (decision 0020)
+      description: >-
+        Each rule as the owner would sign it now: what it tells a customer, its sources and their
+        checks, its scenarios, how many saved results it would change, and what holds it. Read-only.
+      responses:
+        "200":
+          description: The prepared rules. Nothing is released.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OwnerRulePage" }
+        "403": { description: Recently verified development owner required }
+  /admin/owner-rules/{ruleId}/source-watches:
+    post:
+      operationId: watchOwnerRuleSources
+      tags: [staff]
+      summary: Have the daily source check watch a prepared rule's official sources
+      parameters:
+        - { name: ruleId, in: path, required: true, schema: { type: string, pattern: "^[A-Za-z0-9._-]{1,100}$" } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/OwnerRuleSourceWatch" }
+      responses:
+        "200":
+          description: The rule, with its sources watched. Nothing is fetched or released.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OwnerRuleItem" }
+        "403": { description: Recently verified development owner required }
+        "404": { description: No rule is prepared under that name }
+  /admin/owner-rules/{ruleId}/decisions:
+    post:
+      operationId: decideOwnerRule
+      tags: [staff]
+      summary: Sign and release a prepared rule's version, or withdraw a released one
+      parameters:
+        - { name: ruleId, in: path, required: true, schema: { type: string, pattern: "^[A-Za-z0-9._-]{1,100}$" } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/OwnerRuleDecision" }
+      responses:
+        "200":
+          description: The released or withdrawn version
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OwnerRuleReceipt" }
+        "403": { description: Recently verified development owner required }
+        "404": { description: No rule is prepared under that name }
+        "409": { description: "The rule, its sources or its release changed, or something holds it" }
+        "422": { description: A confirmation is missing }
   /workspace/correction-notices: {"get": {"operationId": "getCorrectionNotices", "tags": ["workspace"], "parameters": [{"name": "page", "in": "query", "schema": {"type": "integer", "minimum": 1, "maximum": 10000, "default": 1}}], "responses": {"200": {"description": "Current authorized result. No publication or spending approval is granted.", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/CorrectionNotices"}}}}, "401": {"description": "Sign-in required"}, "403": {"description": "Active area role and recent MFA required"}, "409": {"description": "Changed version or request-key conflict"}}}}
 schemas:
   SourceControlAction: {"oneOf": [{"type": "object", "required": ["requestKey", "reason", "action", "sourceId"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["watch_source"]}, "sourceId": {"type": "string", "minLength": 1, "maxLength": 100}}, "additionalProperties": false}, {"type": "object", "required": ["requestKey", "reason", "action", "kind", "id", "version"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["hold_version"]}, "kind": {"type": "string", "enum": ["content", "rule"]}, "id": {"type": "string", "format": "uuid"}, "version": {"type": "integer", "minimum": 1}}, "additionalProperties": false}, {"type": "object", "required": ["requestKey", "reason", "action", "kind", "id", "version"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["withdraw_version"]}, "kind": {"type": "string", "enum": ["content", "rule"]}, "id": {"type": "string", "format": "uuid"}, "version": {"type": "integer", "minimum": 1}}, "additionalProperties": false}, {"type": "object", "required": ["requestKey", "reason", "action", "service"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["pause_service"]}, "service": {"type": "string", "enum": ["ai", "checkout"]}}, "additionalProperties": false}, {"type": "object", "required": ["requestKey", "reason", "action", "service"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["resume_service"]}, "service": {"type": "string", "enum": ["ai", "checkout"]}}, "additionalProperties": false}]}
@@ -116,3 +173,88 @@ schemas:
       notice: { type: string }
   CorrectionNotice: {"type": "object", "required": ["id", "entityKind", "entityId", "message", "createdAt"], "properties": {"id": {"type": "string", "format": "uuid"}, "entityKind": {"type": "string"}, "entityId": {"type": "string", "format": "uuid"}, "message": {"type": "string"}, "createdAt": {"type": "string", "format": "date-time"}}}
   CorrectionNotices: {"type": "object", "required": ["page", "hasMore", "notices"], "properties": {"page": {"type": "integer"}, "hasMore": {"type": "boolean"}, "notices": {"type": "array", "items": {"$ref": "#/components/schemas/CorrectionNotice"}}}}
+  OwnerRulePage:
+    type: object
+    required: [items]
+    properties:
+      items: { type: array, items: { $ref: "#/components/schemas/OwnerRuleItem" } }
+  OwnerRuleItem:
+    type: object
+    required:
+      [ruleId, title, reason, nextStep, appliesWhen, validFrom, validTo, risk, disclosure, version, manifestHash, live, holds, checks, sources, scenarios, profilesRun, changedProfiles]
+    properties:
+      ruleId: { type: string }
+      title: { type: string }
+      reason: { type: string }
+      nextStep: { type: string }
+      appliesWhen: { type: string }
+      validFrom: { type: string }
+      validTo: { type: [string, "null"] }
+      risk: { type: string }
+      disclosure: { type: string }
+      version: { type: integer, minimum: 1 }
+      manifestHash: { type: string, pattern: "^[a-f0-9]{64}$" }
+      live:
+        anyOf:
+          - type: object
+            required: [version, manifestHash]
+            properties: { version: { type: integer }, manifestHash: { type: string } }
+          - { type: "null" }
+      holds: { type: array, items: { type: string } }
+      checks: { type: array, items: { $ref: "#/components/schemas/OwnerRuleCheck" } }
+      sources: { type: array, items: { $ref: "#/components/schemas/OwnerRuleSource" } }
+      scenarios: { type: array, items: { $ref: "#/components/schemas/OwnerRuleScenario" } }
+      profilesRun: { type: integer, minimum: 0 }
+      changedProfiles: { type: integer, minimum: 0 }
+  OwnerRuleCheck:
+    type: object
+    required: [id, label]
+    properties:
+      id: { $ref: "#/components/schemas/OwnerRuleCheckId" }
+      label: { type: string }
+  OwnerRuleCheckId:
+    type: string
+    enum: [controlling_text, amendments, effective_dates, exceptions, jurisdiction]
+  OwnerRuleSource:
+    type: object
+    required: [title, url, locator, quote, watched, checkedAt, failure, current]
+    properties:
+      title: { type: string }
+      url: { type: [string, "null"] }
+      locator: { type: string }
+      quote: { type: string }
+      watched: { type: boolean }
+      checkedAt: { type: [string, "null"] }
+      failure: { type: [string, "null"] }
+      current: { type: boolean }
+  OwnerRuleScenario:
+    type: object
+    required: [id, critical, expectedLabel, actualLabel, passed]
+    properties:
+      id: { type: string }
+      critical: { type: boolean }
+      expectedLabel: { type: [string, "null"] }
+      actualLabel: { type: [string, "null"] }
+      passed: { type: boolean }
+  OwnerRuleSourceWatch:
+    type: object
+    required: [watch]
+    properties:
+      watch: { type: string, enum: [official_sources] }
+  OwnerRuleDecision:
+    type: object
+    required: [action, version, manifestHash, confirmedChecks, confirmed]
+    properties:
+      action: { type: string, enum: [sign, withdraw] }
+      version: { type: integer, minimum: 1 }
+      manifestHash: { type: string, pattern: "^[a-f0-9]{64}$" }
+      confirmedChecks: { type: array, maxItems: 5, items: { $ref: "#/components/schemas/OwnerRuleCheckId" } }
+      confirmed: { type: boolean, enum: [true] }
+  OwnerRuleReceipt:
+    type: object
+    required: [ruleId, version, state, superseded]
+    properties:
+      ruleId: { type: string }
+      version: { type: integer }
+      state: { type: string, enum: [published, withdrawn] }
+      superseded: { type: array, items: { type: integer } }
