@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { paginateReleasedItems } from "./valo-catalogue";
 import { manualCatalogue } from "./manual-presentation";
+import { escapeLikePattern } from "../manual-library";
 import { verifiedRightsApplicability } from "../publication/rights-applicability";
 test("synthetic already-eligible catalogue metadata produces nonzero counts, filters and pagination", () => {
   const rows = Array.from({ length: 23 }, (_, i) => ({
@@ -128,4 +129,9 @@ test("manualCatalogue maps regulatory articles to guidance, uses sourceCheckedAt
     filtered.items.map((item) => item.title),
     ["Business name registration"],
   );
+});
+
+test("escapeLikePattern escapes SQL wildcards and backslashes literally", () => {
+  assert.equal(escapeLikePattern("100% tax_check\\draft"), "100\\% tax\\_check\\\\draft");
+  assert.equal(escapeLikePattern("Invoice template"), "Invoice template");
 });

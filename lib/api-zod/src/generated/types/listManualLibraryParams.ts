@@ -5,8 +5,16 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { ListManualLibraryKind } from './listManualLibraryKind';
+import type { ListManualLibraryState } from './listManualLibraryState';
 
 export type ListManualLibraryParams = {
   /** @minimum 1 */
   page?: number;
+  /** @maxLength 140 */
+  q?: string;
+  kind?: ListManualLibraryKind;
+  state?: ListManualLibraryState;
+  /** @maxLength 80 */
+  industry?: string;
 };

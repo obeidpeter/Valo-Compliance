@@ -3430,10 +3430,18 @@ export const DecideOwnerGuidanceResponse = zod.object({
 
 export const listManualLibraryQueryPageDefault = 1;
 
+export const listManualLibraryQueryQMax = 140;
+
+export const listManualLibraryQueryIndustryMax = 80;
+
 
 
 export const ListManualLibraryQueryParams = zod.object({
-  "page": zod.coerce.number().int().min(1).default(listManualLibraryQueryPageDefault)
+  "page": zod.coerce.number().int().min(1).default(listManualLibraryQueryPageDefault),
+  "q": zod.coerce.string().max(listManualLibraryQueryQMax).optional(),
+  "kind": zod.enum(['practical_guide', 'industry_introduction', 'template', 'premium_template', 'regulatory_article']).optional(),
+  "state": zod.enum(['draft', 'published', 'replaced', 'withdrawn']).optional(),
+  "industry": zod.coerce.string().max(listManualLibraryQueryIndustryMax).optional()
 })
 
 export const ListManualLibraryResponse = zod.object({

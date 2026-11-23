@@ -6,7 +6,10 @@ import {
 import { releasedManualEntries } from "../manual-library";
 import { manualCatalogue } from "./manual-presentation";
 export async function publicDiscovery() {
-  const [existing, manual] = await Promise.all([liveReleasedVersions(), releasedManualEntries()]);
+  const [existing, manual] = await Promise.all([
+    liveReleasedVersions(),
+    releasedManualEntries({ summaryOnly: true }),
+  ]);
   const released = [...projectReleasedCatalogue(existing), ...manual.map(manualCatalogue)];
   return {
     items: [...released, ...directorySearchItems()]

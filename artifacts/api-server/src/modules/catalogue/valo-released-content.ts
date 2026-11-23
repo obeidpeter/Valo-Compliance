@@ -184,7 +184,10 @@ export function operationalPresentation(templateId: string) {
   };
 }
 export async function liveCoverage() {
-  const [existing, manual] = await Promise.all([liveReleasedVersions(), releasedManualEntries()]);
+  const [existing, manual] = await Promise.all([
+    liveReleasedVersions(),
+    releasedManualEntries({ summaryOnly: true }),
+  ]);
   return coveragePlan([
     ...existing.map((row) => {
       const c = publicationSchema.parse(row.bundle).candidate;
@@ -289,7 +292,10 @@ export function directorySearchItems(): ReleasedLibraryItem[] {
   ];
 }
 export async function releasedCatalogue(query: CatalogueQuery = {}) {
-  const [all, manual] = await Promise.all([liveReleasedVersions(), releasedManualEntries()]);
+  const [all, manual] = await Promise.all([
+    liveReleasedVersions(),
+    releasedManualEntries({ summaryOnly: true }),
+  ]);
   const items = [...projectReleasedCatalogue(all), ...manual.map(manualCatalogue)];
   const reviewedIds = new Set(all.map((row) => row.templateId));
   const manualTitles = new Set(
