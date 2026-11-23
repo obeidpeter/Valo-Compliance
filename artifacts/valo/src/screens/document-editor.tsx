@@ -1,7 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
-import { Check, Columns2, Download, List, Pilcrow, Printer, Redo2, Save, Table2, Undo2 } from "lucide-react";
+import {
+  Check,
+  Columns2,
+  Copy,
+  Download,
+  List,
+  Pilcrow,
+  Printer,
+  Redo2,
+  Save,
+  Table2,
+  Undo2,
+} from "lucide-react";
 import {
   useGetDocument,
   useListDocumentRevisions,
@@ -18,7 +30,13 @@ import {
 import { ErrorState, Notice, Skel } from "@/components/states";
 import { FIELD_LABELS, describeError, missingFieldItems, newBlockId } from "@/lib/api";
 import { suggestedDocumentTitle } from "@/lib/document-list-helpers";
-import { applyIssuerDetailsToGuided, extractReusableIssuerDetails } from "@/lib/guided-prefill";
+import {
+  applyCustomerDetailsToGuided,
+  applyIssuerDetailsToGuided,
+  extractReusableCustomerDetails,
+  extractReusableIssuerDetails,
+  formatDocumentPlainText,
+} from "@/lib/guided-prefill";
 import { cn } from "@/lib/utils";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { DocumentExports } from "@/components/document-exports";
@@ -80,7 +98,9 @@ export default function DocumentEditor({ id }: { id: string }) {
   const leaveAfterSave = useRef(false);
   const [leaveError, setLeaveError] = useState("");
   const [reuseDocId, setReuseDocId] = useState("");
+  const [reuseCustomerKey, setReuseCustomerKey] = useState("");
   const [reuseNotice, setReuseNotice] = useState("");
+  const [copiedPreview, setCopiedPreview] = useState(false);
   const [asking, setAsking] = useState<Asking | null>(null);
   const online = useOnlineStatus();
   const wasOffline = useRef(false);
@@ -553,6 +573,36 @@ export default function DocumentEditor({ id }: { id: string }) {
   const selectedSource =
     reusableSources.find((entry) => entry.doc.id === reuseDocId) ?? reusableSources[0] ?? null;
 
+  const reusableCustomers = (() => {
+    if (!guided) return [];
+    const seen = new Set<string>();
+    const out: {
+      key: string;
+      label: string;
+      details: ReturnType<typeof extractReusableCustomerDetails>;
+    }[] = [];
+    for (const candidate of otherDocs.data ?? []) {
+      if (candidate.id === id) continue;
+      const details = extractReusableCustomerDetails(candidate);
+      const applicable = applyCustomerDetailsToGuided(guided, details).appliedLabels;
+      const name = details.recipientName?.trim();
+      if (!applicable.length || !name) continue;
+      const key = `${name.toLowerCase()}|${(details.recipientAddress ?? "").trim().toLowerCase()}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push({
+        key,
+        label: details.recipientAddress
+          ? `${name} — ${details.recipientAddress.split("\n")[0]!.slice(0, 40)}`
+          : name,
+        details,
+      });
+    }
+    return out;
+  })();
+  const selectedCustomer =
+    reusableCustomers.find((entry) => entry.key === reuseCustomerKey) ?? reusableCustomers[0] ?? null;
+
   function applySelectedIssuerDetails() {
     if (!guided || !content || !selectedSource) return;
     const { data, appliedLabels } = applyIssuerDetailsToGuided(guided, selectedSource.details);
@@ -560,6 +610,16 @@ export default function DocumentEditor({ id }: { id: string }) {
     update({ title, content: compileGuidedContent(data, content) as CanonicalDocument });
     setReuseNotice(
       `Filled ${appliedLabels.join(", ")} from "${selectedSource.doc.title}". Review these details before downloading.`,
+    );
+  }
+
+  function applySelectedCustomerDetails() {
+    if (!guided || !content || !selectedCustomer) return;
+    const { data, appliedLabels } = applyCustomerDetailsToGuided(guided, selectedCustomer.details);
+    if (!appliedLabels.length) return;
+    update({ title, content: compileGuidedContent(data, content) as CanonicalDocument });
+    setReuseNotice(
+      `Filled ${appliedLabels.join(", ")} for "${selectedCustomer.details.recipientName}". Review before downloading.`,
     );
   }
 
@@ -800,14 +860,38 @@ export default function DocumentEditor({ id }: { id: string }) {
                 </button>
               )}
               {tab === "preview" && (
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm"
-                  onClick={() => window.print()}
-                  data-testid="button-toolbar-print"
-                >
-                  <Printer className="h-4 w-4" aria-hidden="true" /> Print
-                </button>
+                <>
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    onClick={async () => {
+                      const plain = formatDocumentPlainText(title || saved.title, content);
+                      try {
+                        await navigator.clipboard.writeText(plain);
+                        setCopiedPreview(true);
+                        setTimeout(() => setCopiedPreview(false), 2500);
+                      } catch {
+                        // Clipboard access may be blocked in restricted contexts.
+                      }
+                    }}
+                    data-testid="button-copy-preview-text"
+                  >
+                    {copiedPreview ? (
+                      <Check className="h-4 w-4" aria-hidden="true" />
+                    ) : (
+                      <Copy className="h-4 w-4" aria-hidden="true" />
+                    )}
+                    {copiedPreview ? "Copied text" : "Copy text"}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    onClick={() => window.print()}
+                    data-testid="button-toolbar-print"
+                  >
+                    <Printer className="h-4 w-4" aria-hidden="true" /> Print
+                  </button>
+                </>
               )}
               <a href="#private-exports" className="btn btn-ghost btn-sm" data-testid="button-export">
                 <Download className="h-4 w-4" aria-hidden="true" /> Download
@@ -860,49 +944,76 @@ export default function DocumentEditor({ id }: { id: string }) {
                 )}
                 {guided ? (
                   <>
-                    {reusableSources.length > 0 && !guidedError && (
+                    {(reusableSources.length > 0 || reusableCustomers.length > 0) && !guidedError && (
                       <div
-                        className="mb-6 rounded-2xl border border-border bg-sidebar/40 p-4"
+                        className="mb-6 grid gap-4 rounded-2xl border border-border bg-sidebar/40 p-4"
                         data-testid="bar-reuse-issuer"
                       >
-                        <p className="text-sm font-medium">Reuse your business details</p>
-                        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                          Copy only your saved sender details (such as business name, address, or payment
-                          instructions) from a previous document. Customer details, references, dates, and
-                          amounts stay untouched.
-                        </p>
-                        <div className="mt-3 flex flex-wrap items-center gap-2">
-                          <label className="sr-only" htmlFor="select-reuse-issuer">
-                            Choose a previous document
-                          </label>
-                          <select
-                            id="select-reuse-issuer"
-                            className="field min-w-[12rem] flex-1 !min-h-9 !py-1.5 text-sm"
-                            value={selectedSource?.doc.id ?? ""}
-                            onChange={(e) => setReuseDocId(e.target.value)}
-                            data-testid="select-reuse-issuer"
-                          >
-                            {reusableSources.map((entry) => (
-                              <option key={entry.doc.id} value={entry.doc.id}>
-                                {entry.doc.title}
-                              </option>
-                            ))}
-                          </select>
-                          <button
-                            type="button"
-                            className="btn btn-ghost btn-sm"
-                            onClick={applySelectedIssuerDetails}
-                            data-testid="button-apply-reuse-issuer"
-                          >
-                            Fill sender details
-                          </button>
+                        <div>
+                          <p className="text-sm font-medium">Reuse saved details</p>
+                          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                            Fill your sender details or a repeat customer from earlier documents without
+                            retyping. References, dates, and amounts stay untouched.
+                          </p>
                         </div>
+                        {reusableSources.length > 0 && (
+                          <div className="flex flex-wrap items-center gap-2">
+                            <label className="sr-only" htmlFor="select-reuse-issuer">
+                              Choose a previous document for sender details
+                            </label>
+                            <select
+                              id="select-reuse-issuer"
+                              className="field min-w-[12rem] flex-1 !min-h-9 !py-1.5 text-sm"
+                              value={selectedSource?.doc.id ?? ""}
+                              onChange={(e) => setReuseDocId(e.target.value)}
+                              data-testid="select-reuse-issuer"
+                            >
+                              {reusableSources.map((entry) => (
+                                <option key={entry.doc.id} value={entry.doc.id}>
+                                  {entry.doc.title}
+                                </option>
+                              ))}
+                            </select>
+                            <button
+                              type="button"
+                              className="btn btn-ghost btn-sm"
+                              onClick={applySelectedIssuerDetails}
+                              data-testid="button-apply-reuse-issuer"
+                            >
+                              Fill sender details
+                            </button>
+                          </div>
+                        )}
+                        {reusableCustomers.length > 0 && (
+                          <div className="flex flex-wrap items-center gap-2" data-testid="bar-reuse-customer">
+                            <label className="sr-only" htmlFor="select-reuse-customer">
+                              Choose a repeat customer
+                            </label>
+                            <select
+                              id="select-reuse-customer"
+                              className="field min-w-[12rem] flex-1 !min-h-9 !py-1.5 text-sm"
+                              value={selectedCustomer?.key ?? ""}
+                              onChange={(e) => setReuseCustomerKey(e.target.value)}
+                              data-testid="select-reuse-customer"
+                            >
+                              {reusableCustomers.map((entry) => (
+                                <option key={entry.key} value={entry.key}>
+                                  {entry.label}
+                                </option>
+                              ))}
+                            </select>
+                            <button
+                              type="button"
+                              className="btn btn-ghost btn-sm"
+                              onClick={applySelectedCustomerDetails}
+                              data-testid="button-apply-reuse-customer"
+                            >
+                              Fill customer details
+                            </button>
+                          </div>
+                        )}
                         {reuseNotice && (
-                          <p
-                            role="status"
-                            className="mt-2 text-xs text-primary"
-                            data-testid="status-reuse-issuer"
-                          >
+                          <p role="status" className="text-xs text-primary" data-testid="status-reuse-issuer">
                             {reuseNotice}
                           </p>
                         )}

@@ -41,3 +41,22 @@ export const saidAs = (issue: string) => (issue === NOT_KOBO ? NOT_AN_AMOUNT : i
 
 /** The help under a money question. The definitions' own explains kobo, which is no longer typed. */
 export const MONEY_HELP = "Type the amount yourself. Valo works out no rate or amount for you.";
+
+const QTY_DECIMAL = /^(\d{1,7})(?:\.(\d{1,3}))?$/;
+
+/**
+ * Exact BigInt line subtotal in whole kobo for `quantity * unitPriceKobo` (supporting up to 3
+ * decimal places on quantity, rounded half-up to the nearest kobo). Returns null if invalid.
+ */
+export function lineSubtotalKobo(quantity: string, unitPriceKobo: string): string | null {
+  const qMatch = QTY_DECIMAL.exec(quantity.trim());
+  if (!qMatch || !KOBO.test(unitPriceKobo.trim())) return null;
+  const whole = qMatch[1]!;
+  const frac = (qMatch[2] ?? "").padEnd(3, "0");
+  const scaledQty = BigInt(whole + frac);
+  if (scaledQty <= 0n) return null;
+  const price = BigInt(unitPriceKobo.trim());
+  const raw = scaledQty * price;
+  const rounded = (raw + 500n) / 1000n;
+  return rounded.toString();
+}

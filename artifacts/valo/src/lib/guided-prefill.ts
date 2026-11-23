@@ -1,7 +1,14 @@
-import type { BusinessDocument, Profile } from "@workspace/api-client-react";
+import type { BusinessDocument, CanonicalDocument, Profile } from "@workspace/api-client-react";
 import type { GuidedData, GuidedTemplateId } from "@workspace/valo-core/guided";
 import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
-import { emptyGuidedData, guidedDataFromBlocks, guidedFieldIssue } from "@workspace/valo-core/guided-runtime";
+import {
+  emptyGuidedData,
+  guidedDataFromBlocks,
+  guidedFieldIssue,
+  guidedRenderableBlocks,
+} from "@workspace/valo-core/guided-runtime";
+import { FIELD_LABELS } from "./api";
+import { formatDay } from "./format";
 
 /**
  * Sender/issuer fields that a business owner may explicitly choose to copy from an earlier saved
@@ -19,6 +26,18 @@ export const REUSABLE_ISSUER_FIELD_IDS = [
 export type ReusableIssuerFieldId = (typeof REUSABLE_ISSUER_FIELD_IDS)[number];
 
 export type ReusableIssuerDetails = Partial<Record<ReusableIssuerFieldId, string>>;
+
+/** Counterparty/customer fields that a business owner may explicitly choose to reuse for repeat billing. */
+export const REUSABLE_CUSTOMER_FIELD_IDS = [
+  "recipientName",
+  "recipientAddress",
+  "recipientLegalForm",
+  "recipientRegistration",
+] as const;
+
+export type ReusableCustomerFieldId = (typeof REUSABLE_CUSTOMER_FIELD_IDS)[number];
+
+export type ReusableCustomerDetails = Partial<Record<ReusableCustomerFieldId, string>>;
 
 /**
  * Returns the trimmed saved business name when it is valid to prefill as a document's issuing
@@ -97,4 +116,91 @@ export function applyIssuerDetailsToGuided(
   }
 
   return { data: { ...current, values }, appliedLabels };
+}
+
+/** Extracts counterparty/customer details from a saved document for opt-in repeat billing reuse. */
+export function extractReusableCustomerDetails(
+  doc: Pick<BusinessDocument, "content">,
+): ReusableCustomerDetails {
+  const details: ReusableCustomerDetails = {};
+  let guided: GuidedData | null = null;
+  try {
+    guided = guidedDataFromBlocks(doc.content.blocks);
+  } catch {
+    // Non-guided documents fall back to header recipientName.
+    guided = null;
+  }
+  if (guided) {
+    for (const id of REUSABLE_CUSTOMER_FIELD_IDS) {
+      const value = guided.values[id]?.trim();
+      if (value) details[id] = value;
+    }
+    return details;
+  }
+  const recipientName = doc.content.fields.recipientName.trim();
+  if (recipientName) details.recipientName = recipientName;
+  return details;
+}
+
+/** Applies explicitly selected customer/counterparty details onto a guided document's answers. */
+export function applyCustomerDetailsToGuided(
+  current: GuidedData,
+  details: ReusableCustomerDetails,
+): { data: GuidedData; appliedLabels: string[] } {
+  const spec = GUIDED_SPECS_V1[current.templateId];
+  const values = { ...current.values };
+  const appliedLabels: string[] = [];
+
+  for (const id of REUSABLE_CUSTOMER_FIELD_IDS) {
+    const candidate = details[id]?.trim();
+    if (!candidate) continue;
+    const field = spec.fields.find((item) => item.id === id);
+    if (!field || guidedFieldIssue(field, candidate)) continue;
+    values[id] = candidate;
+    appliedLabels.push(field.label);
+  }
+
+  return { data: { ...current, values }, appliedLabels };
+}
+
+/** Formats a clean plain-text draft summary of a document for quick copy-paste into WhatsApp or email. */
+export function formatDocumentPlainText(title: string, content: CanonicalDocument): string {
+  const lines: string[] = [
+    `${(title.trim() || "Untitled document").toUpperCase()} (DRAFT)`,
+    "Your own draft — not reviewed by Valo and not legal, tax or payment confirmation.",
+    "",
+  ];
+  const guided = content.blocks.some((b) => b.id.startsWith("guided-"));
+  if (!guided) {
+    const fields = content.fields;
+    for (const key of ["issuerName", "recipientName", "documentNumber", "issueDate", "dueDate"] as const) {
+      const raw = fields[key]?.trim();
+      if (!raw) continue;
+      const shown = key === "issueDate" || key === "dueDate" ? formatDay(raw) : raw;
+      lines.push(`${FIELD_LABELS[key]}: ${shown}`);
+    }
+    if (lines[lines.length - 1] !== "") lines.push("");
+  }
+
+  for (const block of guidedRenderableBlocks(content)) {
+    if (block.type === "table") {
+      for (const row of block.rows) {
+        lines.push(row.filter(Boolean).join(" | "));
+      }
+      lines.push("");
+    } else if (block.type === "list") {
+      for (const item of block.text.split("\n").filter((l) => l.trim())) {
+        lines.push(`- ${item.trim()}`);
+      }
+      lines.push("");
+    } else if (block.text.trim()) {
+      lines.push(block.text.trim(), "");
+    }
+  }
+
+  if (!guided && content.fields.notes.trim()) {
+    lines.push("Notes:", content.fields.notes.trim());
+  }
+
+  return lines.join("\n").trim();
 }

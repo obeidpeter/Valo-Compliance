@@ -11,8 +11,11 @@ import {
 } from "@workspace/valo-core/guided-runtime";
 import { blankContent } from "./api";
 import {
+  applyCustomerDetailsToGuided,
   applyIssuerDetailsToGuided,
+  extractReusableCustomerDetails,
   extractReusableIssuerDetails,
+  formatDocumentPlainText,
   prefillGuidedData,
   savedBusinessName,
 } from "./guided-prefill";
@@ -93,4 +96,29 @@ test("extractReusableIssuerDetails and applyIssuerDetailsToGuided copy only vali
   assert.equal(applied.data.values.recipientName, "");
   assert.equal(applied.data.values.documentNumber, "");
   assert.equal(applied.appliedLabels.length, 2);
+});
+
+test("extractReusableCustomerDetails, applyCustomerDetailsToGuided, and formatDocumentPlainText work cleanly", () => {
+  const source = emptyGuidedData("TPL-01");
+  source.values.issuerName = "Synthetic Trading Ltd";
+  source.values.recipientName = "Synthetic Customer Enterprises";
+  source.values.recipientAddress = "9 Sample Crescent, Yaba, Lagos";
+  source.values.documentNumber = "INV-007";
+  const compiled = compileGuidedContent(source);
+
+  const customer = extractReusableCustomerDetails({ content: compiled });
+  assert.deepEqual(customer, {
+    recipientName: "Synthetic Customer Enterprises",
+    recipientAddress: "9 Sample Crescent, Yaba, Lagos",
+  });
+
+  const target = emptyGuidedData("TPL-03");
+  const applied = applyCustomerDetailsToGuided(target, customer);
+  assert.equal(applied.data.values.recipientName, "Synthetic Customer Enterprises");
+  assert.equal(applied.data.values.recipientAddress, "9 Sample Crescent, Yaba, Lagos");
+  assert.equal(applied.data.values.issuerName, "");
+
+  const plain = formatDocumentPlainText("Invoice — Synthetic Customer Enterprises", compiled);
+  assert.match(plain, /\(DRAFT\)/);
+  assert.match(plain, /Synthetic Customer Enterprises/);
 });
