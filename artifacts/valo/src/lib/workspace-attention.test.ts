@@ -27,7 +27,10 @@ test("buildWorkspaceAttention prioritizes overdue tasks, rule-changed reviews, s
     ["overdue-tasks", "review-tasks", "stale-check", "due-soon-tasks"],
   );
   assert.equal(items[0]?.title, "1 overdue task");
+  assert.equal(items[0]?.href, "/workspace/tasks?focus=overdue");
   assert.equal(items[1]?.title, "1 task needs review");
+  assert.equal(items[1]?.href, "/workspace/tasks?focus=review");
   assert.equal(items[2]?.href, "/workspace/checker?prefill=profile");
   assert.equal(items[3]?.title, "1 task due within 7 days");
+  assert.equal(items[3]?.href, "/workspace/tasks?focus=due_soon");
 });

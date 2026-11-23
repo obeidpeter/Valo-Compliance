@@ -34,6 +34,40 @@ export function dueDateUrgency(
 
 export type TaskSortMode = "default" | "due_soonest";
 
+export type TaskListFilter = "open" | "done" | "all";
+
+export type TaskFocus = "all" | "overdue" | "review" | "due_soon";
+
+export const TASK_FOCUS_LABELS: Record<Exclude<TaskFocus, "all">, string> = {
+  overdue: "Overdue",
+  review: "Needs review",
+  due_soon: "Due within 7 days",
+};
+
+export function parseTaskFilter(raw: string | null | undefined): TaskListFilter {
+  if (raw === "done" || raw === "all") return raw;
+  return "open";
+}
+
+export function parseTaskFocus(raw: string | null | undefined): TaskFocus {
+  if (raw === "overdue" || raw === "review" || raw === "due_soon") return raw;
+  return "all";
+}
+
+/** Whether a task belongs in a given urgency focus view (overdue, rule-changed review, or due within 7 days). */
+export function matchesTaskFocus(
+  task: Pick<WorkspaceTask, "dueDate" | "state" | "needsReview">,
+  focus: TaskFocus,
+  today = lagosToday(),
+): boolean {
+  if (focus === "all") return true;
+  const done = task.state === "completed_by_user";
+  if (done) return false;
+  if (focus === "overdue") return dueDateUrgency(task.dueDate, false, today) === "overdue";
+  if (focus === "due_soon") return dueDateUrgency(task.dueDate, false, today) === "due_soon";
+  return Boolean(task.needsReview || task.state === "needs_review");
+}
+
 /** Sorts tasks by earliest due date first (overdue at top, then upcoming, then undated, then done). */
 export function sortTasksByDueDate<T extends Pick<WorkspaceTask, "dueDate" | "state">>(
   tasks: readonly T[],

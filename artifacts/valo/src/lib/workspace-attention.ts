@@ -35,8 +35,8 @@ export function buildWorkspaceAttention(input: {
       tone: "destructive",
       title: overdue === 1 ? "1 overdue task" : `${overdue} overdue tasks`,
       detail: "Review the due date or mark it done if you have already handled it.",
-      actionLabel: "Open tasks",
-      href: "/workspace/tasks",
+      actionLabel: "Open overdue tasks",
+      href: "/workspace/tasks?focus=overdue",
     });
   }
   if (needsReview > 0) {
@@ -46,7 +46,7 @@ export function buildWorkspaceAttention(input: {
       title: needsReview === 1 ? "1 task needs review" : `${needsReview} tasks need review`,
       detail: "A linked rule changed after the task was created.",
       actionLabel: "Review tasks",
-      href: "/workspace/tasks",
+      href: "/workspace/tasks?focus=review",
     });
   }
   if (input.profileMovedAhead) {
@@ -65,8 +65,8 @@ export function buildWorkspaceAttention(input: {
       tone: "ink",
       title: dueSoon === 1 ? "1 task due within 7 days" : `${dueSoon} tasks due within 7 days`,
       detail: "Check your due dates or export them to your calendar.",
-      actionLabel: "View tasks",
-      href: "/workspace/tasks",
+      actionLabel: "View due soon",
+      href: "/workspace/tasks?focus=due_soon",
     });
   }
   return items;

@@ -1,5 +1,5 @@
 import { useMemo, useState, useRef, useCallback, useEffect } from "react";
-import { Link } from "wouter";
+import { Link, useSearch } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowUpDown, CalendarPlus, ListTodo, Plus, Search, X } from "lucide-react";
 import {
@@ -17,18 +17,30 @@ import { EmptyState, ErrorState, Skel } from "@/components/states";
 import { describeError } from "@/lib/api";
 import { buildTasksIcs, downloadIcsFile } from "@/lib/calendar-export";
 import { live } from "@/lib/checker";
-import { sortTasksByDueDate, type TaskSortMode } from "@/lib/date-shortcuts";
+import {
+  TASK_FOCUS_LABELS,
+  matchesTaskFocus,
+  parseTaskFilter,
+  parseTaskFocus,
+  sortTasksByDueDate,
+  type TaskFocus,
+  type TaskListFilter,
+  type TaskSortMode,
+} from "@/lib/date-shortcuts";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useUnsavedNavigation } from "@/lib/use-unsaved-navigation";
 import { UnsavedNavigationDialog } from "@/components/unsaved-navigation-dialog";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 
-type Filter = "open" | "done" | "all";
+type Filter = TaskListFilter;
 
 export default function TasksPage() {
   const qc = useQueryClient();
-  const [filter, setFilter] = useState<Filter>("open");
+  const search = useSearch();
+  const initialParams = useMemo(() => new URLSearchParams(search), [search]);
+  const [filter, setFilter] = useState<Filter>(() => parseTaskFilter(initialParams.get("filter")));
+  const [focus, setFocus] = useState<TaskFocus>(() => parseTaskFocus(initialParams.get("focus")));
   const [page, setPage] = useState(1),
     [editEpoch, setEditEpoch] = useState(0);
   const [pinned, setPinned] = useState<Record<string, WorkspaceTask>>({});
@@ -49,8 +61,11 @@ export default function TasksPage() {
   );
   const [newOpen, setNewOpen] = useState(false);
   const [newDraft, setNewDraft] = useState<TaskDraft>(emptyDraft());
-  const [taskQuery, setTaskQuery] = useState("");
-  const [sortMode, setSortMode] = useState<TaskSortMode>("default");
+  const [taskQuery, setTaskQuery] = useState(() => initialParams.get("q")?.trim() ?? "");
+  const [sortMode, setSortMode] = useState<TaskSortMode>(() => {
+    const startFocus = parseTaskFocus(initialParams.get("focus"));
+    return startFocus === "overdue" || startFocus === "due_soon" ? "due_soonest" : "default";
+  });
   const searchRef = useRef<HTMLInputElement>(null);
   const newDraftRef = useRef(newDraft);
   newDraftRef.current = newDraft;
@@ -72,18 +87,30 @@ export default function TasksPage() {
     for (const task of Object.values(pinned)) if (!all.some((row) => row.id === task.id)) all.push(task);
     return all;
   }, [tasks.data, pinned]);
+  const focusCounts = useMemo(
+    () => ({
+      overdue: rows.filter((t) => matchesTaskFocus(t, "overdue")).length,
+      review: rows.filter((t) => matchesTaskFocus(t, "review")).length,
+      due_soon: rows.filter((t) => matchesTaskFocus(t, "due_soon")).length,
+    }),
+    [rows],
+  );
   const trimmedTaskQuery = taskQuery.trim().toLowerCase();
   const visibleRows = useMemo(() => {
-    const filtered = !trimmedTaskQuery
-      ? rows
-      : rows.filter(
-          (task) =>
-            Boolean(pinned[task.id]) ||
-            task.title.toLowerCase().includes(trimmedTaskQuery) ||
-            (task.notes ?? "").toLowerCase().includes(trimmedTaskQuery),
-        );
+    const filtered = rows.filter((task) => {
+      if (pinned[task.id]) return true;
+      if (focus !== "all" && !matchesTaskFocus(task, focus)) return false;
+      if (!trimmedTaskQuery) return true;
+      return (
+        task.title.toLowerCase().includes(trimmedTaskQuery) ||
+        (task.notes ?? "").toLowerCase().includes(trimmedTaskQuery)
+      );
+    });
     return sortTasksByDueDate(filtered, sortMode);
-  }, [rows, pinned, sortMode, trimmedTaskQuery]);
+  }, [rows, pinned, focus, sortMode, trimmedTaskQuery]);
+  const showFocusBar =
+    filter !== "done" &&
+    (focus !== "all" || focusCounts.overdue > 0 || focusCounts.review > 0 || focusCounts.due_soon > 0);
   const showTaskSearch = rows.length > 2 || Boolean(trimmedTaskQuery);
   useEffect(() => {
     if (!showTaskSearch) return;
@@ -106,6 +133,7 @@ export default function TasksPage() {
     setPinned({});
     setEditEpoch((value) => value + 1);
     setFilter(nextFilter);
+    if (nextFilter === "done") setFocus("all");
     setPage(nextPage);
   }
 
@@ -252,6 +280,50 @@ export default function TasksPage() {
         )}
       </div>
 
+      {showFocusBar && (
+        <div
+          className="mt-3 flex flex-wrap items-center gap-2"
+          role="group"
+          aria-label="Focus on urgent tasks on this page"
+          data-testid="bar-task-focus"
+        >
+          {(["overdue", "review", "due_soon"] as const).map((key) => {
+            const count = focusCounts[key];
+            if (count === 0 && focus !== key) return null;
+            const active = focus === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                aria-pressed={active}
+                onClick={() => setFocus(active ? "all" : key)}
+                className={cn(
+                  "rounded-full border px-3 py-1 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                  active
+                    ? "border-foreground bg-foreground text-background"
+                    : key === "overdue"
+                      ? "border-destructive/35 bg-destructive/5 text-destructive hover:bg-destructive/10"
+                      : "border-border bg-card text-muted-foreground hover:text-foreground",
+                )}
+                data-testid={"filter-task-focus-" + key}
+              >
+                {TASK_FOCUS_LABELS[key]} ({count})
+              </button>
+            );
+          })}
+          {focus !== "all" && (
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm !min-h-7 !px-2.5 text-xs"
+              onClick={() => setFocus("all")}
+              data-testid="button-clear-task-focus"
+            >
+              <X className="h-3.5 w-3.5" aria-hidden="true" /> Show all on page
+            </button>
+          )}
+        </div>
+      )}
+
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
         {showTaskSearch ? (
           <div className="flex min-w-0 flex-1 items-center gap-2 sm:max-w-sm">
@@ -361,8 +433,21 @@ export default function TasksPage() {
           </EmptyState>
         ) : visibleRows.length === 0 ? (
           <div className="surface p-6 text-sm text-muted-foreground" role="status">
-            <p>No tasks on this page match &ldquo;{taskQuery.trim()}&rdquo;.</p>
-            <button type="button" className="btn btn-ghost btn-sm mt-3" onClick={() => setTaskQuery("")}>
+            <p>
+              {trimmedTaskQuery
+                ? `No tasks on this page match "${taskQuery.trim()}".`
+                : focus !== "all"
+                  ? `No tasks on this page match "${TASK_FOCUS_LABELS[focus]}".`
+                  : "No tasks on this page match this filter."}
+            </p>
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm mt-3"
+              onClick={() => {
+                setTaskQuery("");
+                setFocus("all");
+              }}
+            >
               Show all tasks on this page
             </button>
           </div>
