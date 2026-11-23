@@ -4,7 +4,7 @@ import {
   checkPrivacyAudit,
   privacyCaseRecord,
   privacyDetail,
-  readPrivacyCase,
+  readVerifiedPrivacyCase,
   respondPrivacyCase,
 } from "./valo-privacy";
 import { ValoProblem } from "../../platform/valo-problem";
@@ -35,7 +35,10 @@ export async function requesterPrivacyList(identityId: string) {
 }
 export async function requesterPrivacyDetail(identityId: string, id: string) {
   const actor = await requesterCaseActor(identityId, id);
-  return db.transaction(async (tx) => privacyDetail(tx, await readPrivacyCase(tx, id, actor)));
+  return db.transaction(async (tx) => {
+    const { row, events } = await readVerifiedPrivacyCase(tx, id, actor, { forUpdate: false });
+    return privacyDetail(tx, row, events);
+  });
 }
 export async function requesterPrivacyReply(identityId: string, id: string, raw: unknown) {
   return respondPrivacyCase(await requesterCaseActor(identityId, id), id, raw);

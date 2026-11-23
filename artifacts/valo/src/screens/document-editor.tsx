@@ -143,7 +143,14 @@ export default function DocumentEditor({ id }: { id: string }) {
           baseRev.current = d.revision;
           lastSaved.current = sent;
           qc.setQueryData(getGetDocumentQueryKey(id), d);
-          void qc.invalidateQueries({ queryKey: getListDocumentRevisionsQueryKey(id) });
+          const revKey = getListDocumentRevisionsQueryKey(id);
+          if (qc.getQueryData<BusinessDocument[]>(revKey)) {
+            qc.setQueryData<BusinessDocument[]>(revKey, (prev) =>
+              [d, ...(prev ?? []).filter((r) => r.revision !== d.revision)].slice(0, 100),
+            );
+          } else {
+            void qc.invalidateQueries({ queryKey: revKey });
+          }
           void qc.invalidateQueries({ queryKey: getListDocumentsQueryKey() });
           if (latest.current && ser(latest.current) !== sent) {
             setState("dirty");
@@ -320,6 +327,7 @@ export default function DocumentEditor({ id }: { id: string }) {
     const r = await doc.refetch();
     if (r.data) baseRev.current = r.data.revision;
     else if (conflictRev) baseRev.current = conflictRev;
+    void revs.refetch();
     setConflictRev(null);
     setState("dirty");
     doSaveRef.current();
@@ -357,7 +365,14 @@ export default function DocumentEditor({ id }: { id: string }) {
           inFlight.current = false;
           setRestoring(null);
           qc.setQueryData(getGetDocumentQueryKey(id), d);
-          void qc.invalidateQueries({ queryKey: getListDocumentRevisionsQueryKey(id) });
+          const revKey = getListDocumentRevisionsQueryKey(id);
+          if (qc.getQueryData<BusinessDocument[]>(revKey)) {
+            qc.setQueryData<BusinessDocument[]>(revKey, (prev) =>
+              [d, ...(prev ?? []).filter((r) => r.revision !== d.revision)].slice(0, 100),
+            );
+          } else {
+            void qc.invalidateQueries({ queryKey: revKey });
+          }
           void qc.invalidateQueries({ queryKey: getListDocumentsQueryKey() });
           adopt(d);
         },

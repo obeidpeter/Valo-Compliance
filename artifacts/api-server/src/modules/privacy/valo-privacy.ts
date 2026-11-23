@@ -19,7 +19,12 @@ import {
   RespondPrivacyCaseBody,
 } from "@workspace/api-zod";
 import { createTicketInTransaction } from "../support";
-import { authorizeWorkspaceWrite, limitWorkspaceWrite, type WorkspaceActor } from "../workspaces";
+import {
+  authorizeWorkspaceRead,
+  authorizeWorkspaceWrite,
+  limitWorkspaceWrite,
+  type WorkspaceActor,
+} from "../workspaces";
 import { quotaSubjectHash } from "../../lib/valo-quota";
 import { ValoProblem } from "../../platform/valo-problem";
 import { privacyKey, privacySigner } from "../../lib/valo-privacy-keys";
@@ -83,8 +88,13 @@ export async function requirePrivacyStaff(tx: Tx, actor: PrivacyStaffActor) {
   requireFreshStaffSession(actor);
   return role;
 }
-export async function readPrivacyCase(tx: Tx, id: string, actor?: WorkspaceActor) {
-  const [row] = await tx
+export async function readVerifiedPrivacyCase(
+  tx: Tx,
+  id: string,
+  actor?: WorkspaceActor,
+  options: { forUpdate?: boolean } = {},
+) {
+  const base = tx
     .select()
     .from(valoPrivacyCases)
     .where(
@@ -95,11 +105,14 @@ export async function readPrivacyCase(tx: Tx, id: string, actor?: WorkspaceActor
             eq(valoPrivacyCases.requesterIdentityId, actor.identityId),
           )
         : eq(valoPrivacyCases.id, id),
-    )
-    .for("update");
+    );
+  const [row] = await (options.forUpdate === false ? base : base.for("update"));
   if (!row) throw new ValoProblem(404, "Privacy request not found.");
-  await checkPrivacyAudit(tx, row);
-  return row;
+  const events = await checkPrivacyAudit(tx, row);
+  return { row, events };
+}
+export async function readPrivacyCase(tx: Tx, id: string, actor?: WorkspaceActor) {
+  return (await readVerifiedPrivacyCase(tx, id, actor, { forUpdate: true })).row;
 }
 export async function checkPrivacyAudit(tx: Tx, row: PrivacyRow) {
   const events = await tx
@@ -107,6 +120,14 @@ export async function checkPrivacyAudit(tx: Tx, row: PrivacyRow) {
     .from(valoPrivacyEvents)
     .where(and(eq(valoPrivacyEvents.caseId, row.id), eq(valoPrivacyEvents.workspaceId, row.workspaceId)))
     .orderBy(asc(valoPrivacyEvents.sequence));
+  const keys = new Map<string, string>();
+  const keyFor = async (version: string) => {
+    const cached = keys.get(version);
+    if (cached !== undefined) return cached;
+    const loaded = await privacyKey(tx, version);
+    keys.set(version, loaded);
+    return loaded;
+  };
   let previous = GENESIS;
   for (let n = 0; n < events.length; n++) {
     const e = events[n]!;
@@ -116,7 +137,7 @@ export async function checkPrivacyAudit(tx: Tx, row: PrivacyRow) {
     if (
       e.sequence !== n + 1 ||
       e.previousHash !== previous ||
-      (!redacted && !privacyAuditEqual(e.eventHash, privacyAuditHash(e, await privacyKey(tx, e.keyVersion))))
+      (!redacted && !privacyAuditEqual(e.eventHash, privacyAuditHash(e, await keyFor(e.keyVersion))))
     )
       throw new ValoProblem(
         409,
@@ -152,8 +173,12 @@ export function privacyCaseRecord(row: PrivacyRow) {
     updatedAt: row.updatedAt.toISOString(),
   };
 }
-export async function privacyDetail(tx: Tx, row: PrivacyRow) {
-  const events = await checkPrivacyAudit(tx, row);
+export async function privacyDetail(
+  tx: Tx,
+  row: PrivacyRow,
+  verifiedEvents?: Awaited<ReturnType<typeof checkPrivacyAudit>>,
+) {
+  const events = verifiedEvents ?? (await checkPrivacyAudit(tx, row));
   const messages = await tx
     .select()
     .from(valoPrivacyMessages)
@@ -332,7 +357,7 @@ export async function createPrivacyCase(actor: WorkspaceActor, email: string, ra
 }
 export async function listPrivacyCases(actor: WorkspaceActor) {
   return db.transaction(async (tx) => {
-    await authorizeWorkspaceWrite(tx, actor);
+    await authorizeWorkspaceRead(tx, actor);
     const rows = await tx
       .select()
       .from(valoPrivacyCases)
@@ -354,8 +379,9 @@ export async function listPrivacyCases(actor: WorkspaceActor) {
 }
 export async function customerPrivacyDetail(actor: WorkspaceActor, id: string) {
   return db.transaction(async (tx) => {
-    await authorizeWorkspaceWrite(tx, actor);
-    return privacyDetail(tx, await readPrivacyCase(tx, id, actor));
+    await authorizeWorkspaceRead(tx, actor);
+    const { row, events } = await readVerifiedPrivacyCase(tx, id, actor, { forUpdate: false });
+    return privacyDetail(tx, row, events);
   });
 }
 export async function confirmPrivacyCase(actor: WorkspaceActor, id: string, raw: unknown, cancel = false) {
@@ -513,7 +539,7 @@ export function availablePrivacyActions(row: PrivacyRow, identityId: string) {
 export async function staffPrivacyDetail(actor: PrivacyStaffActor, id: string) {
   return db.transaction(async (tx) => {
     const role = await requirePrivacyStaff(tx, actor),
-      row = await readPrivacyCase(tx, id);
+      { row, events } = await readVerifiedPrivacyCase(tx, id, undefined, { forUpdate: false });
     await tx.insert(valoStaffAccessAudit).values({
       id: randomUUID(),
       assignmentId: role.id,
@@ -523,7 +549,7 @@ export async function staffPrivacyDetail(actor: PrivacyStaffActor, id: string) {
         "Read privacy case history, processing scope and information messages without changing case state.",
     });
     return {
-      ...(await privacyDetail(tx, row)),
+      ...(await privacyDetail(tx, row, events)),
       availableActions: availablePrivacyActions(row, actor.identityId),
     };
   });
