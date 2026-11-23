@@ -313,6 +313,37 @@ const answers: Record<string, unknown> = {
     ],
     hasMore: false,
   }),
+  "GET /admin/manual-library/retained": api.ListRetainedDraftsResponse.parse({
+    items: [
+      {
+        retainedId: "TPL-01",
+        kind: "template",
+        title: "Synthetic invoice template",
+        industry: null,
+        itemId: null,
+        state: "not_in_library",
+        version: null,
+        liveVersion: null,
+        shown: false,
+        sourceCheck: null,
+      },
+      {
+        retainedId: "GUD-01",
+        kind: "regulatory_article",
+        title: "Synthetic regulatory draft",
+        industry: null,
+        itemId: "00000000-0000-4000-8000-00000000a601",
+        state: "draft",
+        version: 1,
+        liveVersion: null,
+        shown: false,
+        sourceCheck: { checkedAt: at(18), holds: 1, validThrough: null },
+      },
+    ],
+    notInLibrary: 1,
+    published: 0,
+    shown: 0,
+  }),
   [`GET /admin/operations`]: (query: URLSearchParams) =>
     api.GetStaffOperationsResponse.parse({
       area: query.get("area"),
