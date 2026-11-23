@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { GUIDED_TEMPLATE_IDS } from "@workspace/valo-core/guided";
 import { guidedFieldIssue } from "@workspace/valo-core/guided-runtime";
 import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
-import { NOT_AN_AMOUNT, askedAs, saidAs, shownAmount, storedAmount } from "./guided-money";
+import { NOT_AN_AMOUNT, askedAs, lineSubtotalKobo, saidAs, shownAmount, storedAmount } from "./guided-money";
 
 const money = {
   id: "synthetic",
@@ -89,4 +89,13 @@ test("every money question in the twelve kinds of document is asked in naira, an
     saidAs("This acknowledged amount must be positive."),
     "This acknowledged amount must be positive.",
   );
+});
+
+test("lineSubtotalKobo computes exact BigInt line subtotals without floating-point drift", () => {
+  assert.equal(lineSubtotalKobo("3", "250000"), "750000");
+  assert.equal(lineSubtotalKobo("1.5", "100000"), "150000");
+  assert.equal(lineSubtotalKobo("2.25", "1000"), "2250");
+  assert.equal(lineSubtotalKobo("0", "1000"), null);
+  assert.equal(lineSubtotalKobo("abc", "1000"), null);
+  assert.equal(lineSubtotalKobo("2", "bad"), null);
 });

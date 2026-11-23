@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState, type FocusEvent, type ReactNode } from "react";
-import { ArrowDownRight, Check, Info, Plus, Trash2 } from "lucide-react";
+import { ArrowDownRight, Check, Copy, Info, Plus, Trash2 } from "lucide-react";
 import type { GuidedData, GuidedField, GuidedSpec, GuidedTable } from "@workspace/valo-core/guided";
 import { guidedDataIssues, guidedFieldIssue, guidedVisible } from "@workspace/valo-core/guided-runtime";
 import { formatNaira, lagosToday } from "@/lib/format";
 import { DATE_QUICK_OFFSETS, addCalendarDays } from "@/lib/date-shortcuts";
-import { MONEY_HELP, askedAs, saidAs, shownAmount, storedAmount } from "@/lib/guided-money";
+import { MONEY_HELP, askedAs, lineSubtotalKobo, saidAs, shownAmount, storedAmount } from "@/lib/guided-money";
 import { computeGuidedProgress } from "@/lib/guided-progress";
 import { cn } from "@/lib/utils";
 
@@ -551,6 +551,12 @@ function TableEditor({
     const target = next.length === 0 ? `#${base}-add` : `#${base}-remove-${Math.min(i, next.length - 1)}`;
     onRows(next, target);
   };
+  const duplicate = (i: number) => {
+    if (!canAdd) return;
+    const copy = { ...rows[i] };
+    const next = [...rows.slice(0, i + 1), copy, ...rows.slice(i + 1)];
+    onRows(next, `#${base}-${i + 1}-${t.columns[0]?.id}`);
+  };
   return (
     <fieldset
       id={"guided-tbl-" + t.id}
@@ -577,50 +583,77 @@ function TableEditor({
         </div>
       ) : (
         <ol className="grid gap-3">
-          {rows.map((r, i) => (
-            <li key={i} className="rounded-2xl border border-border bg-sidebar/50 p-4">
-              <fieldset className="min-w-0">
-                <div className="mb-3 flex items-center justify-between gap-2">
-                  <legend className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
-                    Row {i + 1}
-                  </legend>
-                  <button
-                    type="button"
-                    id={`${base}-remove-${i}`}
-                    className="btn btn-ghost btn-sm !min-h-8 !px-3 text-xs"
-                    disabled={disabled || rows.length <= t.minRows}
-                    aria-label={`Remove ${t.label} row ${i + 1}`}
-                    onClick={() => remove(i)}
-                    data-testid={`button-remove-${t.id}-${i}`}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" aria-hidden />
-                    Remove
-                  </button>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {t.columns
-                    .filter((c) => isVisible(c, { ...values, ...r }))
-                    .map((c) => (
-                      <FieldInput
-                        key={c.id}
-                        field={c}
-                        id={`${base}-${i}-${c.id}`}
-                        spoken={`(row ${i + 1})`}
-                        value={r[c.id] ?? ""}
-                        error={issues[`${t.id}:${i}:${c.id}`]}
-                        disabled={disabled}
-                        onChange={(v) =>
-                          onRows(
-                            rows.map((x, j) => (j === i ? { ...x, [c.id]: v } : x)),
-                            null,
-                          )
-                        }
-                      />
-                    ))}
-                </div>
-              </fieldset>
-            </li>
-          ))}
+          {rows.map((r, i) => {
+            const rowSubtotal =
+              r.quantity && r.unitPriceKobo ? lineSubtotalKobo(r.quantity, r.unitPriceKobo) : null;
+            return (
+              <li key={i} className="rounded-2xl border border-border bg-sidebar/50 p-4">
+                <fieldset className="min-w-0">
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <legend className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
+                        Row {i + 1}
+                      </legend>
+                      {rowSubtotal && (
+                        <span
+                          className="rounded-full bg-accent px-2.5 py-0.5 text-xs font-medium tabular-nums text-accent-foreground"
+                          data-testid={`text-row-total-${t.id}-${i}`}
+                        >
+                          Line total: {formatNaira(rowSubtotal)}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-sm !min-h-8 !px-3 text-xs"
+                        disabled={!canAdd}
+                        aria-label={`Duplicate ${t.label} row ${i + 1}`}
+                        onClick={() => duplicate(i)}
+                        data-testid={`button-duplicate-${t.id}-${i}`}
+                      >
+                        <Copy className="h-3.5 w-3.5" aria-hidden />
+                        Duplicate
+                      </button>
+                      <button
+                        type="button"
+                        id={`${base}-remove-${i}`}
+                        className="btn btn-ghost btn-sm !min-h-8 !px-3 text-xs"
+                        disabled={disabled || rows.length <= t.minRows}
+                        aria-label={`Remove ${t.label} row ${i + 1}`}
+                        onClick={() => remove(i)}
+                        data-testid={`button-remove-${t.id}-${i}`}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" aria-hidden />
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {t.columns
+                      .filter((c) => isVisible(c, { ...values, ...r }))
+                      .map((c) => (
+                        <FieldInput
+                          key={c.id}
+                          field={c}
+                          id={`${base}-${i}-${c.id}`}
+                          spoken={`(row ${i + 1})`}
+                          value={r[c.id] ?? ""}
+                          error={issues[`${t.id}:${i}:${c.id}`]}
+                          disabled={disabled}
+                          onChange={(v) =>
+                            onRows(
+                              rows.map((x, j) => (j === i ? { ...x, [c.id]: v } : x)),
+                              null,
+                            )
+                          }
+                        />
+                      ))}
+                  </div>
+                </fieldset>
+              </li>
+            );
+          })}
         </ol>
       )}
       <button

@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Plus, X } from "lucide-react";
+import { Copy, Plus, X } from "lucide-react";
 import type { FinancialInput } from "@workspace/api-client-react";
 import { financialBlocks, recordedBalance } from "@workspace/valo-core/money";
 import { koboToNaira, nairaToKobo } from "@/lib/checker";
+import { formatNaira } from "@/lib/format";
+import { lineSubtotalKobo } from "@/lib/guided-money";
 import { cn } from "@/lib/utils";
 
 export const FINANCIAL_BLOCK_IDS = ["financial-items-v1", "financial-summary-v1"];
@@ -327,54 +329,80 @@ export function FinancialFields({
             )}
           </p>
           <ul className="grid gap-3">
-            {t.lines.map((l, i) => (
-              <li
-                key={i}
-                className="grid gap-2 rounded-xl border border-border bg-sidebar/60 p-3 sm:grid-cols-[1fr_6rem_9rem_auto] sm:items-start"
-              >
-                <Cell id={`${idPrefix}-desc-${i}`} label="Description" err={e("d" + i)}>
-                  <input
-                    id={`${idPrefix}-desc-${i}`}
-                    className="field"
-                    maxLength={200}
-                    value={l.description}
-                    onChange={(ev) => upLine(i, { description: ev.target.value })}
-                    data-testid={`input-${idPrefix}-desc-${i}`}
-                  />
-                </Cell>
-                <Cell id={`${idPrefix}-qty-${i}`} label="Qty" err={e("q" + i)}>
-                  <input
-                    id={`${idPrefix}-qty-${i}`}
-                    inputMode="decimal"
-                    className="field"
-                    value={l.quantity}
-                    onChange={(ev) => upLine(i, { quantity: ev.target.value })}
-                    data-testid={`input-${idPrefix}-qty-${i}`}
-                  />
-                </Cell>
-                <Cell id={`${idPrefix}-price-${i}`} label="Unit price (₦)" err={e("p" + i)}>
-                  <input
-                    id={`${idPrefix}-price-${i}`}
-                    inputMode="decimal"
-                    className="field"
-                    value={l.price}
-                    placeholder="0.00"
-                    onChange={(ev) => upLine(i, { price: ev.target.value })}
-                    data-testid={`input-${idPrefix}-price-${i}`}
-                  />
-                </Cell>
-                <button
-                  type="button"
-                  aria-label={"Remove line " + (i + 1)}
-                  className="btn btn-ghost btn-sm !px-2.5 sm:mt-6"
-                  disabled={kind !== "business_proposal" && t.lines.length === 1}
-                  onClick={() => up({ lines: t.lines.filter((_, j) => j !== i) })}
-                  data-testid={`button-${idPrefix}-remove-line-${i}`}
+            {t.lines.map((l, i) => {
+              const priceKobo = money(l.price);
+              const rowTotal = priceKobo ? lineSubtotalKobo(l.quantity, priceKobo) : null;
+              return (
+                <li
+                  key={i}
+                  className="grid gap-2 rounded-xl border border-border bg-sidebar/60 p-3 sm:grid-cols-[1fr_6rem_9rem_auto] sm:items-start"
                 >
-                  <X className="h-4 w-4" />
-                </button>
-              </li>
-            ))}
+                  <Cell id={`${idPrefix}-desc-${i}`} label="Description" err={e("d" + i)}>
+                    <input
+                      id={`${idPrefix}-desc-${i}`}
+                      className="field"
+                      maxLength={200}
+                      value={l.description}
+                      onChange={(ev) => upLine(i, { description: ev.target.value })}
+                      data-testid={`input-${idPrefix}-desc-${i}`}
+                    />
+                  </Cell>
+                  <Cell id={`${idPrefix}-qty-${i}`} label="Qty" err={e("q" + i)}>
+                    <input
+                      id={`${idPrefix}-qty-${i}`}
+                      inputMode="decimal"
+                      className="field"
+                      value={l.quantity}
+                      onChange={(ev) => upLine(i, { quantity: ev.target.value })}
+                      data-testid={`input-${idPrefix}-qty-${i}`}
+                    />
+                  </Cell>
+                  <Cell id={`${idPrefix}-price-${i}`} label="Unit price (₦)" err={e("p" + i)}>
+                    <input
+                      id={`${idPrefix}-price-${i}`}
+                      inputMode="decimal"
+                      className="field"
+                      value={l.price}
+                      placeholder="0.00"
+                      onChange={(ev) => upLine(i, { price: ev.target.value })}
+                      data-testid={`input-${idPrefix}-price-${i}`}
+                    />
+                  </Cell>
+                  <div className="flex items-center gap-1.5 sm:mt-6">
+                    <button
+                      type="button"
+                      aria-label={"Duplicate line " + (i + 1)}
+                      title="Duplicate line"
+                      className="btn btn-ghost btn-sm !px-2.5"
+                      disabled={t.lines.length >= 40}
+                      onClick={() =>
+                        up({
+                          lines: [...t.lines.slice(0, i + 1), { ...l }, ...t.lines.slice(i + 1)],
+                        })
+                      }
+                      data-testid={`button-${idPrefix}-duplicate-line-${i}`}
+                    >
+                      <Copy className="h-4 w-4" aria-hidden="true" />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={"Remove line " + (i + 1)}
+                      className="btn btn-ghost btn-sm !px-2.5"
+                      disabled={kind !== "business_proposal" && t.lines.length === 1}
+                      onClick={() => up({ lines: t.lines.filter((_, j) => j !== i) })}
+                      data-testid={`button-${idPrefix}-remove-line-${i}`}
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                  {rowTotal && (
+                    <p className="text-xs font-medium tabular-nums text-muted-foreground sm:col-span-4">
+                      Line total: {formatNaira(rowTotal)}
+                    </p>
+                  )}
+                </li>
+              );
+            })}
           </ul>
           {t.lines.length < 40 && (
             <button
