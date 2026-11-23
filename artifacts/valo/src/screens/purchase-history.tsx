@@ -34,9 +34,20 @@ function OwnedChoice({ file }: { file: OwnedCheckoutDownload }) {
     <li className="rounded-2xl border bg-card p-5">
       <h3 className="font-semibold">{file.title}</h3>
       <p className="my-3 text-sm">Your workspace owns this edition.</p>
-      <a href={basePath + file.downloadPath} className="btn btn-primary" data-testid="checkout-download">
-        <Download className="h-4 w-4" aria-hidden /> Download
-      </a>
+      <div className="flex flex-wrap gap-2">
+        <a href={basePath + file.downloadPath} className="btn btn-primary" data-testid="checkout-download">
+          <Download className="h-4 w-4" aria-hidden /> {file.pdfDownloadPath ? "Download Word" : "Download"}
+        </a>
+        {file.pdfDownloadPath && (
+          <a
+            href={basePath + file.pdfDownloadPath}
+            className="btn btn-secondary"
+            data-testid="checkout-download-pdf"
+          >
+            <Download className="h-4 w-4" aria-hidden /> Download PDF
+          </a>
+        )}
+      </div>
     </li>
   );
 }
@@ -95,16 +106,28 @@ function MyTemplates({ editions }: { editions: ReadonlyMap<string, OwnedCheckout
           {files.map((file) => (
             <li
               key={file.edition}
-              className="flex items-center justify-between gap-3 rounded-2xl border bg-card p-4"
+              className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4"
             >
               <h3 className="min-w-0 break-words font-semibold">{file.title}</h3>
-              <a
-                href={basePath + file.downloadPath}
-                aria-label={`Download ${file.title}`}
-                className="btn btn-secondary shrink-0"
-              >
-                <Download className="h-4 w-4" aria-hidden /> Download
-              </a>
+              <div className="flex flex-wrap gap-2">
+                <a
+                  href={basePath + file.downloadPath}
+                  aria-label={`Download ${file.title}`}
+                  className="btn btn-secondary shrink-0"
+                >
+                  <Download className="h-4 w-4" aria-hidden />{" "}
+                  {file.pdfDownloadPath ? "Download Word" : "Download"}
+                </a>
+                {file.pdfDownloadPath && (
+                  <a
+                    href={basePath + file.pdfDownloadPath}
+                    aria-label={`Download ${file.title} PDF`}
+                    className="btn btn-secondary shrink-0"
+                  >
+                    <Download className="h-4 w-4" aria-hidden /> Download PDF
+                  </a>
+                )}
+              </div>
             </li>
           ))}
         </ul>
@@ -186,6 +209,11 @@ function OrderCard({
           </p>
           <CustomerDisputeInformation orderId={order.id} />
         </>
+      )}
+      {order.status === "verified_success" && !downloadPath && (
+        <p className="my-3 text-sm text-muted-foreground" data-testid="order-download-unavailable">
+          This edition is no longer available to download. Your saved receipt stays here.
+        </p>
       )}
       <div className="flex flex-wrap gap-3">
         {downloadPath && order.status === "verified_success" && (
@@ -542,6 +570,12 @@ function PurchaseHistoryContent() {
                       changed={refresh}
                     />
                   ))}
+                  {q.data.hasMoreOrders && (
+                    <p className="text-sm text-muted-foreground" data-testid="text-more-orders">
+                      Showing your 100 most recent orders. Every premium template you own stays listed under
+                      My Templates above.
+                    </p>
+                  )}
                 </div>
               )}
             </section>

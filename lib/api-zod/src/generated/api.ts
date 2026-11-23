@@ -1188,6 +1188,7 @@ export const GetCustomerPurchasesResponse = zod.object({
   "available": zod.boolean(),
   "message": zod.string(),
   "livePaymentsEnabled": zod.boolean(),
+  "hasMoreOrders": zod.boolean().optional(),
   "orders": zod.array(zod.object({
   "id": zod.string(),
   "reference": zod.string(),
@@ -1237,7 +1238,8 @@ export const GetCustomerPurchasesResponse = zod.object({
   "offerId": zod.uuid(),
   "edition": zod.uuid(),
   "title": zod.string(),
-  "downloadPath": zod.string().describe('Same-origin file path that rechecks the purchased edition on every download.')
+  "downloadPath": zod.string().describe('Same-origin file path that rechecks the purchased edition on every download.'),
+  "pdfDownloadPath": zod.string().optional().describe('Optional same-origin PDF file path for multi-format reviewed editions.')
 })).describe('Downloads for the signed-in workspace\'s currently released purchases, indexed by current or past approved offer.')
 })
 

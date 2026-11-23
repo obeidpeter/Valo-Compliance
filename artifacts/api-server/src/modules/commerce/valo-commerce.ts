@@ -143,12 +143,18 @@ async function commercialCatalogue(ownedPrices: OwnedPrice[] = []) {
     .map(({ edition, product }) => ({ manual: manualIds.has(edition), product }));
   const ownedDownloads = ownedPrices
     .filter(({ edition }) => reviewedIds.has(edition) || manualIds.has(edition))
-    .map((price) => ({
-      ...price,
-      downloadPath: manualIds.has(price.edition)
-        ? "/api/workspace/manual-premium-templates/" + price.edition + "/download"
-        : "/api/workspace/templates/" + price.edition + "/files/docx",
-    }));
+    .map((price) => {
+      const isManual = manualIds.has(price.edition);
+      return {
+        ...price,
+        downloadPath: isManual
+          ? "/api/workspace/manual-premium-templates/" + price.edition + "/download"
+          : "/api/workspace/templates/" + price.edition + "/files/docx",
+        ...(!isManual && {
+          pdfDownloadPath: "/api/workspace/templates/" + price.edition + "/files/pdf",
+        }),
+      };
+    });
   return { offers, ownedDownloads };
 }
 export async function commerceProducts() {
@@ -165,35 +171,59 @@ export async function ownedTemplateEditions(actor: WorkspaceActor) {
 export async function purchases(actor: WorkspaceActor) {
   const { ownedPrices, ...listing } = await db.transaction(async (tx) => {
     await authorizeWorkspaceWrite(tx, actor);
-    const orders = await tx
+    const orderRows = await tx
       .select()
       .from(valoOrders)
       .where(eq(valoOrders.workspaceId, actor.workspaceId))
       .orderBy(desc(valoOrders.createdAt))
-      .limit(100);
-    const refunds = await tx
-      .select()
-      .from(valoRefundRequests)
-      .where(eq(valoRefundRequests.workspaceId, actor.workspaceId))
-      .orderBy(desc(valoRefundRequests.createdAt));
-    const disputes = await tx
-      .select()
-      .from(valoPaymentDisputes)
-      .where(eq(valoPaymentDisputes.workspaceId, actor.workspaceId))
-      .orderBy(desc(valoPaymentDisputes.checkedAt));
-    const originalReceipts = new Set(
-      (
-        await tx
-          .select({ id: valoEvents.entityId })
-          .from(valoEvents)
-          .where(
-            and(
-              eq(valoEvents.workspaceId, actor.workspaceId),
-              inArray(valoEvents.action, originalReceiptActions),
-            ),
-          )
-      ).map((e) => e.id),
-    );
+      .limit(101);
+    const hasMoreOrders = orderRows.length > 100;
+    const orders = orderRows.slice(0, 100);
+    const orderIds = orders.map((o) => o.id);
+    const refundsByOrder = new Map<string, (typeof valoRefundRequests.$inferSelect)[]>();
+    const disputeByOrder = new Map<string, string>();
+    const originalReceipts = new Set<string>();
+    if (orderIds.length) {
+      const refunds = await tx
+        .select()
+        .from(valoRefundRequests)
+        .where(
+          and(
+            eq(valoRefundRequests.workspaceId, actor.workspaceId),
+            inArray(valoRefundRequests.orderId, orderIds),
+          ),
+        )
+        .orderBy(desc(valoRefundRequests.createdAt));
+      const disputes = await tx
+        .select({ orderId: valoPaymentDisputes.orderId, status: valoPaymentDisputes.status })
+        .from(valoPaymentDisputes)
+        .where(
+          and(
+            eq(valoPaymentDisputes.workspaceId, actor.workspaceId),
+            inArray(valoPaymentDisputes.orderId, orderIds),
+          ),
+        )
+        .orderBy(desc(valoPaymentDisputes.checkedAt));
+      const receiptEvents = await tx
+        .select({ id: valoEvents.entityId })
+        .from(valoEvents)
+        .where(
+          and(
+            eq(valoEvents.workspaceId, actor.workspaceId),
+            inArray(valoEvents.entityId, orderIds),
+            inArray(valoEvents.action, originalReceiptActions),
+          ),
+        );
+      for (const refund of refunds) {
+        const list = refundsByOrder.get(refund.orderId);
+        if (list) list.push(refund);
+        else refundsByOrder.set(refund.orderId, [refund]);
+      }
+      for (const dispute of disputes) {
+        if (!disputeByOrder.has(dispute.orderId)) disputeByOrder.set(dispute.orderId, dispute.status);
+      }
+      for (const event of receiptEvents) originalReceipts.add(event.id);
+    }
     const ownedPrices = await tx.execute<OwnedPrice>(sql`
       select p.id as "offerId", p.content_version_id as edition, p.title
       from public.valo_prices p join (${verifiedEditions(actor)}) owned on owned.edition=p.content_version_id
@@ -202,13 +232,14 @@ export async function purchases(actor: WorkspaceActor) {
       ownedPrices: ownedPrices.rows,
       available: true,
       livePaymentsEnabled: false,
+      hasMoreOrders,
       message:
         "No live payments. Only server-verified Paystack test transactions can grant test purchases. Saved orders do not prove payment.",
       orders: orders.map((o) =>
         display(
           o,
-          refunds.filter((r) => r.orderId === o.id),
-          disputes.find((d) => d.orderId === o.id)?.status ?? null,
+          refundsByOrder.get(o.id) ?? [],
+          disputeByOrder.get(o.id) ?? null,
           originalReceipts.has(o.id),
         ),
       ),

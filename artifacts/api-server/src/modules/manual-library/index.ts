@@ -6,11 +6,7 @@ import type { SourceStaffActor } from "../sources";
 import { ValoProblem } from "../../platform/valo-problem";
 import { assertDevelopmentRuntime, isDevelopmentRuntime } from "../../platform/valo-development-runtime";
 import type { EditorialFile } from "./files";
-import {
-  assertAccountNotErasedOrSuspended,
-  authorizeWorkspaceWrite,
-  type WorkspaceActor,
-} from "../workspaces";
+import { authorizeWorkspaceWrite, type WorkspaceActor } from "../workspaces";
 
 type Revision = typeof valoManualLibrary.$inferSelect;
 type RevisionMeta = Omit<Revision, "fileBytes">;
@@ -327,6 +323,7 @@ export async function privateManualFile(actor: SourceStaffActor, itemId: string,
 }
 export async function releasedManualFile(id: string, identityId: string) {
   assertDevelopmentRuntime();
+  const { assertAccountNotErasedOrSuspended } = await import("../workspaces");
   await assertAccountNotErasedOrSuspended(identityId);
   const { db, valoManualLibrary: t } = await import("@workspace/db");
   return attachment(

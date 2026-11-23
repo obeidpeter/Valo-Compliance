@@ -254,6 +254,7 @@ schemas:
       available: { type: boolean }
       message: { type: string }
       livePaymentsEnabled: { type: boolean }
+      hasMoreOrders: { type: boolean }
       orders: { type: array, items: { $ref: "#/components/schemas/CommerceOrder" } }
       products:
         type: array
@@ -270,6 +271,7 @@ schemas:
       edition: { type: string, format: uuid }
       title: { type: string }
       downloadPath: { type: string, description: Same-origin file path that rechecks the purchased edition on every download. }
+      pdfDownloadPath: { type: string, description: Optional same-origin PDF file path for multi-format reviewed editions. }
   CommerceOrderInput:
     type: object
     required: [priceId, acceptedLicenceVersion, requestKey]
