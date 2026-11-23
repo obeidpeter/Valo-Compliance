@@ -170,6 +170,23 @@ export async function releasedResources() {
     ...manual.filter((row) => !isManualTemplate(row.kind)).map(manualResource),
   ];
 }
+export async function releasedResource(slug: string) {
+  if (slug.startsWith("manual-")) {
+    const [row] = await releasedManualEntries(slug);
+    return row && !isManualTemplate(row.kind) ? manualResource(row) : null;
+  }
+  const row = (await liveReleasedVersions()).find(
+    (r) => r.slug === slug && publicationSchema.parse(r.bundle).candidate.contentClass !== "general_template",
+  );
+  return row ? projectReleasedResource(row) : null;
+}
+export async function publishedTemplateCount() {
+  const [existing, manual] = await Promise.all([
+    liveOperationalVersions(),
+    releasedManualEntries({ summaryOnly: true }),
+  ]);
+  return existing.length + manual.filter((row) => isManualTemplate(row.kind)).length;
+}
 export function operationalPresentation(templateId: string) {
   if (templateId === "TPL-07")
     return {

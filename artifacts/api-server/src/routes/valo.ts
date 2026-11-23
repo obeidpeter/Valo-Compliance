@@ -28,6 +28,9 @@ import {
   createReleasedTemplateDraft,
   readReleasedMaster,
   liveCoverage,
+  publishedTemplateCount,
+  releasedResource,
+  releasedResources,
 } from "../modules/catalogue";
 import { exportMime } from "../lib/valo-render";
 import { GetReleasedTemplateResponse } from "@workspace/api-zod";
@@ -38,7 +41,6 @@ import {
   staffOperationsRouter,
   createPrivacyRequesterRouter,
 } from "./valo-customer-access";
-import { releasedResources } from "../modules/catalogue";
 import { commerceRouter } from "./valo-commerce";
 import { savedTemplateList, saveTemplate, unsaveTemplate } from "../modules/catalogue";
 import { publicDiscovery } from "../modules/catalogue";
@@ -73,7 +75,7 @@ router.get("/public/resources", async (_req, res) => {
   res.json((await releasedResources()).map((r) => ReleasedResource.parse(r)));
 });
 router.get("/public/resources/:slug", async (req, res) => {
-  const item = (await releasedResources()).find((r) => r.slug === z.string().max(100).parse(req.params.slug));
+  const item = await releasedResource(z.string().max(100).parse(req.params.slug));
   if (!item) {
     res.status(404).json({ error: "This guide is not available, or it is no longer published." });
     return;
@@ -111,10 +113,11 @@ router.get("/public/recommendations", async (_req, res) => {
 });
 router.get("/public/status", async (_req, res) => {
   const state = readiness();
+  res.set("Cache-Control", "no-store");
   res.json({
     receivedRequirements: state.receivedFormalRequirements,
     expectedRequirements: state.expectedFormalRequirements,
-    publishedTemplates: (await releasedCatalogue({ type: "template" })).total,
+    publishedTemplates: await publishedTemplateCount(),
     p0Passed: false,
     r2Unlocked: false,
     livePaymentsEnabled: false,
@@ -152,7 +155,7 @@ router.get("/development/content", async (_req, res) => {
       deeperPacks: c.deeperPacks,
       identifiedTemplates: c.summary.identifiedIncludingProposals,
       regulatoryRows: c.summary.regulatoryRows,
-      publishedTemplates: (await releasedCatalogue({ type: "template" })).total,
+      publishedTemplates: await publishedTemplateCount(),
       notice: `${c.summary.notice} 78 canonical research keys remain after the explicit SCUML alias only; other umbrella overlaps remain. Neither figure counts distinct published entries.`,
       overlaps: c.overlaps,
       ...expansionReadiness(),
