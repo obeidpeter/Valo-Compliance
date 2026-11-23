@@ -185,13 +185,14 @@ export function QuickFinderDialog({
             No destinations match &ldquo;{query.trim()}&rdquo;.
           </p>
         ) : (
-          <ul className="grid gap-1" role="listbox" aria-label="Quick jump results">
+          <ul className="grid gap-1" aria-label="Quick jump results">
             {results.map((item, index) => {
               const active = index === activeIndex;
               return (
-                <li key={item.id} role="option" aria-selected={active}>
+                <li key={item.id}>
                   <button
                     type="button"
+                    aria-current={active ? "true" : undefined}
                     className={cn(
                       "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
                       active ? "bg-secondary text-foreground" : "hover:bg-secondary/60",
