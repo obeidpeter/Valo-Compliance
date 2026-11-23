@@ -1180,6 +1180,44 @@ export default function DocumentEditor({ id }: { id: string }) {
           <MakeAnother saved={doc.data} unsaved={finDirty || !["idle", "saved"].includes(state)} />
         </aside>
       </div>
+      <div
+        className="held-actions sticky bottom-20 z-20 mt-6 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-border bg-card/95 px-3 py-2.5 shadow-[var(--shadow-md)] backdrop-blur lg:hidden"
+        aria-label="Quick document actions"
+        data-testid="bar-mobile-editor"
+      >
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={() => setTab(tab === "edit" ? "preview" : "edit")}
+            data-testid="button-mobile-toggle-preview"
+          >
+            {tab === "edit" ? "Preview" : "Back to edit"}
+          </button>
+          {finDirty ? (
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              onClick={applyFinancial}
+              data-testid="button-mobile-apply-financial"
+            >
+              Apply totals
+            </button>
+          ) : state === "dirty" ? (
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              onClick={() => saveEverything()}
+              data-testid="button-mobile-save"
+            >
+              <Save className="h-4 w-4" aria-hidden="true" /> Save
+            </button>
+          ) : null}
+        </div>
+        <a href="#private-exports" className="btn btn-ink btn-sm" data-testid="link-mobile-export">
+          <Download className="h-4 w-4" aria-hidden="true" /> Download
+        </a>
+      </div>
     </div>
   );
 }

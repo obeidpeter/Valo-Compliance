@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState, type FocusEvent, type ReactNode } from "react";
-import { Info, Plus, Trash2 } from "lucide-react";
+import { ArrowDownRight, Check, Info, Plus, Trash2 } from "lucide-react";
 import type { GuidedData, GuidedField, GuidedSpec, GuidedTable } from "@workspace/valo-core/guided";
 import { guidedDataIssues, guidedFieldIssue, guidedVisible } from "@workspace/valo-core/guided-runtime";
 import { formatNaira } from "@/lib/format";
 import { MONEY_HELP, askedAs, saidAs, shownAmount, storedAmount } from "@/lib/guided-money";
+import { computeGuidedProgress } from "@/lib/guided-progress";
 import { cn } from "@/lib/utils";
 
 /**
@@ -80,9 +81,26 @@ export function GuidedFields({ spec, value, onChange, disabled, onValidityChange
   const placed = new Set(spec.sections.flatMap((s) => s.fieldIds));
   const loose = spec.fields.filter((f) => !placed.has(f.id));
   const total = Object.keys(issues).length;
+  const progress = computeGuidedProgress(spec, value, issues);
   const hiddenWithValues = spec.fields.filter(
     (f) => !isVisible(f, value.values) && (value.values[f.id] ?? "").trim(),
   );
+
+  function jumpToSelector(selector: string) {
+    const el =
+      root.current?.querySelector<HTMLElement>(selector) ?? document.querySelector<HTMLElement>(selector);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    el.focus();
+  }
+
+  function jumpToDomId(domId: string) {
+    const el = document.getElementById(domId);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    const firstInput = el.querySelector<HTMLElement>("input, textarea, select, button");
+    firstInput?.focus({ preventScroll: true });
+  }
 
   const renderFields = (fs: GuidedField[]) => (
     <div className="grid gap-5 sm:grid-cols-2">
@@ -110,16 +128,76 @@ export function GuidedFields({ spec, value, onChange, disabled, onValidityChange
         {spec.description && (
           <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">{spec.description}</p>
         )}
-        <p
-          className={cn("pill mt-1 w-fit", total ? "pill-ochre" : "pill-forest")}
-          aria-live="polite"
-          data-testid="status-guided-issues"
-        >
-          <span className="dot" />
-          {total
-            ? `${total} ${total === 1 ? "answer needs" : "answers need"} attention`
-            : "All shown answers are complete"}
-        </p>
+        <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
+          <p
+            className={cn("pill w-fit", total ? "pill-ochre" : "pill-forest")}
+            aria-live="polite"
+            data-testid="status-guided-issues"
+          >
+            <span className="dot" />
+            {total
+              ? `${total} ${total === 1 ? "answer needs" : "answers need"} attention`
+              : "All shown answers are complete"}
+          </p>
+          {progress.firstIssueTarget && !disabled && (
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={() => jumpToSelector(progress.firstIssueTarget!.selector)}
+              data-testid="button-next-blank"
+            >
+              <ArrowDownRight className="h-4 w-4" aria-hidden="true" /> Jump to next blank
+            </button>
+          )}
+        </div>
+        {progress.requiredTotal > 0 && (
+          <div className="mt-2 grid gap-2" data-testid="guided-progress">
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>
+                {progress.requiredDone} of {progress.requiredTotal} required answers complete
+              </span>
+              <span className="tabular-nums">{progress.percent}%</span>
+            </div>
+            <div
+              className="h-2 w-full overflow-hidden rounded-full bg-secondary"
+              role="progressbar"
+              aria-label="Required answers progress"
+              aria-valuenow={progress.percent}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            >
+              <div
+                className="h-full rounded-full bg-primary transition-[width] duration-300"
+                style={{ width: `${progress.percent}%` }}
+              />
+            </div>
+          </div>
+        )}
+        {progress.navItems.length > 1 && (
+          <nav
+            aria-label="Jump to section"
+            className="mt-2 flex flex-wrap gap-2"
+            data-testid="nav-guided-sections"
+          >
+            {progress.navItems.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                  item.done
+                    ? "border-[hsl(var(--forest-border))] bg-accent/60 text-accent-foreground"
+                    : "border-border bg-card text-foreground",
+                )}
+                onClick={() => jumpToDomId(item.domId)}
+              >
+                {item.done ? <Check className="h-3.5 w-3.5" aria-hidden="true" /> : null}
+                <span>{item.label}</span>
+                {!item.done && <span className="text-muted-foreground">({item.issueCount} left)</span>}
+              </button>
+            ))}
+          </nav>
+        )}
       </header>
       {Object.entries(issues)
         .filter(
@@ -154,6 +232,7 @@ export function GuidedFields({ spec, value, onChange, disabled, onValidityChange
         return (
           <fieldset
             key={s.id}
+            id={"guided-sec-" + s.id}
             disabled={disabled}
             className="min-w-0 border-t border-border pt-6"
             data-testid={"section-" + s.id}
@@ -166,7 +245,7 @@ export function GuidedFields({ spec, value, onChange, disabled, onValidityChange
       })}
 
       {loose.some((f) => isVisible(f, value.values)) && (
-        <fieldset disabled={disabled} className="min-w-0 border-t border-border pt-6">
+        <fieldset id="guided-sec-other" disabled={disabled} className="min-w-0 border-t border-border pt-6">
           <legend className="font-display float-left mb-4 w-full text-xl">Other details</legend>
           <div className="clear-both">{renderFields(loose)}</div>
         </fieldset>
@@ -457,6 +536,7 @@ function TableEditor({
   };
   return (
     <fieldset
+      id={"guided-tbl-" + t.id}
       disabled={disabled}
       className="min-w-0 border-t border-border pt-6"
       data-testid={"table-" + t.id}
