@@ -1,19 +1,22 @@
 import { useMemo } from "react";
 import { Link } from "wouter";
 import { useUser } from "@clerk/react";
-import { ArrowRight, FilePlus2, ListTodo, UserRound } from "lucide-react";
+import { ArrowRight, Download, FilePlus2, ListTodo, UserRound } from "lucide-react";
 import {
   useGetWorkspace,
   useListAssessments,
   useListTasksPage,
+  useListWorkspaceExports,
   getGetWorkspaceQueryKey,
   getListAssessmentsQueryKey,
   getListTasksPageQueryKey,
+  getListWorkspaceExportsQueryKey,
 } from "@workspace/api-client-react";
 import { WorkspaceNav } from "@/components/workspace-nav";
 import { ErrorState, Skel } from "@/components/states";
 import { CorrectionNotices } from "@/components/correction-notices";
 import { DocumentList } from "@/components/document-list";
+import { FILE_FORMAT_NAMES } from "@/lib/file-formats";
 import { formatCount, formatDay } from "@/lib/format";
 import { RESULT_LABELS, RESULT_TONES } from "@/lib/rich-checker";
 
@@ -32,6 +35,9 @@ export default function WorkspaceHome() {
     { page: 1, filter: "open" },
     { query: { enabled: ws.isSuccess, queryKey: getListTasksPageQueryKey({ page: 1, filter: "open" }) } },
   );
+  const exportsList = useListWorkspaceExports({
+    query: { enabled: ws.isSuccess, queryKey: getListWorkspaceExportsQueryKey() },
+  });
 
   const name = user?.firstName;
   const profile = ws.data?.profile ?? null;
@@ -57,6 +63,7 @@ export default function WorkspaceHome() {
   const showStarterMap = ws.isSuccess && documents === 0 && !profile;
   const upcomingTasks = (openTasks.data?.items ?? []).slice(0, 2);
   const openTaskCount = openTasks.data?.openCount ?? 0;
+  const readyFiles = (exportsList.data ?? []).slice(0, 2);
 
   return (
     <div className="mx-auto max-w-7xl px-5 py-12 lg:px-8">
@@ -141,26 +148,66 @@ export default function WorkspaceHome() {
         </div>
       ) : (
         <div className="mt-10 grid gap-6 lg:grid-cols-[2fr_1fr]">
-          <section aria-labelledby="recent-documents-title">
-            <div className="mb-4 flex items-center justify-between gap-4">
-              <h2 id="recent-documents-title" className="eyebrow">
-                Recent documents
-              </h2>
-              <span className="text-sm text-muted-foreground" data-testid="text-document-count">
-                {formatCount(documents)} saved
-              </span>
-            </div>
-            <DocumentList enabled={ws.isSuccess} limit={3} />
-            {documents > 0 && (
-              <Link
-                href="/workspace/documents"
-                className="btn btn-ghost btn-sm mt-4"
-                data-testid="link-all-documents"
-              >
-                All documents <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              </Link>
+          <div className="grid h-fit gap-8">
+            <section aria-labelledby="recent-documents-title">
+              <div className="mb-4 flex items-center justify-between gap-4">
+                <h2 id="recent-documents-title" className="eyebrow">
+                  Recent documents
+                </h2>
+                <span className="text-sm text-muted-foreground" data-testid="text-document-count">
+                  {formatCount(documents)} saved
+                </span>
+              </div>
+              <DocumentList enabled={ws.isSuccess} limit={3} />
+              {documents > 0 && (
+                <Link
+                  href="/workspace/documents"
+                  className="btn btn-ghost btn-sm mt-4"
+                  data-testid="link-all-documents"
+                >
+                  All documents <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </Link>
+              )}
+            </section>
+
+            {readyFiles.length > 0 && (
+              <section aria-labelledby="home-ready-files-title" data-testid="card-ready-files">
+                <div className="mb-4 flex items-center justify-between gap-4">
+                  <h2 id="home-ready-files-title" className="eyebrow">
+                    Files ready to download
+                  </h2>
+                  <span className="text-sm text-muted-foreground">
+                    {formatCount(exportsList.data?.length ?? readyFiles.length)} ready
+                  </span>
+                </div>
+                <ul className="grid gap-3">
+                  {readyFiles.map((file) => (
+                    <li
+                      key={file.id}
+                      className="surface flex flex-wrap items-center justify-between gap-3 p-4"
+                    >
+                      <div className="min-w-0">
+                        <Link
+                          href={"/workspace/documents/" + file.documentId}
+                          className="block truncate font-medium hover:underline"
+                        >
+                          {file.documentTitle}
+                        </Link>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {FILE_FORMAT_NAMES[file.format]} · version {file.revision} · ready{" "}
+                          {formatDay(file.readyAt)}
+                        </p>
+                      </div>
+                      <a href={file.downloadUrl} className="btn btn-ghost btn-sm">
+                        <Download className="h-4 w-4" aria-hidden="true" /> Download{" "}
+                        {FILE_FORMAT_NAMES[file.format]}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </section>
             )}
-          </section>
+          </div>
 
           <div className="grid h-fit gap-6">
             <section

@@ -119,9 +119,33 @@ export function AIDraftCompose() {
     };
   }
 
+  function focusFirstComposeProblem(requireConsent: boolean): boolean {
+    if (lineTooLong) {
+      const idx = lines.findIndex((l) => l.text.length > 1000);
+      const el = document.querySelector<HTMLElement>(`[data-testid="input-note-${idx >= 0 ? idx : 0}"]`);
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      el?.focus();
+      return true;
+    }
+    if (!fin) {
+      const el = document.querySelector<HTMLElement>('[data-testid="section-ai-financial"]');
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      el?.querySelector<HTMLElement>("input, select, textarea")?.focus();
+      return true;
+    }
+    if (requireConsent && !consent) {
+      const el = document.querySelector<HTMLElement>('[data-testid="checkbox-ai-consent"]');
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      el?.focus();
+      return true;
+    }
+    return false;
+  }
+
   function submitAI(e: FormEvent) {
     e.preventDefault();
     setTouched(true);
+    if (focusFirstComposeProblem(true)) return;
     const facts = buildFacts();
     if (!facts || problems.length || !consent) return;
     const slot = resolveIdempotencyKey(keyRef.current, facts);
@@ -144,6 +168,7 @@ export function AIDraftCompose() {
   function submitManual() {
     setTouched(true);
     setManualErr(null);
+    if (focusFirstComposeProblem(false)) return;
     const facts = buildFacts();
     if (!facts || problems.length) return;
     let draft: ReturnType<typeof buildBusinessDraft>;
@@ -297,6 +322,9 @@ export function AIDraftCompose() {
             title="Notes to organise"
             hint="One fact per note. Unticked notes are not sent or included in the AI preview. A manual draft keeps all your notes."
           >
+            <p className="mb-2 text-xs font-medium text-muted-foreground">
+              Tick each note you want to include in the AI request:
+            </p>
             <ul className="grid gap-2">
               {lines.map((l, i) => (
                 <li key={i} className="flex gap-2">
@@ -370,18 +398,20 @@ export function AIDraftCompose() {
             </p>
           </Section>
 
-          <Section
-            n="4"
-            title="Financial details"
-            hint="Worked out by Valo to the exact kobo, never by the AI provider."
-          >
-            <FinancialFields
-              key={task + finKey}
-              idPrefix="ai"
-              value={emptyFinancial(task)}
-              onChange={setFin}
-            />
-          </Section>
+          <div data-testid="section-ai-financial">
+            <Section
+              n="4"
+              title="Financial details"
+              hint="Worked out by Valo to the exact kobo, never by the AI provider."
+            >
+              <FinancialFields
+                key={task + finKey}
+                idPrefix="ai"
+                value={emptyFinancial(task)}
+                onChange={setFin}
+              />
+            </Section>
+          </div>
 
           {touched && problems.length > 0 && (
             <ul role="alert" className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
