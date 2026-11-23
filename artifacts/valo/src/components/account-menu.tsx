@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, UserRound } from "lucide-react";
 import type { SiteLink } from "./site-chrome";
 import { ACCOUNT_PAGES } from "./workspace-sections";
 
@@ -55,15 +55,15 @@ export function AccountMenu({
         aria-expanded={open}
         aria-controls={list}
         aria-label="Account menu"
-        title={email}
+        title={email ?? (initials ? `Account (${initials})` : undefined)}
         onClick={() => setOpen((shown) => !shown)}
         data-testid="button-account-menu"
       >
         <span
           aria-hidden="true"
-          className="grid h-6 w-6 place-items-center rounded-full bg-secondary text-xs font-medium"
+          className="grid h-6 w-6 place-items-center rounded-full bg-secondary text-foreground"
         >
-          {initials}
+          <UserRound className="h-3.5 w-3.5" aria-hidden="true" />
         </span>
         <span className="hidden text-sm xl:inline">Account</span>
         <ChevronDown className="h-4 w-4" aria-hidden />
