@@ -4,7 +4,15 @@ import { mkdtemp, writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
-import { WorkerHealth, workerReadiness, workerHealthServer, WORKER_FRESH_MS } from "./valo-worker-health";
+import {
+  MaintenanceGate,
+  WorkerHealth,
+  workerReadiness,
+  workerHealthServer,
+  WORKER_FRESH_MS,
+  WORKER_MAINTENANCE_INTERVAL_MS,
+  exportWorkerConcurrency,
+} from "./valo-worker-health";
 test("failed, concurrent-error, stalled and draining workers cannot renew a healthy result", () => {
   let now = Date.now();
   const h = new WorkerHealth(() => now);
@@ -91,4 +99,34 @@ test("a hung shutdown has a bounded nonzero process exit; a completed drain exit
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
+});
+test("exportWorkerConcurrency budgets parallel exports against the worker pool and refuses oversubscription", () => {
+  // Default 10-connection pool with 7 operational slots stays at 1 concurrent export.
+  assert.equal(exportWorkerConcurrency(undefined, 10, 7), 1);
+  // Raising the pool to 15 unlocks 5 parallel exports (15 - 7 ops - 3 reserved = 5).
+  assert.equal(exportWorkerConcurrency(undefined, 15, 7), 5);
+  // Capped at Chromium's 5-PDF limit even with a large pool.
+  assert.equal(exportWorkerConcurrency(undefined, 50, 7), 5);
+  // Production rehearsal without scheduled operations unlocks 5 exports on a 10-connection pool.
+  assert.equal(exportWorkerConcurrency(undefined, 10, 0), 5);
+  // Explicit valid setting within budget is respected.
+  assert.equal(exportWorkerConcurrency("3", 15, 7), 3);
+  // Explicit setting above pool budget or outside 1..5 fails closed.
+  assert.throws(() => exportWorkerConcurrency("3", 10, 7), /EXPORT_CONCURRENCY_EXCEEDS_POOL_BUDGET/);
+  assert.throws(() => exportWorkerConcurrency("0", 20, 0), /INVALID_EXPORT_CONCURRENCY/);
+  assert.throws(() => exportWorkerConcurrency("6", 20, 0), /INVALID_EXPORT_CONCURRENCY/);
+  assert.throws(() => exportWorkerConcurrency(" 2", 20, 0), /INVALID_EXPORT_CONCURRENCY/);
+});
+test("MaintenanceGate runs once at startup and waits for its interval before running again", () => {
+  let now = 1_000;
+  const gate = new MaintenanceGate(WORKER_MAINTENANCE_INTERVAL_MS, () => now);
+  assert.equal(gate.due(), true);
+  gate.mark();
+  assert.equal(gate.due(), false);
+  now += WORKER_MAINTENANCE_INTERVAL_MS - 1;
+  assert.equal(gate.due(), false);
+  now += 1;
+  assert.equal(gate.due(), true);
+  gate.mark();
+  assert.equal(gate.due(), false);
 });

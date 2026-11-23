@@ -177,6 +177,12 @@ export const SETTINGS = {
     group: "Worker and monitoring",
     description: "Number of worker processes (the rehearsal requires 1).",
   },
+  VALO_EXPORT_CONCURRENCY: {
+    group: "Worker and monitoring",
+    description:
+      "Concurrent document export jobs per worker (1-5). Bounded by VALO_DB_POOL_MAX minus reserved operational slots.",
+    example: "1",
+  },
   VALO_EXTERNAL_MONITORING: {
     group: "Worker and monitoring",
     description: "`healthchecks` enables external heartbeat pings.",
@@ -317,6 +323,18 @@ export const OTHER_PACKAGE_SETTINGS: Record<string, SettingDefinition> = {
     description:
       "The same database, logged in as valo_workspace_login, for customer requests and the worker's jobs for one workspace (read by lib/db; lib/db/scripts/workspace-login.mjs prints it). Direct or through a session pooler, not a transaction pooler. Both fail while it is unset.",
     secret: true,
+  },
+  VALO_DB_POOL_MAX: {
+    group: "Database",
+    description:
+      "Maximum application PostgreSQL pool connections per process (1-100, default 10; read by lib/db).",
+    example: "10",
+  },
+  VALO_CUSTOMER_DB_POOL_MAX: {
+    group: "Database",
+    description:
+      "Maximum workspace-scoped PostgreSQL pool connections per process (1-100, default 10; read by lib/db).",
+    example: "10",
   },
   VALO_WORKSPACE_LOGIN_PASSWORD: {
     group: "Database",

@@ -6,11 +6,23 @@ test(
   "the shared pool fails a connection wait after its timeout instead of hanging",
   { skip: process.env.VALO_RUN_DB_TESTS !== "synthetic-development-only", timeout: 30_000 },
   async (t) => {
-    const { pool, createPool, POOL_ACQUIRE_TIMEOUT_MS, POOL_ACQUIRE_TIMEOUT_CODE, CONNECT_TIMEOUT_CODE } =
-      await import("@workspace/db");
+    const {
+      pool,
+      createPool,
+      configuredPoolMax,
+      DEFAULT_POOL_MAX,
+      POOL_ACQUIRE_TIMEOUT_MS,
+      POOL_ACQUIRE_TIMEOUT_CODE,
+      CONNECT_TIMEOUT_CODE,
+    } = await import("@workspace/db");
     try {
       assert.equal(pool.options.connectionTimeoutMillis, POOL_ACQUIRE_TIMEOUT_MS);
       assert.ok(POOL_ACQUIRE_TIMEOUT_MS > 0);
+      assert.equal(configuredPoolMax(undefined), DEFAULT_POOL_MAX);
+      assert.equal(configuredPoolMax("16"), 16);
+      assert.throws(() => configuredPoolMax("0"), /INVALID_DB_POOL_MAX/);
+      assert.throws(() => configuredPoolMax("101"), /INVALID_DB_POOL_MAX/);
+      assert.throws(() => configuredPoolMax("10 "), /INVALID_DB_POOL_MAX/);
 
       await t.test("a full pool refuses a waiting caller with a code, then serves again", async () => {
         // Same configuration as the shared pool, scaled down so the test is quick.
