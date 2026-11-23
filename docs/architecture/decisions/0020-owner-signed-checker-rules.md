@@ -84,4 +84,15 @@ evidence through both so they cannot drift apart.
 
 ## Implementation
 
-Not built yet. Step 6 of the content and speed plan builds it.
+In progress, as step 6 of the content and speed plan. No rule has been released by this route.
+
+- Part 1: the owner-signed rule bundle and its evidence check (`lib/valo-core/src/owner-rule-release.ts`),
+  the checker's `owner_signoff` provenance, the source checks reading either kind of bundle, the
+  database guard (migration `20261123184636_rule_owner_signoffs`), and the registry admitting an
+  owner-signed rule only while the guidance policy it was signed under stands.
+- Part 2: the sign-off service (`artifacts/api-server/src/modules/editorial/owner-rule-signoff.ts`), its
+  staff routes (`/admin/owner-rules`) and the Staff → System panel "Checker rule sign-off". The owner
+  sees each prepared rule as it would be signed, has the daily source check watch its sources,
+  confirms the five checks, and signs that exact version, or withdraws a released one.
+- Part 3: the first prepared rules, CAMA s.814 and NDPA s.27. Until they exist no rule is prepared,
+  so none can be signed.
