@@ -6,6 +6,10 @@ import {
   GetCorrectionNoticesResponse,
   GetEditorialRecordParams,
   GetEditorialRecordResponse,
+  ListOwnerRulesResponse,
+  WatchOwnerRuleSourcesParams,
+  WatchOwnerRuleSourcesResponse,
+  DecideOwnerRuleResponse,
 } from "@workspace/api-zod";
 import { sameOriginMutation } from "../middlewares/valo-identity";
 import { verifiedStaffSession } from "./valo-customer-access";
@@ -15,9 +19,16 @@ import {
   correctionNotices,
   type SourceStaffActor,
 } from "../modules/sources";
+import { decideOwnerRule, listOwnerRules, watchOwnerRuleSources } from "../modules/editorial";
 import { editorialRecord } from "../lib/valo-editorial-record";
 import { ValoProblem } from "../platform/valo-problem";
 const page = (value: unknown) => z.coerce.number().int().min(1).max(10000).default(1).parse(value);
+/** A prepared rule's name from the path; a malformed one names no rule, whoever asks. */
+const ownerRuleId = (params: unknown) => {
+  const parsed = WatchOwnerRuleSourcesParams.safeParse(params);
+  if (!parsed.success) throw new ValoProblem(404, "There is no rule prepared under that name.");
+  return parsed.data.ruleId;
+};
 export function createSourceControlsRouter(
   authenticate: (req: Request) => Promise<SourceStaffActor> = verifiedStaffSession,
 ) {
@@ -42,6 +53,24 @@ export function createSourceControlsRouter(
   });
   router.post("/admin/source-controls/action", sameOriginMutation, async (req, res) => {
     res.json(ActOnSourceControlsResponse.parse(await actOnSourceControls(await authenticate(req), req.body)));
+  });
+  // Requirements-checker rules on the development owner's sign-off (decision 0020).
+  const owner = (req: Request, locals: Record<string, unknown>) =>
+    (locals.verifiedStaff as SourceStaffActor | undefined) ?? authenticate(req);
+  router.get("/admin/owner-rules", async (req, res) => {
+    res.json(ListOwnerRulesResponse.parse(await listOwnerRules(await owner(req, res.locals))));
+  });
+  router.post("/admin/owner-rules/:ruleId/source-watches", sameOriginMutation, async (req, res) => {
+    const actor = await owner(req, res.locals);
+    res.json(
+      WatchOwnerRuleSourcesResponse.parse(
+        await watchOwnerRuleSources(actor, ownerRuleId(req.params), req.body),
+      ),
+    );
+  });
+  router.post("/admin/owner-rules/:ruleId/decisions", sameOriginMutation, async (req, res) => {
+    const actor = await owner(req, res.locals);
+    res.json(DecideOwnerRuleResponse.parse(await decideOwnerRule(actor, ownerRuleId(req.params), req.body)));
   });
   return router;
 }
