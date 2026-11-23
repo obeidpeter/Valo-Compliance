@@ -12,6 +12,7 @@ export function ConfirmDialog({
   confirm,
   onKeep,
   onConfirm,
+  testId = "dialog-confirm",
 }: {
   open: boolean;
   title: string;
@@ -22,6 +23,7 @@ export function ConfirmDialog({
   confirm: string;
   onKeep: () => void;
   onConfirm: () => void;
+  testId?: string;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const id = useId();
@@ -38,7 +40,7 @@ export function ConfirmDialog({
         event.preventDefault();
         onKeep();
       }}
-      data-testid="dialog-confirm"
+      data-testid={testId}
     >
       <h2 id={id} className="font-display text-2xl">
         {title}

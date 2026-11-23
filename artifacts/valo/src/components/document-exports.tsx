@@ -151,12 +151,13 @@ export function DocumentExports({
         of each. The file is your own document. It is not a Valo template, proof of payment or a government
         tax invoice, and no professional has reviewed it.
       </p>
-      <ul
+      <div
+        role="group"
         className="mt-4 grid gap-2 rounded-xl border border-border bg-sidebar/40 p-3 text-xs"
         aria-label="Download readiness"
         data-testid="export-readiness"
       >
-        <li className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <span className="flex items-center gap-2">
             {!disabled ? (
               <Check className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
@@ -190,16 +191,16 @@ export function DocumentExports({
               Save now
             </button>
           ) : null}
-        </li>
-        <li className="flex items-center gap-2">
+        </div>
+        <div className="flex items-center gap-2">
           {acknowledged ? (
             <Check className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
           ) : (
             <Circle className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
           )}
           <span>{acknowledged ? "Draft copy notice confirmed" : "Confirm draft copy notice below"}</span>
-        </li>
-      </ul>
+        </div>
+      </div>
       <label htmlFor={checkbox} className="my-4 flex items-start gap-3 text-sm">
         <input
           id={checkbox}

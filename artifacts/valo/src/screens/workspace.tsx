@@ -185,14 +185,9 @@ export default function WorkspaceHome() {
               <p className="font-mono text-xs text-muted-foreground">Step 3</p>
               <p className="mt-1 font-medium">Make business documents</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Answer guided questions for invoices, receipts or agreements and download Word or PDF.
+                Answer guided questions for invoices, receipts or agreements and download Word or PDF using
+                New document below.
               </p>
-              <Link
-                href="/workspace/documents/new"
-                className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary underline underline-offset-4"
-              >
-                New document <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-              </Link>
             </li>
           </ol>
         </section>

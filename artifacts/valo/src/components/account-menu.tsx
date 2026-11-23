@@ -59,7 +59,10 @@ export function AccountMenu({
         onClick={() => setOpen((shown) => !shown)}
         data-testid="button-account-menu"
       >
-        <span className="grid h-6 w-6 place-items-center rounded-full bg-secondary text-xs font-medium">
+        <span
+          aria-hidden="true"
+          className="grid h-6 w-6 place-items-center rounded-full bg-secondary text-xs font-medium"
+        >
           {initials}
         </span>
         <span className="hidden text-sm xl:inline">Account</span>

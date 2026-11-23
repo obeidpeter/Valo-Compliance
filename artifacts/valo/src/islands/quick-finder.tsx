@@ -32,7 +32,6 @@ export function QuickFinderTrigger({
     <button
       type="button"
       className={cn("btn btn-ghost btn-sm", className)}
-      aria-label="Quick jump (Ctrl+K)"
       aria-keyshortcuts="Control+K Meta+K"
       onClick={openQuickFinder}
       data-testid={testId}
@@ -40,7 +39,10 @@ export function QuickFinderTrigger({
       <Search className="h-4 w-4" aria-hidden="true" />
       <span>Quick jump</span>
       {!compact && (
-        <kbd className="hidden rounded border border-border bg-secondary px-1.5 py-0.5 font-mono text-[0.68rem] text-muted-foreground xl:inline">
+        <kbd
+          aria-hidden="true"
+          className="hidden rounded border border-border bg-secondary px-1.5 py-0.5 font-mono text-[0.68rem] text-muted-foreground xl:inline"
+        >
           Ctrl+K
         </kbd>
       )}

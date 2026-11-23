@@ -104,7 +104,7 @@ export function DevBanner() {
 
 export function SiteFooter({ LinkTo, wordmark }: { LinkTo: SiteLink; wordmark: ReactNode }) {
   return (
-    <footer className="border-t border-border bg-sidebar">
+    <footer className="border-t border-border bg-sidebar pb-24 lg:pb-0">
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 md:grid-cols-[1.4fr_1fr_1fr_1fr] lg:px-8">
         <div>
           {wordmark}
