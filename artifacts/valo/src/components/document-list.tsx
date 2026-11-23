@@ -1,10 +1,39 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "wouter";
-import { ArrowRight, FilePlus2, FileText, Search, X } from "lucide-react";
-import { useListDocuments, getListDocumentsQueryKey } from "@workspace/api-client-react";
+import { Link, useLocation } from "wouter";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  ArrowRight,
+  CopyPlus,
+  Download,
+  Eye,
+  EyeOff,
+  FilePlus2,
+  FileText,
+  Loader2,
+  Search,
+  X,
+} from "lucide-react";
+import {
+  useCreateDocument,
+  useListDocuments,
+  useListWorkspaceExports,
+  getGetWorkspaceQueryKey,
+  getListDocumentsQueryKey,
+  getListWorkspaceExportsQueryKey,
+  type BusinessDocument,
+} from "@workspace/api-client-react";
 import { EmptyState, ErrorState, Skel } from "@/components/states";
 import { missingFields } from "@/lib/api";
-import { documentKindLabel, filterDocuments, type DocumentStatusFilter } from "@/lib/document-list-helpers";
+import { anotherLike } from "@/lib/document-copy";
+import {
+  documentContextSubtitle,
+  documentKindLabel,
+  filterDocuments,
+  readHiddenDocumentIds,
+  writeHiddenDocumentIds,
+  type DocumentStatusFilter,
+} from "@/lib/document-list-helpers";
+import { FILE_FORMAT_NAMES } from "@/lib/file-formats";
 import { formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -24,17 +53,39 @@ export function DocumentList({
   /** Show a title search box when the workspace has more than one saved document. */
   searchable?: boolean;
 }) {
+  const qc = useQueryClient();
+  const [, setLocation] = useLocation();
   const docs = useListDocuments({ query: { enabled, queryKey: getListDocumentsQueryKey() } });
+  const exportsList = useListWorkspaceExports({
+    query: { enabled: enabled && searchable, queryKey: getListWorkspaceExportsQueryKey() },
+  });
+  const createCopy = useCreateDocument();
+  const [copyingId, setCopyingId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<DocumentStatusFilter>("all");
+  const [hiddenIds, setHiddenIds] = useState<Set<string>>(() => new Set());
   const searchInputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (searchable) setHiddenIds(readHiddenDocumentIds());
+  }, [searchable]);
   const all = docs.data ?? [];
+  const hiddenCount = useMemo(
+    () => (searchable ? all.filter((d) => hiddenIds.has(d.id)).length : 0),
+    [all, hiddenIds, searchable],
+  );
+  const readyExportByDoc = useMemo(() => {
+    const map = new Map<string, NonNullable<typeof exportsList.data>[number]>();
+    for (const file of exportsList.data ?? []) {
+      if (!map.has(file.documentId)) map.set(file.documentId, file);
+    }
+    return map;
+  }, [exportsList.data]);
   const trimmed = query.trim();
   const shown = useMemo(() => {
-    const filtered = searchable ? filterDocuments(all, query, status) : all;
+    const filtered = searchable ? filterDocuments(all, query, status, hiddenIds) : all;
     return filtered.slice(0, limit);
-  }, [all, limit, query, searchable, status]);
-  const showSearch = searchable && all.length > 1;
+  }, [all, hiddenIds, limit, query, searchable, status]);
+  const showSearch = searchable && (all.length > 1 || hiddenCount > 0);
   useEffect(() => {
     if (!showSearch) return;
     const onKey = (event: KeyboardEvent) => {
@@ -52,7 +103,37 @@ export function DocumentList({
     { id: "all", label: "All" },
     { id: "incomplete", label: "Needs details" },
     { id: "complete", label: "Complete" },
+    ...(hiddenCount > 0 || status === "hidden"
+      ? [{ id: "hidden" as const, label: `Hidden (${hiddenCount})` }]
+      : []),
   ];
+
+  function toggleHidden(docId: string) {
+    setHiddenIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(docId)) next.delete(docId);
+      else next.add(docId);
+      writeHiddenDocumentIds(next);
+      return next;
+    });
+  }
+
+  function makeAnotherFromList(d: BusinessDocument) {
+    const start = anotherLike(d.content);
+    if (!start || createCopy.isPending) return;
+    setCopyingId(d.id);
+    createCopy.mutate(
+      { data: { title: d.title, content: start } },
+      {
+        onSuccess: (made) => {
+          void qc.invalidateQueries({ queryKey: getListDocumentsQueryKey() });
+          void qc.invalidateQueries({ queryKey: getGetWorkspaceQueryKey() });
+          setLocation("/workspace/documents/" + made.id);
+        },
+        onSettled: () => setCopyingId(null),
+      },
+    );
+  }
   return (
     <>
       {docs.isLoading ? (
@@ -76,9 +157,9 @@ export function DocumentList({
                   ref={searchInputRef}
                   type="search"
                   className="field !pl-10"
-                  aria-label="Search your documents by title"
+                  aria-label="Search your documents by title, recipient, or reference"
                   aria-keyshortcuts="/"
-                  placeholder="Search by title (press /)"
+                  placeholder="Search title, recipient, or ref (press /)"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   data-testid="input-document-search"
@@ -122,16 +203,28 @@ export function DocumentList({
               )}
             </div>
           )}
+          {status === "hidden" && (
+            <p className="mb-4 text-xs text-muted-foreground" role="status">
+              Hidden documents stay saved in your workspace; hiding only declutters this browser view.
+            </p>
+          )}
           {shown.length > 0 ? (
             <ul className="grid gap-3">
               {shown.map((d) => {
                 const miss = missingFields(d.content).length;
                 const kind = documentKindLabel(d);
+                const subtitle = documentContextSubtitle(d);
+                const readyExport = readyExportByDoc.get(d.id);
+                const canCopy = searchable && Boolean(anotherLike(d.content));
+                const isHidden = hiddenIds.has(d.id);
                 return (
-                  <li key={d.id}>
+                  <li
+                    key={d.id}
+                    className="surface overflow-hidden transition-shadow hover:shadow-[var(--shadow-md)]"
+                  >
                     <Link
                       href={"/workspace/documents/" + d.id}
-                      className="surface group flex items-center gap-4 p-5 transition-shadow hover:shadow-[var(--shadow-md)] sm:gap-5"
+                      className="group flex items-center gap-4 p-5 sm:gap-5"
                       data-testid={"link-doc-" + d.id}
                     >
                       <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-accent text-primary">
@@ -139,6 +232,14 @@ export function DocumentList({
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate font-medium">{d.title}</span>
+                        {subtitle && (
+                          <span
+                            className="mt-0.5 block truncate text-xs text-foreground/75"
+                            data-testid={"text-doc-subtitle-" + d.id}
+                          >
+                            {subtitle}
+                          </span>
+                        )}
                         <span className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
                           <span>{kind}</span>
                           <span>Draft</span>
@@ -161,6 +262,52 @@ export function DocumentList({
                         aria-hidden="true"
                       />
                     </Link>
+                    {searchable && (
+                      <div className="flex flex-wrap items-center gap-2 border-t border-border/70 bg-sidebar/30 px-5 py-2.5 text-xs">
+                        {readyExport && (
+                          <a
+                            href={readyExport.downloadUrl}
+                            className="btn btn-ghost btn-sm !min-h-8 !px-3 text-xs"
+                            data-testid={"link-quick-download-" + d.id}
+                          >
+                            <Download className="h-3.5 w-3.5" aria-hidden="true" />
+                            Download {FILE_FORMAT_NAMES[readyExport.format]}
+                          </a>
+                        )}
+                        {canCopy && (
+                          <button
+                            type="button"
+                            className="btn btn-ghost btn-sm !min-h-8 !px-3 text-xs"
+                            disabled={createCopy.isPending}
+                            onClick={() => makeAnotherFromList(d)}
+                            data-testid={"button-quick-copy-" + d.id}
+                          >
+                            {copyingId === d.id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                            ) : (
+                              <CopyPlus className="h-3.5 w-3.5" aria-hidden="true" />
+                            )}
+                            Make another
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm ml-auto !min-h-8 !px-3 text-xs text-muted-foreground"
+                          onClick={() => toggleHidden(d.id)}
+                          data-testid={"button-toggle-hide-" + d.id}
+                        >
+                          {isHidden ? (
+                            <>
+                              <Eye className="h-3.5 w-3.5" aria-hidden="true" /> Show in list
+                            </>
+                          ) : (
+                            <>
+                              <EyeOff className="h-3.5 w-3.5" aria-hidden="true" /> Hide
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    )}
                   </li>
                 );
               })}
