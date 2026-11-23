@@ -4,7 +4,6 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import { fileURLToPath } from "node:url";
 import {
   citationProblems,
   citationResult,
@@ -19,7 +18,7 @@ import {
 } from "./ci-evidence";
 import { readAreaCoverage } from "./code-coverage";
 
-const reporter = fileURLToPath(new URL("./test-results-reporter.mjs", import.meta.url));
+const reporter = new URL("./test-results-reporter.mjs", import.meta.url).href;
 
 /** Runs throwaway test files the way CI does: the spec reporter on stdout and the results
  * reporter beside it, both from NODE_OPTIONS. */
