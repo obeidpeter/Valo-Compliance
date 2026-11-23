@@ -6,15 +6,17 @@ export function UnsavedNavigationDialog({
   onDiscard,
   onStay,
   error,
+  title,
   saveLabel,
   description,
 }: {
   open: boolean;
   busy: boolean;
-  onSave: () => void;
+  onSave?: () => void;
   onDiscard: () => void;
   onStay: () => void;
   error?: string | undefined;
+  title?: string;
   saveLabel?: string;
   description?: string;
 }) {
@@ -34,11 +36,13 @@ export function UnsavedNavigationDialog({
       }}
     >
       <h2 id="unsaved-navigation-title" className="font-display text-2xl">
-        Save before leaving?
+        {title ?? (onSave ? "Save before leaving?" : "Leave without saving?")}
       </h2>
       <p className="mt-3 text-sm">
         {description ??
-          "You have changes that are not saved, including any amounts you have not applied. Save them, discard them, or stay here."}
+          (onSave
+            ? "You have changes that are not saved, including any amounts you have not applied. Save them, discard them, or stay here."
+            : "You have unsaved entries on this page. Stay here to finish, or leave and discard them.")}
       </p>
       {error && (
         <p role="alert" className="mt-3 text-sm text-destructive">
@@ -46,14 +50,25 @@ export function UnsavedNavigationDialog({
         </p>
       )}
       <div className="mt-5 flex flex-wrap gap-2">
+        {onSave && (
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            disabled={busy}
+            onClick={onSave}
+            data-testid="button-save-leave"
+          >
+            {busy ? "Saving…" : (saveLabel ?? "Save and leave")}
+          </button>
+        )}
         <button
           type="button"
-          className="btn btn-primary btn-sm"
+          className={onSave ? "btn btn-ghost btn-sm" : "btn btn-primary btn-sm"}
           disabled={busy}
-          onClick={onSave}
-          data-testid="button-save-leave"
+          onClick={onStay}
+          data-testid="button-stay-editor"
         >
-          {busy ? "Saving…" : (saveLabel ?? "Save and leave")}
+          Stay here
         </button>
         <button
           type="button"
@@ -63,15 +78,6 @@ export function UnsavedNavigationDialog({
           data-testid="button-discard-leave"
         >
           Discard and leave
-        </button>
-        <button
-          type="button"
-          className="btn btn-ghost btn-sm"
-          disabled={busy}
-          onClick={onStay}
-          data-testid="button-stay-editor"
-        >
-          Stay here
         </button>
       </div>
     </dialog>

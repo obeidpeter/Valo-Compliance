@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, FileCheck2, Loader2, RefreshCw, ShieldCheck } from "lucide-react";
@@ -15,8 +15,10 @@ import { synchronizeFinancialBlocks } from "@workspace/valo-core/money";
 import { Meta, Shell, STATUS, TASK_LABEL } from "@/components/ai-draft-shared";
 import { FinancialFields, FINANCIAL_BLOCK_IDS } from "@/components/financial-fields";
 import { ErrorState, Notice, Skel } from "@/components/states";
+import { UnsavedNavigationDialog } from "@/components/unsaved-navigation-dialog";
 import { describeError } from "@/lib/api";
 import { live } from "@/lib/checker";
+import { useUnsavedNavigation } from "@/lib/use-unsaved-navigation";
 import { cn } from "@/lib/utils";
 
 export function AIDraftPreview({ id }: { id: string }) {
@@ -36,6 +38,7 @@ export function AIDraftPreview({ id }: { id: string }) {
   const [finValid, setFinValid] = useState(true);
   const [confirm, setConfirm] = useState(false);
   const [initFor, setInitFor] = useState<string | null>(null);
+  const leavingRef = useRef(false);
 
   const p = q.data;
   // Initialise editable copy once per preview hash; refetch/polling never replaces edits.
@@ -46,6 +49,20 @@ export function AIDraftPreview({ id }: { id: string }) {
       setContent(p.content);
     }
   }, [p, initFor]);
+
+  const initialContentJson = useMemo(() => (p ? JSON.stringify(p.content) : ""), [p]);
+  const hasUnsavedEdits =
+    !leavingRef.current &&
+    Boolean(
+      p &&
+      p.status !== "running" &&
+      p.status !== "unsupported" &&
+      !p.acceptedDocumentId &&
+      (accept.isPending ||
+        (initFor === p.previewHash &&
+          (title !== p.title || (content !== null && JSON.stringify(content) !== initialContentJson)))),
+    );
+  const navigation = useUnsavedNavigation(() => hasUnsavedEdits);
 
   const narrative = useMemo(
     () => content?.blocks.filter((b) => !FINANCIAL_BLOCK_IDS.includes(b.id)) ?? [],
@@ -87,6 +104,7 @@ export function AIDraftPreview({ id }: { id: string }) {
           void qc.invalidateQueries({ queryKey: getGetCustomerAIDraftQueryKey(id) });
           void qc.invalidateQueries({ queryKey: getListDocumentsQueryKey() });
           void qc.invalidateQueries({ queryKey: getGetWorkspaceQueryKey() });
+          leavingRef.current = true;
           setLocation("/workspace/documents/" + doc.id);
         },
       },
@@ -335,6 +353,13 @@ export function AIDraftPreview({ id }: { id: string }) {
           </aside>
         </div>
       )}
+      <UnsavedNavigationDialog
+        open={navigation.blocked}
+        busy={accept.isPending}
+        onDiscard={navigation.proceed}
+        onStay={navigation.stay}
+        description="You edited this preview without saving it to your documents. Stay here to review and save it, or leave and discard your edits."
+      />
     </Shell>
   );
 }

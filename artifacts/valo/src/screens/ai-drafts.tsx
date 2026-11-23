@@ -1,10 +1,11 @@
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { Check, FilePenLine, Loader2, Plus, Sparkles, X } from "lucide-react";
 import {
   useCreateCustomerAIDraft,
   useGetCustomerAIUsage,
+  useGetWorkspace,
   useCreateDocument,
   getGetCustomerAIDraftQueryKey,
   getGetCustomerAIUsageQueryKey,
@@ -18,11 +19,14 @@ import {
 } from "@workspace/api-client-react";
 import { buildBusinessDraft, customerComposerNotes } from "@workspace/valo-core/customer-document";
 import { Section, TASKS, TASK_LABEL, Text, UsageCard } from "@/components/ai-draft-shared";
+import { UnsavedNavigationDialog } from "@/components/unsaved-navigation-dialog";
 import { WorkspaceNav } from "@/components/workspace-nav";
 import { FinancialFields, emptyFinancial } from "@/components/financial-fields";
 import { describeError } from "@/lib/api";
 import { live } from "@/lib/checker";
+import { savedBusinessName } from "@/lib/guided-prefill";
 import { resolveIdempotencyKey, type IdempotencySlot } from "@/lib/idempotency";
+import { useUnsavedNavigation } from "@/lib/use-unsaved-navigation";
 import { cn } from "@/lib/utils";
 export { AIDraftPreview } from "./ai-draft-preview";
 
@@ -32,6 +36,7 @@ export function AIDraftCompose() {
   const qc = useQueryClient();
   const [, setLocation] = useLocation();
   const usage = useGetCustomerAIUsage({ query: { queryKey: getGetCustomerAIUsageQueryKey(), ...live } });
+  const ws = useGetWorkspace({ query: { queryKey: getGetWorkspaceQueryKey() } });
   const create = useCreateCustomerAIDraft();
   const manual = useCreateDocument();
 
@@ -44,6 +49,10 @@ export function AIDraftCompose() {
     issueDate: "",
     dueDate: "",
   });
+  const [prefilledIssuer, setPrefilledIssuer] = useState("");
+  const prefilledRef = useRef(false);
+  const issuerTouchedRef = useRef(false);
+  const leavingRef = useRef(false);
   const [lines, setLines] = useState<{ text: string; send: boolean }[]>([{ text: "", send: true }]);
   const [fin, setFin] = useState<FinancialInput | null>(emptyFinancial("invoice"));
   const [finKey, setFinKey] = useState(0);
@@ -52,6 +61,33 @@ export function AIDraftCompose() {
   const keyRef = useRef<IdempotencySlot>(null);
   const [touched, setTouched] = useState(false);
   const [manualErr, setManualErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (prefilledRef.current || !ws.isSuccess) return;
+    prefilledRef.current = true;
+    const business = savedBusinessName(ws.data?.profile);
+    if (!business || issuerTouchedRef.current) return;
+    setPrefilledIssuer(business);
+    setFields((current) => (current.issuerName ? current : { ...current, issuerName: business }));
+  }, [ws.isSuccess, ws.data?.profile]);
+
+  const emptyFinJson = useMemo(() => JSON.stringify(emptyFinancial(task)), [task]);
+  const hasUnsavedWork =
+    !leavingRef.current &&
+    (create.isPending ||
+      manual.isPending ||
+      fields.issuerName !== prefilledIssuer ||
+      Boolean(
+        fields.recipientName.trim() ||
+        fields.documentNumber.trim() ||
+        fields.issueDate ||
+        fields.dueDate ||
+        draftingInstruction.trim() ||
+        lines.some((line) => line.text.trim()),
+      ) ||
+      !fin ||
+      JSON.stringify(fin) !== emptyFinJson);
+  const navigation = useUnsavedNavigation(() => hasUnsavedWork);
 
   function pickTask(t: CustomerAITask) {
     if (t === task) return;
@@ -97,6 +133,7 @@ export function AIDraftCompose() {
           qc.setQueryData(getGetCustomerAIDraftQueryKey(p.id), p);
           void qc.invalidateQueries({ queryKey: getGetCustomerAIUsageQueryKey() });
           keyRef.current = null;
+          leavingRef.current = true;
           setLocation("/workspace/ai/" + p.id);
         },
         onSettled: () => void qc.invalidateQueries({ queryKey: getGetCustomerAIUsageQueryKey() }),
@@ -122,6 +159,7 @@ export function AIDraftCompose() {
         onSuccess: (doc) => {
           void qc.invalidateQueries({ queryKey: getListDocumentsQueryKey() });
           void qc.invalidateQueries({ queryKey: getGetWorkspaceQueryKey() });
+          leavingRef.current = true;
           setLocation("/workspace/documents/" + doc.id);
         },
       },
@@ -216,7 +254,10 @@ export function AIDraftCompose() {
                 label="From (your business)"
                 max={160}
                 v={fields.issuerName}
-                on={(v) => setFields({ ...fields, issuerName: v })}
+                on={(v) => {
+                  issuerTouchedRef.current = true;
+                  setFields({ ...fields, issuerName: v });
+                }}
               />
               <Text
                 id="recipientName"
@@ -441,6 +482,13 @@ export function AIDraftCompose() {
           </div>
         </aside>
       </form>
+      <UnsavedNavigationDialog
+        open={navigation.blocked}
+        busy={create.isPending || manual.isPending}
+        onDiscard={navigation.proceed}
+        onStay={navigation.stay}
+        description="You have unsaved notes or amounts on this page. Stay here to build your document, or leave and discard them."
+      />
     </div>
   );
 }
