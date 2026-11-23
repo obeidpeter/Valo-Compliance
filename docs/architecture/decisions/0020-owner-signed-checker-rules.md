@@ -58,7 +58,10 @@ labels in ways the sources support. They are not used as release scenarios.
 5. **What the sign-off does.** One transaction records an immutable sign-off (owner, rule, version,
    manifest hash, source check, the confirmed checks, time), the release, its source bindings, and the
    rule's earlier version as superseded. A database trigger refuses an owner-signed release that has
-   no matching sign-off by the designated owner made within a day of its source check.
+   no matching sign-off by the designated owner made within a day of its source check. The owner can
+   withdraw a release. An owner-signed release changes only its status and is never deleted; it leaves
+   publication once, superseded or withdrawn, and is never published again without a new version and
+   a new sign-off.
 6. **What the checker admits.** An owner-signed rule counts only while its sign-off matches its
    manifest, the evidence checks still pass, the guidance policy's approval stands, its sources stay
    current (the daily check within 24 hours, and the source check within 30 days for any risk but

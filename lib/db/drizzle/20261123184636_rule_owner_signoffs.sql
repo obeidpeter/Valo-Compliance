@@ -16,7 +16,8 @@ CREATE UNIQUE INDEX "valo_rule_owner_signoff_version" ON "valo_rule_owner_signof
 -- sign-off of its exact manifest was made in the same transaction, by the designated development
 -- owner, on a source check under a day old, confirming EDP-005's enhanced checks for any risk but
 -- general. An owner-signed release keeps its rule, bundle and manifest, changes only its status, and
--- is never deleted. Releases on the reviewed route are unchanged.
+-- is never deleted. It leaves publication once, superseded or withdrawn, and is never published again:
+-- that takes a new version and a new sign-off. Releases on the reviewed route are unchanged.
 CREATE FUNCTION valo_rule_owner_signoff_immutable() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
   RAISE EXCEPTION 'A rule sign-off is never changed or removed' USING ERRCODE = '23514';
@@ -37,12 +38,17 @@ BEGIN
     RETURN OLD;
   END IF;
   IF TG_OP = 'UPDATE' THEN
-    IF (OLD.rule->>'provenance' = 'owner_signoff' OR NEW.rule->>'provenance' = 'owner_signoff'
-        OR NEW.publication_bundle->>'kind' = 'owner_signoff')
-       AND ROW(NEW.id, NEW.rule_id, NEW.version, NEW.rule, NEW.publication_bundle, NEW.manifest_hash, NEW.published_at)
-           IS DISTINCT FROM
-           ROW(OLD.id, OLD.rule_id, OLD.version, OLD.rule, OLD.publication_bundle, OLD.manifest_hash, OLD.published_at) THEN
-      RAISE EXCEPTION 'An owner-signed rule release changes only its status' USING ERRCODE = '23514';
+    IF OLD.rule->>'provenance' = 'owner_signoff' OR NEW.rule->>'provenance' = 'owner_signoff'
+       OR OLD.publication_bundle->>'kind' = 'owner_signoff' OR NEW.publication_bundle->>'kind' = 'owner_signoff' THEN
+      IF ROW(NEW.id, NEW.rule_id, NEW.version, NEW.rule, NEW.publication_bundle, NEW.manifest_hash, NEW.published_at)
+         IS DISTINCT FROM
+         ROW(OLD.id, OLD.rule_id, OLD.version, OLD.rule, OLD.publication_bundle, OLD.manifest_hash, OLD.published_at) THEN
+        RAISE EXCEPTION 'An owner-signed rule release changes only its status' USING ERRCODE = '23514';
+      END IF;
+      IF NEW.status IS DISTINCT FROM OLD.status
+         AND (OLD.status IS DISTINCT FROM 'published' OR NEW.status NOT IN ('superseded', 'withdrawn')) THEN
+        RAISE EXCEPTION 'An owner-signed rule release leaves publication once and is never published again: sign a new version' USING ERRCODE = '23514';
+      END IF;
     END IF;
     RETURN NEW;
   END IF;

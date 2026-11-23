@@ -10,7 +10,8 @@ database yet.
   unless a sign-off of its exact manifest was made in the same transaction, by the designated
   development owner (`valo_manual_regulatory_owner`), on a source check under a day old, confirming
   EDP-005's enhanced checks for any risk but `general`. An owner-signed release then changes only
-  its status and is never deleted.
+  its status and is never deleted. It leaves publication once, superseded or withdrawn, and is never
+  published again: that takes a new version and a new sign-off.
 - Releases on the reviewed route are unchanged, and it reads and changes no existing row.
 
 **The application code depends on this migration only for owner-signed rules,** and none can be
