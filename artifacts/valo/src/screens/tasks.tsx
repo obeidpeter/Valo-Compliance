@@ -1,7 +1,7 @@
 import { useMemo, useState, useRef, useCallback, useEffect } from "react";
 import { Link } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowUpDown, ListTodo, Plus, Search, X } from "lucide-react";
+import { ArrowUpDown, CalendarPlus, ListTodo, Plus, Search, X } from "lucide-react";
 import {
   useCreateTask,
   getListTasksQueryKey,
@@ -15,6 +15,7 @@ import { TaskForm, emptyDraft, type TaskDraft } from "@/components/task-form";
 import { TaskRow } from "@/components/task-row";
 import { EmptyState, ErrorState, Skel } from "@/components/states";
 import { describeError } from "@/lib/api";
+import { buildTasksIcs, downloadIcsFile } from "@/lib/calendar-export";
 import { live } from "@/lib/checker";
 import { sortTasksByDueDate, type TaskSortMode } from "@/lib/date-shortcuts";
 import { cn } from "@/lib/utils";
@@ -286,6 +287,20 @@ export default function TasksPage() {
           <div />
         )}
         <div className="flex flex-wrap items-center gap-2">
+          {rows.some((t) => t.dueDate && t.state !== "completed_by_user") && (
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={() => {
+                const ics = buildTasksIcs(rows, { alarmDaysBefore: [7, 1, 0] });
+                if (ics) downloadIcsFile(ics, "valo-tasks.ics");
+              }}
+              data-testid="button-export-tasks-ics"
+            >
+              <CalendarPlus className="h-3.5 w-3.5" aria-hidden="true" />
+              Export calendar (.ics)
+            </button>
+          )}
           {rows.length > 1 && (
             <button
               type="button"

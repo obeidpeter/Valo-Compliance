@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
-import { Archive, CalendarDays, CheckCircle2, Loader2, Pencil } from "lucide-react";
+import { Archive, CalendarDays, CalendarPlus, CheckCircle2, Loader2, Pencil } from "lucide-react";
 import {
   useUpdateTask,
   useDeleteTask,
@@ -15,6 +15,7 @@ import {
 import { TaskForm, type TaskDraft } from "@/components/task-form";
 import { Notice } from "@/components/states";
 import { describeError } from "@/lib/api";
+import { buildTasksIcs, downloadIcsFile } from "@/lib/calendar-export";
 import { dueDateUrgency } from "@/lib/date-shortcuts";
 import { formatDateTime, formatDay } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -346,7 +347,22 @@ export function TaskRow({
                 </option>
               ))}
             </select>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
+              {task.dueDate && !done && (
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  title="Download calendar file (.ics) for Google, Apple, or Outlook Calendar"
+                  onClick={() => {
+                    const ics = buildTasksIcs([task], { alarmDaysBefore: [1, 0] });
+                    if (ics) downloadIcsFile(ics, `valo-task-${task.dueDate}.ics`);
+                  }}
+                  data-testid={"button-ics-" + task.id}
+                >
+                  <CalendarPlus className="h-3.5 w-3.5" aria-hidden="true" />
+                  Calendar
+                </button>
+              )}
               <button
                 type="button"
                 className="btn btn-ghost btn-sm"
