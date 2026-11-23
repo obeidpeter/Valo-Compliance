@@ -37,7 +37,7 @@ test("actual export entries and worker startup reject before database, queue or 
     ],
     [
       "drizzle-orm",
-      "export const and=()=>{},or=()=>{},eq=()=>{},ne=()=>{},desc=()=>{},inArray=()=>{},lte=()=>{},lt=()=>{},asc=()=>{},sql=()=>{};",
+      "export const and=()=>{},or=()=>{},eq=()=>{},ne=()=>{},desc=()=>{},inArray=()=>{},lte=()=>{},lt=()=>{},gt=()=>{},isNull=()=>{},asc=()=>{},sql=()=>{};",
     ],
     [
       "pg-boss",
@@ -71,7 +71,7 @@ test("actual export entries and worker startup reject before database, queue or 
     // re-exports, so this stub and the erasure stub below give those files the names they import.
     [
       "valo-privacy",
-      "export const readPrivacyCase=async()=>{globalThis.guardEffects.services++;throw Error('PRIVACY_EFFECT')},privacyChange=readPrivacyCase,privacyDetail=readPrivacyCase,requirePrivacyStaff=readPrivacyCase,checkPrivacyAudit=readPrivacyCase,privacyCaseRecord=readPrivacyCase,respondPrivacyCase=readPrivacyCase,simpleStaffPrivacyAction=readPrivacyCase;",
+      "export const readPrivacyCase=async()=>{globalThis.guardEffects.services++;throw Error('PRIVACY_EFFECT')},readVerifiedPrivacyCase=readPrivacyCase,privacyChange=readPrivacyCase,privacyDetail=readPrivacyCase,requirePrivacyStaff=readPrivacyCase,checkPrivacyAudit=readPrivacyCase,privacyCaseRecord=readPrivacyCase,respondPrivacyCase=readPrivacyCase,simpleStaffPrivacyAction=readPrivacyCase;",
     ],
     [
       "valo-render",
