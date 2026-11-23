@@ -12,7 +12,9 @@ paths = [ "/" ]
 localPort = 20147
 
 [services.development]
-run = "pnpm --filter @workspace/valo run dev"
+# The compiled site, so pages do not compile on their first visit (scripts/serve-development.mjs).
+# For an editing session with instant reload, run `pnpm --filter @workspace/valo run dev` instead.
+run = "pnpm --filter @workspace/valo run dev:compiled"
 
 [services.production]
 build = [ "pnpm", "--filter", "@workspace/valo", "run", "build" ]

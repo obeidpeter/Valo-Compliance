@@ -318,6 +318,18 @@ export const OTHER_PACKAGE_SETTINGS: Record<string, SettingDefinition> = {
     description: "Clerk proxy URL for the web app.",
   },
   BASE_PATH: { group: "Runtime", description: "Path prefix the web app is served under.", example: "/" },
+  VALO_API_INTERNAL_ORIGIN: {
+    group: "Runtime",
+    description:
+      "The API's address on this machine for the web server's page renders, plain http to loopback or https (read by the web app). Unset, they use the configured public origin; dev:compiled sets http://127.0.0.1:8080.",
+    example: "http://127.0.0.1:8080",
+  },
+  VALO_DEVELOPMENT_SITE: {
+    group: "Runtime",
+    description:
+      "`compiled` marks the compiled development site, which the Replit workspace's preview may show (read by the web app). Ignored in a deployment.",
+    setBy: "the web app's dev:compiled command",
+  },
   VALO_CUSTOMER_DATABASE_URL: {
     group: "Database",
     description:

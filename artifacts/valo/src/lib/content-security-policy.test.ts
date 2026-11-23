@@ -43,6 +43,16 @@ test("development allowances cannot leak through deployment markers or malformed
       contentSecurityPolicy(nonce, { NODE_ENV: "development", [marker]: "false" }),
       /unsafe-eval|replit.com/,
     );
+  // The compiled development site is never a deployment either.
+  for (const marker of ["REPLIT_DEPLOYMENT", "REPLIT_DEPLOYMENT_ID"])
+    assert.doesNotMatch(
+      contentSecurityPolicy(nonce, {
+        NODE_ENV: "production",
+        VALO_DEVELOPMENT_SITE: "compiled",
+        [marker]: "1",
+      }),
+      /unsafe-eval|replit.com/,
+    );
   for (const host of [
     "evil.invalid/path$",
     "evil.invalid; script-src *$",
@@ -51,4 +61,36 @@ test("development allowances cannot leak through deployment markers or malformed
   ])
     assert.throws(() => contentSecurityPolicy(nonce, { CLERK_PUBLISHABLE_KEY: "pk_test_" + btoa(host) }));
   assert.throws(() => contentSecurityPolicy("attacker' unsafe-inline"));
+});
+test("the compiled development site may be shown in the workspace preview, and keeps production's scripts and connections", () => {
+  const production = contentSecurityPolicy(nonce, { NODE_ENV: "production" });
+  const compiled = contentSecurityPolicy(nonce, {
+    NODE_ENV: "production",
+    VALO_DEVELOPMENT_SITE: "compiled",
+  });
+  const directive = (policy: string, name: string) =>
+    policy
+      .split(";")
+      .map((part) => part.trim().split(" "))
+      .find(([key]) => key === name)
+      ?.slice(1);
+  assert.deepEqual(directive(compiled, "frame-ancestors"), [
+    "'self'",
+    "https://replit.com",
+    "https://*.replit.com",
+  ]);
+  // Only the framing differs: no evaluated code and no reload socket, which only the development
+  // server's own tooling needs.
+  for (const name of ["script-src", "connect-src", "style-src", "img-src", "frame-src", "object-src"])
+    assert.deepEqual(directive(compiled, name), directive(production, name), name);
+  assert.doesNotMatch(compiled, /unsafe-eval|ws:/);
+  // Any other value is not the development site.
+  for (const value of ["1", "true", "Compiled", ""])
+    assert.deepEqual(
+      directive(
+        contentSecurityPolicy(nonce, { NODE_ENV: "production", VALO_DEVELOPMENT_SITE: value }),
+        "frame-ancestors",
+      ),
+      ["'none'"],
+    );
 });

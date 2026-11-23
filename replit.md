@@ -5,7 +5,8 @@ Valo is a Nigerian SME business-documentation and source-governed compliance app
 ## Run & Operate
 
 - `pnpm --filter @workspace/api-server run dev` — run the API server using the artifact-managed PORT
-- `pnpm --filter @workspace/valo run dev` — run the Next.js frontend using the artifact-managed PORT
+- `pnpm --filter @workspace/valo run dev:compiled` — build the Next.js frontend once and serve the build on the artifact-managed PORT (what the workspace's web service runs; pages do not compile on their first visit)
+- `pnpm --filter @workspace/valo run dev` — the Next.js development server, with instant reload, for editing sessions
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
