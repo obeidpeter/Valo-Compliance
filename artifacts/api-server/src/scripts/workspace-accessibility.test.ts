@@ -552,6 +552,37 @@ const phone = (path: string, api: Api = answer) => app.phone(path, api);
 /** The same on a desktop-sized page. */
 const desktop = (path: string, api: Api = answer) => app.desktop(path, api);
 
+test("account security fits a two-column profile and an authenticator square at desktop and phone widths", async () => {
+  const { page, close } = await desktop("/workspace/account");
+  try {
+    await ready(page);
+    // Model the provider's card, sidebar and section width in its own cascade layer. The classes
+    // from Valo's real ClerkProvider and Valo's compiled CSS still take precedence.
+    await page.addStyleTag({
+      content: `@layer clerk {
+        .cl-userProfile-root .cl-cardBox { display: grid; width: 55rem; grid-template-columns: 13.75rem minmax(0, 1fr); }
+        .cl-userProfile-root .cl-scrollBox { grid-column: -2 / -1; overflow: auto; padding: 1.25rem; }
+        .cl-userProfile-root .cl-scrollBox p { width: 16.5rem; }
+        .cl-userProfile-root .cl-scrollBox::before {
+          content: ""; display: block; width: 12rem; aspect-ratio: 1;
+          background: repeating-conic-gradient(black 0 25%, white 0 50%) 0 0 / 12px 12px;
+        }
+        @media (max-width: 48rem) { .cl-userProfile-root .cl-cardBox { grid-template-columns: minmax(0, 1fr); } }
+      }`,
+    });
+    const card = page.getByTestId("account-profile").locator(".cl-cardBox");
+    for (const width of [1132, 768, 708, 360, 320]) {
+      await page.setViewportSize({ width, height: 900 });
+      const bounds = await card.boundingBox();
+      assert.ok(bounds && bounds.x >= 0 && bounds.x + bounds.width <= width, `profile at ${width}px`);
+      const fits = await card.locator(".cl-scrollBox").evaluate((el) => el.scrollWidth <= el.clientWidth);
+      assert.ok(fits, `security controls and setup square fit at ${width}px`);
+    }
+  } finally {
+    await close();
+  }
+});
+
 /** Each signed-in screen, the title it gives the page, and for the staff screen the area shown. */
 const SIGNED_IN: { path: string; title: string; area?: string }[] = [
   { path: "/workspace", title: "Your workspace" },
