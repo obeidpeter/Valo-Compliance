@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { CheckerFacts, Profile } from "@workspace/api-client-react";
 import { EMPTY_FACTS } from "./checker";
-import { profileFromAssessmentFacts } from "./profile-prefill";
+import { formatProfileSummary, profileFromAssessmentFacts } from "./profile-prefill";
 
 const BASE_PROFILE: Profile = {
   businessName: "Synthetic Ventures Ltd",
@@ -76,4 +76,54 @@ test("profileFromAssessmentFacts does not erase existing profile values with una
   assert.equal(profile.state, "Abuja_FCT");
   assert.equal(profile.lga, "Municipal");
   assert.deepEqual(profile.activities, ["Consulting"]);
+});
+
+test("formatProfileSummary replaces raw enum tokens and hides unanswered state markers", () => {
+  assert.deepEqual(formatProfileSummary(BASE_PROFILE), {
+    legalForm: "I do not know",
+    registration: "I do not know",
+    location: "Not given",
+  });
+
+  assert.deepEqual(
+    formatProfileSummary({
+      legalForm: "company_limited_by_guarantee",
+      registrationStatus: "registered",
+      lga: "Ikeja",
+      state: "Lagos",
+    }),
+    {
+      legalForm: "Company limited by guarantee",
+      registration: "Registered",
+      location: "Ikeja, Lagos",
+    },
+  );
+
+  assert.deepEqual(
+    formatProfileSummary({
+      legalForm: "limited_company",
+      registrationStatus: "unregistered",
+      lga: "  ",
+      state: "unknown",
+    }),
+    {
+      legalForm: "Limited company",
+      registration: "Unregistered",
+      location: "I do not know",
+    },
+  );
+
+  assert.deepEqual(
+    formatProfileSummary({
+      legalForm: "sole_proprietor",
+      registrationStatus: "pending",
+      lga: "Wuse",
+      state: "FCT",
+    }),
+    {
+      legalForm: "Sole proprietor",
+      registration: "Pending",
+      location: "Wuse, FCT",
+    },
+  );
 });

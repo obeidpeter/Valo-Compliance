@@ -9,7 +9,7 @@ import {
   type CheckerFacts,
   type Profile,
 } from "@workspace/api-client-react";
-import { isMarker } from "@/lib/checker";
+import { isMarker, valueLabel } from "@/lib/checker";
 
 function inEnum<T extends string>(enumObj: Record<string, T>, value: unknown): value is T {
   return typeof value === "string" && Object.values(enumObj).includes(value as T);
@@ -102,4 +102,29 @@ export function profileFromAssessmentFacts(
   }
 
   return { profile: next, appliedCount };
+}
+
+/**
+ * Formats a saved business profile's summary rows for Workspace Home using plain customer labels,
+ * avoiding raw enum tokens such as `unanswered` or `not_registered`.
+ */
+export function formatProfileSummary(
+  profile: Pick<Profile, "legalForm" | "registrationStatus" | "lga" | "state">,
+): { legalForm: string; registration: string; location: string } {
+  const lga = profile.lga.trim();
+  const state = profile.state.trim();
+  let location: string;
+  if (!state || state === "unanswered") {
+    location = lga || "Not given";
+  } else if (isMarker(state)) {
+    location = lga || valueLabel(state);
+  } else {
+    location = [lga, valueLabel(state)].filter(Boolean).join(", ");
+  }
+
+  return {
+    legalForm: valueLabel(profile.legalForm),
+    registration: valueLabel(profile.registrationStatus),
+    location,
+  };
 }
