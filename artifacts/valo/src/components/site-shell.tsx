@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { Show, useClerk, useUser } from "@clerk/react";
 import { Building2, ClipboardCheck, FileText, House, ListTodo, LogOut, Menu, X } from "lucide-react";
 import { AccountMenu } from "@/components/account-menu";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { BOTTOM_BAR, MenuPanel } from "@/components/menu-panel";
 import { Wordmark } from "@/components/brand";
 import { DevBanner, DOCK_BUTTON, NAV, SiteFooter, inSection } from "@/components/site-chrome";
@@ -18,6 +19,7 @@ import { basePath } from "@/lib/env";
 import { isServerPage } from "@/lib/server-pages";
 import { cn } from "@/lib/utils";
 import { ANY_DOCUMENT, signUpFor } from "@/lib/start";
+import { allowUnsavedExit, hasUnsavedChanges } from "@/lib/use-unsaved-navigation";
 
 /** A link in the browser app's shell: within the app, its router; to a page the server renders, a
  * plain link that loads that page in full (decision 0011). */
@@ -57,22 +59,20 @@ const headerLink = (current: boolean) =>
 const MENU_LINK =
   "rounded-xl px-3 py-3 text-base hover:bg-secondary aria-[current=page]:bg-secondary aria-[current=page]:font-medium";
 
-/** The signed-in person's initial and email, and how they sign out. */
+/** The signed-in person's initial and email. */
 function useAccount() {
   const { user } = useUser();
-  const { signOut } = useClerk();
   const email = user?.primaryEmailAddress?.emailAddress;
   return {
     email,
     initials: (user?.firstName?.[0] ?? email?.[0] ?? "V").toUpperCase(),
-    signOut: () => signOut({ redirectUrl: basePath || "/" }),
   };
 }
 const SIGN_OUT_HINT = "Save changes before signing out. Unsaved forms are cleared for privacy.";
 
 /** The header's account controls: the way into the workspace from outside it, the account menu and
  * sign out. */
-function UserMenu({ path }: { path: string }) {
+function UserMenu({ path, onRequestSignOut }: { path: string; onRequestSignOut: () => void }) {
   const account = useAccount();
   return (
     <div className="flex items-center gap-2">
@@ -88,18 +88,18 @@ function UserMenu({ path }: { path: string }) {
         className="btn btn-ghost btn-sm !px-2.5"
         aria-label="Sign out"
         title={SIGN_OUT_HINT}
-        onClick={() => void account.signOut()}
+        onClick={onRequestSignOut}
         data-testid="button-signout"
       >
-        <LogOut className="h-4 w-4" />
+        <LogOut className="h-4 w-4" aria-hidden="true" />
+        <span className="hidden xl:inline">Sign out</span>
       </button>
     </div>
   );
 }
 
 /** The same in the phone's menu, where there is room to list the account's pages outright. */
-function UserLinks({ path }: { path: string }) {
-  const account = useAccount();
+function UserLinks({ path, onRequestSignOut }: { path: string; onRequestSignOut: () => void }) {
   return (
     <>
       <nav className="mt-4 grid gap-1 border-t border-border pt-4" aria-label="Account">
@@ -118,10 +118,10 @@ function UserLinks({ path }: { path: string }) {
         type="button"
         className="btn btn-ghost mt-4"
         title={SIGN_OUT_HINT}
-        onClick={() => void account.signOut()}
+        onClick={onRequestSignOut}
         data-testid="button-signout-menu"
       >
-        <LogOut className="h-4 w-4" /> Sign out
+        <LogOut className="h-4 w-4" aria-hidden="true" /> Sign out
       </button>
     </>
   );
@@ -130,16 +130,44 @@ function UserLinks({ path }: { path: string }) {
 export function SiteShell({ children }: { children: ReactNode }) {
   const [location] = useLocation();
   const [open, setOpen] = useState(false);
+  const [confirmSignOut, setConfirmSignOut] = useState(false);
+  const { signOut } = useClerk();
   useEffect(() => {
     setOpen(false);
+    setConfirmSignOut(false);
     window.scrollTo(0, 0);
   }, [location]);
+  function requestSignOut() {
+    if (hasUnsavedChanges()) {
+      setOpen(false);
+      setConfirmSignOut(true);
+      return;
+    }
+    void signOut({ redirectUrl: basePath || "/" });
+  }
+  function confirmDiscardAndSignOut() {
+    setConfirmSignOut(false);
+    allowUnsavedExit();
+    void signOut({ redirectUrl: basePath || "/" });
+  }
   // Inside the workspace the header lists the workspace's sections in place of the site's pages.
   const workspace = inWorkspace(location),
     here = sectionOf(location);
 
   return (
     <div className="flex min-h-[100dvh] flex-col">
+      <ConfirmDialog
+        open={confirmSignOut}
+        title="Sign out with unsaved changes?"
+        keep="Stay and save"
+        confirm="Discard changes and sign out"
+        onKeep={() => setConfirmSignOut(false)}
+        onConfirm={confirmDiscardAndSignOut}
+      >
+        <p>
+          You have changes on this page that have not been saved yet. Signing out clears them for privacy.
+        </p>
+      </ConfirmDialog>
       <DevBanner />
       {/* oxlint-disable-next-line jsx-a11y/no-static-element-interactions -- Escape from any control in the header closes the menu, and so does focus moving on from the header; the header takes no focus */}
       <header
@@ -195,7 +223,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
               </ShellLink>
             )}
             <Show when="signed-in">
-              <UserMenu path={location} />
+              <UserMenu path={location} onRequestSignOut={requestSignOut} />
             </Show>
             <Show when="signed-out">
               <Link href="/sign-in" className="btn btn-ghost btn-sm" data-testid="link-signin">
@@ -235,7 +263,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
               )}
             </nav>
             <Show when="signed-in">
-              <UserLinks path={location} />
+              <UserLinks path={location} onRequestSignOut={requestSignOut} />
             </Show>
             <Show when="signed-out">
               <div className="mt-4 flex flex-wrap gap-2">

@@ -54,6 +54,7 @@ export default function ProfilePage() {
   const save = useSaveBusinessProfile();
   const [p, setP] = useState<Profile>(EMPTY);
   const [touched, setTouched] = useState(false);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
   const [conflict, setConflict] = useState(false);
   const init = useRef(false);
   const form = useRef<HTMLFormElement>(null),
@@ -85,10 +86,31 @@ export default function ProfilePage() {
   if (yearMode === "year" && !/^[0-9]{4}$/.test(p.turnoverYear))
     errors.turnoverYear = "Use a four-digit year.";
 
+  const errorFields: { key: keyof typeof errors; id: string; label: string }[] = [
+    { key: "businessName", id: "businessName", label: "Business name" },
+    { key: "activities", id: "activity-0", label: "Activities" },
+    { key: "employees", id: "employees", label: "Employees" },
+    { key: "turnoverYear", id: "turnoverYear", label: "Turnover year" },
+  ];
+  const activeErrors = errorFields.filter((field) => errors[field.key]);
+
+  function focusField(id: string) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    el.focus();
+  }
+
   function submit(e: FormEvent) {
     e.preventDefault();
     setTouched(true);
-    if (Object.keys(errors).length || !ws.data) return;
+    if (activeErrors.length) {
+      setSubmitAttempted(true);
+      focusField(activeErrors[0]!.id);
+      return;
+    }
+    setSubmitAttempted(false);
+    if (!ws.data) return;
     save.mutate(
       {
         data: {
@@ -132,6 +154,7 @@ export default function ProfilePage() {
         activities: r.data.profile.activities.length ? r.data.profile.activities : [""],
       });
     setTouched(false);
+    setSubmitAttempted(false);
     setConflict(false);
     save.reset();
   }
@@ -396,6 +419,28 @@ export default function ProfilePage() {
               Load the newest version
             </button>
           </Notice>
+        )}
+        {submitAttempted && activeErrors.length > 0 && (
+          <div
+            role="alert"
+            className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive"
+            data-testid="status-profile-validation"
+          >
+            <p className="font-medium">Check these details before saving:</p>
+            <ul className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
+              {activeErrors.map((field) => (
+                <li key={field.key}>
+                  <button
+                    type="button"
+                    className="underline underline-offset-4"
+                    onClick={() => focusField(field.id)}
+                  >
+                    {field.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
         {err && !conflict && (
           <p role="alert" className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">

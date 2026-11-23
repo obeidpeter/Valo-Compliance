@@ -47,7 +47,8 @@ export function AccountLinksFor({ identity, place }: { identity: Identity; place
           onClick={() => void identity.signOut()}
           data-testid="button-signout"
         >
-          <LogOut className="h-4 w-4" />
+          <LogOut className="h-4 w-4" aria-hidden="true" />
+          <span className="hidden xl:inline">Sign out</span>
         </button>
       </div>
     );
