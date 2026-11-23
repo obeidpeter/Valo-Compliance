@@ -121,6 +121,9 @@ import type {
   ReminderRecord,
   RequestCommerceRefund201,
   RequirementsRegister,
+  RetainedDraftLoad,
+  RetainedDraftLoadResult,
+  RetainedDraftStatus,
   SavedAssessment,
   SavedAssessmentInput,
   SavedTemplates,
@@ -5675,6 +5678,182 @@ export function useListManualLibrary<TData = Awaited<ReturnType<typeof listManua
 
 
 
+
+export const getListRetainedDraftsUrl = () => {
+
+
+
+
+  return `/api/admin/manual-library/retained`
+}
+
+export const listRetainedDrafts = async ( options?: Parameters<typeof customFetch>[1]): Promise<RetainedDraftStatus> => {
+
+  return customFetch<RetainedDraftStatus>(getListRetainedDraftsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListRetainedDraftsQueryKey = () => {
+    return [
+    "listRetainedDrafts"
+    ] as const;
+    }
+
+
+export const getListRetainedDraftsQueryOptions = <TData = Awaited<ReturnType<typeof listRetainedDrafts>>, TError = ErrorType<void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRetainedDrafts>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListRetainedDraftsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listRetainedDrafts>>> = ({ signal }) => listRetainedDrafts({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listRetainedDrafts>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListRetainedDraftsQueryResult = NonNullable<Awaited<ReturnType<typeof listRetainedDrafts>>>
+export type ListRetainedDraftsQueryError = ErrorType<void>
+
+
+export function useListRetainedDrafts<TData = Awaited<ReturnType<typeof listRetainedDrafts>>, TError = ErrorType<void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRetainedDrafts>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listRetainedDrafts>>,
+          TError,
+          Awaited<ReturnType<typeof listRetainedDrafts>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListRetainedDrafts<TData = Awaited<ReturnType<typeof listRetainedDrafts>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRetainedDrafts>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listRetainedDrafts>>,
+          TError,
+          Awaited<ReturnType<typeof listRetainedDrafts>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListRetainedDrafts<TData = Awaited<ReturnType<typeof listRetainedDrafts>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRetainedDrafts>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListRetainedDrafts<TData = Awaited<ReturnType<typeof listRetainedDrafts>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRetainedDrafts>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListRetainedDraftsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getLoadRetainedDraftsUrl = () => {
+
+
+
+
+  return `/api/admin/manual-library/retained`
+}
+
+export const loadRetainedDrafts = async (retainedDraftLoad: RetainedDraftLoad, options?: Parameters<typeof customFetch>[1]): Promise<RetainedDraftLoadResult> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<RetainedDraftLoadResult>(getLoadRetainedDraftsUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(retainedDraftLoad)
+  }
+);}
+
+
+
+
+
+export const getLoadRetainedDraftsMutationKey = () => ['loadRetainedDrafts'] as const;
+
+export const getLoadRetainedDraftsMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof loadRetainedDrafts>>, TError,LoadRetainedDraftsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof loadRetainedDrafts>>, TError,LoadRetainedDraftsMutationVariables, TContext> => {
+
+const mutationKey = getLoadRetainedDraftsMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof loadRetainedDrafts>>, LoadRetainedDraftsMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  loadRetainedDrafts(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LoadRetainedDraftsMutationResult = NonNullable<Awaited<ReturnType<typeof loadRetainedDrafts>>>
+    export type LoadRetainedDraftsMutationBody = BodyType<RetainedDraftLoad>
+    export type LoadRetainedDraftsMutationError = ErrorType<void>
+    export type LoadRetainedDraftsMutationVariables = {data: BodyType<RetainedDraftLoad>}
+
+    export const useLoadRetainedDrafts = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof loadRetainedDrafts>>, TError,LoadRetainedDraftsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof loadRetainedDrafts>>,
+        TError,
+        LoadRetainedDraftsMutationVariables,
+        TContext
+      > => {
+      return useMutation(getLoadRetainedDraftsMutationOptions(options), queryClient);
+    }
 
 export const getGetManualLibraryRevisionUrl = (id: string,) => {
 

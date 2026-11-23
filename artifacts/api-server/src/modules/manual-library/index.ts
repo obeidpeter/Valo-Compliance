@@ -1,6 +1,11 @@
+import { randomUUID } from "node:crypto";
 import { and, desc, eq, getTableColumns, ilike, isNull, ne, or, sql } from "drizzle-orm";
 import { baselineTemplates, coveragePlan, digest, sha256 } from "@workspace/valo-core";
-import { ActOnManualLibraryBody, SaveManualLibraryDraftBody } from "@workspace/api-zod";
+import {
+  ActOnManualLibraryBody,
+  LoadRetainedDraftsBody,
+  SaveManualLibraryDraftBody,
+} from "@workspace/api-zod";
 import type { db, valoManualLibrary } from "@workspace/db";
 import type { SourceStaffActor } from "../sources";
 import { ValoProblem } from "../../platform/valo-problem";
@@ -415,4 +420,139 @@ export async function releasedManualEntries(
       throw priorError;
     }
   }
+}
+
+/** How many retained drafts one request files. The screen asks again until none is left, so no
+ * single request runs long. */
+export const RETAINED_DRAFTS_PER_REQUEST = 20;
+type RetainedState = "not_in_library" | Revision["state"];
+
+/**
+ * Where each draft kept in the repository stands in the library: not filed yet, or the state of the
+ * library item it was filed as, or found under (the same kind and title, or for an introduction or a
+ * pack the same industry), whether a published version is on the site now, and for a regulatory
+ * guide its latest source check.
+ */
+export async function retainedDraftStatus(actor: SourceStaffActor) {
+  const { retainedDrafts, retainedItemId } = await import("./retained");
+  const drafts = await retainedDrafts();
+  const { library, checks } = await withEditor(actor, async (tx) => {
+    const { valoManualLibrary: t, valoManualRegulatoryChecks: c } = await import("@workspace/db");
+    const library = await tx
+      .select({
+        itemId: t.itemId,
+        version: t.version,
+        kind: t.kind,
+        title: t.title,
+        industry: t.industry,
+        state: t.state,
+      })
+      .from(t);
+    const checks = await tx
+      .selectDistinctOn([c.candidateId], {
+        candidateId: c.candidateId,
+        checkedAt: c.checkedAt,
+        holds: c.holds,
+        sources: c.sources,
+      })
+      .from(c)
+      .orderBy(c.candidateId, desc(c.checkedAt), desc(c.id));
+    return { library, checks };
+  });
+  const items = new Map<string, { itemId: string; latest: (typeof library)[number]; live: number | null }>();
+  for (const row of library) {
+    const item = items.get(row.itemId) ?? { itemId: row.itemId, latest: row, live: null };
+    if (row.version > item.latest.version) item.latest = row;
+    if (row.state === "published") item.live = row.version;
+    items.set(row.itemId, item);
+  }
+  const shownItems = new Set((await releasedManualEntries({ summaryOnly: true })).map((row) => row.itemId));
+  const sameIndustry = (kind: string) => kind === "industry_introduction" || kind === "industry_pack";
+  const status = drafts.map((draft) => {
+    const own = items.get(retainedItemId(draft.retainedId));
+    const found =
+      own ??
+      [...items.values()]
+        .filter(
+          ({ latest }) =>
+            latest.kind === draft.kind &&
+            (sameIndustry(draft.kind)
+              ? latest.industry === draft.industry
+              : latest.title.toLowerCase() === draft.title.toLowerCase()),
+        )
+        .sort((a, b) => Number(b.live !== null) - Number(a.live !== null))[0];
+    const check = checks.find((row) => row.candidateId === draft.retainedId);
+    const validThrough = check?.sources
+      .map((source) => source.validThrough)
+      .sort()
+      .at(0);
+    const state: RetainedState = !found
+      ? "not_in_library"
+      : found.live !== null
+        ? "published"
+        : found.latest.state;
+    return {
+      retainedId: draft.retainedId,
+      kind: draft.kind,
+      title: draft.title,
+      industry: draft.industry,
+      itemId: found?.itemId ?? null,
+      state,
+      version: found?.latest.version ?? null,
+      liveVersion: found?.live ?? null,
+      shown: Boolean(found && shownItems.has(found.itemId)),
+      sourceCheck:
+        draft.kind === "regulatory_article" && check
+          ? {
+              checkedAt: check.checkedAt.toISOString(),
+              holds: check.holds.length,
+              validThrough: validThrough ?? null,
+            }
+          : null,
+    };
+  });
+  return {
+    items: status,
+    notInLibrary: status.filter((item) => item.state === "not_in_library").length,
+    published: status.filter((item) => item.state === "published").length,
+    shown: status.filter((item) => item.shown).length,
+  };
+}
+
+/**
+ * Files the next retained drafts that are not in the library as private drafts, through the same
+ * draft check as an editor's own (`saveManualDraft`), under the editor who asked. A template gets the
+ * reviewed route's blank Word master, made from the same section. Nothing is published: each draft
+ * waits for an editor to preview and publish it, and a regulatory guide for the owner's source check.
+ */
+export async function loadRetainedDrafts(actor: SourceStaffActor, value: unknown) {
+  LoadRetainedDraftsBody.strict().parse(value);
+  const { retainedDrafts, retainedItemId, retainedTemplateFile } = await import("./retained");
+  const before = await retainedDraftStatus(actor);
+  const drafts = new Map((await retainedDrafts()).map((draft) => [draft.retainedId, draft]));
+  const loaded: string[] = [];
+  for (const item of before.items
+    .filter((entry) => entry.state === "not_in_library")
+    .slice(0, RETAINED_DRAFTS_PER_REQUEST)) {
+    const draft = drafts.get(item.retainedId)!;
+    const file = draft.template ? await retainedTemplateFile(draft.template) : undefined;
+    try {
+      await saveManualDraft(actor, retainedItemId(draft.retainedId), {
+        requestId: randomUUID(),
+        baseVersion: 0,
+        title: draft.title,
+        kind: draft.kind,
+        industry: draft.industry,
+        body: draft.body,
+        fileMode: file ? "upload" : "text",
+        ...(file ? { upload: { format: "docx", base64: file.toString("base64") } } : {}),
+      });
+      loaded.push(draft.retainedId);
+    } catch (error) {
+      // Another editor filed the same draft a moment ago: it is in the library either way.
+      if (!(error instanceof ValoProblem && error.status === 409)) throw error;
+    }
+  }
+  const status = await retainedDraftStatus(actor);
+  return { loaded, remaining: status.notInLibrary, status };
 }

@@ -3459,6 +3459,82 @@ export const ListManualLibraryResponse = zod.object({
 })
 
 
+export const listRetainedDraftsResponseItemsItemSourceCheckOneHoldsMin = 0;
+
+export const listRetainedDraftsResponseNotInLibraryMin = 0;
+
+export const listRetainedDraftsResponsePublishedMin = 0;
+
+export const listRetainedDraftsResponseShownMin = 0;
+
+
+
+export const ListRetainedDraftsResponse = zod.object({
+  "items": zod.array(zod.object({
+  "retainedId": zod.string(),
+  "kind": zod.enum(['practical_guide', 'industry_introduction', 'industry_pack', 'template', 'premium_template', 'regulatory_article']),
+  "title": zod.string(),
+  "industry": zod.string().nullable(),
+  "itemId": zod.uuid().nullable(),
+  "state": zod.enum(['not_in_library', 'draft', 'published', 'withdrawn', 'replaced']),
+  "version": zod.int().nullable(),
+  "liveVersion": zod.int().nullable(),
+  "shown": zod.boolean(),
+  "sourceCheck": zod.union([zod.object({
+  "checkedAt": zod.coerce.date(),
+  "holds": zod.int().min(listRetainedDraftsResponseItemsItemSourceCheckOneHoldsMin),
+  "validThrough": zod.coerce.date().nullable()
+}),zod.null()])
+})),
+  "notInLibrary": zod.int().min(listRetainedDraftsResponseNotInLibraryMin),
+  "published": zod.int().min(listRetainedDraftsResponsePublishedMin),
+  "shown": zod.int().min(listRetainedDraftsResponseShownMin)
+})
+
+
+export const LoadRetainedDraftsBody = zod.object({
+  "load": zod.enum(['missing'])
+})
+
+export const loadRetainedDraftsResponseRemainingMin = 0;
+
+export const loadRetainedDraftsResponseStatusItemsItemSourceCheckOneHoldsMin = 0;
+
+export const loadRetainedDraftsResponseStatusNotInLibraryMin = 0;
+
+export const loadRetainedDraftsResponseStatusPublishedMin = 0;
+
+export const loadRetainedDraftsResponseStatusShownMin = 0;
+
+
+
+export const LoadRetainedDraftsResponse = zod.object({
+  "loaded": zod.array(zod.string()),
+  "remaining": zod.int().min(loadRetainedDraftsResponseRemainingMin),
+  "status": zod.object({
+  "items": zod.array(zod.object({
+  "retainedId": zod.string(),
+  "kind": zod.enum(['practical_guide', 'industry_introduction', 'industry_pack', 'template', 'premium_template', 'regulatory_article']),
+  "title": zod.string(),
+  "industry": zod.string().nullable(),
+  "itemId": zod.uuid().nullable(),
+  "state": zod.enum(['not_in_library', 'draft', 'published', 'withdrawn', 'replaced']),
+  "version": zod.int().nullable(),
+  "liveVersion": zod.int().nullable(),
+  "shown": zod.boolean(),
+  "sourceCheck": zod.union([zod.object({
+  "checkedAt": zod.coerce.date(),
+  "holds": zod.int().min(loadRetainedDraftsResponseStatusItemsItemSourceCheckOneHoldsMin),
+  "validThrough": zod.coerce.date().nullable()
+}),zod.null()])
+})),
+  "notInLibrary": zod.int().min(loadRetainedDraftsResponseStatusNotInLibraryMin),
+  "published": zod.int().min(loadRetainedDraftsResponseStatusPublishedMin),
+  "shown": zod.int().min(loadRetainedDraftsResponseStatusShownMin)
+})
+})
+
+
 export const GetManualLibraryRevisionParams = zod.object({
   "id": zod.uuid()
 })

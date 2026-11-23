@@ -36,6 +36,22 @@ paths:
         '403': { description: Recently verified development owner required }
         '409': { description: The revision or source evidence changed }
   /admin/manual-library: {"get":{"operationId":"listManualLibrary","tags":["staff"],"parameters":[{"name":"page","in":"query","required":false,"schema":{"type":"integer","minimum":1,"default":1}},{"name":"q","in":"query","required":false,"schema":{"type":"string","maxLength":140}},{"name":"kind","in":"query","required":false,"schema":{"type":"string","enum":["practical_guide","industry_introduction","industry_pack","template","premium_template","regulatory_article"]}},{"name":"state","in":"query","required":false,"schema":{"type":"string","enum":["draft","published","replaced","withdrawn"]}},{"name":"industry","in":"query","required":false,"schema":{"type":"string","maxLength":80}}],"responses":{"200":{"description":"Current editorial record","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ManualLibraryPage"}}}},"401":{"description":"Sign in required"},"403":{"description":"Access denied"},"404":{"description":"Unavailable"},"409":{"description":"Revision conflict or source hold"}}}}
+  /admin/manual-library/retained:
+    get:
+      operationId: listRetainedDrafts
+      tags: [staff]
+      responses:
+        '200': { description: 'Each draft kept in the repository and where it stands in the library', content: { application/json: { schema: { $ref: '#/components/schemas/RetainedDraftStatus' } } } }
+        '403': { description: Recently verified content staff required }
+    post:
+      operationId: loadRetainedDrafts
+      tags: [staff]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/RetainedDraftLoad' } } }
+      responses:
+        '200': { description: 'The next drafts that were not in the library, filed as private drafts. Nothing is published.', content: { application/json: { schema: { $ref: '#/components/schemas/RetainedDraftLoadResult' } } } }
+        '403': { description: Recently verified content staff required }
   /admin/manual-library/{id}: {"get":{"operationId":"getManualLibraryRevision","tags":["staff"],"parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string","format":"uuid"}}],"responses":{"200":{"description":"Current editorial record","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ManualLibraryRevision"}}}},"401":{"description":"Sign in required"},"403":{"description":"Access denied"},"404":{"description":"Unavailable"},"409":{"description":"Revision conflict or source hold"}}}}
   /admin/manual-library/{id}/drafts: {"post":{"operationId":"saveManualLibraryDraft","tags":["staff"],"parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string","format":"uuid"}}],"requestBody":{"required":true,"content":{"application/vnd.valo.manual-draft+json":{"schema":{"$ref":"#/components/schemas/ManualLibraryDraft"}}}},"responses":{"200":{"description":"Current editorial record","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ManualLibraryRevision"}}}},"401":{"description":"Sign in required"},"403":{"description":"Access denied"},"404":{"description":"Unavailable"},"409":{"description":"Revision conflict or source hold"}}}}
   /admin/manual-library/{id}/actions: {"post":{"operationId":"actOnManualLibrary","tags":["staff"],"parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string","format":"uuid"}}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/ManualLibraryAction"}}}},"responses":{"200":{"description":"Current editorial record","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ManualLibraryRevision"}}}},"401":{"description":"Sign in required"},"403":{"description":"Access denied"},"404":{"description":"Unavailable"},"409":{"description":"Revision conflict or source hold"}}}}
@@ -98,6 +114,50 @@ schemas:
       itemId: {type: string, format: uuid}
       version: {type: integer}
       state: {type: string, enum: [published, withdrawn]}
+  RetainedDraftLoad:
+    type: object
+    required: [load]
+    properties:
+      load: { type: string, enum: [missing] }
+  RetainedDraftSourceCheck:
+    type: object
+    required: [checkedAt, holds, validThrough]
+    properties:
+      checkedAt: { type: string, format: date-time }
+      holds: { type: integer, minimum: 0 }
+      validThrough: { type: [string, 'null'], format: date-time }
+  RetainedDraft:
+    type: object
+    required: [retainedId, kind, title, industry, itemId, state, version, liveVersion, shown, sourceCheck]
+    properties:
+      retainedId: { type: string }
+      kind: { type: string, enum: [practical_guide, industry_introduction, industry_pack, template, premium_template, regulatory_article] }
+      title: { type: string }
+      industry: { type: [string, 'null'] }
+      itemId: { type: [string, 'null'], format: uuid }
+      state: { type: string, enum: [not_in_library, draft, published, withdrawn, replaced] }
+      version: { type: [integer, 'null'] }
+      liveVersion: { type: [integer, 'null'] }
+      shown: { type: boolean }
+      sourceCheck:
+        anyOf:
+          - { $ref: '#/components/schemas/RetainedDraftSourceCheck' }
+          - { type: 'null' }
+  RetainedDraftStatus:
+    type: object
+    required: [items, notInLibrary, published, shown]
+    properties:
+      items: { type: array, items: { $ref: '#/components/schemas/RetainedDraft' } }
+      notInLibrary: { type: integer, minimum: 0 }
+      published: { type: integer, minimum: 0 }
+      shown: { type: integer, minimum: 0 }
+  RetainedDraftLoadResult:
+    type: object
+    required: [loaded, remaining, status]
+    properties:
+      loaded: { type: array, items: { type: string } }
+      remaining: { type: integer, minimum: 0 }
+      status: { $ref: '#/components/schemas/RetainedDraftStatus' }
   ManualLibraryEntry: {"type":"object","required":["itemId","version","title","kind","state","industry"],"properties":{"itemId":{"type":"string","format":"uuid"},"version":{"type":"integer"},"title":{"type":"string"},"kind":{"type":"string","enum":["practical_guide","industry_introduction","industry_pack","template","premium_template","regulatory_article"]},"state":{"type":"string","enum":["draft","published","replaced","withdrawn"]},"industry":{"type":["string","null"]}}}
   ManualLibraryPage: {"type":"object","required":["items","hasMore"],"properties":{"items":{"type":"array","items":{"$ref":"#/components/schemas/ManualLibraryEntry"}},"hasMore":{"type":"boolean"}}}
   ManualLibraryRevision: {"type":"object","required":["itemId","version","title","kind","state","industry","id","digest","body","fileFormat","createdBy","createdAt","publishedAt","publishedBy","live"],"properties":{"itemId":{"type":"string","format":"uuid"},"version":{"type":"integer"},"title":{"type":"string"},"kind":{"type":"string","enum":["practical_guide","industry_introduction","industry_pack","template","premium_template","regulatory_article"]},"state":{"type":"string","enum":["draft","published","replaced","withdrawn"]},"industry":{"type":["string","null"]},"id":{"type":"string","format":"uuid"},"digest":{"type":"string","pattern":"^[0-9a-f]{64}$"},"body":{"type":"string"},"fileFormat":{"type":["string","null"],"enum":["docx","pdf",null]},"createdBy":{"type":"string"},"createdAt":{"type":"string"},"publishedAt":{"type":["string","null"]},"publishedBy":{"type":["string","null"]},"live":{"anyOf":[{"type":"object","required":["version","digest"],"properties":{"version":{"type":"integer"},"digest":{"type":"string","pattern":"^[0-9a-f]{64}$"}}},{"type":"null"}]}}}
