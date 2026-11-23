@@ -102,9 +102,9 @@ export function AccountStateBoundary({
       typeof BroadcastChannel === "undefined" ? null : new BroadcastChannel("valo-account-boundary-v1");
     const prior = previous.current;
     if (prior !== session) {
-      // oxlint-disable-next-line unicorn/require-post-message-target-origin -- a BroadcastChannel, which takes no target origin
       if (prior) {
         clearCheckerHandoff();
+        // oxlint-disable-next-line unicorn/require-post-message-target-origin -- a BroadcastChannel, which takes no target origin
         channel?.postMessage({ type: "session-ended", session: prior });
       }
       previous.current = session ?? null;

@@ -43,7 +43,7 @@ export default function StaffPage() {
   const status = (q.error as { status?: number } | null)?.status;
   const errText = (q.error as { data?: { error?: string; code?: string } } | null)?.data;
   const mfa = status === 403 && /mfa|factor|reverif/i.test(`${errText?.code ?? ""} ${errText?.error ?? ""}`);
-  const records = q.data?.records ?? [];
+  const records = useMemo(() => q.data?.records ?? [], [q.data?.records]);
   const cols = useMemo(
     () =>
       Array.from(new Set(records.flatMap((r) => Object.keys(r))))

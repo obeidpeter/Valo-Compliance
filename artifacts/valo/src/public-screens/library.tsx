@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
 import { BookOpen, Search, X } from "lucide-react";
 import {
@@ -48,7 +48,7 @@ export function Library({
 }) {
   const search = useSearchParams()?.toString() ?? initialSearch;
   const setLocation = (href: string) => window.history.pushState(null, "", href);
-  const filters = libraryFilters(new URLSearchParams(search));
+  const filters = useMemo(() => libraryFilters(new URLSearchParams(search)), [search]);
   const { q, type, industry, page, category, access, sort } = filters;
   // The server's results are for the address the page was first opened at.
   const serverResults = search === initialSearch ? initialCatalogue : undefined;
@@ -64,7 +64,7 @@ export function Library({
       setLocation(libraryHref(filters, { q: trimmed }));
     }, 300);
     return () => window.clearTimeout(handle);
-  }, [draft, q]);
+  }, [draft, filters, q]);
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== "/" || event.ctrlKey || event.metaKey || event.altKey) return;

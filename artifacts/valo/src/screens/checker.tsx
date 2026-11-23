@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearch } from "wouter";
 import { useUser } from "@clerk/react";
 import {
@@ -176,10 +176,10 @@ export default function Checker() {
     leavingForAuth.current = true;
   }
 
-  function fillIn() {
-    if (!ws.data?.profile) return;
+  const fillIn = useCallback(() => {
+    if (!profile) return;
     setFacts((current) => ({
-      ...factsFromProfile(ws.data!.profile!),
+      ...factsFromProfile(profile),
       ...(current.rich ? { factsVersion: current.factsVersion, rich: current.rich } : {}),
     }));
     setSkipped(new Set());
@@ -188,14 +188,14 @@ export default function Checker() {
     setAmountError(null);
     setFilledIn(true);
     setStep(0);
-  }
+  }, [profile]);
 
   useEffect(() => {
     if (!autoPrefillRequested || autoPrefilled.current || !profile || own || filledIn || fromAssessmentId)
       return;
     autoPrefilled.current = true;
     fillIn();
-  }, [autoPrefillRequested, fromAssessmentId, profile, own, filledIn]);
+  }, [autoPrefillRequested, fromAssessmentId, profile, own, filledIn, fillIn]);
 
   useEffect(() => {
     if (
