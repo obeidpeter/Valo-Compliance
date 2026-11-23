@@ -8,6 +8,9 @@ test("quota defaults preserve the requested initial ceilings", () => {
     "public-support-day": 20,
     "anonymous-read": 60,
     "authenticated-read": 120,
+    // The shared ceiling over every page render's reads (middlewares/valo-quota.ts), added with the
+    // per-visitor count of page renders; it raises none of the ceilings above.
+    "page-render-read": 600,
     "customer-ai": 5,
     "checkout-create": 10,
     "export-create": 10,

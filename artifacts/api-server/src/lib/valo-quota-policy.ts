@@ -6,6 +6,9 @@ export const quotaPolicy = {
   "public-support-day": 20,
   "anonymous-read": 60,
   "authenticated-read": 120,
+  // Every page the web server renders, for all visitors together: each visitor's own reads count
+  // against "anonymous-read", and this caps what forwarded addresses can add up to.
+  "page-render-read": 600,
   "customer-ai": 5,
   "checkout-create": 10,
   "export-create": 10,
