@@ -1,16 +1,38 @@
 import { useEffect, useRef, useState } from "react";
 
-/** What an open screen does when the browser goes back or forward. */
+/** What an open screen does when the browser goes back, forward, or attempts to sign out. */
 type Guard = {
+  /** Whether this screen currently holds unsaved entries. */
+  dirty: () => boolean;
   /** Whether the move would leave the screen with something unsaved on it. */
   holds: () => boolean;
   /** Take the move back, and ask. */
   hold: () => void;
   /** The move went through: this is where the screen now is. */
   moved: () => void;
+  /** Mark this screen as explicitly permitted to leave (e.g. after confirming sign-out). */
+  allowExit: () => void;
 };
 const guards = new Set<Guard>();
 let watching = false;
+
+/** Register a lightweight dirty guard directly (used internally and in tests). */
+export function registerUnsavedGuard(guard: Guard): () => void {
+  guards.add(guard);
+  return () => {
+    guards.delete(guard);
+  };
+}
+
+/** Whether any mounted screen currently has unsaved changes. */
+export function hasUnsavedChanges(): boolean {
+  return [...guards].some((each) => each.dirty());
+}
+
+/** Bypass active unsaved guards once the user explicitly confirms leaving (such as signing out). */
+export function allowUnsavedExit(): void {
+  for (const each of guards) each.allowExit();
+}
 
 /**
  * Watches the browser's Back and Forward. Call it once as the app starts, before the router
@@ -96,6 +118,7 @@ export function useUnsavedNavigation(dirty: () => boolean) {
       }
     };
     const guard: Guard = {
+      dirty: () => !bypass.current && dirtyRef.current(),
       holds: () => !bypass.current && changesRoute(location.href) && dirtyRef.current(),
       hold: () => {
         // The browser has already moved. Put this screen's address back, and go to the other one
@@ -106,6 +129,9 @@ export function useUnsavedNavigation(dirty: () => boolean) {
       },
       moved: () => {
         current = location.href;
+      },
+      allowExit: () => {
+        bypass.current = true;
       },
     };
     const unload = (event: BeforeUnloadEvent) => {

@@ -62,6 +62,7 @@ export function AccountMenu({
         <span className="grid h-6 w-6 place-items-center rounded-full bg-secondary text-xs font-medium">
           {initials}
         </span>
+        <span className="hidden text-sm xl:inline">Account</span>
         <ChevronDown className="h-4 w-4" aria-hidden />
       </button>
       <ul

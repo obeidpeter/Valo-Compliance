@@ -113,8 +113,8 @@ export default function TasksPage() {
       <UnsavedNavigationDialog
         open={navigation.blocked}
         busy={create.isPending}
-        saveLabel="Return to save tasks"
-        onSave={() => navigation.stay()}
+        title="Leave unsaved task changes?"
+        description="You have task edits that are not saved. Stay here to finish and save them, or leave and discard them."
         onStay={() => navigation.stay()}
         onDiscard={() => navigation.proceed()}
       />
