@@ -202,10 +202,12 @@ export default function RemindersPage() {
                     ? "Valo is still being built. A reminder is sent only as a test, to the workspace owner's verified email address."
                     : "You can save your choices now. Nothing is sent, and each reminder stays on hold, until sending is switched on."}
                 </p>
-                {(tasks.data ?? []).some((t) => t.dueDate && t.state !== "completed_by_user") && (
+              </div>
+              {(tasks.data ?? []).some((t) => t.dueDate && t.state !== "completed_by_user") && (
+                <div>
                   <button
                     type="button"
-                    className="btn btn-ghost btn-sm mt-3"
+                    className="btn btn-ghost btn-sm max-w-full whitespace-normal text-left"
                     onClick={() => {
                       const ics = buildTasksIcs(tasks.data ?? [], {
                         alarmDaysBefore: offsets.length ? offsets : [7, 1, 0],
@@ -214,11 +216,11 @@ export default function RemindersPage() {
                     }}
                     data-testid="button-export-reminders-ics"
                   >
-                    <CalendarPlus className="h-4 w-4" aria-hidden="true" />
-                    Download phone/calendar alerts (.ics)
+                    <CalendarPlus className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    Download calendar alerts (.ics)
                   </button>
-                )}
-              </div>
+                </div>
+              )}
 
               <label className="flex cursor-pointer items-center justify-between gap-4">
                 <span>

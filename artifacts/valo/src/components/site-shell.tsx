@@ -172,18 +172,21 @@ export function SiteShell({ children }: { children: ReactNode }) {
       >
         Skip to main content
       </a>
-      <ConfirmDialog
-        open={confirmSignOut}
-        title="Sign out with unsaved changes?"
-        keep="Stay and save"
-        confirm="Discard changes and sign out"
-        onKeep={() => setConfirmSignOut(false)}
-        onConfirm={confirmDiscardAndSignOut}
-      >
-        <p>
-          You have changes on this page that have not been saved yet. Signing out clears them for privacy.
-        </p>
-      </ConfirmDialog>
+      {confirmSignOut && (
+        <ConfirmDialog
+          open
+          testId="dialog-confirm-signout"
+          title="Sign out with unsaved changes?"
+          keep="Stay and save"
+          confirm="Discard changes and sign out"
+          onKeep={() => setConfirmSignOut(false)}
+          onConfirm={confirmDiscardAndSignOut}
+        >
+          <p>
+            You have changes on this page that have not been saved yet. Signing out clears them for privacy.
+          </p>
+        </ConfirmDialog>
+      )}
       <DevBanner />
       {/* oxlint-disable-next-line jsx-a11y/no-static-element-interactions -- Escape from any control in the header closes the menu, and so does focus moving on from the header; the header takes no focus */}
       <header
