@@ -42,11 +42,11 @@ function OwnedChoice({ file }: { file: OwnedCheckoutDownload }) {
 }
 function OrderCard({
   order,
-  owned,
+  downloadPath,
   changed,
 }: {
   order: CommerceOrder;
-  owned: boolean;
+  downloadPath: string | undefined;
   changed: () => Promise<unknown>;
 }) {
   const [busy, setBusy] = useState(false),
@@ -116,7 +116,17 @@ function OrderCard({
         </>
       )}
       <div className="flex flex-wrap gap-3">
-        {!owned && ["created", "pending"].includes(order.status) && (
+        {downloadPath && order.status === "verified_success" && (
+          <a
+            href={basePath + downloadPath}
+            className="btn btn-primary"
+            aria-label={`Download ${order.title}`}
+            data-testid="order-template-download"
+          >
+            <Download className="h-4 w-4" aria-hidden /> Download
+          </a>
+        )}
+        {!downloadPath && ["created", "pending"].includes(order.status) && (
           <button
             className="btn btn-primary"
             disabled={busy}
@@ -315,7 +325,7 @@ function PurchaseHistoryContent() {
   const [keys] = useState(() => new Map<string, string>());
   const products = (q.data?.products ?? []).filter((p) => !directCheckout || p.id === offerId);
   const downloads = new Map(q.data?.ownedDownloads?.map((file) => [file.offerId, file]));
-  const ownedEditions = new Set(q.data?.ownedDownloads?.map((file) => file.edition));
+  const editionDownloads = new Map(q.data?.ownedDownloads?.map((file) => [file.edition, file.downloadPath]));
   const selectedDownload = offerId ? downloads.get(offerId) : undefined;
   const refresh = () => qc.invalidateQueries({ queryKey: getGetCustomerPurchasesQueryKey() });
   return (
@@ -451,7 +461,7 @@ function PurchaseHistoryContent() {
                     <OrderCard
                       key={order.id}
                       order={order}
-                      owned={ownedEditions.has(order.contentVersionId)}
+                      downloadPath={editionDownloads.get(order.contentVersionId)}
                       changed={refresh}
                     />
                   ))}
