@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearch } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -11,15 +11,19 @@ import {
   Loader2,
   Pencil,
   Printer,
+  Search,
+  X,
 } from "lucide-react";
 import {
   useListAssessments,
   useGetAssessment,
+  useGetWorkspace,
   useCompareAssessments,
   useCreateTask,
   useListTasks,
   getListAssessmentsQueryKey,
   getGetAssessmentQueryKey,
+  getGetWorkspaceQueryKey,
   getCompareAssessmentsQueryKey,
   getListTasksQueryKey,
   getListTasksPageQueryKey,
@@ -32,13 +36,19 @@ import { AssessmentResultView } from "@/components/assessment-result";
 import { TaskForm, emptyDraft, type TaskDraft } from "@/components/task-form";
 import { EmptyState, ErrorState, Notice, Skel } from "@/components/states";
 import { describeError } from "@/lib/api";
-import { trackedRuleIdsForAssessment, untrackedActionableItems } from "@/lib/assessment-tasks";
+import {
+  filterSavedAssessments,
+  trackedRuleIdsForAssessment,
+  untrackedActionableItems,
+  type AssessmentListFilter,
+} from "@/lib/assessment-tasks";
 import { formatDateTime, formatDay } from "@/lib/format";
 import { describeAssessmentChange } from "@/lib/assessment-changes";
 import { reviewFacts, displayFact, factLabel, isMarker, live } from "@/lib/checker";
 import { formatRequirementsBrief } from "@/lib/requirements-brief";
 import { RESULT_LABELS, RESULT_TONES, factAtPath, canCreateSourceTask } from "@/lib/rich-checker";
 import { shortRulesVersion } from "@/lib/result-words";
+import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
 function counts(a: SavedAssessment) {
@@ -57,10 +67,34 @@ function savedResultContext(facts: SavedAssessment["facts"]): string {
 
 export function AssessmentsList() {
   const list = useListAssessments({ query: { queryKey: getListAssessmentsQueryKey(), ...live } });
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<AssessmentListFilter>("all");
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const sorted = useMemo(
     () => [...(list.data ?? [])].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
     [list.data],
   );
+  const shown = useMemo(() => filterSavedAssessments(sorted, query, filter), [sorted, query, filter]);
+  const showFilterBar = sorted.length > 1 || Boolean(query.trim()) || filter !== "all";
+  const hasFilter = Boolean(query.trim()) || filter !== "all";
+  useEffect(() => {
+    if (!showFilterBar) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "/" || event.ctrlKey || event.metaKey || event.altKey) return;
+      const target = event.target as HTMLElement | null;
+      if (target && /INPUT|TEXTAREA|SELECT/.test(target.tagName)) return;
+      event.preventDefault();
+      searchInputRef.current?.focus();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [showFilterBar]);
+  const FILTERS: { id: AssessmentListFilter; label: string }[] = [
+    { id: "all", label: "All" },
+    { id: "likely_relevant", label: "Has likely relevant" },
+    { id: "from_profile", label: "From profile" },
+  ];
+
   return (
     <div className="mx-auto max-w-5xl px-5 py-12 lg:px-8">
       <WorkspaceNav />
@@ -90,6 +124,63 @@ export function AssessmentsList() {
         Each saved result keeps the answers and the version of the rules it used, so you can see later what
         changed.
       </p>
+      {showFilterBar && (
+        <div className="mt-6 flex flex-wrap items-center gap-3">
+          <div className="relative min-w-0 flex-1 sm:max-w-sm">
+            <Search
+              className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden="true"
+            />
+            <input
+              ref={searchInputRef}
+              type="search"
+              className="field !pl-10"
+              aria-label="Filter saved results by state, legal form, or rule"
+              aria-keyshortcuts="/"
+              placeholder="Filter by state, business type, or rule (press /)"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              data-testid="input-assessment-search"
+            />
+          </div>
+          <div
+            role="group"
+            aria-label="Filter saved results"
+            className="inline-flex rounded-full border border-border bg-card p-1"
+          >
+            {FILTERS.map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                aria-pressed={filter === f.id}
+                onClick={() => setFilter(f.id)}
+                className={cn(
+                  "rounded-full px-3 py-1 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                  filter === f.id
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+                data-testid={"filter-assessments-" + f.id}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+          {hasFilter && (
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={() => {
+                setQuery("");
+                setFilter("all");
+              }}
+              data-testid="button-clear-assessment-search"
+            >
+              <X className="h-4 w-4" aria-hidden="true" /> Clear
+            </button>
+          )}
+        </div>
+      )}
       <div className="mt-8">
         {list.isLoading ? (
           <div className="grid gap-3">
@@ -111,9 +202,27 @@ export function AssessmentsList() {
           >
             Check your requirements, then choose to save the result. It is kept here.
           </EmptyState>
+        ) : shown.length === 0 ? (
+          <div className="surface p-6 text-sm text-muted-foreground" role="status">
+            <p>
+              {query.trim()
+                ? `No saved results match "${query.trim()}".`
+                : "No saved results match this filter."}
+            </p>
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm mt-3"
+              onClick={() => {
+                setQuery("");
+                setFilter("all");
+              }}
+            >
+              Show all saved results
+            </button>
+          </div>
         ) : (
           <ol className="relative grid gap-3 border-l border-border pl-5 sm:pl-6">
-            {sorted.map((a) => {
+            {shown.map((a) => {
               const c = counts(a);
               const context = savedResultContext(a.facts);
               return (
@@ -174,6 +283,7 @@ export function AssessmentDetail({ id }: { id: string }) {
   const a = useGetAssessment(id, {
     query: { enabled: !!id, queryKey: getGetAssessmentQueryKey(id), ...live },
   });
+  const ws = useGetWorkspace({ query: { queryKey: getGetWorkspaceQueryKey() } });
   const list = useListAssessments({ query: { queryKey: getListAssessmentsQueryKey(), ...live } });
   const workspaceTasks = useListTasks({ query: { queryKey: getListTasksQueryKey(), ...live } });
   const [prevId, setPrevId] = useState(() => new URLSearchParams(search).get("compare") ?? "");
@@ -206,6 +316,9 @@ export function AssessmentDetail({ id }: { id: string }) {
   const s = a.data;
   const facts = s.facts as unknown as Record<string, unknown>;
   const untrackedItems = untrackedActionableItems(s.result.items, trackedRules);
+  const profileMovedAhead = Boolean(
+    ws.data?.profile && s.profileRevision && ws.data.profileRevision > s.profileRevision,
+  );
 
   return (
     <div className="mx-auto max-w-5xl px-5 py-12 lg:px-8">
@@ -285,6 +398,24 @@ export function AssessmentDetail({ id }: { id: string }) {
           )}
         </div>
       </div>
+
+      {profileMovedAhead && ws.data && (
+        <div className="no-print mt-6" data-testid="notice-result-profile-stale">
+          <Notice title="Your business profile changed since this check">
+            <p>
+              This result used version {s.profileRevision} of your business profile, and your saved profile is
+              now at version {ws.data.profileRevision}.
+            </p>
+            <Link
+              href="/workspace/checker?prefill=profile"
+              className="btn btn-ink btn-sm mt-3"
+              data-testid="link-recheck-updated-profile"
+            >
+              Check with updated profile
+            </Link>
+          </Notice>
+        </div>
+      )}
 
       {batchOpen && untrackedItems.length > 0 && (
         <BatchTasksPanel assessmentId={s.id} items={untrackedItems} onClose={() => setBatchOpen(false)} />

@@ -1,5 +1,8 @@
-import type { AssessmentItem, WorkspaceTask } from "@workspace/api-client-react";
+import type { AssessmentItem, SavedAssessment, WorkspaceTask } from "@workspace/api-client-react";
+import { displayFact, isMarker } from "./checker";
 import { canCreateSourceTask } from "./rich-checker";
+
+export type AssessmentListFilter = "all" | "likely_relevant" | "from_profile";
 
 /**
  * Returns the set of rule IDs already represented in the workspace's tasks — either linked
@@ -26,4 +29,36 @@ export function untrackedActionableItems(
   trackedRuleIds: ReadonlySet<string>,
 ): AssessmentItem[] {
   return items.filter((item) => canCreateSourceTask(item) && !trackedRuleIds.has(item.ruleId));
+}
+
+/** Filters saved requirement check results by search text and quick status/origin filter. */
+export function filterSavedAssessments(
+  assessments: readonly SavedAssessment[],
+  query: string,
+  filter: AssessmentListFilter,
+): SavedAssessment[] {
+  const trimmed = query.trim().toLowerCase();
+  return assessments.filter((assessment) => {
+    if (
+      filter === "likely_relevant" &&
+      !assessment.result.items.some((item) => item.label === "Likely relevant")
+    ) {
+      return false;
+    }
+    if (filter === "from_profile" && !assessment.profileRevision) {
+      return false;
+    }
+    if (!trimmed) return true;
+
+    const parts: string[] = [assessment.result.asOfDate, assessment.result.rulesetVersion];
+    const facts = assessment.facts;
+    if (facts.legalForm && !isMarker(facts.legalForm)) parts.push(displayFact("legalForm", facts.legalForm));
+    if (facts.state && !isMarker(facts.state)) parts.push(displayFact("state", facts.state));
+    if (typeof facts.lga === "string" && !isMarker(facts.lga)) parts.push(facts.lga);
+    if (Array.isArray(facts.activities)) parts.push(facts.activities.join(" "));
+    for (const item of assessment.result.items) {
+      parts.push(item.title, item.label);
+    }
+    return parts.join(" ").toLowerCase().includes(trimmed);
+  });
 }
