@@ -19,6 +19,7 @@ import { WorkspaceNav } from "@/components/workspace-nav";
 import { EmptyState, ErrorState, Notice, Skel } from "@/components/states";
 import { describeError } from "@/lib/api";
 import { formatCount, formatDateTime, formatNaira } from "@/lib/format";
+import { randomUuid } from "@/lib/idempotency";
 import { basePath } from "@/lib/env";
 const labels: Record<string, string> = {
   created: "Order saved — not paid",
@@ -513,13 +514,14 @@ function PurchaseHistoryContent() {
                           setBusy(true);
                           setError(null);
                           try {
-                            if (!keys.has(p.id)) keys.set(p.id, crypto.randomUUID());
+                            const keyId = `${p.id}:${p.licenceVersion}`;
+                            if (!keys.has(keyId)) keys.set(keyId, randomUuid());
                             await createCommerceOrder({
                               priceId: p.id,
                               acceptedLicenceVersion: p.licenceVersion,
-                              requestKey: keys.get(p.id)!,
+                              requestKey: keys.get(keyId)!,
                             });
-                            keys.delete(p.id);
+                            keys.delete(keyId);
                             await refresh();
                           } catch (e) {
                             setError(describeError(e).message);

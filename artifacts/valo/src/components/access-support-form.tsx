@@ -6,6 +6,7 @@ import {
   type AccessSupportInputTopic,
 } from "@workspace/api-client-react";
 import { describeError } from "@/lib/describe-error";
+import { resolveIdempotencyKey, type IdempotencySlot } from "@/lib/idempotency";
 
 const TOPICS: { v: AccessSupportInputTopic; l: string; d: string }[] = [
   {
@@ -21,18 +22,10 @@ const TOPICS: { v: AccessSupportInputTopic; l: string; d: string }[] = [
   },
 ];
 
-function uuid(): string {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
-  });
-}
-
 export function AccessSupportForm({ defaultTopic = "general" }: { defaultTopic?: AccessSupportInputTopic }) {
   const mutation = useRequestAccessSupport();
-  // Stable across retries; regenerated only after a confirmed save.
-  const keyRef = useRef<string>(uuid());
+  // Stable across retries of identical input; rotates when inputs change or after a confirmed save.
+  const keyRef = useRef<IdempotencySlot>(null);
   const [topic, setTopic] = useState<AccessSupportInputTopic>(defaultTopic);
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
@@ -56,11 +49,18 @@ export function AccessSupportForm({ defaultTopic = "general" }: { defaultTopic?:
     e.preventDefault();
     setTouched(true);
     if (msgErr || emailErr || mutation.isPending) return;
+    const trimmedEmail = email.trim();
+    const slot = resolveIdempotencyKey(keyRef.current, {
+      email: trimmedEmail.toLowerCase(),
+      topic,
+      message: msg,
+    });
+    keyRef.current = slot;
     mutation.mutate(
       {
         data: {
-          idempotencyKey: keyRef.current,
-          email: email.trim(),
+          idempotencyKey: slot.key,
+          email: trimmedEmail,
           topic,
           message: msg,
           ...(website ? { website } : {}),
@@ -69,7 +69,7 @@ export function AccessSupportForm({ defaultTopic = "general" }: { defaultTopic?:
       {
         onSuccess: (r) => {
           setAck(r);
-          keyRef.current = uuid();
+          keyRef.current = null;
         },
       },
     );
