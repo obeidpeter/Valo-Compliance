@@ -62,32 +62,63 @@ function neededLine(spec: GuidedSpec, key: string, message: string): string {
   return message === UNANSWERED ? name : `${name}: ${saidAs(message)}`;
 }
 
-/** What a document still needs before it is complete, one line each, in the order of its questions. */
-export function missingFields(content: CanonicalDocument): string[] {
-  const out: string[] = [];
+export type MissingFieldItem = {
+  label: string;
+  /** CSS selector for the editor control to focus when the customer clicks this item. */
+  selector?: string;
+};
+
+function guidedIssueSelector(spec: GuidedSpec, key: string): string | undefined {
+  const [tableId, row, columnId] = key.split(":");
+  if (spec.fields.some((f) => f.id === key)) return `#g-${key}`;
+  const table = spec.tables.find((t) => t.id === tableId);
+  if (!table) return undefined;
+  if (row !== undefined && columnId) return `#gt-${table.id}-${row}-${columnId}`;
+  return `#gt-${table.id}-add`;
+}
+
+/** What a document still needs before it is complete, with jump selectors where a control exists. */
+export function missingFieldItems(content: CanonicalDocument): MissingFieldItem[] {
+  const out: MissingFieldItem[] = [];
   let visible = content.blocks;
   try {
     const answers = guidedDataFromBlocks(content.blocks);
     if (answers) {
       const spec = GUIDED_SPECS_V1[answers.templateId];
-      for (const [key, message] of Object.entries(guidedDataIssues(spec, answers)))
-        out.push(neededLine(spec, key, message));
+      for (const [key, message] of Object.entries(guidedDataIssues(spec, answers))) {
+        const selector = guidedIssueSelector(spec, key);
+        out.push(
+          selector
+            ? { label: neededLine(spec, key, message), selector }
+            : { label: neededLine(spec, key, message) },
+        );
+      }
       visible = guidedRenderableBlocks(content);
     } else {
       (Object.keys(FIELD_LABELS) as (keyof CanonicalDocument["fields"])[]).forEach((k) => {
-        if (!content.fields[k]?.trim()) out.push(FIELD_LABELS[k]);
+        if (!content.fields[k]?.trim()) out.push({ label: FIELD_LABELS[k], selector: `#f-${k}` });
       });
       if (!content.blocks.some((b) => b.text.trim() || b.rows.some((r) => r.some((c) => c.trim()))))
-        out.push("The document's text");
+        out.push({ label: "The document's text", selector: '[data-testid="input-block-0"]' });
     }
   } catch {
     return [
-      "This document's saved questions cannot be read. Restore an earlier version, and do not treat this one as complete.",
+      {
+        label:
+          "This document's saved questions cannot be read. Restore an earlier version, and do not treat this one as complete.",
+      },
     ];
   }
   const body = visible.flatMap((b) => [b.text, ...b.rows.flat()]).join("\n");
   const placeholders = [...new Set(body.match(/\[[^\]\n]{0,140}\]|\{\{[^}\n]{1,140}\}\}|_{3,}/g) ?? [])];
   if (placeholders.length)
-    out.push(`Blanks still in the text (${placeholders.length}): ${placeholders.slice(0, 5).join(", ")}`);
+    out.push({
+      label: `Blanks still in the text (${placeholders.length}): ${placeholders.slice(0, 5).join(", ")}`,
+    });
   return out;
+}
+
+/** What a document still needs before it is complete, one line each, in the order of its questions. */
+export function missingFields(content: CanonicalDocument): string[] {
+  return missingFieldItems(content).map((item) => item.label);
 }
