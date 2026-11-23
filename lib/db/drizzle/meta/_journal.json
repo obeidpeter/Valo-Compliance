@@ -351,6 +351,13 @@
       "when": 1795453094979,
       "tag": "20261123165814_manual_industry_packs",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1795459596069,
+      "tag": "20261123184636_rule_owner_signoffs",
+      "breakpoints": true
     }
   ]
 }

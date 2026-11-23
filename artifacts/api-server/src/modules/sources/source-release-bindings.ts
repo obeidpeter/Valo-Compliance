@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { allSourceLeads, publicationSchema } from "@workspace/valo-core";
+import { allSourceLeads, publicationSchema, releaseEvidence } from "@workspace/valo-core";
 import { readSourceText } from "./source-storage";
 import {
   type SourceReader,
@@ -51,7 +51,8 @@ export async function verifyReleasedSources(
   now = new Date(),
   readText: (snapshotId: string, checksum: string) => Promise<string> = readSourceText,
 ): Promise<VerifiedSourceCapture[]> {
-  const bundle = publicationSchema.parse(raw);
+  // A reviewed bundle or an owner-signed rule's (decision 0020); anything else is refused as before.
+  const bundle = releaseEvidence(raw) ?? publicationSchema.parse(raw);
   const captures: VerifiedSourceCapture[] = [];
   for (const source of bundle.sources) {
     if (!allSourceLeads.some((s) => s.url === source.url) || !snapshotIds[source.id])
@@ -88,7 +89,7 @@ export async function bindVerifiedSources(
   captures: VerifiedSourceCapture[],
   now = new Date(),
 ) {
-  const bundle = publicationSchema.parse(raw);
+  const bundle = releaseEvidence(raw) ?? publicationSchema.parse(raw);
   for (const source of bundle.sources) {
     const capture = captures.find((c) => c.bundleSourceId === source.id);
     const snapshot = capture && (await captureFor(tx, source.url, capture.snapshotId));
@@ -102,7 +103,7 @@ export async function bindVerifiedSources(
     await tx.execute(sql`insert into valo_source_release_bindings(target_kind,target_id,source_id,bundle_source_id,source_hash,snapshot_id,raw_hash,created_at)
    values(${kind},${id}::uuid,${capture.sourceId},${source.id},${source.hash},${capture.snapshotId}::uuid,${capture.rawChecksum},clock_timestamp()) on conflict do nothing`);
   }
-  if (!(await sourceTargetAllowed(tx, kind, id, bundle, now))) throw Error("SOURCE_RELEASE_CURRENTNESS_HELD");
+  if (!(await sourceTargetAllowed(tx, kind, id, raw, now))) throw Error("SOURCE_RELEASE_CURRENTNESS_HELD");
 }
 
 /** Server-only evidence binding. A client/staff action cannot bless a snapshot.
