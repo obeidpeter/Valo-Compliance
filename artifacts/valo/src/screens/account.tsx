@@ -23,6 +23,7 @@ import { PrivacyCases } from "@/components/privacy-cases";
 import { getListPrivacyCasesQueryKey } from "@workspace/api-client-react";
 import { WorkspaceDataDownload } from "@/components/workspace-data-download";
 import { MfaVerification } from "@/components/mfa-verification";
+import { ThemeToggle } from "@/islands/theme-toggle";
 
 export function AccountPage() {
   return (
@@ -50,6 +51,20 @@ export function AccountPage() {
         , and do that before deleting your sign-in account, because you will need to be signed in.
       </Notice>
       <MfaVerification />
+      <section
+        className="surface mb-6 flex flex-wrap items-center justify-between gap-4 p-5"
+        aria-labelledby="account-appearance-h"
+      >
+        <div>
+          <h2 id="account-appearance-h" className="font-display text-xl">
+            Appearance
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Switch between light and dark themes. Saved in this browser only; light is the default.
+          </p>
+        </div>
+        <ThemeToggle testId="button-account-theme-toggle" />
+      </section>
       <div className="-mx-5 overflow-x-auto sm:mx-0" data-testid="account-profile">
         <UserProfile routing="hash" />
       </div>

@@ -136,12 +136,12 @@ export function GuidedFields({ spec, value, onChange, disabled, onValidityChange
 
       {spec.notices.length > 0 && (
         <ul
-          className="grid gap-2 rounded-2xl border border-[hsl(38_50%_82%)] bg-[hsl(var(--ochre-soft))] p-4 text-sm"
+          className="grid gap-2 rounded-2xl border border-[hsl(var(--ochre-border))] bg-[hsl(var(--ochre-soft))] p-4 text-sm"
           data-testid="list-guided-notices"
         >
           {spec.notices.map((n, i) => (
             <li key={i} className="flex gap-2">
-              <Info className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(38_60%_28%)]" aria-hidden />
+              <Info className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(var(--ochre-foreground))]" aria-hidden />
               {n}
             </li>
           ))}
@@ -252,7 +252,10 @@ function FieldInput({
     </>
   );
   const req = unanswered ? (
-    <span className="ml-1 text-xs font-medium text-[hsl(38_60%_28%)]" data-testid={"mark-needed-" + id}>
+    <span
+      className="ml-1 text-xs font-medium text-[hsl(var(--ochre-foreground))]"
+      data-testid={"mark-needed-" + id}
+    >
       Still needed
     </span>
   ) : (

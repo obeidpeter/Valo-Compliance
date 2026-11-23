@@ -214,7 +214,7 @@ export function AccessSupportForm({ defaultTopic = "general" }: { defaultTopic?:
         A member of Valo's staff reads your message. Valo does not send replies by email yet, and no time for
         a reply is promised.
       </p>
-      <p className="rounded-xl border border-[hsl(38_50%_80%)] bg-[hsl(var(--ochre-soft))] px-4 py-3 text-sm">
+      <p className="rounded-xl border border-[hsl(var(--ochre-border))] bg-[hsl(var(--ochre-soft))] px-4 py-3 text-sm">
         Never include passwords, verification codes, ID numbers or payment details. Valo staff will never ask
         for them.
       </p>

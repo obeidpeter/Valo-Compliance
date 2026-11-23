@@ -1,4 +1,5 @@
 import type { ComponentType, ReactNode } from "react";
+import { ThemeToggle } from "@/islands/theme-toggle";
 import { basePath } from "@/lib/env";
 
 /**
@@ -114,8 +115,9 @@ export function SiteFooter({ LinkTo, wordmark }: { LinkTo: SiteLink; wordmark: R
           <FooterCol key={column.title} LinkTo={LinkTo} {...column} />
         ))}
       </div>
-      <div className="mx-auto max-w-7xl border-t border-border px-5 py-5 text-xs text-muted-foreground lg:px-8">
-        Valo does not provide legal, tax or accounting advice, and no regulator endorses it.
+      <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-5 text-xs text-muted-foreground lg:px-8">
+        <p>Valo does not provide legal, tax or accounting advice, and no regulator endorses it.</p>
+        <ThemeToggle />
       </div>
     </footer>
   );

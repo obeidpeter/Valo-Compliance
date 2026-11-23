@@ -13,7 +13,7 @@ export function DocPreview({
   content: CanonicalDocument;
   revision: number;
 }) {
-  const accent = content.formatting.accent === "forest" ? "hsl(155 42% 21%)" : "hsl(30 8% 14%)";
+  const accent = content.formatting.accent === "forest" ? "hsl(var(--primary))" : "hsl(var(--foreground))";
   const f = content.fields;
   const guidedLayout = content.blocks.some((b) => b.id.startsWith(GUIDED_PREFIX));
   return (
@@ -37,7 +37,7 @@ export function DocPreview({
               className="flex min-w-0 flex-wrap justify-between gap-3 border-b border-border py-1.5"
             >
               <dt className="text-muted-foreground">{FIELD_LABELS[k]}</dt>
-              <dd className={cn("min-w-0", f[k] ? "" : "italic text-[hsl(38_60%_35%)]")}>
+              <dd className={cn("min-w-0", f[k] ? "" : "italic text-[hsl(var(--ochre-foreground))]")}>
                 {(k === "issueDate" || k === "dueDate" ? formatDay(f[k]) : f[k]) || "Missing"}
               </dd>
             </div>

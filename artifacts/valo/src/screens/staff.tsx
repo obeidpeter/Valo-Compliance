@@ -112,7 +112,7 @@ export default function StaffPage() {
       {lockedByDirty && (
         <p
           role="status"
-          className="mt-3 rounded-xl border border-[hsl(38_50%_82%)] bg-[hsl(var(--ochre-soft))] px-4 py-2.5 text-sm text-[hsl(38_60%_20%)]"
+          className="mt-3 rounded-xl border border-[hsl(var(--ochre-border))] bg-[hsl(var(--ochre-soft))] px-4 py-2.5 text-sm text-[hsl(var(--ochre-foreground))]"
           data-testid="status-staff-area-locked"
         >
           Area switching is paused while you have unsaved edits in {dirtyPanels.join(" and ")}. Save or

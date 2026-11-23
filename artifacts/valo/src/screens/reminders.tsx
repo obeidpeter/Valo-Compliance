@@ -183,8 +183,8 @@ export default function RemindersPage() {
                 className={cn(
                   "rounded-xl border p-4 text-sm",
                   p.deliveryAvailable
-                    ? "border-[hsl(150_25%_80%)] bg-accent"
-                    : "border-[hsl(38_50%_80%)] bg-[hsl(var(--ochre-soft))]",
+                    ? "border-[hsl(var(--forest-border))] bg-accent"
+                    : "border-[hsl(var(--ochre-border))] bg-[hsl(var(--ochre-soft))]",
                 )}
                 data-testid="status-delivery"
               >

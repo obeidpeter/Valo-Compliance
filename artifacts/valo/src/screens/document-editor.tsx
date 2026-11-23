@@ -619,7 +619,7 @@ export default function DocumentEditor({ id }: { id: string }) {
       {finDirty && content.financialInput && (
         <div
           role="status"
-          className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[hsl(38_50%_82%)] bg-[hsl(var(--ochre-soft))] px-4 py-3 text-sm text-[hsl(38_60%_20%)]"
+          className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[hsl(var(--ochre-border))] bg-[hsl(var(--ochre-soft))] px-4 py-3 text-sm text-[hsl(var(--ochre-foreground))]"
           data-testid="banner-financial-pending"
         >
           <p>Financial details have unapplied changes that are not saved yet.</p>

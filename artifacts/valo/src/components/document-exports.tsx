@@ -156,7 +156,7 @@ export function DocumentExports({
       )}
       {missingCount > 0 && (
         <p
-          className="mb-3 rounded-xl border border-[hsl(38_50%_82%)] bg-[hsl(var(--ochre-soft))] px-3 py-2 text-xs leading-relaxed text-[hsl(38_60%_20%)]"
+          className="mb-3 rounded-xl border border-[hsl(var(--ochre-border))] bg-[hsl(var(--ochre-soft))] px-3 py-2 text-xs leading-relaxed text-[hsl(var(--ochre-foreground))]"
           data-testid="status-export-missing-cue"
         >
           {missingCount === 1
