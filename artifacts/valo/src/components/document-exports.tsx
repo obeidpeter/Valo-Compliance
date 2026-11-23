@@ -38,10 +38,15 @@ function ExportButton({
   disabled: boolean;
   onCreated: () => void;
 }) {
-  const [key] = useState(() => crypto.randomUUID());
+  const [key, setKey] = useState(() => crypto.randomUUID());
   const create = useCreateDocumentExport({
     request: { headers: { "Idempotency-Key": key } },
-    mutation: { onSuccess: onCreated },
+    mutation: {
+      onSuccess: () => {
+        setKey(crypto.randomUUID());
+        onCreated();
+      },
+    },
   });
   return (
     <div>
@@ -81,7 +86,7 @@ export function DocumentExports({
       refetchInterval: (query) =>
         query.state.data?.some((job) => ["queued", "running", "retrying"].includes(job.status))
           ? 2000
-          : 15000,
+          : false,
       refetchOnWindowFocus: true,
     },
   });
