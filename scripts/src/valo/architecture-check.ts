@@ -104,10 +104,14 @@ function sourceFiles(directory: string, include: (path: string) => boolean): str
   return out.sort();
 }
 
+const posixPath = (value: string) => value.replaceAll("\\", "/");
+const posixRelative = (from: string, to: string) => posixPath(relative(from, to));
+const posixJoin = (...parts: string[]) => posixPath(join(...parts));
+
 const isSource = (path: string) =>
   /\.(ts|tsx)$/.test(path) && !path.endsWith(".d.ts") && !path.endsWith(".generated.ts");
 const isProductSource = (path: string) =>
-  isSource(path) && !/\.test\.tsx?$/.test(path) && !path.includes("/test-support/");
+  isSource(path) && !/\.test\.tsx?$/.test(path) && !posixPath(path).includes("/test-support/");
 
 /** Import graph of API server product source, keyed by repository-relative path. */
 export function apiImportGraph(root = repositoryRoot): Map<string, Set<string>> {
@@ -123,11 +127,11 @@ export function apiImportGraph(root = repositoryRoot): Map<string, Set<string>> 
       const target = resolve(dirname(file), match[1]!);
       for (const candidate of [`${target}.ts`, `${target}.tsx`, join(target, "index.ts"), target])
         if (known.has(candidate)) {
-          edges.add(relative(root, candidate));
+          edges.add(posixRelative(root, candidate));
           break;
         }
     }
-    graph.set(relative(root, file), edges);
+    graph.set(posixRelative(root, file), edges);
   }
   return graph;
 }
@@ -247,7 +251,7 @@ export function workspaceActorViolations(path: string, text: string): string[] {
 
 export function workspaceActorReport(root = repositoryRoot): string[] {
   return sourceFiles(join(root, "artifacts/api-server/src"), isProductSource).flatMap((file) =>
-    workspaceActorViolations(relative(root, file), readFileSync(file, "utf8")),
+    workspaceActorViolations(posixRelative(root, file), readFileSync(file, "utf8")),
   );
 }
 
@@ -310,7 +314,7 @@ export function inferenceBindingViolations(path: string, text: string): string[]
 
 export function inferenceBindingReport(root = repositoryRoot): string[] {
   return sourceFiles(join(root, "artifacts/api-server/src"), isProductSource).flatMap((file) =>
-    inferenceBindingViolations(relative(root, file), readFileSync(file, "utf8")),
+    inferenceBindingViolations(posixRelative(root, file), readFileSync(file, "utf8")),
   );
 }
 
@@ -342,7 +346,7 @@ export function publisherConnectionViolations(path: string, text: string): strin
 
 export function publisherConnectionReport(root = repositoryRoot): string[] {
   return sourceFiles(join(root, "artifacts/api-server/src"), isProductSource).flatMap((file) =>
-    publisherConnectionViolations(relative(root, file), readFileSync(file, "utf8")),
+    publisherConnectionViolations(posixRelative(root, file), readFileSync(file, "utf8")),
   );
 }
 
@@ -379,7 +383,7 @@ function webFiles(root: string): Map<string, WebFile> {
   const files = new Map<string, WebFile>();
   for (const dir of ["src", "app"])
     for (const full of sourceFiles(join(root, WEB, dir), isProductSource)) {
-      const path = relative(root, full);
+      const path = posixRelative(root, full);
       const source = ts.createSourceFile(
         path,
         readFileSync(full, "utf8"),
@@ -455,14 +459,18 @@ export function publicServerViolations(root = repositoryRoot): string[] {
   const files = webFiles(root);
   const resolveWeb = (from: string, specifier: string) => {
     const base = specifier.startsWith("@/")
-      ? join(WEB, "src", specifier.slice(2))
+      ? posixJoin(WEB, "src", specifier.slice(2))
       : specifier.startsWith(".")
-        ? join(dirname(from), specifier)
+        ? posixJoin(dirname(from), specifier)
         : undefined;
     if (!base) return undefined;
-    return [`${base}.ts`, `${base}.tsx`, join(base, "index.ts"), join(base, "index.tsx"), base].find((p) =>
-      files.has(p),
-    );
+    return [
+      `${base}.ts`,
+      `${base}.tsx`,
+      posixJoin(base, "index.ts"),
+      posixJoin(base, "index.tsx"),
+      base,
+    ].find((p) => files.has(p));
   };
   const violations = new Set<string>();
   const seen = new Set<string>();
@@ -533,7 +541,7 @@ export function webFormattingViolations(path: string, text: string): string[] {
 export function webFormattingReport(root = repositoryRoot): string[] {
   return ["src", "app"].flatMap((dir) =>
     sourceFiles(join(root, WEB, dir), isProductSource).flatMap((file) =>
-      webFormattingViolations(relative(root, file), readFileSync(file, "utf8")),
+      webFormattingViolations(posixRelative(root, file), readFileSync(file, "utf8")),
     ),
   );
 }
@@ -550,7 +558,7 @@ export function silentCatchReport(root = repositoryRoot): string[] {
   ];
   return roots.flatMap((dir) =>
     sourceFiles(join(root, dir), isProductSource).flatMap((file) =>
-      silentCatchViolations(relative(root, file), readFileSync(file, "utf8")),
+      silentCatchViolations(posixRelative(root, file), readFileSync(file, "utf8")),
     ),
   );
 }

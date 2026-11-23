@@ -54,7 +54,7 @@ function sourceFiles(directory: string): string[] {
       const path = join(folder, entry.name);
       if (entry.isDirectory()) walk(path);
       else if (/\.tsx?$/.test(entry.name) && !/\.test\.tsx?$/.test(entry.name))
-        found.push(relative(web, path));
+        found.push(relative(web, path).replaceAll("\\", "/"));
     }
   };
   walk(join(web, directory));
