@@ -4,7 +4,9 @@ import { ArrowRight, FilePlus2, FileText, Search, X } from "lucide-react";
 import { useListDocuments, getListDocumentsQueryKey } from "@workspace/api-client-react";
 import { EmptyState, ErrorState, Skel } from "@/components/states";
 import { missingFields } from "@/lib/api";
+import { documentKindLabel, filterDocuments, type DocumentStatusFilter } from "@/lib/document-list-helpers";
 import { formatDateTime } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 /**
  * The workspace's documents, most recently saved first: each opens its editor. `limit` shows only
@@ -24,13 +26,20 @@ export function DocumentList({
 }) {
   const docs = useListDocuments({ query: { enabled, queryKey: getListDocumentsQueryKey() } });
   const [query, setQuery] = useState("");
+  const [status, setStatus] = useState<DocumentStatusFilter>("all");
   const all = docs.data ?? [];
-  const trimmed = query.trim().toLowerCase();
+  const trimmed = query.trim();
   const shown = useMemo(() => {
-    const filtered = searchable && trimmed ? all.filter((d) => d.title.toLowerCase().includes(trimmed)) : all;
+    const filtered = searchable ? filterDocuments(all, query, status) : all;
     return filtered.slice(0, limit);
-  }, [all, limit, searchable, trimmed]);
+  }, [all, limit, query, searchable, status]);
   const showSearch = searchable && all.length > 1;
+  const hasFilter = Boolean(trimmed || status !== "all");
+  const STATUS_FILTERS: { id: DocumentStatusFilter; label: string }[] = [
+    { id: "all", label: "All" },
+    { id: "incomplete", label: "Needs details" },
+    { id: "complete", label: "Complete" },
+  ];
   return (
     <>
       {docs.isLoading ? (
@@ -44,7 +53,7 @@ export function DocumentList({
       ) : all.length > 0 ? (
         <>
           {showSearch && (
-            <div className="mb-4 flex flex-wrap items-center gap-2">
+            <div className="mb-4 flex flex-wrap items-center gap-3">
               <div className="relative min-w-0 flex-1 sm:max-w-sm">
                 <Search
                   className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
@@ -60,11 +69,37 @@ export function DocumentList({
                   data-testid="input-document-search"
                 />
               </div>
-              {trimmed && (
+              <div
+                role="group"
+                aria-label="Filter documents by completeness"
+                className="inline-flex rounded-full border border-border bg-card p-1"
+              >
+                {STATUS_FILTERS.map((f) => (
+                  <button
+                    key={f.id}
+                    type="button"
+                    aria-pressed={status === f.id}
+                    onClick={() => setStatus(f.id)}
+                    className={cn(
+                      "rounded-full px-3 py-1 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                      status === f.id
+                        ? "bg-foreground text-background"
+                        : "text-muted-foreground hover:text-foreground",
+                    )}
+                    data-testid={"filter-documents-" + f.id}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+              {hasFilter && (
                 <button
                   type="button"
                   className="btn btn-ghost btn-sm"
-                  onClick={() => setQuery("")}
+                  onClick={() => {
+                    setQuery("");
+                    setStatus("all");
+                  }}
                   data-testid="button-clear-document-search"
                 >
                   <X className="h-4 w-4" aria-hidden="true" /> Clear
@@ -76,6 +111,7 @@ export function DocumentList({
             <ul className="grid gap-3">
               {shown.map((d) => {
                 const miss = missingFields(d.content).length;
+                const kind = documentKindLabel(d);
                 return (
                   <li key={d.id}>
                     <Link
@@ -89,6 +125,7 @@ export function DocumentList({
                       <span className="min-w-0 flex-1">
                         <span className="block truncate font-medium">{d.title}</span>
                         <span className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                          <span>{kind}</span>
                           <span>Draft</span>
                           <span>Version {d.revision}</span>
                           <span>Saved {formatDateTime(d.updatedAt)}</span>
@@ -115,8 +152,19 @@ export function DocumentList({
             </ul>
           ) : (
             <div className="surface p-6 text-sm text-muted-foreground" role="status">
-              <p>No saved documents match &ldquo;{query.trim()}&rdquo;.</p>
-              <button type="button" className="btn btn-ghost btn-sm mt-3" onClick={() => setQuery("")}>
+              <p>
+                {trimmed
+                  ? `No saved documents match "${trimmed}" in this view.`
+                  : "No saved documents match this filter."}
+              </p>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm mt-3"
+                onClick={() => {
+                  setQuery("");
+                  setStatus("all");
+                }}
+              >
                 Show all documents
               </button>
             </div>

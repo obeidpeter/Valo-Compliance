@@ -5,6 +5,7 @@ import {
   Check,
   ChevronDown,
   ChevronRight,
+  ClipboardCheck,
   Clock,
   FileText,
   Info,
@@ -13,7 +14,6 @@ import {
   Package,
   PenLine,
   ReceiptText,
-  Scale,
   Truck,
   UserPlus,
 } from "lucide-react";
@@ -239,7 +239,7 @@ function Tasks({ tasks, templates }: { tasks: LandingTask[]; templates: number |
         <div className="mt-3 flex flex-col gap-4 rounded-2xl bg-foreground p-5 text-background sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:p-6">
           <div className="flex items-start gap-4 sm:items-center">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-background/10">
-              <Scale className="h-5 w-5" aria-hidden />
+              <ClipboardCheck className="h-5 w-5" aria-hidden />
             </span>
             <p>
               <span className="block text-lg font-semibold leading-snug">
@@ -288,7 +288,7 @@ function HowItWorks() {
     },
     {
       title: "Requirements",
-      icon: <Scale className="h-5 w-5" aria-hidden />,
+      icon: <ClipboardCheck className="h-5 w-5" aria-hidden />,
       tone: "bg-foreground",
       mark: "bg-secondary text-foreground",
       steps: [

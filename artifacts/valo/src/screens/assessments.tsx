@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link } from "wouter";
+import { Link, useSearch } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight, ClipboardCheck, GitCompare, ListPlus } from "lucide-react";
 import {
@@ -21,7 +21,7 @@ import { EmptyState, ErrorState, Notice, Skel } from "@/components/states";
 import { describeError } from "@/lib/api";
 import { formatDateTime, formatDay } from "@/lib/format";
 import { describeAssessmentChange } from "@/lib/assessment-changes";
-import { reviewFacts, displayFact, factLabel, live } from "@/lib/checker";
+import { reviewFacts, displayFact, factLabel, isMarker, live } from "@/lib/checker";
 import { RESULT_LABELS, RESULT_TONES, factAtPath, canCreateSourceTask } from "@/lib/rich-checker";
 import { shortRulesVersion } from "@/lib/result-words";
 import { useToast } from "@/hooks/use-toast";
@@ -31,6 +31,13 @@ function counts(a: SavedAssessment) {
     label,
     count: a.result.items.filter((item) => item.label === label).length,
   })).filter((item) => item.count > 0);
+}
+
+function savedResultContext(facts: SavedAssessment["facts"]): string {
+  const parts: string[] = [];
+  if (facts.legalForm && !isMarker(facts.legalForm)) parts.push(displayFact("legalForm", facts.legalForm));
+  if (facts.state && !isMarker(facts.state)) parts.push(displayFact("state", facts.state));
+  return parts.join(" · ");
 }
 
 export function AssessmentsList() {
@@ -47,10 +54,22 @@ export function AssessmentsList() {
           <p className="eyebrow">Requirements</p>
           <h1 className="font-display mt-2 text-4xl">Saved results</h1>
         </div>
-        <Link href="/checker" className="btn btn-primary" data-testid="link-new-assessment">
-          <ClipboardCheck className="h-4 w-4" />
-          New check
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          {sorted.length >= 2 && (
+            <Link
+              href={`/workspace/assessments/${sorted[0]!.id}?compare=${sorted[1]!.id}`}
+              className="btn btn-ghost"
+              data-testid="link-compare-latest"
+            >
+              <GitCompare className="h-4 w-4" aria-hidden="true" />
+              Compare latest two
+            </Link>
+          )}
+          <Link href="/workspace/checker" className="btn btn-primary" data-testid="link-new-assessment">
+            <ClipboardCheck className="h-4 w-4" aria-hidden="true" />
+            New check
+          </Link>
+        </div>
       </div>
       <p className="mt-3 max-w-2xl text-muted-foreground">
         Each saved result keeps the answers and the version of the rules it used, so you can see later what
@@ -70,7 +89,7 @@ export function AssessmentsList() {
             mark={<ClipboardCheck className="h-5 w-5 text-muted-foreground" />}
             title="No saved results yet"
             action={
-              <Link href="/checker" className="btn btn-primary">
+              <Link href="/workspace/checker" className="btn btn-primary">
                 Check my requirements
               </Link>
             }
@@ -81,6 +100,7 @@ export function AssessmentsList() {
           <ol className="relative grid gap-3 border-l border-border pl-5 sm:pl-6">
             {sorted.map((a) => {
               const c = counts(a);
+              const context = savedResultContext(a.facts);
               return (
                 <li key={a.id} className="relative">
                   <span
@@ -93,7 +113,12 @@ export function AssessmentsList() {
                     data-testid={"link-assessment-" + a.id}
                   >
                     <span className="min-w-0 flex-1">
-                      <span className="block font-medium">{formatDateTime(a.createdAt)}</span>
+                      <span className="block font-medium">
+                        {formatDateTime(a.createdAt)}
+                        {context ? (
+                          <span className="ml-2 font-normal text-muted-foreground">· {context}</span>
+                        ) : null}
+                      </span>
                       <span className="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
                         <span>Rules as at {formatDay(a.result.asOfDate)}</span>
                         <span className="min-w-0 break-all" title={a.result.rulesetVersion}>
@@ -130,11 +155,12 @@ export function AssessmentsList() {
 }
 
 export function AssessmentDetail({ id }: { id: string }) {
+  const search = useSearch();
   const a = useGetAssessment(id, {
     query: { enabled: !!id, queryKey: getGetAssessmentQueryKey(id), ...live },
   });
   const list = useListAssessments({ query: { queryKey: getListAssessmentsQueryKey(), ...live } });
-  const [prevId, setPrevId] = useState("");
+  const [prevId, setPrevId] = useState(() => new URLSearchParams(search).get("compare") ?? "");
   const [taskFor, setTaskFor] = useState<string | null>(null);
   const others = useMemo(
     () => (list.data ?? []).filter((x) => x.id !== id).sort((x, y) => y.createdAt.localeCompare(x.createdAt)),
