@@ -199,3 +199,42 @@ test("the source checks read the candidate and sources of a reviewed and of an o
   assert.equal(releaseEvidence({ candidate: bundle.candidate, sources: bundle.sources }), null);
   assert.equal(releaseEvidence(null), null);
 });
+
+test("the checker's registry admits an owner-signed rule only while its bundle matches, its evidence passes and the policy it was signed under is the approved one", async () => {
+  process.env.DATABASE_URL ??= "postgresql://unused@localhost/unused";
+  const { ruleReleaseEligible } = await import("./valo-assessments");
+  const { rule, bundle, reviewed } = release();
+  const row = {
+    ruleId: rule.id,
+    version: rule.version,
+    status: "published",
+    rule,
+    publicationBundle: bundle,
+    manifestHash: rule.manifestHash,
+  };
+  const approved = { hash: bundle.policy.hash, ownerApproved: true };
+  assert.equal(ruleReleaseEligible(row, now, approved), true);
+  // Without the current policy, or once it changes or loses the owner's approval, the rule is out.
+  assert.equal(ruleReleaseEligible(row, now), false);
+  assert.equal(ruleReleaseEligible(row, now, { ...approved, ownerApproved: false }), false);
+  assert.equal(ruleReleaseEligible(row, now, { ...approved, hash: "f".repeat(64) }), false);
+  assert.equal(ruleReleaseEligible({ ...row, status: "superseded" }, now, approved), false);
+  assert.equal(ruleReleaseEligible({ ...row, manifestHash: "c".repeat(64) }, now, approved), false);
+  // A reviewed bundle stored under an owner-signed rule is not one.
+  assert.equal(ruleReleaseEligible({ ...row, publicationBundle: reviewed.bundle }, now, approved), false);
+  // Evidence that no longer passes: the source is past its freshness.
+  assert.equal(ruleReleaseEligible(row, new Date("2026-12-31T00:00:00Z"), approved), false);
+  // The reviewed route's rule is still judged as before.
+  assert.equal(
+    ruleReleaseEligible(
+      {
+        ...row,
+        rule: reviewed.rule,
+        publicationBundle: reviewed.bundle,
+        manifestHash: reviewed.rule.manifestHash,
+      },
+      now,
+    ),
+    true,
+  );
+});

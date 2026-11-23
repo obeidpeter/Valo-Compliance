@@ -19,8 +19,11 @@ import {
   canonical,
   checkerFactsSchema,
   digest,
+  evaluateOwnerRuleBundle,
   evaluatePublication,
   factsFromProfile,
+  ownerRuleBundleSchema,
+  ownerRuleMatchesBundle,
   ruleSchema,
   publicationSchema,
   changedCheckerFactPaths,
@@ -33,6 +36,7 @@ import { authorizeWorkspaceRead, authorizeWorkspaceWrite, type WorkspaceActor } 
 import { ValoProblem } from "../../platform/valo-problem";
 
 import { lockSourceState, sourceTargetAllowed } from "../sources";
+import { guidancePolicy } from "../publication";
 import { singleRow } from "../../platform/rows";
 export type WorkspaceTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 /** Read-only workspace transaction: verifies current membership and tombstone status without
@@ -92,7 +96,39 @@ type StoredRuleRelease = Pick<
   typeof valoRuleReleases.$inferSelect,
   "ruleId" | "version" | "status" | "rule" | "publicationBundle" | "manifestHash"
 >;
-function parseEligibleRuleRelease(row: StoredRuleRelease, now: Date): z.infer<typeof ruleSchema> | null {
+/** The guidance policy as it stands now: an owner-signed rule counts only while the policy it was
+ * signed under is still the current one and the owner's approval of it stands (decision 0020). */
+type CurrentGuidance = { hash: string; ownerApproved: boolean };
+/** A rule version released on the development owner's sign-off (decision 0020). Its sign-off was
+ * required by the database when it was stored; here its bundle must still describe it exactly, its
+ * evidence must still pass, and the policy it was signed under must still be the approved one. */
+function parseOwnerSignedRule(
+  row: StoredRuleRelease,
+  rule: z.infer<typeof ruleSchema>,
+  now: Date,
+  guidance: CurrentGuidance | undefined,
+) {
+  const bundle = ownerRuleBundleSchema.safeParse(row.publicationBundle);
+  if (!bundle.success || !guidance) return null;
+  const admissible =
+    rule.id === row.ruleId &&
+    rule.version === row.version &&
+    rule.manifestHash === row.manifestHash &&
+    (!rule.evaluator || sourceFamilyBindingMatches(rule.evaluator)) &&
+    ownerRuleMatchesBundle(rule, bundle.data) &&
+    evaluateOwnerRuleBundle(bundle.data, now).decision === "eligible" &&
+    guidance.ownerApproved &&
+    bundle.data.policy.hash === guidance.hash;
+  return admissible ? rule : null;
+}
+function parseEligibleRuleRelease(
+  row: StoredRuleRelease,
+  now: Date,
+  guidance?: CurrentGuidance,
+): z.infer<typeof ruleSchema> | null {
+  const owner = ruleSchema.safeParse(row.rule);
+  if (owner.success && owner.data.provenance === "owner_signoff")
+    return row.status === "published" ? parseOwnerSignedRule(row, owner.data, now, guidance) : null;
   const rule = ruleSchema.safeParse(row.rule),
     bundle = publicationSchema.safeParse(row.publicationBundle);
   if (!rule.success || !bundle.success || row.status !== "published") return null;
@@ -124,8 +160,13 @@ function parseEligibleRuleRelease(row: StoredRuleRelease, now: Date): z.infer<ty
 }
 /** Whether the registry admits one stored rule release, apart from its sources' current state
  * (sourceTargetAllowed, which needs the database). */
-export function ruleReleaseEligible(row: StoredRuleRelease, now: Date) {
-  return parseEligibleRuleRelease(row, now) !== null;
+export function ruleReleaseEligible(row: StoredRuleRelease, now: Date, guidance?: CurrentGuidance) {
+  return parseEligibleRuleRelease(row, now, guidance) !== null;
+}
+/** The current guidance policy's hash and whether the owner's approval of it stands. */
+export async function currentRuleGuidance(): Promise<CurrentGuidance> {
+  const { policy } = await guidancePolicy();
+  return { hash: policy.hash, ownerApproved: policy.ownerApproved };
 }
 /** No customer endpoint writes this registry or supplies a publication manifest. */
 export async function releasedRegistry(tx: WorkspaceTx | typeof db, now: Date) {
@@ -139,8 +180,11 @@ export async function releasedRegistry(tx: WorkspaceTx | typeof db, now: Date) {
     trusted = new Set<string>(),
     states: unknown[] = [];
   let excluded = 0;
+  // The policy file is read only when an owner-signed rule is stored.
+  const ownerSigned = rows.some((row) => ruleSchema.safeParse(row.rule).data?.provenance === "owner_signoff");
+  const guidance = ownerSigned ? await currentRuleGuidance() : undefined;
   for (const row of rows) {
-    const parsed = parseEligibleRuleRelease(row, now);
+    const parsed = parseEligibleRuleRelease(row, now, guidance);
     let eligible = parsed !== null;
     if (eligible) eligible = await sourceTargetAllowed(tx, "rule", row.id, row.publicationBundle, now);
     if (eligible && parsed) {
