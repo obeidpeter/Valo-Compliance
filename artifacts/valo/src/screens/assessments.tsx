@@ -1,7 +1,17 @@
 import { useMemo, useState } from "react";
 import { Link, useSearch } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowRight, Check, ClipboardCheck, GitCompare, ListPlus, Loader2 } from "lucide-react";
+import {
+  ArrowRight,
+  Check,
+  ClipboardCheck,
+  Copy,
+  GitCompare,
+  ListPlus,
+  Loader2,
+  Pencil,
+  Printer,
+} from "lucide-react";
 import {
   useListAssessments,
   useGetAssessment,
@@ -26,6 +36,7 @@ import { trackedRuleIdsForAssessment, untrackedActionableItems } from "@/lib/ass
 import { formatDateTime, formatDay } from "@/lib/format";
 import { describeAssessmentChange } from "@/lib/assessment-changes";
 import { reviewFacts, displayFact, factLabel, isMarker, live } from "@/lib/checker";
+import { formatRequirementsBrief } from "@/lib/requirements-brief";
 import { RESULT_LABELS, RESULT_TONES, factAtPath, canCreateSourceTask } from "@/lib/rich-checker";
 import { shortRulesVersion } from "@/lib/result-words";
 import { useToast } from "@/hooks/use-toast";
@@ -168,6 +179,7 @@ export function AssessmentDetail({ id }: { id: string }) {
   const [prevId, setPrevId] = useState(() => new URLSearchParams(search).get("compare") ?? "");
   const [taskFor, setTaskFor] = useState<string | null>(null);
   const [batchOpen, setBatchOpen] = useState(false);
+  const [copiedBrief, setCopiedBrief] = useState(false);
   const others = useMemo(
     () => (list.data ?? []).filter((x) => x.id !== id).sort((x, y) => y.createdAt.localeCompare(x.createdAt)),
     [list.data, id],
@@ -214,18 +226,64 @@ export function AssessmentDetail({ id }: { id: string }) {
               : "Worked out from the answers you gave when you checked."}
           </p>
         </div>
-        {untrackedItems.length >= 2 && (
+        <div className="no-print flex flex-wrap gap-2">
+          <Link
+            href={"/workspace/checker?fromAssessment=" + encodeURIComponent(s.id)}
+            className="btn btn-ghost btn-sm"
+            data-testid="link-recheck-from-saved"
+          >
+            <Pencil className="h-4 w-4" aria-hidden="true" />
+            Edit answers &amp; check again
+          </Link>
           <button
             type="button"
-            className="btn btn-primary btn-sm"
-            aria-expanded={batchOpen}
-            onClick={() => setBatchOpen((open) => !open)}
-            data-testid="button-toggle-batch-tasks"
+            className="btn btn-ghost btn-sm"
+            onClick={async () => {
+              const brief = formatRequirementsBrief({
+                result: s.result,
+                facts,
+                savedAt: s.createdAt,
+                profileRevision: s.profileRevision,
+              });
+              try {
+                await navigator.clipboard.writeText(brief);
+                setCopiedBrief(true);
+                setTimeout(() => setCopiedBrief(false), 2500);
+              } catch {
+                // Clipboard access may be blocked in restricted contexts; print remains available.
+              }
+            }}
+            data-testid="button-copy-result-brief"
           >
-            <ListPlus className="h-4 w-4" aria-hidden="true" />
-            {batchOpen ? "Close batch task picker" : `Turn ${untrackedItems.length} results into tasks`}
+            {copiedBrief ? (
+              <Check className="h-4 w-4" aria-hidden="true" />
+            ) : (
+              <Copy className="h-4 w-4" aria-hidden="true" />
+            )}
+            {copiedBrief ? "Copied summary" : "Copy summary"}
           </button>
-        )}
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={() => window.print()}
+            data-testid="button-print-result"
+          >
+            <Printer className="h-4 w-4" aria-hidden="true" />
+            Print / PDF
+          </button>
+          {untrackedItems.length >= 2 && (
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              aria-expanded={batchOpen}
+              onClick={() => setBatchOpen((open) => !open)}
+              data-testid="button-toggle-batch-tasks"
+            >
+              <ListPlus className="h-4 w-4" aria-hidden="true" />
+              {batchOpen ? "Close batch task picker" : `Turn ${untrackedItems.length} results into tasks`}
+            </button>
+          )}
+        </div>
       </div>
 
       {batchOpen && untrackedItems.length > 0 && (

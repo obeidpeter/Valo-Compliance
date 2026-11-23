@@ -1,11 +1,23 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearch } from "wouter";
 import { useUser } from "@clerk/react";
-import { ArrowLeft, ArrowRight, Check, Loader2, RotateCcw, ShieldCheck, UserRound } from "lucide-react";
 import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  Copy,
+  Loader2,
+  Printer,
+  RotateCcw,
+  ShieldCheck,
+  UserRound,
+} from "lucide-react";
+import {
+  useGetAssessment,
   usePreviewAssessment,
   usePreviewWorkspaceAssessment,
   useGetWorkspace,
+  getGetAssessmentQueryKey,
   getGetWorkspaceQueryKey,
   CheckerFactsState,
   CheckerFactsTurnoverBand,
@@ -49,6 +61,7 @@ import {
   factLabel,
 } from "@/lib/checker";
 import { lagosToday } from "@/lib/format";
+import { formatRequirementsBrief } from "@/lib/requirements-brief";
 import { cn } from "@/lib/utils";
 import { useAccountEpoch } from "@/components/account-state-boundary";
 import { WorkspaceNav } from "@/components/workspace-nav";
@@ -66,7 +79,14 @@ export default function Checker() {
     () => new URLSearchParams(search).get("prefill") === "profile",
     [search],
   );
+  const fromAssessmentId = useMemo(
+    () => new URLSearchParams(search).get("fromAssessment")?.trim() ?? "",
+    [search],
+  );
   const autoPrefilled = useRef(false);
+  const loadedFromAssessment = useRef<string | null>(null);
+  const [loadedPreviousCheck, setLoadedPreviousCheck] = useState(false);
+  const [copiedLiveBrief, setCopiedLiveBrief] = useState(false);
   const [facts, setFacts] = useState<RichCheckerFacts>(EMPTY_FACTS);
   /** The questions the visitor chose "Skip for now" on. A question nobody has touched holds the same
    * "unanswered", and shows nothing chosen. */
@@ -90,6 +110,12 @@ export default function Checker() {
 
   const ws = useGetWorkspace({
     query: { enabled: !!isSignedIn, queryKey: getGetWorkspaceQueryKey(), ...live },
+  });
+  const sourceAssessment = useGetAssessment(fromAssessmentId, {
+    query: {
+      enabled: Boolean(fromAssessmentId && isSignedIn),
+      queryKey: getGetAssessmentQueryKey(fromAssessmentId),
+    },
   });
   const profile = isSignedIn ? (ws.data?.profile ?? null) : null;
 
@@ -165,10 +191,31 @@ export default function Checker() {
   }
 
   useEffect(() => {
-    if (!autoPrefillRequested || autoPrefilled.current || !profile || own || filledIn) return;
+    if (!autoPrefillRequested || autoPrefilled.current || !profile || own || filledIn || fromAssessmentId)
+      return;
     autoPrefilled.current = true;
     fillIn();
-  }, [autoPrefillRequested, profile, own, filledIn]);
+  }, [autoPrefillRequested, fromAssessmentId, profile, own, filledIn]);
+
+  useEffect(() => {
+    if (
+      !fromAssessmentId ||
+      !isSignedIn ||
+      !sourceAssessment.data ||
+      loadedFromAssessment.current === fromAssessmentId
+    )
+      return;
+    loadedFromAssessment.current = fromAssessmentId;
+    const savedFacts = sourceAssessment.data.facts as RichCheckerFacts;
+    setFacts({ ...EMPTY_FACTS, ...savedFacts });
+    setSkipped(new Set());
+    setAmountText(koboToNaira(savedFacts.turnoverAmountKobo ?? null));
+    setAmountError(null);
+    setOwn(true);
+    setFilledIn(false);
+    setLoadedPreviousCheck(true);
+    setStep(REVIEW);
+  }, [fromAssessmentId, isSignedIn, sourceAssessment.data]);
 
   function reset() {
     setFacts(EMPTY_FACTS);
@@ -255,6 +302,12 @@ export default function Checker() {
           checked against an official source.
         </p>
       </header>
+      {loadedPreviousCheck && (
+        <Notice className="mt-6" tone="forest" title="Loaded from your earlier saved check">
+          Edit any answer below, then select <strong>Check my requirements</strong> to see what changes. Your
+          earlier saved result stays untouched so you can compare both afterward.
+        </Notice>
+      )}
 
       <UnsavedNavigationDialog
         open={navigation.blocked}
@@ -789,12 +842,50 @@ export default function Checker() {
           {result && (
             <section className="mt-10" aria-live="polite" aria-label="Results">
               <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-                <h2 className="font-display text-3xl">Results</h2>
-                {stale && (
-                  <span className="pill pill-ochre" data-testid="status-stale">
-                    Answers changed since this result. Check again.
-                  </span>
-                )}
+                <div className="flex flex-wrap items-center gap-3">
+                  <h2 className="font-display text-3xl">Results</h2>
+                  {stale && (
+                    <span className="pill pill-ochre" data-testid="status-stale">
+                      Answers changed since this result. Check again.
+                    </span>
+                  )}
+                </div>
+                <div className="no-print flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    onClick={async () => {
+                      const brief = formatRequirementsBrief({
+                        result: result.r,
+                        facts: final as unknown as Record<string, unknown>,
+                      });
+                      try {
+                        await navigator.clipboard.writeText(brief);
+                        setCopiedLiveBrief(true);
+                        setTimeout(() => setCopiedLiveBrief(false), 2500);
+                      } catch {
+                        // Clipboard access may be unavailable; print stays available.
+                      }
+                    }}
+                    data-testid="button-copy-live-brief"
+                  >
+                    {copiedLiveBrief ? (
+                      <Check className="h-4 w-4" aria-hidden="true" />
+                    ) : (
+                      <Copy className="h-4 w-4" aria-hidden="true" />
+                    )}
+                    {copiedLiveBrief ? "Copied summary" : "Copy summary"}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    onClick={() => window.print()}
+                    data-testid="button-print-live-result"
+                  >
+                    <Printer className="h-4 w-4" aria-hidden="true" />
+                    Print / PDF
+                  </button>
+                </div>
               </div>
               <AssessmentResultView
                 result={result.r}
