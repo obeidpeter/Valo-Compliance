@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { BellOff, BellRing, Clock, Loader2 } from "lucide-react";
+import { BellOff, BellRing, CalendarPlus, Clock, Loader2 } from "lucide-react";
 import { Link } from "wouter";
 import {
   useGetReminderPreferences,
@@ -19,6 +19,7 @@ import { useAccountEpoch } from "@/components/account-state-boundary";
 import { EmptyState, ErrorState, Notice, Skel } from "@/components/states";
 import { UnsavedNavigationDialog } from "@/components/unsaved-navigation-dialog";
 import { describeError } from "@/lib/api";
+import { buildTasksIcs, downloadIcsFile } from "@/lib/calendar-export";
 import { formatDateTime } from "@/lib/format";
 import { live } from "@/lib/checker";
 import { REMINDER_STATUS, reminderMeaning, reminderNeedsHelp, triedTimes } from "@/lib/reminder-words";
@@ -201,6 +202,22 @@ export default function RemindersPage() {
                     ? "Valo is still being built. A reminder is sent only as a test, to the workspace owner's verified email address."
                     : "You can save your choices now. Nothing is sent, and each reminder stays on hold, until sending is switched on."}
                 </p>
+                {(tasks.data ?? []).some((t) => t.dueDate && t.state !== "completed_by_user") && (
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm mt-3"
+                    onClick={() => {
+                      const ics = buildTasksIcs(tasks.data ?? [], {
+                        alarmDaysBefore: offsets.length ? offsets : [7, 1, 0],
+                      });
+                      if (ics) downloadIcsFile(ics, "valo-deadlines.ics");
+                    }}
+                    data-testid="button-export-reminders-ics"
+                  >
+                    <CalendarPlus className="h-4 w-4" aria-hidden="true" />
+                    Download phone/calendar alerts (.ics)
+                  </button>
+                )}
               </div>
 
               <label className="flex cursor-pointer items-center justify-between gap-4">
