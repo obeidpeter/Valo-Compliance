@@ -1,9 +1,10 @@
 import { Link, useSearch } from "wouter";
-import { ArrowRight, FilePlus2, Loader2, Sparkles } from "lucide-react";
+import { ArrowRight, BookOpen, FilePlus2, Loader2, Sparkles } from "lucide-react";
 import { GuidedDraftStarter } from "@/components/guided-draft-starter";
 import { Notice } from "@/components/states";
 import { WorkspaceNav } from "@/components/workspace-nav";
 import { describeError } from "@/lib/api";
+import { basePath } from "@/lib/env";
 import { landingTask } from "@/lib/landing-tasks";
 import { useNewDocument } from "@/lib/use-new-document";
 
@@ -24,6 +25,10 @@ export default function NewDocumentPage() {
       <header className="reveal max-w-3xl">
         <p className="eyebrow">Documents</p>
         <h1 className="font-display mt-2 text-4xl sm:text-5xl">New document</h1>
+        <p className="mt-3 text-muted-foreground">
+          Guided forms ask step-by-step questions and calculate totals for you. If you prefer to write freely
+          or start from notes, choose a blank document or the drafting assistant below.
+        </p>
       </header>
       <div className="mt-10">
         <GuidedDraftStarter chosen={chosen} />
@@ -77,6 +82,23 @@ export default function NewDocumentPage() {
                 aria-hidden="true"
               />
             </Link>
+          </li>
+          <li>
+            <a href={basePath + "/library"} className={way} data-testid="link-published-templates">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-accent text-primary">
+                <BookOpen className="h-5 w-5" aria-hidden="true" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block font-medium">Browse published templates and guides</span>
+                <span className="mt-1 block text-sm leading-relaxed text-muted-foreground">
+                  Explore ready-made templates and source-backed guides Valo has published.
+                </span>
+              </span>
+              <ArrowRight
+                className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
+                aria-hidden="true"
+              />
+            </a>
           </li>
         </ul>
         {blank.error && (
