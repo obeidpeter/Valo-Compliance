@@ -42,6 +42,9 @@ let catalogueItems: ReleasedLibraryItem[] | null = null;
 let withdrawn = false;
 /** While a test sets it, the API lists no released guidance at all. */
 let noGuidance = false;
+/** While a test sets it, the web server's read of the catalogue is answered after this many
+ * milliseconds, inside the web server's own time limit. */
+let slowCatalogue = 0;
 const [gone, goneGuidance] = [items[0]!, resources[0]!];
 /** The API paths of a withdrawn entry the browser has read. */
 const browserReadsOfWithdrawn: string[] = [];
@@ -76,6 +79,8 @@ function answerFor(method: string, url: URL, from: "server" | "browser") {
       }),
     };
   const found = serverAnswer(method, url);
+  if (slowCatalogue && found && from === "server" && url.pathname === "/api/public/catalogue")
+    return { ...found, delayMs: slowCatalogue };
   if (withdrawn && found && url.pathname === "/api/public/discovery") {
     const discovery = found.body as { items: { path: string }[] };
     const left = discovery.items.filter(
@@ -490,6 +495,37 @@ test("moving between public pages in the app, from the site's own links and from
     await close();
   }
   assert.deepEqual(problems, []);
+});
+
+test("a click on a link to another server-rendered page says at once that the page is on its way, and the page then arrives in place", async () => {
+  slowCatalogue = 1200;
+  const { page, errors, close } = await web.desktop("/help");
+  try {
+    await ready(page);
+    await page.locator('header [data-testid="link-nav-documents"]').click();
+    // While the new page is still being rendered, the page being left says it is on its way: the
+    // bar along the top is drawn and the main content is marked busy.
+    await page.waitForFunction('document.documentElement.hasAttribute("data-opening")', undefined, {
+      timeout: 1000,
+    });
+    assert.equal(await page.locator("main h1").first().textContent(), HEADINGS["/help"]);
+    assert.equal(await page.locator("#main-content").getAttribute("aria-busy"), "true");
+    assert.equal(
+      await page.evaluate<string>('getComputedStyle(document.body, "::after").position'),
+      "fixed",
+      "the bar is drawn",
+    );
+    // Then the page arrives without a full load, and nothing says it is still on its way.
+    await page.waitForURL(web.origin + "/library");
+    await expect(page.locator("main h1").first()).toHaveText(HEADINGS["/library"]!);
+    await page.waitForFunction('!document.documentElement.hasAttribute("data-opening")');
+    assert.equal(await page.locator("#main-content").getAttribute("aria-busy"), null);
+    assert.equal(await page.evaluate<string>('getComputedStyle(document.body, "::after").content'), "none");
+  } finally {
+    slowCatalogue = 0;
+    await close();
+  }
+  assert.deepEqual(errors, []);
 });
 
 test("a server-rendered page reached inside the browser app without a full load is handed to the server", async () => {

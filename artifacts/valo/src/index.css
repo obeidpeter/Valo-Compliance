@@ -366,6 +366,20 @@ body::before {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+/* A server-rendered page on its way after a click (islands/link-pending.tsx): a bar runs along the
+   top of the screen at once, and the page being left fades a little if the new one takes longer than
+   a moment. Without movement, the bar simply shows. */
+html[data-opening] body::after {
+  content: ''; position: fixed; inset: 0 0 auto 0; height: 3px; z-index: 70; pointer-events: none;
+  background: hsl(var(--primary)); transform-origin: left;
+  animation: page-opening 2.5s cubic-bezier(.1,.6,.2,1) forwards;
+}
+html[data-opening] #main-content { opacity: .6; transition: opacity .2s ease .15s; }
+@keyframes page-opening { from { transform: scaleX(.08); } to { transform: scaleX(.9); } }
+@media (prefers-reduced-motion: reduce) {
+  html[data-opening] body::after { animation: none; transform: none; }
+  html[data-opening] #main-content { transition: none; }
+}
 
 /*
  * Component classes. They sit in the components layer, which comes before Tailwind's utilities, so
