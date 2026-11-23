@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useSearch } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, ArrowRight, ClipboardCheck, GitCompare, ListPlus } from "lucide-react";
+import { ArrowRight, ClipboardCheck, GitCompare, ListPlus } from "lucide-react";
 import {
   useListAssessments,
   useGetAssessment,
@@ -14,6 +14,7 @@ import {
   type AssessmentItem,
   type SavedAssessment,
 } from "@workspace/api-client-react";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { WorkspaceNav } from "@/components/workspace-nav";
 import { AssessmentResultView } from "@/components/assessment-result";
 import { TaskForm, emptyDraft, type TaskDraft } from "@/components/task-form";
@@ -187,13 +188,13 @@ export function AssessmentDetail({ id }: { id: string }) {
   return (
     <div className="mx-auto max-w-5xl px-5 py-12 lg:px-8">
       <WorkspaceNav />
-      <Link
-        href="/workspace/assessments"
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        All saved results
-      </Link>
+      <Breadcrumbs
+        items={[
+          { label: "Home", href: "/workspace" },
+          { label: "All saved results", href: "/workspace/assessments" },
+          { label: formatDay(s.createdAt) },
+        ]}
+      />
       <h1 className="font-display mt-3 text-4xl">Result saved {formatDateTime(s.createdAt)}</h1>
       <p className="mt-2 text-sm text-muted-foreground" data-testid="text-result-origin">
         {s.profileRevision

@@ -13,6 +13,7 @@ import {
 } from "@workspace/api-client-react";
 import { synchronizeFinancialBlocks } from "@workspace/valo-core/money";
 import { Meta, Shell, STATUS, TASK_LABEL } from "@/components/ai-draft-shared";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { FinancialFields, FINANCIAL_BLOCK_IDS } from "@/components/financial-fields";
 import { ErrorState, Notice, Skel } from "@/components/states";
 import { UnsavedNavigationDialog } from "@/components/unsaved-navigation-dialog";
@@ -113,6 +114,14 @@ export function AIDraftPreview({ id }: { id: string }) {
 
   return (
     <Shell>
+      <Breadcrumbs
+        className="mb-5"
+        items={[
+          { label: "Home", href: "/workspace" },
+          { label: "Drafting assistant", href: "/workspace/ai" },
+          { label: title.trim() || TASK_LABEL[p.task] },
+        ]}
+      />
       <div className="flex flex-wrap items-center gap-2">
         <span className={"pill " + s.tone} data-testid="status-ai-preview">
           {p.status === "running" && <Loader2 className="h-3 w-3 animate-spin" />}
