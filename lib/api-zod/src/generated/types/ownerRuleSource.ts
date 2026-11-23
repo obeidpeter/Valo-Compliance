@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { OwnerRuleAmendmentRecord } from './ownerRuleAmendmentRecord';
 
 export interface OwnerRuleSource {
   title: string;
@@ -18,4 +19,11 @@ export interface OwnerRuleSource {
   /** @nullable */
   failure: string | null;
   current: boolean;
+  /** @nullable */
+  passage: string | null;
+  /** @nullable */
+  recordedLocator: string | null;
+  /** @nullable */
+  effectiveFrom: string | null;
+  amendments: OwnerRuleAmendmentRecord | null;
 }

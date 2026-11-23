@@ -27,7 +27,15 @@ import {
   verifyReleasedSources,
   type CurrentSourceCapture,
 } from "../sources";
-import { guidancePolicy } from "../publication";
+import {
+  AMENDMENT_RECORD_DAYS,
+  capturedGuidePassages,
+  guideAmendmentRecords,
+  guidancePolicy,
+  guideSourceDecision,
+  type AmendmentRecord,
+  type GuidePassages,
+} from "../publication";
 import { asDevelopmentOwner, type StaffActor } from "../staff";
 import { ValoProblem } from "../../platform/valo-problem";
 import { planStoredRuleRelease } from "./valo-rule-release";
@@ -36,12 +44,14 @@ import { planStoredRuleRelease } from "./valo-rule-release";
  * Requirements-checker rules released on the development owner's sign-off (decision 0020).
  *
  * A rule is prepared in the repository as an `OwnerRuleCandidate`: what it tells a customer, the
- * passages of its official sources and the claims tying them to the rule, its rights record and its
- * critical scenarios. The rule and its bundle are built from it against each source's current
- * capture and the guidance policy as it stands. The owner reads them, has the daily source check
- * watch the sources, confirms EDP-005's enhanced checks one by one and signs; one transaction then
- * records the sign-off, the release, its source bindings and the earlier version's supersession. The
- * database refuses an owner-signed release without that sign-off (migration rule_owner_signoffs).
+ * official passages it rests on and the claims tying them to the rule, its rights record and its
+ * critical scenarios. Each passage is one the guides use (`guidance-passages.ts`), read from today's
+ * capture of its official address, and its source is marked current only by `guideSourceDecision`
+ * from its text's amendment record, as a guide's is. The owner reads the rule and the evidence for
+ * each of EDP-005's enhanced checks, has the daily source check watch the sources, confirms the
+ * checks one by one and signs; one transaction then records the sign-off, the release, its source
+ * bindings and the earlier version's supersession. The database refuses an owner-signed release
+ * without that sign-off (migration rule_owner_signoffs).
  */
 export type OwnerRuleCandidate = {
   rule: Pick<
@@ -66,16 +76,14 @@ export type OwnerRuleCandidate = {
   missingEvidence: string[];
   sources: {
     id: string;
-    /** The registered official source whose current capture must hold the passage. */
+    /** A passage the guides use; its words, place and official text come from today's capture. */
+    passageId: string;
+    /** The registered official source that capture is of. */
     leadId: string;
-    title: string;
-    issuingBody: string;
-    passage: string;
+    /** Where the quote is, as the customer sees it ("section 814(1)"). */
     locator: string;
     /** The words of the passage the rule shows the customer. */
     quote: string;
-    effectiveFrom: string;
-    effectiveTo: string | null;
   }[];
   claims: PublicationBundle["candidate"]["claims"];
   rights: PublicationBundle["rights"];
@@ -88,20 +96,36 @@ export const ownerRuleCandidates: OwnerRuleCandidate[] = [];
 
 const refusal = "Only the designated development owner can sign requirements-checker rules.";
 const day = 86_400_000;
+/** The guidance policy's point 7: no more than this many words in a row from a passage. */
+export const OWNER_RULE_QUOTE_WORDS = 20;
 const unique = <T>(values: T[]) => [...new Set(values)];
+const wordCount = (text: string) => text.trim().split(/\s+/u).filter(Boolean).length;
 
 type Policy = PublicationBundle["policy"];
 type ReadText = (snapshotId: string, checksum: string) => Promise<string>;
-type Options = { candidates?: readonly OwnerRuleCandidate[]; now?: Date; readText?: ReadText };
+/** Where passages and amendment records come from; tests stand in their own. */
+type Evidence = {
+  passagesFrom: (captures: readonly CurrentSourceCapture[]) => GuidePassages;
+  records: readonly AmendmentRecord[];
+};
+type Options = {
+  candidates?: readonly OwnerRuleCandidate[];
+  now?: Date;
+  readText?: ReadText;
+  evidence?: Partial<Evidence>;
+};
+const evidenceOf = (options: Options): Evidence => ({
+  passagesFrom: options.evidence?.passagesFrom ?? ((captures) => capturedGuidePassages(captures)),
+  records: options.evidence?.records ?? guideAmendmentRecords,
+});
 
 /** What the owner confirms for each of EDP-005's enhanced checks, in the screen's words. */
 export const ownerCheckLabels: Record<OwnerConfirmedCheck, string> = {
-  controlling_text:
-    "Each quoted passage is the controlling text, as the official copy has it at its locator.",
-  amendments: "No amendment to these sources is unresolved.",
-  effective_dates: "Each source is in force for the dates this rule covers.",
-  exceptions: "The rule allows for the exceptions its sources make.",
-  jurisdiction: "The rule covers only the places and businesses its sources cover.",
+  controlling_text: "Each passage is the controlling text, as the official copy has it at its place.",
+  amendments: "No amendment to these texts is unresolved, on their amendment records.",
+  effective_dates: "Each text is in force for the dates this rule covers.",
+  exceptions: "The rule allows for the exceptions its passages make, within its stated scope.",
+  jurisdiction: "The rule covers only the places and businesses its passages cover.",
 };
 
 const operators: Record<string, string> = {
@@ -122,7 +146,7 @@ const valueWords = (value: unknown): string =>
 export function describeRuleCondition(rule: Pick<ReleasedRule, "condition" | "evaluator">) {
   if (!rule.condition)
     return rule.evaluator
-      ? `When the checker's fixed ${rule.evaluator.family} calculation (${rule.evaluator.version}) says so.`
+      ? `When the requirements check's fixed ${rule.evaluator.family} calculation (${rule.evaluator.version}) says so.`
       : "No condition is set.";
   const parts = rule.condition.predicates.map((p) =>
     [fieldWords(p.field), operators[p.op], p.op === "exists" ? "" : valueWords(p.value)]
@@ -130,6 +154,13 @@ export function describeRuleCondition(rule: Pick<ReleasedRule, "condition" | "ev
       .join(" "),
   );
   return `When ${parts.join(rule.condition.mode === "all" ? " and " : " or ")}.`;
+}
+
+/** Where the rule applies, in words. */
+export function describeRuleJurisdiction(jurisdiction: ReleasedRule["jurisdiction"]) {
+  if (jurisdiction.level === "federal") return "Nigeria as a whole (a federal rule).";
+  if (jurisdiction.level === "state") return `${jurisdiction.state ?? "A state"} only (a state rule).`;
+  return `${jurisdiction.lga ?? "A local government area"}, ${jurisdiction.state ?? ""} only (a local rule).`;
 }
 
 const holdWords: Record<string, (detail: string) => string> = {
@@ -160,7 +191,7 @@ const holdWords: Record<string, (detail: string) => string> = {
   manifest_mismatch: () => "The rule's parts do not match its manifest.",
   version_not_next: () => "This is not the rule's next version.",
   critical_scenario_failed: (id) => `Scenario ${id} does not give the result it expects.`,
-  release_not_admissible: () => "The checker would not admit this version as it stands.",
+  release_not_admissible: () => "The requirements check would not admit this version as it stands.",
 };
 
 /** A reason the evidence check or the release plan gives, in the screen's words. */
@@ -171,38 +202,86 @@ export function ownerRuleHold(reason: string) {
   return holdWords[code]?.(detail) ?? `Held: ${reason}.`;
 }
 
+/** What a source's amendment record says, for the screen. */
+function amendmentSummary(record: AmendmentRecord | undefined) {
+  if (!record) return null;
+  const searched = record.searches.map((s) => Date.parse(s.searchedAt)).filter(Number.isFinite);
+  return {
+    searchedAt: searched.length ? new Date(Math.min(...searched)).toISOString() : null,
+    places: record.searches.map((s) => s.place),
+    read: record.amendments.map((a) => a.title),
+    notRead: record.notRead.map((n) => `${n.title} (${n.why})`),
+    open: record.conflicts.filter((c) => c.open).map((c) => c.about),
+    limits: record.limits,
+  };
+}
+
 /**
- * The rule and bundle a candidate makes against these captures, the policy and the owner's
- * confirmations, and what holds it. Nothing is read or written.
+ * The rule and bundle a candidate makes against today's captures, the guide passages they hold, the
+ * amendment records, the policy and the owner's confirmations; and what holds it. Nothing is read or
+ * written.
  *
- * The rule's source check is the oldest of its sources' current captures. With none at all it is
- * dated `now` so its scenarios can still be shown; such a rule is held, and cannot be signed.
+ * A source is approved only when its amendment record approves its passage (`guideSourceDecision`)
+ * and the owner has confirmed the checks that rest on it. The rule's source check is the oldest of its
+ * captures; with none at all it is dated `now`, so its scenarios can still be shown, and it is held. It
+ * stays fresh for 30 days (90 for `general` risk), and no longer than its amendment records do.
  */
 export function prepareOwnerRule(
   candidate: OwnerRuleCandidate,
   input: {
     version: number;
     captures: readonly CurrentSourceCapture[];
+    passages: GuidePassages;
+    records: readonly AmendmentRecord[];
     policy: Policy;
     confirmed: readonly string[];
     now: Date;
   },
 ) {
   const holds: string[] = [];
+  /** The sources whose own holds already say why they are not resolved. */
+  const explained = new Set<string>();
+  const hold = (sourceId: string, text: string) => {
+    holds.push(text);
+    explained.add(sourceId);
+  };
   const has = (check: OwnerConfirmedCheck) => input.confirmed.includes(check);
   const parts = candidate.sources.map((source) => {
     const lead = allSourceLeads.find((l) => l.id === source.leadId);
     const capture = input.captures.find((c) => c.leadId === source.leadId && c.url === lead?.url);
-    if (!lead) holds.push(`${source.title} is not a registered official source.`);
+    const found = capture ? input.passages(source.passageId) : undefined;
+    const passage = found && found.instrument.url === lead?.url ? found : undefined;
+    const title = passage?.instrument.title ?? lead?.title ?? source.passageId;
+    const quotes = [
+      source.quote,
+      ...candidate.claims.filter((c) => c.sourceId === source.id).map((c) => c.quote),
+    ];
+    if (!lead) hold(source.id, `Passage ${source.passageId} is not read from a registered official source.`);
     else if (!capture)
-      holds.push(`${source.title} has no copy of its official source checked within the last day.`);
-    else if (!capture.text.includes(source.passage) || !source.passage.includes(source.quote))
-      holds.push(`${source.title}: the official copy does not hold the passage at ${source.locator}.`);
-    return { source, url: lead?.url ?? "https://invalid.invalid/", capture };
+      hold(source.id, `${title} has no copy of its official source checked within the last day.`);
+    else if (!passage) hold(source.id, `Today's copy of ${title} does not hold passage ${source.passageId}.`);
+    else if (quotes.some((q) => !passage.text.includes(q)))
+      holds.push(`${title}: passage ${source.passageId} does not hold the words the rule quotes.`);
+    for (const quote of unique(quotes))
+      if (wordCount(quote) > OWNER_RULE_QUOTE_WORDS)
+        holds.push(
+          `${title}: a quotation is ${wordCount(quote)} words; the guidance policy allows ${OWNER_RULE_QUOTE_WORDS} in a row.`,
+        );
+    const decision = passage ? guideSourceDecision(passage, input.now, input.records, quotes) : undefined;
+    for (const reason of decision?.reasons ?? []) hold(source.id, `${title}: ${reason}.`);
+    const record = passage ? input.records.find((r) => r.instrument === passage.instrument.id) : undefined;
+    return { source, lead, capture, passage, title, decision, record };
   });
   const checks = parts.flatMap((p) => (p.capture ? [Date.parse(p.capture.checkedAt)] : []));
   const checkedAt = new Date(checks.length ? Math.min(...checks) : +input.now);
-  const freshUntil = new Date(+checkedAt + (candidate.risk === "general" ? 90 : 30) * day).toISOString();
+  const searches = parts.flatMap((p) => p.record?.searches.map((s) => Date.parse(s.searchedAt)) ?? []);
+  const freshUntil = new Date(
+    Math.min(
+      +checkedAt + (candidate.risk === "general" ? 90 : 30) * day,
+      ...(searches.length ? [Math.min(...searches) + AMENDMENT_RECORD_DAYS * day] : []),
+    ),
+  ).toISOString();
+  const passageText = (p: (typeof parts)[number]) => p.passage?.text ?? p.source.quote;
   const content = {
     ...candidate.rule,
     version: input.version,
@@ -210,13 +289,13 @@ export function prepareOwnerRule(
     reviewBy: freshUntil,
     status: "published" as const,
     provenance: "owner_signoff" as const,
-    sources: parts.map(({ source, url }) => ({
-      id: source.id,
-      url,
-      title: source.title,
-      locator: source.locator,
-      quote: source.quote,
-      snapshotHash: sha256(source.passage),
+    sources: parts.map((p) => ({
+      id: p.source.id,
+      url: p.lead?.url ?? "https://invalid.invalid/",
+      title: p.title,
+      locator: p.source.locator,
+      quote: p.source.quote,
+      snapshotHash: sha256(passageText(p)),
     })),
   };
   const bundleCandidate = {
@@ -234,7 +313,8 @@ export function prepareOwnerRule(
     missingEvidence: candidate.missingEvidence,
     sourceCheckDate: checkedAt.toISOString(),
     disclosure: ownerRuleDisclosure,
-    // The owner's confirmations are what resolve the legal scope and each source's text.
+    // The owner's confirmations resolve the legal scope; each source's text and amendments need its
+    // amendment record's decision as well.
     legalScopeStatus:
       has("jurisdiction") && has("exceptions") ? ("verified" as const) : ("unverified" as const),
     claims: candidate.claims,
@@ -243,22 +323,30 @@ export function prepareOwnerRule(
   const unbound = {
     kind: "owner_signoff" as const,
     candidate: bundleCandidate,
-    sources: parts.map(({ source, url, capture }) => ({
-      id: source.id,
-      url,
-      title: source.title,
-      issuingBody: source.issuingBody,
-      text: source.passage,
-      hash: sha256(source.passage),
-      jurisdiction: "NG",
-      retrievedAt: capture?.checkedAt ?? checkedAt.toISOString(),
-      freshUntil,
-      effectiveFrom: source.effectiveFrom,
-      effectiveTo: source.effectiveTo,
-      status: "approved" as const,
-      operativeTextConfirmed: has("controlling_text") && has("effective_dates"),
-      amendmentsResolved: has("amendments"),
-    })),
+    sources: parts.map((p) => {
+      const operative =
+        Boolean(p.decision?.operativeTextConfirmed) && has("controlling_text") && has("effective_dates");
+      const resolved = Boolean(p.decision?.amendmentsResolved) && has("amendments");
+      return {
+        id: p.source.id,
+        url: p.lead?.url ?? "https://invalid.invalid/",
+        title: p.title,
+        issuingBody: p.passage?.instrument.issuingBody ?? p.lead?.title ?? "Unknown",
+        text: passageText(p),
+        hash: sha256(passageText(p)),
+        jurisdiction: "NG",
+        retrievedAt: p.capture?.checkedAt ?? checkedAt.toISOString(),
+        freshUntil,
+        effectiveFrom: p.passage?.instrument.effectiveFrom ?? checkedAt.toISOString(),
+        effectiveTo: null,
+        status:
+          p.decision?.status === "approved" && operative && resolved
+            ? ("approved" as const)
+            : ("held" as const),
+        operativeTextConfirmed: operative,
+        amendmentsResolved: resolved,
+      };
+    }),
     rights: candidate.rights,
     policy: input.policy,
     scenarios: candidate.scenarios,
@@ -266,9 +354,23 @@ export function prepareOwnerRule(
   const bundle: OwnerRuleBundle = { ...unbound, manifest: ownerRuleManifest(unbound) };
   const rule = ruleSchema.parse({ ...content, manifestHash: digest(bundle.manifest) });
   const snapshotIds = Object.fromEntries(
-    parts.flatMap(({ source, capture }) => (capture ? [[source.id, capture.snapshotId]] : [])),
+    parts.flatMap((p) => (p.capture && p.passage ? [[p.source.id, p.capture.snapshotId]] : [])),
   );
-  return { rule, bundle, holds, snapshotIds, sourceCheckedAt: checkedAt };
+  const evidence = parts.map((p) => ({
+    passage: p.passage?.text ?? null,
+    recordedLocator: p.passage?.recordedLocator ?? null,
+    effectiveFrom: p.passage?.instrument.effectiveFrom ?? null,
+    amendments: amendmentSummary(p.record),
+  }));
+  return {
+    rule,
+    bundle,
+    holds,
+    explained: [...explained],
+    snapshotIds,
+    sourceCheckedAt: checkedAt,
+    evidence,
+  };
 }
 
 const candidateFor = (candidates: readonly OwnerRuleCandidate[], ruleId: string) => {
@@ -302,27 +404,39 @@ async function assessCandidate(candidate: OwnerRuleCandidate, input: Parameters<
     input.now,
     { hash: input.policy.hash, ownerApproved: input.policy.ownerApproved },
   );
-  // A failed evidence check already says why the registry would not admit the version.
+  // A source's own hold already says why it is not resolved or current, and a failed evidence check
+  // already says why the registry would not admit the version.
+  const derived = new Set(
+    prepared.explained.flatMap((id) => [`source_unresolved:${id}`, `source_not_current:${id}`]),
+  );
   const reasons = [
-    ...evidence.reasons,
+    ...evidence.reasons.filter((r) => !derived.has(r)),
     ...plan.reasons.filter((r) => !(r === "release_not_admissible" && evidence.reasons.length)),
   ];
   return { prepared, evidence, plan, holds: unique([...prepared.holds, ...reasons.map(ownerRuleHold)]) };
 }
 
-async function present(candidates: readonly OwnerRuleCandidate[], now: Date, readText?: ReadText) {
+async function present(candidates: readonly OwnerRuleCandidate[], now: Date, options: Options) {
   if (!candidates.length) return [];
+  const { passagesFrom, records } = evidenceOf(options);
   const leads = unique(candidates.flatMap((c) => c.sources.map((s) => s.leadId)));
   const stored = await storedVersions(candidates.map((c) => c.rule.id));
   const { policy } = await guidancePolicy();
-  const captures = await currentSourceCaptures(leads, now, readText ? { readText } : {});
+  const captures = await currentSourceCaptures(
+    leads,
+    now,
+    options.readText ? { readText: options.readText } : {},
+  );
   const watches = await sourceWatchStates(leads);
+  const passages = passagesFrom(captures);
   const items = [];
   for (const candidate of candidates) {
     const version = nextVersion(stored, candidate.rule.id);
     const { prepared, plan, holds } = await assessCandidate(candidate, {
       version,
       captures,
+      passages,
+      records,
       policy,
       confirmed: ownerConfirmedChecks,
       now,
@@ -334,19 +448,23 @@ async function present(candidates: readonly OwnerRuleCandidate[], now: Date, rea
       reason: candidate.rule.reason,
       nextStep: candidate.rule.nextStep,
       appliesWhen: describeRuleCondition(candidate.rule),
+      jurisdiction: describeRuleJurisdiction(candidate.rule.jurisdiction),
       validFrom: candidate.rule.validFrom,
       validTo: candidate.rule.validTo,
       risk: candidate.risk,
+      scope: candidate.scope,
+      limitations: candidate.limitations,
+      assumptions: candidate.assumptions,
       disclosure: ownerRuleDisclosure,
       version,
       manifestHash: prepared.rule.manifestHash,
       live: live ? { version: live.version, manifestHash: live.manifestHash } : null,
       holds,
       checks: ownerConfirmedChecks.map((id) => ({ id, label: ownerCheckLabels[id] })),
-      sources: candidate.sources.map((source) => {
+      sources: candidate.sources.map((source, i) => {
         const watch = watches.find((w) => w.leadId === source.leadId);
         return {
-          title: source.title,
+          title: prepared.rule.sources[i]!.title,
           url: allSourceLeads.find((l) => l.id === source.leadId)?.url ?? null,
           locator: source.locator,
           quote: source.quote,
@@ -354,6 +472,7 @@ async function present(candidates: readonly OwnerRuleCandidate[], now: Date, rea
           checkedAt: watch?.checkedAt ?? null,
           failure: watch?.failureCode ?? null,
           current: Boolean(prepared.snapshotIds[source.id]),
+          ...prepared.evidence[i]!,
         };
       }),
       scenarios: plan.scenarios,
@@ -370,11 +489,7 @@ export async function listOwnerRules(actor: StaffActor, options: Options = {}) {
   // The owner's authority first; storage and the policy file are read outside any transaction.
   await asDevelopmentOwner(actor, async () => undefined, refusal);
   return {
-    items: await present(
-      options.candidates ?? ownerRuleCandidates,
-      options.now ?? new Date(),
-      options.readText,
-    ),
+    items: await present(options.candidates ?? ownerRuleCandidates, options.now ?? new Date(), options),
   };
 }
 
@@ -402,7 +517,7 @@ export async function watchOwnerRuleSources(
     },
     refusal,
   );
-  const [item] = await present([candidate], options.now ?? new Date(), options.readText);
+  const [item] = await present([candidate], options.now ?? new Date(), options);
   return item!;
 }
 
@@ -437,6 +552,7 @@ async function signOwnerRule(
     throw new ValoProblem(422, "Confirm each of the five checks before signing.");
   const now = options.now ?? new Date();
   const readText = options.readText ?? readSourceText;
+  const { passagesFrom, records } = evidenceOf(options);
   const { db, valoRuleOwnerSignoffs, valoRuleReleases: r } = await import("@workspace/db");
   const version = nextVersion(await storedVersions([ruleId]), ruleId);
   const { policy } = await guidancePolicy();
@@ -446,6 +562,8 @@ async function signOwnerRule(
   const { prepared, evidence, plan, holds } = await assessCandidate(candidate, {
     version,
     captures,
+    passages: passagesFrom(captures),
+    records,
     policy,
     confirmed: input.confirmedChecks,
     now,

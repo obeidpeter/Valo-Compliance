@@ -16,10 +16,14 @@ export interface OwnerRuleItem {
   reason: string;
   nextStep: string;
   appliesWhen: string;
+  jurisdiction: string;
   validFrom: string;
   /** @nullable */
   validTo: string | null;
   risk: string;
+  scope: string;
+  limitations: string;
+  assumptions: string[];
   disclosure: string;
   /** @minimum 1 */
   version: number;

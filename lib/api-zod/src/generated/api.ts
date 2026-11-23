@@ -3224,9 +3224,13 @@ export const ListOwnerRulesResponse = zod.object({
   "reason": zod.string(),
   "nextStep": zod.string(),
   "appliesWhen": zod.string(),
+  "jurisdiction": zod.string(),
   "validFrom": zod.string(),
   "validTo": zod.string().nullable(),
   "risk": zod.string(),
+  "scope": zod.string(),
+  "limitations": zod.string(),
+  "assumptions": zod.array(zod.string()),
   "disclosure": zod.string(),
   "version": zod.int().min(1),
   "manifestHash": zod.string().regex(listOwnerRulesResponseItemsItemManifestHashRegExp),
@@ -3247,7 +3251,18 @@ export const ListOwnerRulesResponse = zod.object({
   "watched": zod.boolean(),
   "checkedAt": zod.string().nullable(),
   "failure": zod.string().nullable(),
-  "current": zod.boolean()
+  "current": zod.boolean(),
+  "passage": zod.string().nullable(),
+  "recordedLocator": zod.string().nullable(),
+  "effectiveFrom": zod.string().nullable(),
+  "amendments": zod.union([zod.object({
+  "searchedAt": zod.string().nullable(),
+  "places": zod.array(zod.string()),
+  "read": zod.array(zod.string()),
+  "notRead": zod.array(zod.string()),
+  "open": zod.array(zod.string()),
+  "limits": zod.string()
+}),zod.null()])
 })),
   "scenarios": zod.array(zod.object({
   "id": zod.string(),
@@ -3290,9 +3305,13 @@ export const WatchOwnerRuleSourcesResponse = zod.object({
   "reason": zod.string(),
   "nextStep": zod.string(),
   "appliesWhen": zod.string(),
+  "jurisdiction": zod.string(),
   "validFrom": zod.string(),
   "validTo": zod.string().nullable(),
   "risk": zod.string(),
+  "scope": zod.string(),
+  "limitations": zod.string(),
+  "assumptions": zod.array(zod.string()),
   "disclosure": zod.string(),
   "version": zod.int().min(1),
   "manifestHash": zod.string().regex(watchOwnerRuleSourcesResponseManifestHashRegExp),
@@ -3313,7 +3332,18 @@ export const WatchOwnerRuleSourcesResponse = zod.object({
   "watched": zod.boolean(),
   "checkedAt": zod.string().nullable(),
   "failure": zod.string().nullable(),
-  "current": zod.boolean()
+  "current": zod.boolean(),
+  "passage": zod.string().nullable(),
+  "recordedLocator": zod.string().nullable(),
+  "effectiveFrom": zod.string().nullable(),
+  "amendments": zod.union([zod.object({
+  "searchedAt": zod.string().nullable(),
+  "places": zod.array(zod.string()),
+  "read": zod.array(zod.string()),
+  "notRead": zod.array(zod.string()),
+  "open": zod.array(zod.string()),
+  "limits": zod.string()
+}),zod.null()])
 })),
   "scenarios": zod.array(zod.object({
   "id": zod.string(),

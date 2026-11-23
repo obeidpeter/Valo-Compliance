@@ -189,6 +189,7 @@ export * from './ownerGuidancePage';
 export * from './ownerGuidanceReceipt';
 export * from './ownerGuidanceReceiptState';
 export * from './ownerGuidanceRevision';
+export * from './ownerRuleAmendmentRecord';
 export * from './ownerRuleCheck';
 export * from './ownerRuleCheckId';
 export * from './ownerRuleDecision';

@@ -1436,6 +1436,16 @@ export interface OwnerRuleCheck {
   label: string;
 }
 
+export interface OwnerRuleAmendmentRecord {
+  /** @nullable */
+  searchedAt: string | null;
+  places: string[];
+  read: string[];
+  notRead: string[];
+  open: string[];
+  limits: string;
+}
+
 export interface OwnerRuleSource {
   title: string;
   /** @nullable */
@@ -1448,6 +1458,13 @@ export interface OwnerRuleSource {
   /** @nullable */
   failure: string | null;
   current: boolean;
+  /** @nullable */
+  passage: string | null;
+  /** @nullable */
+  recordedLocator: string | null;
+  /** @nullable */
+  effectiveFrom: string | null;
+  amendments: OwnerRuleAmendmentRecord | null;
 }
 
 export interface OwnerRuleScenario {
@@ -1471,10 +1488,14 @@ export interface OwnerRuleItem {
   reason: string;
   nextStep: string;
   appliesWhen: string;
+  jurisdiction: string;
   validFrom: string;
   /** @nullable */
   validTo: string | null;
   risk: string;
+  scope: string;
+  limitations: string;
+  assumptions: string[];
   disclosure: string;
   /** @minimum 1 */
   version: number;

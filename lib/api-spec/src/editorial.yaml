@@ -1,7 +1,68 @@
 # Source controls, editorial records and correction notices.
 paths:
-  /admin/source-controls: {"get": {"operationId": "getSourceControls", "tags": ["staff"], "parameters": [{"name": "area", "in": "query", "required": true, "schema": {"type": "string", "enum": ["content", "system"]}}, {"name": "page", "in": "query", "schema": {"type": "integer", "minimum": 1, "maximum": 10000, "default": 1}}], "responses": {"200": {"description": "Current authorized result. No publication or spending approval is granted.", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SourceControls"}}}}, "401": {"description": "Sign-in required"}, "403": {"description": "Active area role and recent MFA required"}, "409": {"description": "Changed version or request-key conflict"}}}}
-  /admin/source-controls/action: {"post": {"operationId": "actOnSourceControls", "tags": ["staff"], "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SourceControlAction"}}}}, "responses": {"200": {"description": "Current authorized result. No publication or spending approval is granted.", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SourceControlResult"}}}}, "401": {"description": "Sign-in required"}, "403": {"description": "Active area role and recent MFA required"}, "409": {"description": "Changed version or request-key conflict"}}}}
+  /admin/source-controls:
+    {
+      "get":
+        {
+          "operationId": "getSourceControls",
+          "tags": ["staff"],
+          "parameters":
+            [
+              {
+                "name": "area",
+                "in": "query",
+                "required": true,
+                "schema": { "type": "string", "enum": ["content", "system"] },
+              },
+              {
+                "name": "page",
+                "in": "query",
+                "schema": { "type": "integer", "minimum": 1, "maximum": 10000, "default": 1 },
+              },
+            ],
+          "responses":
+            {
+              "200":
+                {
+                  "description": "Current authorized result. No publication or spending approval is granted.",
+                  "content":
+                    { "application/json": { "schema": { "$ref": "#/components/schemas/SourceControls" } } },
+                },
+              "401": { "description": "Sign-in required" },
+              "403": { "description": "Active area role and recent MFA required" },
+              "409": { "description": "Changed version or request-key conflict" },
+            },
+        },
+    }
+  /admin/source-controls/action:
+    {
+      "post":
+        {
+          "operationId": "actOnSourceControls",
+          "tags": ["staff"],
+          "requestBody":
+            {
+              "required": true,
+              "content":
+                { "application/json": { "schema": { "$ref": "#/components/schemas/SourceControlAction" } } },
+            },
+          "responses":
+            {
+              "200":
+                {
+                  "description": "Current authorized result. No publication or spending approval is granted.",
+                  "content":
+                    {
+                      "application/json":
+                        { "schema": { "$ref": "#/components/schemas/SourceControlResult" } },
+                    },
+                },
+              "401": { "description": "Sign-in required" },
+              "403": { "description": "Active area role and recent MFA required" },
+              "409": { "description": "Changed version or request-key conflict" },
+            },
+        },
+    }
   /admin/editorial-records/{kind}/{id}:
     get:
       operationId: getEditorialRecord
@@ -44,7 +105,12 @@ paths:
       tags: [staff]
       summary: Have the daily source check watch a prepared rule's official sources
       parameters:
-        - { name: ruleId, in: path, required: true, schema: { type: string, pattern: "^[A-Za-z0-9._-]{1,100}$" } }
+        - {
+            name: ruleId,
+            in: path,
+            required: true,
+            schema: { type: string, pattern: "^[A-Za-z0-9._-]{1,100}$" },
+          }
       requestBody:
         required: true
         content:
@@ -64,7 +130,12 @@ paths:
       tags: [staff]
       summary: Sign and release a prepared rule's version, or withdraw a released one
       parameters:
-        - { name: ruleId, in: path, required: true, schema: { type: string, pattern: "^[A-Za-z0-9._-]{1,100}$" } }
+        - {
+            name: ruleId,
+            in: path,
+            required: true,
+            schema: { type: string, pattern: "^[A-Za-z0-9._-]{1,100}$" },
+          }
       requestBody:
         required: true
         content:
@@ -80,16 +151,199 @@ paths:
         "404": { description: No rule is prepared under that name }
         "409": { description: "The rule, its sources or its release changed, or something holds it" }
         "422": { description: A confirmation is missing }
-  /workspace/correction-notices: {"get": {"operationId": "getCorrectionNotices", "tags": ["workspace"], "parameters": [{"name": "page", "in": "query", "schema": {"type": "integer", "minimum": 1, "maximum": 10000, "default": 1}}], "responses": {"200": {"description": "Current authorized result. No publication or spending approval is granted.", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/CorrectionNotices"}}}}, "401": {"description": "Sign-in required"}, "403": {"description": "Active area role and recent MFA required"}, "409": {"description": "Changed version or request-key conflict"}}}}
+  /workspace/correction-notices:
+    {
+      "get":
+        {
+          "operationId": "getCorrectionNotices",
+          "tags": ["workspace"],
+          "parameters":
+            [
+              {
+                "name": "page",
+                "in": "query",
+                "schema": { "type": "integer", "minimum": 1, "maximum": 10000, "default": 1 },
+              },
+            ],
+          "responses":
+            {
+              "200":
+                {
+                  "description": "Current authorized result. No publication or spending approval is granted.",
+                  "content":
+                    {
+                      "application/json": { "schema": { "$ref": "#/components/schemas/CorrectionNotices" } },
+                    },
+                },
+              "401": { "description": "Sign-in required" },
+              "403": { "description": "Active area role and recent MFA required" },
+              "409": { "description": "Changed version or request-key conflict" },
+            },
+        },
+    }
 schemas:
-  SourceControlAction: {"oneOf": [{"type": "object", "required": ["requestKey", "reason", "action", "sourceId"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["watch_source"]}, "sourceId": {"type": "string", "minLength": 1, "maxLength": 100}}, "additionalProperties": false}, {"type": "object", "required": ["requestKey", "reason", "action", "kind", "id", "version"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["hold_version"]}, "kind": {"type": "string", "enum": ["content", "rule"]}, "id": {"type": "string", "format": "uuid"}, "version": {"type": "integer", "minimum": 1}}, "additionalProperties": false}, {"type": "object", "required": ["requestKey", "reason", "action", "kind", "id", "version"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["withdraw_version"]}, "kind": {"type": "string", "enum": ["content", "rule"]}, "id": {"type": "string", "format": "uuid"}, "version": {"type": "integer", "minimum": 1}}, "additionalProperties": false}, {"type": "object", "required": ["requestKey", "reason", "action", "service"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["pause_service"]}, "service": {"type": "string", "enum": ["ai", "checkout"]}}, "additionalProperties": false}, {"type": "object", "required": ["requestKey", "reason", "action", "service"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["resume_service"]}, "service": {"type": "string", "enum": ["ai", "checkout"]}}, "additionalProperties": false}]}
-  SourceControlResult: {"type": "object", "required": ["auditId", "replayed", "result"], "properties": {"auditId": {"type": "string", "format": "uuid"}, "replayed": {"type": "boolean"}, "result": {"type": "object", "additionalProperties": true}}}
-  SourceControlVersion: {"type": "object", "required": ["kind", "id", "key", "version", "status", "reviewBy", "safetyHeld"], "properties": {"kind": {"type": "string", "enum": ["content", "rule"]}, "id": {"type": "string", "format": "uuid"}, "key": {"type": "string"}, "version": {"type": "integer"}, "status": {"type": "string"}, "reviewBy": {"type": ["string", "null"]}, "safetyHeld": {"type": "boolean"}}}
-  SourceControlWatch: {"type": "object", "required": ["sourceId", "url", "risk", "checkedAt", "failureCode", "nextCheckAt"], "properties": {"sourceId": {"type": "string"}, "url": {"type": "string"}, "risk": {"type": "string"}, "checkedAt": {"type": ["string", "null"]}, "failureCode": {"type": ["string", "null"]}, "nextCheckAt": {"type": "string", "format": "date-time"}}}
-  SourceControlReview: {"type": "object", "required": ["id", "status", "targetKind", "targetKey", "targetVersion", "reason", "createdAt"], "properties": {"id": {"type": "string", "format": "uuid"}, "status": {"type": "string"}, "targetKind": {"type": "string"}, "targetKey": {"type": "string"}, "targetVersion": {"type": "integer"}, "reason": {"type": "string"}, "createdAt": {"type": "string", "format": "date-time"}}}
-  SourceControlService: {"type": "object", "required": ["key", "enabled", "reason", "updatedAt"], "properties": {"key": {"type": "string"}, "enabled": {"type": "boolean"}, "reason": {"type": "string"}, "updatedAt": {"type": "string", "format": "date-time"}}}
-  SourceControlChoice: {"type": "object", "required": ["id", "title"], "properties": {"id": {"type": "string"}, "title": {"type": "string"}}}
-  SourceControls: {"type": "object", "required": ["area", "page", "hasMore", "notice", "versions", "sources", "review", "services", "sourceChoices"], "properties": {"area": {"type": "string", "enum": ["content", "system"]}, "page": {"type": "integer"}, "hasMore": {"type": "boolean"}, "notice": {"type": "string"}, "versions": {"type": "array", "items": {"$ref": "#/components/schemas/SourceControlVersion"}}, "sources": {"type": "array", "items": {"$ref": "#/components/schemas/SourceControlWatch"}}, "review": {"type": "array", "items": {"$ref": "#/components/schemas/SourceControlReview"}}, "services": {"type": "array", "items": {"$ref": "#/components/schemas/SourceControlService"}}, "sourceChoices": {"type": "array", "items": {"$ref": "#/components/schemas/SourceControlChoice"}}}}
+  SourceControlAction:
+    {
+      "oneOf":
+        [
+          {
+            "type": "object",
+            "required": ["requestKey", "reason", "action", "sourceId"],
+            "properties":
+              {
+                "requestKey": { "type": "string", "format": "uuid" },
+                "reason": { "type": "string", "minLength": 20, "maxLength": 1000 },
+                "action": { "type": "string", "enum": ["watch_source"] },
+                "sourceId": { "type": "string", "minLength": 1, "maxLength": 100 },
+              },
+            "additionalProperties": false,
+          },
+          {
+            "type": "object",
+            "required": ["requestKey", "reason", "action", "kind", "id", "version"],
+            "properties":
+              {
+                "requestKey": { "type": "string", "format": "uuid" },
+                "reason": { "type": "string", "minLength": 20, "maxLength": 1000 },
+                "action": { "type": "string", "enum": ["hold_version"] },
+                "kind": { "type": "string", "enum": ["content", "rule"] },
+                "id": { "type": "string", "format": "uuid" },
+                "version": { "type": "integer", "minimum": 1 },
+              },
+            "additionalProperties": false,
+          },
+          {
+            "type": "object",
+            "required": ["requestKey", "reason", "action", "kind", "id", "version"],
+            "properties":
+              {
+                "requestKey": { "type": "string", "format": "uuid" },
+                "reason": { "type": "string", "minLength": 20, "maxLength": 1000 },
+                "action": { "type": "string", "enum": ["withdraw_version"] },
+                "kind": { "type": "string", "enum": ["content", "rule"] },
+                "id": { "type": "string", "format": "uuid" },
+                "version": { "type": "integer", "minimum": 1 },
+              },
+            "additionalProperties": false,
+          },
+          {
+            "type": "object",
+            "required": ["requestKey", "reason", "action", "service"],
+            "properties":
+              {
+                "requestKey": { "type": "string", "format": "uuid" },
+                "reason": { "type": "string", "minLength": 20, "maxLength": 1000 },
+                "action": { "type": "string", "enum": ["pause_service"] },
+                "service": { "type": "string", "enum": ["ai", "checkout"] },
+              },
+            "additionalProperties": false,
+          },
+          {
+            "type": "object",
+            "required": ["requestKey", "reason", "action", "service"],
+            "properties":
+              {
+                "requestKey": { "type": "string", "format": "uuid" },
+                "reason": { "type": "string", "minLength": 20, "maxLength": 1000 },
+                "action": { "type": "string", "enum": ["resume_service"] },
+                "service": { "type": "string", "enum": ["ai", "checkout"] },
+              },
+            "additionalProperties": false,
+          },
+        ],
+    }
+  SourceControlResult:
+    {
+      "type": "object",
+      "required": ["auditId", "replayed", "result"],
+      "properties":
+        {
+          "auditId": { "type": "string", "format": "uuid" },
+          "replayed": { "type": "boolean" },
+          "result": { "type": "object", "additionalProperties": true },
+        },
+    }
+  SourceControlVersion:
+    {
+      "type": "object",
+      "required": ["kind", "id", "key", "version", "status", "reviewBy", "safetyHeld"],
+      "properties":
+        {
+          "kind": { "type": "string", "enum": ["content", "rule"] },
+          "id": { "type": "string", "format": "uuid" },
+          "key": { "type": "string" },
+          "version": { "type": "integer" },
+          "status": { "type": "string" },
+          "reviewBy": { "type": ["string", "null"] },
+          "safetyHeld": { "type": "boolean" },
+        },
+    }
+  SourceControlWatch:
+    {
+      "type": "object",
+      "required": ["sourceId", "url", "risk", "checkedAt", "failureCode", "nextCheckAt"],
+      "properties":
+        {
+          "sourceId": { "type": "string" },
+          "url": { "type": "string" },
+          "risk": { "type": "string" },
+          "checkedAt": { "type": ["string", "null"] },
+          "failureCode": { "type": ["string", "null"] },
+          "nextCheckAt": { "type": "string", "format": "date-time" },
+        },
+    }
+  SourceControlReview:
+    {
+      "type": "object",
+      "required": ["id", "status", "targetKind", "targetKey", "targetVersion", "reason", "createdAt"],
+      "properties":
+        {
+          "id": { "type": "string", "format": "uuid" },
+          "status": { "type": "string" },
+          "targetKind": { "type": "string" },
+          "targetKey": { "type": "string" },
+          "targetVersion": { "type": "integer" },
+          "reason": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" },
+        },
+    }
+  SourceControlService:
+    {
+      "type": "object",
+      "required": ["key", "enabled", "reason", "updatedAt"],
+      "properties":
+        {
+          "key": { "type": "string" },
+          "enabled": { "type": "boolean" },
+          "reason": { "type": "string" },
+          "updatedAt": { "type": "string", "format": "date-time" },
+        },
+    }
+  SourceControlChoice:
+    {
+      "type": "object",
+      "required": ["id", "title"],
+      "properties": { "id": { "type": "string" }, "title": { "type": "string" } },
+    }
+  SourceControls:
+    {
+      "type": "object",
+      "required":
+        ["area", "page", "hasMore", "notice", "versions", "sources", "review", "services", "sourceChoices"],
+      "properties":
+        {
+          "area": { "type": "string", "enum": ["content", "system"] },
+          "page": { "type": "integer" },
+          "hasMore": { "type": "boolean" },
+          "notice": { "type": "string" },
+          "versions": { "type": "array", "items": { "$ref": "#/components/schemas/SourceControlVersion" } },
+          "sources": { "type": "array", "items": { "$ref": "#/components/schemas/SourceControlWatch" } },
+          "review": { "type": "array", "items": { "$ref": "#/components/schemas/SourceControlReview" } },
+          "services": { "type": "array", "items": { "$ref": "#/components/schemas/SourceControlService" } },
+          "sourceChoices":
+            { "type": "array", "items": { "$ref": "#/components/schemas/SourceControlChoice" } },
+        },
+    }
   EditorialRun:
     type: object
     required: [runId, model, promptVersion]
@@ -121,8 +375,26 @@ schemas:
   EditorialRecord:
     type: object
     required:
-      [kind, id, key, version, status, reviewBy, publishedAt, withdrawnReason, candidateHash, manifestStatus,
-       check, draftRun, reviews, mechanicalChecks, enhancedChecks, audit, safetyHolds, notice]
+      [
+        kind,
+        id,
+        key,
+        version,
+        status,
+        reviewBy,
+        publishedAt,
+        withdrawnReason,
+        candidateHash,
+        manifestStatus,
+        check,
+        draftRun,
+        reviews,
+        mechanicalChecks,
+        enhancedChecks,
+        audit,
+        safetyHolds,
+        notice,
+      ]
     properties:
       kind: { type: string, enum: [content, rule] }
       id: { type: string, format: uuid }
@@ -171,8 +443,30 @@ schemas:
             createdAt: { type: string, format: date-time }
             completedAt: { type: [string, "null"] }
       notice: { type: string }
-  CorrectionNotice: {"type": "object", "required": ["id", "entityKind", "entityId", "message", "createdAt"], "properties": {"id": {"type": "string", "format": "uuid"}, "entityKind": {"type": "string"}, "entityId": {"type": "string", "format": "uuid"}, "message": {"type": "string"}, "createdAt": {"type": "string", "format": "date-time"}}}
-  CorrectionNotices: {"type": "object", "required": ["page", "hasMore", "notices"], "properties": {"page": {"type": "integer"}, "hasMore": {"type": "boolean"}, "notices": {"type": "array", "items": {"$ref": "#/components/schemas/CorrectionNotice"}}}}
+  CorrectionNotice:
+    {
+      "type": "object",
+      "required": ["id", "entityKind", "entityId", "message", "createdAt"],
+      "properties":
+        {
+          "id": { "type": "string", "format": "uuid" },
+          "entityKind": { "type": "string" },
+          "entityId": { "type": "string", "format": "uuid" },
+          "message": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" },
+        },
+    }
+  CorrectionNotices:
+    {
+      "type": "object",
+      "required": ["page", "hasMore", "notices"],
+      "properties":
+        {
+          "page": { "type": "integer" },
+          "hasMore": { "type": "boolean" },
+          "notices": { "type": "array", "items": { "$ref": "#/components/schemas/CorrectionNotice" } },
+        },
+    }
   OwnerRulePage:
     type: object
     required: [items]
@@ -181,16 +475,43 @@ schemas:
   OwnerRuleItem:
     type: object
     required:
-      [ruleId, title, reason, nextStep, appliesWhen, validFrom, validTo, risk, disclosure, version, manifestHash, live, holds, checks, sources, scenarios, profilesRun, changedProfiles]
+      [
+        ruleId,
+        title,
+        reason,
+        nextStep,
+        appliesWhen,
+        jurisdiction,
+        validFrom,
+        validTo,
+        risk,
+        scope,
+        limitations,
+        assumptions,
+        disclosure,
+        version,
+        manifestHash,
+        live,
+        holds,
+        checks,
+        sources,
+        scenarios,
+        profilesRun,
+        changedProfiles,
+      ]
     properties:
       ruleId: { type: string }
       title: { type: string }
       reason: { type: string }
       nextStep: { type: string }
       appliesWhen: { type: string }
+      jurisdiction: { type: string }
       validFrom: { type: string }
       validTo: { type: [string, "null"] }
       risk: { type: string }
+      scope: { type: string }
+      limitations: { type: string }
+      assumptions: { type: array, items: { type: string } }
       disclosure: { type: string }
       version: { type: integer, minimum: 1 }
       manifestHash: { type: string, pattern: "^[a-f0-9]{64}$" }
@@ -217,7 +538,21 @@ schemas:
     enum: [controlling_text, amendments, effective_dates, exceptions, jurisdiction]
   OwnerRuleSource:
     type: object
-    required: [title, url, locator, quote, watched, checkedAt, failure, current]
+    required:
+      [
+        title,
+        url,
+        locator,
+        quote,
+        watched,
+        checkedAt,
+        failure,
+        current,
+        passage,
+        recordedLocator,
+        effectiveFrom,
+        amendments,
+      ]
     properties:
       title: { type: string }
       url: { type: [string, "null"] }
@@ -227,6 +562,23 @@ schemas:
       checkedAt: { type: [string, "null"] }
       failure: { type: [string, "null"] }
       current: { type: boolean }
+      passage: { type: [string, "null"] }
+      recordedLocator: { type: [string, "null"] }
+      effectiveFrom: { type: [string, "null"] }
+      amendments:
+        anyOf:
+          - { $ref: "#/components/schemas/OwnerRuleAmendmentRecord" }
+          - { type: "null" }
+  OwnerRuleAmendmentRecord:
+    type: object
+    required: [searchedAt, places, read, notRead, open, limits]
+    properties:
+      searchedAt: { type: [string, "null"] }
+      places: { type: array, items: { type: string } }
+      read: { type: array, items: { type: string } }
+      notRead: { type: array, items: { type: string } }
+      open: { type: array, items: { type: string } }
+      limits: { type: string }
   OwnerRuleScenario:
     type: object
     required: [id, critical, expectedLabel, actualLabel, passed]

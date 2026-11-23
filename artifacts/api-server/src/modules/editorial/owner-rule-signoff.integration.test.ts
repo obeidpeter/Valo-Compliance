@@ -65,7 +65,8 @@ test(
       .reverse()
       .find((s) => policy.officialHosts.includes(new URL(s.url).hostname) && !watched.includes(s.id));
     assert.ok(lead, "an unwatched official source on the policy's hosts");
-    const passage = "Synthetic provision for a controlled sign-off test: keep a dated record of each sale.";
+    const passage =
+      "1. Synthetic provision for a controlled sign-off test: keep a dated record of each sale.";
     const quote = "keep a dated record of each sale";
     const text = `Synthetic official copy. ${passage} End of the synthetic copy.`;
     const snapshotId = randomUUID(),
@@ -73,6 +74,55 @@ test(
     const readText = async (id: string, checksum: string) => {
       if (id !== snapshotId || checksum !== sha256(text)) throw new Error("SOURCE_STORAGE_CHECKSUM_FAILED");
       return text;
+    };
+    // A synthetic text, its passage and its amendment record, in place of the guides' registry: the
+    // passage is read from today's capture of the lead, and the record searched an official address
+    // yesterday for later amendments.
+    const instrument = {
+      id: "SYNTHETIC-SIGNOFF-ACT",
+      kind: "act" as const,
+      url: lead.url,
+      title: "Synthetic Act",
+      issuingBody: "Synthetic test authority",
+      effectiveFrom: "2026-01-01T00:00:00+01:00",
+    };
+    const evidence = {
+      passagesFrom:
+        (captures: readonly { url: string; text: string; rawChecksum: string; checkedAt: string }[]) =>
+        (passageId: string) => {
+          const today = captures.find((c) => c.url === lead.url);
+          if (passageId !== "SYNTHETIC-SIGNOFF-1" || !today?.text.includes(passage)) return undefined;
+          return {
+            id: passageId,
+            recordedLocator: "section 1; PDF1",
+            text: passage,
+            hash: sha256(passage),
+            sections: ["1"],
+            instrument: { ...instrument, rawSha256: today.rawChecksum, retrievedAt: today.checkedAt },
+          };
+        },
+      records: [
+        {
+          instrument: instrument.id,
+          title: instrument.title,
+          url: lead.url,
+          rawSha256: sha256(raw),
+          commencement: { printed: "[1st Day of January, 2026]", effectiveFrom: instrument.effectiveFrom },
+          searches: [
+            {
+              place: "Synthetic official list of Acts",
+              url: lead.url,
+              searchedAt: new Date(Date.now() - 86_400_000).toISOString(),
+              rawSha256: "b".repeat(64),
+              found: "Nothing later",
+            },
+          ],
+          amendments: [],
+          notRead: [],
+          conflicts: [],
+          limits: "A synthetic record for a test only.",
+        },
+      ],
     };
 
     const id = randomUUID();
@@ -99,14 +149,10 @@ test(
       sources: [
         {
           id: "synthetic-source",
+          passageId: "SYNTHETIC-SIGNOFF-1",
           leadId: lead.id,
-          title: "Synthetic passage",
-          issuingBody: "Synthetic test authority",
-          passage,
-          locator: "synthetic passage",
+          locator: "section 1",
           quote,
-          effectiveFrom: "2026-01-01T00:00:00Z",
-          effectiveTo: null,
         },
       ],
       claims: [
@@ -115,7 +161,7 @@ test(
           kind: "source_statement",
           sourceId: "synthetic-source",
           quote,
-          locator: "synthetic passage",
+          locator: "section 1",
           numbers: [],
         },
       ],
@@ -135,7 +181,7 @@ test(
         },
       ],
     };
-    const options = { candidates: [candidate], readText };
+    const options = { candidates: [candidate], readText, evidence };
 
     // The designated development owner (a permanent system role the operator bootstrap granted), and
     // an ordinary system staff member who is not the owner.
@@ -192,9 +238,8 @@ test(
       let [item] = await list();
       assert.equal(item!.version, 1);
       assert.equal(item!.live, null);
-      assert.deepEqual(item!.holds, [
-        "Synthetic passage has no copy of its official source checked within the last day.",
-      ]);
+      const noCopy = `${lead.title} has no copy of its official source checked within the last day.`;
+      assert.deepEqual(item!.holds, [noCopy]);
       assert.deepEqual(
         item!.sources.map((s) => [s.watched, s.checkedAt, s.current]),
         [[false, null, false]],
@@ -346,9 +391,7 @@ test(
         sql`update valo_source_watches set checked_at=${new Date(Date.now() - 2 * 86_400_000)} where source_id=${lead.id}`,
       );
       [item] = await list();
-      assert.deepEqual(item!.holds, [
-        "Synthetic passage has no copy of its official source checked within the last day.",
-      ]);
+      assert.deepEqual(item!.holds, [noCopy]);
       await assert.rejects(decideOwnerRule(actor(owner), ruleId, sign(item!), options), refused(409));
     } finally {
       for (const identity of [owner, system])
