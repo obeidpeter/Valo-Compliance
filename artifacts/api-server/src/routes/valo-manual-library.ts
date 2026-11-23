@@ -7,6 +7,8 @@ import {
   ListManualLibraryQueryParams,
   ListManualLibraryResponse,
   ListOwnerGuidanceResponse,
+  ListRetainedDraftsResponse,
+  LoadRetainedDraftsResponse,
 } from "@workspace/api-zod";
 import { verifiedStaffSession } from "../lib/valo-managed-session";
 import { mutationOriginFor, sameOriginMutation } from "../middlewares/valo-identity";
@@ -23,6 +25,8 @@ import {
   privateManualFile,
   releasedManualFile,
   purchasedManualFile,
+  retainedDraftStatus,
+  loadRetainedDrafts,
 } from "../modules/manual-library";
 
 const uuid = z
@@ -79,6 +83,13 @@ export function createManualLibraryRouter(
   router.get("/admin/manual-library", async (req, res) => {
     const query = ListManualLibraryQueryParams.parse(req.query);
     res.json(ListManualLibraryResponse.parse(await listManualLibrary(res.locals.manualEditor, query)));
+  });
+  // The drafts kept in the repository, before the item routes so their name is not read as an item.
+  router.get("/admin/manual-library/retained", async (_req, res) => {
+    res.json(ListRetainedDraftsResponse.parse(await retainedDraftStatus(res.locals.manualEditor)));
+  });
+  router.post("/admin/manual-library/retained", sameOriginMutation, async (req, res) => {
+    res.json(LoadRetainedDraftsResponse.parse(await loadRetainedDrafts(res.locals.manualEditor, req.body)));
   });
   router.get("/admin/manual-library/:id", async (req, res) => {
     res.json(

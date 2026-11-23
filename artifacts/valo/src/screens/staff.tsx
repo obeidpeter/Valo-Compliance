@@ -20,6 +20,7 @@ import { StaffSupportCases } from "@/components/staff-support-cases";
 import { ContentEscalations } from "@/components/content-escalations";
 import { PreparedCandidates } from "@/components/prepared-candidates";
 import { ManualLibraryEditor } from "@/components/manual-library-editor";
+import { RetainedDrafts } from "@/components/retained-drafts";
 
 const AREAS: { v: Area; l: string }[] = [
   { v: GetStaffOperationsArea.content, l: "Content" },
@@ -170,6 +171,7 @@ export default function StaffPage() {
             </p>
             {area === "finance" && <FinanceRefunds />}
             {area === "system" && <StaffRoleAdministration />}
+            {area === "content" && <RetainedDrafts />}
             {area === "content" && <ManualLibraryEditor onDirtyChange={setManualDirty} />}
             {(area === "content" || area === "system") && <SourceSafetyControls key={area} area={area} />}
             {area === "system" && <OwnerRegulatoryGuidance />}

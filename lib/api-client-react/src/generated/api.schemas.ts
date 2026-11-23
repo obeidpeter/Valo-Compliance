@@ -1594,12 +1594,89 @@ export interface OwnerGuidanceReceipt {
   state: OwnerGuidanceReceiptState;
 }
 
+export type RetainedDraftLoadLoad = typeof RetainedDraftLoadLoad[keyof typeof RetainedDraftLoadLoad];
+
+
+export const RetainedDraftLoadLoad = {
+  missing: 'missing',
+} as const;
+
+export interface RetainedDraftLoad {
+  load: RetainedDraftLoadLoad;
+}
+
+export interface RetainedDraftSourceCheck {
+  checkedAt: string;
+  /** @minimum 0 */
+  holds: number;
+  /** @nullable */
+  validThrough: string | null;
+}
+
+export type RetainedDraftKind = typeof RetainedDraftKind[keyof typeof RetainedDraftKind];
+
+
+export const RetainedDraftKind = {
+  practical_guide: 'practical_guide',
+  industry_introduction: 'industry_introduction',
+  industry_pack: 'industry_pack',
+  template: 'template',
+  premium_template: 'premium_template',
+  regulatory_article: 'regulatory_article',
+} as const;
+
+export type RetainedDraftState = typeof RetainedDraftState[keyof typeof RetainedDraftState];
+
+
+export const RetainedDraftState = {
+  not_in_library: 'not_in_library',
+  draft: 'draft',
+  published: 'published',
+  withdrawn: 'withdrawn',
+  replaced: 'replaced',
+} as const;
+
+export interface RetainedDraft {
+  retainedId: string;
+  kind: RetainedDraftKind;
+  title: string;
+  /** @nullable */
+  industry: string | null;
+  /** @nullable */
+  itemId: string | null;
+  state: RetainedDraftState;
+  /** @nullable */
+  version: number | null;
+  /** @nullable */
+  liveVersion: number | null;
+  shown: boolean;
+  sourceCheck: RetainedDraftSourceCheck | null;
+}
+
+export interface RetainedDraftStatus {
+  items: RetainedDraft[];
+  /** @minimum 0 */
+  notInLibrary: number;
+  /** @minimum 0 */
+  published: number;
+  /** @minimum 0 */
+  shown: number;
+}
+
+export interface RetainedDraftLoadResult {
+  loaded: string[];
+  /** @minimum 0 */
+  remaining: number;
+  status: RetainedDraftStatus;
+}
+
 export type ManualLibraryEntryKind = typeof ManualLibraryEntryKind[keyof typeof ManualLibraryEntryKind];
 
 
 export const ManualLibraryEntryKind = {
   practical_guide: 'practical_guide',
   industry_introduction: 'industry_introduction',
+  industry_pack: 'industry_pack',
   template: 'template',
   premium_template: 'premium_template',
   regulatory_article: 'regulatory_article',
@@ -1636,6 +1713,7 @@ export type ManualLibraryRevisionKind = typeof ManualLibraryRevisionKind[keyof t
 export const ManualLibraryRevisionKind = {
   practical_guide: 'practical_guide',
   industry_introduction: 'industry_introduction',
+  industry_pack: 'industry_pack',
   template: 'template',
   premium_template: 'premium_template',
   regulatory_article: 'regulatory_article',
@@ -1697,6 +1775,7 @@ export type ManualLibraryDraftKind = typeof ManualLibraryDraftKind[keyof typeof 
 export const ManualLibraryDraftKind = {
   practical_guide: 'practical_guide',
   industry_introduction: 'industry_introduction',
+  industry_pack: 'industry_pack',
   template: 'template',
   premium_template: 'premium_template',
   regulatory_article: 'regulatory_article',
@@ -3794,6 +3873,7 @@ export type ListManualLibraryKind = typeof ListManualLibraryKind[keyof typeof Li
 export const ListManualLibraryKind = {
   practical_guide: 'practical_guide',
   industry_introduction: 'industry_introduction',
+  industry_pack: 'industry_pack',
   template: 'template',
   premium_template: 'premium_template',
   regulatory_article: 'regulatory_article',

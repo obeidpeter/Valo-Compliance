@@ -3441,7 +3441,7 @@ export const listManualLibraryQueryIndustryMax = 80;
 export const ListManualLibraryQueryParams = zod.object({
   "page": zod.coerce.number().int().min(1).default(listManualLibraryQueryPageDefault),
   "q": zod.coerce.string().max(listManualLibraryQueryQMax).optional(),
-  "kind": zod.enum(['practical_guide', 'industry_introduction', 'template', 'premium_template', 'regulatory_article']).optional(),
+  "kind": zod.enum(['practical_guide', 'industry_introduction', 'industry_pack', 'template', 'premium_template', 'regulatory_article']).optional(),
   "state": zod.enum(['draft', 'published', 'replaced', 'withdrawn']).optional(),
   "industry": zod.coerce.string().max(listManualLibraryQueryIndustryMax).optional()
 })
@@ -3451,11 +3451,87 @@ export const ListManualLibraryResponse = zod.object({
   "itemId": zod.uuid(),
   "version": zod.int(),
   "title": zod.string(),
-  "kind": zod.enum(['practical_guide', 'industry_introduction', 'template', 'premium_template', 'regulatory_article']),
+  "kind": zod.enum(['practical_guide', 'industry_introduction', 'industry_pack', 'template', 'premium_template', 'regulatory_article']),
   "state": zod.enum(['draft', 'published', 'replaced', 'withdrawn']),
   "industry": zod.string().nullable()
 })),
   "hasMore": zod.boolean()
+})
+
+
+export const listRetainedDraftsResponseItemsItemSourceCheckOneHoldsMin = 0;
+
+export const listRetainedDraftsResponseNotInLibraryMin = 0;
+
+export const listRetainedDraftsResponsePublishedMin = 0;
+
+export const listRetainedDraftsResponseShownMin = 0;
+
+
+
+export const ListRetainedDraftsResponse = zod.object({
+  "items": zod.array(zod.object({
+  "retainedId": zod.string(),
+  "kind": zod.enum(['practical_guide', 'industry_introduction', 'industry_pack', 'template', 'premium_template', 'regulatory_article']),
+  "title": zod.string(),
+  "industry": zod.string().nullable(),
+  "itemId": zod.uuid().nullable(),
+  "state": zod.enum(['not_in_library', 'draft', 'published', 'withdrawn', 'replaced']),
+  "version": zod.int().nullable(),
+  "liveVersion": zod.int().nullable(),
+  "shown": zod.boolean(),
+  "sourceCheck": zod.union([zod.object({
+  "checkedAt": zod.coerce.date(),
+  "holds": zod.int().min(listRetainedDraftsResponseItemsItemSourceCheckOneHoldsMin),
+  "validThrough": zod.coerce.date().nullable()
+}),zod.null()])
+})),
+  "notInLibrary": zod.int().min(listRetainedDraftsResponseNotInLibraryMin),
+  "published": zod.int().min(listRetainedDraftsResponsePublishedMin),
+  "shown": zod.int().min(listRetainedDraftsResponseShownMin)
+})
+
+
+export const LoadRetainedDraftsBody = zod.object({
+  "load": zod.enum(['missing'])
+})
+
+export const loadRetainedDraftsResponseRemainingMin = 0;
+
+export const loadRetainedDraftsResponseStatusItemsItemSourceCheckOneHoldsMin = 0;
+
+export const loadRetainedDraftsResponseStatusNotInLibraryMin = 0;
+
+export const loadRetainedDraftsResponseStatusPublishedMin = 0;
+
+export const loadRetainedDraftsResponseStatusShownMin = 0;
+
+
+
+export const LoadRetainedDraftsResponse = zod.object({
+  "loaded": zod.array(zod.string()),
+  "remaining": zod.int().min(loadRetainedDraftsResponseRemainingMin),
+  "status": zod.object({
+  "items": zod.array(zod.object({
+  "retainedId": zod.string(),
+  "kind": zod.enum(['practical_guide', 'industry_introduction', 'industry_pack', 'template', 'premium_template', 'regulatory_article']),
+  "title": zod.string(),
+  "industry": zod.string().nullable(),
+  "itemId": zod.uuid().nullable(),
+  "state": zod.enum(['not_in_library', 'draft', 'published', 'withdrawn', 'replaced']),
+  "version": zod.int().nullable(),
+  "liveVersion": zod.int().nullable(),
+  "shown": zod.boolean(),
+  "sourceCheck": zod.union([zod.object({
+  "checkedAt": zod.coerce.date(),
+  "holds": zod.int().min(loadRetainedDraftsResponseStatusItemsItemSourceCheckOneHoldsMin),
+  "validThrough": zod.coerce.date().nullable()
+}),zod.null()])
+})),
+  "notInLibrary": zod.int().min(loadRetainedDraftsResponseStatusNotInLibraryMin),
+  "published": zod.int().min(loadRetainedDraftsResponseStatusPublishedMin),
+  "shown": zod.int().min(loadRetainedDraftsResponseStatusShownMin)
+})
 })
 
 
@@ -3471,7 +3547,7 @@ export const GetManualLibraryRevisionResponse = zod.object({
   "itemId": zod.uuid(),
   "version": zod.int(),
   "title": zod.string(),
-  "kind": zod.enum(['practical_guide', 'industry_introduction', 'template', 'premium_template', 'regulatory_article']),
+  "kind": zod.enum(['practical_guide', 'industry_introduction', 'industry_pack', 'template', 'premium_template', 'regulatory_article']),
   "state": zod.enum(['draft', 'published', 'replaced', 'withdrawn']),
   "industry": zod.string().nullable(),
   "id": zod.uuid(),
@@ -3507,7 +3583,7 @@ export const SaveManualLibraryDraftBody = zod.object({
   "requestId": zod.uuid(),
   "baseVersion": zod.int().min(saveManualLibraryDraftBodyBaseVersionMin),
   "title": zod.string().min(1).max(saveManualLibraryDraftBodyTitleMax),
-  "kind": zod.enum(['practical_guide', 'industry_introduction', 'template', 'premium_template', 'regulatory_article']),
+  "kind": zod.enum(['practical_guide', 'industry_introduction', 'industry_pack', 'template', 'premium_template', 'regulatory_article']),
   "industry": zod.string().nullable(),
   "body": zod.string().max(saveManualLibraryDraftBodyBodyMax),
   "fileMode": zod.enum(['text', 'upload', 'keep']),
@@ -3525,7 +3601,7 @@ export const SaveManualLibraryDraftResponse = zod.object({
   "itemId": zod.uuid(),
   "version": zod.int(),
   "title": zod.string(),
-  "kind": zod.enum(['practical_guide', 'industry_introduction', 'template', 'premium_template', 'regulatory_article']),
+  "kind": zod.enum(['practical_guide', 'industry_introduction', 'industry_pack', 'template', 'premium_template', 'regulatory_article']),
   "state": zod.enum(['draft', 'published', 'replaced', 'withdrawn']),
   "industry": zod.string().nullable(),
   "id": zod.uuid(),
@@ -3565,7 +3641,7 @@ export const ActOnManualLibraryResponse = zod.object({
   "itemId": zod.uuid(),
   "version": zod.int(),
   "title": zod.string(),
-  "kind": zod.enum(['practical_guide', 'industry_introduction', 'template', 'premium_template', 'regulatory_article']),
+  "kind": zod.enum(['practical_guide', 'industry_introduction', 'industry_pack', 'template', 'premium_template', 'regulatory_article']),
   "state": zod.enum(['draft', 'published', 'replaced', 'withdrawn']),
   "industry": zod.string().nullable(),
   "id": zod.uuid(),

@@ -18,7 +18,10 @@ import {
   GetReleasedTemplateResponse,
   ListManualLibraryResponse,
   ListPublicCatalogueResponse,
+  ListRetainedDraftsResponse,
+  LoadRetainedDraftsResponse,
 } from "@workspace/api-zod";
+import { registeredManualGuidance } from "../modules/manual-guidance/regulatory-evidence";
 
 test("consumer Gazette checks bind the exact reviewed pages and expire when the amendment search expires", async () => {
   const { checkConsumerGazette } = await import("../modules/manual-guidance/consumer-gazette");
@@ -117,7 +120,7 @@ test(
 );
 test(
   "manual publishing through staff HTTP routes and public readers",
-  { skip: process.env.VALO_RUN_DB_TESTS !== "synthetic-development-only", timeout: 90000 },
+  { skip: process.env.VALO_RUN_DB_TESTS !== "synthetic-development-only", timeout: 240000 },
   async (t) => {
     assert.equal(process.env.NODE_ENV, "development");
     assert.ok(["127.0.0.1", "localhost", "[::1]"].includes(new URL(process.env.DATABASE_URL!).hostname));
@@ -337,6 +340,43 @@ test(
       await revision(await act(second, "withdraw", otherIntro));
     });
     await t.test(
+      "an industry pack belongs to one industry, which has one published pack at a time",
+      async () => {
+        const id = randomUUID(),
+          second = randomUUID(),
+          data = input("industry_pack", "Synthetic industry pack", industry);
+        assert.equal((await draft(id, { ...data, industry: null })).status, 422);
+        const before = await industryCoverage(industry);
+        const first = await revision(await draft(id, data));
+        assert.equal(first.kind, "industry_pack");
+        await revision(await act(id, "publish", first));
+        const shown = await publicResource(id);
+        assert.equal(shown.kind, "industry_pack");
+        assert.deepEqual(shown.industrySlugs, [industry]);
+        const after = await industryCoverage(industry);
+        assert.equal(after.publishedItems, before.publishedItems + 1);
+        // A pack is everyday guidance: it implies no regulatory evidence for its industry.
+        assert.equal(after.sourceCheckedAt, before.sourceCheckedAt);
+        assert.equal(after.evidenceState, before.evidenceState);
+        const otherPack = await revision(await draft(second, { ...data, requestId: randomUUID() }));
+        const refused = await act(second, "publish", otherPack);
+        assert.equal(refused.status, 409);
+        assert.match(((await refused.json()) as { error: string }).error, /already has an industry pack/);
+        await revision(await act(id, "withdraw", first));
+        await revision(await act(second, "publish", otherPack));
+        await revision(await act(second, "withdraw", otherPack));
+        // The database holds the same rule for a write that does not come through the editor.
+        const unplaced = randomUUID();
+        await assert.rejects(
+          pool.query(
+            "insert into valo_manual_library (id,item_id,version,slug,kind,industry,title,body,digest,created_by) values ($1,$2::uuid,1,'manual-'||$2::text,'industry_pack',null,'Synthetic pack','Synthetic text',$3,$4)",
+            [randomUUID(), unplaced, "0".repeat(64), editor],
+          ),
+          /valo_manual_text/,
+        );
+      },
+    );
+    await t.test(
       "regulatory items stay private and classification and immutable bytes cannot change",
       async () => {
         const id = randomUUID(),
@@ -544,6 +584,94 @@ test(
         } finally {
           await Promise.all([browser.close(), publicSite.close()]);
         }
+      },
+    );
+    await t.test(
+      "the drafts kept in the repository are filed once each as private drafts, and the status shows where each stands",
+      async () => {
+        const retained = "/admin/manual-library/retained";
+        const status = async () => ListRetainedDraftsResponse.parse(await ok(await call(retained)));
+        const publicLists = async () => ({
+          resources: (await ok(await call("/public/resources"))) as unknown[],
+          discovery: GetPublicDiscoveryResponse.parse(await ok(await call("/public/discovery"))).items.length,
+        });
+        const before = await status();
+        assert.equal(before.items.length, 108);
+        assert.equal(new Set(before.items.map((item) => item.retainedId)).size, 108);
+        const shownBefore = await publicLists();
+        // Only content staff with a fresh second factor, from the site's own origin, may read or file them.
+        assert.equal((await call(retained, undefined, "")).status, 401);
+        assert.equal((await call(retained, undefined, other)).status, 403);
+        assert.equal((await call(retained, { load: "missing" }, other)).status, 403);
+        assert.equal(
+          (await call(retained, { load: "missing" }, editor, { "x-test-mfa": "stale" })).status,
+          403,
+        );
+        assert.equal(
+          (await call(retained, { load: "missing" }, editor, { origin: "https://other.example.invalid" }))
+            .status,
+          403,
+        );
+        assert.equal((await call(retained, { load: "everything" })).status, 422);
+        const loaded: string[] = [];
+        let last = LoadRetainedDraftsResponse.parse(await ok(await call(retained, { load: "missing" })));
+        loaded.push(...last.loaded);
+        for (let round = 0; round < 10 && last.remaining > 0; round++) {
+          assert.ok(last.loaded.length > 0 && last.loaded.length <= 20);
+          last = LoadRetainedDraftsResponse.parse(await ok(await call(retained, { load: "missing" })));
+          loaded.push(...last.loaded);
+        }
+        assert.equal(last.remaining, 0);
+        assert.equal(new Set(loaded).size, loaded.length);
+        assert.equal(
+          loaded.length,
+          before.items.filter((item) => item.state === "not_in_library").length,
+          "each draft not yet filed was filed once",
+        );
+        const after = await status();
+        assert.ok(after.items.every((item) => item.state !== "not_in_library"));
+        for (const id of loaded) {
+          const filed = after.items.find((item) => item.retainedId === id)!;
+          assert.equal(filed.state, "draft", id);
+          assert.equal(filed.version, 1, id);
+          assert.equal(filed.shown, false, id);
+        }
+        // Filing again files nothing, and filing published nothing.
+        assert.deepEqual(
+          LoadRetainedDraftsResponse.parse(await ok(await call(retained, { load: "missing" }))).loaded,
+          [],
+        );
+        assert.deepEqual(await publicLists(), shownBefore);
+        // A filed regulatory guide is the exact text the owner's source check recognises, and an editor
+        // cannot publish it.
+        const guide = after.items.find((item) => item.retainedId === "GUD-01")!;
+        if (loaded.includes("GUD-01")) {
+          const r = GetManualLibraryRevisionResponse.parse(await ok(await call(item(guide.itemId!))));
+          assert.equal(r.kind, "regulatory_article");
+          assert.equal(r.createdBy, editor);
+          assert.equal(await registeredManualGuidance(r.title, r.body), "GUD-01");
+          assert.equal((await act(guide.itemId!, "publish", r)).status, 409);
+        }
+        // A filed premium template carries its blank Word master and a public description.
+        const premium = after.items.find((item) => item.retainedId === "TPL-13")!;
+        if (loaded.includes("TPL-13")) {
+          const r = GetManualLibraryRevisionResponse.parse(await ok(await call(item(premium.itemId!))));
+          assert.equal(r.kind, "premium_template");
+          assert.equal(r.fileFormat, "docx");
+          assert.ok(r.body.length <= 600 && r.body.startsWith("A blank service agreement template"));
+          const file = await call(item(premium.itemId!) + "/revisions/1/file");
+          assert.equal(file.status, 200);
+          assert.equal(
+            Buffer.from(await file.arrayBuffer())
+              .subarray(0, 2)
+              .toString(),
+            "PK",
+          );
+        }
+        // An industry pack is filed under its industry.
+        const pack = after.items.find((item) => item.retainedId === "PACK-C01")!;
+        assert.equal(pack.kind, "industry_pack");
+        assert.equal(pack.industry, "retail-wholesale");
       },
     );
     assert.deepEqual(

@@ -8,7 +8,9 @@ export const manualResourceKind = (row: PublicRevision) =>
     ? ("guidance" as const)
     : row.kind === "industry_introduction"
       ? ("industry_introduction" as const)
-      : ("guide" as const);
+      : row.kind === "industry_pack"
+        ? ("industry_pack" as const)
+        : ("guide" as const);
 const summary = (row: PublicRevision) => row.body.replace(/\s+/g, " ").slice(0, 260);
 const disclosure = "Published by the Valo editorial team.";
 function manualTemplateCategory(title: string) {
@@ -55,9 +57,11 @@ export function manualCatalogue(row: PublicRevision): ReleasedLibraryItem {
       ? manualTemplateCategory(row.title)
       : row.kind === "industry_introduction"
         ? "Industry introductions"
-        : row.kind === "regulatory_article"
-          ? "Regulatory guidance"
-          : "Practical business guides",
+        : row.kind === "industry_pack"
+          ? "Industry packs"
+          : row.kind === "regulatory_article"
+            ? "Regulatory guidance"
+            : "Practical business guides",
     access: row.kind === "premium_template" ? "premium" : "free",
     ...(row.kind === "premium_template" && {
       premiumDownloadPath: "/api/workspace/manual-premium-templates/" + row.id + "/download",

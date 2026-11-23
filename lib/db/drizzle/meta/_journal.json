@@ -344,6 +344,13 @@
       "when": 1795418768048,
       "tag": "20261123072608_hot_table_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1795453094979,
+      "tag": "20261123165814_manual_industry_packs",
+      "breakpoints": true
     }
   ]
 }

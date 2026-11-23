@@ -116,7 +116,10 @@ function prepareRecord(industry: Industry, retained: RetainedSection) {
   };
 }
 
-export async function prepareIndustryReviewPacket() {
+/** The 26 retained industry drafts, read from the pinned file: each industry's introduction, and the
+ * deeper pack of the six industries that have one, each split into its customer text (`draft`) and
+ * the editorial notes that stay internal. */
+export async function retainedIndustryDrafts() {
   assertDevelopmentRuntime();
   const root = publicationWorkspaceRoot();
   const [text, provenance] = await Promise.all(
@@ -131,7 +134,7 @@ export async function prepareIndustryReviewPacket() {
     throw Error("INDUSTRY_ORIGINAL_CHANGED");
   const sections = retainedContentSections(original.path, text);
   const byHeading = new Map(sections.map((retained) => [retained.section.heading, retained]));
-  const records = coveragePlan().industries.flatMap((industry) => {
+  const drafts = coveragePlan().industries.flatMap((industry) => {
     const headings = industry.deeperPackTarget
       ? [industry.title, `${industry.title} — deeper pack`]
       : [industry.title];
@@ -139,10 +142,17 @@ export async function prepareIndustryReviewPacket() {
       const retained = byHeading.get(heading);
       if (!retained) throw Error("INDUSTRY_DRAFT_ROSTER_CHANGED");
       byHeading.delete(heading);
-      return prepareRecord(industry, retained);
+      return { industry, retained, ...readDraft(retained) };
     });
   });
-  if (byHeading.size || sections.length !== records.length) throw Error("INDUSTRY_DRAFT_ROSTER_CHANGED");
+  if (byHeading.size || sections.length !== drafts.length) throw Error("INDUSTRY_DRAFT_ROSTER_CHANGED");
+  return drafts;
+}
+
+export async function prepareIndustryReviewPacket() {
+  const records = (await retainedIndustryDrafts()).map(({ industry, retained }) =>
+    prepareRecord(industry, retained),
+  );
   return {
     schemaVersion: 1,
     kind: "industry-editorial-review-intake" as const,
