@@ -136,7 +136,9 @@ export const ruleSchema = z
     sourceCheckedAt: z.string().datetime({ offset: true }),
     reviewBy: z.string().datetime({ offset: true }),
     status: z.enum(["published", "held", "withdrawn", "superseded"]),
-    provenance: z.enum(["editorial_release", "synthetic_fixture"]),
+    /** How the version was released: the reviewed route, the owner's sign-off (decision 0020), or a
+     * test fixture, which counts only in fixture mode. */
+    provenance: z.enum(["editorial_release", "owner_signoff", "synthetic_fixture"]),
     manifestHash: z.string().regex(/^[a-f0-9]{64}$/),
     sources: z
       .array(
@@ -332,7 +334,7 @@ export function assess(
     let hold = r.status !== "published" ? "Rule is not released" : null;
     if (r.provenance === "synthetic_fixture" && !options.fixtureMode)
       hold = "Synthetic fixture is not Nigerian publication evidence";
-    if (r.provenance === "editorial_release" && !options.trustedManifestHashes?.has(r.manifestHash))
+    if (r.provenance !== "synthetic_fixture" && !options.trustedManifestHashes?.has(r.manifestHash))
       hold = "No trusted eligible publication manifest";
     if (
       Date.parse(r.reviewBy) <= evaluatedAt.getTime() ||

@@ -4,8 +4,12 @@ import {
   digest,
   disclosure,
   mandatoryMechanicalChecks,
+  ownerRuleCandidateDigest,
+  ownerRuleDisclosure,
+  ownerRuleManifest,
   ruleSchema,
   sha256,
+  type OwnerRuleBundle,
   type PublicationBundle,
   type ReleasedRule,
 } from "@workspace/valo-core";
@@ -163,4 +167,33 @@ export function syntheticRuleRelease(input: {
     status: "eligible",
   };
   return { rule: { ...rule, manifestHash: digest(bundle.manifest) }, bundle };
+}
+
+/**
+ * Tests only. The same synthetic rule released on the owner's sign-off (decision 0020): the reviewed
+ * fixture's candidate, sources, policy and rights, with the rule's provenance `owner_signoff`, its
+ * scenarios, and the owner-signed manifest in place of any review record.
+ */
+export function syntheticOwnerRuleRelease(
+  input: Parameters<typeof syntheticRuleRelease>[0] & { scenarios: OwnerRuleBundle["scenarios"] },
+) {
+  const reviewed = syntheticRuleRelease(input);
+  const { manifestHash: _, ...content } = { ...reviewed.rule, provenance: "owner_signoff" as const };
+  const candidate = {
+    ...reviewed.bundle.candidate,
+    body: canonical(content),
+    disclosure: ownerRuleDisclosure,
+    hash: "",
+  };
+  candidate.hash = ownerRuleCandidateDigest(candidate);
+  const parts = {
+    kind: "owner_signoff" as const,
+    candidate,
+    sources: reviewed.bundle.sources,
+    rights: reviewed.bundle.rights,
+    policy: reviewed.bundle.policy,
+    scenarios: input.scenarios,
+  };
+  const bundle: OwnerRuleBundle = { ...parts, manifest: ownerRuleManifest(parts) };
+  return { rule: ruleSchema.parse({ ...content, manifestHash: digest(bundle.manifest) }), bundle, reviewed };
 }

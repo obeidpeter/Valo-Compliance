@@ -14,3 +14,4 @@ export * from "./coverage";
 export * from "./checker-rich";
 export * from "./assessment-changes";
 export * from "./rule-release";
+export * from "./owner-rule-release";
