@@ -91,8 +91,13 @@ In progress, as step 6 of the content and speed plan. No rule has been released 
   database guard (migration `20261123184636_rule_owner_signoffs`), and the registry admitting an
   owner-signed rule only while the guidance policy it was signed under stands.
 - Part 2: the sign-off service (`artifacts/api-server/src/modules/editorial/owner-rule-signoff.ts`), its
-  staff routes (`/admin/owner-rules`) and the Staff → System panel "Checker rule sign-off". The owner
-  sees each prepared rule as it would be signed, has the daily source check watch its sources,
-  confirms the five checks, and signs that exact version, or withdraws a released one.
+  staff routes (`/admin/owner-rules`) and the Staff → System panel "Requirements check: rule
+  sign-off". The owner sees each prepared rule as it would be signed, with the evidence for each of
+  the five checks; has the daily source check watch its sources; confirms the checks; and signs that
+  exact version, or withdraws a released one. Each source is a passage the guides use
+  (`guidance-passages.ts`), read from today's capture of its official address, and is marked current
+  only by `guideSourceDecision` from its text's amendment record, as a guide's source is; the owner's
+  confirmations do not resolve a source its record does not. A quotation is at most 20 words in a
+  row, as the guidance policy's point 7 allows.
 - Part 3: the first prepared rules, CAMA s.814 and NDPA s.27. Until they exist no rule is prepared,
   so none can be signed.
