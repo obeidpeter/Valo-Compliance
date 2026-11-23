@@ -44,7 +44,8 @@ export function PlainText({
     <div className={className}>
       {paras.map((p, i) => {
         const lines = p.split("\n");
-        return lines.every((line) => line.startsWith("• ")) ? (
+        // A paragraph that is all list lines, written with "• " or with "- ", is a list.
+        return lines.every((line) => /^(?:• |- )/.test(line)) ? (
           <ul key={i} className="list-disc space-y-1 pl-5">
             {lines.map((line, j) => (
               <li key={j}>{line.slice(2)}</li>
