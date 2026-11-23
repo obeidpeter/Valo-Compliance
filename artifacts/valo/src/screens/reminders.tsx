@@ -357,7 +357,19 @@ export default function RemindersPage() {
                 >
                   <div className="min-w-0">
                     <p className="break-words text-sm font-medium">
-                      {taskTitle.get(r.taskId) ?? "A task no longer in your list"}
+                      {taskTitle.has(r.taskId) ? (
+                        <Link
+                          href={
+                            "/workspace/tasks?filter=all&q=" + encodeURIComponent(taskTitle.get(r.taskId)!)
+                          }
+                          className="underline decoration-border underline-offset-4 hover:decoration-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                          data-testid={"link-reminder-task-" + r.id}
+                        >
+                          {taskTitle.get(r.taskId)}
+                        </Link>
+                      ) : (
+                        "A task no longer in your list"
+                      )}
                     </p>
                     <p className="mt-0.5 text-xs text-muted-foreground">
                       Planned for {formatDateTime(r.scheduledAt)}

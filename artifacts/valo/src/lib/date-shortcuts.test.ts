@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { addCalendarDays, dueDateUrgency, sortTasksByDueDate } from "./date-shortcuts";
+import {
+  addCalendarDays,
+  dueDateUrgency,
+  matchesTaskFocus,
+  parseTaskFilter,
+  parseTaskFocus,
+  sortTasksByDueDate,
+} from "./date-shortcuts";
 
 test("addCalendarDays advances dates accurately across month and year boundaries", () => {
   assert.equal(addCalendarDays("2026-11-23", 0), "2026-11-23");
@@ -34,4 +41,28 @@ test("sortTasksByDueDate places earliest open due dates first, then undated, the
     sortTasksByDueDate(items, "default").map((t) => t.id),
     ["done", "nodate", "later", "soon"],
   );
+});
+
+test("parseTaskFilter, parseTaskFocus, and matchesTaskFocus handle deep-linked focus views cleanly", () => {
+  assert.equal(parseTaskFilter("done"), "done");
+  assert.equal(parseTaskFilter("all"), "all");
+  assert.equal(parseTaskFilter("unknown"), "open");
+  assert.equal(parseTaskFocus("overdue"), "overdue");
+  assert.equal(parseTaskFocus("review"), "review");
+  assert.equal(parseTaskFocus("due_soon"), "due_soon");
+  assert.equal(parseTaskFocus("other"), "all");
+
+  const today = "2026-11-23";
+  const overdue = { dueDate: "2026-11-20", state: "in_progress" as const, needsReview: false };
+  const review = { dueDate: null, state: "needs_review" as const, needsReview: true };
+  const soon = { dueDate: "2026-11-28", state: "not_started" as const, needsReview: false };
+  const done = { dueDate: "2026-11-20", state: "completed_by_user" as const, needsReview: true };
+
+  assert.equal(matchesTaskFocus(overdue, "overdue", today), true);
+  assert.equal(matchesTaskFocus(overdue, "due_soon", today), false);
+  assert.equal(matchesTaskFocus(review, "review", today), true);
+  assert.equal(matchesTaskFocus(soon, "due_soon", today), true);
+  assert.equal(matchesTaskFocus(done, "overdue", today), false);
+  assert.equal(matchesTaskFocus(done, "review", today), false);
+  assert.equal(matchesTaskFocus(done, "all", today), true);
 });
