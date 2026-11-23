@@ -69,12 +69,20 @@ export function suggestedDocumentTitle(title: string, content: CanonicalDocument
   return candidate.toLowerCase() === current.toLowerCase() ? null : candidate;
 }
 
-/** Filter saved documents by title/context query, completeness status, and browser-hidden set. */
+/** Returns distinct document type labels present in a list, sorted alphabetically for filter pills. */
+export function documentKindOptions(docs: readonly Pick<BusinessDocument, "content">[]): string[] {
+  const kinds = new Set<string>();
+  for (const doc of docs) kinds.add(documentKindLabel(doc));
+  return [...kinds].sort((a, b) => a.localeCompare(b));
+}
+
+/** Filter saved documents by title/context query, completeness status, hidden set, and optional type label. */
 export function filterDocuments(
   docs: readonly BusinessDocument[],
   query: string,
   status: DocumentStatusFilter,
   hiddenIds: ReadonlySet<string> = new Set(),
+  kindFilter = "all",
 ): BusinessDocument[] {
   const trimmed = query.trim().toLowerCase();
   return docs.filter((doc) => {
@@ -84,8 +92,10 @@ export function filterDocuments(
     } else if (isHidden) {
       return false;
     }
+    const kind = documentKindLabel(doc);
+    if (kindFilter !== "all" && kind !== kindFilter) return false;
     if (trimmed) {
-      const haystack = `${doc.title} ${documentContextSubtitle(doc)} ${documentKindLabel(doc)}`.toLowerCase();
+      const haystack = `${doc.title} ${documentContextSubtitle(doc)} ${kind}`.toLowerCase();
       if (!haystack.includes(trimmed)) return false;
     }
     if (status === "all" || status === "hidden") return true;
