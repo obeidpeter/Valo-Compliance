@@ -4,14 +4,17 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, Loader2 } from "lucide-react";
 import {
   useCreateDocument,
+  useGetWorkspace,
   getGetWorkspaceQueryKey,
   getListDocumentsQueryKey,
 } from "@workspace/api-client-react";
 import { GUIDED_TEMPLATE_IDS, type GuidedTemplateId } from "@workspace/valo-core/guided";
 import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
-import { emptyGuidedData, compileGuidedContent } from "@workspace/valo-core/guided-runtime";
+import { compileGuidedContent } from "@workspace/valo-core/guided-runtime";
 import { describeError } from "@/lib/api";
+import { live } from "@/lib/checker";
 import { DOCUMENT_PURPOSES } from "@/lib/document-kinds";
+import { prefillGuidedData, savedBusinessName } from "@/lib/guided-prefill";
 import type { LandingTask } from "@/lib/landing-tasks";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +25,8 @@ import { cn } from "@/lib/utils";
  */
 export function GuidedDraftStarter({ chosen }: { chosen?: LandingTask | undefined }) {
   const [starting, setStarting] = useState<GuidedTemplateId | null>(null);
+  const ws = useGetWorkspace({ query: { queryKey: getGetWorkspaceQueryKey(), ...live } });
+  const businessName = savedBusinessName(ws.data?.profile);
   const create = useCreateDocument(),
     qc = useQueryClient(),
     [, navigate] = useLocation();
@@ -32,7 +37,7 @@ export function GuidedDraftStarter({ chosen }: { chosen?: LandingTask | undefine
         data: {
           // The title is printed as the document's heading, so it starts as the kind's own name.
           title: GUIDED_SPECS_V1[id].title,
-          content: compileGuidedContent(emptyGuidedData(id)),
+          content: compileGuidedContent(prefillGuidedData(id, ws.data?.profile)),
         },
       },
       {
@@ -99,6 +104,9 @@ export function GuidedDraftStarter({ chosen }: { chosen?: LandingTask | undefine
         </h2>
         <p className="mt-2 max-w-prose text-sm leading-relaxed text-muted-foreground">
           Choose one. Valo asks you its questions and sets the document out from your answers.
+          {businessName
+            ? " Your saved business name is filled in for you; you can change it on the document."
+            : ""}
         </p>
         <ul className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {GUIDED_TEMPLATE_IDS.map((id) => kind(id, "all"))}
