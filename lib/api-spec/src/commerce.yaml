@@ -33,10 +33,11 @@ paths:
             schema: { $ref: "#/components/schemas/CommerceOrderInput" }
       responses:
         "201":
-          description: Server-priced test order; not a payment
+          description: A server-priced test order. Repeated requests for the same open edition and terms return its existing order.
           content:
             application/json:
               schema: { $ref: "#/components/schemas/CommerceOrder" }
+        "409": { description: "The edition already has a payment or a conflicting open order, or the offer or licence is no longer current." }
   /workspace/orders/{id}/checkout:
     post:
       operationId: startCommerceCheckout
@@ -58,6 +59,7 @@ paths:
                 required: [url]
                 properties:
                   url: { type: string }
+        "409": { description: The edition is already purchased or another checkout is in progress. }
   /workspace/orders/{id}/refresh:
     post:
       operationId: refreshCommerceOrder
@@ -247,7 +249,7 @@ schemas:
   FinanceDisputeLink: {"type": "object", "additionalProperties": false, "required": ["orderId", "providerId"], "properties": {"orderId": {"type": "string", "format": "uuid"}, "providerId": {"type": "string", "pattern": "^\\d{1,40}$"}}}
   CustomerPurchases:
     type: object
-    required: [available, message, orders, products, livePaymentsEnabled]
+    required: [available, message, orders, products, ownedDownloads, livePaymentsEnabled]
     properties:
       available: { type: boolean }
       message: { type: string }
@@ -256,6 +258,18 @@ schemas:
       products:
         type: array
         items: { $ref: "#/components/schemas/TemplateOffer" }
+      ownedDownloads:
+        type: array
+        description: Downloads for the signed-in workspace's currently released purchases, indexed by current or past approved offer.
+        items: { $ref: "#/components/schemas/OwnedCheckoutDownload" }
+  OwnedCheckoutDownload:
+    type: object
+    required: [offerId, edition, title, downloadPath]
+    properties:
+      offerId: { type: string, format: uuid }
+      edition: { type: string, format: uuid }
+      title: { type: string }
+      downloadPath: { type: string, description: Same-origin file path that rechecks the purchased edition on every download. }
   CommerceOrderInput:
     type: object
     required: [priceId, acceptedLicenceVersion, requestKey]

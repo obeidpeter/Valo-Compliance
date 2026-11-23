@@ -3,7 +3,7 @@ import { PaymentConcerns } from "@/components/payment-concerns";
 import { CustomerDisputeInformation, DisputeFormsBoundary } from "@/components/dispute-workflows";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useSearch } from "wouter";
-import { ShoppingBag } from "lucide-react";
+import { Download, ShoppingBag } from "lucide-react";
 import {
   useGetCustomerPurchases,
   getGetCustomerPurchasesQueryKey,
@@ -13,11 +13,13 @@ import {
   getCommerceReceipt,
   requestCommerceRefund,
   type CommerceOrder,
+  type OwnedCheckoutDownload,
 } from "@workspace/api-client-react";
 import { WorkspaceNav } from "@/components/workspace-nav";
 import { EmptyState, ErrorState, Notice, Skel } from "@/components/states";
 import { describeError } from "@/lib/api";
 import { formatDateTime, formatNaira } from "@/lib/format";
+import { basePath } from "@/lib/env";
 const labels: Record<string, string> = {
   created: "Order saved — not paid",
   pending: "Awaiting verified payment",
@@ -27,7 +29,26 @@ const labels: Record<string, string> = {
   needs_review: "Staff reconciliation required",
   reversed: "Payment reversed — access suspended",
 };
-function OrderCard({ order, changed }: { order: CommerceOrder; changed: () => Promise<unknown> }) {
+function OwnedChoice({ file }: { file: OwnedCheckoutDownload }) {
+  return (
+    <li className="rounded-2xl border bg-card p-5">
+      <h3 className="font-semibold">{file.title}</h3>
+      <p className="my-3 text-sm">Your workspace owns this edition.</p>
+      <a href={basePath + file.downloadPath} className="btn btn-primary" data-testid="checkout-download">
+        <Download className="h-4 w-4" aria-hidden /> Download
+      </a>
+    </li>
+  );
+}
+function OrderCard({
+  order,
+  owned,
+  changed,
+}: {
+  order: CommerceOrder;
+  owned: boolean;
+  changed: () => Promise<unknown>;
+}) {
   const [busy, setBusy] = useState(false),
     [error, setError] = useState<string | null>(null);
   const [reason, setReason] = useState(""),
@@ -95,7 +116,7 @@ function OrderCard({ order, changed }: { order: CommerceOrder; changed: () => Pr
         </>
       )}
       <div className="flex flex-wrap gap-3">
-        {!["verified_success", "needs_review", "reversed"].includes(order.status) && (
+        {!owned && ["created", "pending"].includes(order.status) && (
           <button
             className="btn btn-primary"
             disabled={busy}
@@ -293,6 +314,9 @@ function PurchaseHistoryContent() {
     [error, setError] = useState<string | null>(null);
   const [keys] = useState(() => new Map<string, string>());
   const products = (q.data?.products ?? []).filter((p) => !directCheckout || p.id === offerId);
+  const downloads = new Map(q.data?.ownedDownloads?.map((file) => [file.offerId, file]));
+  const ownedEditions = new Set(q.data?.ownedDownloads?.map((file) => file.edition));
+  const selectedDownload = offerId ? downloads.get(offerId) : undefined;
   const refresh = () => qc.invalidateQueries({ queryKey: getGetCustomerPurchasesQueryKey() });
   return (
     <div className="mx-auto max-w-6xl px-5 py-10 lg:px-8">
@@ -328,7 +352,11 @@ function PurchaseHistoryContent() {
             <h2 id="purchase-choices" className="font-display mb-4 text-2xl">
               {directCheckout ? "Your selected template" : "Documents you can buy"}
             </h2>
-            {!products.length ? (
+            {selectedDownload ? (
+              <ul className="max-w-2xl">
+                <OwnedChoice file={selectedDownload} />
+              </ul>
+            ) : !products.length ? (
               <p
                 className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground"
                 data-testid="text-nothing-to-buy"
@@ -339,51 +367,58 @@ function PurchaseHistoryContent() {
               </p>
             ) : (
               <ul className={directCheckout ? "max-w-2xl" : "grid gap-4 sm:grid-cols-2"}>
-                {products.map((p) => (
-                  <li key={p.id} className="rounded-2xl border bg-card p-5">
-                    <h3 className="font-semibold">
-                      {p.title} · {formatNaira(p.amountKobo)}
-                    </h3>
-                    <p className="my-2 text-sm">{p.taxTreatment}</p>
-                    <details className="text-sm">
-                      <summary className="cursor-pointer py-2">Licence · {p.licenceVersion}</summary>
-                      <p className="whitespace-pre-wrap">{p.licenceText}</p>
-                    </details>
-                    <label className="my-3 flex items-start gap-2 text-sm">
-                      <input
-                        type="checkbox"
-                        checked={licences[p.id] ?? false}
-                        onChange={(e) => setLicences((s) => ({ ...s, [p.id]: e.target.checked }))}
-                      />
-                      I accept this version of the licence for this business.
-                    </label>
-                    <button
-                      disabled={busy || !licences[p.id]}
-                      className="btn btn-primary"
-                      onClick={() =>
-                        void (async () => {
-                          setBusy(true);
-                          setError(null);
-                          try {
-                            if (!keys.has(p.id)) keys.set(p.id, crypto.randomUUID());
-                            await createCommerceOrder({
-                              priceId: p.id,
-                              acceptedLicenceVersion: p.licenceVersion,
-                              requestKey: keys.get(p.id)!,
-                            });
-                            await refresh();
-                          } catch (e) {
-                            setError(describeError(e).message);
-                          } finally {
-                            setBusy(false);
-                          }
-                        })()
-                      }
-                    >
-                      Save test order
-                    </button>
-                  </li>
-                ))}
+                {products.map((p) => {
+                  const file = downloads.get(p.id);
+                  return file ? (
+                    <OwnedChoice key={p.id} file={file} />
+                  ) : (
+                    <li key={p.id} className="rounded-2xl border bg-card p-5">
+                      <h3 className="font-semibold">
+                        {p.title} · {formatNaira(p.amountKobo)}
+                      </h3>
+                      <p className="my-2 text-sm">{p.taxTreatment}</p>
+                      <details className="text-sm">
+                        <summary className="cursor-pointer py-2">Licence · {p.licenceVersion}</summary>
+                        <p className="whitespace-pre-wrap">{p.licenceText}</p>
+                      </details>
+                      <label className="my-3 flex items-start gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={licences[p.id] ?? false}
+                          onChange={(e) => setLicences((s) => ({ ...s, [p.id]: e.target.checked }))}
+                        />
+                        I accept this version of the licence for this business.
+                      </label>
+                      <button
+                        disabled={busy || !licences[p.id]}
+                        className="btn btn-primary"
+                        onClick={() =>
+                          void (async () => {
+                            setBusy(true);
+                            setError(null);
+                            try {
+                              if (!keys.has(p.id)) keys.set(p.id, crypto.randomUUID());
+                              await createCommerceOrder({
+                                priceId: p.id,
+                                acceptedLicenceVersion: p.licenceVersion,
+                                requestKey: keys.get(p.id)!,
+                              });
+                              keys.delete(p.id);
+                              await refresh();
+                            } catch (e) {
+                              setError(describeError(e).message);
+                              await refresh();
+                            } finally {
+                              setBusy(false);
+                            }
+                          })()
+                        }
+                      >
+                        Save test order
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
             )}
             {error && (
@@ -413,7 +448,12 @@ function PurchaseHistoryContent() {
               ) : (
                 <div className="space-y-4">
                   {q.data.orders.map((order) => (
-                    <OrderCard key={order.id} order={order} changed={refresh} />
+                    <OrderCard
+                      key={order.id}
+                      order={order}
+                      owned={ownedEditions.has(order.contentVersionId)}
+                      changed={refresh}
+                    />
                   ))}
                 </div>
               )}

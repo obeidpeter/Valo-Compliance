@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { CommerceOrder } from './commerceOrder';
+import type { OwnedCheckoutDownload } from './ownedCheckoutDownload';
 import type { TemplateOffer } from './templateOffer';
 
 export interface CustomerPurchases {
@@ -14,4 +15,6 @@ export interface CustomerPurchases {
   livePaymentsEnabled: boolean;
   orders: CommerceOrder[];
   products: TemplateOffer[];
+  /** Downloads for the signed-in workspace's currently released purchases, indexed by current or past approved offer. */
+  ownedDownloads: OwnedCheckoutDownload[];
 }
