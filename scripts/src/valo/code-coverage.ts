@@ -21,7 +21,7 @@ import { currentResultFiles } from "./result-attempts";
 export const RUNNER_PACKAGE = "artifacts/api-server";
 export const MEASURED_BY =
   "node --test --experimental-test-coverage (V8 block coverage, merged across the area's test files)";
-const reporter = fileURLToPath(new URL("./test-results-reporter.mjs", import.meta.url));
+const reporter = new URL("./test-results-reporter.mjs", import.meta.url).href;
 
 type Count = [covered: number, total: number];
 export type FileCoverage = { path: string; lines: Count; branches: Count; functions: Count };
@@ -48,7 +48,7 @@ export function summarize(
   measured: FileCoverage[],
   root = repositoryRoot,
 ): AreaCoverage {
-  const byPath = new Map(measured.map((f) => [relative(root, f.path), f]));
+  const byPath = new Map(measured.map((f) => [relative(root, f.path).replaceAll("\\", "/"), f]));
   const files = sources.flatMap((source) => {
     const file = byPath.get(source);
     return file ? [{ ...file, path: source }] : [];

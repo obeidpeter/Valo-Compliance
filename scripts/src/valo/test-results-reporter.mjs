@@ -50,7 +50,7 @@ function recordCoverage(summary) {
 function record({ type, data }) {
   if (directory && type === "test:coverage") return recordCoverage(data.summary);
   if (!directory || (type !== "test:start" && type !== "test:pass" && type !== "test:fail")) return;
-  const file = data.file ?? "";
+  const file = (data.file ?? "").replaceAll("\\", "/");
   const names = running.get(file) ?? [];
   running.set(file, names);
   if (type === "test:start") {

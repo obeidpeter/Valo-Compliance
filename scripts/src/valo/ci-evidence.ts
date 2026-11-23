@@ -176,9 +176,10 @@ export function readTestRecords(directory: string): TestRecord[] {
  * not_run; checkouts differ between machines, so a record matches by the end of its path.
  */
 export function citationResult(citation: Citation, records: TestRecord[]): CitationResult {
-  const runs = records.filter(
-    (r) => (r.file === citation.file || r.file.endsWith(`/${citation.file}`)) && r.path[0] === citation.test,
-  );
+  const runs = records.filter((r) => {
+    const file = r.file.replaceAll("\\", "/");
+    return (file === citation.file || file.endsWith(`/${citation.file}`)) && r.path[0] === citation.test;
+  });
   if (runs.some((r) => r.status === "fail")) return "fail";
   if (!runs.some((r) => r.path.length === 1) || runs.some((r) => r.status !== "pass")) return "not_run";
   return "pass";
