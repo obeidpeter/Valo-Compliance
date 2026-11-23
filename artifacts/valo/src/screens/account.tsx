@@ -12,9 +12,11 @@ import {
 } from "@workspace/api-client-react";
 import { WorkspaceNav } from "@/components/workspace-nav";
 import { ErrorState, Notice, Skel } from "@/components/states";
+import { UnsavedNavigationDialog } from "@/components/unsaved-navigation-dialog";
 import { describeError } from "@/lib/api";
 import { formatDateTime } from "@/lib/format";
 import { resolveIdempotencyKey, type IdempotencySlot } from "@/lib/idempotency";
+import { useUnsavedNavigation } from "@/lib/use-unsaved-navigation";
 import { PurchaseHistoryPage } from "./purchase-history";
 import { PRIVACY_KIND_WORDS } from "@/lib/privacy-words";
 import { PrivacyCases } from "@/components/privacy-cases";
@@ -89,6 +91,7 @@ export function PrivacyPage() {
   const [ack, setAckChecked] = useState(false);
   const [touched, setTouched] = useState(false);
   const [saved, setSaved] = useState<AccessSupportAck | null>(null);
+  const navigation = useUnsavedNavigation(() => Boolean(message.trim()) || req.isPending);
 
   const msgErr =
     message.trim().length < 10
@@ -285,6 +288,13 @@ export function PrivacyPage() {
           )}
         </div>
       </section>
+      <UnsavedNavigationDialog
+        open={navigation.blocked}
+        busy={req.isPending}
+        onDiscard={navigation.proceed}
+        onStay={navigation.stay}
+        description="You started writing a privacy request that has not been saved yet. Stay here to finish it, or leave and discard what you typed."
+      />
     </div>
   );
 }

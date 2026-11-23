@@ -1,6 +1,10 @@
 import { useState, useRef } from "react";
 import { PaymentConcerns } from "@/components/payment-concerns";
-import { CustomerDisputeInformation, DisputeFormsBoundary } from "@/components/dispute-workflows";
+import {
+  CustomerDisputeInformation,
+  DisputeFormsBoundary,
+  useDisputeDirty,
+} from "@/components/dispute-workflows";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useSearch } from "wouter";
 import { Download, ShoppingBag } from "lucide-react";
@@ -20,6 +24,7 @@ import { EmptyState, ErrorState, Notice, Skel } from "@/components/states";
 import { describeError } from "@/lib/api";
 import { formatCount, formatDateTime, formatNaira } from "@/lib/format";
 import { randomUuid } from "@/lib/idempotency";
+import { hasActivePurchaseWork } from "@/lib/purchase-state";
 import { basePath } from "@/lib/env";
 const labels: Record<string, string> = {
   created: "Order saved — not paid",
@@ -138,11 +143,11 @@ function MyTemplates({ editions }: { editions: ReadonlyMap<string, OwnedCheckout
 }
 function OrderCard({
   order,
-  downloadPath,
+  download,
   changed,
 }: {
   order: CommerceOrder;
-  downloadPath: string | undefined;
+  download: OwnedCheckoutDownload | undefined;
   changed: () => Promise<unknown>;
 }) {
   const [busy, setBusy] = useState(false),
@@ -152,6 +157,7 @@ function OrderCard({
   const [amount, setAmount] = useState(""),
     [policyAccepted, setPolicyAccepted] = useState(false);
   const refundKey = useRef<{ fingerprint: string; key: string } | null>(null);
+  useDisputeDirty(Boolean(amount.trim() || reason.trim() || busy));
   async function run(action: () => Promise<void>) {
     setBusy(true);
     setError(null);
@@ -211,23 +217,36 @@ function OrderCard({
           <CustomerDisputeInformation orderId={order.id} />
         </>
       )}
-      {order.status === "verified_success" && !downloadPath && (
+      {order.status === "verified_success" && !download && (
         <p className="my-3 text-sm text-muted-foreground" data-testid="order-download-unavailable">
           This edition is no longer available to download. Your saved receipt stays here.
         </p>
       )}
       <div className="flex flex-wrap gap-3">
-        {downloadPath && order.status === "verified_success" && (
-          <a
-            href={basePath + downloadPath}
-            className="btn btn-primary"
-            aria-label={`Download ${order.title}`}
-            data-testid="order-template-download"
-          >
-            <Download className="h-4 w-4" aria-hidden /> Download
-          </a>
+        {download && order.status === "verified_success" && (
+          <>
+            <a
+              href={basePath + download.downloadPath}
+              className="btn btn-primary"
+              aria-label={`Download ${order.title}`}
+              data-testid="order-template-download"
+            >
+              <Download className="h-4 w-4" aria-hidden />{" "}
+              {download.pdfDownloadPath ? "Download Word" : "Download"}
+            </a>
+            {download.pdfDownloadPath && (
+              <a
+                href={basePath + download.pdfDownloadPath}
+                className="btn btn-secondary"
+                aria-label={`Download ${order.title} PDF`}
+                data-testid="order-template-download-pdf"
+              >
+                <Download className="h-4 w-4" aria-hidden /> Download PDF
+              </a>
+            )}
+          </>
         )}
-        {!downloadPath && ["created", "pending"].includes(order.status) && (
+        {!download && ["created", "pending"].includes(order.status) && (
           <button
             className="btn btn-primary"
             disabled={busy}
@@ -417,7 +436,7 @@ function PurchaseHistoryContent() {
       query: {
         queryKey: getGetCustomerPurchasesQueryKey(),
         refetchOnWindowFocus: true,
-        refetchInterval: 30000,
+        refetchInterval: (query) => (hasActivePurchaseWork(query.state.data?.orders) ? 30000 : false),
       },
     });
   const [licences, setLicences] = useState<Record<string, boolean>>({}),
@@ -568,7 +587,7 @@ function PurchaseHistoryContent() {
                     <OrderCard
                       key={order.id}
                       order={order}
-                      downloadPath={editionDownloads.get(order.contentVersionId)?.downloadPath}
+                      download={editionDownloads.get(order.contentVersionId)}
                       changed={refresh}
                     />
                   ))}
