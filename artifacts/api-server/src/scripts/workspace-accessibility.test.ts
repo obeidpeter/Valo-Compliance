@@ -545,6 +545,31 @@ const answers: Record<string, unknown> = {
     ],
     hasMore: false,
   }),
+  [`GET /admin/owner-rules`]: api.ListOwnerRulesResponse.parse({
+    items: [
+      {
+        ruleId: "synthetic-owner-rule",
+        title: "Synthetic checker rule",
+        reason: "A synthetic reason this may matter.",
+        nextStep: "A synthetic next step.",
+        appliesWhen: "When legal form is company.",
+        validFrom: "2026-01-01",
+        validTo: null,
+        risk: "privacy",
+        disclosure:
+          "Released on the Valo development owner's sign-off after a check of its official sources; not reviewed by a Nigerian legal, tax or sector specialist",
+        version: 1,
+        manifestHash: "a".repeat(64),
+        live: null,
+        holds: ["Synthetic passage has no copy of its official source checked within the last day."],
+        checks: [],
+        sources: [],
+        scenarios: [],
+        profilesRun: 0,
+        changedProfiles: 0,
+      },
+    ],
+  }),
   [`GET /admin/staff-roles`]: api.GetStaffRoleAdministrationResponse.parse({
     assignments: [
       {
