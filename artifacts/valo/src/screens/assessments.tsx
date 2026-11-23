@@ -1,16 +1,18 @@
 import { useMemo, useState } from "react";
 import { Link, useSearch } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowRight, ClipboardCheck, GitCompare, ListPlus } from "lucide-react";
+import { ArrowRight, Check, ClipboardCheck, GitCompare, ListPlus, Loader2 } from "lucide-react";
 import {
   useListAssessments,
   useGetAssessment,
   useCompareAssessments,
   useCreateTask,
+  useListTasks,
   getListAssessmentsQueryKey,
   getGetAssessmentQueryKey,
   getCompareAssessmentsQueryKey,
   getListTasksQueryKey,
+  getListTasksPageQueryKey,
   type AssessmentItem,
   type SavedAssessment,
 } from "@workspace/api-client-react";
@@ -20,6 +22,7 @@ import { AssessmentResultView } from "@/components/assessment-result";
 import { TaskForm, emptyDraft, type TaskDraft } from "@/components/task-form";
 import { EmptyState, ErrorState, Notice, Skel } from "@/components/states";
 import { describeError } from "@/lib/api";
+import { trackedRuleIdsForAssessment, untrackedActionableItems } from "@/lib/assessment-tasks";
 import { formatDateTime, formatDay } from "@/lib/format";
 import { describeAssessmentChange } from "@/lib/assessment-changes";
 import { reviewFacts, displayFact, factLabel, isMarker, live } from "@/lib/checker";
@@ -161,11 +164,17 @@ export function AssessmentDetail({ id }: { id: string }) {
     query: { enabled: !!id, queryKey: getGetAssessmentQueryKey(id), ...live },
   });
   const list = useListAssessments({ query: { queryKey: getListAssessmentsQueryKey(), ...live } });
+  const workspaceTasks = useListTasks({ query: { queryKey: getListTasksQueryKey(), ...live } });
   const [prevId, setPrevId] = useState(() => new URLSearchParams(search).get("compare") ?? "");
   const [taskFor, setTaskFor] = useState<string | null>(null);
+  const [batchOpen, setBatchOpen] = useState(false);
   const others = useMemo(
     () => (list.data ?? []).filter((x) => x.id !== id).sort((x, y) => y.createdAt.localeCompare(x.createdAt)),
     [list.data, id],
+  );
+  const trackedRules = useMemo(
+    () => trackedRuleIdsForAssessment(workspaceTasks.data ?? [], id),
+    [workspaceTasks.data, id],
   );
 
   if (a.isLoading)
@@ -184,6 +193,7 @@ export function AssessmentDetail({ id }: { id: string }) {
     );
   const s = a.data;
   const facts = s.facts as unknown as Record<string, unknown>;
+  const untrackedItems = untrackedActionableItems(s.result.items, trackedRules);
 
   return (
     <div className="mx-auto max-w-5xl px-5 py-12 lg:px-8">
@@ -195,32 +205,65 @@ export function AssessmentDetail({ id }: { id: string }) {
           { label: formatDay(s.createdAt) },
         ]}
       />
-      <h1 className="font-display mt-3 text-4xl">Result saved {formatDateTime(s.createdAt)}</h1>
-      <p className="mt-2 text-sm text-muted-foreground" data-testid="text-result-origin">
-        {s.profileRevision
-          ? "Worked out from your business profile, version " + s.profileRevision + "."
-          : "Worked out from the answers you gave when you checked."}
-      </p>
+      <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="font-display text-4xl">Result saved {formatDateTime(s.createdAt)}</h1>
+          <p className="mt-2 text-sm text-muted-foreground" data-testid="text-result-origin">
+            {s.profileRevision
+              ? "Worked out from your business profile, version " + s.profileRevision + "."
+              : "Worked out from the answers you gave when you checked."}
+          </p>
+        </div>
+        {untrackedItems.length >= 2 && (
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            aria-expanded={batchOpen}
+            onClick={() => setBatchOpen((open) => !open)}
+            data-testid="button-toggle-batch-tasks"
+          >
+            <ListPlus className="h-4 w-4" aria-hidden="true" />
+            {batchOpen ? "Close batch task picker" : `Turn ${untrackedItems.length} results into tasks`}
+          </button>
+        )}
+      </div>
+
+      {batchOpen && untrackedItems.length > 0 && (
+        <BatchTasksPanel assessmentId={s.id} items={untrackedItems} onClose={() => setBatchOpen(false)} />
+      )}
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_18rem]">
         <div className="min-w-0">
           <AssessmentResultView
             result={s.result}
             // oxlint-disable-next-line react/no-unstable-nested-components -- a render function the list calls, not a component
-            itemAction={(it) =>
-              canCreateSourceTask(it) ? (
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm"
-                  aria-expanded={taskFor === it.ruleId}
-                  onClick={() => setTaskFor(taskFor === it.ruleId ? null : it.ruleId)}
-                  data-testid={"button-task-" + it.ruleId}
-                >
-                  <ListPlus className="h-4 w-4" />
-                  Add task
-                </button>
-              ) : null
-            }
+            itemAction={(it) => {
+              const tracked = trackedRules.has(it.ruleId);
+              if (!canCreateSourceTask(it)) return null;
+              return (
+                <div className="flex flex-wrap items-center gap-2">
+                  {tracked && (
+                    <Link
+                      href="/workspace/tasks"
+                      className="pill pill-forest hover:underline"
+                      data-testid={"badge-tracked-" + it.ruleId}
+                    >
+                      <Check className="h-3 w-3" aria-hidden="true" /> In your tasks
+                    </Link>
+                  )}
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    aria-expanded={taskFor === it.ruleId}
+                    onClick={() => setTaskFor(taskFor === it.ruleId ? null : it.ruleId)}
+                    data-testid={"button-task-" + it.ruleId}
+                  >
+                    <ListPlus className="h-4 w-4" aria-hidden="true" />
+                    {tracked ? "Add another" : "Add task"}
+                  </button>
+                </div>
+              );
+            }}
           />
           {taskFor &&
             (() => {
@@ -454,6 +497,7 @@ function TaskFromItem({
       {
         onSuccess: () => {
           void qc.invalidateQueries({ queryKey: getListTasksQueryKey() });
+          void qc.invalidateQueries({ queryKey: getListTasksPageQueryKey() });
           toast({ title: "Task added", description: "Find it under Tasks." });
           onDone();
         },
@@ -493,5 +537,189 @@ function TaskFromItem({
         Valo does not file anything or contact any agency on your behalf.
       </Notice>
     </div>
+  );
+}
+
+function BatchTasksPanel({
+  assessmentId,
+  items,
+  onClose,
+}: {
+  assessmentId: string;
+  items: AssessmentItem[];
+  onClose: () => void;
+}) {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  const create = useCreateTask();
+  const [selected, setSelected] = useState<string[]>(() => items.map((item) => item.ruleId));
+  const [dueDate, setDueDate] = useState("");
+  const [dateConfirmed, setDateConfirmed] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [progress, setProgress] = useState({ done: 0, total: 0 });
+  const [error, setError] = useState("");
+
+  function toggle(ruleId: string) {
+    setSelected((prev) => (prev.includes(ruleId) ? prev.filter((id) => id !== ruleId) : [...prev, ruleId]));
+  }
+
+  async function createSelected() {
+    const targets = items.filter((item) => selected.includes(item.ruleId));
+    if (!targets.length || saving) return;
+    setSaving(true);
+    setError("");
+    setProgress({ done: 0, total: targets.length });
+    let created = 0;
+    const failedTitles: string[] = [];
+    for (const item of targets) {
+      try {
+        await create.mutateAsync({
+          data: {
+            title: item.title.slice(0, 200),
+            notes: item.nextStep.slice(0, 6000),
+            dueDate: dueDate || null,
+            dateConfirmed: Boolean(dueDate && dateConfirmed),
+            assessmentId,
+            ruleId: item.ruleId,
+          },
+        });
+        created++;
+      } catch {
+        // Record each failed item so already-created tasks remain intact and the user sees what failed.
+        failedTitles.push(item.title);
+      }
+      setProgress({ done: created + failedTitles.length, total: targets.length });
+    }
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: getListTasksQueryKey() }),
+      qc.invalidateQueries({ queryKey: getListTasksPageQueryKey() }),
+    ]);
+    setSaving(false);
+    if (failedTitles.length > 0) {
+      setError(
+        `Added ${created} of ${targets.length} tasks. Could not add: ${failedTitles.join(", ")}. Try those again.`,
+      );
+      return;
+    }
+    toast({
+      title: created === 1 ? "1 task added" : `${created} tasks added`,
+      description: "Find them under Tasks.",
+    });
+    onClose();
+  }
+
+  return (
+    <section
+      className="surface mt-6 border-primary/40 p-5 sm:p-6"
+      aria-labelledby="batch-tasks-title"
+      data-testid="panel-batch-tasks"
+    >
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="eyebrow">Add multiple tasks</p>
+          <h2 id="batch-tasks-title" className="font-display mt-1 text-2xl">
+            Choose results to track in your Tasks
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Your own personal to-do list. Valo does not file anything or contact any authority for you.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={() => setSelected(items.map((item) => item.ruleId))}
+          >
+            Select all
+          </button>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setSelected([])}>
+            Clear
+          </button>
+        </div>
+      </div>
+
+      <ul className="mt-4 grid gap-2">
+        {items.map((item) => {
+          const checked = selected.includes(item.ruleId);
+          return (
+            <li key={item.ruleId}>
+              <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-sidebar/40 p-3 text-sm hover:bg-secondary/50">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 h-4 w-4 accent-[hsl(var(--primary))]"
+                  checked={checked}
+                  disabled={saving}
+                  onChange={() => toggle(item.ruleId)}
+                  data-testid={"checkbox-batch-task-" + item.ruleId}
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="block font-medium">{item.title}</span>
+                  <span className="mt-0.5 block text-xs text-muted-foreground">
+                    {item.label} · Rule {item.ruleId}
+                  </span>
+                </span>
+              </label>
+            </li>
+          );
+        })}
+      </ul>
+
+      <div className="mt-4 grid gap-3 rounded-xl border border-border p-4 sm:grid-cols-2 sm:items-end">
+        <div>
+          <label className="label" htmlFor="batch-due-date">
+            Optional shared due date
+          </label>
+          <input
+            id="batch-due-date"
+            type="date"
+            className="field"
+            value={dueDate}
+            disabled={saving}
+            onChange={(e) => {
+              setDueDate(e.target.value);
+              if (!e.target.value) setDateConfirmed(false);
+            }}
+          />
+        </div>
+        <label className="flex cursor-pointer items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            className="mt-0.5 h-4 w-4 accent-[hsl(var(--primary))]"
+            disabled={!dueDate || saving}
+            checked={dateConfirmed}
+            onChange={(e) => setDateConfirmed(e.target.checked)}
+          />
+          <span className={!dueDate ? "text-muted-foreground" : ""}>
+            I confirmed this due date from an official source
+          </span>
+        </label>
+      </div>
+
+      {error && (
+        <p role="alert" className="mt-4 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {error}
+        </p>
+      )}
+
+      <div className="mt-5 flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          className="btn btn-primary btn-sm"
+          disabled={saving || selected.length === 0}
+          onClick={() => void createSelected()}
+          data-testid="button-create-batch-tasks"
+        >
+          {saving && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+          {saving
+            ? `Adding ${progress.done} of ${progress.total}…`
+            : selected.length === 1
+              ? "Add 1 task"
+              : `Add ${selected.length} tasks`}
+        </button>
+        <button type="button" className="btn btn-ghost btn-sm" disabled={saving} onClick={onClose}>
+          Cancel
+        </button>
+      </div>
+    </section>
   );
 }
