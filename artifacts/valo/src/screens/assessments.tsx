@@ -241,6 +241,13 @@ export function AssessmentDetail({ id }: { id: string }) {
                 </div>
               ))}
             </dl>
+            <Link
+              href={"/workspace/profile?fromAssessment=" + encodeURIComponent(s.id)}
+              className="btn btn-ghost btn-sm mt-4 w-full"
+              data-testid="link-copy-to-profile"
+            >
+              Copy answers to business profile
+            </Link>
           </details>
         </aside>
       </div>

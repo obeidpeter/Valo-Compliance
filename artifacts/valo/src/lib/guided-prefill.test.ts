@@ -10,7 +10,12 @@ import {
   guidedDataIssues,
 } from "@workspace/valo-core/guided-runtime";
 import { blankContent } from "./api";
-import { prefillGuidedData, savedBusinessName } from "./guided-prefill";
+import {
+  applyIssuerDetailsToGuided,
+  extractReusableIssuerDetails,
+  prefillGuidedData,
+  savedBusinessName,
+} from "./guided-prefill";
 
 test("prefillGuidedData carries forward only the saved business name across all 12 guided templates", () => {
   const profile = { businessName: "  Synthetic Trading Ltd  " };
@@ -63,4 +68,29 @@ test("blankContent optionally carries forward the saved business name without ch
     blankContent(savedBusinessName({ businessName: "Synthetic Studio" })).fields.issuerName,
     "Synthetic Studio",
   );
+});
+
+test("extractReusableIssuerDetails and applyIssuerDetailsToGuided copy only validated issuer fields", () => {
+  const source = emptyGuidedData("TPL-01");
+  source.values.issuerName = "Synthetic Trading Ltd";
+  source.values.issuerAddress = "14 Synthetic Way, Ikeja, Lagos";
+  source.values.paymentInstructions = "Bank transfer to Synthetic Bank, 0000000000";
+  source.values.recipientName = "Should Not Be Copied Ltd";
+  source.values.documentNumber = "INV-999";
+
+  const details = extractReusableIssuerDetails({ content: compileGuidedContent(source) });
+  assert.deepEqual(details, {
+    issuerName: "Synthetic Trading Ltd",
+    issuerAddress: "14 Synthetic Way, Ikeja, Lagos",
+    paymentInstructions: "Bank transfer to Synthetic Bank, 0000000000",
+  });
+
+  // Applying invoice issuer details onto a receipt copies name & address, skips invoice-only paymentInstructions.
+  const target = emptyGuidedData("TPL-03");
+  const applied = applyIssuerDetailsToGuided(target, details);
+  assert.equal(applied.data.values.issuerName, "Synthetic Trading Ltd");
+  assert.equal(applied.data.values.issuerAddress, "14 Synthetic Way, Ikeja, Lagos");
+  assert.equal(applied.data.values.recipientName, "");
+  assert.equal(applied.data.values.documentNumber, "");
+  assert.equal(applied.appliedLabels.length, 2);
 });
