@@ -337,6 +337,13 @@
       "when": 1795372680000,
       "tag": "20261122183800_manual_premium_templates",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1795418768048,
+      "tag": "20261123072608_hot_table_indexes",
+      "breakpoints": true
     }
   ]
 }

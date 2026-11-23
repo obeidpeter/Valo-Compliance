@@ -6,6 +6,7 @@ import {
   timestamp,
   boolean,
   unique,
+  index,
   foreignKey,
   check,
 } from "drizzle-orm/pg-core";
@@ -62,6 +63,7 @@ export const valoPaymentConcernEvents = pgTable(
     createdAt: time("created_at").notNull().defaultNow(),
   },
   (t) => [
+    index("valo_concern_events_concern_visible_idx").on(t.concernId, t.customerVisible, t.createdAt),
     foreignKey({
       name: "valo_concern_event_exact_concern_fk",
       columns: [t.workspaceId, t.orderId, t.concernId],
