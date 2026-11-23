@@ -18,6 +18,7 @@ import {
   UserPlus,
 } from "lucide-react";
 import { PublicLink as Link } from "@/components/public-link";
+import { SampleDocumentPreview } from "@/islands/sample-document-preview";
 import { formatCount, formatDay, formatNaira } from "@/lib/format";
 import { landingTasks, type LandingTask } from "@/lib/landing-tasks";
 import { ANY_DOCUMENT, signUpFor } from "@/lib/start";
@@ -236,7 +237,8 @@ function Tasks({ tasks, templates }: { tasks: LandingTask[]; templates: number |
             );
           })}
         </ul>
-        <div className="mt-3 flex flex-col gap-4 rounded-2xl bg-foreground p-5 text-background sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:p-6">
+        <SampleDocumentPreview />
+        <div className="mt-6 flex flex-col gap-4 rounded-2xl bg-foreground p-5 text-background sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:p-6">
           <div className="flex items-start gap-4 sm:items-center">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-background/10">
               <ClipboardCheck className="h-5 w-5" aria-hidden />

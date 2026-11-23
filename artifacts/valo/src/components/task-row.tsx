@@ -15,6 +15,7 @@ import {
 import { TaskForm, type TaskDraft } from "@/components/task-form";
 import { Notice } from "@/components/states";
 import { describeError } from "@/lib/api";
+import { dueDateUrgency } from "@/lib/date-shortcuts";
 import { formatDateTime, formatDay } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -160,6 +161,7 @@ export function TaskRow({
   const err = !conflict && update.error ? describeError(update.error) : null;
   const archErr = archive.error ? describeError(archive.error) : null;
   const done = task.state === "completed_by_user";
+  const urgency = dueDateUrgency(task.dueDate, done);
   const latestDiffers = conflict !== null && task.revision !== baseRev;
 
   return (
@@ -278,6 +280,19 @@ export function TaskRow({
                   <CalendarDays className="h-3 w-3" />
                   {formatDay(task.dueDate)}
                   {task.dateConfirmed ? "" : " (unconfirmed)"}
+                </span>
+              )}
+              {urgency === "overdue" && (
+                <span
+                  className="pill border-destructive/40 bg-destructive/15 text-destructive"
+                  data-testid={"badge-overdue-" + task.id}
+                >
+                  Overdue
+                </span>
+              )}
+              {urgency === "due_soon" && (
+                <span className="pill pill-ochre" data-testid={"badge-due-soon-" + task.id}>
+                  Due within 7 days
                 </span>
               )}
               {task.ruleId && task.assessmentId && (

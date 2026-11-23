@@ -18,6 +18,7 @@ import {
   type Profile,
 } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
+import { useOnlineStatus } from "@/hooks/use-online-status";
 import { useAccountEpoch } from "@/components/account-state-boundary";
 import { ErrorState, Notice, Skel } from "@/components/states";
 import { describeError } from "@/lib/api";
@@ -59,6 +60,7 @@ export default function ProfilePage() {
   );
   const qc = useQueryClient();
   const { toast } = useToast();
+  const online = useOnlineStatus();
   const ws = useGetWorkspace({ query: { enabled: true, queryKey: getGetWorkspaceQueryKey() } });
   const sourceCheck = useGetAssessment(fromAssessmentId, {
     query: {
@@ -239,6 +241,11 @@ export default function ProfilePage() {
       <p className="mt-2 text-muted-foreground">
         Each save keeps a new version. &ldquo;I do not know&rdquo; is always an acceptable answer.
       </p>
+      {!online && (
+        <Notice className="mt-6" title="You are offline">
+          Keep filling out this form — your answers stay in this tab until you are back online to save.
+        </Notice>
+      )}
       {prefilledCount > 0 && (
         <Notice className="mt-6" tone="forest" title="Pre-filled from your saved check">
           {prefilledCount === 1

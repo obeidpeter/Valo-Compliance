@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState, type FocusEvent, type ReactNode }
 import { ArrowDownRight, Check, Info, Plus, Trash2 } from "lucide-react";
 import type { GuidedData, GuidedField, GuidedSpec, GuidedTable } from "@workspace/valo-core/guided";
 import { guidedDataIssues, guidedFieldIssue, guidedVisible } from "@workspace/valo-core/guided-runtime";
-import { formatNaira } from "@/lib/format";
+import { formatNaira, lagosToday } from "@/lib/format";
+import { DATE_QUICK_OFFSETS, addCalendarDays } from "@/lib/date-shortcuts";
 import { MONEY_HELP, askedAs, saidAs, shownAmount, storedAmount } from "@/lib/guided-money";
 import { computeGuidedProgress } from "@/lib/guided-progress";
 import { cn } from "@/lib/utils";
@@ -407,13 +408,29 @@ function FieldInput({
     );
   else if (f.type === "date")
     control = (
-      <input
-        {...common}
-        type="date"
-        className="field"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-      />
+      <div>
+        <input
+          {...common}
+          type="date"
+          className="field"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+        />
+        {!disabled && (
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            {DATE_QUICK_OFFSETS.map((opt) => (
+              <button
+                key={opt.days}
+                type="button"
+                className="rounded-full border border-border bg-card px-2.5 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                onClick={() => onChange(addCalendarDays(lagosToday(), opt.days))}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     );
   else if (money) control = <MoneyInput common={common} id={id} value={value} onChange={onChange} />;
   else {
