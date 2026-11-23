@@ -1,5 +1,7 @@
 import { useState, type FormEvent, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
+import { DATE_QUICK_OFFSETS, addCalendarDays } from "@/lib/date-shortcuts";
+import { lagosToday } from "@/lib/format";
 
 export interface TaskDraft {
   title: string;
@@ -116,6 +118,18 @@ export function TaskForm({
                 Clear
               </button>
             )}
+          </div>
+          <div className="mt-2 flex flex-wrap gap-1.5" aria-label="Quick due date options">
+            {DATE_QUICK_OFFSETS.map((opt) => (
+              <button
+                key={opt.days}
+                type="button"
+                className="rounded-full border border-border bg-card px-2.5 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                onClick={() => set("dueDate", addCalendarDays(lagosToday(), opt.days))}
+              >
+                {opt.label}
+              </button>
+            ))}
           </div>
         </div>
         {draft.dueDate && (

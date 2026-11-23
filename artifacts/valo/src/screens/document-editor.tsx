@@ -30,6 +30,7 @@ import { FinancialFields } from "@/components/financial-fields";
 import { synchronizeFinancialBlocks } from "@workspace/valo-core/money";
 import type { FinancialInput } from "@workspace/api-client-react";
 import { useUnsavedNavigation } from "@/lib/use-unsaved-navigation";
+import { useOnlineStatus } from "@/hooks/use-online-status";
 import { UnsavedNavigationDialog } from "@/components/unsaved-navigation-dialog";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { GuidedFields } from "@/components/guided-fields";
@@ -81,6 +82,8 @@ export default function DocumentEditor({ id }: { id: string }) {
   const [reuseDocId, setReuseDocId] = useState("");
   const [reuseNotice, setReuseNotice] = useState("");
   const [asking, setAsking] = useState<Asking | null>(null);
+  const online = useOnlineStatus();
+  const wasOffline = useRef(false);
   /** Whether a question is open. The autosave and the keyboard's save and undo wait for its answer. */
   const questionOpen = useRef(false);
 
@@ -192,6 +195,19 @@ export default function DocumentEditor({ id }: { id: string }) {
   }, [id, qc]);
   const doSaveRef = useRef(doSave);
   doSaveRef.current = doSave;
+
+  useEffect(() => {
+    if (!online) {
+      wasOffline.current = true;
+      return;
+    }
+    if (wasOffline.current) {
+      wasOffline.current = false;
+      if (!financialDirty.current && (state === "error" || state === "dirty")) {
+        doSaveRef.current();
+      }
+    }
+  }, [online, state]);
 
   function update(next: Snapshot) {
     const prev = latest.current;
@@ -653,6 +669,12 @@ export default function DocumentEditor({ id }: { id: string }) {
               Discard mine and load the newest
             </button>
           </div>
+        </Notice>
+      )}
+      {!online && (
+        <Notice className="no-print mt-4" title="You are offline">
+          Keep editing — your changes stay in this browser tab and will save automatically when your
+          connection returns.
         </Notice>
       )}
       {state === "error" && (

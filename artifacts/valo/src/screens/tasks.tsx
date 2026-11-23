@@ -1,7 +1,7 @@
 import { useMemo, useState, useRef, useCallback, useEffect } from "react";
 import { Link } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
-import { ListTodo, Plus, Search, X } from "lucide-react";
+import { ArrowUpDown, ListTodo, Plus, Search, X } from "lucide-react";
 import {
   useCreateTask,
   getListTasksQueryKey,
@@ -16,6 +16,7 @@ import { TaskRow } from "@/components/task-row";
 import { EmptyState, ErrorState, Skel } from "@/components/states";
 import { describeError } from "@/lib/api";
 import { live } from "@/lib/checker";
+import { sortTasksByDueDate, type TaskSortMode } from "@/lib/date-shortcuts";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useUnsavedNavigation } from "@/lib/use-unsaved-navigation";
@@ -48,6 +49,7 @@ export default function TasksPage() {
   const [newOpen, setNewOpen] = useState(false);
   const [newDraft, setNewDraft] = useState<TaskDraft>(emptyDraft());
   const [taskQuery, setTaskQuery] = useState("");
+  const [sortMode, setSortMode] = useState<TaskSortMode>("default");
   const searchRef = useRef<HTMLInputElement>(null);
   const newDraftRef = useRef(newDraft);
   newDraftRef.current = newDraft;
@@ -71,14 +73,16 @@ export default function TasksPage() {
   }, [tasks.data, pinned]);
   const trimmedTaskQuery = taskQuery.trim().toLowerCase();
   const visibleRows = useMemo(() => {
-    if (!trimmedTaskQuery) return rows;
-    return rows.filter(
-      (task) =>
-        Boolean(pinned[task.id]) ||
-        task.title.toLowerCase().includes(trimmedTaskQuery) ||
-        (task.notes ?? "").toLowerCase().includes(trimmedTaskQuery),
-    );
-  }, [rows, pinned, trimmedTaskQuery]);
+    const filtered = !trimmedTaskQuery
+      ? rows
+      : rows.filter(
+          (task) =>
+            Boolean(pinned[task.id]) ||
+            task.title.toLowerCase().includes(trimmedTaskQuery) ||
+            (task.notes ?? "").toLowerCase().includes(trimmedTaskQuery),
+        );
+    return sortTasksByDueDate(filtered, sortMode);
+  }, [rows, pinned, sortMode, trimmedTaskQuery]);
   const showTaskSearch = rows.length > 2 || Boolean(trimmedTaskQuery);
   useEffect(() => {
     if (!showTaskSearch) return;
@@ -281,15 +285,29 @@ export default function TasksPage() {
         ) : (
           <div />
         )}
-        <button
-          type="button"
-          className="btn btn-ghost btn-sm"
-          disabled={tasks.isFetching}
-          onClick={() => tasks.refetch()}
-          data-testid="button-refresh-tasks"
-        >
-          {tasks.isFetching ? "Refreshing…" : "Refresh tasks"}
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {rows.length > 1 && (
+            <button
+              type="button"
+              className={cn("btn btn-ghost btn-sm", sortMode === "due_soonest" && "bg-secondary")}
+              aria-pressed={sortMode === "due_soonest"}
+              onClick={() => setSortMode((m) => (m === "default" ? "due_soonest" : "default"))}
+              data-testid="button-sort-due"
+            >
+              <ArrowUpDown className="h-3.5 w-3.5" aria-hidden="true" />
+              {sortMode === "due_soonest" ? "Sorted: Due soonest" : "Sort by due date"}
+            </button>
+          )}
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            disabled={tasks.isFetching}
+            onClick={() => tasks.refetch()}
+            data-testid="button-refresh-tasks"
+          >
+            {tasks.isFetching ? "Refreshing…" : "Refresh tasks"}
+          </button>
+        </div>
       </div>
       <div className="mt-4">
         {tasks.isError && rows.length > 0 && (
