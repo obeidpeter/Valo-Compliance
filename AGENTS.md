@@ -31,7 +31,10 @@ what decision or credential is needed.
 - AI review is not professional legal, tax or regulatory review. Never label it
   as such in code, content or docs.
 - Keep held content held. Templates, guidance and rules publish only through
-  the editorial gates. Never seed, forge or hand-insert published rows.
+  the editorial gates: the reviewed route's publisher command (decision 0014) and, in development
+  only, the staff library and the owner's sign-off for regulatory articles (decision 0018). In the
+  staff library a person releases each version: a Content editor after a preview, or the owner
+  after a current source check. Never seed, forge or hand-insert published rows.
 - When a test fails, fix the cause. Never weaken an assertion, skip a test or
   loosen a safety check to make a run pass.
 
@@ -116,10 +119,15 @@ Rules that apply now:
   in as `valo_publisher_login`, which may become the publisher role and nothing else. Only
   `publishOperationalVersion` uses that connection; the `publisher-connection` repository rule
   enforces this. Never give the login another privilege or membership outside a reviewed
-  migration, and never give its connection string to the API or the worker.
+  migration, and never give its connection string to the API or the worker. The staff library
+  (decision 0018) is the only other release: its table's own trigger, `valo_guard_manual_revision`,
+  publishes an entry only for an active Content editor, and a regulatory article only for the
+  development owner, from another account than the editor's and on a source check of that exact
+  text under a day old.
 - A guide that says what the law requires is released only under the guidance policy
   (`guidancePolicy`, read from `docs/valo/policies/guidance-publication-policy.md`), never under
-  the templates' policy. Only the product owner approves it: the policy counts as approved only
+  the templates' policy; the owner's sign-off in the staff library and its readers check the same
+  approval. Only the product owner approves it: the policy counts as approved only
   while `guidancePolicyApprovedHash` returns that file's own SHA-256. Never change that function
   without the owner's explicit, current approval of the file's exact text. A source is marked
   current only by `guideSourceDecision`, from its text's amendment record
