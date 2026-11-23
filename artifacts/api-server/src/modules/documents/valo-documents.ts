@@ -7,6 +7,7 @@ import { documentInput, documentUpdate } from "../../lib/valo-validation";
 import { z } from "zod";
 import { guidedDataFromBlocks } from "@workspace/valo-core/guided-runtime";
 import { ValoProblem } from "../../platform/valo-problem";
+import { singleRow } from "../../platform/rows";
 import {
   authorizeWorkspaceWrite,
   limitWorkspaceWrite,
@@ -79,7 +80,8 @@ export async function listRevisions(actor: WorkspaceActor, id: string) {
     .where(
       and(eq(valoDocumentRevisions.documentId, id), eq(valoDocumentRevisions.workspaceId, actor.workspaceId)),
     )
-    .orderBy(desc(valoDocumentRevisions.revision));
+    .orderBy(desc(valoDocumentRevisions.revision))
+    .limit(100);
   return revisions.map((revision) => serialize(document, revision));
 }
 async function appendRevision(
@@ -92,43 +94,26 @@ async function appendRevision(
 ) {
   const { valoDocumentRevisions } = await import("@workspace/db");
   // The hash binds the title and entire canonical document, not only its visible text.
-  await tx.insert(valoDocumentRevisions).values({
-    id: randomUUID(),
-    workspaceId: actor.workspaceId,
-    documentId: id,
-    revision,
-    title: input.title,
-    content: input.content,
-    contentHash: sha256(serializeRevision(input)),
-    actorId: actor.identityId,
-    origin,
-  });
+  const created = singleRow(
+    await tx
+      .insert(valoDocumentRevisions)
+      .values({
+        id: randomUUID(),
+        workspaceId: actor.workspaceId,
+        documentId: id,
+        revision,
+        title: input.title,
+        content: input.content,
+        contentHash: sha256(serializeRevision(input)),
+        actorId: actor.identityId,
+        origin,
+      })
+      .returning(),
+  );
   await recordWorkspaceEvent(tx, actor, "document.revision_saved", id, revision);
+  return created;
 }
-async function getExactRevision(actor: WorkspaceActor, id: string, revisionNumber: number) {
-  const { db, valoDocumentRevisions, valoDocuments } = await import("@workspace/db");
-  const [row] = await db
-    .select({ document: valoDocuments, revision: valoDocumentRevisions })
-    .from(valoDocuments)
-    .innerJoin(
-      valoDocumentRevisions,
-      and(
-        eq(valoDocumentRevisions.documentId, valoDocuments.id),
-        eq(valoDocumentRevisions.workspaceId, actor.workspaceId),
-        eq(valoDocumentRevisions.revision, revisionNumber),
-      ),
-    )
-    .where(and(eq(valoDocuments.id, id), eq(valoDocuments.workspaceId, actor.workspaceId)));
-  if (!row) throw new ValoProblem(404, "This document was not found in your workspace.");
-  return serialize(row.document, row.revision);
-}
-export async function createDocument(actor: WorkspaceActor, raw: unknown) {
-  const { db } = await import("@workspace/db");
-  const id = await db.transaction((tx) => createDocumentInTransaction(tx, actor, raw));
-  return getExactRevision(actor, id, 1);
-}
-/** AI acceptance and document creation share one transaction and one tenant check. */
-export async function createDocumentInTransaction(
+async function createDocumentRecordInTransaction(
   tx: Tx,
   actor: WorkspaceActor,
   raw: unknown,
@@ -139,26 +124,47 @@ export async function createDocumentInTransaction(
   const id = randomUUID();
   await authorizeWorkspaceWrite(tx, actor);
   await limitWorkspaceWrite(tx, actor, "document");
-  await tx.insert(valoDocuments).values({ id, workspaceId: actor.workspaceId, currentRevision: 1 });
-  await appendRevision(tx, actor, id, 1, input, origin);
-  return id;
+  const document = singleRow(
+    await tx
+      .insert(valoDocuments)
+      .values({ id, workspaceId: actor.workspaceId, currentRevision: 1 })
+      .returning(),
+  );
+  const revision = await appendRevision(tx, actor, id, 1, input, origin);
+  return { document, revision };
+}
+export async function createDocument(actor: WorkspaceActor, raw: unknown) {
+  const { db } = await import("@workspace/db");
+  const { document, revision } = await db.transaction((tx) =>
+    createDocumentRecordInTransaction(tx, actor, raw),
+  );
+  return serialize(document, revision);
+}
+/** AI acceptance and document creation share one transaction and one tenant check. */
+export async function createDocumentInTransaction(
+  tx: Tx,
+  actor: WorkspaceActor,
+  raw: unknown,
+  origin: "manual" | "customer_ai" = "manual",
+) {
+  return (await createDocumentRecordInTransaction(tx, actor, raw, origin)).document.id;
 }
 export async function saveDocument(actor: WorkspaceActor, id: string, raw: unknown) {
   const { db, valoDocumentRevisions, valoDocuments } = await import("@workspace/db");
   const { expectedRevision, ...input } = documentUpdate.parse(raw);
-  await db.transaction(async (tx) => {
-    const [document] = await tx
+  const { document, revision } = await db.transaction(async (tx) => {
+    const [existing] = await tx
       .select()
       .from(valoDocuments)
       .where(and(eq(valoDocuments.id, id), eq(valoDocuments.workspaceId, actor.workspaceId)))
       .for("update");
-    if (!document) throw new ValoProblem(404, "This document was not found in your workspace.");
+    if (!existing) throw new ValoProblem(404, "This document was not found in your workspace.");
     await authorizeWorkspaceWrite(tx, actor);
-    if (document.currentRevision !== expectedRevision)
+    if (existing.currentRevision !== expectedRevision)
       throw new ValoProblem(
         409,
         "This document was saved somewhere else after you opened it. Your text was not overwritten. Compare it with the newest version.",
-        document.currentRevision,
+        existing.currentRevision,
       );
     const [current] = await tx
       .select({ title: valoDocumentRevisions.title, content: valoDocumentRevisions.content })
@@ -183,11 +189,15 @@ export async function saveDocument(actor: WorkspaceActor, id: string, raw: unkno
         "This document is made from a set of questions, and they cannot be taken out of it. To write without them, start a blank document.",
       );
     await limitWorkspaceWrite(tx, actor, "document");
-    await appendRevision(tx, actor, id, expectedRevision + 1, input);
-    await tx
-      .update(valoDocuments)
-      .set({ currentRevision: expectedRevision + 1, updatedAt: new Date() })
-      .where(and(eq(valoDocuments.id, id), eq(valoDocuments.workspaceId, actor.workspaceId)));
+    const savedRevision = await appendRevision(tx, actor, id, expectedRevision + 1, input);
+    const updatedDocument = singleRow(
+      await tx
+        .update(valoDocuments)
+        .set({ currentRevision: expectedRevision + 1, updatedAt: new Date() })
+        .where(and(eq(valoDocuments.id, id), eq(valoDocuments.workspaceId, actor.workspaceId)))
+        .returning(),
+    );
+    return { document: updatedDocument, revision: savedRevision };
   });
-  return getExactRevision(actor, id, expectedRevision + 1);
+  return serialize(document, revision);
 }
