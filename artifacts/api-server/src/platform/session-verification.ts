@@ -50,10 +50,24 @@ const CACHED_ROUTES = [
   /^\/v1\/exports\/[^/]+\/retry\/?$/,
 ].map((route) => new RegExp(route.source, "i")); // Express matches routes case-insensitively.
 
-/** Whether a request path (Express `req.baseUrl + req.path`) may use a cached check. */
-export function routeUsesCachedCheck(path: string): boolean {
+/**
+ * Routes whose reads, and only their reads, may reuse a passing check (decision 0019, from the
+ * owner's approval on 23 November 2026 to let a passed sign-in check serve more read-only customer
+ * screens for up to a minute). Decision 0003's live checks stay: payments and purchases, file
+ * downloads, privacy, the account page, AI drafts and staff actions are none of these. A write to any
+ * of these paths checks live.
+ */
+const CACHED_READ_ROUTES = [
+  /^\/v1\/exports\/?$/, // the list of a business's exports, not a file
+  /^\/workspace\/correction-notices\/?$/,
+  /^\/workspace\/support-cases(\/[^/]+)?\/?$/,
+].map((route) => new RegExp(route.source, "i"));
+
+/** Whether a request (Express `req.baseUrl + req.path`, and its method) may use a cached check. */
+export function routeUsesCachedCheck(path: string, method = "GET"): boolean {
   const normalised = path.replace(/\/{2,}/g, "/").replace(/^\/api(?=\/|$)/i, "");
-  return CACHED_ROUTES.some((route) => route.test(normalised));
+  if (CACHED_ROUTES.some((route) => route.test(normalised))) return true;
+  return ["GET", "HEAD"].includes(method.toUpperCase()) && CACHED_READ_ROUTES.some((r) => r.test(normalised));
 }
 
 type Refusal = Extract<SessionCheck, { ok: false }>;

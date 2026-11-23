@@ -60,6 +60,36 @@ test("only listed everyday routes may use a cached check", () => {
     assert.equal(routeUsesCachedCheck(path), false, path);
 });
 
+test("four ordinary read routes reuse a passing check for their reads only, and payments, downloads, privacy, the account page and AI drafts stay live", () => {
+  for (const path of [
+    "/api/v1/exports",
+    "/api/workspace/correction-notices",
+    "/api/workspace/support-cases",
+    `/api/workspace/support-cases/${id}`,
+  ]) {
+    assert.equal(routeUsesCachedCheck(path, "GET"), true, path);
+    assert.equal(routeUsesCachedCheck(path, "head"), true, path);
+    // A write to the same path checks live.
+    for (const method of ["POST", "PUT", "PATCH", "DELETE"])
+      assert.equal(routeUsesCachedCheck(path, method), false, `${method} ${path}`);
+  }
+  for (const path of [
+    `/api/v1/exports/${id}/file`,
+    "/api/workspace/purchases",
+    "/api/workspace/owned-template-editions",
+    `/api/workspace/orders/${id}/receipt`,
+    "/api/workspace/disputes",
+    "/api/workspace/account",
+    "/api/workspace/privacy-cases",
+    `/api/workspace/privacy-cases/${id}`,
+    "/api/workspace/data-export",
+    `/api/workspace/ai-drafts/${id}`,
+    `/api/workspace/templates/${id}/files/docx`,
+    `/api/workspace/support-cases/${id}/messages/more`,
+  ])
+    assert.equal(routeUsesCachedCheck(path, "GET"), false, path);
+});
+
 type Provider = {
   session: ProviderSession;
   user: ProviderUser;
