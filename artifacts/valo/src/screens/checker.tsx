@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Link } from "wouter";
 import { useUser } from "@clerk/react";
 import { ArrowLeft, ArrowRight, Check, Loader2, RotateCcw, ShieldCheck, UserRound } from "lucide-react";
@@ -20,9 +20,18 @@ import { AnswerOr, Choice, ListOr, known, opts, yesNo, type Change } from "@/com
 import { Review, SavePanel } from "@/components/checker-review";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { RichCheckerFields } from "@/components/rich-checker-fields";
+import { UnsavedNavigationDialog } from "@/components/unsaved-navigation-dialog";
 import { richQuestionTarget, type RichCheckerFacts } from "@/lib/rich-checker";
 import { Notice } from "@/components/states";
 import { describeError } from "@/lib/api";
+import {
+  clearCheckerHandoff,
+  peekCheckerHandoff,
+  stashCheckerHandoff,
+  type CheckerHandoff,
+} from "@/lib/checker-handoff";
+import { CHECKER_START, signUpFor } from "@/lib/start";
+import { useUnsavedNavigation } from "@/lib/use-unsaved-navigation";
 import {
   CHECKER_STEPS,
   EMPTY_FACTS,
@@ -65,6 +74,10 @@ export default function Checker() {
   const [filledIn, setFilledIn] = useState(false);
   const [amountText, setAmountText] = useState("");
   const [amountError, setAmountError] = useState<string | null>(null);
+  const [pendingHandoff, setPendingHandoff] = useState<CheckerHandoff | null>(() =>
+    isSignedIn ? peekCheckerHandoff() : null,
+  );
+  const leavingForAuth = useRef(false);
   const publicPreview = usePreviewAssessment();
   const workspacePreview = usePreviewWorkspaceAssessment();
   const preview = isSignedIn ? workspacePreview : publicPreview;
@@ -99,6 +112,37 @@ export default function Checker() {
   /** Answers that only this page holds: starting over would lose them. */
   const mine = own || !!facts.rich;
   const untouched = !mine && !filledIn && !result && step === 0;
+  const answeredSteps = useMemo(
+    () => STEPS.slice(0, REVIEW).filter((_, index) => stepDone(facts, skipped, index)).length,
+    [facts, skipped],
+  );
+  const navigation = useUnsavedNavigation(() => !leavingForAuth.current && mine && (!result || !!stale));
+
+  function loadHandoff() {
+    if (!pendingHandoff) return;
+    setFacts(pendingHandoff.facts);
+    setSkipped(new Set(pendingHandoff.skipped));
+    setAmountText(pendingHandoff.amountText);
+    const k = nairaToKobo(pendingHandoff.amountText);
+    setAmountError(
+      pendingHandoff.amountText.trim() && !k ? "Use digits, with up to two decimal places." : null,
+    );
+    setOwn(true);
+    setFilledIn(false);
+    setPendingHandoff(null);
+    clearCheckerHandoff();
+    show(REVIEW);
+  }
+
+  function dismissHandoff() {
+    setPendingHandoff(null);
+    clearCheckerHandoff();
+  }
+
+  function stashForAuth() {
+    stashCheckerHandoff({ facts, skipped: [...skipped], amountText });
+    leavingForAuth.current = true;
+  }
 
   function fillIn() {
     if (!ws.data?.profile) return;
@@ -122,6 +166,8 @@ export default function Checker() {
     setAmountError(null);
     setResult(null);
     setFilledIn(false);
+    setPendingHandoff(null);
+    clearCheckerHandoff();
     publicPreview.reset();
     workspacePreview.reset();
     show(0);
@@ -169,7 +215,12 @@ export default function Checker() {
 
   function go(n: number, field?: string) {
     const nextStep = (field ? richQuestionTarget(field)?.step : undefined) ?? n;
-    if (step === TURNOVER && nextStep > TURNOVER && amountText && amountError) return;
+    if (step === TURNOVER && nextStep > TURNOVER && amountText && amountError) {
+      const amountInput = document.getElementById("amount");
+      amountInput?.scrollIntoView({ behavior: "smooth", block: "center" });
+      amountInput?.focus();
+      return;
+    }
     show(n, field);
   }
 
@@ -193,6 +244,40 @@ export default function Checker() {
         </p>
       </header>
 
+      <UnsavedNavigationDialog
+        open={navigation.blocked}
+        busy={preview.isPending}
+        title="Leave your requirements answers?"
+        description="You have answers on this page that have not been checked yet. Stay here to finish, or leave and discard them."
+        onStay={navigation.stay}
+        onDiscard={navigation.proceed}
+      />
+      {isSignedIn && pendingHandoff && !mine && !filledIn && (
+        <div className="mt-6" data-testid="notice-checker-handoff">
+          <Notice tone="ink" title="Your earlier answers are ready to load">
+            You answered these questions before signing in. Load them here to check and save your result, or
+            dismiss them to start fresh.
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                onClick={loadHandoff}
+                data-testid="button-load-handoff"
+              >
+                Load my answers
+              </button>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={dismissHandoff}
+                data-testid="button-dismiss-handoff"
+              >
+                Dismiss
+              </button>
+            </div>
+          </Notice>
+        </div>
+      )}
       <div className="mt-8">
         <div className="flex flex-wrap items-center gap-2">
           {isSignedIn &&
@@ -236,7 +321,8 @@ export default function Checker() {
             data-testid="text-anonymous"
           >
             <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />
-            You are not signed in. Your answers are not saved, and leaving this page clears them.
+            You are not signed in. Your answers are not saved unless you choose to carry them into sign-up
+            after checking.
           </p>
         )}
         <p
@@ -325,9 +411,14 @@ export default function Checker() {
             className="surface p-5 outline-none sm:p-8"
             aria-label={STEPS[step]}
           >
-            <p className="eyebrow">
-              Step {step + 1} of {STEPS.length}
-            </p>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="eyebrow">
+                Step {step + 1} of {STEPS.length}
+              </p>
+              <span className="text-xs text-muted-foreground" data-testid="status-checker-progress">
+                {answeredSteps} of {REVIEW} sections answered
+              </span>
+            </div>
             <h2 className="font-display mt-2 text-2xl sm:text-3xl">{STEPS[step]}</h2>
             <div className="mt-6 grid gap-8">
               {step === 0 && (
@@ -474,7 +565,12 @@ export default function Checker() {
                     markers={["unknown", "unanswered", "not_applicable"]}
                   />
                   {asked(facts, "turnoverYear") ? (
-                    <>
+                    <fieldset className="grid gap-7 rounded-2xl border border-border bg-sidebar/40 p-4 sm:p-5">
+                      <legend className="eyebrow float-left w-full">Optional turnover details</legend>
+                      <p className="-mt-4 text-sm text-muted-foreground">
+                        Add whatever details you have. You can leave any of these blank or skip them to
+                        continue.
+                      </p>
                       <div>
                         <label className="label text-base" htmlFor="amount">
                           The exact figure, if you have it{" "}
@@ -583,7 +679,7 @@ export default function Checker() {
                           markers={["unknown", "unanswered", "not_applicable"]}
                         />
                       </div>
-                    </>
+                    </fieldset>
                   ) : (
                     <p className="hint">
                       The questions about that figure are skipped because turnover does not apply.
@@ -705,12 +801,27 @@ export default function Checker() {
                 />
               ) : (
                 <Notice className="mt-6" tone="ink" title="Want to keep this?">
-                  Nothing here has been saved. With an account you can save your results and turn them into
-                  tasks. The answers on this page are not carried over, so you would answer again after you{" "}
-                  <Link href="/sign-up" className="font-medium underline">
-                    create an account
-                  </Link>
-                  .
+                  Nothing here has been saved yet. With an account you can save this result and turn it into
+                  tasks. Choose a button below to keep your answers in this browser tab while you sign in, so
+                  you do not have to enter them again.
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Link
+                      href={signUpFor(CHECKER_START)}
+                      className="btn btn-primary btn-sm"
+                      onClick={stashForAuth}
+                      data-testid="link-signup-keep-answers"
+                    >
+                      Create account and keep these answers
+                    </Link>
+                    <Link
+                      href={`/sign-in?start=${CHECKER_START}`}
+                      className="btn btn-ghost btn-sm"
+                      onClick={stashForAuth}
+                      data-testid="link-signin-keep-answers"
+                    >
+                      Sign in and keep these answers
+                    </Link>
+                  </div>
                 </Notice>
               )}
             </section>

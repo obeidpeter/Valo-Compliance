@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { GUIDED_TEMPLATE_IDS } from "@workspace/valo-core/guided";
 import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
 import { NAMED_IN_LEAD, landingTask, landingTasks, startPath } from "./landing-tasks";
-import { ANY_DOCUMENT, signUpFor } from "./start";
+import { ANY_DOCUMENT, CHECKER_START, signUpFor } from "./start";
 import { checkoutSignInPath, templateCheckoutPath } from "./template-checkout";
 import { templateDownloadSignInPath } from "./template-download";
 
@@ -107,6 +107,8 @@ test("what a visitor chose before signing up leads to the page where a document 
   // "Create a document" asks for no task in particular.
   assert.equal(signUpFor(ANY_DOCUMENT), "/sign-up?start=document");
   assert.equal(startPath(ANY_DOCUMENT), "/workspace/documents/new");
+  assert.equal(signUpFor(CHECKER_START), "/sign-up?start=requirements");
+  assert.equal(startPath(CHECKER_START), "/workspace/checker");
   for (const task of landingTasks()) {
     assert.equal(signUpFor(task.id), `/sign-up?start=${task.id}`);
     assert.equal(startPath(task.id), `/workspace/documents/new?start=${task.id}`);
