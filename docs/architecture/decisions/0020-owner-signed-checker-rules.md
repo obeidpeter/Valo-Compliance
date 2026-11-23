@@ -1,11 +1,12 @@
 # 0020 — Owner sign-off for requirements-checker rules
 
-Date: 2026-11-23. Status: **proposed**. The product owner approved the direction on 2026-11-23,
-in the content and speed plan ("Approved. Go ahead and implement"): "How checker rules are
-released. I recommend an owner sign-off route like the one for regulatory guides, starting with the
-four research notes. The existing route needs two paid AI reviews per rule." This record sets out
-the route before it is built, so the owner can read what a sign-off will mean. It is marked accepted,
-with its implementation, in the pull request that builds it.
+Date: 2026-11-23. Status: **accepted** on 2026-11-23. The product owner approved the direction on
+2026-11-23, in the content and speed plan ("Approved. Go ahead and implement"): "How checker rules
+are released. I recommend an owner sign-off route like the one for regulatory guides, starting with
+the four research notes. The existing route needs two paid AI reviews per rule." This record set
+out the route before it was built, so the owner could read what a sign-off will mean. The owner
+accepted it as written on 2026-11-23: "I accept decision 0020 as written". The acceptance is
+recorded in the pull request that builds the route's service and screen.
 
 ## Context
 
@@ -84,13 +85,14 @@ evidence through both so they cannot drift apart.
 
 ## Implementation
 
-In progress, as step 6 of the content and speed plan. No rule has been released by this route.
+As at acceptance, on 2026-11-23, when no rule had been released by this route. Later progress is
+recorded in the plan (`docs/architecture/plan.md`, "Content and speed", step 6).
 
-- Part 1: the owner-signed rule bundle and its evidence check (`lib/valo-core/src/owner-rule-release.ts`),
+- Part 1, built: the owner-signed rule bundle and its evidence check (`lib/valo-core/src/owner-rule-release.ts`),
   the checker's `owner_signoff` provenance, the source checks reading either kind of bundle, the
   database guard (migration `20261123184636_rule_owner_signoffs`), and the registry admitting an
   owner-signed rule only while the guidance policy it was signed under stands.
-- Part 2: the sign-off service (`artifacts/api-server/src/modules/editorial/owner-rule-signoff.ts`), its
+- Part 2, built: the sign-off service (`artifacts/api-server/src/modules/editorial/owner-rule-signoff.ts`), its
   staff routes (`/admin/owner-rules`) and the Staff → System panel "Requirements check: rule
   sign-off". The owner sees each prepared rule as it would be signed, with the evidence for each of
   the five checks; has the daily source check watch its sources; confirms the checks; and signs that
@@ -99,5 +101,5 @@ In progress, as step 6 of the content and speed plan. No rule has been released 
   only by `guideSourceDecision` from its text's amendment record, as a guide's source is; the owner's
   confirmations do not resolve a source its record does not. A quotation is at most 20 words in a
   row, as the guidance policy's point 7 allows.
-- Part 3: the first prepared rules, CAMA s.814 and NDPA s.27. Until they exist no rule is prepared,
-  so none can be signed.
+- Part 3, to come: the first prepared rules, CAMA s.814 and NDPA s.27. Until they exist no rule is
+  prepared, so none can be signed.

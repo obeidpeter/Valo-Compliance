@@ -32,9 +32,10 @@ what decision or credential is needed.
   as such in code, content or docs.
 - Keep held content held. Templates, guidance and rules publish only through
   the editorial gates: the reviewed route's publisher command (decision 0014) and, in development
-  only, the staff library and the owner's sign-off for regulatory articles (decision 0018). In the
-  staff library a person releases each version: a Content editor after a preview, or the owner
-  after a current source check. Never seed, forge or hand-insert published rows.
+  only, the staff library and the owner's sign-off for regulatory articles (decision 0018) and for
+  requirements-check rules (decision 0020). In the staff library a person releases each version: a
+  Content editor after a preview, or the owner after a current source check. On the rules' route
+  the owner signs each rule's exact version. Never seed, forge or hand-insert published rows.
 - When a test fails, fix the cause. Never weaken an assertion, skip a test or
   loosen a safety check to make a run pass.
 
@@ -124,6 +125,13 @@ Rules that apply now:
   publishes an entry only for an active Content editor, and a regulatory article only for the
   development owner, from another account than the editor's and on a source check of that exact
   text under a day old.
+- A requirements-check rule's version is released on the reviewed route (`applyStoredRuleRelease`)
+  or, in development, on the owner's sign-off (decision 0020, `modules/editorial/owner-rule-signoff.ts`).
+  The rule table's trigger, `valo_guard_owner_signed_rule`, refuses an owner-signed release unless
+  the development owner's sign-off of its exact manifest was made in the same transaction, on a
+  source check under a day old; such a release changes only its status, and is never published
+  again once superseded or withdrawn. Its sources are marked current only by `guideSourceDecision`,
+  as a guide's are.
 - A guide that says what the law requires is released only under the guidance policy
   (`guidancePolicy`, read from `docs/valo/policies/guidance-publication-policy.md`), never under
   the templates' policy; the owner's sign-off in the staff library and its readers check the same
