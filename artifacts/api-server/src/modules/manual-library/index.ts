@@ -76,7 +76,9 @@ async function withEditor<T>(actor: SourceStaffActor, work: (tx: Tx) => Promise<
         409,
         e.constraint === "valo_manual_one_intro"
           ? "This industry already has an introduction. Edit its existing entry or withdraw it first."
-          : "This revision already exists. Reopen the item.",
+          : e.constraint === "valo_manual_one_pack"
+            ? "This industry already has an industry pack. Edit its existing entry or withdraw it first."
+            : "This revision already exists. Reopen the item.",
       );
     throw error;
   }
@@ -178,7 +180,7 @@ export async function saveManualDraft(actor: SourceStaffActor, itemId: string, v
     );
   if (
     (input.industry !== null && !sectors.has(input.industry)) ||
-    (input.kind === "industry_introduction" && !input.industry)
+    ((input.kind === "industry_introduction" || input.kind === "industry_pack") && !input.industry)
   )
     throw new ValoProblem(422, "Choose a listed industry for this item.");
   if (

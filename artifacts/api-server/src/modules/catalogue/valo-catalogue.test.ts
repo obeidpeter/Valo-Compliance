@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { paginateReleasedItems } from "./valo-catalogue";
-import { manualCatalogue } from "./manual-presentation";
+import { manualCatalogue, manualResource } from "./manual-presentation";
 import { escapeLikePattern } from "../manual-library";
 import { verifiedRightsApplicability } from "../publication/rights-applicability";
 test("synthetic already-eligible catalogue metadata produces nonzero counts, filters and pagination", () => {
@@ -121,7 +121,27 @@ test("manualCatalogue maps regulatory articles to guidance, uses sourceCheckedAt
   assert.equal(intro.type, "article");
   assert.equal(intro.category, "Industry introductions");
 
-  const filtered = paginateReleasedItems([regulatory, baselineTemplate, customPremium, guide, intro], {
+  const pack = manualCatalogue({
+    ...base,
+    kind: "industry_pack",
+    industry: "retail-wholesale",
+    title: "Retail/wholesale: five practical steps",
+  });
+  assert.equal(pack.type, "article");
+  assert.equal(pack.category, "Industry packs");
+  assert.equal(pack.industry, "retail-wholesale");
+  assert.equal(pack.href, "/resources/" + base.slug);
+  const packPage = manualResource({
+    ...base,
+    kind: "industry_pack",
+    industry: "retail-wholesale",
+    title: "Retail/wholesale: five practical steps",
+  });
+  assert.equal(packPage.kind, "industry_pack");
+  assert.deepEqual(packPage.industrySlugs, ["retail-wholesale"]);
+  assert.equal(packPage.disclosure, "Published by the Valo editorial team.");
+
+  const filtered = paginateReleasedItems([regulatory, baselineTemplate, customPremium, guide, intro, pack], {
     type: "guidance",
     category: "Regulatory guidance",
   });

@@ -12,6 +12,7 @@ export type ManualLibraryEntryKind = typeof ManualLibraryEntryKind[keyof typeof 
 export const ManualLibraryEntryKind = {
   practical_guide: 'practical_guide',
   industry_introduction: 'industry_introduction',
+  industry_pack: 'industry_pack',
   template: 'template',
   premium_template: 'premium_template',
   regulatory_article: 'regulatory_article',

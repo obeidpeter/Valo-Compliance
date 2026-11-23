@@ -19,10 +19,14 @@ import { ErrorState } from "./states";
 const kinds: Record<ManualLibraryDraft["kind"], string> = {
   practical_guide: "Practical guide",
   industry_introduction: "Industry introduction",
+  industry_pack: "Industry pack",
   template: "Free template",
   premium_template: "Premium template",
   regulatory_article: "Regulatory article",
 };
+/** An introduction and an industry pack each belong to one industry. */
+const industryRequired = (kind: ManualLibraryDraft["kind"]) =>
+  kind === "industry_introduction" || kind === "industry_pack";
 const inputStyle = "mt-1 block w-full rounded-lg border border-border bg-background p-2 text-base";
 const emptyForm = () => ({
   itemId: crypto.randomUUID() as string,
@@ -367,11 +371,11 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
                     className={inputStyle}
                     value={form.industry}
                     aria-label="Industry"
-                    required={form.kind === "industry_introduction"}
+                    required={industryRequired(form.kind)}
                     onChange={(e) => update({ industry: e.target.value })}
                   >
                     <option value="">
-                      {form.kind === "industry_introduction" ? "Choose an industry" : "General business"}
+                      {industryRequired(form.kind) ? "Choose an industry" : "General business"}
                     </option>
                     {coverage.data?.industries.map((i) => (
                       <option key={i.slug} value={i.slug}>

@@ -12,6 +12,7 @@ export type ListManualLibraryKind = typeof ListManualLibraryKind[keyof typeof Li
 export const ListManualLibraryKind = {
   practical_guide: 'practical_guide',
   industry_introduction: 'industry_introduction',
+  industry_pack: 'industry_pack',
   template: 'template',
   premium_template: 'premium_template',
   regulatory_article: 'regulatory_article',

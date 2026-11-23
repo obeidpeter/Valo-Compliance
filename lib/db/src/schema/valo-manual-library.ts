@@ -67,6 +67,7 @@ export const valoManualLibrary = pgTable(
       enum: [
         "practical_guide",
         "industry_introduction",
+        "industry_pack",
         "template",
         "premium_template",
         "regulatory_article",
@@ -102,10 +103,13 @@ export const valoManualLibrary = pgTable(
     uniqueIndex("valo_manual_one_intro")
       .on(t.industry)
       .where(sql`${t.state} = 'published' AND ${t.kind} = 'industry_introduction'`),
+    uniqueIndex("valo_manual_one_pack")
+      .on(t.industry)
+      .where(sql`${t.state} = 'published' AND ${t.kind} = 'industry_pack'`),
     index("valo_manual_state_slug").on(t.state, t.slug),
     check(
       "valo_manual_kind",
-      sql`${t.kind} IN ('practical_guide','industry_introduction','template','premium_template','regulatory_article')`,
+      sql`${t.kind} IN ('practical_guide','industry_introduction','industry_pack','template','premium_template','regulatory_article')`,
     ),
     check(
       "valo_manual_state",
@@ -117,7 +121,7 @@ export const valoManualLibrary = pgTable(
     ),
     check(
       "valo_manual_text",
-      sql`length(${t.title}) BETWEEN 1 AND 140 AND length(${t.body}) BETWEEN 1 AND 60000 AND (${t.kind} <> 'industry_introduction' OR ${t.industry} IS NOT NULL)`,
+      sql`length(${t.title}) BETWEEN 1 AND 140 AND length(${t.body}) BETWEEN 1 AND 60000 AND (${t.kind} NOT IN ('industry_introduction','industry_pack') OR ${t.industry} IS NOT NULL)`,
     ),
     check(
       "valo_manual_file",

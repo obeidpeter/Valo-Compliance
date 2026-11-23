@@ -337,6 +337,43 @@ test(
       await revision(await act(second, "withdraw", otherIntro));
     });
     await t.test(
+      "an industry pack belongs to one industry, which has one published pack at a time",
+      async () => {
+        const id = randomUUID(),
+          second = randomUUID(),
+          data = input("industry_pack", "Synthetic industry pack", industry);
+        assert.equal((await draft(id, { ...data, industry: null })).status, 422);
+        const before = await industryCoverage(industry);
+        const first = await revision(await draft(id, data));
+        assert.equal(first.kind, "industry_pack");
+        await revision(await act(id, "publish", first));
+        const shown = await publicResource(id);
+        assert.equal(shown.kind, "industry_pack");
+        assert.deepEqual(shown.industrySlugs, [industry]);
+        const after = await industryCoverage(industry);
+        assert.equal(after.publishedItems, before.publishedItems + 1);
+        // A pack is everyday guidance: it implies no regulatory evidence for its industry.
+        assert.equal(after.sourceCheckedAt, before.sourceCheckedAt);
+        assert.equal(after.evidenceState, before.evidenceState);
+        const otherPack = await revision(await draft(second, { ...data, requestId: randomUUID() }));
+        const refused = await act(second, "publish", otherPack);
+        assert.equal(refused.status, 409);
+        assert.match(((await refused.json()) as { error: string }).error, /already has an industry pack/);
+        await revision(await act(id, "withdraw", first));
+        await revision(await act(second, "publish", otherPack));
+        await revision(await act(second, "withdraw", otherPack));
+        // The database holds the same rule for a write that does not come through the editor.
+        const unplaced = randomUUID();
+        await assert.rejects(
+          pool.query(
+            "insert into valo_manual_library (id,item_id,version,slug,kind,industry,title,body,digest,created_by) values ($1,$2::uuid,1,'manual-'||$2::text,'industry_pack',null,'Synthetic pack','Synthetic text',$3,$4)",
+            [randomUUID(), unplaced, "0".repeat(64), editor],
+          ),
+          /valo_manual_text/,
+        );
+      },
+    );
+    await t.test(
       "regulatory items stay private and classification and immutable bytes cannot change",
       async () => {
         const id = randomUUID(),

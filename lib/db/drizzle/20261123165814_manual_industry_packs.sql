@@ -1,0 +1,5 @@
+ALTER TABLE "valo_manual_library" DROP CONSTRAINT "valo_manual_kind";--> statement-breakpoint
+ALTER TABLE "valo_manual_library" DROP CONSTRAINT "valo_manual_text";--> statement-breakpoint
+CREATE UNIQUE INDEX "valo_manual_one_pack" ON "valo_manual_library" USING btree ("industry") WHERE "valo_manual_library"."state" = 'published' AND "valo_manual_library"."kind" = 'industry_pack';--> statement-breakpoint
+ALTER TABLE "valo_manual_library" ADD CONSTRAINT "valo_manual_kind" CHECK ("valo_manual_library"."kind" IN ('practical_guide','industry_introduction','industry_pack','template','premium_template','regulatory_article'));--> statement-breakpoint
+ALTER TABLE "valo_manual_library" ADD CONSTRAINT "valo_manual_text" CHECK (length("valo_manual_library"."title") BETWEEN 1 AND 140 AND length("valo_manual_library"."body") BETWEEN 1 AND 60000 AND ("valo_manual_library"."kind" NOT IN ('industry_introduction','industry_pack') OR "valo_manual_library"."industry" IS NOT NULL));
