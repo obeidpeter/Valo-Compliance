@@ -1,6 +1,7 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, FileText, Scale } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, ArrowRight, FileText, Scale, Search, X } from "lucide-react";
 import {
   useGetPublicCoverage,
   useListReleasedResources,
@@ -38,6 +39,27 @@ export function Industries({ initial }: { initial: IndustryReads }) {
   });
   const counts = new Map<string, number>();
   (res.data ?? []).forEach((r) => r.industrySlugs.forEach((s) => counts.set(s, (counts.get(s) ?? 0) + 1)));
+  const [query, setQuery] = useState("");
+  const searchRef = useRef<HTMLInputElement>(null);
+  const allIndustries = coverage.data?.industries ?? [];
+  const trimmed = query.trim().toLowerCase();
+  const visibleIndustries = trimmed
+    ? allIndustries.filter((ind) =>
+        `${industryName(ind.title)} ${ind.slug.replaceAll("-", " ")}`.toLowerCase().includes(trimmed),
+      )
+    : allIndustries;
+  useEffect(() => {
+    if (allIndustries.length <= 1) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "/" || event.ctrlKey || event.metaKey || event.altKey) return;
+      const target = event.target as HTMLElement | null;
+      if (target && /INPUT|TEXTAREA|SELECT/.test(target.tagName)) return;
+      event.preventDefault();
+      searchRef.current?.focus();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [allIndustries.length]);
   return (
     <div className="mx-auto max-w-7xl px-5 py-14 lg:px-8">
       <GuidanceTabs current="/industries" />
@@ -50,30 +72,72 @@ export function Industries({ initial }: { initial: IndustryReads }) {
       ) : coverage.isError ? (
         <ErrorState error={coverage.error} onRetry={() => coverage.refetch()} />
       ) : (
-        <ul className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
-          {coverage.data?.industries.map((ind) => {
-            const n = counts.get(ind.slug) ?? 0;
-            return (
-              <li key={ind.slug} data-testid={"row-industry-" + ind.slug}>
-                <Link
-                  href={"/industries/" + encodeURIComponent(ind.slug)}
-                  className="group flex h-full items-center justify-between gap-4 bg-card p-5 transition-colors hover:bg-secondary/60 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary"
+        <>
+          {allIndustries.length > 1 && (
+            <div className="mb-5 flex flex-wrap items-center gap-2">
+              <div className="relative min-w-0 flex-1 sm:max-w-md">
+                <Search
+                  className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                  aria-hidden="true"
+                />
+                <input
+                  ref={searchRef}
+                  type="search"
+                  className="field !pl-10"
+                  aria-label="Filter industries"
+                  aria-keyshortcuts="/"
+                  placeholder="Find an industry (press /)"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  data-testid="input-industry-search"
+                />
+              </div>
+              {trimmed && (
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => setQuery("")}
+                  data-testid="button-clear-industry-search"
                 >
-                  <div className="min-w-0">
-                    <p className="break-words font-medium">{industryName(ind.title)}</p>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {n > 0 ? `${formatCount(n)} guide${n === 1 ? "" : "s"}` : "No guides yet"}
-                    </p>
-                  </div>
-                  <ArrowRight
-                    className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
-                    aria-hidden
-                  />
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+                  <X className="h-4 w-4" aria-hidden="true" /> Clear
+                </button>
+              )}
+            </div>
+          )}
+          {visibleIndustries.length > 0 ? (
+            <ul className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
+              {visibleIndustries.map((ind) => {
+                const n = counts.get(ind.slug) ?? 0;
+                return (
+                  <li key={ind.slug} data-testid={"row-industry-" + ind.slug}>
+                    <Link
+                      href={"/industries/" + encodeURIComponent(ind.slug)}
+                      className="group flex h-full items-center justify-between gap-4 bg-card p-5 transition-colors hover:bg-secondary/60 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary"
+                    >
+                      <div className="min-w-0">
+                        <p className="break-words font-medium">{industryName(ind.title)}</p>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          {n > 0 ? `${formatCount(n)} guide${n === 1 ? "" : "s"}` : "No guides yet"}
+                        </p>
+                      </div>
+                      <ArrowRight
+                        className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
+                        aria-hidden
+                      />
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <div className="surface p-6 text-sm text-muted-foreground" role="status">
+              <p>No industries match &ldquo;{query.trim()}&rdquo;.</p>
+              <button type="button" className="btn btn-ghost btn-sm mt-3" onClick={() => setQuery("")}>
+                Show all industries
+              </button>
+            </div>
+          )}
+        </>
       )}
       {coverage.data?.ngoNotice && (
         <Notice className="mt-6" title="Nonprofits">

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowLeft, BookOpen, ExternalLink, FileX } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, BookOpen, ExternalLink, FileX, Search, X } from "lucide-react";
 import {
   useListReleasedResources,
   useGetReleasedResource,
@@ -33,17 +33,40 @@ export function Resources({ initial }: { initial?: ReleasedResource[] | undefine
   });
   const items = q.data ?? [];
   const [selectedIndustry, setIndustry] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchRef = useRef<HTMLInputElement>(null);
   const industries = [...new Set(items.flatMap((r) => r.industrySlugs))].sort();
   const hasGeneral = items.some((r) => r.industrySlugs.length === 0);
   const selected =
     industries.includes(selectedIndustry) || (selectedIndustry === "general" && hasGeneral)
       ? selectedIndustry
       : "";
-  const visible = selected
-    ? items.filter((r) =>
-        selected === "general" ? r.industrySlugs.length === 0 : r.industrySlugs.includes(selected),
-      )
-    : items;
+  const trimmedSearch = searchQuery.trim().toLowerCase();
+  const visible = items.filter((r) => {
+    if (selected) {
+      const industryMatch =
+        selected === "general" ? r.industrySlugs.length === 0 : r.industrySlugs.includes(selected);
+      if (!industryMatch) return false;
+    }
+    if (trimmedSearch) {
+      const haystack = `${r.title} ${r.summary} ${r.industrySlugs.join(" ")}`.toLowerCase();
+      if (!haystack.includes(trimmedSearch)) return false;
+    }
+    return true;
+  });
+  useEffect(() => {
+    if (items.length === 0) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "/" || event.ctrlKey || event.metaKey || event.altKey) return;
+      const target = event.target as HTMLElement | null;
+      if (target && /INPUT|TEXTAREA|SELECT/.test(target.tagName)) return;
+      event.preventDefault();
+      searchRef.current?.focus();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [items.length]);
+  const hasActiveFilter = Boolean(selected || trimmedSearch);
   return (
     <div className="mx-auto max-w-7xl px-5 py-14 lg:px-8">
       <GuidanceTabs current="/resources" />
@@ -61,27 +84,64 @@ export function Resources({ initial }: { initial?: ReleasedResource[] | undefine
         <ErrorState error={q.error} onRetry={() => q.refetch()} />
       ) : items.length > 0 ? (
         <>
-          {industries.length > 0 && (
-            <div className="mb-4">
-              <label htmlFor="guide-industry" className="block text-sm font-medium">
-                Filter guides by industry
+          <div className="mb-5 flex flex-wrap items-end gap-3">
+            <div className="relative min-w-0 flex-1 sm:max-w-md">
+              <label htmlFor="guide-search" className="label">
+                Search guides
               </label>
-              <select
-                className="mt-1 rounded-lg border border-border bg-background p-2"
-                id="guide-industry"
-                value={selected}
-                onChange={(e) => setIndustry(e.target.value)}
-              >
-                <option value="">All industries</option>
-                {hasGeneral && <option value="general">General business</option>}
-                {industries.map((slug) => (
-                  <option key={slug} value={slug}>
-                    {industryName(slug.replaceAll("-", " "))}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <Search
+                  className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                  aria-hidden="true"
+                />
+                <input
+                  ref={searchRef}
+                  id="guide-search"
+                  type="search"
+                  className="field !pl-10"
+                  aria-keyshortcuts="/"
+                  placeholder="Search by topic or keyword (press /)"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  data-testid="input-guide-search"
+                />
+              </div>
             </div>
-          )}
+            {industries.length > 0 && (
+              <div>
+                <label htmlFor="guide-industry" className="label">
+                  Filter guides by industry
+                </label>
+                <select
+                  className="field min-w-[12rem]"
+                  id="guide-industry"
+                  value={selected}
+                  onChange={(e) => setIndustry(e.target.value)}
+                >
+                  <option value="">All industries</option>
+                  {hasGeneral && <option value="general">General business</option>}
+                  {industries.map((slug) => (
+                    <option key={slug} value={slug}>
+                      {industryName(slug.replaceAll("-", " "))}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            {hasActiveFilter && (
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={() => {
+                  setSearchQuery("");
+                  setIndustry("");
+                }}
+                data-testid="button-clear-guide-filters"
+              >
+                <X className="h-4 w-4" aria-hidden="true" /> Clear
+              </button>
+            )}
+          </div>
           <p
             className="mb-4 text-sm text-muted-foreground"
             aria-live="polite"
@@ -89,13 +149,29 @@ export function Resources({ initial }: { initial?: ReleasedResource[] | undefine
           >
             {formatCount(visible.length)} guide{visible.length === 1 ? "" : "s"}
           </p>
-          <ul className="grid gap-3 md:grid-cols-2">
-            {visible.map((r) => (
-              <li key={r.id} data-testid={"card-resource-" + r.id}>
-                <ResourceCard r={r} />
-              </li>
-            ))}
-          </ul>
+          {visible.length > 0 ? (
+            <ul className="grid gap-3 md:grid-cols-2">
+              {visible.map((r) => (
+                <li key={r.id} data-testid={"card-resource-" + r.id}>
+                  <ResourceCard r={r} />
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="surface p-6 text-sm text-muted-foreground" role="status">
+              <p>No guides match your current search or filter.</p>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm mt-3"
+                onClick={() => {
+                  setSearchQuery("");
+                  setIndustry("");
+                }}
+              >
+                Show all guides
+              </button>
+            </div>
+          )}
         </>
       ) : (
         <div className="grid gap-4">

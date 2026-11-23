@@ -1,12 +1,21 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { Show, useClerk, useUser } from "@clerk/react";
+import {
+  useListDocuments,
+  useListTasks,
+  getListDocumentsQueryKey,
+  getListTasksQueryKey,
+} from "@workspace/api-client-react";
 import { Building2, ClipboardCheck, FileText, House, ListTodo, LogOut, Menu, X } from "lucide-react";
 import { AccountMenu } from "@/components/account-menu";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { BOTTOM_BAR, MenuPanel } from "@/components/menu-panel";
 import { Wordmark } from "@/components/brand";
 import { DevBanner, DOCK_BUTTON, NAV, SiteFooter, inSection } from "@/components/site-chrome";
+import { QuickFinderDialog, QuickFinderTrigger } from "@/islands/quick-finder";
+import { documentContextSubtitle } from "@/lib/document-list-helpers";
+import type { QuickFinderItem } from "@/lib/quick-finder";
 import {
   ACCOUNT_PAGES,
   WORKSPACE_SECTIONS,
@@ -224,6 +233,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
             </nav>
           )}
           <div className="hidden items-center gap-2 lg:flex">
+            <QuickFinderTrigger />
             {workspace && (
               <ShellLink href="/help" className={headerLink(false)} data-testid="link-workspace-help">
                 Help
@@ -290,7 +300,65 @@ export function SiteShell({ children }: { children: ReactNode }) {
       </main>
       <SiteFooter LinkTo={ShellLink} wordmark={<Wordmark />} />
       {workspace ? <WorkspaceBar here={here} /> : <MobileDock />}
+      <WorkspaceQuickFinder />
     </div>
+  );
+}
+
+/** Lazily loads the signed-in user's documents and open tasks only when Quick Jump is opened. */
+function WorkspaceQuickFinder() {
+  const { isSignedIn } = useUser();
+  const [, setLocation] = useLocation();
+  const [open, setOpen] = useState(false);
+  const fetchLive = open && Boolean(isSignedIn);
+  const docs = useListDocuments({
+    query: { enabled: fetchLive, queryKey: getListDocumentsQueryKey() },
+  });
+  const tasks = useListTasks({
+    query: { enabled: fetchLive, queryKey: getListTasksQueryKey() },
+  });
+  const extraItems = useMemo<QuickFinderItem[]>(() => {
+    if (!isSignedIn) return [];
+    const docItems: QuickFinderItem[] = (docs.data ?? []).slice(0, 15).map((d) => {
+      const subtitle = documentContextSubtitle(d);
+      return {
+        id: "doc-" + d.id,
+        label: d.title,
+        description: subtitle
+          ? `${subtitle} · Version ${d.revision}`
+          : `Saved document · Version ${d.revision}`,
+        href: "/workspace/documents/" + d.id,
+        group: "Your documents",
+        keywords: `${d.title} ${subtitle} document`,
+      };
+    });
+    const taskItems: QuickFinderItem[] = (tasks.data ?? [])
+      .filter((t) => t.state !== "completed_by_user")
+      .slice(0, 10)
+      .map((t) => ({
+        id: "task-" + t.id,
+        label: t.title,
+        description: t.dueDate ? `Open task · Due ${t.dueDate}` : "Open task",
+        href: "/workspace/tasks",
+        group: "Your tasks",
+        keywords: `${t.title} ${t.notes} task`,
+      }));
+    return [...docItems, ...taskItems];
+  }, [docs.data, isSignedIn, tasks.data]);
+
+  return (
+    <QuickFinderDialog
+      mode={isSignedIn ? "workspace" : "public"}
+      extraItems={extraItems}
+      onOpenChange={setOpen}
+      onNavigate={(href, serverPage) => {
+        if (serverPage || isServerPage(href)) {
+          window.location.assign(basePath + href);
+        } else {
+          setLocation(href);
+        }
+      }}
+    />
   );
 }
 
