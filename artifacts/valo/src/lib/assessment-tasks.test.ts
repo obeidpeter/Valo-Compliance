@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import type { AssessmentItem } from "@workspace/api-client-react";
-import { trackedRuleIdsForAssessment, untrackedActionableItems } from "./assessment-tasks";
+import type { AssessmentItem, SavedAssessment } from "@workspace/api-client-react";
+import { EMPTY_FACTS } from "./checker";
+import {
+  filterSavedAssessments,
+  trackedRuleIdsForAssessment,
+  untrackedActionableItems,
+} from "./assessment-tasks";
 
 const baseItem = (
   ruleId: string,
@@ -50,5 +55,52 @@ test("untrackedActionableItems excludes already-tracked, non-eligible, and non-r
   assert.deepEqual(
     result.map((i) => i.ruleId),
     ["R-2"],
+  );
+});
+
+test("filterSavedAssessments filters by likely relevant, profile origin, and search text", () => {
+  const first: SavedAssessment = {
+    id: "a-1",
+    createdAt: "2026-11-22T09:00:00.000Z",
+    profileRevision: 3,
+    facts: { ...EMPTY_FACTS, legalForm: "limited_company", state: "Lagos", lga: "Ikeja" },
+    result: {
+      rulesetVersion: "rules-v1",
+      asOfDate: "2026-11-22",
+      disclaimer: "Guidance only.",
+      items: [baseItem("R-1", { label: "Likely relevant" })],
+      missingQuestions: [],
+    },
+  };
+  const second: SavedAssessment = {
+    id: "a-2",
+    createdAt: "2026-11-20T09:00:00.000Z",
+    profileRevision: null,
+    facts: { ...EMPTY_FACTS, legalForm: "sole_proprietor", state: "FCT" },
+    result: {
+      rulesetVersion: "rules-v1",
+      asOfDate: "2026-11-20",
+      disclaimer: "Guidance only.",
+      items: [baseItem("R-2", { label: "May apply" })],
+      missingQuestions: [],
+    },
+  };
+  const list = [first, second];
+
+  assert.deepEqual(
+    filterSavedAssessments(list, "", "likely_relevant").map((a) => a.id),
+    ["a-1"],
+  );
+  assert.deepEqual(
+    filterSavedAssessments(list, "", "from_profile").map((a) => a.id),
+    ["a-1"],
+  );
+  assert.deepEqual(
+    filterSavedAssessments(list, "fct", "all").map((a) => a.id),
+    ["a-2"],
+  );
+  assert.deepEqual(
+    filterSavedAssessments(list, "ikeja", "all").map((a) => a.id),
+    ["a-1"],
   );
 });
