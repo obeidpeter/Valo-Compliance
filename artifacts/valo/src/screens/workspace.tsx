@@ -19,6 +19,8 @@ import { DocumentList } from "@/components/document-list";
 import { FILE_FORMAT_NAMES } from "@/lib/file-formats";
 import { formatCount, formatDay } from "@/lib/format";
 import { RESULT_LABELS, RESULT_TONES } from "@/lib/rich-checker";
+import { buildWorkspaceAttention } from "@/lib/workspace-attention";
+import { cn } from "@/lib/utils";
 
 /**
  * The workspace's home. The greeting comes first, with the one button that starts a document. Then
@@ -64,6 +66,16 @@ export default function WorkspaceHome() {
   const upcomingTasks = (openTasks.data?.items ?? []).slice(0, 2);
   const openTaskCount = openTasks.data?.openCount ?? 0;
   const readyFiles = (exportsList.data ?? []).slice(0, 2);
+  const attentionItems = useMemo(
+    () =>
+      ws.isSuccess
+        ? buildWorkspaceAttention({
+            openTasks: openTasks.data?.items ?? [],
+            profileMovedAhead,
+          })
+        : [],
+    [openTasks.data?.items, profileMovedAhead, ws.isSuccess],
+  );
 
   return (
     <div className="mx-auto max-w-7xl px-5 py-12 lg:px-8">
@@ -83,6 +95,53 @@ export default function WorkspaceHome() {
         )}
       </header>
       {ws.isSuccess && <CorrectionNotices />}
+
+      {attentionItems.length > 0 && (
+        <section
+          className="surface mt-8 p-5 sm:p-6"
+          aria-labelledby="home-attention-title"
+          data-testid="card-needs-attention"
+        >
+          <p id="home-attention-title" className="eyebrow">
+            Needs your attention
+          </p>
+          <ul className="mt-4 grid gap-3 md:grid-cols-2">
+            {attentionItems.map((item) => (
+              <li
+                key={item.id}
+                className={cn(
+                  "flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4",
+                  item.tone === "destructive"
+                    ? "border-destructive/35 bg-destructive/5"
+                    : item.tone === "ochre"
+                      ? "border-[hsl(var(--ochre-border))] bg-[hsl(var(--ochre-soft))]"
+                      : "border-border bg-sidebar/40",
+                )}
+                data-testid={"attention-" + item.id}
+              >
+                <div className="min-w-0 flex-1">
+                  <p
+                    className={cn(
+                      "text-sm font-semibold",
+                      item.tone === "destructive"
+                        ? "text-destructive"
+                        : item.tone === "ochre"
+                          ? "text-[hsl(var(--ochre-foreground))]"
+                          : "text-foreground",
+                    )}
+                  >
+                    {item.title}
+                  </p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{item.detail}</p>
+                </div>
+                <Link href={item.href} className="btn btn-ghost btn-sm shrink-0">
+                  {item.actionLabel} <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {showStarterMap && (
         <section
