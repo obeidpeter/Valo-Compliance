@@ -1,7 +1,7 @@
 import { useMemo, useState, useRef, useCallback, useEffect } from "react";
 import { Link } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
-import { ListTodo, Plus } from "lucide-react";
+import { ListTodo, Plus, Search, X } from "lucide-react";
 import {
   useCreateTask,
   getListTasksQueryKey,
@@ -47,6 +47,8 @@ export default function TasksPage() {
   );
   const [newOpen, setNewOpen] = useState(false);
   const [newDraft, setNewDraft] = useState<TaskDraft>(emptyDraft());
+  const [taskQuery, setTaskQuery] = useState("");
+  const searchRef = useRef<HTMLInputElement>(null);
   const newDraftRef = useRef(newDraft);
   newDraftRef.current = newDraft;
   const navigation = useUnsavedNavigation(
@@ -67,6 +69,29 @@ export default function TasksPage() {
     for (const task of Object.values(pinned)) if (!all.some((row) => row.id === task.id)) all.push(task);
     return all;
   }, [tasks.data, pinned]);
+  const trimmedTaskQuery = taskQuery.trim().toLowerCase();
+  const visibleRows = useMemo(() => {
+    if (!trimmedTaskQuery) return rows;
+    return rows.filter(
+      (task) =>
+        Boolean(pinned[task.id]) ||
+        task.title.toLowerCase().includes(trimmedTaskQuery) ||
+        (task.notes ?? "").toLowerCase().includes(trimmedTaskQuery),
+    );
+  }, [rows, pinned, trimmedTaskQuery]);
+  const showTaskSearch = rows.length > 2 || Boolean(trimmedTaskQuery);
+  useEffect(() => {
+    if (!showTaskSearch) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "/" || event.ctrlKey || event.metaKey || event.altKey) return;
+      const target = event.target as HTMLElement | null;
+      if (target && /INPUT|TEXTAREA|SELECT/.test(target.tagName)) return;
+      event.preventDefault();
+      searchRef.current?.focus();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [showTaskSearch]);
   function changeView(nextFilter: Filter, nextPage: number) {
     if (Object.keys(pinnedRef.current).length) setLeaving({ filter: nextFilter, page: nextPage });
     else changeViewNow(nextFilter, nextPage);
@@ -208,13 +233,54 @@ export default function TasksPage() {
           ))}
         </div>
         {tasks.isSuccess && (
-          <span className="font-mono text-xs text-muted-foreground">
-            {open} open / {total} total
-          </span>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="font-mono text-xs text-muted-foreground">
+              {open} open / {total} total
+            </span>
+            <Link
+              href="/workspace/reminders"
+              className="text-xs font-medium text-primary underline underline-offset-4"
+            >
+              Manage reminders
+            </Link>
+          </div>
         )}
       </div>
 
-      <div className="mt-3 flex justify-end">
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+        {showTaskSearch ? (
+          <div className="flex min-w-0 flex-1 items-center gap-2 sm:max-w-sm">
+            <div className="relative min-w-0 flex-1">
+              <Search
+                className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                aria-hidden="true"
+              />
+              <input
+                ref={searchRef}
+                type="search"
+                className="field !pl-10"
+                aria-label="Filter tasks on this page"
+                aria-keyshortcuts="/"
+                placeholder="Filter tasks on this page (press /)"
+                value={taskQuery}
+                onChange={(e) => setTaskQuery(e.target.value)}
+                data-testid="input-task-search"
+              />
+            </div>
+            {trimmedTaskQuery && (
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={() => setTaskQuery("")}
+                data-testid="button-clear-task-search"
+              >
+                <X className="h-4 w-4" aria-hidden="true" /> Clear
+              </button>
+            )}
+          </div>
+        ) : (
+          <div />
+        )}
         <button
           type="button"
           className="btn btn-ghost btn-sm"
@@ -260,9 +326,16 @@ export default function TasksPage() {
               ? "Add anything you need to remember. Tasks work even where no published rule covers your situation."
               : "Try another filter."}
           </EmptyState>
+        ) : visibleRows.length === 0 ? (
+          <div className="surface p-6 text-sm text-muted-foreground" role="status">
+            <p>No tasks on this page match &ldquo;{taskQuery.trim()}&rdquo;.</p>
+            <button type="button" className="btn btn-ghost btn-sm mt-3" onClick={() => setTaskQuery("")}>
+              Show all tasks on this page
+            </button>
+          </div>
         ) : (
           <ul className="grid gap-3">
-            {rows.map((t) => (
+            {visibleRows.map((t) => (
               <TaskRow key={`${editEpoch}-${t.id}`} task={t} onEditing={pin} />
             ))}
           </ul>

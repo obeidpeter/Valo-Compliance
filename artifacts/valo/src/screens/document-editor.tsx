@@ -616,6 +616,35 @@ export default function DocumentEditor({ id }: { id: string }) {
           {errMsg} What you typed is still here.
         </p>
       )}
+      {finDirty && content.financialInput && (
+        <div
+          role="status"
+          className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[hsl(38_50%_82%)] bg-[hsl(var(--ochre-soft))] px-4 py-3 text-sm text-[hsl(38_60%_20%)]"
+          data-testid="banner-financial-pending"
+        >
+          <p>Financial details have unapplied changes that are not saved yet.</p>
+          <div className="flex flex-wrap gap-2">
+            {finDraft && JSON.stringify(finDraft) !== JSON.stringify(content.financialInput) ? (
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                onClick={applyFinancial}
+                data-testid="button-apply-financial-top"
+              >
+                Apply amounts now
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={() => focusEditorTarget('[data-testid="panel-financial"]')}
+              >
+                Review financial details
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_20rem]">
         <div className="min-w-0">
