@@ -1,25 +1,12 @@
-import { useMemo, useState, type ReactNode } from "react";
-import { Link, useLocation } from "wouter";
+import { useMemo, useState } from "react";
+import { Link } from "wouter";
 import { useUser } from "@clerk/react";
-import { useQueryClient } from "@tanstack/react-query";
-import {
-  ArrowLeft,
-  ArrowRight,
-  Check,
-  Loader2,
-  Plus,
-  RotateCcw,
-  ShieldCheck,
-  UserRound,
-  X,
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Loader2, RotateCcw, ShieldCheck, UserRound } from "lucide-react";
 import {
   usePreviewAssessment,
   usePreviewWorkspaceAssessment,
-  useCreateAssessment,
   useGetWorkspace,
   getGetWorkspaceQueryKey,
-  getListAssessmentsQueryKey,
   CheckerFactsState,
   CheckerFactsTurnoverBand,
   CheckerFactsTurnoverMetric,
@@ -29,20 +16,19 @@ import {
   type AssessmentResult,
 } from "@workspace/api-client-react";
 import { AssessmentResultView } from "@/components/assessment-result";
+import { AnswerOr, Choice, ListOr, known, opts, yesNo, type Change } from "@/components/checker-controls";
+import { Review, SavePanel } from "@/components/checker-review";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { RichCheckerFields } from "@/components/rich-checker-fields";
-import { richQuestionTarget, richStep, type RichCheckerFacts } from "@/lib/rich-checker";
+import { richQuestionTarget, type RichCheckerFacts } from "@/lib/rich-checker";
 import { Notice } from "@/components/states";
 import { describeError } from "@/lib/api";
 import {
   CHECKER_STEPS,
   EMPTY_FACTS,
-  MARKER_LABEL,
   LEGAL_FORMS,
   REG_STATUSES,
-  ANSWER_OPTIONS,
   asked,
-  reviewFacts,
   factsFromProfile,
   finaliseFacts,
   nairaToKobo,
@@ -51,10 +37,7 @@ import {
   live,
   stepDone,
   stepOf,
-  valueLabel,
   factLabel,
-  displayFact,
-  type Marker,
 } from "@/lib/checker";
 import { lagosToday } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -65,17 +48,6 @@ const STEPS = CHECKER_STEPS.map((step) => step.name);
 const REVIEW = STEPS.length - 1;
 /** The step that asks about size and turnover, which holds the one box that can hold a mistake. */
 const TURNOVER = stepOf("turnoverAmountKobo");
-
-type Opt = { value: string; label: string };
-const opts = (vals: string[]): Opt[] => vals.map((v) => ({ value: v, label: valueLabel(v) }));
-/** A question's answers without the three ways of not answering, which every question lists last. */
-const known = (vals: string[]): Opt[] => opts(vals.filter((v) => !isMarker(v)));
-
-/** What a question passes back: its answer, and whether the visitor chose it. Emptying an answer box
- * passes "unanswered" as not chosen, so the question goes back to untouched. A question's component
- * takes `Change<never>`: which answers are valid is fixed where the question is asked, by the answers
- * it is given to offer. */
-type Change<V> = (value: V, chosen?: boolean) => void;
 
 export default function Checker() {
   const currentAccount = useAccountEpoch();
@@ -745,403 +717,6 @@ export default function Checker() {
           )}
         </div>
       </div>
-    </div>
-  );
-}
-
-const yesNo: Opt[] = opts((ANSWER_OPTIONS as string[]).filter((value) => !isMarker(value)));
-
-/** The ways of not answering a question, listed after its answers. "Skip for now" shows as chosen
- * only when the visitor chose it: an untouched question holds the same value. */
-function Markers({
-  name,
-  group,
-  value,
-  skipped,
-  markers,
-  onChange,
-}: {
-  name: string;
-  group: string;
-  value: unknown;
-  skipped: boolean;
-  markers: readonly Marker[];
-  onChange: (marker: Marker) => void;
-}) {
-  return (
-    <>
-      {markers.map((k) => {
-        const on = value === k && (k !== "unanswered" || skipped);
-        return (
-          <label
-            key={k}
-            className={cn(
-              "cursor-pointer rounded-full border px-3.5 py-2 text-sm transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring",
-              on
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-dashed border-input text-muted-foreground hover:bg-secondary",
-            )}
-          >
-            <input
-              type="radio"
-              className="sr-only"
-              name={group}
-              value={k}
-              checked={on}
-              onChange={() => onChange(k)}
-              data-testid={"radio-" + name + "-" + k}
-            />
-            {MARKER_LABEL[k]}
-          </label>
-        );
-      })}
-    </>
-  );
-}
-
-/** A question answered by choosing one of a few answers. Nothing is chosen until the visitor chooses. */
-function Choice({
-  name,
-  label,
-  hint,
-  value,
-  skipped,
-  options,
-  markers,
-  onChange,
-}: {
-  name: string;
-  label: string;
-  hint?: string;
-  value: string;
-  skipped: boolean;
-  options: Opt[];
-  markers: readonly Marker[];
-  onChange: Change<never>;
-}) {
-  const choose = onChange as Change<string>;
-  return (
-    <fieldset>
-      <legend className="label text-base">{label}</legend>
-      {hint && <p className="hint !mt-0 mb-2">{hint}</p>}
-      <div className="flex flex-wrap gap-2">
-        {options.map((o) => {
-          const on = value === o.value;
-          return (
-            <label
-              key={o.value}
-              className={cn(
-                "cursor-pointer rounded-full border px-3.5 py-2 text-sm transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring",
-                on ? "border-primary bg-primary text-primary-foreground" : "border-input hover:bg-secondary",
-              )}
-            >
-              <input
-                type="radio"
-                className="sr-only"
-                name={name}
-                value={o.value}
-                checked={on}
-                onChange={() => choose(o.value)}
-                data-testid={"radio-" + name + "-" + o.value}
-              />
-              {o.label}
-            </label>
-          );
-        })}
-        <Markers
-          name={name}
-          group={name}
-          value={value}
-          skipped={skipped}
-          markers={markers}
-          onChange={choose}
-        />
-      </div>
-    </fieldset>
-  );
-}
-
-/** A question answered in a box or a list, with the ways of not answering it beside the box. Typing
- * an answer takes the place of a chosen "I do not know"; emptying the box leaves the question
- * untouched. */
-function AnswerOr({
-  name,
-  label,
-  value,
-  skipped,
-  markers,
-  onChange,
-  render,
-}: {
-  name: string;
-  label: string;
-  value: string;
-  skipped: boolean;
-  markers: readonly Marker[];
-  onChange: Change<never>;
-  render: (value: string, change: (value: string) => void, labelledBy: string) => ReactNode;
-}) {
-  const choose = onChange as Change<string>;
-  const legend = name + "-question";
-  return (
-    <fieldset>
-      <legend id={legend} className="label text-base">
-        {label}
-      </legend>
-      {render(
-        isMarker(value) ? "" : value,
-        (next) => (next === "" ? choose("unanswered", false) : choose(next)),
-        legend,
-      )}
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <span className="text-sm text-muted-foreground">or</span>
-        <Markers
-          name={name}
-          group={name + "-mode"}
-          value={value}
-          skipped={skipped}
-          markers={markers}
-          onChange={choose}
-        />
-      </div>
-    </fieldset>
-  );
-}
-
-/** A question answered with a short list in the visitor's own words. */
-function ListOr({
-  name,
-  label,
-  hint,
-  value,
-  skipped,
-  onChange,
-  placeholder,
-}: {
-  name: string;
-  label: string;
-  hint: string;
-  value: string[] | Marker;
-  skipped: boolean;
-  onChange: Change<never>;
-  placeholder: string;
-}) {
-  const choose = onChange as Change<string[] | Marker>;
-  const list = Array.isArray(value) && value.length ? value : [""];
-  return (
-    <fieldset>
-      <legend className="label text-base">{label}</legend>
-      <p className="hint !mt-0 mb-2">{hint}</p>
-      <div className="grid gap-2">
-        {list.map((a, i) => (
-          <div key={i} className="flex gap-2">
-            <input
-              aria-label={label + " " + (i + 1)}
-              className="field"
-              maxLength={120}
-              value={a}
-              placeholder={placeholder}
-              onChange={(e) => choose(list.map((x, j) => (j === i ? e.target.value : x)))}
-              data-testid={"input-" + name + "-" + i}
-            />
-            {list.length > 1 && (
-              <button
-                type="button"
-                aria-label={"Remove item " + (i + 1)}
-                className="btn btn-ghost !px-3"
-                onClick={() => choose(list.filter((_, j) => j !== i))}
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-        ))}
-        {list.length < 10 && (
-          <button type="button" className="btn btn-ghost btn-sm w-fit" onClick={() => choose([...list, ""])}>
-            <Plus className="h-4 w-4" />
-            Add another
-          </button>
-        )}
-      </div>
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <span className="text-sm text-muted-foreground">or</span>
-        <Markers
-          name={name}
-          group={name + "-mode"}
-          value={value}
-          skipped={skipped}
-          markers={["unknown", "unanswered"]}
-          onChange={choose}
-        />
-      </div>
-    </fieldset>
-  );
-}
-
-function Review({ facts, onEdit }: { facts: RichCheckerFacts; onEdit: (n: number, field?: string) => void }) {
-  return (
-    <dl className="grid gap-0 text-sm" data-testid="list-review">
-      {reviewFacts(facts).map(([k, value]) => (
-        <div
-          key={k}
-          className="grid grid-cols-[1fr_auto] items-baseline gap-x-4 border-t border-border py-2.5 sm:grid-cols-[14rem_1fr_auto]"
-        >
-          <dt className="text-muted-foreground">{factLabel(k)}</dt>
-          <dd
-            className={cn(
-              "col-start-1 row-start-2 break-words sm:col-start-2 sm:row-start-1",
-              isMarker(value) || value === null ? "italic text-muted-foreground" : "",
-            )}
-          >
-            {displayFact(k, value)}
-          </dd>
-          {/* A list of terms holds only terms and their descriptions, so the button sits in one. */}
-          <dd className="col-start-2 row-span-2 row-start-1 sm:col-start-3 sm:row-span-1">
-            <button
-              type="button"
-              aria-label={"Edit " + factLabel(k)}
-              className="-my-1 px-1 py-1 text-xs font-medium text-primary underline-offset-2 hover:underline"
-              onClick={() => onEdit(k.startsWith("rich.") ? richStep(k) : stepOf(k), k)}
-            >
-              Edit
-            </button>
-          </dd>
-        </div>
-      ))}
-    </dl>
-  );
-}
-
-function SavePanel({
-  facts,
-  profileRevision,
-  hasProfile,
-  stale,
-}: {
-  facts: RichCheckerFacts;
-  profileRevision: number;
-  hasProfile: boolean;
-  stale: boolean;
-}) {
-  const qc = useQueryClient();
-  const [, setLocation] = useLocation();
-  const [consent, setConsent] = useState(false);
-  const [mode, setMode] = useState<"answers" | "profile">("answers");
-  const create = useCreateAssessment();
-  const e = create.error ? describeError(create.error) : null;
-
-  function save() {
-    const data =
-      mode === "answers"
-        ? { facts, asOfDate: lagosToday(), saveConsent: true as const }
-        : {
-            asOfDate: lagosToday(),
-            saveConsent: true as const,
-            ...(profileRevision >= 1 ? { expectedProfileRevision: profileRevision } : {}),
-          };
-    create.mutate(
-      { data },
-      {
-        onSuccess: (a) => {
-          void qc.invalidateQueries({ queryKey: getListAssessmentsQueryKey() });
-          setLocation("/workspace/assessments/" + a.id);
-        },
-        onError: (er) => {
-          if (describeError(er).kind === "conflict")
-            void qc.invalidateQueries({ queryKey: getGetWorkspaceQueryKey() });
-        },
-      },
-    );
-  }
-
-  return (
-    <div className="surface mt-8 p-5 sm:p-7" data-testid="panel-save">
-      <p className="eyebrow">Save this result</p>
-      <fieldset className="mt-4 grid gap-2">
-        <legend className="sr-only">What to save</legend>
-        <label
-          className={cn(
-            "flex cursor-pointer gap-3 rounded-xl border p-4 text-sm",
-            mode === "answers" ? "border-primary bg-accent/50" : "border-border",
-          )}
-        >
-          <input
-            type="radio"
-            name="save-mode"
-            className="mt-0.5 accent-[hsl(155_42%_21%)]"
-            checked={mode === "answers"}
-            onChange={() => setMode("answers")}
-            data-testid="radio-save-answers"
-          />
-          <span>
-            <span className="font-medium">With the answers I gave here</span>
-            <span className="block text-muted-foreground">
-              The answers are kept with the result. Your business profile is not changed.
-            </span>
-          </span>
-        </label>
-        <label
-          className={cn(
-            "flex gap-3 rounded-xl border p-4 text-sm",
-            !hasProfile ? "cursor-not-allowed opacity-60" : "cursor-pointer",
-            mode === "profile" ? "border-primary bg-accent/50" : "border-border",
-          )}
-        >
-          <input
-            type="radio"
-            name="save-mode"
-            className="mt-0.5 accent-[hsl(155_42%_21%)]"
-            disabled={!hasProfile}
-            checked={mode === "profile"}
-            onChange={() => setMode("profile")}
-            data-testid="radio-save-profile"
-          />
-          <span>
-            <span className="font-medium">
-              {hasProfile
-                ? `With my business profile, version ${profileRevision}`
-                : "With my business profile"}
-            </span>
-            <span className="block text-muted-foreground">
-              {hasProfile
-                ? "The result is worked out again from that version of your profile. The extra details you gave above are left out. If your profile has changed since this page opened, nothing is saved and you are told."
-                : "You have not saved a business profile yet."}
-            </span>
-          </span>
-        </label>
-      </fieldset>
-      <label className="mt-4 flex cursor-pointer items-start gap-3 text-sm">
-        <input
-          type="checkbox"
-          className="mt-0.5 h-4 w-4 accent-[hsl(155_42%_21%)]"
-          checked={consent}
-          onChange={(ev) => setConsent(ev.target.checked)}
-          data-testid="checkbox-save-consent"
-        />
-        <span>I agree to Valo storing this result privately in my workspace.</span>
-      </label>
-      {stale && mode === "answers" && (
-        <p className="hint">
-          You changed answers after this result was worked out. What is saved is worked out again from your
-          answers as they are now.
-        </p>
-      )}
-      {e && (
-        <p role="alert" className="mt-4 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          {e.kind === "conflict"
-            ? "Your profile changed after this page opened. The version above is now the newest. Look at it, then save again."
-            : e.message}
-        </p>
-      )}
-      <button
-        type="button"
-        className="btn btn-primary mt-5"
-        disabled={!consent || create.isPending}
-        onClick={save}
-        data-testid="button-save-assessment"
-      >
-        {create.isPending && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}Save this result
-      </button>
     </div>
   );
 }

@@ -1,23 +1,7 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  ArrowDown,
-  ArrowLeft,
-  ArrowUp,
-  Check,
-  CloudOff,
-  Download,
-  History,
-  List,
-  Loader2,
-  Pilcrow,
-  Plus,
-  RotateCcw,
-  Table2,
-  Trash2,
-  Undo2,
-} from "lucide-react";
+import { ArrowLeft, Check, Download, List, Pilcrow, Table2, Undo2 } from "lucide-react";
 import {
   useGetDocument,
   useListDocumentRevisions,
@@ -32,11 +16,13 @@ import {
 } from "@workspace/api-client-react";
 import { ErrorState, Notice, Skel } from "@/components/states";
 import { FIELD_LABELS, describeError, missingFields, newBlockId } from "@/lib/api";
-import { formatDateTime, formatDay } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { DocumentExports } from "@/components/document-exports";
+import { BlockEditor, SaveIndicator, type SaveState } from "@/components/document-editor-blocks";
+import { DocPreview } from "@/components/document-preview";
+import { DocumentRevisionsCard } from "@/components/document-revisions-card";
 import { MakeAnother } from "@/components/make-another";
-import { FinancialFields, FINANCIAL_BLOCK_IDS } from "@/components/financial-fields";
+import { FinancialFields } from "@/components/financial-fields";
 import { synchronizeFinancialBlocks } from "@workspace/valo-core/money";
 import type { FinancialInput } from "@workspace/api-client-react";
 import { useUnsavedNavigation } from "@/lib/use-unsaved-navigation";
@@ -48,22 +34,14 @@ import {
   GUIDED_PREFIX,
   guidedDataFromBlocks,
   compileGuidedContent,
-  guidedRenderableBlocks,
 } from "@workspace/valo-core/guided-runtime";
 
 type Snapshot = { title: string; content: CanonicalDocument };
-type SaveState = "idle" | "dirty" | "saving" | "saved" | "error" | "conflict" | "blocked";
 /** A question put to the customer before something they entered is discarded: what would be lost,
  * the button that keeps it, the button that goes ahead, and what going ahead does. */
 type Asking = { title: string; body: string; keep: string; confirm: string; run: () => void };
 
 const AUTOSAVE_MS = 1400;
-/** What each part of a document's own text is called. */
-const BLOCK_NAMES: Record<DocumentBlockType, string> = {
-  paragraph: "Paragraph",
-  list: "List",
-  table: "Table",
-};
 const ser = (s: Snapshot) => JSON.stringify(s);
 
 export default function DocumentEditor({ id }: { id: string }) {
@@ -901,63 +879,17 @@ export default function DocumentEditor({ id }: { id: string }) {
             )}
             <p className="hint mt-3">A document saves with details missing. Valo fills nothing in for you.</p>
           </div>
-          <div className="surface p-5" data-testid="card-revisions">
-            <p className="eyebrow flex items-center gap-2">
-              <History className="h-3.5 w-3.5" aria-hidden="true" /> Versions
-            </p>
-            {revs.isLoading ? (
-              <Skel className="mt-3 h-24" />
-            ) : revs.isError ? (
-              <div className="mt-3">
-                <ErrorState error={revs.error} onRetry={() => revs.refetch()} />
-              </div>
-            ) : (
-              <ol className="mt-3 grid max-h-80 gap-1 overflow-auto pr-1">
-                {[...(revs.data ?? [])]
-                  .sort((a, b) => b.revision - a.revision)
-                  .map((r) => {
-                    const current = r.revision === baseRev.current;
-                    return (
-                      <li
-                        key={r.revision}
-                        className={cn(
-                          "flex items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-sm",
-                          current && "bg-accent",
-                        )}
-                        data-testid={"row-revision-" + r.revision}
-                      >
-                        <span>
-                          <span>Version {r.revision}</span>
-                          <span className="block text-xs text-muted-foreground">
-                            {formatDateTime(r.updatedAt)}
-                          </span>
-                        </span>
-                        {current ? (
-                          <span className="text-xs text-primary">Current</span>
-                        ) : (
-                          <button
-                            className="btn btn-ghost btn-sm !min-h-7 !px-2.5 text-xs"
-                            disabled={restoring !== null || state === "saving"}
-                            onClick={() => restore(r)}
-                            data-testid={"button-restore-" + r.revision}
-                          >
-                            {restoring === r.revision ? (
-                              <Loader2 className="h-3 w-3 animate-spin" />
-                            ) : (
-                              <RotateCcw className="h-3 w-3" />
-                            )}{" "}
-                            Restore
-                          </button>
-                        )}
-                      </li>
-                    );
-                  })}
-              </ol>
-            )}
-            <p className="hint mt-3">
-              Restoring a version saves it as the newest one. Every earlier version is kept.
-            </p>
-          </div>
+          <DocumentRevisionsCard
+            revisions={revs.data}
+            isLoading={revs.isLoading}
+            isError={revs.isError}
+            error={revs.error}
+            onRetry={() => void revs.refetch()}
+            currentRevision={baseRev.current}
+            restoring={restoring}
+            saving={state === "saving"}
+            onRestore={restore}
+          />
           <DocumentExports
             documentId={id}
             revisionId={doc.data.revisionId}
@@ -968,292 +900,5 @@ export default function DocumentEditor({ id }: { id: string }) {
         </aside>
       </div>
     </div>
-  );
-}
-
-function SaveIndicator({ state, rev, onRetry }: { state: SaveState; rev: number; onRetry: () => void }) {
-  const map: Record<SaveState, [string, string]> = {
-    idle: ["", ""],
-    dirty: ["Unsaved changes", "pill-ochre"],
-    saving: ["Saving", "pill-ink"],
-    saved: ["Saved · version " + rev, "pill-forest"],
-    error: ["Not saved", "pill-ochre"],
-    conflict: ["Not saved — changed somewhere else", "pill-ochre"],
-    blocked: ["Needs a title to save", "pill-ochre"],
-  };
-  const [text, cls] = map[state];
-  if (!text) return null;
-  return (
-    <div className="flex items-center gap-2" aria-live="polite">
-      <span className={"pill " + cls} data-testid="status-save">
-        {state === "saving" ? (
-          <Loader2 className="h-3 w-3 animate-spin" />
-        ) : state === "saved" ? (
-          <Check className="h-3 w-3" />
-        ) : state === "error" ? (
-          <CloudOff className="h-3 w-3" />
-        ) : (
-          <span className="dot" />
-        )}
-        {text}
-      </span>
-      {state === "error" && (
-        <button className="text-sm underline" onClick={onRetry} data-testid="button-retry-save">
-          Retry
-        </button>
-      )}
-    </div>
-  );
-}
-
-function BlockEditor({
-  block,
-  index,
-  count,
-  onChange,
-  onMove,
-  onDelete,
-}: {
-  block: DocumentBlock;
-  index: number;
-  count: number;
-  onChange: (b: DocumentBlock) => void;
-  onMove: (d: -1 | 1) => void;
-  onDelete: () => void;
-}) {
-  const Icon = block.type === "list" ? List : block.type === "table" ? Table2 : Pilcrow;
-  const locked = FINANCIAL_BLOCK_IDS.includes(block.id);
-  if (locked) {
-    return (
-      <li className="rounded-xl border border-dashed border-border p-3" data-testid={"block-" + index}>
-        <p className="mb-2 flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Table2 className="h-3.5 w-3.5" />
-          {block.text || "Financial table"} · change it in Financial details above
-        </p>
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-sm">
-            <tbody>
-              {block.rows.map((r, i) => (
-                <tr key={i} className={i === 0 ? "font-medium" : ""}>
-                  {r.map((c, j) => (
-                    <td key={j} className="border border-border px-2.5 py-1.5 tabular-nums">
-                      {c}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </li>
-    );
-  }
-  return (
-    <li
-      className="group relative rounded-xl border border-transparent p-1 transition-colors focus-within:border-border hover:border-border"
-      data-testid={"block-" + index}
-    >
-      <div className="mb-1 flex items-center justify-between px-2 pt-1 text-xs text-muted-foreground">
-        <span className="inline-flex items-center gap-1.5">
-          <Icon className="h-3.5 w-3.5" aria-hidden="true" /> {BLOCK_NAMES[block.type]}
-        </span>
-        <span className="flex gap-0.5 opacity-60 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
-          <IconBtn label="Move up" disabled={index === 0} onClick={() => onMove(-1)}>
-            <ArrowUp className="h-3.5 w-3.5" />
-          </IconBtn>
-          <IconBtn label="Move down" disabled={index === count - 1} onClick={() => onMove(1)}>
-            <ArrowDown className="h-3.5 w-3.5" />
-          </IconBtn>
-          <IconBtn
-            label={"Delete this " + BLOCK_NAMES[block.type].toLowerCase()}
-            disabled={count === 1}
-            onClick={onDelete}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </IconBtn>
-        </span>
-      </div>
-      {block.type === "table" ? (
-        <div className="overflow-x-auto px-1 pb-1">
-          <table className="w-full border-collapse text-sm">
-            <tbody>
-              {block.rows.map((row, ri) => (
-                <tr key={ri}>
-                  {row.map((cell, ci) => (
-                    <td key={ci} className="border border-border p-0">
-                      <input
-                        aria-label={"Row " + (ri + 1) + " column " + (ci + 1)}
-                        className="w-full bg-transparent px-2.5 py-2 outline-none focus:bg-accent/50"
-                        maxLength={1000}
-                        value={cell}
-                        onChange={(e) =>
-                          onChange({
-                            ...block,
-                            rows: block.rows.map((r, x) =>
-                              x === ri ? r.map((c, y) => (y === ci ? e.target.value : c)) : r,
-                            ),
-                          })
-                        }
-                      />
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <div className="mt-2 flex gap-2">
-            <button
-              className="text-xs text-muted-foreground underline-offset-2 hover:underline disabled:opacity-40"
-              disabled={block.rows.length >= 100}
-              onClick={() =>
-                onChange({ ...block, rows: [...block.rows, block.rows[0]?.map(() => "") ?? [""]] })
-              }
-            >
-              <Plus className="mr-0.5 inline h-3 w-3" aria-hidden="true" />
-              Add a row
-            </button>
-            <button
-              className="text-xs text-muted-foreground underline-offset-2 hover:underline disabled:opacity-40"
-              disabled={(block.rows[0]?.length ?? 0) >= 10}
-              onClick={() => onChange({ ...block, rows: block.rows.map((r) => [...r, ""]) })}
-            >
-              <Plus className="mr-0.5 inline h-3 w-3" aria-hidden="true" />
-              Add a column
-            </button>
-          </div>
-        </div>
-      ) : (
-        <textarea
-          aria-label={block.type === "list" ? "List items, one per line" : "Paragraph"}
-          className="min-h-24 w-full resize-y rounded-lg bg-transparent px-2.5 py-2 leading-relaxed outline-none focus:bg-background"
-          maxLength={8000}
-          value={block.text}
-          placeholder={block.type === "list" ? "One item per line" : "Write in your own words"}
-          onChange={(e) => onChange({ ...block, text: e.target.value })}
-          data-testid={"input-block-" + index}
-        />
-      )}
-    </li>
-  );
-}
-
-function IconBtn({
-  label,
-  disabled,
-  onClick,
-  children,
-}: {
-  label: string;
-  disabled?: boolean;
-  onClick: () => void;
-  children: ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      disabled={disabled}
-      onClick={onClick}
-      className="grid h-7 w-7 place-items-center rounded-md hover:bg-secondary disabled:opacity-30"
-    >
-      {children}
-    </button>
-  );
-}
-
-function DocPreview({
-  title,
-  content,
-  revision,
-}: {
-  title: string;
-  content: CanonicalDocument;
-  revision: number;
-}) {
-  const accent = content.formatting.accent === "forest" ? "hsl(155 42% 21%)" : "hsl(30 8% 14%)";
-  const f = content.fields;
-  const guidedLayout = content.blocks.some((b) => b.id.startsWith(GUIDED_PREFIX));
-  return (
-    <article
-      className={cn(
-        "surface mx-auto min-w-0 w-full max-w-[46rem] px-7 py-10 shadow-[var(--shadow-lg)] sm:px-14 sm:py-14",
-        content.formatting.font === "serif" ? "font-display" : "font-sans",
-      )}
-      style={{ overflowWrap: "anywhere" }}
-      data-testid="preview-doc"
-    >
-      <div className="h-1 w-16 rounded-full" style={{ background: accent }} />
-      <h2 className="mt-6 text-3xl leading-tight" style={{ color: accent }}>
-        {title}
-      </h2>
-      {!guidedLayout && (
-        <dl className="mt-6 grid gap-x-8 gap-y-2 font-sans text-sm sm:grid-cols-2">
-          {(["issuerName", "recipientName", "documentNumber", "issueDate", "dueDate"] as const).map((k) => (
-            <div
-              key={k}
-              className="flex min-w-0 flex-wrap justify-between gap-3 border-b border-border py-1.5"
-            >
-              <dt className="text-muted-foreground">{FIELD_LABELS[k]}</dt>
-              <dd className={cn("min-w-0", f[k] ? "" : "italic text-[hsl(38_60%_35%)]")}>
-                {(k === "issueDate" || k === "dueDate" ? formatDay(f[k]) : f[k]) || "Missing"}
-              </dd>
-            </div>
-          ))}
-        </dl>
-      )}
-      <div className="mt-8 grid gap-4 text-[1.05rem] leading-relaxed">
-        {guidedRenderableBlocks(content).map((b, index) =>
-          b.type === "list" ? (
-            <ul key={b.id} className="list-disc pl-6">
-              {b.text
-                .split("\n")
-                .filter((l) => l.trim())
-                .map((l, i) => (
-                  <li key={i}>{l}</li>
-                ))}
-            </ul>
-          ) : b.type === "table" ? (
-            <div
-              key={b.id}
-              className="preview-table min-w-0 overflow-x-auto"
-              role="region"
-              aria-label={"Document table " + (index + 1)}
-              tabIndex={0}
-            >
-              <table className="w-full min-w-[30rem] table-fixed border-collapse font-sans text-sm">
-                <tbody>
-                  {b.rows.map((r, i) => (
-                    <tr key={i}>
-                      {r.map((c, j) => (
-                        <td key={j} className="border border-border px-2.5 py-1.5">
-                          {c}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : b.text.trim() ? (
-            <p key={b.id} className="whitespace-pre-wrap">
-              {b.text}
-            </p>
-          ) : (
-            <p key={b.id} className="font-sans text-sm italic text-muted-foreground">
-              Empty paragraph
-            </p>
-          ),
-        )}
-      </div>
-      {f.notes && (
-        <p className="mt-8 whitespace-pre-wrap border-t border-border pt-4 font-sans text-sm text-muted-foreground">
-          {f.notes}
-        </p>
-      )}
-      <p className="mt-10 font-mono text-[0.7rem] uppercase tracking-wider text-muted-foreground">
-        Draft · version {revision} · your own document, not reviewed
-      </p>
-    </article>
   );
 }
