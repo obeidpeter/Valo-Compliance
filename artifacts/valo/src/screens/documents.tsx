@@ -6,6 +6,7 @@ import { LibraryExports } from "@/components/library-exports";
 import { SavedTemplates } from "@/components/saved-templates";
 import { ErrorState, Skel } from "@/components/states";
 import { WorkspaceNav } from "@/components/workspace-nav";
+import { formatCount } from "@/lib/format";
 
 /**
  * The workspace's documents section: every document the business has saved, the files ready to
@@ -22,9 +23,11 @@ export default function DocumentsPage() {
         <div>
           <p className="eyebrow">Documents</p>
           <h1 className="font-display mt-2 text-4xl sm:text-5xl">Your documents</h1>
-          <p className="mt-3 text-sm text-muted-foreground" data-testid="text-document-count">
-            {ws.data?.documentCount ?? 0} saved
-          </p>
+          {ws.data && (
+            <p className="mt-3 text-sm text-muted-foreground" data-testid="text-document-count">
+              {formatCount(ws.data.documentCount)} saved
+            </p>
+          )}
         </div>
         {/* With nothing saved yet, the empty list below offers this instead: one button, not two. */}
         {(ws.data?.documentCount ?? 0) > 0 && (
@@ -40,7 +43,7 @@ export default function DocumentsPage() {
           <ErrorState error={ws.error} onRetry={() => ws.refetch()} />
         ) : (
           <section>
-            <DocumentList enabled={ws.isSuccess} />
+            <DocumentList enabled={ws.isSuccess} searchable />
             <LibraryExports />
           </section>
         )}

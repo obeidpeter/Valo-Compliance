@@ -15,11 +15,14 @@ import {
   type ReminderRecordStatus,
 } from "@workspace/api-client-react";
 import { WorkspaceNav } from "@/components/workspace-nav";
+import { useAccountEpoch } from "@/components/account-state-boundary";
 import { EmptyState, ErrorState, Notice, Skel } from "@/components/states";
+import { UnsavedNavigationDialog } from "@/components/unsaved-navigation-dialog";
 import { describeError } from "@/lib/api";
 import { formatDateTime } from "@/lib/format";
 import { live } from "@/lib/checker";
 import { REMINDER_STATUS, reminderMeaning, reminderNeedsHelp, triedTimes } from "@/lib/reminder-words";
+import { useUnsavedNavigation } from "@/lib/use-unsaved-navigation";
 import { cn } from "@/lib/utils";
 
 const OFFSETS = Object.values(ReminderPreferencesInputOffsetsItem) as Offset[];
@@ -35,6 +38,7 @@ const TONE: Record<ReminderRecordStatus, string> = {
 };
 
 export default function RemindersPage() {
+  const currentAccount = useAccountEpoch();
   const qc = useQueryClient();
   const prefs = useGetReminderPreferences({
     query: { queryKey: getGetReminderPreferencesQueryKey(), ...live },
@@ -45,19 +49,31 @@ export default function RemindersPage() {
 
   const [enabled, setEnabled] = useState(false);
   const [offsets, setOffsets] = useState<Offset[]>([1]);
+  const [savedSnapshot, setSavedSnapshot] = useState<{ enabled: boolean; offsets: Offset[] } | null>(null);
   const [rev, setRev] = useState(0);
   const [conflict, setConflict] = useState(false);
   const [savedNote, setSavedNote] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const init = useRef(false);
+  const form = useRef<HTMLFormElement>(null),
+    leaving = useRef(false);
+
+  const dirty =
+    savedSnapshot !== null &&
+    (enabled !== savedSnapshot.enabled ||
+      offsets.length !== savedSnapshot.offsets.length ||
+      offsets.some((value, index) => value !== savedSnapshot.offsets[index]));
+  const navigation = useUnsavedNavigation(() => dirty || save.isPending);
 
   useEffect(() => {
     if (prefs.data && !init.current) {
       init.current = true;
+      const loadedOffsets = (prefs.data.offsets.filter((o) => (OFFSETS as number[]).includes(o)) as Offset[])
+        .sort((a, b) => a - b)
+        .slice(0, 4);
       setEnabled(prefs.data.enabled);
-      setOffsets(
-        (prefs.data.offsets.filter((o) => (OFFSETS as number[]).includes(o)) as Offset[]).slice(0, 4),
-      );
+      setOffsets(loadedOffsets);
+      setSavedSnapshot({ enabled: prefs.data.enabled, offsets: loadedOffsets });
       setRev(prefs.data.revision);
     }
   }, [prefs.data]);
@@ -84,6 +100,7 @@ export default function RemindersPage() {
     setErr(null);
     setSavedNote(false);
     if (enabled && offsets.length < 1) {
+      leaving.current = false;
       setErr("Choose at least one time while reminders are on.");
       return;
     }
@@ -91,13 +108,24 @@ export default function RemindersPage() {
       { data: { enabled, offsets, expectedRevision: rev } },
       {
         onSuccess: (p) => {
+          if (!currentAccount()) return;
+          const nextOffsets = (p.offsets.filter((o) => (OFFSETS as number[]).includes(o)) as Offset[])
+            .sort((a, b) => a - b)
+            .slice(0, 4);
           setRev(p.revision);
+          setSavedSnapshot({ enabled: p.enabled, offsets: nextOffsets });
           setConflict(false);
           setSavedNote(true);
           qc.setQueryData(getGetReminderPreferencesQueryKey(), p);
           void qc.invalidateQueries({ queryKey: getListRemindersQueryKey() });
+          if (leaving.current) {
+            leaving.current = false;
+            navigation.proceed();
+          }
         },
         onError: (er) => {
+          if (!currentAccount()) return;
+          leaving.current = false;
           const d = describeError(er);
           if (d.kind === "conflict") {
             setConflict(true);
@@ -110,12 +138,18 @@ export default function RemindersPage() {
 
   async function loadLatest() {
     const r = await prefs.refetch();
+    if (!currentAccount()) return;
     if (r.data) {
+      const nextOffsets = (r.data.offsets.filter((o) => (OFFSETS as number[]).includes(o)) as Offset[])
+        .sort((a, b) => a - b)
+        .slice(0, 4);
       setEnabled(r.data.enabled);
-      setOffsets((r.data.offsets as Offset[]).slice(0, 4));
+      setOffsets(nextOffsets);
+      setSavedSnapshot({ enabled: r.data.enabled, offsets: nextOffsets });
       setRev(r.data.revision);
     }
     setConflict(false);
+    setErr(null);
     save.reset();
   }
 
@@ -140,7 +174,7 @@ export default function RemindersPage() {
           ) : prefs.isError || !p ? (
             <ErrorState error={prefs.error} onRetry={() => prefs.refetch()} />
           ) : (
-            <form onSubmit={submit} noValidate className="surface grid gap-6 p-5 sm:p-7">
+            <form ref={form} onSubmit={submit} noValidate className="surface grid gap-6 p-5 sm:p-7">
               <h2 id="pref-h" className="font-display text-2xl">
                 Preferences
               </h2>
@@ -347,6 +381,27 @@ export default function RemindersPage() {
           )}
         </section>
       </div>
+      <UnsavedNavigationDialog
+        open={navigation.blocked}
+        busy={save.isPending}
+        description="You have unsaved changes to your reminder preferences. Save, discard them, or stay on this page."
+        onSave={() => {
+          if (conflict) return;
+          if (enabled && offsets.length < 1) {
+            setErr("Choose at least one time while reminders are on.");
+            return;
+          }
+          leaving.current = true;
+          form.current?.requestSubmit();
+        }}
+        onDiscard={navigation.proceed}
+        onStay={navigation.stay}
+        error={
+          conflict
+            ? "Your preferences were changed somewhere else. Load the saved preferences before saving."
+            : (err ?? undefined)
+        }
+      />
     </div>
   );
 }
