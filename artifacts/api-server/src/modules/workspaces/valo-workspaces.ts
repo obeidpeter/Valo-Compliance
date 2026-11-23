@@ -93,6 +93,34 @@ export async function recordWorkspaceEvent(
     revision,
   });
 }
+/** Checks erasure tombstones and existing workspace membership without creating a workspace. */
+export async function assertAccountNotErasedOrSuspended(identityId: string): Promise<void> {
+  const { db, valoMemberships, valoPrivacyTombstones } = await import("@workspace/db");
+  await db.transaction(async (tx) => {
+    const hashes = await privacyIdentityHashes(tx, identityId);
+    const [erasedIdentity] = hashes.length
+      ? await tx
+          .select({ id: valoPrivacyTombstones.id })
+          .from(valoPrivacyTombstones)
+          .where(inArray(valoPrivacyTombstones.identityHash, hashes))
+          .limit(1)
+      : [];
+    if (erasedIdentity)
+      throw new ValoProblem(403, "Identity deletion is recorded. Access cannot be recreated.");
+    const [existing] = await tx
+      .select({ workspaceId: valoMemberships.workspaceId, active: valoMemberships.active })
+      .from(valoMemberships)
+      .where(eq(valoMemberships.identityId, identityId));
+    if (!existing) return;
+    const [deleted] = await tx
+      .select({ id: valoPrivacyTombstones.id })
+      .from(valoPrivacyTombstones)
+      .where(eq(valoPrivacyTombstones.workspaceId, existing.workspaceId))
+      .limit(1);
+    if (deleted) throw new ValoProblem(403, "Workspace deletion is recorded. Access cannot be recreated.");
+    if (existing.active !== "yes") throw new ValoProblem(403, "Your access to this workspace is suspended.");
+  });
+}
 /** Called only after identity verification; callers cannot choose a workspace. */
 export async function resolveWorkspace(identityId: string): Promise<WorkspaceActor> {
   const { db, valoMemberships, valoPrivacyTombstones, valoWorkspaces } = await import("@workspace/db");

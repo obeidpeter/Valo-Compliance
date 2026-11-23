@@ -10,6 +10,24 @@ export const LIBRARY_TYPES: { v: ListPublicCatalogueType; l: string }[] = [
   { v: "service", l: "Service enquiries" },
 ];
 
+/** Every category the public catalogue emits across reviewed, manual and directory items. */
+export const LIBRARY_CATEGORIES = [
+  "Finance and operations",
+  "People",
+  "Agreements and sales",
+  "Privacy and data",
+  "Business management",
+  "Business templates",
+  "Business guidance",
+  "Regulatory guidance",
+  "Practical business guides",
+  "Industry guidance",
+  "Industry introductions",
+  "Location guidance",
+  "Industry directory",
+  "Service enquiries",
+] as const;
+
 export type LibraryFilters = {
   q: string;
   type: ListPublicCatalogueType;
