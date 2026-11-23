@@ -180,9 +180,9 @@ export function createPool(options: pg.PoolConfig = {}, customerOptions: pg.Pool
     },
     // Customer requests connect as the workspace login, which can only become the scoped role.
     {
+      max: configuredPoolMax(process.env.VALO_CUSTOMER_DB_POOL_MAX, DEFAULT_POOL_MAX),
       ...shared,
       connectionString: process.env.VALO_CUSTOMER_DATABASE_URL,
-      max: configuredPoolMax(process.env.VALO_CUSTOMER_DB_POOL_MAX, DEFAULT_POOL_MAX),
       ...customerOptions,
     },
   );
