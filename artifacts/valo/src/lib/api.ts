@@ -21,9 +21,16 @@ export function blankParagraph(): DocumentBlock {
   return { id: newBlockId(), type: "paragraph", text: "", rows: [] };
 }
 
-export function blankContent(): CanonicalDocument {
+export function blankContent(issuerName = ""): CanonicalDocument {
   return {
-    fields: { issuerName: "", recipientName: "", documentNumber: "", issueDate: "", dueDate: "", notes: "" },
+    fields: {
+      issuerName,
+      recipientName: "",
+      documentNumber: "",
+      issueDate: "",
+      dueDate: "",
+      notes: "",
+    },
     blocks: [blankParagraph()],
     selectedClauses: [],
     formatting: { font: "serif", accent: "forest" },
