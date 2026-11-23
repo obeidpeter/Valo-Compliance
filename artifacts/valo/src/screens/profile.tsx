@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { Link } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Loader2, Plus, X } from "lucide-react";
+import { Loader2, Plus, X } from "lucide-react";
 import {
   useGetWorkspace,
   useSaveBusinessProfile,
@@ -20,6 +19,7 @@ import { useAccountEpoch } from "@/components/account-state-boundary";
 import { ErrorState, Notice, Skel } from "@/components/states";
 import { describeError } from "@/lib/api";
 import { valueLabel } from "@/lib/checker";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { WorkspaceNav } from "@/components/workspace-nav";
 import { useUnsavedNavigation } from "@/lib/use-unsaved-navigation";
 import { UnsavedNavigationDialog } from "@/components/unsaved-navigation-dialog";
@@ -194,12 +194,7 @@ export default function ProfilePage() {
   return (
     <div className="mx-auto max-w-3xl px-5 py-12 lg:px-8">
       <WorkspaceNav />
-      <Link
-        href="/workspace"
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Home
-      </Link>
+      <Breadcrumbs items={[{ label: "Home", href: "/workspace" }, { label: "Business profile" }]} />
       <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
         <h1 className="font-display text-4xl">Business profile</h1>
         <span className="text-sm text-muted-foreground" data-testid="text-profile-revision">

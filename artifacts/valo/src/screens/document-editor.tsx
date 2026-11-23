@@ -1,18 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  ArrowLeft,
-  Check,
-  Columns2,
-  Download,
-  List,
-  Pilcrow,
-  Redo2,
-  Save,
-  Table2,
-  Undo2,
-} from "lucide-react";
+import { Check, Columns2, Download, List, Pilcrow, Redo2, Save, Table2, Undo2 } from "lucide-react";
 import {
   useGetDocument,
   useListDocumentRevisions,
@@ -28,6 +17,7 @@ import {
 import { ErrorState, Notice, Skel } from "@/components/states";
 import { FIELD_LABELS, describeError, missingFieldItems, newBlockId } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { DocumentExports } from "@/components/document-exports";
 import { BlockEditor, SaveIndicator, type SaveState } from "@/components/document-editor-blocks";
 import { DocPreview } from "@/components/document-preview";
@@ -554,13 +544,13 @@ export default function DocumentEditor({ id }: { id: string }) {
         {asking?.body}
       </ConfirmDialog>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Link
-          href="/workspace/documents"
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-          data-testid="link-back"
-        >
-          <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Your documents
-        </Link>
+        <Breadcrumbs
+          items={[
+            { label: "Home", href: "/workspace" },
+            { label: "Your documents", href: "/workspace/documents", testId: "link-back" },
+            { label: title.trim() || "Untitled document" },
+          ]}
+        />
         <SaveIndicator
           state={finDirty ? "dirty" : state}
           rev={baseRev.current}
