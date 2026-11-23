@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
   decideOwnerRule,
   useListOwnerRules,
@@ -17,15 +17,78 @@ function sourceState(source: OwnerRuleSource) {
   if (source.failure)
     return `The last check, ${formatDateTime(source.checkedAt)}, could not read it (${source.failure}).`;
   if (source.current) return `Checked ${formatDateTime(source.checkedAt)}.`;
-  return `Last checked ${formatDateTime(source.checkedAt)}. No copy checked within the last day holds this passage.`;
+  return `Last checked ${formatDateTime(source.checkedAt)}. No copy checked within the last day holds its passage.`;
 }
 
 const label = (value: string | null) => value ?? "Not shown";
+const list = (items: string[], empty: string) => (items.length ? items.join("; ") : empty);
+
+/** The evidence the owner reads before confirming one check (decision 0020, point 4). */
+function checkEvidence(id: OwnerRuleCheckId, rule: OwnerRuleItem): ReactNode {
+  if (id === "controlling_text")
+    return rule.sources.map((s, i) => (
+      <details key={i} className="mt-1">
+        <summary className="cursor-pointer">
+          {s.title}: {s.recordedLocator ?? s.locator}
+        </summary>
+        {s.passage ? (
+          <p className="mt-1 whitespace-pre-wrap border-l-2 border-border pl-3 text-sm">{s.passage}</p>
+        ) : (
+          <p className="mt-1 text-sm">Today's copy does not hold this passage.</p>
+        )}
+      </details>
+    ));
+  if (id === "amendments")
+    return rule.sources.map((s, i) => (
+      <div key={i} className="mt-1 text-sm">
+        <p className="font-medium">{s.title}</p>
+        {s.amendments ? (
+          <ul className="list-disc pl-5">
+            <li>
+              Searched for later amendments{" "}
+              {s.amendments.searchedAt ? formatDay(s.amendments.searchedAt) : "never"}:{" "}
+              {list(s.amendments.places, "no place recorded")}.
+            </li>
+            <li>Amending texts read: {list(s.amendments.read, "none")}.</li>
+            <li>Not yet read: {list(s.amendments.notRead, "none")}.</li>
+            <li>Open questions: {list(s.amendments.open, "none")}.</li>
+            <li>What the record does not cover: {s.amendments.limits}</li>
+          </ul>
+        ) : (
+          <p>No amendment record is held for this text.</p>
+        )}
+      </div>
+    ));
+  if (id === "effective_dates")
+    return (
+      <ul className="mt-1 list-disc pl-5 text-sm">
+        {rule.sources.map((s, i) => (
+          <li key={i}>
+            {s.title}: in force from {s.effectiveFrom ? formatDay(s.effectiveFrom) : "an unknown date"}.
+          </li>
+        ))}
+        <li>
+          The rule: from {formatDay(rule.validFrom)}
+          {rule.validTo ? ` to ${formatDay(rule.validTo)}` : ", with no end date"}.
+        </li>
+      </ul>
+    );
+  if (id === "exceptions")
+    return (
+      <ul className="mt-1 list-disc pl-5 text-sm">
+        <li>What it covers: {rule.scope}</li>
+        <li>Its limits: {rule.limitations}</li>
+        <li>What it assumes: {list(rule.assumptions, "nothing recorded")}.</li>
+        <li>Each passage's own exceptions are in its text, under the first check.</li>
+      </ul>
+    );
+  return <p className="mt-1 text-sm">{rule.jurisdiction}</p>;
+}
 
 /**
  * Requirements-checker rules on the development owner's sign-off (decision 0020). The owner reads a
- * prepared rule, its official sources and its scenarios, confirms each of the five checks, and signs
- * the exact version shown; or withdraws a released version.
+ * prepared rule, its official sources, the evidence for each of the five checks and its scenarios,
+ * confirms each check, and signs the exact version shown; or withdraws a released version.
  */
 export function OwnerCheckerRules() {
   const result = useListOwnerRules({ query: { retry: false } });
@@ -73,7 +136,7 @@ export function OwnerCheckerRules() {
         confirmedChecks: checks,
         confirmed: true,
       });
-      return `Version ${saved.version} is released. The checker uses it from now on.`;
+      return `Version ${saved.version} is released. The requirements check uses it from now on.`;
     });
   const withdraw = (rule: OwnerRuleItem) =>
     act(async () => {
@@ -85,13 +148,14 @@ export function OwnerCheckerRules() {
         confirmedChecks: [],
         confirmed: true,
       });
-      return `Version ${saved.version} is withdrawn. The checker no longer uses it.`;
+      return `Version ${saved.version} is withdrawn. The requirements check no longer uses it.`;
     });
   const allChecked = item ? item.checks.every((c) => checks.includes(c.id)) : false;
+  const signable = Boolean(item && !item.holds.length);
   return (
     <section className="surface mt-8 p-5 sm:p-7" aria-labelledby="owner-rules-heading">
       <h2 className="font-display text-2xl" id="owner-rules-heading">
-        Checker rule sign-off
+        Requirements check: rule sign-off
       </h2>
       {result.isError ? (
         <ErrorState error={result.error} onRetry={() => result.refetch()} />
@@ -142,13 +206,6 @@ export function OwnerCheckerRules() {
                 <div>
                   <dt className="font-semibold">Next step it suggests</dt>
                   <dd>{item.nextStep}</dd>
-                </div>
-                <div>
-                  <dt className="font-semibold">In force</dt>
-                  <dd>
-                    From {formatDay(item.validFrom)}
-                    {item.validTo ? ` to ${formatDay(item.validTo)}` : ", with no end date"}
-                  </dd>
                 </div>
               </dl>
               <p className="text-sm text-muted-foreground">Shown with it: {item.disclosure}.</p>
@@ -211,7 +268,7 @@ export function OwnerCheckerRules() {
                   {formatCount(item.profilesRun)} most recent saved checks.
                 </p>
               </section>
-              {item.holds.length > 0 ? (
+              {item.holds.length > 0 && (
                 <section aria-label="What holds this rule">
                   <h4 className="font-semibold">What holds this rule</h4>
                   <ul className="list-disc pl-5">
@@ -220,40 +277,51 @@ export function OwnerCheckerRules() {
                     ))}
                   </ul>
                 </section>
-              ) : (
-                <fieldset className="space-y-2">
-                  <legend className="font-semibold">Confirm each check for version {item.version}</legend>
-                  {item.checks.map((c) => (
-                    <label key={c.id} className="flex items-start gap-2">
+              )}
+              <fieldset className="space-y-3">
+                <legend className="font-semibold">The five checks for version {item.version}</legend>
+                {item.checks.map((c) => (
+                  <div key={c.id}>
+                    {signable ? (
+                      <label className="flex items-start gap-2">
+                        <input
+                          type="checkbox"
+                          disabled={busy}
+                          checked={checks.includes(c.id)}
+                          onChange={(e) =>
+                            setChecks(e.target.checked ? [...checks, c.id] : checks.filter((x) => x !== c.id))
+                          }
+                        />
+                        {c.label}
+                      </label>
+                    ) : (
+                      <p>{c.label}</p>
+                    )}
+                    <div className="ml-6">{checkEvidence(c.id, item)}</div>
+                  </div>
+                ))}
+                {signable && (
+                  <>
+                    <label className="flex items-start gap-2">
                       <input
                         type="checkbox"
-                        disabled={busy}
-                        checked={checks.includes(c.id)}
-                        onChange={(e) =>
-                          setChecks(e.target.checked ? [...checks, c.id] : checks.filter((x) => x !== c.id))
-                        }
+                        disabled={busy || !allChecked}
+                        checked={approval === key}
+                        onChange={(e) => setApproval(e.target.checked ? key : "")}
                       />
-                      {c.label}
+                      I have read this rule version, its sources, the evidence for each check and its
+                      scenarios, and I sign it for release.
                     </label>
-                  ))}
-                  <label className="flex items-start gap-2">
-                    <input
-                      type="checkbox"
-                      disabled={busy || !allChecked}
-                      checked={approval === key}
-                      onChange={(e) => setApproval(e.target.checked ? key : "")}
-                    />
-                    I have read this rule version, its sources and its scenarios, and I sign it for release.
-                  </label>
-                  <button
-                    className="btn btn-primary"
-                    disabled={busy || !allChecked || approval !== key}
-                    onClick={() => void sign(item)}
-                  >
-                    Sign and release version {item.version}
-                  </button>
-                </fieldset>
-              )}
+                    <button
+                      className="btn btn-primary"
+                      disabled={busy || !allChecked || approval !== key}
+                      onClick={() => void sign(item)}
+                    >
+                      Sign and release version {item.version}
+                    </button>
+                  </>
+                )}
+              </fieldset>
               {item.live && (
                 <div className="space-y-2">
                   <label className="flex items-start gap-2">

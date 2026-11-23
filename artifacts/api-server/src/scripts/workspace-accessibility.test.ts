@@ -553,9 +553,13 @@ const answers: Record<string, unknown> = {
         reason: "A synthetic reason this may matter.",
         nextStep: "A synthetic next step.",
         appliesWhen: "When legal form is company.",
+        jurisdiction: "Nigeria as a whole (a federal rule).",
         validFrom: "2026-01-01",
         validTo: null,
         risk: "privacy",
+        scope: "A synthetic scope.",
+        limitations: "A synthetic limit.",
+        assumptions: [],
         disclosure:
           "Released on the Valo development owner's sign-off after a check of its official sources; not reviewed by a Nigerian legal, tax or sector specialist",
         version: 1,
