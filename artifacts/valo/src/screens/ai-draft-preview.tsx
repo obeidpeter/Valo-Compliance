@@ -1,7 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, FileCheck2, Loader2, RefreshCw, ShieldCheck } from "lucide-react";
+import {
+  AlertTriangle,
+  Check,
+  Copy,
+  Eye,
+  FileCheck2,
+  Loader2,
+  Pencil,
+  RefreshCw,
+  ShieldCheck,
+} from "lucide-react";
 import {
   useGetCustomerAIDraft,
   useAcceptCustomerAIDraft,
@@ -14,11 +24,13 @@ import {
 import { synchronizeFinancialBlocks } from "@workspace/valo-core/money";
 import { Meta, Shell, STATUS, TASK_LABEL } from "@/components/ai-draft-shared";
 import { Breadcrumbs } from "@/components/breadcrumbs";
+import { DocPreview } from "@/components/document-preview";
 import { FinancialFields, FINANCIAL_BLOCK_IDS } from "@/components/financial-fields";
 import { ErrorState, Notice, Skel } from "@/components/states";
 import { UnsavedNavigationDialog } from "@/components/unsaved-navigation-dialog";
 import { describeError } from "@/lib/api";
 import { live } from "@/lib/checker";
+import { formatDocumentPlainText } from "@/lib/guided-prefill";
 import { useUnsavedNavigation } from "@/lib/use-unsaved-navigation";
 import { cn } from "@/lib/utils";
 
@@ -38,6 +50,8 @@ export function AIDraftPreview({ id }: { id: string }) {
   const [content, setContent] = useState<CanonicalDocument | null>(null);
   const [finValid, setFinValid] = useState(true);
   const [confirm, setConfirm] = useState(false);
+  const [viewMode, setViewMode] = useState<"edit" | "preview">("edit");
+  const [copiedText, setCopiedText] = useState(false);
   const [initFor, setInitFor] = useState<string | null>(null);
   const leavingRef = useRef(false);
 
@@ -181,93 +195,161 @@ export function AIDraftPreview({ id }: { id: string }) {
             )}
             {content && (
               <>
-                <div>
-                  <label className="label" htmlFor="ai-title">
-                    Title
-                  </label>
-                  <input
-                    id="ai-title"
-                    className="field font-display !text-xl"
-                    maxLength={160}
-                    value={title}
-                    aria-invalid={!title.trim()}
-                    disabled={!canAccept}
-                    onChange={(e) => setTitle(e.target.value)}
-                    data-testid="input-ai-title"
-                  />
-                </div>
-                <div className="surface grid gap-4 p-5 sm:p-7">
-                  <p className="eyebrow">Key details (inserted as you typed them)</p>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {(["issuerName", "recipientName", "documentNumber", "issueDate", "dueDate"] as const).map(
-                      (k) => (
-                        <div key={k}>
-                          <label className="label !text-xs" htmlFor={"ai-f-" + k}>
-                            {
-                              {
-                                issuerName: "From",
-                                recipientName: "To",
-                                documentNumber: "Reference",
-                                issueDate: "Issue date",
-                                dueDate: "Due date",
-                              }[k]
-                            }
-                          </label>
-                          <input
-                            id={"ai-f-" + k}
-                            type={k.endsWith("Date") ? "date" : "text"}
-                            className="field"
-                            disabled={!canAccept}
-                            value={content.fields[k]}
-                            onChange={(e) =>
-                              setContent({ ...content, fields: { ...content.fields, [k]: e.target.value } })
-                            }
-                            data-testid={"input-ai-field-" + k}
-                          />
-                        </div>
-                      ),
-                    )}
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div
+                    role="group"
+                    aria-label="Draft preview view"
+                    className="inline-flex rounded-full border border-border bg-card p-1"
+                    data-testid="toggle-ai-preview-mode"
+                  >
+                    <button
+                      type="button"
+                      aria-pressed={viewMode === "edit"}
+                      onClick={() => setViewMode("edit")}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                        viewMode === "edit"
+                          ? "bg-foreground text-background"
+                          : "text-muted-foreground hover:text-foreground",
+                      )}
+                      data-testid="button-ai-view-edit"
+                    >
+                      <Pencil className="h-3.5 w-3.5" aria-hidden="true" /> Edit fields
+                    </button>
+                    <button
+                      type="button"
+                      aria-pressed={viewMode === "preview"}
+                      onClick={() => setViewMode("preview")}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                        viewMode === "preview"
+                          ? "bg-foreground text-background"
+                          : "text-muted-foreground hover:text-foreground",
+                      )}
+                      data-testid="button-ai-view-preview"
+                    >
+                      <Eye className="h-3.5 w-3.5" aria-hidden="true" /> Formatted preview
+                    </button>
                   </div>
-                </div>
-                <div className="surface grid gap-3 p-5 sm:p-7">
-                  <p className="eyebrow">Narrative</p>
-                  {narrative.map((b, i) => (
-                    <textarea
-                      key={b.id}
-                      aria-label={"Section " + (i + 1)}
-                      rows={Math.min(10, Math.max(3, b.text.split("\n").length + 1))}
-                      className="field"
-                      maxLength={8000}
-                      disabled={!canAccept}
-                      value={b.text}
-                      onChange={(e) =>
-                        setContent({
-                          ...content,
-                          blocks: content.blocks.map((x) =>
-                            x.id === b.id ? { ...x, text: e.target.value } : x,
-                          ),
-                        })
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    onClick={async () => {
+                      const plain = formatDocumentPlainText(title.trim() || TASK_LABEL[p.task], content);
+                      try {
+                        await navigator.clipboard.writeText(plain);
+                        setCopiedText(true);
+                        setTimeout(() => setCopiedText(false), 2500);
+                      } catch {
+                        // Clipboard access may be blocked in restricted contexts.
                       }
-                      data-testid={"input-ai-block-" + i}
-                    />
-                  ))}
-                </div>
-                {content.financialInput && (
-                  <div className="surface p-5 sm:p-7">
-                    <p className="eyebrow mb-4">Financial details</p>
-                    {canAccept ? (
-                      <FinancialFields
-                        key={p.previewHash}
-                        idPrefix="preview"
-                        value={content.financialInput}
-                        onChange={setFin}
-                      />
+                    }}
+                    data-testid="button-ai-copy-text"
+                  >
+                    {copiedText ? (
+                      <Check className="h-3.5 w-3.5" aria-hidden="true" />
                     ) : (
-                      <p className="text-sm text-muted-foreground">
-                        Edit financial details in the saved draft.
-                      </p>
+                      <Copy className="h-3.5 w-3.5" aria-hidden="true" />
                     )}
-                  </div>
+                    {copiedText ? "Copied text" : "Copy text"}
+                  </button>
+                </div>
+                {viewMode === "preview" ? (
+                  <DocPreview title={title.trim() || TASK_LABEL[p.task]} content={content} revision={1} />
+                ) : (
+                  <>
+                    <div>
+                      <label className="label" htmlFor="ai-title">
+                        Title
+                      </label>
+                      <input
+                        id="ai-title"
+                        className="field font-display !text-xl"
+                        maxLength={160}
+                        value={title}
+                        aria-invalid={!title.trim()}
+                        disabled={!canAccept}
+                        onChange={(e) => setTitle(e.target.value)}
+                        data-testid="input-ai-title"
+                      />
+                    </div>
+                    <div className="surface grid gap-4 p-5 sm:p-7">
+                      <p className="eyebrow">Key details (inserted as you typed them)</p>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {(
+                          ["issuerName", "recipientName", "documentNumber", "issueDate", "dueDate"] as const
+                        ).map((k) => (
+                          <div key={k}>
+                            <label className="label !text-xs" htmlFor={"ai-f-" + k}>
+                              {
+                                {
+                                  issuerName: "From",
+                                  recipientName: "To",
+                                  documentNumber: "Reference",
+                                  issueDate: "Issue date",
+                                  dueDate: "Due date",
+                                }[k]
+                              }
+                            </label>
+                            <input
+                              id={"ai-f-" + k}
+                              type={k.endsWith("Date") ? "date" : "text"}
+                              className="field"
+                              disabled={!canAccept}
+                              value={content.fields[k]}
+                              onChange={(e) =>
+                                setContent({
+                                  ...content,
+                                  fields: { ...content.fields, [k]: e.target.value },
+                                })
+                              }
+                              data-testid={"input-ai-field-" + k}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="surface grid gap-3 p-5 sm:p-7">
+                      <p className="eyebrow">Narrative</p>
+                      {narrative.map((b, i) => (
+                        <textarea
+                          key={b.id}
+                          aria-label={"Section " + (i + 1)}
+                          rows={Math.min(10, Math.max(3, b.text.split("\n").length + 1))}
+                          className="field"
+                          maxLength={8000}
+                          disabled={!canAccept}
+                          value={b.text}
+                          onChange={(e) =>
+                            setContent({
+                              ...content,
+                              blocks: content.blocks.map((x) =>
+                                x.id === b.id ? { ...x, text: e.target.value } : x,
+                              ),
+                            })
+                          }
+                          data-testid={"input-ai-block-" + i}
+                        />
+                      ))}
+                    </div>
+                    {content.financialInput && (
+                      <div className="surface p-5 sm:p-7">
+                        <p className="eyebrow mb-4">Financial details</p>
+                        {canAccept ? (
+                          <FinancialFields
+                            key={p.previewHash}
+                            idPrefix="preview"
+                            value={content.financialInput}
+                            onChange={setFin}
+                          />
+                        ) : (
+                          <p className="text-sm text-muted-foreground">
+                            Edit financial details in the saved draft.
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </>
                 )}
               </>
             )}

@@ -163,6 +163,21 @@ export function applyCustomerDetailsToGuided(
   return { data: { ...current, values }, appliedLabels };
 }
 
+/** Returns deduplicated customer/recipient names extracted from previously saved documents. */
+export function uniqueSavedCustomerNames(docs: readonly Pick<BusinessDocument, "content">[]): string[] {
+  const seen = new Set<string>();
+  const names: string[] = [];
+  for (const doc of docs) {
+    const name = extractReusableCustomerDetails(doc).recipientName?.trim();
+    if (!name) continue;
+    const norm = name.toLowerCase();
+    if (seen.has(norm)) continue;
+    seen.add(norm);
+    names.push(name);
+  }
+  return names;
+}
+
 /** Formats a clean plain-text draft summary of a document for quick copy-paste into WhatsApp or email. */
 export function formatDocumentPlainText(title: string, content: CanonicalDocument): string {
   const lines: string[] = [
