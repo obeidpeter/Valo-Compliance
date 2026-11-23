@@ -1317,6 +1317,7 @@ export default function DocumentEditor({ id }: { id: string }) {
             error={revs.error}
             onRetry={() => void revs.refetch()}
             currentRevision={baseRev.current}
+            currentDoc={{ title, content }}
             restoring={restoring}
             saving={state === "saving"}
             onRestore={restore}
