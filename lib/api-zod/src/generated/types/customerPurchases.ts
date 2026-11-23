@@ -13,6 +13,7 @@ export interface CustomerPurchases {
   available: boolean;
   message: string;
   livePaymentsEnabled: boolean;
+  hasMoreOrders?: boolean;
   orders: CommerceOrder[];
   products: TemplateOffer[];
   /** Downloads for the signed-in workspace's currently released purchases, indexed by current or past approved offer. */

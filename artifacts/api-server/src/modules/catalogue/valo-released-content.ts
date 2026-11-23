@@ -37,20 +37,28 @@ import {
   isFreeBaselineTemplate,
   offerForReleasedEdition,
 } from "./template-prices";
+function parseVisibleBundle(
+  row: typeof valoContentVersions.$inferSelect,
+  policyHash: string,
+  now = new Date(),
+) {
+  if (row.status !== "published" || +row.reviewBy <= +now) return null;
+  const parsed = publicationSchema.safeParse(row.bundle);
+  if (
+    !parsed.success ||
+    parsed.data.candidate.hash !== row.candidateHash ||
+    parsed.data.policy.hash !== policyHash ||
+    evaluatePublication(parsed.data, now).decision !== "eligible"
+  )
+    return null;
+  return parsed.data;
+}
 export function releaseVisible(
   row: typeof valoContentVersions.$inferSelect,
   policyHash: string,
   now = new Date(),
 ) {
-  const parsed = publicationSchema.safeParse(row.bundle);
-  return (
-    row.status === "published" &&
-    +row.reviewBy > +now &&
-    parsed.success &&
-    parsed.data.candidate.hash === row.candidateHash &&
-    parsed.data.policy.hash === policyHash &&
-    evaluatePublication(parsed.data, now).decision === "eligible"
-  );
+  return parseVisibleBundle(row, policyHash, now) !== null;
 }
 /**
  * Whether a published guide's policy still stands: the policy it was released under must be the
@@ -67,46 +75,52 @@ export function guidePolicyStands(
 export async function liveReleasedVersions() {
   const { db, valoContentVersions, valoPublicationPolicies } = await import("@workspace/db");
   if (setting("NODE_ENV") !== "development" || setting("REPLIT_DEPLOYMENT")) return [];
-  const currentPolicy = await operationalPolicy();
-  // The guidance policy as it stands, read when the first published guide is met.
-  let currentGuidance: Awaited<ReturnType<typeof guidancePolicy>>["policy"] | undefined;
-  const rows = await db
-    .select({ content: valoContentVersions, policy: valoPublicationPolicies })
-    .from(valoContentVersions)
-    .innerJoin(valoPublicationPolicies, eq(valoContentVersions.policyId, valoPublicationPolicies.id))
-    .where(eq(valoContentVersions.status, "published"));
-  const allowed = [];
-  for (const r of rows) {
-    if (
-      !releaseVisible(r.content, r.policy.hash) ||
-      !(await sourceTargetAllowed(db, "content", r.content.id, r.content.bundle))
-    )
-      continue;
-    const candidate = publicationSchema.parse(r.content.bundle).candidate;
-    if (candidate.evidenceMode === "original_operational") {
-      const policy =
-        candidate.contentClass === "practical_guide"
-          ? (await practicalGuideReleasePolicy(candidate))?.policy
-          : currentPolicy.policy;
-      if (
-        !policy?.ownerApproved ||
-        r.policy.hash !== policy.hash ||
-        !(await currentOperationalPermission(r.content))
-      )
-        continue;
-    }
-    // A guide answers to the guidance policy, as a template answers to the templates' one, and its
-    // wording rests on the same kind of provider permission, which must still be current.
-    if (candidate.contentClass === "sourced_guidance") {
-      currentGuidance ??= (await guidancePolicy()).policy;
-      if (
-        !guidePolicyStands(r.policy.hash, currentGuidance) ||
-        !(await currentOperationalPermission(r.content))
-      )
-        continue;
-    }
-    allowed.push(r.content);
-  }
+  const [currentPolicy, rows] = await Promise.all([
+    operationalPolicy(),
+    db
+      .select({ content: valoContentVersions, policy: valoPublicationPolicies })
+      .from(valoContentVersions)
+      .innerJoin(valoPublicationPolicies, eq(valoContentVersions.policyId, valoPublicationPolicies.id))
+      .where(eq(valoContentVersions.status, "published")),
+  ]);
+  const visible = rows.flatMap((r) => {
+    const bundle = parseVisibleBundle(r.content, r.policy.hash);
+    return bundle ? [{ row: r, bundle }] : [];
+  });
+  const needsGuidancePolicy = visible.some(
+    ({ bundle }) => bundle.candidate.contentClass === "sourced_guidance",
+  );
+  const currentGuidance = needsGuidancePolicy ? (await guidancePolicy()).policy : undefined;
+  const checked = await Promise.all(
+    visible.map(async ({ row: r, bundle }) => {
+      if (!(await sourceTargetAllowed(db, "content", r.content.id, r.content.bundle))) return null;
+      const candidate = bundle.candidate;
+      if (candidate.evidenceMode === "original_operational") {
+        const policy =
+          candidate.contentClass === "practical_guide"
+            ? (await practicalGuideReleasePolicy(candidate))?.policy
+            : currentPolicy.policy;
+        if (
+          !policy?.ownerApproved ||
+          r.policy.hash !== policy.hash ||
+          !(await currentOperationalPermission(r.content))
+        )
+          return null;
+      }
+      // A guide answers to the guidance policy, as a template answers to the templates' one, and its
+      // wording rests on the same kind of provider permission, which must still be current.
+      if (candidate.contentClass === "sourced_guidance") {
+        if (
+          !currentGuidance ||
+          !guidePolicyStands(r.policy.hash, currentGuidance) ||
+          !(await currentOperationalPermission(r.content))
+        )
+          return null;
+      }
+      return r.content;
+    }),
+  );
+  const allowed = checked.filter((item): item is typeof valoContentVersions.$inferSelect => item !== null);
   return allowed
     .sort((a, b) => b.version - a.version)
     .filter((r, i, all) => all.findIndex((v) => v.templateId === r.templateId) === i);

@@ -12,4 +12,6 @@ export interface OwnedCheckoutDownload {
   title: string;
   /** Same-origin file path that rechecks the purchased edition on every download. */
   downloadPath: string;
+  /** Optional same-origin PDF file path for multi-format reviewed editions. */
+  pdfDownloadPath?: string;
 }

@@ -675,12 +675,15 @@ export interface OwnedCheckoutDownload {
   title: string;
   /** Same-origin file path that rechecks the purchased edition on every download. */
   downloadPath: string;
+  /** Optional same-origin PDF file path for multi-format reviewed editions. */
+  pdfDownloadPath?: string;
 }
 
 export interface CustomerPurchases {
   available: boolean;
   message: string;
   livePaymentsEnabled: boolean;
+  hasMoreOrders?: boolean;
   orders: CommerceOrder[];
   products: TemplateOffer[];
   /** Downloads for the signed-in workspace's currently released purchases, indexed by current or past approved offer. */
