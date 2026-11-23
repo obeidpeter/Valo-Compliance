@@ -20,7 +20,7 @@ function productFiles(directory: string): string[] {
   return readdirSync(directory).flatMap((entry) => {
     const full = join(directory, entry);
     if (statSync(full).isDirectory()) return entry === "test-support" ? [] : productFiles(full);
-    const path = relative(source, full);
+    const path = relative(source, full).replaceAll("\\", "/");
     if (!path.endsWith(".ts") || path.endsWith(".test.ts")) return [];
     if (path.startsWith("scripts/") && !shipped.has(path)) return [];
     return [path];
