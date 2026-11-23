@@ -17,6 +17,7 @@ import {
 } from "@workspace/api-client-react";
 import { ErrorState, Notice, Skel } from "@/components/states";
 import { FIELD_LABELS, describeError, missingFieldItems, newBlockId } from "@/lib/api";
+import { suggestedDocumentTitle } from "@/lib/document-list-helpers";
 import { applyIssuerDetailsToGuided, extractReusableIssuerDetails } from "@/lib/guided-prefill";
 import { cn } from "@/lib/utils";
 import { Breadcrumbs } from "@/components/breadcrumbs";
@@ -522,6 +523,7 @@ export default function DocumentEditor({ id }: { id: string }) {
       },
     ]);
   const saved = doc.data;
+  const titleSuggestion = suggestedDocumentTitle(title, content);
   const reusableSources = guided
     ? (otherDocs.data ?? [])
         .filter((candidate) => candidate.id !== id)
@@ -604,11 +606,24 @@ export default function DocumentEditor({ id }: { id: string }) {
         onChange={(e) => update({ title: e.target.value, content })}
         placeholder="Title of this document"
         aria-invalid={!title.trim()}
-        className="document-title font-display mt-3 w-full rounded-md bg-transparent text-4xl leading-tight placeholder:text-muted-foreground/60 sm:text-5xl"
+        className="document-title no-print font-display mt-3 w-full rounded-md bg-transparent text-4xl leading-tight placeholder:text-muted-foreground/60 sm:text-5xl"
         data-testid="input-title"
       />
       {!title.trim() && (
-        <p className="hint !text-destructive">Give the document a title so that it can be saved.</p>
+        <p className="hint no-print !text-destructive">Give the document a title so that it can be saved.</p>
+      )}
+      {titleSuggestion && (
+        <div className="no-print mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          <span>Make this easier to spot in your list:</span>
+          <button
+            type="button"
+            className="rounded-full border border-border bg-card px-3 py-1 font-medium text-foreground transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            onClick={() => update({ title: titleSuggestion, content })}
+            data-testid="button-suggest-title"
+          >
+            Rename to &ldquo;{titleSuggestion}&rdquo;
+          </button>
+        </div>
       )}
 
       {state === "conflict" && (

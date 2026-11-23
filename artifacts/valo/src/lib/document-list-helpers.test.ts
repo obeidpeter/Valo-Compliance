@@ -3,7 +3,14 @@ import { test } from "node:test";
 import type { BusinessDocument, CanonicalDocument } from "@workspace/api-client-react";
 import { compileGuidedContent, emptyGuidedData } from "@workspace/valo-core/guided-runtime";
 import { blankContent } from "./api";
-import { documentKindLabel, filterDocuments } from "./document-list-helpers";
+import {
+  documentContextSubtitle,
+  documentKindLabel,
+  filterDocuments,
+  readHiddenDocumentIds,
+  suggestedDocumentTitle,
+  writeHiddenDocumentIds,
+} from "./document-list-helpers";
 
 function doc(id: string, title: string, content: CanonicalDocument): BusinessDocument {
   return {
@@ -24,7 +31,19 @@ test("documentKindLabel identifies guided templates and blank freeform documents
   assert.equal(documentKindLabel({ content: blankContent() }), "Freeform");
 });
 
-test("filterDocuments filters by title query and completeness status", () => {
+test("documentContextSubtitle and suggestedDocumentTitle distinguish generic drafts cleanly", () => {
+  const guided = emptyGuidedData("TPL-01");
+  guided.values.recipientName = "Synthetic Buyer Ltd";
+  guided.values.documentNumber = "INV-007";
+  const compiled = compileGuidedContent(guided) as CanonicalDocument;
+
+  assert.equal(documentContextSubtitle({ content: compiled }), "Synthetic Buyer Ltd · INV-007");
+  assert.equal(suggestedDocumentTitle("Invoice", compiled), "Invoice — Synthetic Buyer Ltd (INV-007)");
+  // Customized titles are never overwritten with a suggestion.
+  assert.equal(suggestedDocumentTitle("Q4 Retainer for Synthetic Buyer", compiled), null);
+});
+
+test("filterDocuments matches title or context subtitle, completeness status, and hidden set", () => {
   const completeContent = blankContent("Synthetic Trading");
   completeContent.fields = {
     issuerName: "Synthetic Trading",
@@ -36,13 +55,17 @@ test("filterDocuments filters by title query and completeness status", () => {
   };
   completeContent.blocks = [{ id: "b1", type: "paragraph", text: "Completed body text.", rows: [] }];
 
-  const completeDoc = doc("1", "November Invoice", completeContent);
+  const completeDoc = doc("1", "Invoice", completeContent);
   const incompleteDoc = doc("2", "Draft Quotation", blankContent("Synthetic Trading"));
   const all = [completeDoc, incompleteDoc];
 
   assert.deepEqual(
     filterDocuments(all, "", "all").map((d) => d.id),
     ["1", "2"],
+  );
+  assert.deepEqual(
+    filterDocuments(all, "INV-1", "all").map((d) => d.id),
+    ["1"],
   );
   assert.deepEqual(
     filterDocuments(all, "", "incomplete").map((d) => d.id),
@@ -53,11 +76,24 @@ test("filterDocuments filters by title query and completeness status", () => {
     ["1"],
   );
   assert.deepEqual(
-    filterDocuments(all, "invoice", "complete").map((d) => d.id),
+    filterDocuments(all, "", "all", new Set(["2"])).map((d) => d.id),
     ["1"],
   );
   assert.deepEqual(
-    filterDocuments(all, "invoice", "incomplete").map((d) => d.id),
-    [],
+    filterDocuments(all, "", "hidden", new Set(["2"])).map((d) => d.id),
+    ["2"],
   );
+});
+
+test("hidden document IDs persist cleanly and tolerate corrupt storage", () => {
+  const map = new Map<string, string>();
+  const storage = {
+    getItem: (k: string) => map.get(k) ?? null,
+    setItem: (k: string, v: string) => void map.set(k, v),
+  };
+  writeHiddenDocumentIds(new Set(["doc-a", "doc-b"]), storage);
+  assert.deepEqual([...readHiddenDocumentIds(storage)].sort(), ["doc-a", "doc-b"]);
+
+  map.set("valo-hidden-docs-v1", "{bad json");
+  assert.equal(readHiddenDocumentIds(storage).size, 0);
 });
