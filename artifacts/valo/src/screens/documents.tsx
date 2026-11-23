@@ -1,6 +1,15 @@
 import { Link } from "wouter";
 import { BookOpen, FilePlus2 } from "lucide-react";
-import { useGetWorkspace, getGetWorkspaceQueryKey } from "@workspace/api-client-react";
+import {
+  getGetWorkspaceQueryKey,
+  getListDocumentsQueryKey,
+  getListSavedTemplatesQueryKey,
+  getListWorkspaceExportsQueryKey,
+  useGetWorkspace,
+  useListDocuments,
+  useListSavedTemplates,
+  useListWorkspaceExports,
+} from "@workspace/api-client-react";
 import { DocumentList } from "@/components/document-list";
 import { LibraryExports } from "@/components/library-exports";
 import { SavedTemplates } from "@/components/saved-templates";
@@ -16,6 +25,11 @@ import { formatCount } from "@/lib/format";
  */
 export default function DocumentsPage() {
   const ws = useGetWorkspace({ query: { enabled: true, queryKey: getGetWorkspaceQueryKey() } });
+  // The lists' reads start with the workspace's, not after it; each list still appears only once the
+  // workspace has loaded, and reads the same query then.
+  useListDocuments({ query: { enabled: true, queryKey: getListDocumentsQueryKey() } });
+  useListWorkspaceExports({ query: { enabled: true, queryKey: getListWorkspaceExportsQueryKey() } });
+  useListSavedTemplates({ query: { enabled: true, queryKey: getListSavedTemplatesQueryKey() } });
 
   return (
     <div className="mx-auto max-w-7xl px-5 py-12 lg:px-8">

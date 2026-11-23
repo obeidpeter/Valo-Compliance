@@ -21,7 +21,7 @@ const sessions = makeSessionVerifier({
 /** Requires an active provider session, an unrestricted account and a verified primary
  * email, then resolves the workspace from the server-side membership on every request.
  * Payments, downloads, privacy, the account page and AI drafts check the provider live;
- * listed everyday routes reuse a passing check for at most a minute (decision 0003).
+ * listed everyday routes reuse a passing check for at most a minute (decisions 0003 and 0019).
  * No browser-supplied tenant or role is used. Provider failure fails closed. The rest of
  * the request runs in the workspace's database scope: row-level security then limits every
  * query to this workspace's rows, even one that forgets its workspace filter.
@@ -37,7 +37,7 @@ export const verifiedWorkspace: RequestHandler = async (req, res, next) => {
     }
     const check = await sessions.verify(
       { userId: auth.userId, sessionId: auth.sessionId },
-      routeUsesCachedCheck(req.baseUrl + req.path) ? "cached" : "live",
+      routeUsesCachedCheck(req.baseUrl + req.path, req.method) ? "cached" : "live",
     );
     if (!check.ok) {
       res.status(check.status).json({ error: check.error });
