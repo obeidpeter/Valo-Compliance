@@ -16,6 +16,7 @@ import { ValoProblem } from "../../platform/valo-problem";
 import {
   assessmentRow,
   serializeAssessment,
+  workspaceReadTransaction,
   workspaceTransaction,
   workspaceEvent,
   releasedRegistry,
@@ -83,11 +84,27 @@ async function cancelOutstanding(
       ),
     );
 }
-async function scheduleTask(tx: WorkspaceTx, actor: WorkspaceActor, task: typeof valoTasks.$inferSelect) {
-  const [prefs] = await tx
-    .select()
-    .from(valoReminderPreferences)
-    .where(eq(valoReminderPreferences.workspaceId, actor.workspaceId));
+type ReleasedRegistry = Awaited<ReturnType<typeof releasedRegistry>>;
+type ScheduleContext = {
+  prefs?: typeof valoReminderPreferences.$inferSelect | null;
+  getRegistry?: () => Promise<ReleasedRegistry>;
+  now?: Date;
+};
+async function scheduleTask(
+  tx: WorkspaceTx,
+  actor: WorkspaceActor,
+  task: typeof valoTasks.$inferSelect,
+  context?: ScheduleContext,
+) {
+  const prefs =
+    context?.prefs !== undefined
+      ? context.prefs
+      : (
+          await tx
+            .select()
+            .from(valoReminderPreferences)
+            .where(eq(valoReminderPreferences.workspaceId, actor.workspaceId))
+        )[0];
   if (
     !prefs?.enabled ||
     !task.dueDate ||
@@ -97,9 +114,9 @@ async function scheduleTask(tx: WorkspaceTx, actor: WorkspaceActor, task: typeof
     task.needsReview
   )
     return;
-  const now = new Date();
+  const now = context?.now ?? new Date();
   if (task.ruleId) {
-    const registry = await releasedRegistry(tx, now);
+    const registry = context?.getRegistry ? await context.getRegistry() : await releasedRegistry(tx, now);
     const day = new Date(now.getTime() + 3600000).toISOString().slice(0, 10);
     if (
       !registry.rules.some(
@@ -141,10 +158,32 @@ async function scheduleTask(tx: WorkspaceTx, actor: WorkspaceActor, task: typeof
       });
   }
 }
+async function markIneligibleSourceTasks(
+  tx: WorkspaceTx,
+  actor: WorkspaceActor,
+  rows: (typeof valoTasks.$inferSelect)[],
+) {
+  const candidates = rows.filter((row) => row.ruleId && !row.needsReview);
+  if (candidates.length === 0) return;
+  const registry = await releasedRegistry(tx, new Date());
+  for (const row of candidates) {
+    if (!registry.rules.some((r) => r.id === row.ruleId && r.version === row.ruleVersion)) {
+      await tx
+        .update(valoTasks)
+        .set({ needsReview: true })
+        .where(and(eq(valoTasks.id, row.id), eq(valoTasks.workspaceId, actor.workspaceId)));
+      row.needsReview = true;
+      await cancelOutstanding(tx, actor, row.id, "SOURCE_NO_LONGER_ELIGIBLE");
+      await workspaceEvent(tx, actor, "task.source_review_required", row.id, row.revision);
+    }
+  }
+}
 export async function createTask(actor: WorkspaceActor, raw: unknown) {
   const input = taskInput.parse(raw);
   return workspaceTransaction(actor, async (tx) => {
     let ruleVersion: number | null = null;
+    let checkedRegistry: ReleasedRegistry | undefined;
+    let checkedNow: Date | undefined;
     if (input.assessmentId) {
       const saved = serializeAssessment(await assessmentRow(tx, actor, input.assessmentId));
       if (input.ruleId) {
@@ -167,6 +206,8 @@ export async function createTask(actor: WorkspaceActor, raw: unknown) {
             "This item is out of date. Run the check again before you make a task from it.",
           );
         ruleVersion = item.ruleVersion;
+        checkedRegistry = current;
+        checkedNow = now;
       }
     }
     const row = singleRow(
@@ -181,7 +222,14 @@ export async function createTask(actor: WorkspaceActor, raw: unknown) {
         })
         .returning(),
     );
-    await scheduleTask(tx, actor, row);
+    await scheduleTask(
+      tx,
+      actor,
+      row,
+      checkedRegistry && checkedNow
+        ? { getRegistry: async () => checkedRegistry, now: checkedNow }
+        : undefined,
+    );
     await workspaceEvent(tx, actor, "task.created", row.id, 1);
     return taskDto(row);
   });
@@ -228,20 +276,7 @@ export async function listTasksPage(actor: WorkspaceActor, raw: unknown) {
       .orderBy(desc(valoTasks.updatedAt), desc(valoTasks.id))
       .limit(pageSize)
       .offset((query.page - 1) * pageSize);
-    const registry = await releasedRegistry(tx, new Date());
-    for (const row of rows)
-      if (
-        row.ruleId &&
-        !registry.rules.some((r) => r.id === row.ruleId && r.version === row.ruleVersion) &&
-        !row.needsReview
-      ) {
-        await tx
-          .update(valoTasks)
-          .set({ needsReview: true })
-          .where(and(eq(valoTasks.id, row.id), eq(valoTasks.workspaceId, actor.workspaceId)));
-        row.needsReview = true;
-        await cancelOutstanding(tx, actor, row.id, "SOURCE_NO_LONGER_ELIGIBLE");
-      }
+    await markIneligibleSourceTasks(tx, actor, rows);
     return {
       items: rows.map(taskDto),
       total: counts.total,
@@ -261,22 +296,7 @@ export async function listTasks(actor: WorkspaceActor) {
       .where(and(eq(valoTasks.workspaceId, actor.workspaceId), isNull(valoTasks.deletedAt)))
       .orderBy(desc(valoTasks.updatedAt))
       .limit(200);
-    const registry = await releasedRegistry(tx, new Date());
-    for (const row of rows) {
-      if (
-        row.ruleId &&
-        !registry.rules.some((r) => r.id === row.ruleId && r.version === row.ruleVersion) &&
-        !row.needsReview
-      ) {
-        await tx
-          .update(valoTasks)
-          .set({ needsReview: true })
-          .where(and(eq(valoTasks.id, row.id), eq(valoTasks.workspaceId, actor.workspaceId)));
-        row.needsReview = true;
-        await cancelOutstanding(tx, actor, row.id, "SOURCE_NO_LONGER_ELIGIBLE");
-        await workspaceEvent(tx, actor, "task.source_review_required", row.id, row.revision);
-      }
-    }
+    await markIneligibleSourceTasks(tx, actor, rows);
     return rows.map(taskDto);
   });
 }
@@ -322,7 +342,7 @@ export async function deleteTask(actor: WorkspaceActor, id: string, raw: unknown
   });
 }
 export async function getReminderPreferences(actor: WorkspaceActor) {
-  return workspaceTransaction(actor, async (tx) => {
+  return workspaceReadTransaction(actor, async (tx) => {
     const [row] = await tx
       .select()
       .from(valoReminderPreferences)
@@ -365,10 +385,13 @@ export async function saveReminderPreferences(actor: WorkspaceActor, raw: unknow
       actorId: actor.identityId,
       updatedAt: new Date(),
     };
-    await tx
-      .insert(valoReminderPreferences)
-      .values({ workspaceId: actor.workspaceId, ...values })
-      .onConflictDoUpdate({ target: valoReminderPreferences.workspaceId, set: values });
+    const savedPrefs = singleRow(
+      await tx
+        .insert(valoReminderPreferences)
+        .values({ workspaceId: actor.workspaceId, ...values })
+        .onConflictDoUpdate({ target: valoReminderPreferences.workspaceId, set: values })
+        .returning(),
+    );
     await cancelOutstanding(
       tx,
       actor,
@@ -380,14 +403,17 @@ export async function saveReminderPreferences(actor: WorkspaceActor, raw: unknow
         .select()
         .from(valoTasks)
         .where(and(eq(valoTasks.workspaceId, actor.workspaceId), isNull(valoTasks.deletedAt)));
-      for (const task of tasks) await scheduleTask(tx, actor, task);
+      const now = new Date();
+      let cachedRegistry: ReleasedRegistry | undefined;
+      const getRegistry = async () => (cachedRegistry ??= await releasedRegistry(tx, now));
+      for (const task of tasks) await scheduleTask(tx, actor, task, { prefs: savedPrefs, getRegistry, now });
     }
     await workspaceEvent(tx, actor, "reminders.preferences_saved", actor.workspaceId, values.revision);
   });
   return getReminderPreferences(actor);
 }
 export async function listReminders(actor: WorkspaceActor) {
-  return workspaceTransaction(actor, async (tx) =>
+  return workspaceReadTransaction(actor, async (tx) =>
     ListRemindersResponse.parse(
       (
         await tx
