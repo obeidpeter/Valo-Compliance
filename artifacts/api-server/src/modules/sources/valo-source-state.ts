@@ -1,6 +1,6 @@
 import { sql } from "drizzle-orm";
 import type { db } from "@workspace/db";
-import { publicationSchema } from "@workspace/valo-core";
+import { releaseEvidence } from "@workspace/valo-core";
 import { ValoProblem } from "../../platform/valo-problem";
 export type SourceTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 export type SourceReader = Pick<SourceTx, "execute">;
@@ -21,10 +21,10 @@ export async function sourceTargetAllowed(
   raw: unknown,
   now = new Date(),
 ) {
-  const parsed = publicationSchema.safeParse(raw);
-  if (!parsed.success) return false;
-  const b = parsed.data,
-    checked = Date.parse(b.candidate.sourceCheckDate);
+  // A reviewed bundle or an owner-signed rule's (decision 0020).
+  const b = releaseEvidence(raw);
+  if (!b) return false;
+  const checked = Date.parse(b.candidate.sourceCheckDate);
   const cadence = b.candidate.risk === "general" ? 90 : 30;
   if (!Number.isFinite(checked) || checked > +now || checked + cadence * 86400000 <= +now) return false;
   const held =

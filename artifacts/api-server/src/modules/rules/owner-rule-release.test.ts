@@ -7,6 +7,7 @@ import {
   evaluatePublication,
   ownerRuleBundleSchema,
   ownerRuleMatchesBundle,
+  releaseEvidence,
   ruleSchema,
   type OwnerRuleBundle,
 } from "@workspace/valo-core";
@@ -184,4 +185,17 @@ test("the checker holds an owner-signed rule until the registry trusts its manif
     trusted.items.map((item) => [item.ruleId, item.label]),
     [["synthetic-owner-rule", "Likely relevant"]],
   );
+});
+
+test("the source checks read the candidate and sources of a reviewed and of an owner-signed bundle, and nothing else", () => {
+  const { bundle, reviewed } = release();
+  assert.deepEqual(releaseEvidence(bundle), { candidate: bundle.candidate, sources: bundle.sources });
+  assert.deepEqual(releaseEvidence(reviewed.bundle), {
+    candidate: reviewed.bundle.candidate,
+    sources: reviewed.bundle.sources,
+  });
+  // An owner-signed candidate cannot say it was AI drafted and reviewed, and no other shape is read.
+  assert.equal(releaseEvidence({ ...bundle, candidate: reviewed.bundle.candidate }), null);
+  assert.equal(releaseEvidence({ candidate: bundle.candidate, sources: bundle.sources }), null);
+  assert.equal(releaseEvidence(null), null);
 });

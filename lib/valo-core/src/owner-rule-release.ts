@@ -201,3 +201,12 @@ export function parseOwnerRuleRelease(rule: unknown, bundle: unknown) {
     b = ownerRuleBundleSchema.safeParse(bundle);
   return r.success && b.success ? { rule: r.data, bundle: b.data } : null;
 }
+
+/** The candidate and sources of a stored release's bundle, whichever route released it: a reviewed
+ * publication bundle or an owner-signed rule bundle. Null when it is neither. */
+export function releaseEvidence(raw: unknown) {
+  const reviewed = publicationSchema.safeParse(raw);
+  if (reviewed.success) return { candidate: reviewed.data.candidate, sources: reviewed.data.sources };
+  const owner = ownerRuleBundleSchema.safeParse(raw);
+  return owner.success ? { candidate: owner.data.candidate, sources: owner.data.sources } : null;
+}
