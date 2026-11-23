@@ -3,7 +3,8 @@ import { Link } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAccountEpoch } from "./account-state-boundary";
 import { ErrorState } from "./states";
-import { SupportDraftGuard, SupportMessages } from "./support-cases";
+import { StaffSupportCaseDetail } from "./staff-support-case-detail";
+import { SupportDraftGuard } from "./support-cases";
 import { formatDateTime } from "@/lib/format";
 import {
   actOnSupportCase,
@@ -21,13 +22,6 @@ import {
 } from "@/lib/support-case-api";
 
 const statuses: (SupportStatus | "all")[] = ["all", "open", "in_progress", "awaiting_customer", "resolved"];
-const actionLabels: Record<SupportAction, string> = {
-  assign: "Assign support staff",
-  reply: "Save a reply",
-  resolve: "Resolve with a reason",
-  reopen: "Reopen with a reason",
-  escalate_content: "Queue internal content triage",
-};
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function StaffSupportCases({ onDirtyChange }: { onDirtyChange?: (dirty: boolean) => void }) {
@@ -268,347 +262,42 @@ export function StaffSupportCases({ onDirtyChange }: { onDirtyChange?: (dirty: b
         </>
       )}
       {!denied && selected && (
-        <section className="surface mt-7 min-w-0 p-5 sm:p-7" aria-labelledby="staff-support-detail-heading">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <h3 id="staff-support-detail-heading" className="font-display break-all text-2xl">
-              {!detailDenied && row ? row.reference : "Support case"}
-            </h3>
-            <button
-              type="button"
-              className="btn btn-ghost btn-sm"
-              disabled={detail.isFetching || mutation.isPending}
-              onClick={() => void reloadDetail()}
-            >
-              Reload latest case
-            </button>
-          </div>
-          {detail.isLoading && (
-            <p className="mt-4" role="status">
-              Loading the case before enabling operations…
-            </p>
-          )}
-          {detail.isError && (
-            <div className="mt-4">
-              <ErrorState error={detail.error} onRetry={() => void reloadDetail()} />
-            </div>
-          )}
-          {!detailDenied && detail.data && row && (
-            <div className="mt-5 grid min-w-0 gap-5">
-              <dl className="grid gap-3 text-sm sm:grid-cols-2">
-                {(
-                  [
-                    ["Status", row.status.replaceAll("_", " ")],
-                    ["Version", String(row.version)],
-                    ["Contact email", row.contactEmail ?? "Not recorded"],
-                    ["Assigned staff", row.assignedTo ?? "Unassigned"],
-                    ["Outside-adviser sharing consent", row.sharingConsent ? "Given" : "Not given"],
-                    [
-                      "Request source",
-                      row.sourceKind === "access" ? "Anonymous account access" : "Signed-in workspace",
-                    ],
-                  ] as const
-                ).map(([label, value]) => (
-                  <div key={label} className="min-w-0">
-                    <dt className="text-xs text-muted-foreground">{label}</dt>
-                    <dd className="mt-1 [overflow-wrap:anywhere]">{value}</dd>
-                  </div>
-                ))}
-              </dl>
-              <div>
-                <h4 className="text-sm font-semibold">Full original request</h4>
-                <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed [overflow-wrap:anywhere]">
-                  {row.scope}
-                </p>
-              </div>
-              <p className="rounded-xl bg-secondary p-3 text-sm">{detail.data.notice}</p>
-              <SupportMessages messages={detail.data.messages} staff />
-              <div
-                className="flex flex-wrap items-center gap-3"
-                role="group"
-                aria-label="Staff support conversation pages"
-              >
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm"
-                  disabled={messagesPage === 1 || detail.isFetching || mutation.isPending}
-                  onClick={() => setMessagesPage(messagesPage - 1)}
-                >
-                  Newer messages
-                </button>
-                <span className="text-xs text-muted-foreground">
-                  Message page {detail.data.messagesPage}
-                  {messagesPage === 1 ? " · newest messages" : ""}
-                </span>
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm"
-                  disabled={!detail.data.moreMessages || detail.isFetching || mutation.isPending}
-                  onClick={() => setMessagesPage(messagesPage + 1)}
-                >
-                  Older messages
-                </button>
-              </div>
-              {!!detail.data.escalations?.length && (
-                <section aria-label="Content review referrals">
-                  <h4 className="text-sm font-semibold">Content review referrals</h4>
-                  <ul className="mt-3 grid gap-3">
-                    {detail.data.escalations.map((item) => (
-                      <li key={item.id} className="rounded-xl border border-border p-4 text-sm">
-                        <p className="[overflow-wrap:anywhere]">
-                          <strong>{item.status.replaceAll("_", " ")}</strong> · {item.targetKind} ·{" "}
-                          {item.targetId}
-                        </p>
-                        <p className="mt-2 whitespace-pre-wrap [overflow-wrap:anywhere]">{item.reason}</p>
-                        <p className="mt-2 text-xs text-muted-foreground">{formatDateTime(item.createdAt)}</p>
-                      </li>
-                    ))}
-                  </ul>
-                  {detail.data.escalationsTruncated && (
-                    <p className="mt-3 text-xs text-muted-foreground">
-                      Only the most recent referrals are shown. Earlier referral evidence remains in the audit
-                      records.
-                    </p>
-                  )}
-                </section>
-              )}
-              {!!detail.data.events?.length && (
-                <details className="border-t border-border pt-4">
-                  <summary className="cursor-pointer text-sm font-medium">Case operation history</summary>
-                  <ol className="mt-3 grid gap-3 text-sm" aria-label="Support operation history">
-                    {detail.data.events.map((item) => (
-                      <li key={item.id}>
-                        <strong>{item.action.replaceAll("_", " ")}</strong> · {formatDateTime(item.createdAt)}
-                        <p className="mt-1 text-xs text-muted-foreground [overflow-wrap:anywhere]">
-                          Recorded actor: {item.actorId}
-                        </p>
-                      </li>
-                    ))}
-                  </ol>
-                  {detail.data.eventsTruncated && (
-                    <p className="mt-3 text-xs text-muted-foreground">
-                      Only the most recent operation entries are shown. Earlier evidence remains in the audit
-                      records.
-                    </p>
-                  )}
-                </details>
-              )}
-              <form
-                className="grid min-w-0 gap-4 border-t border-border pt-5"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  submit();
-                }}
-              >
-                <div className="grid gap-2 text-sm">
-                  <label htmlFor="support-operation">Operation</label>
-                  <select
-                    id="support-operation"
-                    className="field"
-                    value={action}
-                    disabled={fieldsLocked}
-                    onChange={(e) => {
-                      setAction(e.target.value as SupportAction);
-                      setSaved("");
-                    }}
-                  >
-                    {(Object.keys(actionLabels) as SupportAction[]).map((value) => (
-                      <option
-                        key={value}
-                        value={value}
-                        disabled={
-                          value === "reopen"
-                            ? !resolved
-                            : value === "escalate_content"
-                              ? !mayEscalate || resolved
-                              : resolved
-                        }
-                      >
-                        {actionLabels[value]}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                {resolved && action !== "reopen" && (
-                  <p className="text-sm">
-                    This case is resolved. Choose “Reopen with a reason” before further operations.
-                  </p>
-                )}
-                {action === "assign" ? (
-                  <div className="grid gap-3">
-                    <div className="grid gap-2 text-sm">
-                      <label htmlFor="support-assignee">Active support staff identity</label>
-                      <select
-                        id="support-assignee"
-                        className="field"
-                        value={assignee}
-                        disabled={fieldsLocked || assignees.isFetching || assignees.isError}
-                        onChange={(e) => setAssignee(e.target.value)}
-                        required
-                      >
-                        <option value="">Choose an authorised support identity</option>
-                        {assignees.data?.assignees.map((item) => (
-                          <option key={item.identityId} value={item.identityId}>
-                            {item.identityId}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    {assignees.isLoading && (
-                      <p role="status" className="text-sm">
-                        Loading active support staff…
-                      </p>
-                    )}
-                    {assignees.isError && (
-                      <ErrorState error={assignees.error} onRetry={() => void assignees.refetch()} />
-                    )}
-                    {!assignees.isLoading && !assignees.isError && !assignees.data?.assignees.length && (
-                      <p className="text-sm">
-                        No active support identities were returned. Assignment is unavailable.
-                      </p>
-                    )}
-                    <p className="text-xs text-muted-foreground">
-                      Only existing active support identities can be assigned. This does not grant a staff
-                      role.
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    <div className="grid gap-2 text-sm">
-                      <label htmlFor="support-operation-body">
-                        {action === "reply"
-                          ? row.sourceKind === "access"
-                            ? "Reply text to save internally"
-                            : "Reply for the customer portal"
-                          : "Reason and relevant scope"}
-                      </label>
-                      <textarea
-                        id="support-operation-body"
-                        className="field min-h-32"
-                        value={body}
-                        onChange={(e) => setBody(e.target.value)}
-                        disabled={fieldsLocked}
-                        required
-                        minLength={8}
-                        maxLength={4000}
-                        aria-describedby="support-operation-body-hint"
-                      />
-                    </div>
-                    <p id="support-operation-body-hint" className="text-xs text-muted-foreground">
-                      8–4,000 characters. Do not add passwords, payment credentials or identity documents.
-                      {action === "reply" &&
-                        (row.sourceKind === "access"
-                          ? " This anonymous case has no customer portal. The reply is stored internally and is not sent to the email address."
-                          : " This reply appears in the signed-in customer portal. It is not emailed.")}
-                    </p>
-                  </>
-                )}
-                {action === "escalate_content" && (
-                  <>
-                    <div className="grid gap-2 text-sm">
-                      <label htmlFor="support-target-kind">Review target</label>
-                      <select
-                        id="support-target-kind"
-                        className="field"
-                        value={targetKind}
-                        disabled={fieldsLocked}
-                        onChange={(e) => setTargetKind(e.target.value as "content" | "rule")}
-                      >
-                        <option value="content">Content record</option>
-                        <option value="rule">Rule record</option>
-                      </select>
-                    </div>
-                    <div className="grid gap-2 text-sm">
-                      <label htmlFor="support-target-id">Existing target record UUID</label>
-                      <input
-                        id="support-target-id"
-                        className="field font-mono text-sm"
-                        value={targetId}
-                        onChange={(e) => setTargetId(e.target.value)}
-                        disabled={fieldsLocked}
-                        required
-                        autoComplete="off"
-                        maxLength={36}
-                        pattern="[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
-                      />
-                    </div>
-                    <p className="rounded-xl bg-secondary p-3 text-sm">
-                      Internal content triage creates a queue item for authorised content staff. Include only
-                      the issue and relevant version details; leave out contact details and private document
-                      text. This does not share externally, contact an adviser, place a hold or change
-                      publication.
-                    </p>
-                  </>
-                )}
-                {!mayEscalate && (
-                  <p className="text-xs text-muted-foreground">
-                    Internal content triage is available for workspace cases. Anonymous account-access cases
-                    cannot use this path.
-                  </p>
-                )}
-                <div className="flex flex-wrap gap-3">
-                  <button
-                    className="btn btn-primary btn-sm"
-                    disabled={operationLocked || !actionAllowed || !validInput}
-                  >
-                    {mutation.isPending
-                      ? "Saving operation…"
-                      : action === "reply"
-                        ? row.sourceKind === "access"
-                          ? "Save internal reply · no delivery"
-                          : "Save reply to customer portal"
-                        : actionLabels[action]}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-ghost btn-sm"
-                    disabled={fieldsLocked}
-                    onClick={discard}
-                  >
-                    Discard unsaved details
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
-          {mutation.isError && (
-            <div className="mt-4">
-              <ErrorState
-                error={mutation.error}
-                title={conflict ? "This case changed" : "Operation was not confirmed"}
-              />
-            </div>
-          )}
-          {conflict && (
-            <p className="mt-3 text-sm" role="status">
-              Your operation details are preserved. Reload the latest case, review its version and history,
-              then apply the operation again.
-            </p>
-          )}
-          {uncertain && (
-            <div className="mt-3 rounded-xl border border-border p-4 text-sm" role="status">
-              <p>
-                The save result is unknown. Retry this same operation safely using its original request
-                reference before editing another operation.
-              </p>
-              <button
-                type="button"
-                className="btn btn-ghost btn-sm mt-3"
-                disabled={mutation.isPending || !attempt.current || !selected}
-                onClick={() => {
-                  if (selected && attempt.current)
-                    mutation.mutate({ id: selected, input: attempt.current.input });
-                }}
-              >
-                Retry the same operation
-              </button>
-            </div>
-          )}
-          {saved && (
-            <p className="mt-4 text-sm" role="status">
-              {saved}
-            </p>
-          )}
-        </section>
+        <StaffSupportCaseDetail
+          detail={detail}
+          detailDenied={detailDenied}
+          assignees={assignees}
+          messagesPage={messagesPage}
+          onMessagesPage={setMessagesPage}
+          action={action}
+          onAction={(nextAction) => {
+            setAction(nextAction);
+            setSaved("");
+          }}
+          body={body}
+          onBody={setBody}
+          assignee={assignee}
+          onAssignee={setAssignee}
+          targetKind={targetKind}
+          onTargetKind={setTargetKind}
+          targetId={targetId}
+          onTargetId={setTargetId}
+          fieldsLocked={fieldsLocked}
+          operationLocked={operationLocked}
+          actionAllowed={actionAllowed}
+          validInput={validInput}
+          mutationPending={mutation.isPending}
+          mutationError={mutation.isError ? mutation.error : null}
+          conflict={conflict}
+          uncertain={uncertain}
+          canRetryUncertain={Boolean(attempt.current && selected)}
+          saved={saved}
+          onReload={() => void reloadDetail()}
+          onSubmit={submit}
+          onDiscard={discard}
+          onRetryUncertain={() => {
+            if (selected && attempt.current) mutation.mutate({ id: selected, input: attempt.current.input });
+          }}
+        />
       )}
       {dirty && (
         <p className="mt-4 text-sm text-muted-foreground">
