@@ -4,6 +4,7 @@ import { MobileDock } from "@/islands/dock";
 import { IdentityLoader } from "@/islands/identity";
 import { HeaderWithMenu } from "@/islands/menu";
 import { MobileNav, PrimaryNav } from "@/islands/primary-nav";
+import { QuickFinderDialog, QuickFinderTrigger } from "@/islands/quick-finder";
 import { PublicLink } from "./public-link";
 import { DevBanner, SiteFooter } from "./site-chrome";
 import { WORDMARK_LINK_CLASS, WordmarkMark } from "./wordmark";
@@ -39,6 +40,7 @@ export function PublicShell({ nonce, children }: { nonce?: string | undefined; c
             <HomeLink />
             <PrimaryNav />
             <div className="hidden items-center gap-2 lg:flex">
+              <QuickFinderTrigger />
               <AccountLinks place="header" />
             </div>
           </>
@@ -57,6 +59,7 @@ export function PublicShell({ nonce, children }: { nonce?: string | undefined; c
       </main>
       <SiteFooter LinkTo={PublicLink} wordmark={<HomeLink />} />
       <MobileDock />
+      <QuickFinderDialog mode="public" />
       <IdentityLoader nonce={nonce} />
     </div>
   );
