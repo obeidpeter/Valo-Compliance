@@ -1,7 +1,7 @@
 import { reconcileExportOrphans } from "./valo-export-recovery";
 import { serializeRevision } from "../documents";
 import { randomUUID } from "node:crypto";
-import { and, eq, ne, desc } from "drizzle-orm";
+import { and, eq, gt, isNull, ne, or, desc } from "drizzle-orm";
 import {
   db,
   runInWorkspaceScope,
@@ -92,6 +92,7 @@ function publicJob(
 export async function getExport(
   actor: WorkspaceActor,
   id: string,
+  allowRecovery = true,
 ): Promise<{ job: typeof valoExportJobs.$inferSelect; asset: typeof valoFileAssets.$inferSelect | null }> {
   developmentExportsOnly();
   await assertExportActor(actor);
@@ -105,16 +106,18 @@ export async function getExport(
     .where(and(eq(valoExportJobs.id, id), eq(valoExportJobs.workspaceId, actor.workspaceId)));
   if (!row) throw new ValoProblem(404, "This file was not found.");
   if (
+    allowRecovery &&
     ["queued", "running", "retrying"].includes(row.job.status) &&
     Date.now() - row.job.updatedAt.getTime() > EXPORT_LEASE_MS
   ) {
-    if (await recoverAbandonedExports(id)) return getExport(actor, id);
+    if (await recoverAbandonedExports(id)) return getExport(actor, id, false);
   }
   return row;
 }
 export async function listExports(
   actor: WorkspaceActor,
   documentId: string,
+  allowRecovery = true,
 ): Promise<ReturnType<typeof publicJob>[]> {
   developmentExportsOnly();
   await assertExportActor(actor);
@@ -133,14 +136,16 @@ export async function listExports(
     .where(and(eq(valoExportJobs.documentId, documentId), eq(valoExportJobs.workspaceId, actor.workspaceId)))
     .orderBy(desc(valoExportJobs.createdAt))
     .limit(200);
-  let recovered = 0;
-  for (const { job } of rows)
-    if (
-      ["queued", "running", "retrying"].includes(job.status) &&
-      Date.now() - job.updatedAt.getTime() > EXPORT_LEASE_MS
-    )
-      recovered += await recoverAbandonedExports(job.id);
-  if (recovered) return listExports(actor, documentId);
+  if (allowRecovery) {
+    let recovered = 0;
+    for (const { job } of rows)
+      if (
+        ["queued", "running", "retrying"].includes(job.status) &&
+        Date.now() - job.updatedAt.getTime() > EXPORT_LEASE_MS
+      )
+        recovered += await recoverAbandonedExports(job.id);
+    if (recovered) return listExports(actor, documentId, false);
+  }
   return rows.map(({ job, asset }) => publicJob(job, asset));
 }
 /** The business library (DOC-005): the workspace's newest ready exports, each with the saved
@@ -150,6 +155,7 @@ export async function listExports(
 export async function listWorkspaceExports(actor: WorkspaceActor) {
   developmentExportsOnly();
   await assertExportActor(actor);
+  const now = new Date();
   const rows = await db
     .select({
       job: valoExportJobs,
@@ -176,11 +182,17 @@ export async function listWorkspaceExports(actor: WorkspaceActor) {
       ),
     )
     .leftJoin(valoContentVersions, eq(valoContentVersions.id, valoDocuments.templateVersionId))
-    .where(and(eq(valoExportJobs.workspaceId, actor.workspaceId), eq(valoExportJobs.status, "ready")))
+    .where(
+      and(
+        eq(valoExportJobs.workspaceId, actor.workspaceId),
+        eq(valoExportJobs.status, "ready"),
+        or(isNull(valoFileAssets.retentionAt), gt(valoFileAssets.retentionAt, now)),
+      ),
+    )
     .orderBy(desc(valoFileAssets.createdAt))
     .limit(50);
   return rows
-    .filter(({ asset }) => !exportIsExpired(asset))
+    .filter(({ asset }) => !exportIsExpired(asset, now.getTime()))
     .map(({ job, asset, title, templateVersionId, templateId, templateVersion }) => ({
       id: job.id,
       documentId: job.documentId,
