@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
-import { Check, Columns2, Download, List, Pilcrow, Redo2, Save, Table2, Undo2 } from "lucide-react";
+import { Check, Columns2, Download, List, Pilcrow, Printer, Redo2, Save, Table2, Undo2 } from "lucide-react";
 import {
   useGetDocument,
   useListDocumentRevisions,
@@ -572,7 +572,7 @@ export default function DocumentEditor({ id }: { id: string }) {
       >
         {asking?.body}
       </ConfirmDialog>
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="no-print flex flex-wrap items-center justify-between gap-3">
         <Breadcrumbs
           items={[
             { label: "Home", href: "/workspace" },
@@ -677,7 +677,7 @@ export default function DocumentEditor({ id }: { id: string }) {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_20rem]">
         <div className="min-w-0">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="no-print mb-4 flex flex-wrap items-center justify-between gap-3">
             <div
               className="inline-flex rounded-full border border-border p-1"
               role="tablist"
@@ -762,6 +762,16 @@ export default function DocumentEditor({ id }: { id: string }) {
                   <Columns2 className="h-4 w-4" aria-hidden="true" /> Side-by-side preview
                 </button>
               )}
+              {tab === "preview" && (
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => window.print()}
+                  data-testid="button-toolbar-print"
+                >
+                  <Printer className="h-4 w-4" aria-hidden="true" /> Print
+                </button>
+              )}
               <a href="#private-exports" className="btn btn-ghost btn-sm" data-testid="button-export">
                 <Download className="h-4 w-4" aria-hidden="true" /> Download
               </a>
@@ -777,7 +787,7 @@ export default function DocumentEditor({ id }: { id: string }) {
           {tab === "preview" ? (
             <div role="tabpanel" id="editor-preview-panel" aria-labelledby="editor-tab-preview" tabIndex={0}>
               {(state !== "saved" || finDirty) && (
-                <p className="mb-3 text-sm text-muted-foreground">
+                <p className="no-print mb-3 text-sm text-muted-foreground">
                   Live preview of what is currently in the editor.{" "}
                   {finDirty ? (
                     <>
@@ -1109,7 +1119,7 @@ export default function DocumentEditor({ id }: { id: string }) {
           )}
         </div>
 
-        <aside className="grid h-fit gap-4 lg:sticky lg:top-24">
+        <aside className="no-print grid h-fit gap-4 lg:sticky lg:top-24">
           <div className="surface p-5" id="still-needed-card" data-testid="card-missing">
             <p className="eyebrow">Still needed</p>
             {missing.length ? (
@@ -1165,11 +1175,18 @@ export default function DocumentEditor({ id }: { id: string }) {
           />
           <DocumentExports
             documentId={id}
+            documentTitle={title.trim() || saved.title}
             revisionId={doc.data.revisionId}
             revisionNumber={doc.data.revision}
             disabled={finDirty || !["idle", "saved"].includes(state)}
             missingCount={missing.length}
             finDirty={finDirty}
+            onSaveNow={() => saveEverything()}
+            onApplyFinancial={applyFinancial}
+            onPrintPreview={() => {
+              setTab("preview");
+              setTimeout(() => window.print(), 120);
+            }}
             onJumpToFinancial={() => focusEditorTarget('[data-testid="panel-financial"]')}
             onJumpToMissing={() => {
               document

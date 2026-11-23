@@ -1,5 +1,5 @@
-import { useId, useState } from "react";
-import { Download, RotateCcw } from "lucide-react";
+import { useEffect, useId, useState } from "react";
+import { Check, Circle, Download, Printer, RotateCcw, Share2 } from "lucide-react";
 import {
   useListDocumentExports,
   useCreateDocumentExport,
@@ -8,6 +8,7 @@ import {
 import { describeError } from "@/lib/api";
 import { FILE_FORMAT_NAMES } from "@/lib/file-formats";
 import { formatDateTime, formatFileSize } from "@/lib/format";
+import { canUseWebShare, shareExportFile } from "@/lib/share-file";
 import { ErrorState } from "./states";
 
 /** Where a file has got to, in the customer's words. */
@@ -61,7 +62,7 @@ function ExportButton({
         {create.isPending ? "Asking…" : `Make a ${FILE_FORMAT_NAMES[format]} file`}
       </button>
       {create.isError && (
-        <p role="alert" className="mt-2 text-sm text-red-800">
+        <p role="alert" className="mt-2 text-sm text-destructive">
           {describeError(create.error).message}
         </p>
       )}
@@ -70,25 +71,39 @@ function ExportButton({
 }
 export function DocumentExports({
   documentId,
+  documentTitle = "Document",
   revisionId,
   revisionNumber,
   disabled,
   missingCount = 0,
   finDirty = false,
+  onSaveNow,
+  onApplyFinancial,
+  onPrintPreview,
   onJumpToFinancial,
   onJumpToMissing,
 }: {
   documentId: string;
+  documentTitle?: string;
   revisionId: string;
   revisionNumber: number;
   disabled: boolean;
   missingCount?: number;
   finDirty?: boolean;
+  onSaveNow?: () => void;
+  onApplyFinancial?: () => void;
+  onPrintPreview?: () => void;
   onJumpToFinancial?: () => void;
   onJumpToMissing?: () => void;
 }) {
   const checkbox = useId();
   const [acknowledged, setAcknowledged] = useState(false);
+  const [canShare, setCanShare] = useState(false);
+  const [sharingId, setSharingId] = useState<string | null>(null);
+  const [shareNote, setShareNote] = useState("");
+  useEffect(() => {
+    setCanShare(canUseWebShare());
+  }, []);
   const jobs = useListDocumentExports(documentId, {
     query: {
       refetchInterval: (query) =>
@@ -105,6 +120,21 @@ export function DocumentExports({
       },
     },
   });
+
+  async function shareJob(job: { id: string; format: "docx" | "pdf"; downloadUrl: string }) {
+    setSharingId(job.id);
+    setShareNote("");
+    const outcome = await shareExportFile({
+      title: documentTitle,
+      format: job.format,
+      downloadUrl: job.downloadUrl,
+    });
+    setSharingId(null);
+    if (outcome === "error") {
+      setShareNote("Could not open share options on this device. Use Download instead.");
+    }
+  }
+
   return (
     <section
       id="private-exports"
@@ -121,6 +151,55 @@ export function DocumentExports({
         of each. The file is your own document. It is not a Valo template, proof of payment or a government
         tax invoice, and no professional has reviewed it.
       </p>
+      <ul
+        className="mt-4 grid gap-2 rounded-xl border border-border bg-sidebar/40 p-3 text-xs"
+        aria-label="Download readiness"
+        data-testid="export-readiness"
+      >
+        <li className="flex flex-wrap items-center justify-between gap-2">
+          <span className="flex items-center gap-2">
+            {!disabled ? (
+              <Check className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+            ) : (
+              <Circle className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+            )}
+            <span>
+              {finDirty
+                ? "Financial changes need to be applied"
+                : disabled
+                  ? "Unsaved edits waiting to save"
+                  : `Saved version ${revisionNumber} is up to date`}
+            </span>
+          </span>
+          {finDirty && onApplyFinancial ? (
+            <button
+              type="button"
+              className="font-medium text-primary underline underline-offset-4"
+              onClick={onApplyFinancial}
+              data-testid="button-export-apply-financial"
+            >
+              Apply totals
+            </button>
+          ) : !finDirty && disabled && onSaveNow ? (
+            <button
+              type="button"
+              className="font-medium text-primary underline underline-offset-4"
+              onClick={onSaveNow}
+              data-testid="button-export-save-now"
+            >
+              Save now
+            </button>
+          ) : null}
+        </li>
+        <li className="flex items-center gap-2">
+          {acknowledged ? (
+            <Check className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+          ) : (
+            <Circle className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+          )}
+          <span>{acknowledged ? "Draft copy notice confirmed" : "Confirm draft copy notice below"}</span>
+        </li>
+      </ul>
       <label htmlFor={checkbox} className="my-4 flex items-start gap-3 text-sm">
         <input
           id={checkbox}
@@ -187,6 +266,16 @@ export function DocumentExports({
             }}
           />
         ))}
+        {onPrintPreview && (
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={onPrintPreview}
+            data-testid="button-print-preview"
+          >
+            <Printer className="h-4 w-4" aria-hidden="true" /> Print preview
+          </button>
+        )}
       </div>
       {jobs.isLoading && (
         <p className="mt-4 text-sm" role="status">
@@ -227,7 +316,7 @@ export function DocumentExports({
                 </p>
               )}
               {job.errorCode && (
-                <p className="mt-1 break-words text-sm text-red-800">
+                <p className="mt-1 break-words text-sm text-destructive">
                   {FAILURES[job.errorCode] ??
                     `The file could not be made. If you write to us about it, quote ${job.errorCode}.`}{" "}
                   Your saved document has not been changed.
@@ -235,10 +324,30 @@ export function DocumentExports({
               )}
             </div>
             {job.downloadUrl && (
-              <a href={job.downloadUrl} className="btn btn-primary btn-sm">
-                <Download className="h-4 w-4" aria-hidden="true" />
-                Download the {FILE_FORMAT_NAMES[job.format]} file
-              </a>
+              <div className="flex flex-wrap gap-2">
+                <a href={job.downloadUrl} className="btn btn-primary btn-sm">
+                  <Download className="h-4 w-4" aria-hidden="true" />
+                  Download the {FILE_FORMAT_NAMES[job.format]} file
+                </a>
+                {canShare && (
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    disabled={sharingId === job.id}
+                    onClick={() =>
+                      void shareJob({
+                        id: job.id,
+                        format: job.format,
+                        downloadUrl: job.downloadUrl!,
+                      })
+                    }
+                    data-testid="button-share-export"
+                  >
+                    <Share2 className="h-4 w-4" aria-hidden="true" />
+                    {sharingId === job.id ? "Sharing…" : "Share"}
+                  </button>
+                )}
+              </div>
             )}
             {job.status === "failed" && (
               <button
@@ -253,8 +362,13 @@ export function DocumentExports({
           </li>
         ))}
       </ul>
+      {shareNote && (
+        <p role="status" className="mt-2 text-xs text-muted-foreground">
+          {shareNote}
+        </p>
+      )}
       {retry.isError && (
-        <p role="alert" className="text-sm text-red-800">
+        <p role="alert" className="text-sm text-destructive">
           {describeError(retry.error).message}
         </p>
       )}

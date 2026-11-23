@@ -1,14 +1,21 @@
+import { useEffect, useState } from "react";
 import { Link } from "wouter";
-import { Download } from "lucide-react";
+import { Download, Share2 } from "lucide-react";
 import { useListWorkspaceExports, getListWorkspaceExportsQueryKey } from "@workspace/api-client-react";
 import { FILE_FORMAT_NAMES } from "@/lib/file-formats";
 import { formatDateTime } from "@/lib/format";
+import { canUseWebShare, shareExportFile } from "@/lib/share-file";
 import { ErrorState, Skel } from "./states";
 
 /** The business library's files (DOC-005): each ready file with the saved version it was made from
  * and the template version its document came from. */
 export function LibraryExports() {
   const files = useListWorkspaceExports({ query: { queryKey: getListWorkspaceExportsQueryKey() } });
+  const [canShare, setCanShare] = useState(false);
+  const [sharingId, setSharingId] = useState<string | null>(null);
+  useEffect(() => {
+    setCanShare(canUseWebShare());
+  }, []);
   return (
     <section className="mt-6" aria-labelledby="library-exports-heading" data-testid="library-exports">
       <div className="mb-4 flex items-center justify-between">
@@ -47,10 +54,31 @@ export function LibraryExports() {
                     : "Not made from a template"}
                 </p>
               </div>
-              <a href={file.downloadUrl} className="btn btn-ghost btn-sm">
-                <Download className="h-4 w-4" aria-hidden="true" />
-                Download the {FILE_FORMAT_NAMES[file.format]} file
-              </a>
+              <div className="flex flex-wrap gap-2">
+                <a href={file.downloadUrl} className="btn btn-ghost btn-sm">
+                  <Download className="h-4 w-4" aria-hidden="true" />
+                  Download the {FILE_FORMAT_NAMES[file.format]} file
+                </a>
+                {canShare && (
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    disabled={sharingId === file.id}
+                    onClick={async () => {
+                      setSharingId(file.id);
+                      await shareExportFile({
+                        title: file.documentTitle,
+                        format: file.format,
+                        downloadUrl: file.downloadUrl,
+                      });
+                      setSharingId(null);
+                    }}
+                  >
+                    <Share2 className="h-4 w-4" aria-hidden="true" />
+                    {sharingId === file.id ? "Sharing…" : "Share"}
+                  </button>
+                )}
+              </div>
             </li>
           ))}
         </ul>
