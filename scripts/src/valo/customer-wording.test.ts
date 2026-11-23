@@ -68,7 +68,7 @@ test("losing access is never described as taking back a downloaded copy, and sav
     /a confirmed full refund suspends future template reuse\. Saved drafts, revisions and already downloaded files are never deleted\./,
   );
   says(
-    "artifacts/valo/src/screens/purchase-history.tsx",
+    "artifacts/valo/src/components/purchase-order-card.tsx",
     /Saved drafts and previously downloaded files are not deleted\./,
   );
   says(

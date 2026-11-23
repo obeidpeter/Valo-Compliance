@@ -23,6 +23,7 @@ const NOT_FOR_CUSTOMERS = [
   "src/screens/finance-refunds.tsx",
   "src/screens/development.tsx",
   "src/components/staff-support-cases.tsx",
+  "src/components/staff-support-case-detail.tsx",
   "src/components/content-escalations.tsx",
   "src/components/source-evidence.tsx",
   "src/components/source-safety-controls.tsx",

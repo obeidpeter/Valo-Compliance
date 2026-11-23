@@ -337,6 +337,10 @@ test("default managed entry and customer organizer use actual finite dispatch an
         assert.deepEqual(current, { workspaceId: actor.workspaceId, identityId: actor.identityId });
         return fn(tx);
       },
+      workspaceReadTransaction: async (current: unknown, fn: (t: typeof tx) => Promise<unknown>) => {
+        assert.deepEqual(current, { workspaceId: actor.workspaceId, identityId: actor.identityId });
+        return fn(tx);
+      },
       workspaceEvent: async () => undefined,
     },
   });
