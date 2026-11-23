@@ -40,6 +40,41 @@ function OwnedChoice({ file }: { file: OwnedCheckoutDownload }) {
     </li>
   );
 }
+function MyTemplates({ editions }: { editions: ReadonlyMap<string, OwnedCheckoutDownload> }) {
+  const files = [...editions.values()].sort(
+    (a, b) => a.title.localeCompare(b.title, "en-NG") || a.edition.localeCompare(b.edition),
+  );
+  return (
+    <section className="mb-8" aria-labelledby="my-templates">
+      <h2 id="my-templates" className="font-display mb-4 text-2xl">
+        My Templates
+      </h2>
+      {files.length ? (
+        <ul className="grid gap-3 sm:grid-cols-2">
+          {files.map((file) => (
+            <li
+              key={file.edition}
+              className="flex items-center justify-between gap-3 rounded-2xl border bg-card p-4"
+            >
+              <h3 className="min-w-0 break-words font-semibold">{file.title}</h3>
+              <a
+                href={basePath + file.downloadPath}
+                aria-label={`Download ${file.title}`}
+                className="btn btn-secondary shrink-0"
+              >
+                <Download className="h-4 w-4" aria-hidden /> Download
+              </a>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">
+          Your workspace has no premium templates available to download.
+        </p>
+      )}
+    </section>
+  );
+}
 function OrderCard({
   order,
   downloadPath,
@@ -323,9 +358,16 @@ function PurchaseHistoryContent() {
     [busy, setBusy] = useState(false),
     [error, setError] = useState<string | null>(null);
   const [keys] = useState(() => new Map<string, string>());
-  const products = (q.data?.products ?? []).filter((p) => !directCheckout || p.id === offerId);
-  const downloads = new Map(q.data?.ownedDownloads?.map((file) => [file.offerId, file]));
-  const editionDownloads = new Map(q.data?.ownedDownloads?.map((file) => [file.edition, file.downloadPath]));
+  const offers = q.data?.products ?? [];
+  const ownedFiles = q.data?.ownedDownloads ?? [];
+  const downloads = new Map(ownedFiles.map((file) => [file.offerId, file]));
+  const editionDownloads = new Map(ownedFiles.map((file) => [file.edition, file]));
+  // Historical offers resolve old checkout links. Prefer the current offer's title for the edition.
+  for (const offer of offers) {
+    const file = downloads.get(offer.id);
+    if (file) editionDownloads.set(file.edition, file);
+  }
+  const products = offers.filter((p) => (directCheckout ? p.id === offerId : !downloads.has(p.id)));
   const selectedDownload = offerId ? downloads.get(offerId) : undefined;
   const refresh = () => qc.invalidateQueries({ queryKey: getGetCustomerPurchasesQueryKey() });
   return (
@@ -358,6 +400,7 @@ function PurchaseHistoryContent() {
         <ErrorState error={q.error} onRetry={() => q.refetch()} />
       ) : (
         <>
+          {!directCheckout && <MyTemplates editions={editionDownloads} />}
           <section className="mb-8" aria-labelledby="purchase-choices">
             <h2 id="purchase-choices" className="font-display mb-4 text-2xl">
               {directCheckout ? "Your selected template" : "Documents you can buy"}
@@ -373,62 +416,59 @@ function PurchaseHistoryContent() {
               >
                 {directCheckout
                   ? "This offer is unavailable. Open the template again to see its current price and licence."
-                  : "Nothing can be bought yet. A document is listed here once it is published with a price and a licence. The documents you have made, and their files, stay in your workspace."}
+                  : offers.length
+                    ? "Your workspace owns every template currently on sale."
+                    : "Nothing can be bought yet. A document is listed here once it is published with a price and a licence. The documents you have made, and their files, stay in your workspace."}
               </p>
             ) : (
               <ul className={directCheckout ? "max-w-2xl" : "grid gap-4 sm:grid-cols-2"}>
-                {products.map((p) => {
-                  const file = downloads.get(p.id);
-                  return file ? (
-                    <OwnedChoice key={p.id} file={file} />
-                  ) : (
-                    <li key={p.id} className="rounded-2xl border bg-card p-5">
-                      <h3 className="font-semibold">
-                        {p.title} · {formatNaira(p.amountKobo)}
-                      </h3>
-                      <p className="my-2 text-sm">{p.taxTreatment}</p>
-                      <details className="text-sm">
-                        <summary className="cursor-pointer py-2">Licence · {p.licenceVersion}</summary>
-                        <p className="whitespace-pre-wrap">{p.licenceText}</p>
-                      </details>
-                      <label className="my-3 flex items-start gap-2 text-sm">
-                        <input
-                          type="checkbox"
-                          checked={licences[p.id] ?? false}
-                          onChange={(e) => setLicences((s) => ({ ...s, [p.id]: e.target.checked }))}
-                        />
-                        I accept this version of the licence for this business.
-                      </label>
-                      <button
-                        disabled={busy || !licences[p.id]}
-                        className="btn btn-primary"
-                        onClick={() =>
-                          void (async () => {
-                            setBusy(true);
-                            setError(null);
-                            try {
-                              if (!keys.has(p.id)) keys.set(p.id, crypto.randomUUID());
-                              await createCommerceOrder({
-                                priceId: p.id,
-                                acceptedLicenceVersion: p.licenceVersion,
-                                requestKey: keys.get(p.id)!,
-                              });
-                              keys.delete(p.id);
-                              await refresh();
-                            } catch (e) {
-                              setError(describeError(e).message);
-                              await refresh();
-                            } finally {
-                              setBusy(false);
-                            }
-                          })()
-                        }
-                      >
-                        Save test order
-                      </button>
-                    </li>
-                  );
-                })}
+                {products.map((p) => (
+                  <li key={p.id} className="rounded-2xl border bg-card p-5">
+                    <h3 className="font-semibold">
+                      {p.title} · {formatNaira(p.amountKobo)}
+                    </h3>
+                    <p className="my-2 text-sm">{p.taxTreatment}</p>
+                    <details className="text-sm">
+                      <summary className="cursor-pointer py-2">Licence · {p.licenceVersion}</summary>
+                      <p className="whitespace-pre-wrap">{p.licenceText}</p>
+                    </details>
+                    <label className="my-3 flex items-start gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={licences[p.id] ?? false}
+                        onChange={(e) => setLicences((s) => ({ ...s, [p.id]: e.target.checked }))}
+                      />
+                      I accept this version of the licence for this business.
+                    </label>
+                    <button
+                      disabled={busy || !licences[p.id]}
+                      className="btn btn-primary"
+                      onClick={() =>
+                        void (async () => {
+                          setBusy(true);
+                          setError(null);
+                          try {
+                            if (!keys.has(p.id)) keys.set(p.id, crypto.randomUUID());
+                            await createCommerceOrder({
+                              priceId: p.id,
+                              acceptedLicenceVersion: p.licenceVersion,
+                              requestKey: keys.get(p.id)!,
+                            });
+                            keys.delete(p.id);
+                            await refresh();
+                          } catch (e) {
+                            setError(describeError(e).message);
+                            await refresh();
+                          } finally {
+                            setBusy(false);
+                          }
+                        })()
+                      }
+                    >
+                      Save test order
+                    </button>
+                  </li>
+                ))}
               </ul>
             )}
             {error && (
@@ -461,7 +501,7 @@ function PurchaseHistoryContent() {
                     <OrderCard
                       key={order.id}
                       order={order}
-                      downloadPath={editionDownloads.get(order.contentVersionId)}
+                      downloadPath={editionDownloads.get(order.contentVersionId)?.downloadPath}
                       changed={refresh}
                     />
                   ))}

@@ -2903,6 +2903,7 @@ test("a direct checkout shows only the chosen price and leaves an obsolete link 
   try {
     await ready(page);
     await expect(page.getByRole("heading", { name: "Template checkout" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "My Templates" })).toHaveCount(0);
     await expect(
       page.getByRole("heading", { name: "Synthetic service agreement · ₦4,000.00" }),
     ).toBeVisible();
@@ -2925,6 +2926,81 @@ test("a direct checkout shows only the chosen price and leaves an obsolete link 
     await page.goto(new URL("/workspace/purchases?offer=unavailable", page.url()).href);
     await expect(page.getByTestId("text-nothing-to-buy")).toContainText("This offer is unavailable");
     await expect(save).toHaveCount(0);
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
+
+test("My Templates lists owned editions once, including older purchases and closed offers", async () => {
+  const id = (suffix: number) => "00000000-0000-4000-8000-" + String(suffix).padStart(12, "0");
+  const edition = (n: number, title: string, reviewed = false) => ({
+    offerId: id(100 + n),
+    edition: id(n),
+    title,
+    downloadPath: reviewed
+      ? "/api/workspace/templates/" + id(n) + "/files/docx"
+      : "/api/workspace/manual-premium-templates/" + id(n) + "/download",
+  });
+  const letter = edition(1, "Engagement letter");
+  const budget = edition(2, "Budget planner", true);
+  const otherLetter = edition(3, "Engagement letter");
+  const current = {
+    id: letter.offerId,
+    title: letter.title,
+    currency: "NGN",
+    amountKobo: 250000,
+    licenceVersion: "1.0",
+    licenceText: "Synthetic licence.",
+    taxTreatment: "Synthetic price.",
+  };
+  const listing = api.GetCustomerPurchasesResponse.parse({
+    available: true,
+    message: "Test purchases.",
+    livePaymentsEnabled: false,
+    orders: [],
+    products: [current, { ...current, id: id(200), title: "Another template" }],
+    ownedDownloads: [
+      otherLetter,
+      letter,
+      budget,
+      { ...letter, offerId: id(300), title: "Old listing title" },
+    ],
+  });
+  const { page, errors, unknown, close } = await phone(
+    "/workspace/purchases",
+    except({ "GET /workspace/purchases": listing }),
+  );
+  try {
+    await ready(page);
+    const mine = page.getByRole("region", { name: "My Templates", exact: true });
+    const shop = page.getByRole("region", { name: "Documents you can buy" });
+    const links = mine.getByRole("link");
+    await expect(links).toHaveCount(3);
+    assert.deepEqual(await mine.getByRole("heading", { level: 3 }).allTextContents(), [
+      budget.title,
+      letter.title,
+      otherLetter.title,
+    ]);
+    assert.deepEqual(await links.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("href"))), [
+      budget.downloadPath,
+      letter.downloadPath,
+      otherLetter.downloadPath,
+    ]);
+    await expect(mine.getByRole("link", { name: "Download Budget planner" })).toBeVisible();
+    await expect(shop.getByRole("heading", { level: 3 })).toHaveCount(1);
+    await expect(shop.getByRole("heading", { name: /Another template/ })).toBeVisible();
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "My Templates with several owned editions"), []);
+    listing.products = [listing.products[0]!];
+    await page.reload();
+    await expect(shop).toContainText("Your workspace owns every template currently on sale.");
+    listing.ownedDownloads = [];
+    await page.reload();
+    await expect(mine).toContainText("Your workspace has no premium templates available to download.");
+    await expect(links).toHaveCount(0);
+    await expect(shop.getByRole("heading", { name: /Engagement letter/ })).toBeVisible();
     assert.deepEqual(errors, []);
     assert.deepEqual(unknown, []);
   } finally {
