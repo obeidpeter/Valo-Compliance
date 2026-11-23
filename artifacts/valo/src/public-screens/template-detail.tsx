@@ -7,14 +7,14 @@ import {
   useCreateTemplateDraft,
   downloadReleasedTemplate,
   downloadManualTemplate,
-  downloadPremiumManualTemplate,
   type ReleasedTemplate,
 } from "@workspace/api-client-react";
 import { PublicLink as Link } from "@/components/public-link";
+import { PremiumTemplateDetailAction } from "@/components/premium-template-detail-action";
 import { describeError } from "@/lib/describe-error";
 import { basePath } from "@/lib/env";
 import { formatDay, formatNaira } from "@/lib/format";
-import { templateCheckoutPath } from "@/lib/template-checkout";
+import { useOwnedTemplateEditions } from "@/lib/use-owned-template-editions";
 import { fromServer } from "@/lib/server-data";
 import { EmptyState, ErrorState, Notice, Skel } from "@/components/states";
 import { SaveTemplateButton } from "@/components/saved-templates";
@@ -38,7 +38,7 @@ function Unavailable() {
   );
 }
 
-function CustomerActions({ t }: { t: ReleasedTemplate }) {
+function CustomerActions({ t, canUse }: { t: ReleasedTemplate; canUse: boolean }) {
   // The new draft opens in the workspace, which is the browser app: a full load (decision 0011).
   const create = useCreateTemplateDraft({
     mutation: {
@@ -57,9 +57,7 @@ function CustomerActions({ t }: { t: ReleasedTemplate }) {
       try {
         const res: unknown =
           t.publicationMethod === "manual"
-            ? t.access === "premium"
-              ? await downloadPremiumManualTemplate(t.id)
-              : await downloadManualTemplate(t.id)
+            ? await downloadManualTemplate(t.id)
             : await downloadReleasedTemplate(t.id, format);
         const blob = res instanceof Blob ? res : new Blob([res as BlobPart]);
         const url = URL.createObjectURL(blob);
@@ -81,7 +79,7 @@ function CustomerActions({ t }: { t: ReleasedTemplate }) {
         setBusy(null);
       }
     },
-    [t.publicationMethod, t.access, t.id, t.slug, t.version],
+    [t.publicationMethod, t.id, t.slug, t.version],
   );
 
   useEffect(() => {
@@ -98,10 +96,10 @@ function CustomerActions({ t }: { t: ReleasedTemplate }) {
 
   const createErr = create.isError ? describeError(create.error) : null;
   return (
-    <div className="grid gap-3">
-      {t.publicationMethod !== "manual" && (
+    <div className="grid gap-3 empty:hidden">
+      {t.publicationMethod !== "manual" && <SaveTemplateButton releaseId={t.id} templateId={t.templateId} />}
+      {t.publicationMethod !== "manual" && canUse && (
         <>
-          <SaveTemplateButton releaseId={t.id} templateId={t.templateId} />
           <button
             className="btn btn-primary w-full"
             disabled={create.isPending}
@@ -120,7 +118,7 @@ function CustomerActions({ t }: { t: ReleasedTemplate }) {
           )}
         </>
       )}
-      {t.formats.length > 0 && (
+      {t.access === "free" && t.formats.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {t.formats.map((f) => (
             <button
@@ -170,7 +168,11 @@ export function TemplateDetail({
   const t = q.data;
   const notFound =
     (q.isError && describeError(q.error).kind === "notFound") || (initial === "missing" && q.isLoading);
-  const signedIn = useIdentity().status === "signed-in";
+  const identity = useIdentity();
+  const signedIn = identity.status === "signed-in";
+  // A reviewed edition can omit its access label after its sale offer closes.
+  const owned = useOwnedTemplateEditions(identity, !!t && t.access !== "free");
+  const ownsEdition = !!t && owned.has(t.id);
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-14 lg:px-8">
@@ -256,36 +258,38 @@ export function TemplateDetail({
                       {formatNaira(t.offer.amountKobo)}
                     </p>
                     <p className="text-sm text-muted-foreground">{t.offer.taxTreatment}</p>
-                    <Link href={templateCheckoutPath(t.offer.id)} className="btn btn-primary w-full">
-                      Go to checkout
-                    </Link>
                   </>
                 )}
-                {t.access === "premium" && (
+                {(t.access === "premium" || ownsEdition) && (
+                  <PremiumTemplateDetailAction edition={t} owned={ownsEdition} />
+                )}
+                {t.access === "premium" && !ownsEdition && (
                   <p className="text-sm text-muted-foreground">
                     Downloading this version requires an active purchase in your workspace.
                   </p>
                 )}
                 {signedIn ? (
-                  <CustomerActions t={t} />
+                  <CustomerActions t={t} canUse={t.access === "free" || ownsEdition} />
                 ) : !t.offer ? (
                   <>
                     <p className="text-sm text-muted-foreground">
-                      {t.publicationMethod === "manual"
-                        ? "Sign in to download the template."
-                        : "Sign in to make your own copy or download the blank file. Your copy is kept in your own workspace."}
+                      {t.access === "premium"
+                        ? "Sign in to check access to this edition."
+                        : t.publicationMethod === "manual"
+                          ? "Sign in to download the template."
+                          : "Sign in to make your own copy or download the blank file. Your copy is kept in your own workspace."}
                     </p>
                     <Link href="/sign-in" className="btn btn-primary w-full" data-testid="link-sign-in">
                       Sign in to continue
                     </Link>
                   </>
                 ) : null}
-                {t.publicationMethod !== "manual" && !t.commercialLicenceAccepted && !t.offer && (
-                  <Notice title="Not for sale">
-                    Commercial licence terms have not been accepted for this template, so it is not sold or
-                    offered as a paid product.
-                  </Notice>
-                )}
+                {t.publicationMethod !== "manual" &&
+                  !t.commercialLicenceAccepted &&
+                  !t.offer &&
+                  !ownsEdition && (
+                    <Notice title="Not for sale">There is no current purchase offer for this edition.</Notice>
+                  )}
                 {t.developmentOnly && (
                   <p className="text-xs text-muted-foreground">
                     Development release. This is an everyday business document, not legal guidance, and it

@@ -7,8 +7,6 @@ import {
   useListPublicCatalogue,
   getListPublicCatalogueQueryKey,
   useGetPublicCoverage,
-  getListOwnedTemplateEditionsQueryKey,
-  useListOwnedTemplateEditions,
   type CataloguePage,
   type PublicCoverage,
 } from "@workspace/api-client-react";
@@ -18,6 +16,7 @@ import { EmptyState, ErrorState, Notice, PageHeader, Skel } from "@/components/s
 import { useIdentity } from "@/islands/identity-store";
 import { formatCount, formatNaira } from "@/lib/format";
 import { templateDownloadSignInPath } from "@/lib/template-download";
+import { useOwnedTemplateEditions } from "@/lib/use-owned-template-editions";
 import {
   catalogueParams,
   industryLabel,
@@ -70,18 +69,10 @@ export function Library({
   const coverage = useGetPublicCoverage({
     query: { retry: false, staleTime: 60000, ...(initialCoverage ? { initialData: initialCoverage } : {}) },
   });
-  const ownership = useListOwnedTemplateEditions({
-    query: {
-      queryKey: [...getListOwnedTemplateEditionsQueryKey(), signedIn ? identity.sessionId : null],
-      enabled:
-        signedIn && !!cat.data?.items.some((item) => item.type === "template" && item.access === "premium"),
-      gcTime: 0,
-      retry: false,
-      refetchInterval: 15000,
-      refetchOnWindowFocus: true,
-    },
-  });
-  const owned = new Set(signedIn && ownership.isSuccess ? ownership.data : []);
+  const owned = useOwnedTemplateEditions(
+    identity,
+    !!cat.data?.items.some((item) => item.type === "template" && item.access === "premium"),
+  );
   const unknownIndustry = !!industry && !coverage.data?.industries.some((i) => i.slug === industry);
   const industryNames = new Map((coverage.data?.industries ?? []).map((i) => [i.slug, i.title] as const));
 
