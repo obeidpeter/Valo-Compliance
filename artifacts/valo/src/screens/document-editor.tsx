@@ -1,7 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Check, Download, List, Pilcrow, Table2, Undo2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Check,
+  Columns2,
+  Download,
+  List,
+  Pilcrow,
+  Redo2,
+  Save,
+  Table2,
+  Undo2,
+} from "lucide-react";
 import {
   useGetDocument,
   useListDocumentRevisions,
@@ -15,7 +26,7 @@ import {
   type DocumentBlockType,
 } from "@workspace/api-client-react";
 import { ErrorState, Notice, Skel } from "@/components/states";
-import { FIELD_LABELS, describeError, missingFields, newBlockId } from "@/lib/api";
+import { FIELD_LABELS, describeError, missingFieldItems, newBlockId } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { DocumentExports } from "@/components/document-exports";
 import { BlockEditor, SaveIndicator, type SaveState } from "@/components/document-editor-blocks";
@@ -57,10 +68,12 @@ export default function DocumentEditor({ id }: { id: string }) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState<CanonicalDocument | null>(null);
   const [tab, setTab] = useState<"edit" | "preview">("edit");
+  const [splitPreview, setSplitPreview] = useState(false);
   const [state, setState] = useState<SaveState>("idle");
   const [errMsg, setErrMsg] = useState("");
   const [conflictRev, setConflictRev] = useState<number | null>(null);
   const [history, setHistory] = useState<Snapshot[]>([]);
+  const [redoStack, setRedoStack] = useState<Snapshot[]>([]);
   const [restoring, setRestoring] = useState<number | null>(null);
   const [finDraft, setFinDraft] = useState<FinancialInput | null>(null);
   const [finKey, setFinKey] = useState(0);
@@ -106,6 +119,7 @@ export default function DocumentEditor({ id }: { id: string }) {
       setContent(d.content);
       resetFinancial(d.content);
       setHistory([]);
+      setRedoStack([]);
       setConflictRev(null);
       setState("saved");
     },
@@ -191,6 +205,7 @@ export default function DocumentEditor({ id }: { id: string }) {
       setHistory((h) => [...h.slice(-49), prev]);
       lastPush.current = now;
     }
+    setRedoStack([]);
     if (state === "conflict") return;
     setState(ser(next) === lastSaved.current ? "saved" : "dirty");
     if (timer.current) clearTimeout(timer.current);
@@ -247,9 +262,11 @@ export default function DocumentEditor({ id }: { id: string }) {
   }
   function undoNow() {
     if (inFlight.current) return;
+    const current = latest.current;
     setHistory((h) => {
       if (!h.length) return h;
       const prev = h[h.length - 1]!;
+      if (current) setRedoStack((r) => [...r.slice(-49), current]);
       latest.current = prev;
       setTitle(prev.title);
       setContent(prev.content);
@@ -261,6 +278,38 @@ export default function DocumentEditor({ id }: { id: string }) {
         timer.current = setTimeout(() => doSaveRef.current(), AUTOSAVE_MS);
       }
       return h.slice(0, -1);
+    });
+  }
+  function redo() {
+    if (inFlight.current || !redoStack.length) return;
+    if (financialDirty.current)
+      ask({
+        title: "Redo, and discard the amounts you have not applied?",
+        body: "You have changed amounts that are not applied yet. Redoing your last change discards them.",
+        keep: "Keep them",
+        confirm: "Discard them and redo",
+        run: redoNow,
+      });
+    else redoNow();
+  }
+  function redoNow() {
+    if (inFlight.current) return;
+    const current = latest.current;
+    setRedoStack((r) => {
+      if (!r.length) return r;
+      const next = r[r.length - 1]!;
+      if (current) setHistory((h) => [...h.slice(-49), current]);
+      latest.current = next;
+      setTitle(next.title);
+      setContent(next.content);
+      resetFinancial(next.content);
+      lastPush.current = 0;
+      if (state !== "conflict") {
+        setState(ser(next) === lastSaved.current ? "saved" : "dirty");
+        if (timer.current) clearTimeout(timer.current);
+        timer.current = setTimeout(() => doSaveRef.current(), AUTOSAVE_MS);
+      }
+      return r.slice(0, -1);
     });
   }
   function applyFinancial() {
@@ -309,12 +358,20 @@ export default function DocumentEditor({ id }: { id: string }) {
       }
       if (
         (e.metaKey || e.ctrlKey) &&
-        e.key === "z" &&
+        e.key.toLowerCase() === "z" &&
         !e.shiftKey &&
         !(target && /INPUT|TEXTAREA/.test(target.tagName))
       ) {
         e.preventDefault();
         if (!questionOpen.current) undoRef.current();
+      }
+      if (
+        (e.metaKey || e.ctrlKey) &&
+        ((e.key.toLowerCase() === "z" && e.shiftKey) || e.key.toLowerCase() === "y") &&
+        !(target && /INPUT|TEXTAREA/.test(target.tagName))
+      ) {
+        e.preventDefault();
+        if (!questionOpen.current) redoRef.current();
       }
     };
     window.addEventListener("keydown", onKey);
@@ -322,6 +379,8 @@ export default function DocumentEditor({ id }: { id: string }) {
   }, []);
   const undoRef = useRef(undo);
   undoRef.current = undo;
+  const redoRef = useRef(redo);
+  redoRef.current = redo;
 
   async function keepMine() {
     const r = await doc.refetch();
@@ -411,7 +470,32 @@ export default function DocumentEditor({ id }: { id: string }) {
     );
   }
 
-  const missing = missingFields(content);
+  const missing = missingFieldItems(content);
+  function focusEditorTarget(selector: string) {
+    if (tab !== "edit") setTab("edit");
+    requestAnimationFrame(() => {
+      const target = document.querySelector<HTMLElement>(selector);
+      if (!target) return;
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+      target.focus();
+    });
+  }
+  function removeBlock(block: DocumentBlock) {
+    const hasContent =
+      block.text.trim().length > 0 || block.rows.some((row) => row.some((cell) => cell.trim().length > 0));
+    const run = () => setBlocks(content!.blocks.filter((x) => x.id !== block.id));
+    if (hasContent) {
+      ask({
+        title: "Delete this block?",
+        body: "This removes the text or table from the document. You can still bring it back with Undo before leaving.",
+        keep: "Keep it",
+        confirm: "Delete block",
+        run,
+      });
+    } else {
+      run();
+    }
+  }
   let guided: ReturnType<typeof guidedDataFromBlocks> = null;
   let guidedError = "";
   try {
@@ -587,15 +671,49 @@ export default function DocumentEditor({ id }: { id: string }) {
                 </button>
               ))}
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
+              {state === "dirty" && !finDirty && (
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => saveEverything()}
+                  title="Save now (Ctrl+S)"
+                  data-testid="button-save-now"
+                >
+                  <Save className="h-4 w-4" aria-hidden="true" /> Save now
+                </button>
+              )}
               <button
+                type="button"
                 className="btn btn-ghost btn-sm"
                 onClick={undo}
                 disabled={!history.length}
+                title="Undo (Ctrl+Z)"
                 data-testid="button-undo"
               >
                 <Undo2 className="h-4 w-4" aria-hidden="true" /> Undo
               </button>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={redo}
+                disabled={!redoStack.length}
+                title="Redo (Ctrl+Shift+Z)"
+                data-testid="button-redo"
+              >
+                <Redo2 className="h-4 w-4" aria-hidden="true" /> Redo
+              </button>
+              {tab === "edit" && (
+                <button
+                  type="button"
+                  className={cn("btn btn-ghost btn-sm hidden xl:inline-flex", splitPreview && "bg-secondary")}
+                  aria-pressed={splitPreview}
+                  onClick={() => setSplitPreview((open) => !open)}
+                  data-testid="button-split-preview"
+                >
+                  <Columns2 className="h-4 w-4" aria-hidden="true" /> Side-by-side preview
+                </button>
+              )}
               <a href="#private-exports" className="btn btn-ghost btn-sm" data-testid="button-export">
                 <Download className="h-4 w-4" aria-hidden="true" /> Download
               </a>
@@ -610,279 +728,317 @@ export default function DocumentEditor({ id }: { id: string }) {
           />
           {tab === "preview" ? (
             <div role="tabpanel" id="editor-preview-panel" aria-labelledby="editor-tab-preview" tabIndex={0}>
-              {state !== "saved" && (
+              {(state !== "saved" || finDirty) && (
                 <p className="mb-3 text-sm text-muted-foreground">
-                  This is the last saved version. Changes you have not saved are not in it.
+                  Live preview of what is currently in the editor.{" "}
+                  {finDirty ? (
+                    <>
+                      Unapplied changes in Financial details are not included until you apply them.{" "}
+                      <button
+                        type="button"
+                        className="font-medium text-primary underline underline-offset-4"
+                        onClick={() => focusEditorTarget('[data-testid="panel-financial"]')}
+                      >
+                        Go to Financial details
+                      </button>
+                    </>
+                  ) : (
+                    "Your changes are being saved automatically."
+                  )}
                 </p>
               )}
-              {saved && <DocPreview title={saved.title} content={saved.content} revision={saved.revision} />}
+              <DocPreview title={title || saved.title} content={content} revision={baseRev.current} />
             </div>
           ) : (
-            <div
-              className="surface p-5 sm:p-8"
-              role="tabpanel"
-              id="editor-edit-panel"
-              aria-labelledby="editor-tab-edit"
-              tabIndex={0}
-            >
-              {guidedError && (
-                <p role="alert" className="mb-5 text-sm text-destructive">
-                  {guidedError}
-                </p>
-              )}
-              {guided ? (
-                <GuidedFields
-                  spec={GUIDED_SPECS_V1[guided.templateId]}
-                  value={guided}
-                  disabled={!!guidedError}
-                  onChange={(next) =>
-                    update({ title, content: compileGuidedContent(next, content) as CanonicalDocument })
-                  }
-                />
-              ) : (
-                <>
-                  <p className="eyebrow mb-4">Key details</p>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    {(["issuerName", "recipientName", "documentNumber"] as const).map((k) => (
-                      <div key={k}>
-                        <label className="label" htmlFor={"f-" + k}>
-                          {FIELD_LABELS[k]}
-                        </label>
-                        <input
-                          id={"f-" + k}
-                          className="field"
-                          maxLength={k === "documentNumber" ? 80 : 160}
-                          value={content.fields[k]}
-                          onChange={(e) => setFields(k, e.target.value)}
-                          data-testid={"input-field-" + k}
-                        />
-                      </div>
-                    ))}
-                    <div className="grid grid-cols-2 gap-3">
-                      {(["issueDate", "dueDate"] as const).map((k) => (
+            <div className={cn(splitPreview && "xl:grid xl:grid-cols-2 xl:items-start xl:gap-6")}>
+              <div
+                className="surface p-5 sm:p-8"
+                role="tabpanel"
+                id="editor-edit-panel"
+                aria-labelledby="editor-tab-edit"
+                tabIndex={0}
+              >
+                {guidedError && (
+                  <p role="alert" className="mb-5 text-sm text-destructive">
+                    {guidedError}
+                  </p>
+                )}
+                {guided ? (
+                  <GuidedFields
+                    spec={GUIDED_SPECS_V1[guided.templateId]}
+                    value={guided}
+                    disabled={!!guidedError}
+                    onChange={(next) =>
+                      update({ title, content: compileGuidedContent(next, content) as CanonicalDocument })
+                    }
+                  />
+                ) : (
+                  <>
+                    <p className="eyebrow mb-4">Key details</p>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      {(["issuerName", "recipientName", "documentNumber"] as const).map((k) => (
                         <div key={k}>
                           <label className="label" htmlFor={"f-" + k}>
                             {FIELD_LABELS[k]}
                           </label>
                           <input
                             id={"f-" + k}
-                            type="date"
                             className="field"
+                            maxLength={k === "documentNumber" ? 80 : 160}
                             value={content.fields[k]}
                             onChange={(e) => setFields(k, e.target.value)}
                             data-testid={"input-field-" + k}
                           />
                         </div>
                       ))}
+                      <div className="grid grid-cols-2 gap-3">
+                        {(["issueDate", "dueDate"] as const).map((k) => (
+                          <div key={k}>
+                            <label className="label" htmlFor={"f-" + k}>
+                              {FIELD_LABELS[k]}
+                            </label>
+                            <input
+                              id={"f-" + k}
+                              type="date"
+                              className="field"
+                              value={content.fields[k]}
+                              onChange={(e) => setFields(k, e.target.value)}
+                              data-testid={"input-field-" + k}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {content.financialInput && (
+                  <div
+                    className="mt-10 rounded-2xl border border-border bg-sidebar/50 p-4 sm:p-5"
+                    data-testid="panel-financial"
+                  >
+                    <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                      <p className="eyebrow">Financial details</p>
+                      <span className="text-xs text-muted-foreground">
+                        The document&rsquo;s tables update when you apply your changes
+                      </span>
+                    </div>
+                    <FinancialFields
+                      key={"fin-" + finKey}
+                      idPrefix="doc"
+                      value={content.financialInput}
+                      onChange={(value) => {
+                        financialValue.current = value;
+                        setFinDraft(value);
+                      }}
+                      onDirtyChange={(dirty) => {
+                        financialDirty.current = dirty;
+                        setFinDirty(dirty);
+                        if (dirty) {
+                          financialValue.current = null;
+                          setFinDraft(null);
+                        }
+                      }}
+                    />
+                    {finDirty && (
+                      <p
+                        role="status"
+                        className="hint !text-destructive"
+                        data-testid="status-financial-unsaved"
+                      >
+                        You have changed amounts that are not applied, so they are not saved. Apply them
+                        before you download or leave.
+                      </p>
+                    )}
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        className="btn btn-primary btn-sm"
+                        disabled={
+                          !finDirty ||
+                          !finDraft ||
+                          JSON.stringify(finDraft) === JSON.stringify(content.financialInput)
+                        }
+                        onClick={applyFinancial}
+                        data-testid="button-apply-financial"
+                      >
+                        Apply these amounts
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => {
+                          if (financialDirty.current)
+                            ask({
+                              title: "Discard the amounts you have not applied?",
+                              body: "The amounts go back to the ones last applied to the document.",
+                              keep: "Keep them",
+                              confirm: "Discard them",
+                              // The document as it is when the answer comes, not as it was when asked.
+                              run: () => resetFinancial(latest.current?.content ?? content),
+                            });
+                          else resetFinancial(content);
+                        }}
+                        data-testid="button-reset-financial"
+                      >
+                        Reset
+                      </button>
                     </div>
                   </div>
-                </>
-              )}
+                )}
 
-              {content.financialInput && (
-                <div
-                  className="mt-10 rounded-2xl border border-border bg-sidebar/50 p-4 sm:p-5"
-                  data-testid="panel-financial"
-                >
-                  <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-                    <p className="eyebrow">Financial details</p>
-                    <span className="text-xs text-muted-foreground">
-                      The document&rsquo;s tables update when you apply your changes
-                    </span>
-                  </div>
-                  <FinancialFields
-                    key={"fin-" + finKey}
-                    idPrefix="doc"
-                    value={content.financialInput}
-                    onChange={(value) => {
-                      financialValue.current = value;
-                      setFinDraft(value);
-                    }}
-                    onDirtyChange={(dirty) => {
-                      financialDirty.current = dirty;
-                      setFinDirty(dirty);
-                      if (dirty) {
-                        financialValue.current = null;
-                        setFinDraft(null);
-                      }
-                    }}
-                  />
-                  {finDirty && (
-                    <p
-                      role="status"
-                      className="hint !text-destructive"
-                      data-testid="status-financial-unsaved"
-                    >
-                      You have changed amounts that are not applied, so they are not saved. Apply them before
-                      you download or leave.
-                    </p>
-                  )}
+                <p className="eyebrow mb-4 mt-10">Text and tables</p>
+                <ol className="grid gap-3">
+                  {manualBlocks.map((b, i) => (
+                    <BlockEditor
+                      key={b.id}
+                      block={b}
+                      index={i}
+                      count={manualBlocks.length}
+                      onChange={(nb) => setBlocks(content.blocks.map((x) => (x.id === b.id ? nb : x)))}
+                      onMove={(dir) => {
+                        const a = [...content.blocks];
+                        const from = a.findIndex((x) => x.id === b.id),
+                          j = a.findIndex((x) => x.id === manualBlocks[i + dir]?.id);
+                        if (from >= 0 && j >= 0) {
+                          [a[from], a[j]] = [a[j]!, a[from]!];
+                          setBlocks(a);
+                        }
+                      }}
+                      onDelete={() => removeBlock(b)}
+                    />
+                  ))}
+                </ol>
+                {content.blocks.length < 100 && (
                   <div className="mt-4 flex flex-wrap gap-2">
                     <button
-                      type="button"
-                      className="btn btn-primary btn-sm"
-                      disabled={
-                        !finDirty ||
-                        !finDraft ||
-                        JSON.stringify(finDraft) === JSON.stringify(content.financialInput)
-                      }
-                      onClick={applyFinancial}
-                      data-testid="button-apply-financial"
+                      className="btn btn-ghost btn-sm"
+                      onClick={() => addBlock("paragraph")}
+                      data-testid="button-add-paragraph"
                     >
-                      Apply these amounts
+                      <Pilcrow className="h-4 w-4" aria-hidden="true" /> Add a paragraph
                     </button>
                     <button
-                      type="button"
                       className="btn btn-ghost btn-sm"
-                      onClick={() => {
-                        if (financialDirty.current)
-                          ask({
-                            title: "Discard the amounts you have not applied?",
-                            body: "The amounts go back to the ones last applied to the document.",
-                            keep: "Keep them",
-                            confirm: "Discard them",
-                            // The document as it is when the answer comes, not as it was when asked.
-                            run: () => resetFinancial(latest.current?.content ?? content),
-                          });
-                        else resetFinancial(content);
-                      }}
-                      data-testid="button-reset-financial"
+                      onClick={() => addBlock("list")}
+                      data-testid="button-add-list"
                     >
-                      Reset
+                      <List className="h-4 w-4" aria-hidden="true" /> Add a list
+                    </button>
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      onClick={() => addBlock("table")}
+                      data-testid="button-add-table"
+                    >
+                      <Table2 className="h-4 w-4" aria-hidden="true" /> Add a table
                     </button>
                   </div>
-                </div>
-              )}
+                )}
 
-              <p className="eyebrow mb-4 mt-10">Text and tables</p>
-              <ol className="grid gap-3">
-                {manualBlocks.map((b, i) => (
-                  <BlockEditor
-                    key={b.id}
-                    block={b}
-                    index={i}
-                    count={manualBlocks.length}
-                    onChange={(nb) => setBlocks(content.blocks.map((x) => (x.id === b.id ? nb : x)))}
-                    onMove={(dir) => {
-                      const a = [...content.blocks];
-                      const from = a.findIndex((x) => x.id === b.id),
-                        j = a.findIndex((x) => x.id === manualBlocks[i + dir]?.id);
-                      if (from >= 0 && j >= 0) {
-                        [a[from], a[j]] = [a[j]!, a[from]!];
-                        setBlocks(a);
-                      }
-                    }}
-                    onDelete={() => setBlocks(content.blocks.filter((x) => x.id !== b.id))}
+                <div className="mt-10">
+                  <label className="label" htmlFor="f-notes">
+                    {FIELD_LABELS.notes}
+                  </label>
+                  <textarea
+                    id="f-notes"
+                    className="field min-h-24"
+                    maxLength={5000}
+                    value={content.fields.notes}
+                    onChange={(e) => setFields("notes", e.target.value)}
+                    data-testid="input-field-notes"
                   />
-                ))}
-              </ol>
-              {content.blocks.length < 100 && (
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <button
-                    className="btn btn-ghost btn-sm"
-                    onClick={() => addBlock("paragraph")}
-                    data-testid="button-add-paragraph"
-                  >
-                    <Pilcrow className="h-4 w-4" aria-hidden="true" /> Add a paragraph
-                  </button>
-                  <button
-                    className="btn btn-ghost btn-sm"
-                    onClick={() => addBlock("list")}
-                    data-testid="button-add-list"
-                  >
-                    <List className="h-4 w-4" aria-hidden="true" /> Add a list
-                  </button>
-                  <button
-                    className="btn btn-ghost btn-sm"
-                    onClick={() => addBlock("table")}
-                    data-testid="button-add-table"
-                  >
-                    <Table2 className="h-4 w-4" aria-hidden="true" /> Add a table
-                  </button>
+                </div>
+
+                <div className="mt-8 grid gap-4 border-t border-border pt-6 sm:grid-cols-2">
+                  <div>
+                    <label className="label" htmlFor="fmt-font">
+                      Lettering
+                    </label>
+                    <select
+                      id="fmt-font"
+                      className="field"
+                      value={content.formatting.font}
+                      onChange={(e) =>
+                        update({
+                          title,
+                          content: {
+                            ...content,
+                            formatting: { ...content.formatting, font: e.target.value as "sans" | "serif" },
+                          },
+                        })
+                      }
+                      data-testid="select-font"
+                    >
+                      <option value="serif">Classic (serif)</option>
+                      <option value="sans">Plain (sans-serif)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="label" htmlFor="fmt-accent">
+                      Colour
+                    </label>
+                    <select
+                      id="fmt-accent"
+                      className="field"
+                      value={content.formatting.accent}
+                      onChange={(e) =>
+                        update({
+                          title,
+                          content: {
+                            ...content,
+                            formatting: {
+                              ...content.formatting,
+                              accent: e.target.value as "forest" | "charcoal",
+                            },
+                          },
+                        })
+                      }
+                      data-testid="select-accent"
+                    >
+                      <option value="forest">Green</option>
+                      <option value="charcoal">Dark grey</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              {splitPreview && (
+                <div className="hidden xl:sticky xl:top-24 xl:block" aria-label="Live preview">
+                  <p className="eyebrow mb-3">Live preview</p>
+                  <DocPreview title={title || saved.title} content={content} revision={baseRev.current} />
                 </div>
               )}
-
-              <div className="mt-10">
-                <label className="label" htmlFor="f-notes">
-                  {FIELD_LABELS.notes}
-                </label>
-                <textarea
-                  id="f-notes"
-                  className="field min-h-24"
-                  maxLength={5000}
-                  value={content.fields.notes}
-                  onChange={(e) => setFields("notes", e.target.value)}
-                  data-testid="input-field-notes"
-                />
-              </div>
-
-              <div className="mt-8 grid gap-4 border-t border-border pt-6 sm:grid-cols-2">
-                <div>
-                  <label className="label" htmlFor="fmt-font">
-                    Lettering
-                  </label>
-                  <select
-                    id="fmt-font"
-                    className="field"
-                    value={content.formatting.font}
-                    onChange={(e) =>
-                      update({
-                        title,
-                        content: {
-                          ...content,
-                          formatting: { ...content.formatting, font: e.target.value as "sans" | "serif" },
-                        },
-                      })
-                    }
-                    data-testid="select-font"
-                  >
-                    <option value="serif">Classic (serif)</option>
-                    <option value="sans">Plain (sans-serif)</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="label" htmlFor="fmt-accent">
-                    Colour
-                  </label>
-                  <select
-                    id="fmt-accent"
-                    className="field"
-                    value={content.formatting.accent}
-                    onChange={(e) =>
-                      update({
-                        title,
-                        content: {
-                          ...content,
-                          formatting: {
-                            ...content.formatting,
-                            accent: e.target.value as "forest" | "charcoal",
-                          },
-                        },
-                      })
-                    }
-                    data-testid="select-accent"
-                  >
-                    <option value="forest">Green</option>
-                    <option value="charcoal">Dark grey</option>
-                  </select>
-                </div>
-              </div>
             </div>
           )}
         </div>
 
         <aside className="grid h-fit gap-4 lg:sticky lg:top-24">
-          <div className="surface p-5" data-testid="card-missing">
+          <div className="surface p-5" id="still-needed-card" data-testid="card-missing">
             <p className="eyebrow">Still needed</p>
             {missing.length ? (
               <ul className="mt-3 grid gap-1.5 text-sm">
                 {missing.map((m) => (
-                  <li key={m} className="flex items-start gap-2">
-                    <span
-                      className="mt-[0.45rem] h-1.5 w-1.5 shrink-0 rounded-full bg-[hsl(var(--ochre))]"
-                      aria-hidden="true"
-                    />
-                    {m}
+                  <li key={m.label}>
+                    {m.selector ? (
+                      <button
+                        type="button"
+                        className="flex w-full items-start gap-2 rounded-md text-left transition-colors hover:text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                        onClick={() => focusEditorTarget(m.selector!)}
+                      >
+                        <span
+                          className="mt-[0.45rem] h-1.5 w-1.5 shrink-0 rounded-full bg-[hsl(var(--ochre))]"
+                          aria-hidden="true"
+                        />
+                        {m.label}
+                      </button>
+                    ) : (
+                      <span className="flex items-start gap-2">
+                        <span
+                          className="mt-[0.45rem] h-1.5 w-1.5 shrink-0 rounded-full bg-[hsl(var(--ochre))]"
+                          aria-hidden="true"
+                        />
+                        {m.label}
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -892,7 +1048,11 @@ export default function DocumentEditor({ id }: { id: string }) {
                 the details Valo checks. Read the whole document before you use it.
               </p>
             )}
-            <p className="hint mt-3">A document saves with details missing. Valo fills nothing in for you.</p>
+            <p className="hint mt-3">
+              {missing.length
+                ? "Select any item above to jump straight to it. A document saves with details missing; Valo fills nothing in for you."
+                : "A document saves with details missing. Valo fills nothing in for you."}
+            </p>
           </div>
           <DocumentRevisionsCard
             revisions={revs.data}
@@ -910,6 +1070,14 @@ export default function DocumentEditor({ id }: { id: string }) {
             revisionId={doc.data.revisionId}
             revisionNumber={doc.data.revision}
             disabled={finDirty || !["idle", "saved"].includes(state)}
+            missingCount={missing.length}
+            finDirty={finDirty}
+            onJumpToFinancial={() => focusEditorTarget('[data-testid="panel-financial"]')}
+            onJumpToMissing={() => {
+              document
+                .getElementById("still-needed-card")
+                ?.scrollIntoView({ behavior: "smooth", block: "center" });
+            }}
           />
           <MakeAnother saved={doc.data} unsaved={finDirty || !["idle", "saved"].includes(state)} />
         </aside>

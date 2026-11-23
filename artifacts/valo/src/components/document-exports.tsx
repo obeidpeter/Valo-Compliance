@@ -73,11 +73,19 @@ export function DocumentExports({
   revisionId,
   revisionNumber,
   disabled,
+  missingCount = 0,
+  finDirty = false,
+  onJumpToFinancial,
+  onJumpToMissing,
 }: {
   documentId: string;
   revisionId: string;
   revisionNumber: number;
   disabled: boolean;
+  missingCount?: number;
+  finDirty?: boolean;
+  onJumpToFinancial?: () => void;
+  onJumpToMissing?: () => void;
 }) {
   const checkbox = useId();
   const [acknowledged, setAcknowledged] = useState(false);
@@ -123,9 +131,46 @@ export function DocumentExports({
         />
         I want a draft copy: marked as a draft on every page, with any missing details left as they are.
       </label>
-      {disabled && (
+      {finDirty && (
+        <div
+          role="status"
+          className="mb-3 rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2.5 text-sm text-destructive"
+          data-testid="status-export-financial-pending"
+        >
+          <p>Apply your financial changes before making a file.</p>
+          {onJumpToFinancial && (
+            <button
+              type="button"
+              className="mt-1 font-medium underline underline-offset-4"
+              onClick={onJumpToFinancial}
+            >
+              Go to Financial details
+            </button>
+          )}
+        </div>
+      )}
+      {!finDirty && disabled && (
         <p role="status" className="mb-3 text-sm">
           Save your changes before you make a file.
+        </p>
+      )}
+      {missingCount > 0 && (
+        <p
+          className="mb-3 rounded-xl border border-[hsl(38_50%_82%)] bg-[hsl(var(--ochre-soft))] px-3 py-2 text-xs leading-relaxed text-[hsl(38_60%_20%)]"
+          data-testid="status-export-missing-cue"
+        >
+          {missingCount === 1
+            ? "1 detail is still blank in Still needed."
+            : `${missingCount} details are still blank in Still needed.`}{" "}
+          {onJumpToMissing && (
+            <button
+              type="button"
+              className="font-medium underline underline-offset-4"
+              onClick={onJumpToMissing}
+            >
+              Review still needed
+            </button>
+          )}
         </p>
       )}
       <p className="mb-3 text-sm">Saved version {revisionNumber}</p>

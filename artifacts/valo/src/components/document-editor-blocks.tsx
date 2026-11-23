@@ -117,19 +117,19 @@ export function BlockEditor({
         <span className="inline-flex items-center gap-1.5">
           <Icon className="h-3.5 w-3.5" aria-hidden="true" /> {BLOCK_NAMES[block.type]}
         </span>
-        <span className="flex gap-0.5 opacity-60 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
+        <span className="flex gap-1 opacity-80 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 sm:opacity-65">
           <IconBtn label="Move up" disabled={index === 0} onClick={() => onMove(-1)}>
-            <ArrowUp className="h-3.5 w-3.5" />
+            <ArrowUp className="h-4 w-4" aria-hidden="true" />
           </IconBtn>
           <IconBtn label="Move down" disabled={index === count - 1} onClick={() => onMove(1)}>
-            <ArrowDown className="h-3.5 w-3.5" />
+            <ArrowDown className="h-4 w-4" aria-hidden="true" />
           </IconBtn>
           <IconBtn
             label={"Delete this " + BLOCK_NAMES[block.type].toLowerCase()}
             disabled={count === 1}
             onClick={onDelete}
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            <Trash2 className="h-4 w-4" aria-hidden="true" />
           </IconBtn>
         </span>
       </div>
@@ -215,7 +215,7 @@ function IconBtn({
       title={label}
       disabled={disabled}
       onClick={onClick}
-      className="grid h-7 w-7 place-items-center rounded-md hover:bg-secondary disabled:opacity-30"
+      className="grid min-h-10 min-w-10 place-items-center rounded-lg hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-30"
     >
       {children}
     </button>

@@ -4,7 +4,7 @@ import type { CanonicalDocument } from "@workspace/api-client-react";
 import { GUIDED_TEMPLATE_IDS } from "@workspace/valo-core/guided";
 import { compileGuidedContent, emptyGuidedData } from "@workspace/valo-core/guided-runtime";
 import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
-import { blankContent, missingFields } from "./api";
+import { blankContent, missingFieldItems, missingFields } from "./api";
 import { askedAs } from "./guided-money";
 
 /** A document of this kind as it is first saved, with these answers given. */
@@ -98,4 +98,20 @@ test("a blank document needs each of its details and its text, and blanks left i
   assert.deepEqual(missingFields(content), [
     "Blanks still in the text (3): [Counterparty address], ____, {{name}}",
   ]);
+});
+
+test("missingFieldItems maps missing details to matching editor jump selectors", () => {
+  const blankItems = missingFieldItems(blankContent());
+  assert.equal(blankItems.find((i) => i.label === "Issued by")?.selector, "#f-issuerName");
+  assert.equal(
+    blankItems.find((i) => i.label === "The document's text")?.selector,
+    '[data-testid="input-block-0"]',
+  );
+
+  const guidedItems = missingFieldItems(started("TPL-01"));
+  assert.equal(guidedItems.find((i) => i.label === "Issuing business legal name")?.selector, "#g-issuerName");
+  assert.equal(
+    guidedItems.find((i) => i.label === "Goods, work and agreed charges, row 1: Description")?.selector,
+    "#gt-items-0-description",
+  );
 });
