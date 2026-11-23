@@ -10,6 +10,7 @@ import { ValoProblem } from "../platform/valo-problem";
 import { wordFromText } from "../modules/manual-library/files";
 import { exerciseManualRegulatoryOwner } from "../test-support/manual-regulatory-owner";
 import { exercisePremiumManualTemplate } from "../test-support/manual-premium-template";
+import { exercisePremiumPriceCommand } from "../test-support/premium-price-command";
 import {
   GetManualLibraryRevisionResponse,
   GetPublicCoverageResponse,
@@ -409,6 +410,10 @@ test(
     );
     await t.test("premium manual files require the purchasing workspace and the exact released edition", () =>
       exercisePremiumManualTemplate(call, editor),
+    );
+    await t.test(
+      "the price command records the owner's exact terms for a published premium template, and closes its open price when the new one starts",
+      () => exercisePremiumPriceCommand(call, editor),
     );
     await t.test("Word and PDF previews, original template downloads and withdrawal", async () => {
       const text = "Synthetic delivery checklist";
