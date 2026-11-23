@@ -5,45 +5,14 @@ import { registeredManualGuidance, checkManualRegulatorySources } from "./regula
 import { guidancePolicy } from "../publication";
 import type { db, valoManualRegulatoryChecks } from "@workspace/db";
 import { ValoProblem } from "../../platform/valo-problem";
-import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
-import {
-  activeStaffAssignment,
-  assertStaffAssignmentCurrent,
-  requireFreshStaffSession,
-  type StaffActor,
-} from "../staff";
+import { asDevelopmentOwner, type StaffActor } from "../staff";
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 type Check = typeof valoManualRegulatoryChecks.$inferSelect;
 const conflict = () =>
   new ValoProblem(409, "The draft or its source check changed. Reopen the article before signing.");
 
-async function asOwner<T>(actor: StaffActor, work: (tx: Tx) => Promise<T>) {
-  assertDevelopmentRuntime();
-  requireFreshStaffSession(actor);
-  const { db: store, valoStaffAssignments: a } = await import("@workspace/db");
-  return store.transaction(async (tx) => {
-    const [role] = await tx
-      .select({ id: a.id })
-      .from(a)
-      .where(
-        and(
-          eq(a.identityId, actor.identityId),
-          eq(a.role, "system"),
-          eq(a.grantMode, "permanent"),
-          activeStaffAssignment(),
-        ),
-      )
-      .for("share");
-    if (!role)
-      throw new ValoProblem(403, "A permanent development owner with recent verification is required.");
-    await assertStaffAssignmentCurrent(tx, role.id);
-    const owner = await tx.execute(sql`select valo_manual_regulatory_owner(${actor.identityId}) as allowed`);
-    if (!owner.rows[0]?.allowed)
-      throw new ValoProblem(403, "Only the designated development owner can sign regulatory guidance.");
-    return work(tx);
-  });
-}
+const asOwner = <T>(actor: StaffActor, work: (tx: Tx) => Promise<T>) => asDevelopmentOwner(actor, work);
 
 function holdsFor(check: Check | undefined, row: { title: string; body: string }) {
   if (!check || check.title !== row.title || check.bodySha256 !== sha256(row.body))
