@@ -253,6 +253,7 @@ export const valoRefundRequests = pgTable(
     uniqueIndex("valo_refund_reference_unique").on(t.reference),
     uniqueIndex("valo_refund_provider_unique").on(t.providerId),
     index("valo_refund_queue_idx").on(t.status, t.nextAttemptAt),
+    index("valo_refund_workspace_order_idx").on(t.workspaceId, t.orderId, t.createdAt),
     foreignKey({
       name: "valo_refund_order_tenant_fk",
       columns: [t.workspaceId, t.orderId],
@@ -312,6 +313,7 @@ export const valoPaymentDisputes = pgTable(
     // Dispute information and actions reference a dispute with its workspace and
     // order, so a selected dispute cannot belong to another order.
     unique("valo_dispute_exact_binding").on(t.workspaceId, t.orderId, t.id),
+    index("valo_dispute_workspace_order_idx").on(t.workspaceId, t.orderId, t.checkedAt),
     foreignKey({
       name: "valo_dispute_order_tenant_fk",
       columns: [t.workspaceId, t.orderId],

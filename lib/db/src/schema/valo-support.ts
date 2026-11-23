@@ -63,6 +63,7 @@ export const valoSupportCases = pgTable(
   },
   (t) => [
     index("valo_support_case_queue").on(t.status, t.updatedAt),
+    index("valo_support_case_workspace_updated_idx").on(t.workspaceId, t.updatedAt),
     foreignKey({
       name: "valo_support_case_workspace",
       columns: [t.ticketId, t.workspaceId],

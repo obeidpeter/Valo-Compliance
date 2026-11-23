@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, integer, timestamp, uniqueIndex, foreignKey } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, integer, timestamp, uniqueIndex, index, foreignKey } from "drizzle-orm/pg-core";
 import { workspaceRowPolicy } from "./valo-workspace-scope";
 import { createInsertSchema } from "drizzle-zod";
 import { valoExportJobs } from "./valo-exports";
@@ -17,6 +17,8 @@ export const valoFileAssets = pgTable(
   },
   (t) => [
     uniqueIndex("valo_export_file_unique").on(t.jobId),
+    index("valo_file_assets_workspace_created_idx").on(t.workspaceId, t.createdAt),
+    index("valo_file_assets_retention_idx").on(t.retentionAt),
     foreignKey({
       columns: [t.jobId, t.workspaceId],
       foreignColumns: [valoExportJobs.id, valoExportJobs.workspaceId],

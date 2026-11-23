@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, integer, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, integer, timestamp, index } from "drizzle-orm/pg-core";
 import { workspaceRowPolicy } from "./valo-workspace-scope";
 import { createInsertSchema } from "drizzle-zod";
 import { valoWorkspaces } from "./valo-workspaces";
@@ -16,7 +16,11 @@ export const valoEvents = pgTable(
     revision: integer("revision"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [workspaceRowPolicy(t.workspaceId)],
+  (t) => [
+    index("valo_events_workspace_entity_action_idx").on(t.workspaceId, t.entityId, t.action, t.createdAt),
+    index("valo_events_workspace_created_idx").on(t.workspaceId, t.createdAt),
+    workspaceRowPolicy(t.workspaceId),
+  ],
 );
 export const insertValoEventSchema = createInsertSchema(valoEvents);
 export type ValoEvent = typeof valoEvents.$inferSelect;

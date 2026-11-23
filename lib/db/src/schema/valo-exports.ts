@@ -46,6 +46,7 @@ export const valoExportJobs = pgTable(
     ),
     uniqueIndex("valo_export_workspace_unique").on(t.id, t.workspaceId),
     index("valo_export_dispatch_idx").on(t.status, t.createdAt),
+    index("valo_export_workspace_document_idx").on(t.workspaceId, t.documentId, t.createdAt),
     foreignKey({
       columns: [t.revisionId, t.documentId, t.workspaceId],
       foreignColumns: [
