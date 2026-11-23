@@ -2932,6 +2932,59 @@ test("a direct checkout shows only the chosen price and leaves an obsolete link 
   }
 });
 
+test("purchase history offers the exact owned file on a verified order and keeps its receipt after access ends", async () => {
+  const listing = api.GetCustomerPurchasesResponse.parse(answers["GET /workspace/purchases"]);
+  const paid = listing.orders[0]!;
+  const edition = paid.contentVersionId;
+  const downloadPath = "/api/workspace/manual-premium-templates/" + edition + "/download";
+  listing.ownedDownloads = [
+    "00000000-0000-4000-8000-00000000a301",
+    "00000000-0000-4000-8000-00000000a302",
+  ].map((offerId) => ({ offerId, edition, title: paid.title, downloadPath }));
+  listing.orders.push(
+    {
+      ...paid,
+      id: "00000000-0000-4000-8000-00000000a102",
+      reference: "ORD-SYNTH-2",
+      contentVersionId: "00000000-0000-4000-8000-00000000a202",
+    },
+    { ...paid, id: "00000000-0000-4000-8000-00000000a103", reference: "ORD-SYNTH-3", status: "reversed" },
+    {
+      ...paid,
+      id: "00000000-0000-4000-8000-00000000a104",
+      reference: "ORD-SYNTH-4",
+      status: "created",
+      receiptReference: null,
+    },
+  );
+  const { page, errors, unknown, close } = await phone(
+    "/workspace/purchases",
+    except({ "GET /workspace/purchases": listing }),
+  );
+  try {
+    const history = page.getByRole("region", { name: "Your orders" });
+    const order = history
+      .getByRole("article")
+      .filter({ has: page.getByText(paid.reference, { exact: true }) });
+    const download = history.getByRole("link", { name: "Download " + paid.title, exact: true });
+    const receipt = order.getByRole("button", { name: "Download test purchase receipt" });
+    await expect(download).toHaveCount(1);
+    await expect(order.getByRole("link", { name: "Download " + paid.title })).toHaveAttribute(
+      "href",
+      downloadPath,
+    );
+    await expect(receipt).toBeVisible();
+    listing.ownedDownloads = [];
+    await page.reload();
+    await expect(receipt).toBeVisible();
+    await expect(download).toHaveCount(0);
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
+
 // The purchases screen with nothing for sale and nothing ordered, which is how it opens while no
 // document is published with a price. The other tests give the screen an order, so its list with
 // no order had never been drawn.
