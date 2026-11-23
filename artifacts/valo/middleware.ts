@@ -11,6 +11,7 @@ export function middleware(request: NextRequest) {
   headers.set("Content-Security-Policy", policy);
   const response = NextResponse.next({ request: { headers } });
   response.headers.set("Content-Security-Policy", policy);
+  if (policy.includes("frame-ancestors 'none'")) response.headers.set("X-Frame-Options", "DENY");
   response.headers.set("Cache-Control", "private, no-store, max-age=0");
   response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
   // Browsers ignore HSTS on plain HTTP, so this is safe in local development.
