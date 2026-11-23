@@ -5,7 +5,7 @@ import { missingFields } from "./api";
 
 export type DocumentStatusFilter = "all" | "incomplete" | "complete" | "hidden";
 
-export const HIDDEN_DOCS_STORAGE_KEY = "valo-hidden-docs-v1";
+export const HIDDEN_DOCS_STORAGE_NAME = "valo-hidden-docs-v1";
 
 const DEFAULT_TITLES = new Set<string>([
   "",
@@ -109,7 +109,7 @@ export function readHiddenDocumentIds(storage?: Pick<Storage, "getItem"> | null)
     storage === undefined ? (typeof window !== "undefined" ? window.localStorage : null) : storage;
   if (!target) return new Set();
   try {
-    const raw = target.getItem(HIDDEN_DOCS_STORAGE_KEY);
+    const raw = target.getItem(HIDDEN_DOCS_STORAGE_NAME);
     if (!raw) return new Set();
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return new Set();
@@ -128,7 +128,7 @@ export function writeHiddenDocumentIds(
     storage === undefined ? (typeof window !== "undefined" ? window.localStorage : null) : storage;
   if (!target) return;
   try {
-    target.setItem(HIDDEN_DOCS_STORAGE_KEY, JSON.stringify([...ids]));
+    target.setItem(HIDDEN_DOCS_STORAGE_NAME, JSON.stringify([...ids]));
   } catch {
     // Storage-restricted browsers still keep hidden state in memory for the current session.
   }
