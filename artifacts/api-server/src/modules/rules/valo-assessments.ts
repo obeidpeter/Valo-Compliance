@@ -29,13 +29,32 @@ import {
   type CheckerFacts,
 } from "@workspace/valo-core";
 import { z } from "zod";
-import { authorizeWorkspaceWrite, type WorkspaceActor } from "../workspaces";
+import { authorizeWorkspaceRead, authorizeWorkspaceWrite, type WorkspaceActor } from "../workspaces";
 import { ValoProblem } from "../../platform/valo-problem";
 
 import { lockSourceState, sourceTargetAllowed } from "../sources";
 import { singleRow } from "../../platform/rows";
 export type WorkspaceTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
-/** Repository methods recheck membership, including worker and direct-service callers. */
+/** Read-only workspace transaction: verifies current membership and tombstone status without
+ * acquiring an exclusive workspace row lock. Set `lockSources: true` when reading live rules. */
+export async function workspaceReadTransaction<T>(
+  actor: WorkspaceActor,
+  fn: (tx: WorkspaceTx) => Promise<T>,
+  options: { lockSources?: boolean } = {},
+): Promise<T> {
+  return db.transaction(async (tx) => {
+    if (options.lockSources) await lockSourceState(tx);
+    const [workspace] = await tx
+      .select({ id: valoWorkspaces.id })
+      .from(valoWorkspaces)
+      .where(eq(valoWorkspaces.id, actor.workspaceId));
+    if (!workspace) throw new ValoProblem(404, "Your workspace was not found.");
+    await authorizeWorkspaceRead(tx, actor);
+    return fn(tx);
+  });
+}
+/** Repository write methods recheck membership and hold an exclusive workspace row lock,
+ * including worker and direct-service callers. */
 export async function workspaceTransaction<T>(
   actor: WorkspaceActor,
   fn: (tx: WorkspaceTx) => Promise<T>,
@@ -73,16 +92,14 @@ type StoredRuleRelease = Pick<
   typeof valoRuleReleases.$inferSelect,
   "ruleId" | "version" | "status" | "rule" | "publicationBundle" | "manifestHash"
 >;
-/** Whether the registry admits one stored rule release, apart from its sources' current state
- * (sourceTargetAllowed, which needs the database). */
-export function ruleReleaseEligible(row: StoredRuleRelease, now: Date) {
+function parseEligibleRuleRelease(row: StoredRuleRelease, now: Date): z.infer<typeof ruleSchema> | null {
   const rule = ruleSchema.safeParse(row.rule),
     bundle = publicationSchema.safeParse(row.publicationBundle);
-  if (!rule.success || !bundle.success || row.status !== "published") return false;
+  if (!rule.success || !bundle.success || row.status !== "published") return null;
   const r = rule.data,
     b = bundle.data,
     { manifestHash: _, ...reviewedRule } = r;
-  return (
+  const admissible =
     r.id === row.ruleId &&
     r.version === row.version &&
     b.candidate.version === r.version &&
@@ -102,8 +119,13 @@ export function ruleReleaseEligible(row: StoredRuleRelease, now: Date) {
             bs.id === s.id && bs.hash === s.snapshotHash && bs.url === s.url && bs.text.includes(s.quote),
         ) &&
         b.candidate.claims.some((c) => c.sourceId === s.id && c.locator === s.locator && c.quote === s.quote),
-    )
-  );
+    );
+  return admissible ? r : null;
+}
+/** Whether the registry admits one stored rule release, apart from its sources' current state
+ * (sourceTargetAllowed, which needs the database). */
+export function ruleReleaseEligible(row: StoredRuleRelease, now: Date) {
+  return parseEligibleRuleRelease(row, now) !== null;
 }
 /** No customer endpoint writes this registry or supplies a publication manifest. */
 export async function releasedRegistry(tx: WorkspaceTx | typeof db, now: Date) {
@@ -118,12 +140,12 @@ export async function releasedRegistry(tx: WorkspaceTx | typeof db, now: Date) {
     states: unknown[] = [];
   let excluded = 0;
   for (const row of rows) {
-    let eligible = ruleReleaseEligible(row, now);
+    const parsed = parseEligibleRuleRelease(row, now);
+    let eligible = parsed !== null;
     if (eligible) eligible = await sourceTargetAllowed(tx, "rule", row.id, row.publicationBundle, now);
-    if (eligible) {
-      const r = ruleSchema.parse(row.rule);
-      rules.push(r);
-      trusted.add(r.manifestHash);
+    if (eligible && parsed) {
+      rules.push(parsed);
+      trusted.add(parsed.manifestHash);
     }
     states.push({
       id: row.ruleId,
@@ -203,7 +225,9 @@ export async function previewAssessment(raw: unknown) {
 export async function previewWorkspaceAssessment(actor: WorkspaceActor, raw: unknown) {
   const facts = checkerFactsSchema.parse(z.object({ facts: z.unknown() }).parse(raw).facts);
   const input = PreviewAssessmentBody.strict().parse(raw);
-  return workspaceTransaction(actor, (tx) => runAssessment(facts, input.asOfDate, tx));
+  return workspaceReadTransaction(actor, (tx) => runAssessment(facts, input.asOfDate, tx), {
+    lockSources: true,
+  });
 }
 export function serializeAssessment(row: typeof valoAssessments.$inferSelect) {
   const result = GetAssessmentResponse.parse({
@@ -279,7 +303,7 @@ export async function createAssessment(actor: WorkspaceActor, raw: unknown) {
   });
 }
 export async function listAssessments(actor: WorkspaceActor) {
-  return workspaceTransaction(actor, async (tx) =>
+  return workspaceReadTransaction(actor, async (tx) =>
     (
       await tx
         .select()
@@ -299,10 +323,12 @@ export async function assessmentRow(tx: WorkspaceTx, actor: WorkspaceActor, id: 
   return row;
 }
 export async function getAssessment(actor: WorkspaceActor, id: string) {
-  return workspaceTransaction(actor, async (tx) => serializeAssessment(await assessmentRow(tx, actor, id)));
+  return workspaceReadTransaction(actor, async (tx) =>
+    serializeAssessment(await assessmentRow(tx, actor, id)),
+  );
 }
 export async function compareAssessments(actor: WorkspaceActor, id: string, previousId: string) {
-  return workspaceTransaction(actor, async (tx) => {
+  return workspaceReadTransaction(actor, async (tx) => {
     const current = serializeAssessment(await assessmentRow(tx, actor, id));
     const previous = serializeAssessment(await assessmentRow(tx, actor, previousId));
     const before = new Map(previous.result.items.map((i) => [i.ruleId, i]));
