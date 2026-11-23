@@ -1,9 +1,12 @@
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useSearch } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2, Plus, X } from "lucide-react";
 import {
+  useGetAssessment,
   useGetWorkspace,
   useSaveBusinessProfile,
+  getGetAssessmentQueryKey,
   getGetWorkspaceQueryKey,
   Answer,
   ProfileLegalForm,
@@ -19,6 +22,7 @@ import { useAccountEpoch } from "@/components/account-state-boundary";
 import { ErrorState, Notice, Skel } from "@/components/states";
 import { describeError } from "@/lib/api";
 import { valueLabel } from "@/lib/checker";
+import { profileFromAssessmentFacts } from "@/lib/profile-prefill";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { WorkspaceNav } from "@/components/workspace-nav";
 import { useUnsavedNavigation } from "@/lib/use-unsaved-navigation";
@@ -48,15 +52,28 @@ const label = valueLabel;
 
 export default function ProfilePage() {
   const currentAccount = useAccountEpoch();
+  const search = useSearch();
+  const fromAssessmentId = useMemo(
+    () => new URLSearchParams(search).get("fromAssessment")?.trim() ?? "",
+    [search],
+  );
   const qc = useQueryClient();
   const { toast } = useToast();
   const ws = useGetWorkspace({ query: { enabled: true, queryKey: getGetWorkspaceQueryKey() } });
+  const sourceCheck = useGetAssessment(fromAssessmentId, {
+    query: {
+      enabled: Boolean(fromAssessmentId),
+      queryKey: getGetAssessmentQueryKey(fromAssessmentId),
+    },
+  });
   const save = useSaveBusinessProfile();
   const [p, setP] = useState<Profile>(EMPTY);
   const [touched, setTouched] = useState(false);
+  const [prefilledCount, setPrefilledCount] = useState(0);
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [conflict, setConflict] = useState(false);
   const init = useRef(false);
+  const prefillApplied = useRef<string | null>(null);
   const form = useRef<HTMLFormElement>(null),
     leaving = useRef(false);
   const navigation = useUnsavedNavigation(() => touched || save.isPending);
@@ -71,6 +88,24 @@ export default function ProfilePage() {
         });
     }
   }, [ws.data]);
+
+  useEffect(() => {
+    if (!fromAssessmentId || !ws.data || !sourceCheck.data || prefillApplied.current === fromAssessmentId)
+      return;
+    prefillApplied.current = fromAssessmentId;
+    const base: Profile = ws.data.profile
+      ? {
+          ...ws.data.profile,
+          activities: ws.data.profile.activities.length ? ws.data.profile.activities : [""],
+        }
+      : EMPTY;
+    const merged = profileFromAssessmentFacts(sourceCheck.data.facts, base);
+    if (merged.appliedCount > 0) {
+      setP(merged.profile);
+      setTouched(true);
+      setPrefilledCount(merged.appliedCount);
+    }
+  }, [fromAssessmentId, ws.data, sourceCheck.data]);
 
   const set = <K extends keyof Profile>(k: K, v: Profile[K]) => {
     setTouched(true);
@@ -204,6 +239,15 @@ export default function ProfilePage() {
       <p className="mt-2 text-muted-foreground">
         Each save keeps a new version. &ldquo;I do not know&rdquo; is always an acceptable answer.
       </p>
+      {prefilledCount > 0 && (
+        <Notice className="mt-6" tone="forest" title="Pre-filled from your saved check">
+          {prefilledCount === 1
+            ? "1 answer was copied into this form."
+            : `${prefilledCount} answers were copied into this form.`}{" "}
+          Review them, enter your business name if needed, and select <strong>Save profile</strong> to keep
+          them.
+        </Notice>
+      )}
 
       <form ref={form} onSubmit={submit} noValidate className="mt-8 grid gap-6">
         <Section title="Identity">

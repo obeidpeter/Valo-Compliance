@@ -5,6 +5,7 @@ import { Check, Columns2, Download, List, Pilcrow, Redo2, Save, Table2, Undo2 } 
 import {
   useGetDocument,
   useListDocumentRevisions,
+  useListDocuments,
   useSaveDocument,
   getGetDocumentQueryKey,
   getListDocumentRevisionsQueryKey,
@@ -16,6 +17,7 @@ import {
 } from "@workspace/api-client-react";
 import { ErrorState, Notice, Skel } from "@/components/states";
 import { FIELD_LABELS, describeError, missingFieldItems, newBlockId } from "@/lib/api";
+import { applyIssuerDetailsToGuided, extractReusableIssuerDetails } from "@/lib/guided-prefill";
 import { cn } from "@/lib/utils";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { DocumentExports } from "@/components/document-exports";
@@ -51,6 +53,9 @@ export default function DocumentEditor({ id }: { id: string }) {
   const revs = useListDocumentRevisions(id, {
     query: { enabled: !!id && doc.isSuccess, queryKey: getListDocumentRevisionsQueryKey(id) },
   });
+  const otherDocs = useListDocuments({
+    query: { enabled: !!id && doc.isSuccess, queryKey: getListDocumentsQueryKey() },
+  });
   const saveMut = useSaveDocument();
   const mutateRef = useRef(saveMut.mutate);
   mutateRef.current = saveMut.mutate;
@@ -72,6 +77,8 @@ export default function DocumentEditor({ id }: { id: string }) {
     financialValue = useRef<FinancialInput | null>(null);
   const leaveAfterSave = useRef(false);
   const [leaveError, setLeaveError] = useState("");
+  const [reuseDocId, setReuseDocId] = useState("");
+  const [reuseNotice, setReuseNotice] = useState("");
   const [asking, setAsking] = useState<Asking | null>(null);
   /** Whether a question is open. The autosave and the keyboard's save and undo wait for its answer. */
   const questionOpen = useRef(false);
@@ -515,6 +522,28 @@ export default function DocumentEditor({ id }: { id: string }) {
       },
     ]);
   const saved = doc.data;
+  const reusableSources = guided
+    ? (otherDocs.data ?? [])
+        .filter((candidate) => candidate.id !== id)
+        .map((candidate) => {
+          const details = extractReusableIssuerDetails(candidate);
+          const applicable = applyIssuerDetailsToGuided(guided, details).appliedLabels;
+          return { doc: candidate, details, applicable };
+        })
+        .filter((entry) => entry.applicable.length > 0)
+    : [];
+  const selectedSource =
+    reusableSources.find((entry) => entry.doc.id === reuseDocId) ?? reusableSources[0] ?? null;
+
+  function applySelectedIssuerDetails() {
+    if (!guided || !content || !selectedSource) return;
+    const { data, appliedLabels } = applyIssuerDetailsToGuided(guided, selectedSource.details);
+    if (!appliedLabels.length) return;
+    update({ title, content: compileGuidedContent(data, content) as CanonicalDocument });
+    setReuseNotice(
+      `Filled ${appliedLabels.join(", ")} from "${selectedSource.doc.title}". Review these details before downloading.`,
+    );
+  }
 
   return (
     <div className="mx-auto max-w-7xl px-5 py-8 lg:px-8">
@@ -783,14 +812,64 @@ export default function DocumentEditor({ id }: { id: string }) {
                   </p>
                 )}
                 {guided ? (
-                  <GuidedFields
-                    spec={GUIDED_SPECS_V1[guided.templateId]}
-                    value={guided}
-                    disabled={!!guidedError}
-                    onChange={(next) =>
-                      update({ title, content: compileGuidedContent(next, content) as CanonicalDocument })
-                    }
-                  />
+                  <>
+                    {reusableSources.length > 0 && !guidedError && (
+                      <div
+                        className="mb-6 rounded-2xl border border-border bg-sidebar/40 p-4"
+                        data-testid="bar-reuse-issuer"
+                      >
+                        <p className="text-sm font-medium">Reuse your business details</p>
+                        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                          Copy only your saved sender details (such as business name, address, or payment
+                          instructions) from a previous document. Customer details, references, dates, and
+                          amounts stay untouched.
+                        </p>
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                          <label className="sr-only" htmlFor="select-reuse-issuer">
+                            Choose a previous document
+                          </label>
+                          <select
+                            id="select-reuse-issuer"
+                            className="field min-w-[12rem] flex-1 !min-h-9 !py-1.5 text-sm"
+                            value={selectedSource?.doc.id ?? ""}
+                            onChange={(e) => setReuseDocId(e.target.value)}
+                            data-testid="select-reuse-issuer"
+                          >
+                            {reusableSources.map((entry) => (
+                              <option key={entry.doc.id} value={entry.doc.id}>
+                                {entry.doc.title}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            type="button"
+                            className="btn btn-ghost btn-sm"
+                            onClick={applySelectedIssuerDetails}
+                            data-testid="button-apply-reuse-issuer"
+                          >
+                            Fill sender details
+                          </button>
+                        </div>
+                        {reuseNotice && (
+                          <p
+                            role="status"
+                            className="mt-2 text-xs text-primary"
+                            data-testid="status-reuse-issuer"
+                          >
+                            {reuseNotice}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                    <GuidedFields
+                      spec={GUIDED_SPECS_V1[guided.templateId]}
+                      value={guided}
+                      disabled={!!guidedError}
+                      onChange={(next) =>
+                        update({ title, content: compileGuidedContent(next, content) as CanonicalDocument })
+                      }
+                    />
+                  </>
                 ) : (
                   <>
                     <p className="eyebrow mb-4">Key details</p>

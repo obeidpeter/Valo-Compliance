@@ -146,7 +146,7 @@ export function SavePanel({
             <span className="block text-muted-foreground">
               {hasProfile
                 ? "The result is worked out again from that version of your profile. The extra details you gave above are left out. If your profile has changed since this page opened, nothing is saved and you are told."
-                : "You have not saved a business profile yet."}
+                : "You have not saved a business profile yet. Save this result first, then copy these answers into your business profile in one click."}
             </span>
           </span>
         </label>
