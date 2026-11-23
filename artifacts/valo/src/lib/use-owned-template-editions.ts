@@ -12,7 +12,8 @@ export function useOwnedTemplateEditions(identity: Identity, hasPremium: boolean
       enabled: !!session && hasPremium,
       gcTime: 0,
       retry: false,
-      refetchInterval: 15000,
+      // The labels change only after a purchase or a refund. Coming back to the tab rereads them; a
+      // poll every 15 seconds also checked the sign-in live each time (decision 0003).
       refetchOnWindowFocus: true,
     },
   });

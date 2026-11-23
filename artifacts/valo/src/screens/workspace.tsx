@@ -5,10 +5,12 @@ import { ArrowRight, Download, FilePlus2, ListTodo, UserRound } from "lucide-rea
 import {
   useGetWorkspace,
   useListAssessments,
+  useListDocuments,
   useListTasksPage,
   useListWorkspaceExports,
   getGetWorkspaceQueryKey,
   getListAssessmentsQueryKey,
+  getListDocumentsQueryKey,
   getListTasksPageQueryKey,
   getListWorkspaceExportsQueryKey,
 } from "@workspace/api-client-react";
@@ -31,15 +33,18 @@ import { cn } from "@/lib/utils";
 export default function WorkspaceHome() {
   const { user } = useUser();
   const ws = useGetWorkspace({ query: { enabled: true, queryKey: getGetWorkspaceQueryKey() } });
+  // Every section's read starts with the workspace's, not after it; a section still shows only once
+  // the workspace has loaded. The documents list reads the same query when it appears.
+  useListDocuments({ query: { enabled: true, queryKey: getListDocumentsQueryKey() } });
   const assessments = useListAssessments({
-    query: { enabled: ws.isSuccess, queryKey: getListAssessmentsQueryKey() },
+    query: { enabled: true, queryKey: getListAssessmentsQueryKey() },
   });
   const openTasks = useListTasksPage(
     { page: 1, filter: "open" },
-    { query: { enabled: ws.isSuccess, queryKey: getListTasksPageQueryKey({ page: 1, filter: "open" }) } },
+    { query: { enabled: true, queryKey: getListTasksPageQueryKey({ page: 1, filter: "open" }) } },
   );
   const exportsList = useListWorkspaceExports({
-    query: { enabled: ws.isSuccess, queryKey: getListWorkspaceExportsQueryKey() },
+    query: { enabled: true, queryKey: getListWorkspaceExportsQueryKey() },
   });
 
   const name = user?.firstName;
