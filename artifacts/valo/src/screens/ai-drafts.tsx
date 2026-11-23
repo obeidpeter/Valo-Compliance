@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { Check, FilePenLine, Loader2, Plus, Sparkles, X } from "lucide-react";
@@ -22,16 +22,9 @@ import { WorkspaceNav } from "@/components/workspace-nav";
 import { FinancialFields, emptyFinancial } from "@/components/financial-fields";
 import { describeError } from "@/lib/api";
 import { live } from "@/lib/checker";
+import { resolveIdempotencyKey, type IdempotencySlot } from "@/lib/idempotency";
 import { cn } from "@/lib/utils";
 export { AIDraftPreview } from "./ai-draft-preview";
-
-const uuid = () =>
-  typeof crypto !== "undefined" && "randomUUID" in crypto
-    ? crypto.randomUUID()
-    : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
-        const r = (Math.random() * 16) | 0;
-        return (c === "x" ? r : (r & 3) | 8).toString(16);
-      });
 
 /* ------------------------------ Compose ------------------------------ */
 
@@ -56,7 +49,7 @@ export function AIDraftCompose() {
   const [finKey, setFinKey] = useState(0);
   const [consent, setConsent] = useState(false);
   const [draftingInstruction, setDraftingInstruction] = useState("");
-  const [key, setKey] = useState(uuid);
+  const keyRef = useRef<IdempotencySlot>(null);
   const [touched, setTouched] = useState(false);
   const [manualErr, setManualErr] = useState<string | null>(null);
 
@@ -65,7 +58,7 @@ export function AIDraftCompose() {
     setTask(t);
     setFin(emptyFinancial(t));
     setFinKey((k) => k + 1);
-    setKey(uuid());
+    keyRef.current = null;
   }
 
   const selected = customerComposerNotes(lines, "ai");
@@ -74,7 +67,7 @@ export function AIDraftCompose() {
   if (!fin) problems.push("Fix the amounts in Financial details.");
   if (lineTooLong) problems.push("Each note must be under 1,000 characters.");
 
-  function build(): CustomerAIInput | null {
+  function buildFacts(): Omit<CustomerAIInput, "idempotencyKey"> | null {
     if (!fin) return null;
     return {
       task,
@@ -87,22 +80,23 @@ export function AIDraftCompose() {
       draftingInstruction,
       financialInput: { ...fin, kind: task },
       processingConsent: consent,
-      idempotencyKey: key,
     };
   }
 
   function submitAI(e: FormEvent) {
     e.preventDefault();
     setTouched(true);
-    const input = build();
-    if (!input || problems.length || !consent) return;
+    const facts = buildFacts();
+    if (!facts || problems.length || !consent) return;
+    const slot = resolveIdempotencyKey(keyRef.current, facts);
+    keyRef.current = slot;
     create.mutate(
-      { data: input },
+      { data: { ...facts, idempotencyKey: slot.key } },
       {
         onSuccess: (p) => {
           qc.setQueryData(getGetCustomerAIDraftQueryKey(p.id), p);
           void qc.invalidateQueries({ queryKey: getGetCustomerAIUsageQueryKey() });
-          setKey(uuid());
+          keyRef.current = null;
           setLocation("/workspace/ai/" + p.id);
         },
         onSettled: () => void qc.invalidateQueries({ queryKey: getGetCustomerAIUsageQueryKey() }),
@@ -113,11 +107,11 @@ export function AIDraftCompose() {
   function submitManual() {
     setTouched(true);
     setManualErr(null);
-    const input = build();
-    if (!input || problems.length) return;
+    const facts = buildFacts();
+    if (!facts || problems.length) return;
     let draft: ReturnType<typeof buildBusinessDraft>;
     try {
-      draft = buildBusinessDraft({ ...input, contextLines: customerComposerNotes(lines, "manual") }, null);
+      draft = buildBusinessDraft({ ...facts, contextLines: customerComposerNotes(lines, "manual") }, null);
     } catch (er) {
       setManualErr("These details could not be assembled: " + (er as Error).message);
       return;

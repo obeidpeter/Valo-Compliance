@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { Link } from "wouter";
 import { UserProfile } from "@clerk/react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -14,6 +14,7 @@ import { WorkspaceNav } from "@/components/workspace-nav";
 import { ErrorState, Notice, Skel } from "@/components/states";
 import { describeError } from "@/lib/api";
 import { formatDateTime } from "@/lib/format";
+import { resolveIdempotencyKey, type IdempotencySlot } from "@/lib/idempotency";
 import { PurchaseHistoryPage } from "./purchase-history";
 import { PRIVACY_KIND_WORDS } from "@/lib/privacy-words";
 import { PrivacyCases } from "@/components/privacy-cases";
@@ -82,7 +83,7 @@ export function PrivacyPage() {
       },
     },
   });
-  const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
+  const keyRef = useRef<IdempotencySlot>(null);
   const [kind, setKind] = useState<PrivacyRequestInputKind>("correction");
   const [message, setMessage] = useState("");
   const [ack, setAckChecked] = useState(false);
@@ -100,15 +101,18 @@ export function PrivacyPage() {
     e.preventDefault();
     setTouched(true);
     if (msgErr || !ack || req.isPending) return;
+    const payload = { kind, message: message.trim(), acknowledgement: true as const };
+    const slot = resolveIdempotencyKey(keyRef.current, payload);
+    keyRef.current = slot;
     req.mutate(
-      { data: { kind, message: message.trim(), acknowledgement: true, idempotencyKey } },
+      { data: { ...payload, idempotencyKey: slot.key } },
       {
         onSuccess: (r) => {
           setSaved(r);
           setMessage("");
           setAckChecked(false);
           setTouched(false);
-          setIdempotencyKey(crypto.randomUUID());
+          keyRef.current = null;
         },
       },
     );
