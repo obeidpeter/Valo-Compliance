@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "wouter";
 import { ArrowRight, FilePlus2, FileText, Search, X } from "lucide-react";
 import { useListDocuments, getListDocumentsQueryKey } from "@workspace/api-client-react";
@@ -27,6 +27,7 @@ export function DocumentList({
   const docs = useListDocuments({ query: { enabled, queryKey: getListDocumentsQueryKey() } });
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<DocumentStatusFilter>("all");
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const all = docs.data ?? [];
   const trimmed = query.trim();
   const shown = useMemo(() => {
@@ -34,6 +35,18 @@ export function DocumentList({
     return filtered.slice(0, limit);
   }, [all, limit, query, searchable, status]);
   const showSearch = searchable && all.length > 1;
+  useEffect(() => {
+    if (!showSearch) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "/" || event.ctrlKey || event.metaKey || event.altKey) return;
+      const target = event.target as HTMLElement | null;
+      if (target && /INPUT|TEXTAREA|SELECT/.test(target.tagName)) return;
+      event.preventDefault();
+      searchInputRef.current?.focus();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [showSearch]);
   const hasFilter = Boolean(trimmed || status !== "all");
   const STATUS_FILTERS: { id: DocumentStatusFilter; label: string }[] = [
     { id: "all", label: "All" },
@@ -60,10 +73,12 @@ export function DocumentList({
                   aria-hidden="true"
                 />
                 <input
+                  ref={searchInputRef}
                   type="search"
                   className="field !pl-10"
                   aria-label="Search your documents by title"
-                  placeholder="Search by title"
+                  aria-keyshortcuts="/"
+                  placeholder="Search by title (press /)"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   data-testid="input-document-search"

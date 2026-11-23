@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { PageHeader } from "@/components/page-parts";
 import { PublicLink } from "@/components/public-link";
+import { HelpFilter } from "@/islands/help-filter";
 import { fixedPageMetadata } from "@/server/page-metadata";
 
 /** A link inside an answer. */
@@ -137,9 +138,10 @@ export default function Help() {
         </PublicLink>
         .
       </PageHeader>
+      <HelpFilter total={GROUPS.reduce((sum, group) => sum + group.questions.length, 0)} />
       <div className="grid gap-10">
         {NUMBERED.map((group) => (
-          <section key={group.id} aria-labelledby={group.id}>
+          <section key={group.id} aria-labelledby={group.id} data-help-group={group.id}>
             <h2 id={group.id} className="font-display text-2xl">
               {group.title}
             </h2>

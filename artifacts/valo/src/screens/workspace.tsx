@@ -191,7 +191,14 @@ export default function WorkspaceHome() {
                       className="rounded-xl border border-[hsl(38_50%_82%)] bg-[hsl(var(--ochre-soft))] px-3 py-2 text-xs text-[hsl(38_60%_20%)]"
                       data-testid="status-profile-changed-since-check"
                     >
-                      Your business profile changed since this saved result. Check again to refresh it.
+                      Your business profile changed since this saved result.{" "}
+                      <Link
+                        href="/workspace/checker?prefill=profile"
+                        className="font-medium underline underline-offset-4"
+                      >
+                        Refresh with your profile
+                      </Link>
+                      .
                     </p>
                   )}
                 </div>
