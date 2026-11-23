@@ -127,8 +127,8 @@ export function createManualLibraryRouter(
   router.get("/account/manual-templates/:id/download", async (req, res) => {
     res.set("Cache-Control", "private, no-store");
     // This route serves only released free templates. Premium editions require a workspace purchase.
-    await authenticate(req);
-    sendManualFile(res, await releasedManualFile(uuid.parse(req.params.id)));
+    const account = await authenticate(req);
+    sendManualFile(res, await releasedManualFile(uuid.parse(req.params.id), account.identityId));
   });
   return router;
 }

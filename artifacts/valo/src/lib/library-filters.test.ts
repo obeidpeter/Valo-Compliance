@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  LIBRARY_CATEGORIES,
   catalogueParams,
   industryLabel,
   industryName,
@@ -92,4 +93,26 @@ test("a result names its kind and its industries in words, never by their codes"
     ),
     "Retail/wholesale · Agriculture",
   );
+});
+
+test("library categories cover every reviewed, manual and directory category without duplicates", () => {
+  assert.equal(new Set(LIBRARY_CATEGORIES).size, LIBRARY_CATEGORIES.length);
+  for (const required of [
+    "Finance and operations",
+    "People",
+    "Agreements and sales",
+    "Privacy and data",
+    "Business management",
+    "Business templates",
+    "Business guidance",
+    "Regulatory guidance",
+    "Practical business guides",
+    "Industry guidance",
+    "Industry introductions",
+    "Location guidance",
+    "Industry directory",
+    "Service enquiries",
+  ]) {
+    assert.ok((LIBRARY_CATEGORIES as readonly string[]).includes(required), required);
+  }
 });

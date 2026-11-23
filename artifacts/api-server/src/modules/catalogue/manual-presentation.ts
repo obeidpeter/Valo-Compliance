@@ -1,5 +1,6 @@
+import { baselineTemplates } from "@workspace/valo-core";
 import { isManualTemplate, type releasedManualEntries } from "../manual-library";
-import type { ReleasedLibraryItem } from "./valo-catalogue";
+import { templateCategory, type ReleasedLibraryItem } from "./valo-catalogue";
 
 type PublicRevision = Awaited<ReturnType<typeof releasedManualEntries>>[number];
 export const manualResourceKind = (row: PublicRevision) =>
@@ -10,6 +11,10 @@ export const manualResourceKind = (row: PublicRevision) =>
       : ("guide" as const);
 const summary = (row: PublicRevision) => row.body.replace(/\s+/g, " ").slice(0, 260);
 const disclosure = "Published by the Valo editorial team.";
+function manualTemplateCategory(title: string) {
+  const registered = baselineTemplates.find((entry) => entry.title.toLowerCase() === title.toLowerCase());
+  return registered ? templateCategory(registered.id) : "Business templates";
+}
 export function manualResource(row: PublicRevision) {
   const regulatory = row.kind === "regulatory_article";
   return {
@@ -42,12 +47,12 @@ export function manualCatalogue(row: PublicRevision): ReleasedLibraryItem {
     id: row.id,
     slug: row.slug,
     title: row.title,
-    type: template ? "template" : "article",
+    type: template ? "template" : row.kind === "regulatory_article" ? "guidance" : "article",
     industry: row.industry ?? "All industries",
     summary: summary(row),
     ...(template ? { templateId: row.slug } : {}),
     category: template
-      ? "Business templates"
+      ? manualTemplateCategory(row.title)
       : row.kind === "industry_introduction"
         ? "Industry introductions"
         : row.kind === "regulatory_article"
@@ -60,7 +65,7 @@ export function manualCatalogue(row: PublicRevision): ReleasedLibraryItem {
     ...(row.kind === "template" && {
       freeDownloadPath: "/api/account/manual-templates/" + row.id + "/download",
     }),
-    reviewedAt: row.publishedAt!.toISOString(),
+    reviewedAt: (row.sourceCheckedAt ?? row.publishedAt)!.toISOString(),
     href: (template ? "/library/" : "/resources/") + row.slug,
   };
 }

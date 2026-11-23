@@ -21,6 +21,7 @@ import {
   catalogueParams,
   industryLabel,
   industryName,
+  LIBRARY_CATEGORIES,
   LIBRARY_TYPES as TYPES,
   libraryFilters,
   libraryHref,
@@ -152,33 +153,12 @@ export function Library({
             data-testid="select-category"
           >
             <option value="">All categories</option>
-            {[
-              "Finance and operations",
-              "People",
-              "Agreements and sales",
-              "Privacy and data",
-              "Business management",
-              "Business guidance",
-              "Industry guidance",
-              "Location guidance",
-              "Industry directory",
-              "Service enquiries",
-            ].map((v) => (
+            {LIBRARY_CATEGORIES.map((v) => (
               <option key={v}>{v}</option>
             ))}
-            {category &&
-              ![
-                "Finance and operations",
-                "People",
-                "Agreements and sales",
-                "Privacy and data",
-                "Business management",
-                "Business guidance",
-                "Industry guidance",
-                "Location guidance",
-                "Industry directory",
-                "Service enquiries",
-              ].includes(category) && <option value={category}>{category}</option>}
+            {category && !(LIBRARY_CATEGORIES as readonly string[]).includes(category) && (
+              <option value={category}>{category}</option>
+            )}
           </select>
         </label>
         <label className="text-sm">

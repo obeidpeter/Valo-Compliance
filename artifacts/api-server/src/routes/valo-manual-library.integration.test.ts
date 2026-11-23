@@ -398,6 +398,25 @@ test(
         assert.equal(original.headers.get("x-content-type-options"), "nosniff");
         assert.ok(original.headers.get("content-disposition")?.endsWith("." + format + '"'));
         assert.deepEqual(Buffer.from(await original.arrayBuffer()), bytes);
+        const erasedIdentity = "synthetic-erased-reader-" + randomUUID();
+        const { valoPrivacyTombstones } = await import("@workspace/db");
+        const { privacySigner } = await import("../lib/valo-privacy-keys");
+        const { quotaSubjectHash } = await import("../lib/valo-quota");
+        await db.transaction(async (tx) => {
+          const signer = await privacySigner(tx);
+          await tx.insert(valoPrivacyTombstones).values({
+            id: randomUUID(),
+            workspaceId: randomUUID(),
+            caseId: randomUUID(),
+            identityHash: quotaSubjectHash(signer.key, "user", erasedIdentity),
+            phase: "erased",
+            keyVersion: signer.version,
+          });
+        });
+        assert.equal(
+          (await call(download, undefined, erasedIdentity, { "x-test-mfa": "stale" })).status,
+          403,
+        );
         const correction = await revision(
           await draft(id, {
             ...input("template", "Corrected title"),
