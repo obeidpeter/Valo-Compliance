@@ -23,3 +23,4 @@ never edited after acceptance; a later record supersedes an earlier one.
 | [0016](0016-record-independent-review.md) | Record the independent reviewer's decisions on the acceptance cases | Proposed |
 | [0017](0017-clear-guidance-holds.md) | What clears each of guidance's six standing holds | Proposed |
 | [0018](0018-manual-library-publishing.md) | Manual publishing for practical guides, industry introductions and templates | Accepted |
+| [0019](0019-reuse-sign-in-check-on-four-read-routes.md) | Reuse a passed sign-in check on four more read routes | Accepted |
