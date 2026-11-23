@@ -25,7 +25,7 @@ import {
 } from "@workspace/db";
 import { RequestAccessSupportBody } from "@workspace/api-zod";
 import { consumeQuota, quotaSubjectHash } from "../../lib/valo-quota";
-import { authorizeWorkspaceWrite, authorizeWorkspaceRead, type WorkspaceActor } from "../workspaces";
+import { authorizeWorkspaceRead, type WorkspaceActor } from "../workspaces";
 import { ValoProblem } from "../../platform/valo-problem";
 import {
   valoOrders,
@@ -55,7 +55,7 @@ export async function saveAccessSupport(raw: unknown, remoteAddress: string) {
   const input = RequestAccessSupportBody.strict().parse(raw);
   const data = { email: input.email.trim().toLowerCase(), topic: input.topic, message: input.message.trim() };
   if (data.message.length < 20)
-    throw new ValoProblem(422, "Please include at least20 characters describing the problem.");
+    throw new ValoProblem(422, "Please include at least 20 characters describing the problem.");
   const payloadHash = createHash("sha256").update(JSON.stringify(data)).digest("hex");
   return db.transaction(async (tx) => {
     const id = randomUUID();
@@ -109,7 +109,7 @@ export async function saveAccessSupport(raw: unknown, remoteAddress: string) {
 }
 export async function customerAccount(actor: WorkspaceActor) {
   return db.transaction(async (tx) => {
-    await authorizeWorkspaceWrite(tx, actor);
+    await authorizeWorkspaceRead(tx, actor);
     const rows = await tx
       .select()
       .from(valoSupportTickets)

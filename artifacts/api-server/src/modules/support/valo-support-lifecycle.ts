@@ -1,5 +1,5 @@
 import { randomUUID, createHash } from "node:crypto";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 import { canonical } from "@workspace/valo-core";
 import {
@@ -19,7 +19,12 @@ import {
   valoRuleReleases,
 } from "@workspace/db";
 import { ValoProblem } from "../../platform/valo-problem";
-import { authorizeWorkspaceWrite, limitWorkspaceWrite, type WorkspaceActor } from "../workspaces";
+import {
+  authorizeWorkspaceRead,
+  authorizeWorkspaceWrite,
+  limitWorkspaceWrite,
+  type WorkspaceActor,
+} from "../workspaces";
 import { consumeQuota, quotaSubjectHash } from "../../lib/valo-quota";
 import { setting } from "../../platform/settings";
 import {
@@ -96,12 +101,9 @@ export async function requireSupportStaff(
   });
   return row;
 }
-async function privateWorkspace(tx: Tx, id: string) {
-  const [row] = await tx
-    .select({ id: valoWorkspaces.id })
-    .from(valoWorkspaces)
-    .where(eq(valoWorkspaces.id, id))
-    .for("update");
+async function privateWorkspace(tx: Tx, id: string, lock = true) {
+  const base = tx.select({ id: valoWorkspaces.id }).from(valoWorkspaces).where(eq(valoWorkspaces.id, id));
+  const [row] = await (lock ? base.for("update") : base);
   const [erased] = await tx
     .select({ id: valoPrivacyTombstones.id })
     .from(valoPrivacyTombstones)
@@ -111,6 +113,20 @@ async function privateWorkspace(tx: Tx, id: string) {
       404,
       "This workspace is no longer available, so its support requests cannot be opened.",
     );
+}
+async function readCase(tx: Tx, id: string, workspaceId?: string) {
+  const [row] = await tx
+    .select()
+    .from(valoSupportCases)
+    .where(
+      and(
+        eq(valoSupportCases.id, id),
+        workspaceId ? eq(valoSupportCases.workspaceId, workspaceId) : undefined,
+      ),
+    );
+  if (!row) throw new ValoProblem(404, "This support request was not found.");
+  if (row.workspaceId) await privateWorkspace(tx, row.workspaceId, false);
+  return row;
 }
 async function lockedCase(tx: Tx, id: string, workspaceId?: string) {
   const [first] = await tx
@@ -125,20 +141,27 @@ async function lockedCase(tx: Tx, id: string, workspaceId?: string) {
   if (!first) throw new ValoProblem(404, "This support request was not found.");
   // Same workspace-before-case order as privacy quarantine; final status is
   // checked after the lock, so queued staff replies cannot recreate erased data.
-  if (first.workspaceId) await privateWorkspace(tx, first.workspaceId);
+  if (first.workspaceId) await privateWorkspace(tx, first.workspaceId, true);
   const [row] = await tx.select().from(valoSupportCases).where(eq(valoSupportCases.id, id)).for("update");
   if (!row) throw new ValoProblem(404, "This support request was not found.");
   return row;
 }
-async function source(tx: Tx, row: Case) {
+type SourceSummary = {
+  reference: string;
+  category: string;
+  scope: string;
+  contactEmail: string;
+  sharingConsent: boolean;
+};
+async function source(tx: Tx, row: Case, lock = true): Promise<SourceSummary> {
   if (row.sourceKind === "workspace") {
-    const [r] = await tx
+    const base = tx
       .select()
       .from(valoSupportTickets)
       .where(
         and(eq(valoSupportTickets.id, row.ticketId!), eq(valoSupportTickets.workspaceId, row.workspaceId!)),
-      )
-      .for("share");
+      );
+    const [r] = await (lock ? base.for("share") : base);
     if (!r) throw new ValoProblem(404, "This support request can no longer be opened.");
     return {
       reference: `VALO-${r.id}`,
@@ -148,11 +171,8 @@ async function source(tx: Tx, row: Case) {
       sharingConsent: r.sharingConsent,
     };
   }
-  const [r] = await tx
-    .select()
-    .from(valoAccessSupport)
-    .where(eq(valoAccessSupport.id, row.accessId!))
-    .for("share");
+  const base = tx.select().from(valoAccessSupport).where(eq(valoAccessSupport.id, row.accessId!));
+  const [r] = await (lock ? base.for("share") : base);
   if (!r) throw new ValoProblem(404, "This support request can no longer be opened.");
   return {
     reference: `VALO-ACCESS-${r.id}`,
@@ -162,8 +182,46 @@ async function source(tx: Tx, row: Case) {
     sharingConsent: false,
   };
 }
-async function detail(tx: Tx, row: Case, staff: boolean, messagesPage = 1) {
-  const original = await source(tx, row),
+async function sourcesFor(tx: Tx, rows: Case[]) {
+  const ticketIds = [
+    ...new Set(rows.filter((r) => r.sourceKind === "workspace" && r.ticketId).map((r) => r.ticketId!)),
+  ];
+  const accessIds = [
+    ...new Set(rows.filter((r) => r.sourceKind !== "workspace" && r.accessId).map((r) => r.accessId!)),
+  ];
+  const tickets = ticketIds.length
+    ? await tx.select().from(valoSupportTickets).where(inArray(valoSupportTickets.id, ticketIds))
+    : [];
+  const access = accessIds.length
+    ? await tx.select().from(valoAccessSupport).where(inArray(valoAccessSupport.id, accessIds))
+    : [];
+  const ticketByKey = new Map(tickets.map((r) => [`${r.workspaceId}:${r.id}`, r]));
+  const accessById = new Map(access.map((r) => [r.id, r]));
+  return rows.map((row): SourceSummary => {
+    if (row.sourceKind === "workspace") {
+      const r = ticketByKey.get(`${row.workspaceId}:${row.ticketId}`);
+      if (!r) throw new ValoProblem(404, "This support request can no longer be opened.");
+      return {
+        reference: `VALO-${r.id}`,
+        category: r.category,
+        scope: r.scope,
+        contactEmail: r.contactEmail,
+        sharingConsent: r.sharingConsent,
+      };
+    }
+    const r = accessById.get(row.accessId!);
+    if (!r) throw new ValoProblem(404, "This support request can no longer be opened.");
+    return {
+      reference: `VALO-ACCESS-${r.id}`,
+      category: r.topic,
+      scope: r.message,
+      contactEmail: r.contactEmail,
+      sharingConsent: false,
+    };
+  });
+}
+async function detail(tx: Tx, row: Case, staff: boolean, messagesPage = 1, lockSource = true) {
+  const original = await source(tx, row, lockSource),
     messages = await tx
       .select({
         id: valoSupportMessages.id,
@@ -235,20 +293,18 @@ async function list(tx: Tx, filter: ReturnType<typeof and>, page: number) {
     .orderBy(desc(valoSupportCases.updatedAt), desc(valoSupportCases.id))
     .limit(26)
     .offset((page - 1) * 25);
-  const cases = [];
-  for (const row of rows.slice(0, 25)) {
-    const original = await source(tx, row);
-    cases.push({
-      id: row.id,
-      sourceKind: row.sourceKind,
-      reference: original.reference,
-      category: original.category,
-      status: row.status,
-      version: row.version,
-      assignedTo: row.assignedTo,
-      updatedAt: row.updatedAt,
-    });
-  }
+  const pageRows = rows.slice(0, 25);
+  const originals = await sourcesFor(tx, pageRows);
+  const cases = pageRows.map((row, index) => ({
+    id: row.id,
+    sourceKind: row.sourceKind,
+    reference: originals[index]!.reference,
+    category: originals[index]!.category,
+    status: row.status,
+    version: row.version,
+    assignedTo: row.assignedTo,
+    updatedAt: row.updatedAt,
+  }));
   return {
     cases,
     page,
@@ -260,8 +316,8 @@ async function list(tx: Tx, filter: ReturnType<typeof and>, page: number) {
 export async function customerSupportCases(actor: WorkspaceActor, rawPage?: unknown) {
   const page = pageValue(rawPage);
   return db.transaction(async (tx) => {
-    await privateWorkspace(tx, actor.workspaceId);
-    await authorizeWorkspaceWrite(tx, actor);
+    await privateWorkspace(tx, actor.workspaceId, false);
+    await authorizeWorkspaceRead(tx, actor);
     const result = await list(tx, eq(valoSupportCases.workspaceId, actor.workspaceId), page);
     return { ...result, cases: result.cases.map(({ assignedTo: _staff, ...c }) => c) };
   });
@@ -269,9 +325,9 @@ export async function customerSupportCases(actor: WorkspaceActor, rawPage?: unkn
 export async function customerSupportCase(actor: WorkspaceActor, id: string, rawPage?: unknown) {
   const page = pageValue(rawPage);
   return db.transaction(async (tx) => {
-    const row = await lockedCase(tx, id, actor.workspaceId);
-    await authorizeWorkspaceWrite(tx, actor);
-    return detail(tx, row, false, page);
+    const row = await readCase(tx, id, actor.workspaceId);
+    await authorizeWorkspaceRead(tx, actor);
+    return detail(tx, row, false, page, false);
   });
 }
 async function replay(
@@ -387,7 +443,7 @@ export async function staffSupportCase(actor: SupportStaffActor, id: string, raw
   const page = pageValue(rawPage);
   return db.transaction(async (tx) => {
     await requireSupportStaff(tx, actor);
-    return detail(tx, await lockedCase(tx, id), true, page);
+    return detail(tx, await readCase(tx, id), true, page, false);
   });
 }
 export async function actOnSupportCase(actor: SupportStaffActor, id: string, raw: unknown) {
