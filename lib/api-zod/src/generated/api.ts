@@ -1232,7 +1232,13 @@ export const GetCustomerPurchasesResponse = zod.object({
   "licenceVersion": zod.string(),
   "licenceText": zod.string(),
   "taxTreatment": zod.string()
-}))
+})),
+  "ownedDownloads": zod.array(zod.object({
+  "offerId": zod.uuid(),
+  "edition": zod.uuid(),
+  "title": zod.string(),
+  "downloadPath": zod.string().describe('Same-origin file path that rechecks the purchased edition on every download.')
+})).describe('Downloads for the signed-in workspace\'s currently released purchases, indexed by current or past approved offer.')
 })
 
 

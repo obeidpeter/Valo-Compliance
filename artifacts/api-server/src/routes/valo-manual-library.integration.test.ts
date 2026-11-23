@@ -152,7 +152,12 @@ test(
     app.use("/admin", makeStaffGate(authenticate));
     app.use(createManualLibraryRouter(authenticate));
     app.use(
-      ["/workspace/manual-premium-templates", "/workspace/owned-template-editions"],
+      [
+        "/workspace/manual-premium-templates",
+        "/workspace/owned-template-editions",
+        "/workspace/purchases",
+        "/workspace/orders",
+      ],
       async (req, res, next) => {
         const session = await authenticate(req);
         const { resolveWorkspace } = await import("../modules/workspaces");

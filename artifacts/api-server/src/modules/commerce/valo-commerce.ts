@@ -36,6 +36,12 @@ import { refundBalance, TEST_REFUND_POLICY } from "./valo-refund-provider";
 import { setting } from "../../platform/settings";
 import { assertSafetyActive, withSafetyDispatch } from "../sources";
 import { singleRow } from "../../platform/rows";
+import {
+  assertPayableOrder,
+  lockCheckoutWorkspace,
+  openEditionOrder,
+  verifiedEditions,
+} from "./checkout-editions";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 const originalReceiptActions = ["payment.verified_success", "payment.synthetic_receipt_recovered"];
 function audit(tx: Tx, workspaceId: string, actorId: string, action: string, id: string) {
@@ -121,42 +127,43 @@ async function presentOrder(tx: Tx, order: typeof valoOrders.$inferSelect) {
 /** The released catalogue. It reads publication artifacts from storage and takes its own
  * pooled connections, so call it outside transactions: a caller that holds a transaction's
  * connection while it waits for another lets enough concurrent requests exhaust the pool. */
-async function commercialOffers() {
+type OwnedPrice = { offerId: string; edition: string; title: string };
+async function commercialCatalogue(ownedPrices: OwnedPrice[] = []) {
   const [released, prices] = await Promise.all([liveOperationalVersions(), activeTemplatePrices()]);
   const reviewedIds = new Set(released.filter((v) => !isFreeBaselineTemplate(v.templateId)).map((v) => v.id));
   const manualIds = new Set<string>();
-  if (prices.length && isDevelopmentRuntime()) {
+  if ((prices.length || ownedPrices.length) && isDevelopmentRuntime()) {
     const { rows } = await db.execute<{ edition: string }>(
       sql`select edition from public.valo_live_manual_premium_versions(null)`,
     );
     for (const { edition } of rows) manualIds.add(edition);
   }
-  return prices
+  const offers = prices
     .filter(({ edition }) => reviewedIds.has(edition) || manualIds.has(edition))
     .map(({ edition, product }) => ({ manual: manualIds.has(edition), product }));
+  const ownedDownloads = ownedPrices
+    .filter(({ edition }) => reviewedIds.has(edition) || manualIds.has(edition))
+    .map((price) => ({
+      ...price,
+      downloadPath: manualIds.has(price.edition)
+        ? "/api/workspace/manual-premium-templates/" + price.edition + "/download"
+        : "/api/workspace/templates/" + price.edition + "/files/docx",
+    }));
+  return { offers, ownedDownloads };
 }
 export async function commerceProducts() {
-  return (await commercialOffers()).map((offer) => offer.product);
+  return (await commercialCatalogue()).offers.map((offer) => offer.product);
 }
 /** Ownership follows the edition and the terms originally purchased, even after its sale price changes. */
 export async function ownedTemplateEditions(actor: WorkspaceActor) {
   return db.transaction(async (tx) => {
     await authorizeWorkspaceWrite(tx, actor);
-    const { rows } = await tx.execute<{ edition: string }>(sql`
-      select distinct e.content_version_id as edition
-      from public.valo_entitlements e
-      join public.valo_orders o on o.id = e.order_id and o.workspace_id = e.workspace_id
-      join public.valo_prices p on p.id = o.price_id and p.content_version_id = e.content_version_id
-      where e.workspace_id = ${actor.workspaceId}::uuid and e.status = 'active'
-        and o.status = 'verified_success' and length(o.provider_transaction_id) > 0
-        and o.line->>'contentVersionId' = e.content_version_id::text
-        and o.line->>'licenceVersion' = p.licence_version and length(p.approval_reference) > 0
-      order by e.content_version_id`);
+    const { rows } = await tx.execute<{ edition: string }>(sql`${verifiedEditions(actor)} order by edition`);
     return rows.map((row) => row.edition);
   });
 }
 export async function purchases(actor: WorkspaceActor) {
-  const listing = await db.transaction(async (tx) => {
+  const { ownedPrices, ...listing } = await db.transaction(async (tx) => {
     await authorizeWorkspaceWrite(tx, actor);
     const orders = await tx
       .select()
@@ -187,7 +194,12 @@ export async function purchases(actor: WorkspaceActor) {
           )
       ).map((e) => e.id),
     );
+    const ownedPrices = await tx.execute<OwnedPrice>(sql`
+      select p.id as "offerId", p.content_version_id as edition, p.title
+      from public.valo_prices p join (${verifiedEditions(actor)}) owned on owned.edition=p.content_version_id
+      where p.effective_from<=now() and length(p.approval_reference)>0 order by p.id`);
     return {
+      ownedPrices: ownedPrices.rows,
       available: true,
       livePaymentsEnabled: false,
       message:
@@ -203,16 +215,21 @@ export async function purchases(actor: WorkspaceActor) {
     };
   });
   // After the transaction: the catalogue takes its own connections. It holds no tenant data.
-  return { ...listing, products: await commerceProducts() };
+  const catalogue = await commercialCatalogue(ownedPrices);
+  return {
+    ...listing,
+    products: catalogue.offers.map((offer) => offer.product),
+    ownedDownloads: catalogue.ownedDownloads,
+  };
 }
 export async function createOrder(actor: WorkspaceActor, raw: unknown) {
   const input = CreateCommerceOrderBody.strict().parse(raw);
   // Before the transaction: see commerceProducts.
-  const offer = (await commercialOffers()).find((entry) => entry.product.id === input.priceId);
+  const offer = (await commercialCatalogue()).offers.find((entry) => entry.product.id === input.priceId);
   return db.transaction(async (tx) => {
     await assertSafetyActive(tx, "checkout");
     // Serialize one tenant's idempotency/price selection without trusting browser prices.
-    await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${actor.workspaceId}))`);
+    await lockCheckoutWorkspace(tx, actor.workspaceId);
     const [old] = await tx
       .select()
       .from(valoOrders)
@@ -226,7 +243,6 @@ export async function createOrder(actor: WorkspaceActor, raw: unknown) {
         );
       return presentOrder(tx, old);
     }
-    await limit(tx, actor);
     const [price] = await tx.select().from(valoPrices).where(eq(valoPrices.id, input.priceId)).for("share");
     await authorizeWorkspaceWrite(tx, actor);
     if (
@@ -249,6 +265,16 @@ export async function createOrder(actor: WorkspaceActor, raw: unknown) {
     }
     if (input.acceptedLicenceVersion !== price.licenceVersion)
       throw new ValoProblem(409, "The licence changed. Review the current licence before continuing.");
+    const existing = await openEditionOrder(tx, actor, price.contentVersionId, price.id);
+    if (existing) {
+      if (existing.priceId !== price.id || existing.line.licenceVersion !== input.acceptedLicenceVersion)
+        throw new ValoProblem(
+          409,
+          "An earlier order for this edition has different terms. Check it in your purchases.",
+        );
+      return presentOrder(tx, existing);
+    }
+    await limit(tx, actor);
     const id = randomUUID();
     const order = singleRow(
       await tx
@@ -290,24 +316,48 @@ export async function startCheckout(actor: WorkspaceActor, id: string, email: st
   // Before the transaction: see commerceProducts. It is read again just before the
   // merchant call, outside any transaction.
   const products = await commerceProducts();
+  const origin = trustedSiteOrigin();
   const order = await db.transaction(async (tx) => {
     await assertSafetyActive(tx, "checkout");
+    await lockCheckoutWorkspace(tx, actor.workspaceId);
     const order = await ownedOrder(tx, actor, id);
     if (order.status === "verified_success")
       throw new ValoProblem(409, "This purchase is already verified. Do not pay again.");
     if (order.status === "needs_review" || order.status === "reversed")
       throw new ValoProblem(409, "This order needs staff reconciliation before any new payment.");
-    await limit(tx, actor);
     if (!products.some((p) => p.id === order.priceId))
       throw new ValoProblem(
         409,
         "This product is unavailable for new checkout. Your order history and drafts are unchanged.",
       );
+    await assertPayableOrder(tx, actor, order);
+    if (order.checkoutUrl) return order;
+    if (!origin) throw new ValoProblem(503, "The trusted checkout return address is not configured.");
+    if (!sandboxPaymentsConfigured())
+      throw new ValoProblem(503, "Sandbox checkout needs a configured test merchant.");
+    const recent = await tx
+      .select({ id: valoEvents.id })
+      .from(valoEvents)
+      .where(
+        and(
+          eq(valoEvents.workspaceId, actor.workspaceId),
+          eq(valoEvents.entityId, id),
+          eq(valoEvents.action, "checkout.starting"),
+          sql`${valoEvents.createdAt} > clock_timestamp() - interval '1 minute'`,
+        ),
+      )
+      .limit(1);
+    if (recent.length)
+      throw new ValoProblem(
+        409,
+        "Checkout is already starting for this order. Check its status before retrying.",
+      );
+    await limit(tx, actor);
+    await tx.update(valoOrders).set({ status: "pending" }).where(eq(valoOrders.id, id));
+    await audit(tx, actor.workspaceId, actor.identityId, "checkout.starting", id);
     return order;
   });
   if (order.checkoutUrl) return { url: order.checkoutUrl };
-  const origin = trustedSiteOrigin();
-  if (!origin) throw new ValoProblem(503, "The trusted checkout return address is not configured.");
   // No membership lock across provider I/O. Stable provider reference prevents
   // a retry from becoming a different order; never mint another reference on error.
   const url = await withSafetyDispatch("checkout", async () => {
@@ -317,12 +367,9 @@ export async function startCheckout(actor: WorkspaceActor, id: string, email: st
   });
   return db.transaction(async (tx) => {
     await assertSafetyActive(tx, "checkout");
+    await lockCheckoutWorkspace(tx, actor.workspaceId);
     const current = await ownedOrder(tx, actor, id);
-    if (["verified_success", "reversed", "needs_review"].includes(current.status))
-      throw new ValoProblem(
-        409,
-        "The order changed while checkout was starting. Refresh its status before continuing.",
-      );
+    await assertPayableOrder(tx, actor, current);
     if (current.checkoutUrl) return { url: current.checkoutUrl };
     await tx.update(valoOrders).set({ checkoutUrl: url, status: "pending" }).where(eq(valoOrders.id, id));
     await audit(tx, actor.workspaceId, actor.identityId, "checkout.initialised", id);
@@ -334,6 +381,10 @@ export async function startCheckout(actor: WorkspaceActor, id: string, email: st
 export async function settleVerifiedOrder(id: string, data: VerifiedTransaction, actor?: WorkspaceActor) {
   data = verifiedTransaction.parse(data);
   return db.transaction(async (tx) => {
+    // Take the same lock as order creation and checkout before locking the order. The stored
+    // workspace also covers verified events that arrive without a signed-in customer.
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtext(workspace_id::text)) from public.valo_orders
+      where id = ${id}::uuid ${actor ? sql`and workspace_id = ${actor.workspaceId}::uuid` : sql``}`);
     const [order] = await tx
       .select()
       .from(valoOrders)

@@ -176,6 +176,7 @@ export * from './manualLibraryRevisionState';
 export * from './missingAnswerState';
 export * from './missingAnswerStateState';
 export * from './officialRoute';
+export * from './ownedCheckoutDownload';
 export * from './ownerGuidanceCheck';
 export * from './ownerGuidanceDecision';
 export * from './ownerGuidanceDecisionAction';

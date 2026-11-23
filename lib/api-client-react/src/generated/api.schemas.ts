@@ -669,12 +669,22 @@ export interface CommerceOrder {
   disputeStatus: string | null;
 }
 
+export interface OwnedCheckoutDownload {
+  offerId: string;
+  edition: string;
+  title: string;
+  /** Same-origin file path that rechecks the purchased edition on every download. */
+  downloadPath: string;
+}
+
 export interface CustomerPurchases {
   available: boolean;
   message: string;
   livePaymentsEnabled: boolean;
   orders: CommerceOrder[];
   products: TemplateOffer[];
+  /** Downloads for the signed-in workspace's currently released purchases, indexed by current or past approved offer. */
+  ownedDownloads: OwnedCheckoutDownload[];
 }
 
 export interface CommerceOrderInput {

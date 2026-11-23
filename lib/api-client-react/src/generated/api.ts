@@ -1830,7 +1830,7 @@ return customFetch<CommerceOrder>(getCreateCommerceOrderUrl(),
 
 export const getCreateCommerceOrderMutationKey = () => ['createCommerceOrder'] as const;
 
-export const getCreateCommerceOrderMutationOptions = <TError = ErrorType<unknown>,
+export const getCreateCommerceOrderMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCommerceOrder>>, TError,CreateCommerceOrderMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createCommerceOrder>>, TError,CreateCommerceOrderMutationVariables, TContext> => {
 
@@ -1859,10 +1859,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type CreateCommerceOrderMutationResult = NonNullable<Awaited<ReturnType<typeof createCommerceOrder>>>
     export type CreateCommerceOrderMutationBody = BodyType<CommerceOrderInput>
-    export type CreateCommerceOrderMutationError = ErrorType<unknown>
+    export type CreateCommerceOrderMutationError = ErrorType<void>
     export type CreateCommerceOrderMutationVariables = {data: BodyType<CommerceOrderInput>}
 
-    export const useCreateCommerceOrder = <TError = ErrorType<unknown>,
+    export const useCreateCommerceOrder = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCommerceOrder>>, TError,CreateCommerceOrderMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createCommerceOrder>>,
@@ -1913,7 +1913,7 @@ return customFetch<StartCommerceCheckout200>(getStartCommerceCheckoutUrl(id),
 
 export const getStartCommerceCheckoutMutationKey = () => ['startCommerceCheckout'] as const;
 
-export const getStartCommerceCheckoutMutationOptions = <TError = ErrorType<unknown>,
+export const getStartCommerceCheckoutMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startCommerceCheckout>>, TError,StartCommerceCheckoutMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof startCommerceCheckout>>, TError,StartCommerceCheckoutMutationVariables, TContext> => {
 
@@ -1942,10 +1942,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type StartCommerceCheckoutMutationResult = NonNullable<Awaited<ReturnType<typeof startCommerceCheckout>>>
     export type StartCommerceCheckoutMutationBody = BodyType<CommerceActionInput>
-    export type StartCommerceCheckoutMutationError = ErrorType<unknown>
+    export type StartCommerceCheckoutMutationError = ErrorType<void>
     export type StartCommerceCheckoutMutationVariables = {id: string;data: BodyType<CommerceActionInput>}
 
-    export const useStartCommerceCheckout = <TError = ErrorType<unknown>,
+    export const useStartCommerceCheckout = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startCommerceCheckout>>, TError,StartCommerceCheckoutMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof startCommerceCheckout>>,

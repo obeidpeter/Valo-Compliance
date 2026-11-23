@@ -4,6 +4,7 @@ import { eq, sql } from "drizzle-orm";
 import {
   GetManualLibraryRevisionResponse,
   GetReleasedTemplateResponse,
+  GetCustomerPurchasesResponse,
   ListOwnedTemplateEditionsResponse,
   ListPublicCatalogueResponse,
 } from "@workspace/api-zod";
@@ -12,7 +13,7 @@ import { wordFromText } from "../modules/manual-library/files";
 type Call = (path: string, body?: unknown, actor?: string) => Promise<Response>;
 
 export async function exercisePremiumManualTemplate(call: Call, editor: string) {
-  const { db, valoPrices, runInWorkspaceScope } = await import("@workspace/db");
+  const { db, valoOrders, valoPrices, runInWorkspaceScope } = await import("@workspace/db");
   const { resolveWorkspace } = await import("../modules/workspaces");
   const { commerceProducts, createOrder, settleVerifiedOrder } = await import("../modules/commerce");
   const itemId = randomUUID();
@@ -136,7 +137,36 @@ export async function exercisePremiumManualTemplate(call: Call, editor: string) 
         requestKey: randomUUID(),
       }),
     );
-  const order = await orderFor(account);
+  const [order, secondTab] = await Promise.all([orderFor(account), orderFor(account)]);
+  assert.equal(order.id, secondTab.id);
+  // Previous versions could save a second order for the same edition from another tab.
+  const legacyId = randomUUID();
+  await db.insert(valoOrders).values({
+    id: legacyId,
+    reference: "valo-test-" + legacyId,
+    workspaceId: account.workspaceId,
+    requestedBy: reader,
+    priceId,
+    requestKey: randomUUID(),
+    amountKobo: price.amountKobo,
+    currency: "NGN",
+    line: {
+      title: price.title,
+      contentVersionId: first.id,
+      licenceVersion: price.licenceVersion,
+      licenceText: price.licenceText,
+      taxTreatment: price.taxTreatment,
+    },
+  });
+  const startLegacy = () => call("/workspace/orders/" + legacyId + "/checkout", {}, reader);
+  const competingCheckout = await startLegacy();
+  assert.equal(competingCheckout.status, 409);
+  const checkoutFiles = async (who: string) => {
+    const response = await call("/workspace/purchases", undefined, who);
+    assert.equal(response.status, 200);
+    return GetCustomerPurchasesResponse.parse(await response.json()).ownedDownloads;
+  };
+  assert.deepEqual(await checkoutFiles(reader), []);
   assert.deepEqual(await owned(reader), []);
   assert.equal((await download(first.id, reader)).status, 403);
   const verified = {
@@ -149,6 +179,17 @@ export async function exercisePremiumManualTemplate(call: Call, editor: string) 
     metadata: { valoOrderId: order.id, workspaceId: account.workspaceId },
   };
   await settleVerifiedOrder(order.id, verified);
+  assert.equal((await startLegacy()).status, 409);
+  await assert.rejects(orderFor(account), /payment for this edition is already on record/);
+  assert.ok(
+    (await checkoutFiles(reader)).some(
+      (file) =>
+        file.offerId === priceId &&
+        file.edition === first.id &&
+        file.downloadPath === "/api/workspace/manual-premium-templates/" + first.id + "/download",
+    ),
+  );
+  assert.deepEqual(await checkoutFiles(other), []);
   assert.deepEqual(await owned(reader), [first.id]);
   assert.deepEqual(await owned(other), []);
   const file = await download(first.id, reader);
@@ -157,6 +198,7 @@ export async function exercisePremiumManualTemplate(call: Call, editor: string) 
   assert.deepEqual(Buffer.from(await file.arrayBuffer()), bytes);
   assert.equal((await download(first.id, other)).status, 403);
   await settleVerifiedOrder(order.id, { ...verified, status: "reversed" });
+  assert.deepEqual(await checkoutFiles(reader), []);
   assert.deepEqual(await owned(reader), []);
   assert.equal((await download(first.id, reader)).status, 403);
   // Keep a different workspace's genuine test entitlement active across replacement.
@@ -175,6 +217,12 @@ export async function exercisePremiumManualTemplate(call: Call, editor: string) 
     .set({ effectiveTo: sql`now()` })
     .where(eq(valoPrices.id, priceId));
   await db.insert(valoPrices).values(newPrice);
+  const afterRepricing = await checkoutFiles(other);
+  assert.ok(
+    [priceId, newPrice.id].every((id) =>
+      afterRepricing.some((file) => file.offerId === id && file.edition === first.id),
+    ),
+  );
   assert.equal((await libraryCard())?.priceId, newPrice.id);
   assert.deepEqual(await owned(other), [first.id]);
   assert.equal((await download(first.id, other)).status, 200);
@@ -186,6 +234,7 @@ export async function exercisePremiumManualTemplate(call: Call, editor: string) 
     await (await call("/public/templates/manual-" + itemId)).json(),
   );
   assert.equal(replacement.id, next.id);
+  assert.deepEqual(await checkoutFiles(other), []);
   assert.equal(replacement.offer, undefined);
   const replacedCard = await libraryCard();
   assert.equal(replacedCard?.id, next.id);

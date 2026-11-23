@@ -261,6 +261,7 @@ const answers: Record<string, unknown> = {
     },
   ]),
   [`GET /workspace/purchases`]: api.GetCustomerPurchasesResponse.parse({
+    ownedDownloads: [],
     available: true,
     message: "Synthetic test fixture: payments run in test mode only.",
     livePaymentsEnabled: false,
@@ -2872,6 +2873,9 @@ test("the account screen names the sign-in service as the contact page does, and
 test("a direct checkout shows only the chosen price and leaves an obsolete link unavailable", async () => {
   const id = "4dad9357-4a4f-409f-aebf-96b997932d0a";
   const otherId = "6e9721a8-eee0-41c1-a4dc-6285e5afcd73";
+  const retiredId = "3125e6de-b202-41f2-b3f5-c480a0d2c53a";
+  const ownedEdition = "be90d48c-0192-4f5e-9bed-989f5781dfc5";
+  const downloadPath = "/api/workspace/manual-premium-templates/" + ownedEdition + "/download";
   const offer = {
     id,
     title: "Synthetic service agreement",
@@ -2887,6 +2891,9 @@ test("a direct checkout shows only the chosen price and leaves an obsolete link 
       "GET /workspace/purchases": api.GetCustomerPurchasesResponse.parse({
         available: true,
         message: "Synthetic checkout.",
+        ownedDownloads: [
+          { offerId: retiredId, edition: ownedEdition, title: "Previously purchased template", downloadPath },
+        ],
         livePaymentsEnabled: false,
         orders: [],
         products: [offer, { ...offer, id: otherId, title: "Other synthetic template" }],
@@ -2908,6 +2915,13 @@ test("a direct checkout shows only the chosen price and leaves an obsolete link 
       .getByRole("checkbox", { name: "I accept this version of the licence for this business." })
       .check();
     await expect(save).toBeEnabled();
+    await page.goto(new URL("/workspace/purchases?offer=" + retiredId, page.url()).href);
+    await expect(page.getByRole("heading", { name: "Previously purchased template" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Download", exact: true })).toHaveAttribute(
+      "href",
+      downloadPath,
+    );
+    await expect(save).toHaveCount(0);
     await page.goto(new URL("/workspace/purchases?offer=unavailable", page.url()).href);
     await expect(page.getByTestId("text-nothing-to-buy")).toContainText("This offer is unavailable");
     await expect(save).toHaveCount(0);
@@ -2928,6 +2942,7 @@ test("with nothing for sale and no order, the purchases screen says so in plain 
       "GET /workspace/purchases": api.GetCustomerPurchasesResponse.parse({
         available: true,
         message: "Synthetic test fixture: a note in the server's own words.",
+        ownedDownloads: [],
         livePaymentsEnabled: false,
         orders: [],
         products: [],
