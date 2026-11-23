@@ -3777,7 +3777,34 @@ export type ListOwnerGuidanceParams = {
 export type ListManualLibraryParams = {
   /** @minimum 1 */
   page?: number;
+  /** @maxLength 140 */
+  q?: string;
+  kind?: ListManualLibraryKind;
+  state?: ListManualLibraryState;
+  /** @maxLength 80 */
+  industry?: string;
 };
+
+export type ListManualLibraryKind = typeof ListManualLibraryKind[keyof typeof ListManualLibraryKind];
+
+
+export const ListManualLibraryKind = {
+  practical_guide: 'practical_guide',
+  industry_introduction: 'industry_introduction',
+  template: 'template',
+  premium_template: 'premium_template',
+  regulatory_article: 'regulatory_article',
+} as const;
+
+export type ListManualLibraryState = typeof ListManualLibraryState[keyof typeof ListManualLibraryState];
+
+
+export const ListManualLibraryState = {
+  draft: 'draft',
+  published: 'published',
+  replaced: 'replaced',
+  withdrawn: 'withdrawn',
+} as const;
 
 export type ListWorkspaceDataExportsParams = {
   cursor?: string;

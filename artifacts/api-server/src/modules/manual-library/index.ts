@@ -1,4 +1,4 @@
-import { and, desc, eq, getTableColumns, ne, or, sql } from "drizzle-orm";
+import { and, desc, eq, getTableColumns, ilike, isNull, ne, or, sql } from "drizzle-orm";
 import { baselineTemplates, coveragePlan, digest, sha256 } from "@workspace/valo-core";
 import { ActOnManualLibraryBody, SaveManualLibraryDraftBody } from "@workspace/api-zod";
 import type { db, valoManualLibrary } from "@workspace/db";
@@ -13,6 +13,7 @@ import {
 } from "../workspaces";
 
 type Revision = typeof valoManualLibrary.$inferSelect;
+type RevisionMeta = Omit<Revision, "fileBytes">;
 export const isManualTemplate = (kind: Revision["kind"]) =>
   kind === "template" || kind === "premium_template";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -20,7 +21,15 @@ const sectors = new Set(coveragePlan().industries.map((i) => i.slug));
 const missing = () => new ValoProblem(404, "This library item is unavailable.");
 const conflict = () =>
   new ValoProblem(409, "This item changed. Reopen the latest version before continuing.");
-function summary(row: Revision) {
+function metadataColumns(t: typeof valoManualLibrary) {
+  const { fileBytes: _bytes, ...columns } = getTableColumns(t);
+  return columns;
+}
+/** Escapes SQL LIKE wildcards so staff title searches match literal characters safely. */
+export function escapeLikePattern(value: string) {
+  return value.replaceAll("\\", "\\\\").replaceAll("%", "\\%").replaceAll("_", "\\_");
+}
+function summary(row: RevisionMeta) {
   return {
     itemId: row.itemId,
     title: row.title,
@@ -30,7 +39,7 @@ function summary(row: Revision) {
     industry: row.industry,
   };
 }
-async function detail(tx: Tx, row: Revision) {
+async function detail(tx: Tx, row: RevisionMeta) {
   const { valoManualLibrary: t } = await import("@workspace/db");
   const [live] = await tx
     .select({ version: t.version, digest: t.digest })
@@ -77,7 +86,25 @@ async function withEditor<T>(actor: SourceStaffActor, work: (tx: Tx) => Promise<
   }
 }
 export const authorizeManualEditor = (actor: SourceStaffActor) => withEditor(actor, async () => undefined);
-export async function listManualLibrary(actor: SourceStaffActor, page: number) {
+export type ManualLibraryListFilters = {
+  page: number;
+  q?: string | undefined;
+  kind?: Revision["kind"] | undefined;
+  state?: Revision["state"] | undefined;
+  industry?: string | undefined;
+};
+export async function listManualLibrary(
+  actor: SourceStaffActor,
+  pageOrFilters: number | ManualLibraryListFilters,
+) {
+  const filters: ManualLibraryListFilters =
+    typeof pageOrFilters === "number" ? { page: pageOrFilters } : pageOrFilters;
+  if (!Number.isInteger(filters.page) || filters.page < 1 || filters.page > 10000)
+    throw new ValoProblem(422, "Choose a page between 1 and 10,000.");
+  const q = filters.q?.trim();
+  const industry = filters.industry?.trim();
+  if (industry && industry !== "__general__" && !sectors.has(industry))
+    throw new ValoProblem(422, "Choose a listed industry filter.");
   return withEditor(actor, async (tx) => {
     const { valoManualLibrary: t } = await import("@workspace/db");
     const latest = tx
@@ -93,18 +120,31 @@ export async function listManualLibrary(actor: SourceStaffActor, page: number) {
       .from(t)
       .orderBy(t.itemId, desc(t.version))
       .as("latest");
+    const conditions = [
+      q ? ilike(latest.title, `%${escapeLikePattern(q)}%`) : undefined,
+      filters.kind ? eq(latest.kind, filters.kind) : undefined,
+      filters.state ? eq(latest.state, filters.state) : undefined,
+      industry === "__general__"
+        ? isNull(latest.industry)
+        : industry
+          ? eq(latest.industry, industry)
+          : undefined,
+    ];
     const items = await tx
       .select()
       .from(latest)
+      .where(and(...conditions))
       .orderBy(desc(latest.createdAt), latest.itemId)
-      .offset((page - 1) * 50)
+      .offset((filters.page - 1) * 50)
       .limit(51);
     return { items: items.slice(0, 50), hasMore: items.length > 50 };
   });
 }
 async function latestRevision(tx: Tx, itemId: string) {
   const { valoManualLibrary: t } = await import("@workspace/db");
-  return (await tx.select().from(t).where(eq(t.itemId, itemId)).orderBy(desc(t.version)).limit(1))[0];
+  return (
+    await tx.select(metadataColumns(t)).from(t).where(eq(t.itemId, itemId)).orderBy(desc(t.version)).limit(1)
+  )[0];
 }
 export async function getManualRevision(actor: SourceStaffActor, itemId: string) {
   return withEditor(
@@ -185,7 +225,7 @@ export async function saveManualDraft(actor: SourceStaffActor, itemId: string, v
         fileFormat: file?.format ?? null,
         fileHash: file ? sha256(file.bytes) : null,
       });
-      const [retry] = await tx.select().from(t).where(eq(t.id, input.requestId));
+      const [retry] = await tx.select(metadataColumns(t)).from(t).where(eq(t.id, input.requestId));
       if (retry) {
         if (
           retry.itemId !== itemId ||
@@ -214,7 +254,7 @@ export async function saveManualDraft(actor: SourceStaffActor, itemId: string, v
           fileBytes: file?.bytes ?? null,
           createdBy: actor.identityId,
         })
-        .returning();
+        .returning(metadataColumns(t));
       return detail(tx, row!);
     },
     itemId,
@@ -234,7 +274,7 @@ export async function actOnManualRevision(actor: SourceStaffActor, itemId: strin
           "This regulatory article stays in draft until the owner checks its sources.",
         );
       const [target] = await tx
-        .select()
+        .select(metadataColumns(t))
         .from(t)
         .where(and(eq(t.itemId, itemId), eq(t.version, input.version)));
       if (!target || target.digest !== input.digest) throw conflict();
@@ -316,8 +356,11 @@ export async function purchasedManualFile(actor: WorkspaceActor, id: string) {
   });
 }
 /** Existing readers may still run against the schema preceding the additive migration. */
-export async function releasedManualEntries(slug?: string) {
+export async function releasedManualEntries(
+  slugOrOptions?: string | { slug?: string | undefined; summaryOnly?: boolean | undefined },
+) {
   if (!isDevelopmentRuntime()) return [];
+  const options = typeof slugOrOptions === "string" ? { slug: slugOrOptions } : (slugOrOptions ?? {});
   const { guidancePolicy } = await import("../publication");
   const { policy } = await guidancePolicy();
   const regulatoryEnabled =
@@ -331,9 +374,14 @@ export async function releasedManualEntries(slug?: string) {
     closedBy: _closer,
     publishedBy: _editor,
     regulatoryCheckId: _privateCheck,
-    ...fields
+    body: fullBody,
+    ...restFields
   } = getTableColumns(t);
-  const released = and(eq(t.state, "published"), slug ? eq(t.slug, slug) : undefined);
+  const fields = {
+    ...restFields,
+    body: options.summaryOnly ? sql<string>`left(${fullBody}, 600)` : fullBody,
+  };
+  const released = and(eq(t.state, "published"), options.slug ? eq(t.slug, options.slug) : undefined);
   try {
     return await db
       .select({ ...fields, regulatorySources: c.sources, sourceCheckedAt: c.checkedAt })

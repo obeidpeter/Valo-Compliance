@@ -6,7 +6,9 @@ import {
   saveManualLibraryDraft,
   useGetPublicCoverage,
   useListManualLibrary,
+  type ListManualLibraryParams,
   type ManualLibraryDraft,
+  type ManualLibraryEntryState,
   type ManualLibraryRevision,
 } from "@workspace/api-client-react";
 import { describeError } from "@/lib/describe-error";
@@ -44,7 +46,20 @@ async function encodeFile(file: File) {
 }
 export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: boolean) => void }) {
   const [page, setPage] = useState(1);
-  const list = useListManualLibrary({ page }, { query: { retry: false } });
+  const [searchFilter, setSearchFilter] = useState("");
+  const [kindFilter, setKindFilter] = useState<"" | ManualLibraryDraft["kind"]>("");
+  const [stateFilter, setStateFilter] = useState<"" | ManualLibraryEntryState>("");
+  const [industryFilter, setIndustryFilter] = useState("");
+  const trimmedSearch = searchFilter.trim();
+  const listParams: ListManualLibraryParams = {
+    page,
+    ...(trimmedSearch ? { q: trimmedSearch } : {}),
+    ...(kindFilter ? { kind: kindFilter } : {}),
+    ...(stateFilter ? { state: stateFilter } : {}),
+    ...(industryFilter ? { industry: industryFilter } : {}),
+  };
+  const hasFilters = Boolean(trimmedSearch || kindFilter || stateFilter || industryFilter);
+  const list = useListManualLibrary(listParams, { query: { retry: false } });
   const coverage = useGetPublicCoverage({ query: { retry: false, staleTime: 60000 } });
   const [form, setForm] = useState(emptyForm);
   const [snapshot, setSnapshot] = useState<ManualLibraryRevision | null>(null);
@@ -156,24 +171,117 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
       <p className="mt-2 text-sm text-muted-foreground">
         Save a private draft, preview it, then publish when you’re ready.
       </p>
-      <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(12rem,1fr)_2fr]">
+      <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(14rem,1fr)_2fr]">
         <div>
-          <button
-            type="button"
-            disabled={busy}
-            className="btn btn-ghost btn-sm"
-            onClick={() => {
-              if (canLeave()) {
-                load(null);
-                setMessage("");
-                setError("");
-              }
-            }}
-          >
-            New item
-          </button>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <button
+              type="button"
+              disabled={busy}
+              className="btn btn-ghost btn-sm"
+              onClick={() => {
+                if (canLeave()) {
+                  load(null);
+                  setMessage("");
+                  setError("");
+                }
+              }}
+            >
+              New item
+            </button>
+            {hasFilters && (
+              <button
+                type="button"
+                className="text-xs text-muted-foreground underline underline-offset-2"
+                onClick={() => {
+                  setSearchFilter("");
+                  setKindFilter("");
+                  setStateFilter("");
+                  setIndustryFilter("");
+                  setPage(1);
+                }}
+              >
+                Clear filters
+              </button>
+            )}
+          </div>
+          <div className="mt-3 grid gap-2" role="search" aria-label="Filter saved items">
+            <label className="text-xs font-medium text-muted-foreground">
+              Filter by title
+              <input
+                type="search"
+                className={inputStyle}
+                value={searchFilter}
+                maxLength={140}
+                placeholder="Search title"
+                onChange={(e) => {
+                  setSearchFilter(e.target.value);
+                  setPage(1);
+                }}
+              />
+            </label>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <label className="text-xs font-medium text-muted-foreground">
+                Filter by type
+                <select
+                  className={inputStyle}
+                  value={kindFilter}
+                  onChange={(e) => {
+                    setKindFilter(e.target.value as "" | ManualLibraryDraft["kind"]);
+                    setPage(1);
+                  }}
+                >
+                  <option value="">All types</option>
+                  {Object.entries(kinds).map(([k, label]) => (
+                    <option value={k} key={k}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="text-xs font-medium text-muted-foreground">
+                Filter by status
+                <select
+                  className={inputStyle}
+                  value={stateFilter}
+                  onChange={(e) => {
+                    setStateFilter(e.target.value as "" | ManualLibraryEntryState);
+                    setPage(1);
+                  }}
+                >
+                  <option value="">All statuses</option>
+                  <option value="draft">Draft</option>
+                  <option value="published">Published</option>
+                  <option value="withdrawn">Withdrawn</option>
+                  <option value="replaced">Replaced</option>
+                </select>
+              </label>
+            </div>
+            <label className="text-xs font-medium text-muted-foreground">
+              Filter by industry
+              <select
+                className={inputStyle}
+                value={industryFilter}
+                onChange={(e) => {
+                  setIndustryFilter(e.target.value);
+                  setPage(1);
+                }}
+              >
+                <option value="">All industries</option>
+                <option value="__general__">General business</option>
+                {coverage.data?.industries.map((i) => (
+                  <option key={i.slug} value={i.slug}>
+                    {industryName(i.title)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
           {list.isError ? (
             <ErrorState error={list.error} onRetry={() => list.refetch()} />
+          ) : list.data && list.data.items.length === 0 ? (
+            <p className="mt-4 text-sm text-muted-foreground">
+              {hasFilters ? "No saved items match these filters." : "No saved items yet."}
+            </p>
           ) : (
             <ul className="mt-3 divide-y divide-border">
               {list.data?.items.map((row) => (

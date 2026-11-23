@@ -16,6 +16,7 @@ import {
   GetPublicDiscoveryResponse,
   GetReleasedResourceResponse,
   GetReleasedTemplateResponse,
+  ListManualLibraryResponse,
   ListPublicCatalogueResponse,
 } from "@workspace/api-zod";
 
@@ -294,6 +295,18 @@ test(
       assert.equal((await act(id, "publish", r1)).status, 409);
       await revision(await act(id, "publish", r2));
       assert.equal((await publicResource(id)).body, r2.body);
+      const filteredStaff = ListManualLibraryResponse.parse(
+        await ok(
+          await call(
+            `/admin/manual-library?q=${encodeURIComponent(id)}&kind=practical_guide&state=published&industry=${encodeURIComponent(industry)}`,
+          ),
+        ),
+      );
+      assert.ok(filteredStaff.items.some((v) => v.itemId === id));
+      const wrongKindStaff = ListManualLibraryResponse.parse(
+        await ok(await call(`/admin/manual-library?q=${encodeURIComponent(id)}&kind=template`)),
+      );
+      assert.equal(wrongKindStaff.items.length, 0);
       const search = ListPublicCatalogueResponse.parse(await ok(await call("/public/catalogue?q=" + id)));
       assert.ok(search.items.some((v: { id: string }) => v.id === r2.id));
       const discovery = GetPublicDiscoveryResponse.parse(await ok(await call("/public/discovery")));

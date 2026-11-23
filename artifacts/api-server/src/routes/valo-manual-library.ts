@@ -4,6 +4,7 @@ import {
   DecideOwnerGuidanceResponse,
   RefreshOwnerGuidanceResponse,
   GetManualLibraryRevisionResponse,
+  ListManualLibraryQueryParams,
   ListManualLibraryResponse,
   ListOwnerGuidanceResponse,
 } from "@workspace/api-zod";
@@ -76,14 +77,8 @@ export function createManualLibraryRouter(
     next();
   });
   router.get("/admin/manual-library", async (req, res) => {
-    res.json(
-      ListManualLibraryResponse.parse(
-        await listManualLibrary(
-          res.locals.manualEditor,
-          z.coerce.number().int().min(1).max(10000).default(1).parse(req.query.page),
-        ),
-      ),
-    );
+    const query = ListManualLibraryQueryParams.parse(req.query);
+    res.json(ListManualLibraryResponse.parse(await listManualLibrary(res.locals.manualEditor, query)));
   });
   router.get("/admin/manual-library/:id", async (req, res) => {
     res.json(
