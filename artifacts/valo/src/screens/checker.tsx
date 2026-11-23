@@ -1,5 +1,5 @@
-import { useMemo, useRef, useState } from "react";
-import { Link } from "wouter";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useSearch } from "wouter";
 import { useUser } from "@clerk/react";
 import { ArrowLeft, ArrowRight, Check, Loader2, RotateCcw, ShieldCheck, UserRound } from "lucide-react";
 import {
@@ -60,7 +60,13 @@ const TURNOVER = stepOf("turnoverAmountKobo");
 
 export default function Checker() {
   const currentAccount = useAccountEpoch();
+  const search = useSearch();
   const { isSignedIn } = useUser();
+  const autoPrefillRequested = useMemo(
+    () => new URLSearchParams(search).get("prefill") === "profile",
+    [search],
+  );
+  const autoPrefilled = useRef(false);
   const [facts, setFacts] = useState<RichCheckerFacts>(EMPTY_FACTS);
   /** The questions the visitor chose "Skip for now" on. A question nobody has touched holds the same
    * "unanswered", and shows nothing chosen. */
@@ -157,6 +163,12 @@ export default function Checker() {
     setFilledIn(true);
     setStep(0);
   }
+
+  useEffect(() => {
+    if (!autoPrefillRequested || autoPrefilled.current || !profile || own || filledIn) return;
+    autoPrefilled.current = true;
+    fillIn();
+  }, [autoPrefillRequested, profile, own, filledIn]);
 
   function reset() {
     setFacts(EMPTY_FACTS);
@@ -423,9 +435,16 @@ export default function Checker() {
             <div className="mt-6 grid gap-8">
               {step === 0 && (
                 <>
+                  <p className="rounded-xl border border-border bg-sidebar/50 px-3.5 py-2.5 text-xs leading-relaxed text-muted-foreground">
+                    <strong className="font-medium text-foreground">Quick guide to answer choices:</strong>{" "}
+                    &ldquo;I do not know&rdquo; tells Valo which extra facts a rule needs; &ldquo;Skip for
+                    now&rdquo; leaves a question open for later; &ldquo;Not applicable&rdquo; skips follow-up
+                    questions that do not fit your business.
+                  </p>
                   <Choice
                     {...at("legalForm")}
                     label="How is the business set up?"
+                    hint="For example: Business Name (sole trader or partnership), Private Limited Company (Ltd), or Unregistered."
                     value={facts.legalForm}
                     options={opts(LEGAL_FORMS)}
                     markers={["unknown", "unanswered"]}
@@ -433,6 +452,7 @@ export default function Checker() {
                   <Choice
                     {...at("registrationStatus")}
                     label="Is it registered with the Corporate Affairs Commission (CAC)?"
+                    hint="Choose Registered if you hold a CAC Business Name, Company or Incorporated Trustees certificate."
                     value={facts.registrationStatus}
                     options={opts(REG_STATUSES)}
                     markers={["unknown", "unanswered"]}
@@ -484,6 +504,7 @@ export default function Checker() {
                   <Choice
                     {...at("premises")}
                     label="Do you operate from physical premises?"
+                    hint="Choose Yes for a shop, office, workshop or warehouse; choose No if you operate only from home or online."
                     value={facts.premises}
                     options={yesNo}
                     markers={["unknown", "unanswered"]}

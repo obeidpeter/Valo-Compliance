@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
 import { BookOpen, Search, X } from "lucide-react";
 import {
@@ -53,9 +53,29 @@ export function Library({
   // The server's results are for the address the page was first opened at.
   const serverResults = search === initialSearch ? initialCatalogue : undefined;
   const [draft, setDraft] = useState(q);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const identity = useIdentity();
   const signedIn = identity.status === "signed-in";
   useEffect(() => setDraft(q), [q]);
+  useEffect(() => {
+    const trimmed = draft.trim().slice(0, 120);
+    if (trimmed === q) return;
+    const handle = window.setTimeout(() => {
+      setLocation(libraryHref(filters, { q: trimmed }));
+    }, 300);
+    return () => window.clearTimeout(handle);
+  }, [draft, q]);
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "/" || event.ctrlKey || event.metaKey || event.altKey) return;
+      const target = event.target as HTMLElement | null;
+      if (target && /INPUT|TEXTAREA|SELECT/.test(target.tagName)) return;
+      event.preventDefault();
+      searchInputRef.current?.focus();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   const params = catalogueParams(filters);
   const cat = useListPublicCatalogue(params, {
@@ -114,11 +134,13 @@ export function Library({
           <span className="sr-only">Search documents and guidance</span>
           <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
+            ref={searchInputRef}
             type="search"
             value={draft}
             maxLength={120}
+            aria-keyshortcuts="/"
             onChange={(e) => setDraft(e.target.value)}
-            placeholder="Search by name, topic or keyword"
+            placeholder="Search by name, topic or keyword (press /)"
             className="field !border-transparent !bg-transparent pl-11"
             data-testid="input-search"
           />
@@ -228,10 +250,69 @@ export function Library({
             onClick={() => setLocation("/library")}
             data-testid="button-clear-filters"
           >
-            <X className="h-3.5 w-3.5" /> Clear
+            <X className="h-3.5 w-3.5" aria-hidden="true" /> Clear all
           </button>
         )}
       </div>
+
+      {filtered && (
+        <div
+          className="mt-3 flex flex-wrap items-center gap-2 text-xs"
+          aria-label="Active filters"
+          data-testid="list-active-filters"
+        >
+          {q && (
+            <button
+              type="button"
+              className="pill pill-ink hover:bg-secondary"
+              onClick={() => {
+                setDraft("");
+                go({ q: "" });
+              }}
+            >
+              Search: &ldquo;{q}&rdquo; <X className="h-3 w-3" aria-hidden="true" />
+            </button>
+          )}
+          {industry && (
+            <button
+              type="button"
+              className="pill pill-ink hover:bg-secondary"
+              onClick={() => go({ industry: "" })}
+            >
+              Industry: {industryLabel(industry, industryNames) ?? industry}{" "}
+              <X className="h-3 w-3" aria-hidden="true" />
+            </button>
+          )}
+          {category && (
+            <button
+              type="button"
+              className="pill pill-ink hover:bg-secondary"
+              onClick={() => go({ category: "" })}
+            >
+              Category: {category} <X className="h-3 w-3" aria-hidden="true" />
+            </button>
+          )}
+          {access !== "all" && (
+            <button
+              type="button"
+              className="pill pill-ink hover:bg-secondary"
+              onClick={() => go({ access: "all" })}
+            >
+              Access: {access === "premium" ? "Premium templates" : "Free"}{" "}
+              <X className="h-3 w-3" aria-hidden="true" />
+            </button>
+          )}
+          {sort !== "relevance" && (
+            <button
+              type="button"
+              className="pill pill-ink hover:bg-secondary"
+              onClick={() => go({ sort: "relevance" })}
+            >
+              Sort: {sort === "name" ? "Name" : "Most recent"} <X className="h-3 w-3" aria-hidden="true" />
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="mt-10">
         {cat.isLoading ? (

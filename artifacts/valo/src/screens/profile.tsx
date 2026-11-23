@@ -224,11 +224,17 @@ export default function ProfilePage() {
             />
           </Field>
           <div className="grid gap-5 sm:grid-cols-2">
-            {sel("legalForm", ProfileLegalForm, "Legal form")}
+            {sel(
+              "legalForm",
+              ProfileLegalForm,
+              "Legal form",
+              "For example: Business Name (sole trader or partnership), Private Limited Company (Ltd), or Unregistered.",
+            )}
             {sel(
               "registrationStatus",
               ProfileRegistrationStatus,
               "Registration with the Corporate Affairs Commission (CAC)",
+              "Whether your business name or company currently holds a CAC registration certificate.",
             )}
           </div>
         </Section>
@@ -305,7 +311,11 @@ export default function ProfilePage() {
                 ))}
               </select>
             </Field>
-            <Field label="LGA" id="lga">
+            <Field
+              label="LGA"
+              id="lga"
+              hint="Local Government Area, such as Ikeja, Surulere or Abuja Municipal."
+            >
               <input
                 id="lga"
                 className="field"
@@ -385,10 +395,20 @@ export default function ProfilePage() {
 
         <Section title="Characteristics">
           <div className="grid gap-5 sm:grid-cols-2">
-            {sel("premises", Answer, "Do you operate from premises?")}
+            {sel(
+              "premises",
+              Answer,
+              "Do you operate from premises?",
+              "Yes for a shop, office, workshop or warehouse; No if home-based or online-only.",
+            )}
             {sel("manufacturing", Answer, "Do you manufacture goods?")}
             {sel("importing", Answer, "Do you import goods?")}
-            {sel("personalData", Answer, "Do you hold customer personal data?")}
+            {sel(
+              "personalData",
+              Answer,
+              "Do you hold customer personal data?",
+              "Names, phone numbers, addresses, ID numbers or similar records.",
+            )}
           </div>
         </Section>
 
