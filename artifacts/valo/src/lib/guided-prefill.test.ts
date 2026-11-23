@@ -18,6 +18,7 @@ import {
   formatDocumentPlainText,
   prefillGuidedData,
   savedBusinessName,
+  uniqueSavedCustomerNames,
 } from "./guided-prefill";
 
 test("prefillGuidedData carries forward only the saved business name across all 12 guided templates", () => {
@@ -121,4 +122,17 @@ test("extractReusableCustomerDetails, applyCustomerDetailsToGuided, and formatDo
   const plain = formatDocumentPlainText("Invoice — Synthetic Customer Enterprises", compiled);
   assert.match(plain, /\(DRAFT\)/);
   assert.match(plain, /Synthetic Customer Enterprises/);
+
+  const second = emptyGuidedData("TPL-02");
+  second.values.recipientName = "synthetic customer enterprises";
+  const third = emptyGuidedData("TPL-01");
+  third.values.recipientName = "Beta Logistics Ltd";
+  assert.deepEqual(
+    uniqueSavedCustomerNames([
+      { content: compiled },
+      { content: compileGuidedContent(second) as CanonicalDocument },
+      { content: compileGuidedContent(third) as CanonicalDocument },
+    ]),
+    ["Synthetic Customer Enterprises", "Beta Logistics Ltd"],
+  );
 });

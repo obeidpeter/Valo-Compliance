@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
-import { Check, FilePenLine, Loader2, Plus, Sparkles, X } from "lucide-react";
+import { Check, FilePenLine, Loader2, Plus, Sparkles, UserCheck, X } from "lucide-react";
 import {
   useCreateCustomerAIDraft,
   useGetCustomerAIUsage,
   useGetWorkspace,
   useCreateDocument,
+  useListDocuments,
   getGetCustomerAIDraftQueryKey,
   getGetCustomerAIUsageQueryKey,
   getListDocumentsQueryKey,
@@ -24,7 +25,9 @@ import { WorkspaceNav } from "@/components/workspace-nav";
 import { FinancialFields, emptyFinancial } from "@/components/financial-fields";
 import { describeError } from "@/lib/api";
 import { live } from "@/lib/checker";
-import { savedBusinessName } from "@/lib/guided-prefill";
+import { addCalendarDays } from "@/lib/date-shortcuts";
+import { lagosToday } from "@/lib/format";
+import { savedBusinessName, uniqueSavedCustomerNames } from "@/lib/guided-prefill";
 import { resolveIdempotencyKey, type IdempotencySlot } from "@/lib/idempotency";
 import { useUnsavedNavigation } from "@/lib/use-unsaved-navigation";
 import { cn } from "@/lib/utils";
@@ -37,8 +40,11 @@ export function AIDraftCompose() {
   const [, setLocation] = useLocation();
   const usage = useGetCustomerAIUsage({ query: { queryKey: getGetCustomerAIUsageQueryKey(), ...live } });
   const ws = useGetWorkspace({ query: { queryKey: getGetWorkspaceQueryKey() } });
+  const savedDocs = useListDocuments({ query: { queryKey: getListDocumentsQueryKey() } });
   const create = useCreateCustomerAIDraft();
   const manual = useCreateDocument();
+  const savedCustomers = useMemo(() => uniqueSavedCustomerNames(savedDocs.data ?? []), [savedDocs.data]);
+  const [selectedCustomer, setSelectedCustomer] = useState("");
 
   const [task, setTask] = useState<CustomerAITask>("invoice");
   const [tone, setTone] = useState<CustomerAIInputTone>("neutral");
@@ -273,6 +279,35 @@ export function AIDraftCompose() {
             title="Key details"
             hint="Inserted verbatim by the server. Not sent to the AI provider."
           >
+            {savedCustomers.length > 0 && (
+              <div
+                className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-sidebar/40 px-3 py-2 text-xs"
+                data-testid="bar-ai-reuse-customer"
+              >
+                <UserCheck className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" />
+                <label htmlFor="ai-reuse-customer" className="font-medium">
+                  Fill customer:
+                </label>
+                <select
+                  id="ai-reuse-customer"
+                  className="field !min-h-8 !w-auto !py-1 text-xs"
+                  value={selectedCustomer}
+                  onChange={(e) => {
+                    const name = e.target.value;
+                    setSelectedCustomer(name);
+                    if (name) setFields((current) => ({ ...current, recipientName: name }));
+                  }}
+                  data-testid="select-ai-reuse-customer"
+                >
+                  <option value="">Choose a previous customer…</option>
+                  {savedCustomers.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className="grid gap-4 sm:grid-cols-2">
               <Text
                 id="issuerName"
@@ -299,20 +334,52 @@ export function AIDraftCompose() {
                 on={(v) => setFields({ ...fields, documentNumber: v })}
               />
               <div className="grid grid-cols-2 gap-3">
-                <Text
-                  id="issueDate"
-                  type="date"
-                  label="Issue date"
-                  v={fields.issueDate}
-                  on={(v) => setFields({ ...fields, issueDate: v })}
-                />
-                <Text
-                  id="dueDate"
-                  type="date"
-                  label="Due date"
-                  v={fields.dueDate}
-                  on={(v) => setFields({ ...fields, dueDate: v })}
-                />
+                <div>
+                  <Text
+                    id="issueDate"
+                    type="date"
+                    label="Issue date"
+                    v={fields.issueDate}
+                    on={(v) => setFields({ ...fields, issueDate: v })}
+                  />
+                  <div className="mt-1.5 flex flex-wrap gap-1">
+                    <button
+                      type="button"
+                      className="rounded-full border border-border bg-card px-2 py-0.5 text-[0.7rem] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                      onClick={() => setFields((current) => ({ ...current, issueDate: lagosToday() }))}
+                      data-testid="button-ai-issue-today"
+                    >
+                      Today
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <Text
+                    id="dueDate"
+                    type="date"
+                    label="Due date"
+                    v={fields.dueDate}
+                    on={(v) => setFields({ ...fields, dueDate: v })}
+                  />
+                  <div className="mt-1.5 flex flex-wrap gap-1" aria-label="Quick due date options">
+                    {([7, 14, 30] as const).map((days) => (
+                      <button
+                        key={days}
+                        type="button"
+                        className="rounded-full border border-border bg-card px-2 py-0.5 text-[0.7rem] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                        onClick={() =>
+                          setFields((current) => ({
+                            ...current,
+                            dueDate: addCalendarDays(current.issueDate || lagosToday(), days),
+                          }))
+                        }
+                        data-testid={"button-ai-due-plus-" + days}
+                      >
+                        +{days}d
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </Section>
