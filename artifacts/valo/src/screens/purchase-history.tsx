@@ -18,7 +18,7 @@ import {
 import { WorkspaceNav } from "@/components/workspace-nav";
 import { EmptyState, ErrorState, Notice, Skel } from "@/components/states";
 import { describeError } from "@/lib/api";
-import { formatDateTime, formatNaira } from "@/lib/format";
+import { formatCount, formatDateTime, formatNaira } from "@/lib/format";
 import { basePath } from "@/lib/env";
 const labels: Record<string, string> = {
   created: "Order saved — not paid",
@@ -41,15 +41,56 @@ function OwnedChoice({ file }: { file: OwnedCheckoutDownload }) {
   );
 }
 function MyTemplates({ editions }: { editions: ReadonlyMap<string, OwnedCheckoutDownload> }) {
-  const files = [...editions.values()].sort(
-    (a, b) => a.title.localeCompare(b.title, "en-NG") || a.edition.localeCompare(b.edition),
-  );
+  const [search, setSearch] = useState("");
+  const searchInput = useRef<HTMLInputElement>(null);
+  const query = search.trim().toLowerCase();
+  const files = [...editions.values()]
+    .filter((file) => file.title.toLowerCase().includes(query))
+    .sort((a, b) => a.title.localeCompare(b.title, "en-NG") || a.edition.localeCompare(b.edition));
   return (
     <section className="mb-8" aria-labelledby="my-templates">
       <h2 id="my-templates" className="font-display mb-4 text-2xl">
         My Templates
       </h2>
-      {files.length ? (
+      <div className="mb-4 max-w-xl">
+        <label className="label" htmlFor="owned-template-search">
+          Search by title
+        </label>
+        <div className="flex items-center gap-2">
+          <input
+            ref={searchInput}
+            id="owned-template-search"
+            type="search"
+            autoComplete="off"
+            className="field min-w-0 flex-1 [&::-webkit-search-cancel-button]:hidden"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+          {search && (
+            <button
+              type="button"
+              className="btn btn-secondary shrink-0"
+              onClick={() => {
+                setSearch("");
+                searchInput.current?.focus();
+              }}
+            >
+              Clear search
+            </button>
+          )}
+        </div>
+      </div>
+      <p
+        role="status"
+        className={files.length ? "sr-only" : "rounded-2xl border bg-card p-5 text-sm text-muted-foreground"}
+      >
+        {!editions.size
+          ? "Your workspace has no premium templates available to download."
+          : !files.length
+            ? "No owned editions match your search."
+            : `${formatCount(files.length)} ${files.length === 1 ? "edition" : "editions"} available to download.`}
+      </p>
+      {files.length > 0 && (
         <ul className="grid gap-3 sm:grid-cols-2">
           {files.map((file) => (
             <li
@@ -67,10 +108,6 @@ function MyTemplates({ editions }: { editions: ReadonlyMap<string, OwnedCheckout
             </li>
           ))}
         </ul>
-      ) : (
-        <p className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">
-          Your workspace has no premium templates available to download.
-        </p>
       )}
     </section>
   );
