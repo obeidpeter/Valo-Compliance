@@ -165,7 +165,7 @@ export function AIDraftPreview({ id }: { id: string }) {
           <div className="grid min-w-0 gap-6">
             {p.missingFields.length > 0 && (
               <div
-                className="rounded-2xl border border-[hsl(38_50%_80%)] bg-[hsl(var(--ochre-soft))] p-5"
+                className="rounded-2xl border border-[hsl(var(--ochre-border))] bg-[hsl(var(--ochre-soft))] p-5"
                 data-testid="list-missing"
               >
                 <p className="flex items-center gap-2 text-sm font-semibold">

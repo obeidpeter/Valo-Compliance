@@ -51,8 +51,8 @@ export function Notice({
   className?: string;
 }) {
   const tones = {
-    ochre: "border-[hsl(38_50%_80%)] bg-[hsl(var(--ochre-soft))]",
-    forest: "border-[hsl(150_25%_80%)] bg-accent",
+    ochre: "border-[hsl(var(--ochre-border))] bg-[hsl(var(--ochre-soft))]",
+    forest: "border-[hsl(var(--forest-border))] bg-accent",
     ink: "border-border bg-secondary",
   };
   return (

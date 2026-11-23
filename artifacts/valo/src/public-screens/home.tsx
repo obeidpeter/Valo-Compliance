@@ -371,7 +371,7 @@ function Reliance() {
           ))}
         </div>
         <p
-          className="mt-9 rounded-2xl border border-[hsl(38_50%_82%)] bg-[hsl(var(--ochre-soft))] px-5 py-4 text-[0.95rem] leading-relaxed text-[hsl(38_60%_20%)]"
+          className="mt-9 rounded-2xl border border-[hsl(var(--ochre-border))] bg-[hsl(var(--ochre-soft))] px-5 py-4 text-[0.95rem] leading-relaxed text-[hsl(var(--ochre-foreground))]"
           data-testid="text-good-to-know"
         >
           <strong className="font-semibold">Good to know.</strong> Valo is not legal, tax or accounting
@@ -472,7 +472,7 @@ function Closing() {
         <div className="grid gap-3 sm:flex sm:flex-wrap">
           <Link
             href={DOCUMENTS.href}
-            className={BIG + " bg-background text-[hsl(155_42%_14%)] hover:bg-secondary"}
+            className={BIG + " bg-background text-[hsl(155_42%_14%)] hover:bg-secondary dark:text-foreground"}
             data-testid="link-closing-documents"
           >
             {DOCUMENTS.label}

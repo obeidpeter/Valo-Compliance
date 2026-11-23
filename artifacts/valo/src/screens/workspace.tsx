@@ -235,7 +235,7 @@ export default function WorkspaceHome() {
                   )}
                   {profileMovedAhead && (
                     <p
-                      className="rounded-xl border border-[hsl(38_50%_82%)] bg-[hsl(var(--ochre-soft))] px-3 py-2 text-xs text-[hsl(38_60%_20%)]"
+                      className="rounded-xl border border-[hsl(var(--ochre-border))] bg-[hsl(var(--ochre-soft))] px-3 py-2 text-xs text-[hsl(var(--ochre-foreground))]"
                       data-testid="status-profile-changed-since-check"
                     >
                       Your business profile changed since this saved result.{" "}

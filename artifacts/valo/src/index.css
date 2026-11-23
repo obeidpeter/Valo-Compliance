@@ -113,6 +113,12 @@
 
   --ochre: 38 58% 42%;
   --ochre-soft: 40 60% 93%;
+  --ochre-border: 38 50% 82%;
+  --ochre-foreground: 38 60% 24%;
+  --forest-border: 150 25% 80%;
+  --primary-hover: 155 42% 17%;
+  --primary-shadow: 155 42% 14%;
+  --ink-hover: 30 8% 22%;
 
   --app-font-sans: 'Instrument Sans', 'Instrument Sans Fallback', ui-sans-serif, system-ui, sans-serif;
   --app-font-serif: 'Newsreader', 'Newsreader Fallback', Georgia, serif;
@@ -139,6 +145,11 @@
 }
 
 .dark {
+  --button-outline: rgba(245, 240, 232, 0.16);
+  --badge-outline: rgba(245, 240, 232, 0.1);
+  --elevate-1: rgba(245, 240, 232, 0.05);
+  --elevate-2: rgba(245, 240, 232, 0.1);
+
   --background: 30 8% 10%;
   --foreground: 40 25% 92%;
   --border: 30 6% 22%;
@@ -173,6 +184,15 @@
   --chart-3: 40 20% 80%;
   --chart-4: 160 20% 45%;
   --chart-5: 20 40% 60%;
+
+  --ochre: 38 68% 60%;
+  --ochre-soft: 38 35% 18%;
+  --ochre-border: 38 42% 34%;
+  --ochre-foreground: 38 80% 82%;
+  --forest-border: 152 28% 30%;
+  --primary-hover: 152 40% 58%;
+  --primary-shadow: 152 38% 36%;
+  --ink-hover: 40 22% 84%;
 }
 
 @layer base {
@@ -338,10 +358,10 @@ body::before {
   }
   .btn:active:not(:disabled) { transform: translateY(1px) scale(.99); }
   .btn:disabled, .btn[aria-disabled='true'] { opacity: .5; cursor: not-allowed; }
-  .btn-primary { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); box-shadow: inset 0 -2px 0 hsl(155 42% 14%), var(--shadow-sm); }
-  .btn-primary:hover:not(:disabled) { background: hsl(155 42% 17%); }
+  .btn-primary { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); box-shadow: inset 0 -2px 0 hsl(var(--primary-shadow)), var(--shadow-sm); }
+  .btn-primary:hover:not(:disabled) { background: hsl(var(--primary-hover)); }
   .btn-ink { background: hsl(var(--foreground)); color: hsl(var(--background)); }
-  .btn-ink:hover:not(:disabled) { background: hsl(30 8% 22%); }
+  .btn-ink:hover:not(:disabled) { background: hsl(var(--ink-hover)); }
   .btn-ghost { background: transparent; border: 1px solid hsl(var(--border)); color: hsl(var(--foreground)); }
   .btn-ghost:hover:not(:disabled) { background: hsl(var(--secondary)); }
   .btn-sm { min-height: 2.25rem; padding: 0 .9rem; font-size: .85rem; }
@@ -357,7 +377,7 @@ body::before {
 
   .pill { display: inline-flex; align-items: center; gap: .4rem; border-radius: 999px; padding: .2rem .65rem; font-size: .75rem; font-weight: 500; border: 1px solid transparent; }
   .pill-forest { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
-  .pill-ochre { background: hsl(var(--ochre-soft)); color: hsl(38 60% 28%); border-color: hsl(38 50% 82%); }
+  .pill-ochre { background: hsl(var(--ochre-soft)); color: hsl(var(--ochre-foreground)); border-color: hsl(var(--ochre-border)); }
   .pill-ink { background: hsl(var(--secondary)); color: hsl(var(--foreground)); border-color: hsl(var(--border)); }
   .dot { width: .45rem; height: .45rem; border-radius: 999px; background: currentColor; }
 
@@ -387,7 +407,7 @@ body::before {
 }
 
 .cl-formFieldInput::placeholder { color: hsl(var(--muted-foreground)); opacity: 1; }
-.cl-formButtonPrimary:hover { background: hsl(155 42% 17%) !important; }
+.cl-formButtonPrimary:hover { background: hsl(var(--primary-hover)) !important; }
 .cl-footerActionLink:hover { text-decoration: underline; }
 
 /* The auth grid must size to the viewport, not the provider card's intrinsic
