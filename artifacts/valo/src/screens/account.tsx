@@ -103,7 +103,19 @@ export function PrivacyPage() {
   function submit(e: FormEvent) {
     e.preventDefault();
     setTouched(true);
-    if (msgErr || !ack || req.isPending) return;
+    if (msgErr) {
+      const el = document.getElementById("pr-msg");
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      el?.focus();
+      return;
+    }
+    if (!ack) {
+      const el = document.getElementById("pr-ack");
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      el?.focus();
+      return;
+    }
+    if (req.isPending) return;
     const payload = { kind, message: message.trim(), acknowledgement: true as const };
     const slot = resolveIdempotencyKey(keyRef.current, payload);
     keyRef.current = slot;
@@ -132,17 +144,31 @@ export function PrivacyPage() {
       <div className="grid gap-8 lg:grid-cols-[1fr_1fr]">
         <section className="surface p-6 sm:p-8">
           <h2 className="font-display text-2xl">Download workspace data</h2>
-          <p
-            className="mt-2 text-sm leading-relaxed text-muted-foreground"
-            data-testid="workspace-export-scope"
-          >
-            A JSON copy of the sections listed in the file: profile versions, documents and their versions,
-            saved results, tasks, reminder records, support requests, AI drafts, purchases, export/file
-            metadata and your own workspace activity. This is not complete privacy fulfilment. It does not
-            include Word/PDF file bytes, storage links, membership records, other people's activity, full
-            system/staff audits, sign-in-provider data, external-provider data or unlinked public contact
-            requests. Use the privacy request form for coordinated access to those systems.
-          </p>
+          <div className="mt-3 grid gap-3 text-sm leading-relaxed" data-testid="workspace-export-scope">
+            <p className="text-muted-foreground">
+              A JSON copy of your workspace records.{" "}
+              <strong className="font-medium text-foreground">This is not complete privacy fulfilment</strong>
+              —use the privacy request form alongside it for coordinated access to external or staff systems.
+            </p>
+            <div className="grid gap-3 rounded-xl border border-border bg-sidebar/40 p-4 sm:grid-cols-2">
+              <div>
+                <p className="font-medium text-foreground">Included</p>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                  Profile versions, documents and their versions, saved results, tasks, reminder records,
+                  support requests, AI drafts, purchases, export/file metadata and your own workspace
+                  activity.
+                </p>
+              </div>
+              <div>
+                <p className="font-medium text-foreground">Not included</p>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                  Word/PDF file bytes, storage links, membership records, other people&rsquo;s activity, full
+                  system/staff audits, sign-in-provider data, external-provider data or unlinked public
+                  contact requests.
+                </p>
+              </div>
+            </div>
+          </div>
           <WorkspaceDataDownload />
         </section>
 
@@ -200,9 +226,12 @@ export function PrivacyPage() {
                 ))}
               </fieldset>
               <div>
-                <label className="label" htmlFor="pr-msg">
-                  Details
-                </label>
+                <div className="flex items-baseline justify-between gap-2">
+                  <label className="label" htmlFor="pr-msg">
+                    Details
+                  </label>
+                  <span className="font-mono text-xs text-muted-foreground">{message.length} / 1,500</span>
+                </div>
                 <textarea
                   id="pr-msg"
                   className="field min-h-28"
@@ -216,8 +245,9 @@ export function PrivacyPage() {
                   {touched && msgErr ? msgErr : "No passwords, ID numbers or payment details."}
                 </p>
               </div>
-              <label className="flex items-start gap-3 text-sm">
+              <label className="flex items-start gap-3 text-sm" htmlFor="pr-ack">
                 <input
+                  id="pr-ack"
                   type="checkbox"
                   checked={ack}
                   onChange={(e) => setAckChecked(e.target.checked)}
