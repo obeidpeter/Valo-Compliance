@@ -18,7 +18,12 @@ import {
   HoldFinanceDisputeBody,
   LinkFinanceDisputeBody,
 } from "@workspace/api-zod";
-import { authorizeWorkspaceWrite, limitWorkspaceWrite, type WorkspaceActor } from "../workspaces";
+import {
+  authorizeWorkspaceRead,
+  authorizeWorkspaceWrite,
+  limitWorkspaceWrite,
+  type WorkspaceActor,
+} from "../workspaces";
 import { assertFinanceActor, requireFinance, type FinanceActor } from "./valo-refunds";
 import { ValoProblem } from "../../platform/valo-problem";
 import {
@@ -54,6 +59,14 @@ const digest = (v: unknown) =>
   createHash("sha256")
     .update(JSON.stringify(sorted(v)))
     .digest("hex");
+async function readDispute(tx: Tx, id: string) {
+  const [row] = await tx.select().from(valoPaymentDisputes).where(eq(valoPaymentDisputes.id, id));
+  if (!row) throw new ValoProblem(404, "Dispute not found.");
+  const [order] = await tx.select().from(valoOrders).where(eq(valoOrders.id, row.orderId));
+  if (!order || row.orderId !== order.id || row.workspaceId !== order.workspaceId)
+    throw new ValoProblem(409, "Dispute binding changed.");
+  return { order, row };
+}
 async function locked(tx: Tx, id: string) {
   const [link] = await tx.select().from(valoPaymentDisputes).where(eq(valoPaymentDisputes.id, id));
   if (!link) throw new ValoProblem(404, "Dispute not found.");
@@ -198,13 +211,19 @@ function actionView(a: Action) {
     failure: a.failure,
   };
 }
-async function detail(tx: Tx, id: string, enabled = false) {
-  const { row, order } = await locked(tx, id);
+async function detail(
+  tx: Tx,
+  id: string,
+  enabled = false,
+  loaded?: { row: typeof valoPaymentDisputes.$inferSelect; order: Order },
+) {
+  const { row, order } = loaded ?? (await locked(tx, id));
   const actions = await tx
     .select()
     .from(valoDisputeActions)
     .where(eq(valoDisputeActions.disputeId, id))
-    .orderBy(desc(valoDisputeActions.createdAt));
+    .orderBy(desc(valoDisputeActions.createdAt))
+    .limit(100);
   return {
     id,
     orderReference: order.reference,
@@ -226,11 +245,13 @@ async function detail(tx: Tx, id: string, enabled = false) {
     information: await tx
       .select()
       .from(valoDisputeInformation)
-      .where(eq(valoDisputeInformation.disputeId, id)),
+      .where(eq(valoDisputeInformation.disputeId, id))
+      .limit(100),
     history: await tx
       .select()
       .from(valoDisputeTransitions)
-      .where(eq(valoDisputeTransitions.orderId, order.id)),
+      .where(eq(valoDisputeTransitions.orderId, order.id))
+      .limit(100),
     executionEnabled: enabled,
     policy: DISPUTE_POLICY,
   };
@@ -238,9 +259,9 @@ async function detail(tx: Tx, id: string, enabled = false) {
 export async function financeDispute(actor: FinanceActor, id: string) {
   await assertFinanceActor(actor);
   return db.transaction(async (tx) => {
-    await locked(tx, id);
+    const loaded = await readDispute(tx, id);
     await requireFinance(tx, actor, "Inspect scoped dispute and customer-consented financial evidence.");
-    return detail(tx, id, disputeTransport.configured());
+    return detail(tx, id, disputeTransport.configured(), loaded);
   });
 }
 export async function orderDisputeInformation(actor: WorkspaceActor, orderId: string) {
@@ -248,10 +269,9 @@ export async function orderDisputeInformation(actor: WorkspaceActor, orderId: st
     const [order] = await tx
       .select()
       .from(valoOrders)
-      .where(and(eq(valoOrders.id, orderId), eq(valoOrders.workspaceId, actor.workspaceId)))
-      .for("share");
+      .where(and(eq(valoOrders.id, orderId), eq(valoOrders.workspaceId, actor.workspaceId)));
     if (!order) throw new ValoProblem(404, "Order not found.");
-    await authorizeWorkspaceWrite(tx, actor);
+    await authorizeWorkspaceRead(tx, actor);
     const rows = await tx.select().from(valoPaymentDisputes).where(eq(valoPaymentDisputes.orderId, orderId));
     return {
       disputes: rows.map((r) => ({ id: r.id, status: r.status })),
@@ -343,7 +363,7 @@ export async function prepareDisputeAction(actor: FinanceActor, id: string, raw:
         duplicate.payload.requestHash !== digest(input)
       )
         throw new ValoProblem(409, "The immutable prepared intent differs from these details.");
-      return detail(tx, id, disputeTransport.configured());
+      return detail(tx, id, disputeTransport.configured(), { row, order });
     }
     if (row.held || row.status !== "awaiting-merchant-feedback")
       throw new ValoProblem(409, "Dispute is held or is not awaiting merchant feedback.");
@@ -428,7 +448,7 @@ export async function prepareDisputeAction(actor: FinanceActor, id: string, raw:
         .returning(),
     );
     await transition(tx, a, actor.identityId, "prepared");
-    return detail(tx, id, disputeTransport.configured());
+    return detail(tx, id, disputeTransport.configured(), { row, order });
   });
 }
 export async function renderPurchaseReceipt(order: Order) {
@@ -787,11 +807,14 @@ export async function holdFinanceDispute(actor: FinanceActor, id: string, raw: u
     if (row.controlVersion !== input.expectedVersion)
       throw new ValoProblem(409, "Dispute hold changed. Refresh first.");
     if (!input.held) await source(tx, order, id, null);
-    await tx
-      .update(valoPaymentDisputes)
-      .set({ held: input.held, controlVersion: row.controlVersion + 1 })
-      .where(eq(valoPaymentDisputes.id, id));
-    return detail(tx, id, disputeTransport.configured());
+    const updated = singleRow(
+      await tx
+        .update(valoPaymentDisputes)
+        .set({ held: input.held, controlVersion: row.controlVersion + 1 })
+        .where(eq(valoPaymentDisputes.id, id))
+        .returning(),
+    );
+    return detail(tx, id, disputeTransport.configured(), { row: updated, order });
   });
 }
 export async function linkFinanceDispute(

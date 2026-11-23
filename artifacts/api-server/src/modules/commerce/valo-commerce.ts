@@ -16,7 +16,7 @@ import {
 } from "@workspace/db";
 import { z } from "zod";
 import { activeTemplatePrices, isFreeBaselineTemplate, liveOperationalVersions } from "../catalogue";
-import { authorizeWorkspaceWrite, type WorkspaceActor } from "../workspaces";
+import { authorizeWorkspaceRead, authorizeWorkspaceWrite, type WorkspaceActor } from "../workspaces";
 import { ValoProblem } from "../../platform/valo-problem";
 import { consumeQuota, quotaSubjectHash } from "../../lib/valo-quota";
 import {
@@ -163,14 +163,14 @@ export async function commerceProducts() {
 /** Ownership follows the edition and the terms originally purchased, even after its sale price changes. */
 export async function ownedTemplateEditions(actor: WorkspaceActor) {
   return db.transaction(async (tx) => {
-    await authorizeWorkspaceWrite(tx, actor);
+    await authorizeWorkspaceRead(tx, actor);
     const { rows } = await tx.execute<{ edition: string }>(sql`${verifiedEditions(actor)} order by edition`);
     return rows.map((row) => row.edition);
   });
 }
 export async function purchases(actor: WorkspaceActor) {
   const { ownedPrices, ...listing } = await db.transaction(async (tx) => {
-    await authorizeWorkspaceWrite(tx, actor);
+    await authorizeWorkspaceRead(tx, actor);
     const orderRows = await tx
       .select()
       .from(valoOrders)
@@ -494,7 +494,12 @@ export async function refreshOrder(actor: WorkspaceActor, id: string) {
 }
 export async function purchaseReceipt(actor: WorkspaceActor, id: string) {
   return db.transaction(async (tx) => {
-    const order = await ownedOrder(tx, actor, id);
+    const [order] = await tx
+      .select()
+      .from(valoOrders)
+      .where(and(eq(valoOrders.id, id), eq(valoOrders.workspaceId, actor.workspaceId)));
+    if (!order) throw new ValoProblem(404, "Order not found.");
+    await authorizeWorkspaceRead(tx, actor);
     if (
       !order.providerTransactionId ||
       (order.status !== "verified_success" && !(await originalReceiptExists(tx, id, order.workspaceId)))

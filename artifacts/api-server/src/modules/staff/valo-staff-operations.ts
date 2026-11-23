@@ -95,6 +95,7 @@ export async function staffOperations(actor: StaffActor, area: StaffArea) {
           reviewBy: valoContentVersions.reviewBy,
         })
         .from(valoContentVersions)
+        .orderBy(valoContentVersions.templateId, desc(valoContentVersions.version))
         .limit(200);
       // A candidate awaiting its reviews is a private artifact, not a content version, so it is
       // listed from its own record with where it stands.

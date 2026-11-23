@@ -13,7 +13,12 @@ import {
   RespondPaymentConcernBody,
   ActOnPaymentConcernBody,
 } from "@workspace/api-zod";
-import { authorizeWorkspaceWrite, limitWorkspaceWrite, type WorkspaceActor } from "../workspaces";
+import {
+  authorizeWorkspaceRead,
+  authorizeWorkspaceWrite,
+  limitWorkspaceWrite,
+  type WorkspaceActor,
+} from "../workspaces";
 import { ValoProblem } from "../../platform/valo-problem";
 import { assertFinanceActor, requireFinance, type FinanceActor } from "./valo-refunds";
 import { singleRow } from "../../platform/rows";
@@ -54,40 +59,56 @@ const history = (r: typeof valoPaymentConcernEvents.$inferSelect) => ({
   actorType: r.actorType,
   createdAt: r.createdAt.toISOString(),
 });
-async function concernView(tx: Tx, c: Concern) {
-  const o = singleRow(await tx.select().from(valoOrders).where(eq(valoOrders.id, c.orderId)));
-  const events = await tx
+async function concernViews(tx: Tx, rows: Concern[]) {
+  if (!rows.length) return [];
+  const orderIds = [...new Set(rows.map((r) => r.orderId))];
+  const concernIds = rows.map((r) => r.id);
+  const orders = await tx.select().from(valoOrders).where(inArray(valoOrders.id, orderIds));
+  const orderById = new Map(orders.map((o) => [o.id, o]));
+  const eventsQuery = tx
     .select()
     .from(valoPaymentConcernEvents)
     .where(
-      and(eq(valoPaymentConcernEvents.concernId, c.id), eq(valoPaymentConcernEvents.customerVisible, true)),
+      and(
+        inArray(valoPaymentConcernEvents.concernId, concernIds),
+        eq(valoPaymentConcernEvents.customerVisible, true),
+      ),
     )
-    .orderBy(desc(valoPaymentConcernEvents.createdAt))
-    .limit(100);
-  const messages = events.length
-    ? await tx
-        .select()
-        .from(valoConcernMessages)
-        .where(
-          inArray(
-            valoConcernMessages.id,
-            events.map((e) => e.id),
-          ),
-        )
+    .orderBy(desc(valoPaymentConcernEvents.createdAt));
+  const rawEvents = rows.length === 1 ? await eventsQuery.limit(100) : await eventsQuery;
+  const eventsByConcern = new Map<string, (typeof valoPaymentConcernEvents.$inferSelect)[]>();
+  const keptEventIds: string[] = [];
+  for (const event of rawEvents) {
+    const list = eventsByConcern.get(event.concernId) ?? [];
+    if (list.length >= 100) continue;
+    list.push(event);
+    eventsByConcern.set(event.concernId, list);
+    keptEventIds.push(event.id);
+  }
+  const messages = keptEventIds.length
+    ? await tx.select().from(valoConcernMessages).where(inArray(valoConcernMessages.id, keptEventIds))
     : [];
   const byId = new Map(messages.map((m) => [m.id, m.body]));
-  return {
-    id: c.id,
-    orderId: c.orderId,
-    orderReference: o.reference,
-    message: c.message,
-    status: c.status,
-    latestReply: c.latestReply,
-    version: c.version,
-    createdAt: c.createdAt.toISOString(),
-    updatedAt: c.updatedAt.toISOString(),
-    history: events.reverse().map((e) => ({ ...history(e), reason: byId.get(e.id) ?? e.reason })),
-  };
+  return rows.map((c) => {
+    const o = orderById.get(c.orderId);
+    if (!o) throw Error("EXPECTED_SINGLE_ROW");
+    const events = eventsByConcern.get(c.id) ?? [];
+    return {
+      id: c.id,
+      orderId: c.orderId,
+      orderReference: o.reference,
+      message: c.message,
+      status: c.status,
+      latestReply: c.latestReply,
+      version: c.version,
+      createdAt: c.createdAt.toISOString(),
+      updatedAt: c.updatedAt.toISOString(),
+      history: events.reverse().map((e) => ({ ...history(e), reason: byId.get(e.id) ?? e.reason })),
+    };
+  });
+}
+async function concernView(tx: Tx, c: Concern) {
+  return singleRow(await concernViews(tx, [c]));
 }
 async function noErasure(tx: Tx, workspaceId: string) {
   const [t] = await tx
@@ -239,14 +260,14 @@ export async function actOnPaymentConcern(actor: FinanceActor, id: string, raw: 
 
 export async function getWorkspaceDisputes(actor: WorkspaceActor) {
   return db.transaction(async (tx) => {
-    await authorizeWorkspaceWrite(tx, actor);
+    await authorizeWorkspaceRead(tx, actor);
     const rows = await tx
       .select()
       .from(valoPaymentConcerns)
       .where(eq(valoPaymentConcerns.workspaceId, actor.workspaceId))
       .orderBy(desc(valoPaymentConcerns.updatedAt))
       .limit(100);
-    return { concerns: await Promise.all(rows.map((row) => concernView(tx, row))), notice };
+    return { concerns: await concernViews(tx, rows), notice };
   });
 }
 export async function getFinancePaymentConcerns(actor: FinanceActor) {
@@ -258,6 +279,6 @@ export async function getFinancePaymentConcerns(actor: FinanceActor) {
       .from(valoPaymentConcerns)
       .orderBy(desc(valoPaymentConcerns.updatedAt))
       .limit(100);
-    return { concerns: await Promise.all(rows.map((row) => concernView(tx, row))), notice };
+    return { concerns: await concernViews(tx, rows), notice };
   });
 }

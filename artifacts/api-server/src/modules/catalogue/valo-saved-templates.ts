@@ -2,7 +2,12 @@ import { randomUUID } from "node:crypto";
 import { and, eq, desc, sql } from "drizzle-orm";
 import type { db } from "@workspace/db";
 import { publicationSchema } from "@workspace/valo-core";
-import { authorizeWorkspaceWrite, limitWorkspaceWrite, type WorkspaceActor } from "../workspaces";
+import {
+  authorizeWorkspaceRead,
+  authorizeWorkspaceWrite,
+  limitWorkspaceWrite,
+  type WorkspaceActor,
+} from "../workspaces";
 import { ValoProblem } from "../../platform/valo-problem";
 import {
   checkReleaseEvidence,
@@ -14,18 +19,16 @@ import { recommendTemplates } from "./valo-catalogue";
 import { developmentPublicationOnly } from "../publication";
 import { singleRow } from "../../platform/rows";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
-async function owner(tx: Tx, actor: WorkspaceActor) {
+async function owner(tx: Tx, actor: WorkspaceActor, lock = true) {
   const { valoMemberships, valoWorkspaces } = await import("@workspace/db");
-  // Workspace lock serializes capacity/idempotency; membership lock is taken
+  // Workspace lock serializes capacity/idempotency on writes; membership lock is taken
   // after waits so a committed revocation wins before the write.
-  const [w] = await tx
-    .select()
-    .from(valoWorkspaces)
-    .where(eq(valoWorkspaces.id, actor.workspaceId))
-    .for("update");
-  await authorizeWorkspaceWrite(tx, actor);
+  const baseWorkspace = tx.select().from(valoWorkspaces).where(eq(valoWorkspaces.id, actor.workspaceId));
+  const [w] = await (lock ? baseWorkspace.for("update") : baseWorkspace);
+  if (lock) await authorizeWorkspaceWrite(tx, actor);
+  else await authorizeWorkspaceRead(tx, actor);
   const [m] = await tx
-    .select()
+    .select({ role: valoMemberships.role })
     .from(valoMemberships)
     .where(
       and(
@@ -40,8 +43,11 @@ async function owner(tx: Tx, actor: WorkspaceActor) {
 export async function savedTemplateList(actor: WorkspaceActor) {
   const { db, valoProfileVersions, valoSavedTemplates } = await import("@workspace/db");
   const current = projectReleasedCatalogue(await liveReleasedVersions());
+  const currentByTemplate = new Map(
+    current.filter((i) => i.type === "template").map((i) => [i.templateId, i]),
+  );
   return db.transaction(async (tx) => {
-    const w = await owner(tx, actor);
+    const w = await owner(tx, actor, false);
     const saved = await tx
       .select()
       .from(valoSavedTemplates)
@@ -59,7 +65,7 @@ export async function savedTemplateList(actor: WorkspaceActor) {
       );
     return {
       items: saved.map((s) => {
-        const item = current.find((i) => i.type === "template" && i.templateId === s.templateId);
+        const item = currentByTemplate.get(s.templateId);
         return {
           templateId: s.templateId,
           title: item?.title ?? s.savedTitle,

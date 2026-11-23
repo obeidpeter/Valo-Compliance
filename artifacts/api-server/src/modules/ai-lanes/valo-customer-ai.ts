@@ -28,11 +28,11 @@ const workspaceDailyLimit = 30;
 /** The database schema and the workspace transaction load when a customer AI request runs, not
  * with every reader of this file: both load the database client. */
 async function runtime() {
-  const [{ valoAIDrafts, valoSafetySwitches }, { workspaceTransaction, workspaceEvent }] = await Promise.all([
-    import("@workspace/db"),
-    import("../rules"),
-  ]);
-  return { valoAIDrafts, valoSafetySwitches, workspaceTransaction, workspaceEvent };
+  const [
+    { valoAIDrafts, valoSafetySwitches },
+    { workspaceReadTransaction, workspaceTransaction, workspaceEvent },
+  ] = await Promise.all([import("@workspace/db"), import("../rules")]);
+  return { valoAIDrafts, valoSafetySwitches, workspaceReadTransaction, workspaceTransaction, workspaceEvent };
 }
 /** Customer AI reservations allowed per day across every workspace. */
 export const globalDailyLimit = 120;
@@ -93,8 +93,8 @@ export function serializeAIPreview(row: typeof AIDrafts.$inferSelect) {
   return { ...p, acceptedDocumentId: row.acceptedDocumentId };
 }
 export async function customerAIUsage(actor: WorkspaceActor) {
-  const { workspaceTransaction } = await runtime();
-  return workspaceTransaction(actor, async (tx) => {
+  const { workspaceReadTransaction } = await runtime();
+  return workspaceReadTransaction(actor, async (tx) => {
     const b = await budget(tx, actor.workspaceId, actor.identityId);
     return GetCustomerAIUsageResponse.parse({
       enabled: await enabled(tx, actor.workspaceId),
@@ -247,7 +247,17 @@ export async function createCustomerAIDraft(
   });
 }
 export async function getCustomerAIDraft(actor: WorkspaceActor, id: string) {
-  const { valoAIDrafts, workspaceTransaction } = await runtime();
+  const { valoAIDrafts, workspaceReadTransaction, workspaceTransaction } = await runtime();
+  const initial = await workspaceReadTransaction(actor, async (tx) => {
+    const [row] = await tx
+      .select()
+      .from(valoAIDrafts)
+      .where(and(eq(valoAIDrafts.workspaceId, actor.workspaceId), eq(valoAIDrafts.id, id)));
+    if (!row) throw new ValoProblem(404, "AI preview not found");
+    return row;
+  });
+  if (initial.status !== "running" || Date.now() - initial.createdAt.getTime() <= 90000)
+    return serializeAIPreview(initial);
   return workspaceTransaction(actor, async (tx) => {
     const [row] = await tx
       .select()
