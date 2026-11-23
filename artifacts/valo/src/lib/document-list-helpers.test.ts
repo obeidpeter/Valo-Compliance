@@ -6,6 +6,7 @@ import { blankContent } from "./api";
 import {
   documentContextSubtitle,
   documentKindLabel,
+  documentKindOptions,
   filterDocuments,
   readHiddenDocumentIds,
   suggestedDocumentTitle,
@@ -96,4 +97,21 @@ test("hidden document IDs persist cleanly and tolerate corrupt storage", () => {
 
   map.set("valo-hidden-docs-v1", "{bad json");
   assert.equal(readHiddenDocumentIds(storage).size, 0);
+});
+
+test("documentKindOptions and kind filtering group saved documents by type", () => {
+  const inv = doc("inv", "Invoice", compileGuidedContent(emptyGuidedData("TPL-01")) as CanonicalDocument);
+  const quote = doc("quo", "Quotation", compileGuidedContent(emptyGuidedData("TPL-02")) as CanonicalDocument);
+  const free = doc("free", "Notes", blankContent("Synthetic Trading"));
+  const all = [inv, quote, free];
+
+  assert.deepEqual(documentKindOptions(all), ["Freeform", "Invoice", "Quotation"]);
+  assert.deepEqual(
+    filterDocuments(all, "", "all", new Set(), "Invoice").map((d) => d.id),
+    ["inv"],
+  );
+  assert.deepEqual(
+    filterDocuments(all, "", "all", new Set(), "Quotation").map((d) => d.id),
+    ["quo"],
+  );
 });

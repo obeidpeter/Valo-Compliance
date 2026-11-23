@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   ArrowRight,
+  ArrowRightLeft,
   CopyPlus,
   Download,
   Eye,
@@ -26,8 +27,14 @@ import { EmptyState, ErrorState, Skel } from "@/components/states";
 import { missingFields } from "@/lib/api";
 import { anotherLike } from "@/lib/document-copy";
 import {
+  availableConversions,
+  convertGuidedDocument,
+  type ConversionTargetId,
+} from "@/lib/document-conversions";
+import {
   documentContextSubtitle,
   documentKindLabel,
+  documentKindOptions,
   filterDocuments,
   readHiddenDocumentIds,
   writeHiddenDocumentIds,
@@ -60,15 +67,17 @@ export function DocumentList({
     query: { enabled: enabled && searchable, queryKey: getListWorkspaceExportsQueryKey() },
   });
   const createCopy = useCreateDocument();
-  const [copyingId, setCopyingId] = useState<string | null>(null);
+  const [busyAction, setBusyAction] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<DocumentStatusFilter>("all");
+  const [kindFilter, setKindFilter] = useState("all");
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(() => new Set());
   const searchInputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     if (searchable) setHiddenIds(readHiddenDocumentIds());
   }, [searchable]);
-  const all = docs.data ?? [];
+  const all = useMemo(() => docs.data ?? [], [docs.data]);
+  const kindOptions = useMemo(() => (searchable ? documentKindOptions(all) : []), [all, searchable]);
   const hiddenCount = useMemo(
     () => (searchable ? all.filter((d) => hiddenIds.has(d.id)).length : 0),
     [all, hiddenIds, searchable],
@@ -82,9 +91,9 @@ export function DocumentList({
   }, [exportsList.data]);
   const trimmed = query.trim();
   const shown = useMemo(() => {
-    const filtered = searchable ? filterDocuments(all, query, status, hiddenIds) : all;
+    const filtered = searchable ? filterDocuments(all, query, status, hiddenIds, kindFilter) : all;
     return filtered.slice(0, limit);
-  }, [all, hiddenIds, limit, query, searchable, status]);
+  }, [all, hiddenIds, kindFilter, limit, query, searchable, status]);
   const showSearch = searchable && (all.length > 1 || hiddenCount > 0);
   useEffect(() => {
     if (!showSearch) return;
@@ -98,7 +107,7 @@ export function DocumentList({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [showSearch]);
-  const hasFilter = Boolean(trimmed || status !== "all");
+  const hasFilter = Boolean(trimmed || status !== "all" || kindFilter !== "all");
   const STATUS_FILTERS: { id: DocumentStatusFilter; label: string }[] = [
     { id: "all", label: "All" },
     { id: "incomplete", label: "Needs details" },
@@ -121,7 +130,7 @@ export function DocumentList({
   function makeAnotherFromList(d: BusinessDocument) {
     const start = anotherLike(d.content);
     if (!start || createCopy.isPending) return;
-    setCopyingId(d.id);
+    setBusyAction("copy:" + d.id);
     createCopy.mutate(
       { data: { title: d.title, content: start } },
       {
@@ -130,7 +139,24 @@ export function DocumentList({
           void qc.invalidateQueries({ queryKey: getGetWorkspaceQueryKey() });
           setLocation("/workspace/documents/" + made.id);
         },
-        onSettled: () => setCopyingId(null),
+        onSettled: () => setBusyAction(null),
+      },
+    );
+  }
+
+  function convertFromList(d: BusinessDocument, targetId: ConversionTargetId) {
+    const converted = convertGuidedDocument(d.content, targetId);
+    if (!converted || createCopy.isPending) return;
+    setBusyAction(`convert:${d.id}:${targetId}`);
+    createCopy.mutate(
+      { data: converted },
+      {
+        onSuccess: (made) => {
+          void qc.invalidateQueries({ queryKey: getListDocumentsQueryKey() });
+          void qc.invalidateQueries({ queryKey: getGetWorkspaceQueryKey() });
+          setLocation("/workspace/documents/" + made.id);
+        },
+        onSettled: () => setBusyAction(null),
       },
     );
   }
@@ -195,12 +221,44 @@ export function DocumentList({
                   onClick={() => {
                     setQuery("");
                     setStatus("all");
+                    setKindFilter("all");
                   }}
                   data-testid="button-clear-document-search"
                 >
                   <X className="h-4 w-4" aria-hidden="true" /> Clear
                 </button>
               )}
+            </div>
+          )}
+          {showSearch && kindOptions.length > 1 && (
+            <div
+              className="mb-4 flex flex-wrap items-center gap-1.5"
+              role="group"
+              aria-label="Filter documents by type"
+              data-testid="bar-document-kinds"
+            >
+              {["all", ...kindOptions].map((k) => {
+                const active = kindFilter === k;
+                return (
+                  <button
+                    key={k}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => setKindFilter(k)}
+                    className={cn(
+                      "rounded-full border px-3 py-1 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                      active
+                        ? "border-foreground bg-foreground text-background"
+                        : "border-border bg-card text-muted-foreground hover:text-foreground",
+                    )}
+                    data-testid={
+                      "filter-doc-kind-" + (k === "all" ? "all" : k.toLowerCase().replace(/\s+/g, "-"))
+                    }
+                  >
+                    {k === "all" ? "All types" : k}
+                  </button>
+                );
+              })}
             </div>
           )}
           {status === "hidden" && (
@@ -216,6 +274,7 @@ export function DocumentList({
                 const subtitle = documentContextSubtitle(d);
                 const readyExport = readyExportByDoc.get(d.id);
                 const canCopy = searchable && Boolean(anotherLike(d.content));
+                const conversions = searchable ? availableConversions(d.content) : [];
                 const isHidden = hiddenIds.has(d.id);
                 return (
                   <li
@@ -282,7 +341,7 @@ export function DocumentList({
                             onClick={() => makeAnotherFromList(d)}
                             data-testid={"button-quick-copy-" + d.id}
                           >
-                            {copyingId === d.id ? (
+                            {busyAction === "copy:" + d.id ? (
                               <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
                             ) : (
                               <CopyPlus className="h-3.5 w-3.5" aria-hidden="true" />
@@ -290,6 +349,23 @@ export function DocumentList({
                             Make another
                           </button>
                         )}
+                        {conversions.map((opt) => (
+                          <button
+                            key={opt.targetId}
+                            type="button"
+                            className="btn btn-ghost btn-sm !min-h-8 !px-3 text-xs"
+                            disabled={createCopy.isPending}
+                            onClick={() => convertFromList(d, opt.targetId)}
+                            data-testid={`button-quick-convert-${d.id}-${opt.targetId}`}
+                          >
+                            {busyAction === `convert:${d.id}:${opt.targetId}` ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                            ) : (
+                              <ArrowRightLeft className="h-3.5 w-3.5" aria-hidden="true" />
+                            )}
+                            {opt.label}
+                          </button>
+                        ))}
                         <button
                           type="button"
                           className="btn btn-ghost btn-sm ml-auto !min-h-8 !px-3 text-xs text-muted-foreground"
@@ -325,6 +401,7 @@ export function DocumentList({
                 onClick={() => {
                   setQuery("");
                   setStatus("all");
+                  setKindFilter("all");
                 }}
               >
                 Show all documents
