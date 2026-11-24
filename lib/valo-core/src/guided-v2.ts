@@ -33,6 +33,12 @@ export type GuidedSpecV2 = {
   >;
   /** Choice options that keep no passage of the text, each declared so that none is missed. */
   keepsNothing?: readonly { question: string; option: string }[];
+  /** Choices the form works out from its answers, which keep passages as a choice's options do: a
+   * payment reminder's timing paragraph, from its due date and its own date, for example. Null while
+   * the answers needed are not all given and valid, when the passage kept while unanswered prints. */
+  derived?: Readonly<
+    Record<string, { options: readonly string[]; of: (data: GuidedDataV2) => string | null }>
+  >;
   /** v1's date order checks, carried with its questions: a later date before an earlier one. */
   dateOrder?: GuidedSpec["dateOrder"];
 };

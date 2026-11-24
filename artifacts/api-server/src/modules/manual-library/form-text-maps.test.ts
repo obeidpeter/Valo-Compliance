@@ -34,21 +34,38 @@ function subsequence(part: string[], whole: string[]) {
   }
   return true;
 }
-/** Every combination of answers to the form's choices and confirmations, each also unanswered. */
+/** Every combination of answers to the form's choices, confirmations and worked-out choices, each
+ * also unanswered. */
 function choiceCombinations(spec: GuidedSpecV2) {
+  const choices: [string, readonly string[]][] = [
+    ...spec.fields
+      .filter((f) => f.clause || f.type === "acknowledgement")
+      .map((f): [string, readonly string[]] => [
+        f.id,
+        f.clause ? (f.options ?? []).map((o) => o.value) : ["yes"],
+      ]),
+    ...Object.entries(spec.derived ?? {}).map(([id, d]): [string, readonly string[]] => [id, d.options]),
+  ];
   let combinations: Record<string, string>[] = [{}];
-  for (const choice of spec.fields.filter((f) => f.clause || f.type === "acknowledgement"))
+  for (const [id, options] of choices)
     combinations = combinations.flatMap((values) =>
-      ["", ...(choice.clause ? (choice.options ?? []).map((o) => o.value) : ["yes"])].map((option) => ({
-        ...values,
-        [choice.id]: option,
-      })),
+      ["", ...options].map((option) => ({ ...values, [id]: option })),
     );
   return combinations;
 }
+/** Whether `part` uses no word more often than `whole` has it. */
+function fromWords(part: string[], whole: string[]) {
+  const left = new Map<string, number>();
+  for (const word of whole) left.set(word, (left.get(word) ?? 0) + 1);
+  return part.every((word) => {
+    const n = left.get(word) ?? 0;
+    left.set(word, n - 1);
+    return n > 0;
+  });
+}
 
 test("every map turns its retained draft into form text that the v2 form fits exactly", async () => {
-  assert.deepEqual(mapped, ["TPL-01", "TPL-02", "TPL-03", "TPL-04", "TPL-05", "TPL-08"]);
+  assert.deepEqual(mapped, ["TPL-01", "TPL-02", "TPL-03", "TPL-04", "TPL-05", "TPL-08", "TPL-12"]);
   for (const templateId of mapped) {
     const spec = GUIDED_SPECS_V2[templateId];
     assert.ok(spec, templateId);
@@ -73,26 +90,38 @@ test("form text adds no words: with its slots left empty, every combination of c
     const text = parseFormText((await proposedFormText(templateId))!);
     // Calculations left empty too: they print their placeholders. A choice that also fills a slot,
     // such as a delivery's status, is an answer there, so its slot is left empty like any other.
-    const empty: GuidedSpecV2 = {
+    const empty = (choices: Record<string, string>): GuidedSpecV2 => ({
       ...spec,
       fields: spec.fields.map((f) => (f.clause && f.tokens ? { ...f, tokens: [] } : f)),
       calculated: Object.fromEntries(Object.keys(spec.calculated ?? {}).map((name) => [name, () => null])),
-    };
+      // A worked-out choice takes each of its options in turn.
+      ...(spec.derived
+        ? {
+            derived: Object.fromEntries(
+              Object.entries(spec.derived).map(([id, d]) => [id, { ...d, of: () => choices[id] || null }]),
+            ),
+          }
+        : {}),
+    });
+    // A map that moves the draft's words, each move with its reason, keeps to them without keeping
+    // their order; every other map keeps their order too.
+    const moves = FORM_TEXT_MAPS[templateId]!.some((change) => change.moves);
     const combinations = choiceCombinations(spec);
     assert.ok(combinations.length > 1, templateId);
     for (const choices of combinations) {
       const data = emptyFormData(spec);
       data.values = { ...data.values, ...choices };
-      const out = compileForm(empty, text, data);
+      const out = compileForm(empty(choices), text, data);
+      const printed = [...words(out.title), ...printedWords(out.blocks)];
       assert.ok(
-        subsequence([...words(out.title), ...printedWords(out.blocks)], draft),
+        moves ? fromWords(printed, draft) : subsequence(printed, draft),
         `${templateId} ${JSON.stringify(choices)}`,
       );
     }
     // Each change that leaves words out, or keeps them only for an answer, says why.
     for (const change of FORM_TEXT_MAPS[templateId]!) {
       const leavesOut = !subsequence(words(change.from), words(change.to.replace(/\{[^}]*\}/g, "")));
-      if (leavesOut || change.to.includes("{?")) assert.ok(change.why, change.from);
+      if (leavesOut || change.to.includes("{?") || change.moves) assert.ok(change.why, change.from);
     }
   }
 });
@@ -108,7 +137,8 @@ test("a v2 form asks v1's questions unchanged, and lists each question it adds o
           changes.added.some((a) => a.id === field.id && a.why),
           field.id,
         );
-        assert.ok(field.tokens?.length, `${field.id} serves a slot`);
+        // A new question serves a slot, or is a choice whose options keep passages.
+        assert.ok(field.tokens?.length || field.clause, `${field.id} serves a slot or keeps passages`);
         continue;
       }
       const { tokens: _tokens, clause: _clause, example: _example, ...asked } = field;
@@ -496,6 +526,92 @@ test("meeting minutes' answers fill their own wording: the attendees, a heading,
   assert.deepEqual(compileForm(spec, text, data).unfilled, []);
   // Up to 20 topics, each with its heading, discussion and outcome.
   assert.equal(spec.tables.find((t) => t.id === "decisions")!.maxRows, 20);
+});
+
+test("a payment reminder's answers fill its own letter: the balance by the draft's formula, the timing paragraph from its due date and its own date, and a dispute or arrangement only when chosen", async () => {
+  const spec = GUIDED_SPECS_V2["TPL-12"]!;
+  const text = parseFormText((await proposedFormText("TPL-12"))!);
+  const data = emptyFormData(spec);
+  data.values = {
+    ...data.values,
+    issuerName: "Synthetic Supplies Ltd",
+    issuerAddress: "accounts@synthetic.example",
+    issueDate: "2026-11-20",
+    recipientName: "Synthetic Buyer Ltd",
+    invoiceReference: "SYN-INV-001",
+    invoiceIssueDate: "2026-11-02",
+    billingBasis: "synthetic October supplies",
+    invoiceDueDate: "2026-11-16",
+    balanceDate: "2026-11-19",
+    invoiceAmountKobo: "265002",
+    paymentsKnown: "listed",
+    creditsKobo: "0",
+    disputeKind: "none",
+    replyContact: "accounts@synthetic.example",
+    senderName: "Synthetic accounts officer",
+  };
+  data.tables.payments = [{ reference: "SYN-TRF-1", amountKobo: "100000" }];
+  const shown = (
+    values: Record<string, string>,
+    payments: Record<string, string>[] = data.tables.payments ?? [],
+  ) =>
+    compileForm(spec, text, {
+      ...data,
+      values: { ...data.values, ...values },
+      tables: { payments },
+    }).blocks.map((b) => b.text);
+  const letter = shown({});
+  assert.ok(
+    letter.includes(
+      "As of 19 Nov 2026, our records show an original invoice amount of ₦2,650.02, payments of ₦1,000.00 and confirmed credits or reductions of ₦0.00.",
+    ),
+  );
+  assert.ok(letter.some((p) => p.endsWith("the remaining recorded balance is ₦1,650.02.")));
+  assert.ok(
+    letter.includes(
+      "The agreed payment date recorded for this invoice was 16 Nov 2026. Please let us know the expected payment date, or raise any issue that needs resolving.",
+    ),
+  );
+  assert.deepEqual(compileForm(spec, text, data).unfilled, []);
+  // The timing paragraph follows the dates: due on the letter's date, or still ahead.
+  assert.ok(
+    shown({ invoiceDueDate: "2026-11-20" }).some((p) =>
+      p.startsWith("The payment date recorded for this invoice is today, 20 Nov 2026."),
+    ),
+  );
+  assert.ok(
+    shown({ invoiceDueDate: "2026-11-30" }).includes(
+      "The payment date recorded for this invoice is 30 Nov 2026. This is a reminder ahead of that date.",
+    ),
+  );
+  // A dispute prints its paragraph, with the amount once given; an arrangement its own.
+  const disputed = shown({ disputeKind: "dispute", dispute: "the delivery date", disputedKobo: "50000" });
+  assert.ok(
+    disputed.includes(
+      "We understand that the delivery date is still being discussed. The amount currently identified as disputed is ₦500.00. This message does not treat that issue as settled.",
+    ),
+  );
+  assert.ok(
+    shown({ disputeKind: "arrangement", dispute: "two monthly payments" }).includes(
+      "Our recorded arrangement is two monthly payments. Please let us know if our understanding is incorrect or if you need to discuss it.",
+    ),
+  );
+  // No balance prints while payments are unresolved, when a payment is listed twice, or when nothing is
+  // owed: the letter is then not complete.
+  const unbalanced = (
+    values: Record<string, string>,
+    payments: Record<string, string>[] = data.tables.payments ?? [],
+  ) =>
+    compileForm(spec, text, { ...data, values: { ...data.values, ...values }, tables: { payments } })
+      .unfilled;
+  assert.ok(unbalanced({ paymentsKnown: "unknown" }).includes("calc.balance"));
+  assert.ok(
+    unbalanced({}, [
+      { reference: "SYN-TRF-1", amountKobo: "100000" },
+      { reference: "syn-trf-1", amountKobo: "100000" },
+    ]).includes("calc.balance"),
+  );
+  assert.ok(unbalanced({ creditsKobo: "165002" }).includes("calc.balance"));
 });
 
 test("an invoice form document is saved as its answers make it, hashed as V2, and its file prints the template's wording with only its note among its fields", async () => {
