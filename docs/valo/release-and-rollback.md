@@ -75,7 +75,10 @@ Everything that runs is tied to that SHA.
    It records:
    - the commit;
    - the migrations the release ships and those the database has applied, and whether they match;
-   - every content and rule version with its status;
+   - every content version with its status: the reviewed route's versions and the staff library's
+     drafts, releases, replacements and withdrawals (decision 0018), by identity and digest;
+   - every rule version with its status and how it was released: on the reviewed route or on the
+     owner's sign-off (decision 0020);
    - the known issues in `docs/valo/known-issues.json` as committed.
 
    It only reads. Update the known issues before the release commit.

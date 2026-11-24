@@ -46,8 +46,19 @@ const audit = (paths: string[][], high = paths.length) => ({
     },
   },
 });
+// The gate tolerates no advisory today (REVIEWED_DEPENDENCY_ADVISORIES is empty), so its handling of
+// a reviewed one is tested with this synthetic review of the advisory it last tolerated.
+const reviewed: typeof REVIEWED_DEPENDENCY_ADVISORIES = [
+  {
+    id: "GHSA-fc5q-39xc-vjpf",
+    package: "picomatch",
+    within: ["lib__api-spec>orval>"],
+    reason: "Synthetic review for the gate's own test; not a review of the advisory.",
+    reviewedOn: "2026-11-17",
+  },
+];
 const review = (installed: string[]) => ({
-  advisories: REVIEWED_DEPENDENCY_ADVISORIES,
+  advisories: reviewed,
   installedPaths: { picomatch: installed },
 });
 
@@ -120,4 +131,17 @@ test("installed dependency paths follow every chain and name non-development roo
     reviewedPath,
   ]);
   assert.throws(() => installedDependencyPaths({}, "picomatch", root), /UNAVAILABLE/);
+});
+
+// SEC-007: an advisory the audit no longer reports is not kept as an exception. With none reviewed,
+// any advisory the audit reports blocks the merge.
+test("no advisory is tolerated today, so any the audit reports blocks", () => {
+  assert.deepEqual(REVIEWED_DEPENDENCY_ADVISORIES, []);
+  assert.equal(
+    dependencySummary(audit([[reviewedPath]]), {
+      advisories: REVIEWED_DEPENDENCY_ADVISORIES,
+      installedPaths: { picomatch: [reviewedPath] },
+    }).status,
+    "blocked",
+  );
 });

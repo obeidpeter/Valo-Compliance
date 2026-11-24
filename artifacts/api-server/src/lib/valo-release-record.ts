@@ -4,8 +4,10 @@ import { z } from "zod";
 /**
  * The release record (OPS-005 accepts "the release identifies commit, migration, content/rule
  * versions and known issues"). It names the release commit, the migrations the release ships and
- * those the database has applied, every content and rule version with its status, and the known
- * issues as committed at the release. It only reads.
+ * those the database has applied, every content version (of the reviewed route and of the staff
+ * library, decision 0018) and every rule version with its status and how it was released, and the
+ * known issues as committed at the release. It only reads. It names versions by their identities and
+ * digests, never by their text.
  */
 type Queryable = { query: (text: string) => Promise<{ rows: Record<string, unknown>[] }> };
 
@@ -77,9 +79,24 @@ export async function buildReleaseRecord(
     candidateHash: String(row.candidate_hash),
     publishedAt: iso(row.published_at),
   }));
+  // A staff library entry's versions (decision 0018): drafts, releases, replacements and withdrawals.
+  const library = (
+    await db.query(
+      "select id, item_id, version, kind, state, digest, published_at, closed_at from valo_manual_library order by item_id, version",
+    )
+  ).rows.map((row) => ({
+    versionId: String(row.id),
+    itemId: String(row.item_id),
+    version: Number(row.version),
+    kind: String(row.kind),
+    state: String(row.state),
+    digest: String(row.digest),
+    publishedAt: iso(row.published_at),
+    closedAt: iso(row.closed_at),
+  }));
   const rules = (
     await db.query(
-      "select id, rule_id, version, status, manifest_hash, published_at from valo_rule_releases order by rule_id, version",
+      "select id, rule_id, version, status, manifest_hash, published_at, rule->>'provenance' as provenance from valo_rule_releases order by rule_id, version",
     )
   ).rows.map((row) => ({
     releaseId: String(row.id),
@@ -88,6 +105,8 @@ export async function buildReleaseRecord(
     status: String(row.status),
     manifestHash: String(row.manifest_hash),
     publishedAt: iso(row.published_at),
+    // The reviewed route (editorial_release) or the owner's sign-off (owner_signoff, decision 0020).
+    provenance: row.provenance == null ? null : String(row.provenance),
   }));
   return {
     kind: "valo-release-record-v1" as const,
@@ -95,6 +114,7 @@ export async function buildReleaseRecord(
     recordedAt: (input.now ?? new Date()).toISOString(),
     migrations: { shipped: { count: journal.entries.length, latest: shipped.tag }, applied },
     content,
+    library,
     rules,
     knownIssues: known.issues,
   };

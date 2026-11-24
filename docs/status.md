@@ -30,7 +30,7 @@ No recorded evidence at all: none.
 
 ## Tests cited as evidence
 
-`docs/registers/ci-evidence.json` holds 433 citations of 289 tests for 126 requirements (decision 0010).
+`docs/registers/ci-evidence.json` holds 437 citations of 293 tests for 126 requirements (decision 0010).
 A CI job fails when a test cited for it does not pass, and each run's `readiness-report` artifact lists every citation's result.
 A citation is partial evidence: it never accepts a requirement.
 
@@ -39,10 +39,10 @@ A citation is partial evidence: it never accepts a requirement.
 | ADM-001 | 2 | postgres |
 | ADM-002 | 4 | foundation, postgres |
 | ADM-003 | 2 | postgres |
-| ADM-004 | 3 | foundation, postgres |
+| ADM-004 | 4 | foundation, postgres |
 | ADM-005 | 3 | foundation, postgres |
 | ADM-006 | 1 | postgres |
-| ADM-007 | 3 | foundation, postgres |
+| ADM-007 | 4 | foundation, postgres |
 | ADM-008 | 4 | postgres |
 | ADM-009 | 3 | foundation, postgres |
 | AI-001 | 1 | foundation |
@@ -79,7 +79,7 @@ A citation is partial evidence: it never accepts a requirement.
 | EDP-005 | 10 | foundation, postgres |
 | EDP-006 | 6 | foundation |
 | EDP-007 | 11 | foundation, postgres |
-| EDP-008 | 4 | foundation |
+| EDP-008 | 6 | foundation |
 | EDP-009 | 6 | foundation, postgres |
 | EDP-010 | 8 | foundation, postgres |
 | EDP-011 | 8 | foundation, postgres, web-performance |

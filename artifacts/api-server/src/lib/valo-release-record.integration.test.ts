@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -46,12 +47,60 @@ test(
       assert.ok(
         record.content.some((c) => c.versionId === held.id && c.status === "held" && c.publishedAt === null),
       );
-      const rules = (await pool.query("select id, status from valo_rule_releases order by rule_id, version"))
-        .rows;
+      // Each rule version says how it was released: on the reviewed route or the owner's sign-off.
+      const rules = (
+        await pool.query(
+          "select id, status, rule->>'provenance' as provenance from valo_rule_releases order by rule_id, version",
+        )
+      ).rows;
       assert.deepEqual(
-        record.rules.map((r) => [r.releaseId, r.status]),
-        rules.map((r) => [r.id, r.status]),
+        record.rules.map((r) => [r.releaseId, r.status, r.provenance]),
+        rules.map((r) => [r.id, r.status, r.provenance]),
       );
+
+      // Every staff library version too (decision 0018). A synthetic Content editor's draft is saved
+      // in a transaction that is rolled back, so no later test sees it; the record names it by its
+      // identity, state and digest, and never by its text.
+      const client = await pool.connect();
+      try {
+        await client.query("begin");
+        const editor = `synthetic-release-editor-${randomUUID()}`,
+          itemId = randomUUID(),
+          draftId = randomUUID();
+        await client.query(
+          "insert into valo_staff_assignments(id, identity_id, role, granted_by, reason) values ($1, $2, 'content', 'synthetic test', 'Synthetic release record test')",
+          [randomUUID(), editor],
+        );
+        await client.query(
+          "insert into valo_manual_library(id, item_id, version, slug, kind, title, body, digest, created_by) values ($1, $2, 1, $3, 'practical_guide', 'Synthetic release-record draft', 'Synthetic draft body for the release record.', $4, $5)",
+          [draftId, itemId, `manual-${itemId}`, "c".repeat(64), editor],
+        );
+        const withDraft = await buildReleaseRecord(client, { releaseSha, journalPath, knownIssuesPath });
+        const library = (
+          await client.query("select id, state from valo_manual_library order by item_id, version")
+        ).rows;
+        assert.deepEqual(
+          withDraft.library.map((l) => [l.versionId, l.state]),
+          library.map((r) => [r.id, r.state]),
+        );
+        assert.deepEqual(
+          withDraft.library.find((l) => l.versionId === draftId),
+          {
+            versionId: draftId,
+            itemId,
+            version: 1,
+            kind: "practical_guide",
+            state: "draft",
+            digest: "c".repeat(64),
+            publishedAt: null,
+            closedAt: null,
+          },
+        );
+        assert.ok(!JSON.stringify(withDraft).includes("Synthetic draft body for the release record."));
+      } finally {
+        await client.query("rollback");
+        client.release();
+      }
 
       // The known issues exactly as committed.
       const known = JSON.parse(await readFile(knownIssuesPath, "utf8"));
