@@ -13,6 +13,9 @@ test("quota defaults preserve the requested initial ceilings", () => {
     "page-render-read": 600,
     "customer-ai": 5,
     "checkout-create": 10,
+    // Checkout's account limit has its own counter, so the day's count is never read against the
+    // minute's ceiling (SEC-005).
+    "checkout-create-day": 100,
     "export-create": 10,
     "profile-write": 20,
     "profile-write-day": 200,

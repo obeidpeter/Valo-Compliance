@@ -75,16 +75,23 @@ test(
     assert.ok((await reading(readinessQueries.deniedAccess)) >= 3);
     assert.ok((await reading(readinessQueries.signatureFailures)) >= 1);
     // A caller at a quota limit is read as bulk exports, unusual payment activity or unusual AI use.
-    for (const [bucket, limit, query] of [
-      ["export-create", 10, readinessQueries.bulkExports],
-      ["checkout-create", 10, readinessQueries.paymentActivity],
-      ["customer-ai", 5, readinessQueries.aiActivity],
+    for (const [bucket, limit, query, window] of [
+      ["export-create", 10, readinessQueries.bulkExports, "minute"],
+      ["checkout-create", 10, readinessQueries.paymentActivity, "minute"],
+      ["checkout-create-day", 100, readinessQueries.paymentActivity, "day"],
+      ["customer-ai", 5, readinessQueries.aiActivity, "minute"],
     ] as const) {
       const before = await reading(query);
       await db.execute(sql`insert into valo_rate_buckets(bucket, subject_hash, window_started_at, used_count, expires_at)
-        values(${bucket}, ${hashOf(`synthetic-${randomUUID()}`)}, date_trunc('minute', now()), ${limit}, now() + interval '2 minutes')`);
+        values(${bucket}, ${hashOf(`synthetic-${randomUUID()}`)}, date_trunc(${window}, now()), ${limit}, now() + interval '2 days')`);
       assert.equal(await reading(query), before + 1, bucket);
     }
+    // SEC-005: ten checkouts in a day are a tenth of checkout's day limit, kept in a counter of its
+    // own, and raise no payment alert. They did when the day was counted under the minute's name.
+    const quiet = await reading(readinessQueries.paymentActivity);
+    await db.execute(sql`insert into valo_rate_buckets(bucket, subject_hash, window_started_at, used_count, expires_at)
+      values('checkout-create-day', ${hashOf(`synthetic-${randomUUID()}`)}, date_trunc('day', now()), 10, now() + interval '2 days')`);
+    assert.equal(await reading(readinessQueries.paymentActivity), quiet);
     assert.ok((await reading(readinessQueries.roleChanges)) >= 0);
 
     // Counting refuses to run inside a workspace scope, and its subject is a keyed hash that differs

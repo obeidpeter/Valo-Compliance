@@ -17,6 +17,8 @@ import {
 import { resolveWorkspace } from "../workspaces";
 import * as commerce from "./valo-commerce";
 import { verifiedTransaction } from "./valo-paystack-contract";
+import { quotaSubjectHash } from "../../lib/valo-quota";
+import { setting } from "../../platform/settings";
 import { financeHeldFixture } from "./valo-finance-test-fixture";
 import { guardNestedConnections } from "../../test-support/nested-connection-guard";
 
@@ -471,6 +473,25 @@ test(
           const o = await fixture();
           await assert.rejects(commerce.refreshOrder(a, o!.id), { status: 503 });
           await assert.rejects(commerce.purchaseReceipt(a, o!.id), { status: 409 });
+          // SEC-005: the refresh counted against checkout's minute ceiling and its day limit, each in
+          // a counter of its own, and the day's counter starts at the day's start. (This customer's
+          // refund requests above keep counters of their own, which are not read here.)
+          const counters = await db.execute<{ bucket: string; daily: boolean; used: number }>(sql`
+            select bucket,
+              (window_started_at at time zone 'UTC') = date_trunc('day', window_started_at at time zone 'UTC') as daily,
+              used_count as used
+            from valo_rate_buckets
+            where subject_hash = ${quotaSubjectHash(setting("SESSION_SECRET"), "user", a.identityId)}
+              and bucket like 'checkout-%'
+            order by bucket, window_started_at`);
+          assert.deepEqual(
+            [...new Set(counters.rows.map((r) => r.bucket))],
+            ["checkout-create", "checkout-create-day"],
+          );
+          const day = counters.rows.filter((r) => r.bucket === "checkout-create-day");
+          assert.equal(day.length, 1);
+          assert.equal(day[0]!.daily, true);
+          assert.ok(day[0]!.used >= 1);
         },
       );
       console.log(
