@@ -940,4 +940,51 @@ export const guideAmendmentRecords: readonly AmendmentRecord[] = [
     limits:
       "The search covers the commission's listing and the file's own address, the National Assembly's published list of Acts and its bill tracker, on the days shown. The National Assembly's list does not hold every Act. Three Acts in it were searched for the Labour Act's name and not otherwise read, and one bill was read. Whether an Act on another subject changes the Labour Act in passing was not looked for. Regulations made under the Act, state laws, the National Minimum Wage Act as it now stands and court decisions were not looked for. No Gazette index was searched. The comparison with a second copy covers only the five passages the guides quote, and neither copy is the Gazette's.",
   },
+  // The Food, Drugs and Related Products (Registration, etc.) Act, for the product-registration rule
+  // (decision 0020). Searched on 24 November 2026; nothing found that amends it.
+  {
+    instrument: "NAFDAC-CAP-F33",
+    title: "Food, Drugs and Related Products (Registration, etc.) Act, Cap F33",
+    url: "https://www.nafdac.gov.ng/wp-content/uploads/Files/Resources/Regulations/NAFDAC_Acts/FOOD-DRUGS-AND-RELATED-PRODUCTS-REGISTRATION-ACT-Cap.F.33.pdf",
+    rawSha256: "3099b153d913872ef0d839110a65c8451f758d145eeadd54ebc2f049ff663f07",
+    commencement: { printed: "[27th January, 1993]", effectiveFrom: "1993-01-27T00:00:00+01:00" },
+    searches: [
+      {
+        place: "NAFDAC: the Act as NAFDAC serves it",
+        url: "https://www.nafdac.gov.ng/wp-content/uploads/Files/Resources/Regulations/NAFDAC_Acts/FOOD-DRUGS-AND-RELATED-PRODUCTS-REGISTRATION-ACT-Cap.F.33.pdf",
+        searchedAt: "2026-11-24T14:05:45Z",
+        rawSha256: "3099b153d913872ef0d839110a65c8451f758d145eeadd54ebc2f049ff663f07",
+        found: "The same file as the copy retrieved on 14 November 2026, byte for byte.",
+      },
+      {
+        place: "NAFDAC: its page of the laws it administers",
+        url: "https://nafdac.gov.ng/about-nafdac/nafdac-laws/",
+        searchedAt: "2026-11-24T14:06:07Z",
+        rawSha256: "322d7c9820e92b51926b3f398a1f694cb2e5ebea369fa5f06673211f48da1a23",
+        found:
+          "Four laws: the NAFDAC Act (Cap N1), the Counterfeit and Fake Drugs and Unwholesome Processed Foods (Miscellaneous Provisions) Act (Cap C34), the Food and Drug Act (Cap F32) and this Act (Cap F33). It notes no amendment of this Act, and says its content is current as of 11 January 2024.",
+      },
+      {
+        place: "NAFDAC: its index of regulations",
+        url: "https://nafdac.gov.ng/resources/nafdac-regulations/",
+        searchedAt: "2026-11-24T14:06:12Z",
+        rawSha256: "5198808be06925a90dd7cfb6cac7adaf6c6d4f7fccf055d1d793c1bd4e331b40",
+        found:
+          "No entry is named as an amendment of the Act. The page says its content is current as of 12 May 2025.",
+      },
+      {
+        place: "National Assembly: its list of Acts and publications",
+        url: NASS_ACTS_LIST,
+        searchedAt: "2026-11-24T14:06:46Z",
+        rawSha256: "25274f83bbd57258cfa1e835ff7ba50fbe14e22227b3c9f5c154bb5c5810872e",
+        found:
+          "182 entries, from the 4th to the 10th National Assembly, 136 of them undated; the latest is dated 13 November 2026. None names food, drugs, NAFDAC, cosmetics or medical devices.",
+      },
+    ],
+    amendments: [],
+    notRead: [],
+    conflicts: [],
+    limits:
+      "The search covers NAFDAC's copy of the Act, its page of the laws it administers and its index of regulations, and the National Assembly's published list, on the day shown. The list holds 182 entries, not every Act passed, and 136 of them are undated. The copy is the 2004 revision of the Laws of the Federation; whether an earlier decree changed it before that revision was not looked for. Regulations made under the Act were not read. No Gazette index was searched and no court decision was looked for.",
+  },
 ];

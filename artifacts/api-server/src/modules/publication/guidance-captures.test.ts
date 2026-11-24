@@ -54,6 +54,8 @@ const pageCapture = (leadId: string, text: string): GuideCapture => ({
 test("each address a guide's passages are read from is a known official source", () => {
   assert.deepEqual([...guideCaptureLeads].sort(), [
     "CAC-BN-PROCESS",
+    // The Act the product-registration rule quotes (decision 0020); no guide quotes it.
+    "NAFDAC-CAP-F33",
     "NAFDAC-FRR-GDL-003-01",
     "NAFDAC-FRRA-GDL-002-01",
     "NAFDAC-FSAN-GDL-001-03",

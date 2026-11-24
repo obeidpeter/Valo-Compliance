@@ -747,11 +747,211 @@ const companyReturnRule: OwnerRuleCandidate = {
   ],
 };
 
-/** The rules prepared for the owner's sign-off: three of decision 0020's four research notes. The
- * NAFDAC note waits for a registered official copy of its Act (decision 0020, Consequences).
- * Preparing a rule here releases nothing: the owner signs each version in Staff → System. */
+// Sections 1 and 13 of the Food, Drugs and Related Products (Registration, etc.) Act, Cap F33 of the
+// Laws of the Federation of Nigeria 2004, from NAFDAC's own copy (NAFDAC-CAP-F33), which prints its
+// commencement as 27 January 1993 and is the same file, byte for byte, on 14 and 24 November 2026.
+// The Act's amendment record says what was searched on 24 November 2026. The research note is the
+// product candidate in `checker-source-candidates.ts`.
+const f33 = { leadId: "NAFDAC-CAP-F33" } as const;
+const registrationQuote = "No processed food, drug, drug product, cosmetic, medical device or water";
+const samplePermitQuote = "or manufacture of a sample of drug, drug product, cosmetic or medical";
+const foodExclusionQuote = "live animals, birds and fish;";
+const cosmeticQuote = "attractiveness or altering the complexion, skin, hair or teeth and includes";
+/**
+ * The product-registration rule's rights record. The owner did not answer for this rule in
+ * particular: on 24 November 2026 the owner left the finishing plan's decisions to the coding agent,
+ * and the rule is prepared on the basis the owner chose that day for the other three. The owner gives
+ * that basis, or not, by signing a version.
+ */
+const productRegistrationAdoption =
+  "On 24 November 2026 the Valo development owner left the finishing plan's decisions to the coding agent (\"Implement all (make the best decisions for me)\"), and the product-registration rule is prepared on the basis the owner chose that day for the other three rules: the owner adopts it as Valo's own and allows its commercial use. The owner has not answered for this rule in particular, and gives that basis, or not, by signing a version. What the requirements check tells a customer comes from the research note committed on 14 November 2026, with no record of how it was written; the rule's title, scope, limits, assumptions and claims were written for it on 24 November 2026. Official text is quoted no more than 20 words in a row, as the guidance policy's point 7 allows. No copyright opinion, exclusivity, non-infringement or clearance of anyone else's rights is claimed.";
+
+const productRegistrationRule: OwnerRuleCandidate = {
+  rule: {
+    id: "nafdac-f33-product-registration",
+    requirementVersionId: "NAFDAC-F33-PRODUCT-REGISTRATION",
+    title: "Registering a food, drug, cosmetic, medical device or water product with NAFDAC",
+    jurisdiction: { level: "federal" },
+    validFrom: "1993-01-27",
+    validTo: null,
+    reason:
+      "Section 1 of the Food, Drugs and Related Products (Registration, etc.) Act says no processed food, drug, drug product, cosmetic, medical device or water may be made, imported, exported, advertised, sold or distributed in Nigeria unless it is registered.",
+    nextStep:
+      "Check with NAFDAC that each product you make, import, export, advertise, sell or distribute is registered before you supply it.",
+    relatedTemplateIds: [],
+    evaluator: {
+      family: "product",
+      version: "source-family-v1",
+      algorithmHash: sourceFamilyAlgorithmHashes.product,
+    },
+  },
+  risk: "regulated_sector",
+  scope:
+    "Whether a product a business makes, imports, exports, advertises, sells or distributes in Nigeria must be registered under section 1 of the Food, Drugs and Related Products (Registration, etc.) Act, Cap F33, read with section 13's meanings of food and cosmetic.",
+  limitations:
+    "It does not say how to register a product, what NAFDAC charges, whether a micro-scale or local-manufacturer route applies, or whether a registration the business already holds covers the product: NAFDAC decides those. Regulations made under the Act, NAFDAC's guidelines and the Act's other sections are not read.",
+  assumptions: [
+    "The Act is the revision in the Laws of the Federation of Nigeria 2004 (Cap F33) as NAFDAC serves it, in force from 27 January 1993 as it prints.",
+    "The product, its category and what the business does with it are taken as the customer gives them; Valo does not verify them.",
+  ],
+  unresolvedMaterialIssues: [],
+  missingEvidence: [],
+  sources: [
+    {
+      id: "f33-1",
+      passageId: "NAFDAC-F33-PAGE-2",
+      ...f33,
+      locator: "section 1(1)",
+      quote: registrationQuote,
+    },
+    {
+      id: "f33-13",
+      passageId: "NAFDAC-F33-PAGE-7",
+      ...f33,
+      locator: 'section 13, "food"',
+      quote: foodExclusionQuote,
+    },
+  ],
+  claims: [
+    {
+      text: "No processed food, drug, drug product, cosmetic, medical device or water may be manufactured, imported, exported, advertised, sold or distributed in Nigeria unless it is registered under the Act or regulations made under it.",
+      kind: "source_statement",
+      sourceId: "f33-1",
+      quote: registrationQuote,
+      locator: "section 1(1)",
+      numbers: [],
+    },
+    {
+      text: "NAFDAC may grant a permit to import or manufacture a sample of a drug, drug product, cosmetic or medical device for registration or a clinical trial, on the conditions the permit sets; the subsection does not name processed food.",
+      kind: "source_statement",
+      sourceId: "f33-1",
+      quote: samplePermitQuote,
+      locator: "section 1(2)",
+      numbers: [],
+    },
+    {
+      text: "Food, for the Act, excludes live animals, birds and fish, and articles or substances used as drugs.",
+      kind: "source_statement",
+      sourceId: "f33-13",
+      quote: foodExclusionQuote,
+      locator: 'section 13, "food"',
+      numbers: [],
+    },
+    {
+      text: "A cosmetic includes any substance applied to the body for cleansing, beautifying, promoting attractiveness or altering the complexion, skin, hair or teeth, and includes deodorants and detergent powder.",
+      kind: "source_statement",
+      sourceId: "f33-13",
+      quote: cosmeticQuote,
+      locator: 'section 13, "cosmetic"',
+      numbers: [],
+    },
+  ],
+  rights: adopted(productRegistrationAdoption),
+  scenarios: [
+    scenario(
+      "manufactures-processed-food",
+      {
+        product: { productCategory: "processed_food", manufacturesInNigeria: true, activity: "manufacture" },
+      },
+      "Likely relevant",
+    ),
+    scenario(
+      "imports-and-distributes-cosmetics",
+      {
+        product: {
+          productCategory: "cosmetic",
+          manufacturesInNigeria: false,
+          activity: "import_and_distribute",
+        },
+      },
+      "Likely relevant",
+    ),
+    scenario(
+      "resells-drug-products",
+      { product: { productCategory: "drug_product", manufacturesInNigeria: false, activity: "resale_only" } },
+      "Likely relevant",
+    ),
+    scenario(
+      "bottles-water-under-its-own-brand",
+      {
+        product: { productCategory: "water", activity: "own_brand_repackaging", ownBrandOrRepackaging: true },
+      },
+      "Likely relevant",
+    ),
+    scenario(
+      "cosmetic-sold-with-therapeutic-claims",
+      {
+        product: {
+          productCategory: "claimed_cosmetic",
+          therapeuticClaims: true,
+          commercialSupplyInNigeria: true,
+        },
+      },
+      "Likely relevant",
+    ),
+    scenario(
+      "medical-device-sample-under-a-permit",
+      {
+        product: {
+          productCategory: "medical_device",
+          activity: "sample_for_registration",
+          specialSamplePermit: "permit_held",
+          permitScopeMatchesActivity: true,
+          permitConditionsSatisfied: true,
+        },
+      },
+      "Not indicated by these answers",
+    ),
+    scenario(
+      "processed-food-sample-with-a-permit",
+      {
+        product: {
+          productCategory: "processed_food",
+          activity: "sample_for_registration",
+          specialSamplePermit: "permit_held",
+          permitScopeMatchesActivity: true,
+          permitConditionsSatisfied: true,
+        },
+      },
+      "More information needed",
+    ),
+    scenario(
+      "live-fish-not-processed",
+      { product: { productCategory: "live_fish", processingOrPackaging: false, drugOrMedicalUse: false } },
+      "Not indicated by these answers",
+    ),
+    scenario(
+      "no-regulated-product",
+      { product: { commercialSupplyOfRegulatedProducts: false, manufacturesInNigeria: false } },
+      "Not indicated by these answers",
+    ),
+    scenario(
+      "uses-cosmetics-in-a-service-only",
+      {
+        product: {
+          productCategory: "cosmetic",
+          activity: "service_use_only",
+          manufacturesInNigeria: false,
+          ownBrandOrRepackaging: false,
+        },
+      },
+      "Not indicated by these answers",
+    ),
+    scenario(
+      "industry-named-product-unknown",
+      { product: { productCategory: "other" } },
+      "More information needed",
+    ),
+    scenario("drug-activity-unknown", { product: { productCategory: "drug" } }, "More information needed"),
+    scenario("nothing-answered", {}, "More information needed"),
+  ],
+};
+
+/** The rules prepared for the owner's sign-off: decision 0020's four research notes. Preparing a rule
+ * here releases nothing: the owner signs each version in Staff → System. */
 export const ownerRuleCandidates: OwnerRuleCandidate[] = [
   businessNameRule,
   collectionInformationRule,
   companyReturnRule,
+  productRegistrationRule,
 ];

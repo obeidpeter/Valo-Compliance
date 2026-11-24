@@ -19,11 +19,16 @@ test("coordinating mappings and resolutions do not become implementation or cont
 test("additional source leads deduplicate URLs without changing the 24 original IDs", () => {
   assert.equal(finalSourceContext.references.length, 24);
   // 24 original, four supplementary, three for the business-name rule, two for the tax guides, eight
-  // for the food guides' guidelines, one employment Act, one consumer-protection Gazette and two
-  // manual guide sources from the Joint Revenue Board and the issuing Labour Ministry.
-  assert.equal(allSourceLeads.length, 45);
-  assert.equal(new Set(allSourceLeads.map((s) => s.url)).size, 45);
-  assert.equal(new Set(allSourceLeads.map((s) => s.id)).size, 45);
+  // for the food guides' guidelines, one employment Act, one consumer-protection Gazette, two
+  // manual guide sources from the Joint Revenue Board and the issuing Labour Ministry, and NAFDAC's
+  // copy of the Act the product-registration rule quotes.
+  assert.equal(allSourceLeads.length, 46);
+  assert.equal(new Set(allSourceLeads.map((s) => s.url)).size, 46);
+  assert.equal(new Set(allSourceLeads.map((s) => s.id)).size, 46);
+  assert.equal(
+    allSourceLeads.find((s) => s.id === "NAFDAC-CAP-F33")?.url,
+    "https://www.nafdac.gov.ng/wp-content/uploads/Files/Resources/Regulations/NAFDAC_Acts/FOOD-DRUGS-AND-RELATED-PRODUCTS-REGISTRATION-ACT-Cap.F.33.pdf",
+  );
   assert.equal(
     allSourceLeads.find((s) => s.id === "JRB-TAXID-HOW")?.url,
     "https://taxid.jrb.gov.ng/how-it-works",

@@ -35,6 +35,7 @@ export type GuideCapture = {
 export const guideActLeads: Record<string, string> = {
   "CAC-CAMA-2020": "SV-010",
   "NASS-NTAA-2025": "NASS-NTAA-2025",
+  "NAFDAC-CAP-F33": "NAFDAC-CAP-F33",
 };
 
 /**

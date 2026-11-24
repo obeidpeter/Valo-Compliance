@@ -60,6 +60,7 @@ export async function exerciseOwnerRuleRoutes(call: Call, editor: string) {
     const { items } = ListOwnerRulesResponse.parse(await listed.json());
     assert.deepEqual(items.map((item) => item.ruleId).sort(), [
       "cac-business-name-814",
+      "nafdac-f33-product-registration",
       "ndpa-27-collection-information",
       "ntaa-11-company-return",
     ]);
