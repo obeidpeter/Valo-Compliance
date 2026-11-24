@@ -1687,11 +1687,11 @@ test("a new form is not marked as wrong: each unanswered question is marked as s
  * one proposed for the invoice.
  */
 const EDITION = "00000000-0000-4000-8000-00000000b001";
-async function formInvoice(revision: number) {
+async function formInvoice(revision: number, given: Record<string, string> = {}) {
   const spec = GUIDED_SPECS_V2["TPL-01"]!;
   const formText = (await proposedFormText("TPL-01"))!;
   const answers = emptyFormData(spec);
-  answers.values.issuerName = profile.businessName;
+  answers.values = { ...answers.values, issuerName: profile.businessName, ...given };
   const { unfilled: _unfilled, ...content } = formDocumentContent(spec, parseFormText(formText), answers);
   const started = {
     ...document(revision),
@@ -1709,7 +1709,7 @@ async function formInvoice(revision: number) {
       formText,
     }),
   });
-  return { spec, formText, started, stubs };
+  return { spec, formText, answers, started, stubs };
 }
 
 // EDT-001: "Implement the 12 designated guided templates using typed field schemas, conditional
@@ -1788,6 +1788,74 @@ test("an invoice started from its form asks its questions and fills its template
     );
     assert.deepEqual(last.content.blocks, made.blocks);
     assert.ok(!("unfilled" in last.content));
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
+
+test("'Make another like this' starts an invoice made from its form through its form, with every answer but its reference and its dates, and opens it", async () => {
+  const ANOTHER = "00000000-0000-4000-8000-00000000d003";
+  const { formText, answers, started, stubs } = await formInvoice(3, {
+    recipientName: "Synthetic Customer Enterprises",
+    documentNumber: "INV-0007",
+    issueDate: "2026-11-18",
+    dueDate: "2026-12-02",
+  });
+  const another = { ...started, id: ANOTHER, revision: 1 };
+  const starts: unknown[] = [];
+  const created: unknown[] = [];
+  const making: Api = async (route, method, path, query) => {
+    const json = (status: number, body: unknown) =>
+      route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) });
+    if (method === "POST" && path === "/workspace/form-documents") {
+      starts.push(route.request().postDataJSON());
+      return json(201, api.StartFormDocumentResponse.parse(another));
+    }
+    if (method === "POST" && path === "/workspace/documents") {
+      created.push(route.request().postDataJSON());
+      return json(500, {});
+    }
+    if (method === "GET" && path === `/workspace/documents/${ANOTHER}`)
+      return json(200, api.GetDocumentResponse.parse(another));
+    if (method === "GET" && path === `/workspace/documents/${ANOTHER}/revisions`)
+      return json(200, api.ListDocumentRevisionsResponse.parse([another]));
+    if (method === "GET" && path === `/workspace/documents/${ANOTHER}/form`)
+      return json(
+        200,
+        api.GetDocumentFormResponse.parse({
+          edition: EDITION,
+          editionVersion: 1,
+          title: "Invoice",
+          formText,
+        }),
+      );
+    if (method === "GET" && path === `/v1/documents/${ANOTHER}/exports`) return json(200, []);
+    return stubs(route, method, path, query);
+  };
+  const { page, errors, unknown, close } = await desktop(`/workspace/documents/${DOCUMENT}`, making);
+  try {
+    await ready(page);
+    await expect(page.getByTestId("guided-fields")).toBeVisible();
+    const button = page.getByTestId("button-make-another");
+    await expect(button).toBeEnabled();
+    await button.click();
+    await page.waitForURL(new RegExp(`/workspace/documents/${ANOTHER}$`));
+    // The new document starts from the form with the saved answers, its reference and its dates
+    // blank, and the saved title. It is not made as a document of its own.
+    assert.deepEqual(starts, [
+      {
+        templateId: "TPL-01",
+        title: started.title,
+        formAnswers: {
+          ...answers,
+          values: { ...answers.values, documentNumber: "", issueDate: "", dueDate: "" },
+        },
+      },
+    ]);
+    assert.deepEqual(created, []);
+    await expect(page.getByTestId("guided-fields")).toBeVisible();
     assert.deepEqual(errors, []);
     assert.deepEqual(unknown, []);
   } finally {

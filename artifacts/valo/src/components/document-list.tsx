@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import {
   useCreateDocument,
+  useStartFormDocument,
   useListDocuments,
   useListWorkspaceExports,
   getGetWorkspaceQueryKey,
@@ -24,8 +25,8 @@ import {
   type BusinessDocument,
 } from "@workspace/api-client-react";
 import { EmptyState, ErrorState, Skel } from "@/components/states";
-import { missingFields } from "@/lib/api";
-import { anotherLike } from "@/lib/document-copy";
+import { describeError, missingFields } from "@/lib/api";
+import { anotherFormLike, anotherLike } from "@/lib/document-copy";
 import {
   availableConversions,
   convertGuidedDocument,
@@ -67,6 +68,9 @@ export function DocumentList({
     query: { enabled: enabled && searchable, queryKey: getListWorkspaceExportsQueryKey() },
   });
   const createCopy = useCreateDocument();
+  // A form document (forms v2) is made like another through its form, with the copied answers.
+  const startFormCopy = useStartFormDocument();
+  const copying = createCopy.isPending || startFormCopy.isPending;
   const [busyAction, setBusyAction] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<DocumentStatusFilter>("all");
@@ -127,38 +131,36 @@ export function DocumentList({
     });
   }
 
+  const opened = {
+    onSuccess: (made: BusinessDocument) => {
+      void qc.invalidateQueries({ queryKey: getListDocumentsQueryKey() });
+      void qc.invalidateQueries({ queryKey: getGetWorkspaceQueryKey() });
+      setLocation("/workspace/documents/" + made.id);
+    },
+    onSettled: () => setBusyAction(null),
+  };
+
   function makeAnotherFromList(d: BusinessDocument) {
+    if (copying) return;
+    const formStart = anotherFormLike(d.content);
     const start = anotherLike(d.content);
-    if (!start || createCopy.isPending) return;
-    setBusyAction("copy:" + d.id);
-    createCopy.mutate(
-      { data: { title: d.title, content: start } },
-      {
-        onSuccess: (made) => {
-          void qc.invalidateQueries({ queryKey: getListDocumentsQueryKey() });
-          void qc.invalidateQueries({ queryKey: getGetWorkspaceQueryKey() });
-          setLocation("/workspace/documents/" + made.id);
-        },
-        onSettled: () => setBusyAction(null),
-      },
-    );
+    if (formStart) {
+      setBusyAction("copy:" + d.id);
+      startFormCopy.mutate(
+        { data: { templateId: formStart.templateId, title: d.title, formAnswers: formStart } },
+        opened,
+      );
+    } else if (start) {
+      setBusyAction("copy:" + d.id);
+      createCopy.mutate({ data: { title: d.title, content: start } }, opened);
+    }
   }
 
   function convertFromList(d: BusinessDocument, targetId: ConversionTargetId) {
     const converted = convertGuidedDocument(d.content, targetId);
-    if (!converted || createCopy.isPending) return;
+    if (!converted || copying) return;
     setBusyAction(`convert:${d.id}:${targetId}`);
-    createCopy.mutate(
-      { data: converted },
-      {
-        onSuccess: (made) => {
-          void qc.invalidateQueries({ queryKey: getListDocumentsQueryKey() });
-          void qc.invalidateQueries({ queryKey: getGetWorkspaceQueryKey() });
-          setLocation("/workspace/documents/" + made.id);
-        },
-        onSettled: () => setBusyAction(null),
-      },
-    );
+    createCopy.mutate({ data: converted }, opened);
   }
   return (
     <>
@@ -266,6 +268,11 @@ export function DocumentList({
               Hidden documents stay saved in your workspace; hiding only declutters this browser view.
             </p>
           )}
+          {(createCopy.isError || startFormCopy.isError) && (
+            <p role="alert" className="mb-4 text-sm text-destructive" data-testid="alert-copy">
+              {describeError(createCopy.error ?? startFormCopy.error).message}
+            </p>
+          )}
           {shown.length > 0 ? (
             <ul className="grid gap-3">
               {shown.map((d) => {
@@ -273,7 +280,7 @@ export function DocumentList({
                 const kind = documentKindLabel(d);
                 const subtitle = documentContextSubtitle(d);
                 const readyExport = readyExportByDoc.get(d.id);
-                const canCopy = searchable && Boolean(anotherLike(d.content));
+                const canCopy = searchable && Boolean(anotherLike(d.content) ?? anotherFormLike(d.content));
                 const conversions = searchable ? availableConversions(d.content) : [];
                 const isHidden = hiddenIds.has(d.id);
                 return (
@@ -337,7 +344,7 @@ export function DocumentList({
                           <button
                             type="button"
                             className="btn btn-ghost btn-sm !min-h-8 !px-3 text-xs"
-                            disabled={createCopy.isPending}
+                            disabled={copying}
                             onClick={() => makeAnotherFromList(d)}
                             data-testid={"button-quick-copy-" + d.id}
                           >
@@ -354,7 +361,7 @@ export function DocumentList({
                             key={opt.targetId}
                             type="button"
                             className="btn btn-ghost btn-sm !min-h-8 !px-3 text-xs"
-                            disabled={createCopy.isPending}
+                            disabled={copying}
                             onClick={() => convertFromList(d, opt.targetId)}
                             data-testid={`button-quick-convert-${d.id}-${opt.targetId}`}
                           >

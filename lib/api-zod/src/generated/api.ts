@@ -3134,13 +3134,29 @@ export const SaveDocumentResponse = zod.object({
 
 
 /**
- * Starts a document from a template's form (forms v2): from the most recently released edition of its wording, when the form fits it. The answers start empty.
+ * Starts a document from a template's form (forms v2): from the most recently released edition of its wording, when the form fits it. The answers start as given, or else empty apart from the workspace's saved business name; an answer the form does not take is refused.
  */
 export const startFormDocumentBodyTemplateIdRegExp = new RegExp('^TPL-[0-9]{2}$');
+export const startFormDocumentBodyTitleMax = 160;
+
+export const startFormDocumentBodyFormAnswersTemplateIdRegExp = new RegExp('^TPL-[0-9]{2}$');
+export const startFormDocumentBodyFormAnswersValuesMaxOne = 4400;
+
+export const startFormDocumentBodyFormAnswersTablesItemMaxOne = 4400;
+
+export const startFormDocumentBodyFormAnswersTablesMaxOne = 100;
+
 
 
 export const StartFormDocumentBody = zod.object({
-  "templateId": zod.string().regex(startFormDocumentBodyTemplateIdRegExp)
+  "templateId": zod.string().regex(startFormDocumentBodyTemplateIdRegExp),
+  "title": zod.string().min(1).max(startFormDocumentBodyTitleMax).optional().describe('The document\'s title. The template\'s own name when it is not given.'),
+  "formAnswers": zod.object({
+  "schemaVersion": zod.literal(2),
+  "templateId": zod.string().regex(startFormDocumentBodyFormAnswersTemplateIdRegExp),
+  "values": zod.record(zod.string(), zod.string().max(startFormDocumentBodyFormAnswersValuesMaxOne)),
+  "tables": zod.record(zod.string(), zod.array(zod.record(zod.string(), zod.string().max(startFormDocumentBodyFormAnswersTablesItemMaxOne))).max(startFormDocumentBodyFormAnswersTablesMaxOne))
+}).optional().describe('A form document\'s answers (forms v2). Its blocks are exactly what these answers make from the form text of the edition it was started with.')
 })
 
 export const startFormDocumentResponseContentFieldsIssuerNameMax = 160;

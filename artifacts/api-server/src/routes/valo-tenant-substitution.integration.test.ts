@@ -116,6 +116,8 @@ const REQUEST_FIELDS_NOT_WORKSPACE_OWNED: Record<string, string> = {
     "Block identifiers inside the draft's own content, chosen by the client.",
   "POST /workspace/form-documents body.templateId":
     "Public catalogue template identifier; the document is started in the caller's own workspace.",
+  "POST /workspace/form-documents body.formAnswers.templateId":
+    "The public catalogue template the starting answers belong to; answers of any template but the one the document starts from are refused.",
   "POST /workspace/documents body.content.formAnswers.templateId":
     "The public catalogue template a document's own answers belong to; a form document starts only from its form, which records its edition.",
   "PATCH /workspace/documents/{id} body.content.formAnswers.templateId":

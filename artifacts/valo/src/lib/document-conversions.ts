@@ -1,5 +1,5 @@
 import type { CanonicalDocument } from "@workspace/api-client-react";
-import type { GuidedData } from "@workspace/valo-core/guided";
+import { GUIDED_TEMPLATE_IDS, type GuidedData, type GuidedTemplateId } from "@workspace/valo-core/guided";
 import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
 import {
   compileGuidedContent,
@@ -17,13 +17,34 @@ export type DocumentConversionOption = {
   defaultTitle: string;
 };
 
-function readGuided(content: CanonicalDocument): GuidedData | null {
+/**
+ * A guided document's answers: a v1 form's, read from its blocks, or a v2 form's (forms v2), which
+ * asks v1's questions by the same names, so a conversion reads either alike.
+ */
+function readGuided(content: CanonicalDocument): Pick<GuidedData, "templateId" | "values" | "tables"> | null {
+  if (content.formAnswers) {
+    const { templateId, values, tables } = content.formAnswers;
+    return (GUIDED_TEMPLATE_IDS as readonly string[]).includes(templateId)
+      ? { templateId: templateId as GuidedTemplateId, values, tables }
+      : null;
+  }
   try {
     return guidedDataFromBlocks(content.blocks);
   } catch {
     // Unsupported or altered guided metadata offers no automatic conversion.
     return null;
   }
+}
+
+/**
+ * What a converted document keeps of the one it is made from. A form document's own parts (forms
+ * v2), its wording, answers and kept passages, stay with it: the new document takes only its note
+ * and its formatting. Any other document passes its own text through, as before.
+ */
+function keptFrom(content: CanonicalDocument): CanonicalDocument {
+  if (!content.formAnswers) return content;
+  const { formAnswers: _answers, ...rest } = content;
+  return { ...rest, blocks: [], selectedClauses: [] };
 }
 
 function copyIfValid(target: GuidedData, fieldId: string, raw: string | undefined) {
@@ -109,7 +130,7 @@ export function convertGuidedDocument(
     const customer = source.values.recipientName?.trim();
     return {
       title: customer ? `Invoice — ${customer}`.slice(0, 120) : "Invoice",
-      content: compileGuidedContent(next, content) as CanonicalDocument,
+      content: compileGuidedContent(next, keptFrom(content)) as CanonicalDocument,
     };
   }
 
@@ -129,7 +150,7 @@ export function convertGuidedDocument(
     const payer = source.values.recipientName?.trim();
     return {
       title: payer ? `Receipt — ${payer}`.slice(0, 120) : "Receipt",
-      content: compileGuidedContent(next, content) as CanonicalDocument,
+      content: compileGuidedContent(next, keptFrom(content)) as CanonicalDocument,
     };
   }
 

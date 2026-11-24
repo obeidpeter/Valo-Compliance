@@ -8,7 +8,7 @@ import { FormTextError, parseFormText } from "@workspace/valo-core/form-text";
 import type { GuidedTemplateId } from "@workspace/valo-core/guided";
 import { formAnswerIssues, formDocumentContent, formFit } from "@workspace/valo-core/guided-runtime-v2";
 import { GUIDED_SPECS_V2 } from "@workspace/valo-core/guided-specs-v2";
-import type { GuidedDataV2 } from "@workspace/valo-core/guided-v2";
+import type { GuidedDataV2, GuidedSpecV2 } from "@workspace/valo-core/guided-v2";
 import { ValoProblem } from "../../platform/valo-problem";
 
 /**
@@ -84,6 +84,28 @@ export async function documentFormText(tx: Tx, documentId: string) {
 
 const FIELDS = ["issuerName", "recipientName", "documentNumber", "issueDate", "dueDate"] as const;
 
+/** An answer the form does not take is refused; one not valid yet stays a draft answer. */
+function assertFormTakes(spec: GuidedSpecV2, data: GuidedDataV2) {
+  const { refused } = formAnswerIssues(spec, data);
+  if (refused.length)
+    throw new ValoProblem(422, `Some answers cannot be saved. ${refused.slice(0, 3).join(" ")}`);
+}
+
+/**
+ * The answers a form document starts with when they are given, as when it is made like another of
+ * the same form: they must be this form's, and the form must take each of them.
+ */
+export function startingAnswers(
+  spec: GuidedSpecV2,
+  answers: { schemaVersion: number; templateId: string },
+): GuidedDataV2 {
+  if (answers.schemaVersion !== 2 || answers.templateId !== spec.templateId)
+    throw new ValoProblem(422, "These answers belong to another form. Reopen the document and try again.");
+  const data = answers as GuidedDataV2;
+  assertFormTakes(spec, data);
+  return data;
+}
+
 /**
  * A form document's content is exactly what its answers make from the form text of the edition it
  * was started with. An answer the form does not take is refused; one not valid yet stays a draft
@@ -111,9 +133,7 @@ export async function checkFormContent(
   )
     throw new ValoProblem(422, "These answers belong to another form. Reopen the document and try again.");
   const data = answers as GuidedDataV2;
-  const { refused } = formAnswerIssues(spec, data);
-  if (refused.length)
-    throw new ValoProblem(422, `Some answers cannot be saved. ${refused.slice(0, 3).join(" ")}`);
+  assertFormTakes(spec, data);
   const made = formDocumentContent(spec, text, data, content);
   if (
     !isDeepStrictEqual(made.blocks, content.blocks) ||

@@ -1239,6 +1239,13 @@ export interface DocumentUpdate {
 export interface FormDocumentStart {
   /** @pattern ^TPL-[0-9]{2}$ */
   templateId: string;
+  /**
+     * The document's title. The template's own name when it is not given.
+     * @minLength 1
+     * @maxLength 160
+     */
+  title?: string;
+  formAnswers?: FormAnswers;
 }
 
 export interface DocumentFormText {

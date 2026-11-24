@@ -14,6 +14,7 @@ import {
   checkFormContent,
   documentFormText,
   freeFormEdition,
+  startingAnswers,
 } from "./valo-form-documents";
 import { singleRow } from "../../platform/rows";
 import {
@@ -248,24 +249,29 @@ export async function saveDocument(actor: WorkspaceActor, id: string, raw: unkno
 }
 /**
  * Starts a document from a free template's form (forms v2): from the most recently released edition
- * of its wording, while the form fits it, with the answers empty. The document records the edition
- * and its text's SHA-256, which never change.
+ * of its wording, while the form fits it. Its answers start as given, as when it is made like another
+ * of the same form, or else empty apart from the saved business name. The document records the
+ * edition and its text's SHA-256, which never change.
  */
 export async function startFormDocument(actor: WorkspaceActor, raw: unknown) {
-  const { templateId } = StartFormDocumentBody.strict().parse(raw);
+  const { templateId, title, formAnswers } = StartFormDocumentBody.strict().parse(raw);
   const { db, valoDocuments } = await import("@workspace/db");
   const { document, revision } = await db.transaction(async (tx) => {
     await authorizeWorkspaceWrite(tx, actor);
     const form = await freeFormEdition(tx, templateId);
     await limitWorkspaceWrite(tx, actor, "document");
-    // The saved business name is filled in as the issuing business, as the questions-only form's
-    // starter fills it in, and only when it is a valid answer. Nothing else is assumed.
-    const answers = emptyFormData(form.spec);
-    const name = await savedBusinessName(tx, actor);
-    const issuer = form.spec.fields.find((field) => field.id === "issuerName");
-    if (name && issuer && !guidedFieldIssue(issuer, name)) answers.values.issuerName = name;
+    let answers;
+    if (formAnswers) answers = startingAnswers(form.spec, formAnswers);
+    else {
+      // The saved business name is filled in as the issuing business, as the questions-only form's
+      // starter fills it in, and only when it is a valid answer. Nothing else is assumed.
+      answers = emptyFormData(form.spec);
+      const name = await savedBusinessName(tx, actor);
+      const issuer = form.spec.fields.find((field) => field.id === "issuerName");
+      if (name && issuer && !guidedFieldIssue(issuer, name)) answers.values.issuerName = name;
+    }
     const { unfilled: _unfilled, ...content } = formDocumentContent(form.spec, form.text, answers);
-    const input = documentInput.parse({ title: form.spec.title, content });
+    const input = documentInput.parse({ title: title ?? form.spec.title, content });
     const id = randomUUID();
     const document = singleRow(
       await tx

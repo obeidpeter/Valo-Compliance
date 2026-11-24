@@ -4265,7 +4265,7 @@ export const getStartFormDocumentUrl = () => {
 }
 
 /**
- * Starts a document from a template's form (forms v2): from the most recently released edition of its wording, when the form fits it. The answers start empty.
+ * Starts a document from a template's form (forms v2): from the most recently released edition of its wording, when the form fits it. The answers start as given, or else empty apart from the workspace's saved business name; an answer the form does not take is refused.
  */
 export const startFormDocument = async (formDocumentStart: FormDocumentStart, options?: Parameters<typeof customFetch>[1]): Promise<BusinessDocument> => {
 
@@ -4330,7 +4330,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type StartFormDocumentMutationError = ErrorType<AuthErrorResponse | WriteLimitResponse>
     export type StartFormDocumentMutationVariables = {data: BodyType<FormDocumentStart>}
 
-    /** Starts a document from a template's form (forms v2): from the most recently released edition of its wording, when the form fits it. The answers start empty. */
+    /** Starts a document from a template's form (forms v2): from the most recently released edition of its wording, when the form fits it. The answers start as given, or else empty apart from the workspace's saved business name; an answer the form does not take is refused. */
 export const useStartFormDocument = <TError = ErrorType<AuthErrorResponse | WriteLimitResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startFormDocument>>, TError,StartFormDocumentMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<

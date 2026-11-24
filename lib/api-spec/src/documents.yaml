@@ -71,7 +71,7 @@ paths:
   /workspace/form-documents:
     post:
       operationId: startFormDocument
-      description: "Starts a document from a template's form (forms v2): from the most recently released edition of its wording, when the form fits it. The answers start empty."
+      description: "Starts a document from a template's form (forms v2): from the most recently released edition of its wording, when the form fits it. The answers start as given, or else empty apart from the workspace's saved business name; an answer the form does not take is refused."
       requestBody:
         required: true
         content:
@@ -141,6 +141,12 @@ schemas:
     required: [templateId]
     properties:
       templateId: { type: string, pattern: "^TPL-[0-9]{2}$" }
+      title:
+        type: string
+        minLength: 1
+        maxLength: 160
+        description: "The document's title. The template's own name when it is not given."
+      formAnswers: { $ref: "#/components/schemas/FormAnswers" }
   DocumentFormText:
     type: object
     required: [edition, editionVersion, title, formText]

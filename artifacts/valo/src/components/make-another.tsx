@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, CopyPlus, Loader2 } from "lucide-react";
 import {
   useCreateDocument,
+  useStartFormDocument,
   getGetWorkspaceQueryKey,
   getListDocumentsQueryKey,
   type BusinessDocument,
@@ -14,7 +15,8 @@ import {
   convertGuidedDocument,
   type ConversionTargetId,
 } from "@/lib/document-conversions";
-import { anotherLike } from "@/lib/document-copy";
+import type { GuidedDataV2 } from "@workspace/valo-core/guided-v2";
+import { anotherFormLike, anotherLike } from "@/lib/document-copy";
 
 /**
  * Starts a new document from the saved one in view: the same details, with its reference and its
@@ -26,24 +28,33 @@ export function MakeAnother({ saved, unsaved }: { saved: BusinessDocument; unsav
   const qc = useQueryClient();
   const [, setLocation] = useLocation();
   const create = useCreateDocument();
+  const startForm = useStartFormDocument();
+  const pending = create.isPending || startForm.isPending;
   const [pendingAction, setPendingAction] = useState<"copy" | ConversionTargetId | null>(null);
   const start = useMemo(() => anotherLike(saved.content), [saved.content]);
+  // A form document (forms v2) is made like another through its form, with the copied answers.
+  const formStart = useMemo(() => anotherFormLike(saved.content), [saved.content]);
   const conversions = useMemo(() => availableConversions(saved.content), [saved.content]);
   // A document whose saved questions cannot be read is not copied; the editor already says why.
-  if (!start) return null;
+  if (!start && !formStart) return null;
 
+  const opened = (made: BusinessDocument) => {
+    void qc.invalidateQueries({ queryKey: getListDocumentsQueryKey() });
+    void qc.invalidateQueries({ queryKey: getGetWorkspaceQueryKey() });
+    setLocation("/workspace/documents/" + made.id);
+  };
   function launch(action: "copy" | ConversionTargetId, title: string, content: BusinessDocument["content"]) {
     setPendingAction(action);
     create.mutate(
       { data: { title, content } },
-      {
-        onSuccess: (made) => {
-          void qc.invalidateQueries({ queryKey: getListDocumentsQueryKey() });
-          void qc.invalidateQueries({ queryKey: getGetWorkspaceQueryKey() });
-          setLocation("/workspace/documents/" + made.id);
-        },
-        onSettled: () => setPendingAction(null),
-      },
+      { onSuccess: opened, onSettled: () => setPendingAction(null) },
+    );
+  }
+  function launchForm(title: string, formAnswers: GuidedDataV2) {
+    setPendingAction("copy");
+    startForm.mutate(
+      { data: { templateId: formAnswers.templateId, title, formAnswers } },
+      { onSuccess: opened, onSettled: () => setPendingAction(null) },
     );
   }
 
@@ -60,11 +71,14 @@ export function MakeAnother({ saved, unsaved }: { saved: BusinessDocument; unsav
         <button
           type="button"
           className="btn btn-ghost btn-sm"
-          disabled={unsaved || create.isPending}
-          onClick={() => launch("copy", saved.title, start)}
+          disabled={unsaved || pending}
+          onClick={() => {
+            if (formStart) launchForm(saved.title, formStart);
+            else if (start) launch("copy", saved.title, start);
+          }}
           data-testid="button-make-another"
         >
-          {pendingAction === "copy" && create.isPending ? (
+          {pendingAction === "copy" && pending ? (
             <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
           ) : (
             <CopyPlus className="h-4 w-4" aria-hidden="true" />
@@ -76,7 +90,7 @@ export function MakeAnother({ saved, unsaved }: { saved: BusinessDocument; unsav
             key={conv.targetId}
             type="button"
             className="btn btn-primary btn-sm"
-            disabled={unsaved || create.isPending}
+            disabled={unsaved || pending}
             title={conv.description}
             onClick={() => {
               const converted = convertGuidedDocument(saved.content, conv.targetId);
@@ -84,7 +98,7 @@ export function MakeAnother({ saved, unsaved }: { saved: BusinessDocument; unsav
             }}
             data-testid={"button-convert-" + conv.targetId}
           >
-            {pendingAction === conv.targetId && create.isPending ? (
+            {pendingAction === conv.targetId && pending ? (
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
             ) : (
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -99,9 +113,9 @@ export function MakeAnother({ saved, unsaved }: { saved: BusinessDocument; unsav
           Save your changes first.
         </p>
       )}
-      {create.isError && (
+      {(create.isError || startForm.isError) && (
         <p role="alert" className="mt-3 text-sm text-destructive">
-          {describeError(create.error).message}
+          {describeError(create.error ?? startForm.error).message}
         </p>
       )}
     </section>
