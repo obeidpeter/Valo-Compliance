@@ -63,3 +63,42 @@ test("a free staff-library template's page says its preview is the opening of th
   );
   assert.equal(/text-purchase-needed/.test(html), false);
 });
+
+// DOC-003, EDP-008: a staff-library template's page says what it is for, what a customer needs, its
+// limits, its related guidance and how it was written and checked, as its release records them.
+test("a staff-library template's page shows what it is for, what you need, its limits, related guidance and how it was written", () => {
+  const render = (template: ReleasedTemplate) =>
+    renderToStaticMarkup(
+      <QueryClientProvider client={new QueryClient()}>
+        <TemplateDetail slug={slug} initial={template} />
+      </QueryClientProvider>,
+    );
+  const html = render({
+    ...edition("Synthetic register"),
+    access: "free",
+    summary: "Keep a synthetic record.",
+    purpose: "Keep a synthetic record.",
+    needs: ["The first synthetic fact", "The second synthetic fact"],
+    limitations: "It shows nothing about the synthetic record beyond what is entered.",
+    relatedGuides: [{ title: "Synthetic guide", href: "/resources/manual-synthetic", kind: "guide" }],
+    disclosure: "Drafted with AI. A Valo Content editor read this version before releasing it.",
+  });
+  assert.match(html, /data-testid="text-summary">Keep a synthetic record\.</);
+  assert.match(html, /<li>The first synthetic fact<\/li><li>The second synthetic fact<\/li>/);
+  assert.match(
+    html,
+    /data-testid="text-limitations">It shows nothing about the synthetic record beyond what is entered\.</,
+  );
+  assert.match(
+    html,
+    /href="[^"]*\/resources\/manual-synthetic"[^>]*>Synthetic guide<\/a> <span[^>]*>· Practical guide</,
+  );
+  assert.match(
+    html,
+    /data-testid="text-disclosure">Drafted with AI\. A Valo Content editor read this version before releasing it\. Released 1 Nov 2026\.</,
+  );
+  // A version released before these details existed shows the statement alone.
+  const older = render({ ...edition("Synthetic older"), access: "free", limitations: "" });
+  assert.equal(/text-summary|list-needs|text-limitations|list-related-guides/.test(older), false);
+  assert.match(older, /data-testid="text-disclosure">/);
+});

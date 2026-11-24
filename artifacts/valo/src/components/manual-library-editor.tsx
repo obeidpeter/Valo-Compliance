@@ -11,9 +11,11 @@ import {
   type ManualLibraryEntryState,
   type ManualLibraryRevision,
 } from "@workspace/api-client-react";
+import { libraryTemplateStatement } from "@workspace/valo-core/library-statement";
 import { describeError } from "@/lib/describe-error";
 import { industryName } from "@/lib/library-filters";
 import { FormTextOutline } from "./form-text-outline";
+import { RelatedGuidesPicker } from "./related-guides-picker";
 import { PlainText } from "./resource-parts";
 import { ErrorState } from "./states";
 
@@ -51,6 +53,12 @@ const emptyForm = () => ({
   body: "",
   formText: "",
   fileMode: "text" as ManualLibraryDraft["fileMode"],
+  // A template's entry details (docs/architecture/library-entries.md).
+  purpose: "",
+  needs: "",
+  limits: "",
+  relatedItems: [] as string[],
+  aiDrafted: "" as "" | "yes" | "no",
 });
 async function encodeFile(file: File) {
   const format = file.name.split(".").pop()?.toLowerCase();
@@ -63,6 +71,64 @@ async function encodeFile(file: File) {
     reader.readAsDataURL(file);
   });
   return { format, base64 } as NonNullable<ManualLibraryDraft["upload"]>;
+}
+/**
+ * A saved template version's entry details as readers will see them (docs/architecture/library-entries.md),
+ * and what it still needs before it can be published.
+ */
+function EntryDetailsPreview({ revision }: { revision: ManualLibraryRevision }) {
+  const missing = [
+    revision.purpose === null && "what it is for",
+    revision.limits === null && "its limits",
+    revision.aiDrafted === null && "how it was written",
+  ].filter((entry): entry is string => Boolean(entry));
+  return (
+    <section
+      className="mt-5 grid gap-2 rounded-xl border border-border p-4 text-sm"
+      aria-label="What readers see about this template"
+      data-testid="preview-entry-details"
+    >
+      <p className="eyebrow">What readers see about this template</p>
+      {revision.purpose && <p>{revision.purpose}</p>}
+      {revision.needs && (
+        <>
+          <p className="font-medium">What you need</p>
+          <ul className="list-disc pl-6">
+            {revision.needs.split("\n").map((need) => (
+              <li key={need}>{need}</li>
+            ))}
+          </ul>
+        </>
+      )}
+      {revision.limits && (
+        <>
+          <p className="font-medium">Limits you should know</p>
+          <p>{revision.limits}</p>
+        </>
+      )}
+      {revision.relatedGuides.length > 0 && (
+        <>
+          <p className="font-medium">Related guidance</p>
+          <ul className="list-disc pl-6">
+            {revision.relatedGuides.map((guide) => (
+              <li key={guide.itemId}>
+                {guide.title ?? "A guide not filed here yet"}
+                {guide.title && !guide.live && " (readers see it once it is published)"}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      <p className="font-medium">How it was written and checked</p>
+      <p data-testid="preview-statement">{libraryTemplateStatement(revision.aiDrafted)}</p>
+      {missing.length > 0 && (
+        <p role="note" data-testid="preview-missing">
+          Before this version can be published, add {missing.join(", ").replace(/, ([^,]*)$/, " and $1")},
+          then save it again.
+        </p>
+      )}
+    </section>
+  );
 }
 export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: boolean) => void }) {
   const [page, setPage] = useState(1);
@@ -113,6 +179,11 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
             body: row.body,
             formText: row.formText ?? "",
             fileMode: row.fileFormat ? "keep" : "text",
+            purpose: row.purpose ?? "",
+            needs: row.needs ?? "",
+            limits: row.limits ?? "",
+            relatedItems: row.relatedItems,
+            aiDrafted: row.aiDrafted === null ? "" : row.aiDrafted ? "yes" : "no",
           }
         : emptyForm(),
     );
@@ -151,6 +222,15 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
       body: form.body,
       formText: isTemplate(form.kind) && form.formText.trim() ? form.formText : null,
       fileMode: form.fileMode,
+      ...(isTemplate(form.kind)
+        ? {
+            purpose: form.purpose.trim() || null,
+            needs: form.needs.trim() || null,
+            limits: form.limits.trim() || null,
+            relatedItems: form.relatedItems,
+            aiDrafted: form.aiDrafted === "" ? null : form.aiDrafted === "yes",
+          }
+        : {}),
       ...(upload ? { upload } : {}),
     });
     load(row);
@@ -488,6 +568,92 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
                   </span>
                 </label>
               )}
+              {isTemplate(form.kind) && (
+                <fieldset
+                  className="grid gap-3 rounded-lg border border-border p-3"
+                  data-testid="entry-details"
+                >
+                  <legend className="px-1 text-sm font-medium">What readers see about this template</legend>
+                  <p className="text-sm text-muted-foreground">
+                    A template is published only with what it is for, its limits and how it was written.
+                  </p>
+                  <label className="text-sm font-medium">
+                    What it is for
+                    <textarea
+                      className={inputStyle}
+                      rows={2}
+                      maxLength={400}
+                      value={form.purpose}
+                      onChange={(e) => update({ purpose: e.target.value })}
+                      aria-describedby="purpose-help"
+                      data-testid="input-purpose"
+                    />
+                    <span id="purpose-help" className="mt-1 block font-normal text-muted-foreground">
+                      Shown under the title, and as the template&apos;s summary in the list of documents. Up
+                      to 400 characters.
+                    </span>
+                  </label>
+                  <label className="text-sm font-medium">
+                    What you need (optional)
+                    <textarea
+                      className={inputStyle}
+                      rows={4}
+                      maxLength={1600}
+                      value={form.needs}
+                      onChange={(e) => update({ needs: e.target.value })}
+                      aria-describedby="needs-help"
+                      data-testid="input-needs"
+                    />
+                    <span id="needs-help" className="mt-1 block font-normal text-muted-foreground">
+                      The facts and records a customer needs to complete it, one to a line. Up to 12 lines.
+                    </span>
+                  </label>
+                  <label className="text-sm font-medium">
+                    Limits you should know
+                    <textarea
+                      className={inputStyle}
+                      rows={3}
+                      maxLength={800}
+                      value={form.limits}
+                      onChange={(e) => update({ limits: e.target.value })}
+                      aria-describedby="limits-help"
+                      data-testid="input-limits"
+                    />
+                    <span id="limits-help" className="mt-1 block font-normal text-muted-foreground">
+                      What it does not do. For an agreement, or an employment, privacy, governance or sector
+                      document, say when independent advice may be useful. Never promise that it is
+                      enforceable, suitable or approved.
+                    </span>
+                  </label>
+                  <fieldset className="text-sm" data-testid="input-ai-drafted">
+                    <legend className="font-medium">How was this text written?</legend>
+                    <label className="mr-4 inline-flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="ai-drafted"
+                        checked={form.aiDrafted === "yes"}
+                        onChange={() => update({ aiDrafted: "yes" })}
+                      />
+                      Drafted with AI
+                    </label>
+                    <label className="inline-flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="ai-drafted"
+                        checked={form.aiDrafted === "no"}
+                        onChange={() => update({ aiDrafted: "no" })}
+                      />
+                      Written without AI
+                    </label>
+                  </fieldset>
+                  <RelatedGuidesPicker
+                    key={snapshot?.id ?? form.itemId}
+                    value={form.relatedItems}
+                    known={snapshot?.relatedGuides ?? []}
+                    onChange={(relatedItems) => update({ relatedItems })}
+                  />
+                </fieldset>
+              )}
               {form.fileMode === "upload" && form.kind !== "premium_template" && (
                 <p className="text-sm text-muted-foreground">
                   Leave the text blank to use the words in your file. For a scanned PDF, paste the text you
@@ -525,6 +691,7 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
               </p>
               <h3 className="font-display mt-2 text-xl">{snapshot.title}</h3>
               <PlainText text={snapshot.body} className="mt-3 grid gap-3" />
+              {isTemplate(snapshot.kind) && <EntryDetailsPreview revision={snapshot} />}
               {snapshot.formText !== null && snapshot.formFit && (
                 <section
                   className="mt-5 grid gap-3 rounded-xl border border-border p-4"

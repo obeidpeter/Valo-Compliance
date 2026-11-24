@@ -393,6 +393,13 @@
       "when": 1795558556328,
       "tag": "20261124221556_export_finished_files",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1795562849091,
+      "tag": "20261124232729_library_entry_details",
+      "breakpoints": true
     }
   ]
 }

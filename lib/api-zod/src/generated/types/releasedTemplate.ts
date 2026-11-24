@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { RelatedGuide } from './relatedGuide';
 import type { ReleasedTemplateAccess } from './releasedTemplateAccess';
 import type { ReleasedTemplateFormatsItem } from './releasedTemplateFormatsItem';
 import type { ReleasedTemplatePublicationMethod } from './releasedTemplatePublicationMethod';
@@ -30,4 +31,10 @@ export interface ReleasedTemplate {
   commercialLicenceAccepted: boolean;
   offer?: TemplateOffer;
   formats: ReleasedTemplateFormatsItem[];
+  /** A staff-library template's purpose, released with its version. Absent when the version has none. */
+  purpose?: string;
+  /** What a customer needs to complete a staff-library template, one item each. */
+  needs?: string[];
+  /** A staff-library template's related guides that are released now. */
+  relatedGuides?: RelatedGuide[];
 }

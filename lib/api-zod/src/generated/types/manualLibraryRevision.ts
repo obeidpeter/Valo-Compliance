@@ -9,6 +9,7 @@ import type { ManualFormFit } from './manualFormFit';
 import type { ManualLibraryRevisionFileFormat } from './manualLibraryRevisionFileFormat';
 import type { ManualLibraryRevisionKind } from './manualLibraryRevisionKind';
 import type { ManualLibraryRevisionLive } from './manualLibraryRevisionLive';
+import type { ManualLibraryRevisionRelatedGuidesItem } from './manualLibraryRevisionRelatedGuidesItem';
 import type { ManualLibraryRevisionState } from './manualLibraryRevisionState';
 
 export interface ManualLibraryRevision {
@@ -38,4 +39,18 @@ export interface ManualLibraryRevision {
      */
   formText: string | null;
   formFit: ManualFormFit | null;
+  /** @nullable */
+  purpose: string | null;
+  /** @nullable */
+  needs: string | null;
+  /** @nullable */
+  limits: string | null;
+  relatedItems: string[];
+  /**
+     * A template's entry details (docs/architecture/library-entries.md), released with the version.
+     * @nullable
+     */
+  aiDrafted: boolean | null;
+  /** The related guides by their library items, as the editor sees them: the title and kind of each item's latest version, whether a version of it is released now, or nulls for an item not in the library yet. */
+  relatedGuides: ManualLibraryRevisionRelatedGuidesItem[];
 }

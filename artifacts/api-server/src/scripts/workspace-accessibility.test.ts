@@ -348,6 +348,7 @@ const answers: Record<string, unknown> = {
         shown: false,
         sourceCheck: null,
         formText: "proposed",
+        details: "proposed",
       },
       {
         retainedId: "GUD-01",
@@ -361,6 +362,7 @@ const answers: Record<string, unknown> = {
         shown: false,
         sourceCheck: { checkedAt: at(18), holds: 1, validThrough: null },
         formText: null,
+        details: null,
       },
     ],
     notInLibrary: 1,

@@ -14,6 +14,7 @@ import {
   exercisePremiumManualTemplate,
 } from "../test-support/manual-premium-template";
 import { exercisePremiumPriceCommand } from "../test-support/premium-price-command";
+import { templateDetails } from "../test-support/template-details";
 import { exerciseOwnerRuleRoutes } from "../test-support/owner-rule-routes";
 import {
   GetManualLibraryRevisionResponse,
@@ -236,6 +237,8 @@ test(
       fileMode: "text",
       baseVersion: 0,
       requestId: randomUUID(),
+      // A template is released only with its entry details (docs/architecture/library-entries.md).
+      ...(kind === "template" || kind === "premium_template" ? templateDetails : {}),
     });
     async function ok(r: globalThis.Response) {
       const body = await r.json();
@@ -410,6 +413,108 @@ test(
         assert.equal((await call("/public/resources/manual-" + id)).status, 404);
       },
     );
+    // docs/architecture/library-entries.md: a template's page says what it is for, what a customer
+    // needs, its limits and how it was written (DOC-003, EDP-008), and the release carries them.
+    await t.test(
+      "a template is released only with its entry details, which never change once saved, and its page shows a related guide only while it is released",
+      async () => {
+        const guideId = randomUUID();
+        const guide = await revision(
+          await draft(guideId, input("practical_guide", "Synthetic related guide")),
+        );
+        const releasedGuide = await revision(await act(guideId, "publish", guide));
+        const id = randomUUID(),
+          title = "Synthetic detailed template";
+        // Only a template has entry details, and each stays within its limits.
+        assert.equal(
+          (await draft(randomUUID(), { ...input("practical_guide", "Synthetic guide"), purpose: "For" }))
+            .status,
+          422,
+        );
+        assert.equal(
+          (await draft(id, { ...input("template", title), purpose: "x".repeat(401) })).status,
+          422,
+        );
+        assert.equal((await draft(id, { ...input("template", title), limits: "x".repeat(801) })).status, 422);
+        const thirteen = Array.from({ length: 13 }, (_, i) => `Synthetic need ${i + 1}`).join("\n");
+        assert.equal((await draft(id, { ...input("template", title), needs: thirteen })).status, 422);
+        // Saved without them, a template is refused release, by the route in plain words and by the
+        // database whoever asks.
+        const bare = await revision(
+          await draft(id, { ...input("template", title), purpose: null, limits: null, aiDrafted: null }),
+        );
+        assert.equal(bare.purpose, null);
+        const refused = await act(id, "publish", bare);
+        assert.equal(refused.status, 422);
+        assert.match(
+          ((await refused.json()) as { error: string }).error,
+          /^Say what this template is for, give its limits and say whether AI drafted it/,
+        );
+        await assert.rejects(
+          pool.query(
+            "update valo_manual_library set state='published',published_at=now(),published_by=$2 where id=$1",
+            [bare.id, editor],
+          ),
+          /released with what it is for, its limits and how it was written/,
+        );
+        // With them it is released, and its page shows them, its statement and its released guide.
+        const missingGuide = randomUUID();
+        const full = await revision(
+          await draft(id, {
+            ...input("template", title),
+            baseVersion: 1,
+            relatedItems: [guideId, missingGuide],
+          }),
+        );
+        assert.equal(full.purpose, templateDetails.purpose);
+        assert.equal(full.needs, templateDetails.needs);
+        assert.equal(full.limits, templateDetails.limits);
+        assert.equal(full.aiDrafted, true);
+        assert.notEqual(full.digest, bare.digest);
+        assert.deepEqual(
+          full.relatedGuides.map((entry) => [entry.itemId, entry.title, entry.kind, entry.live]),
+          [
+            [guideId, "Synthetic related guide", "practical_guide", true],
+            [missingGuide, null, null, false],
+          ],
+        );
+        await revision(await act(id, "publish", full));
+        const page = async () =>
+          GetReleasedTemplateResponse.parse(await ok(await call("/public/templates/manual-" + id)));
+        const shown = await page();
+        assert.equal(shown.summary, templateDetails.purpose);
+        assert.equal(shown.purpose, templateDetails.purpose);
+        assert.deepEqual(shown.needs, templateDetails.needs.split("\n"));
+        assert.equal(shown.limitations, templateDetails.limits);
+        assert.match(shown.disclosure, /^Drafted with AI\. A Valo Content editor read this version/);
+        assert.deepEqual(shown.relatedGuides, [
+          { title: "Synthetic related guide", href: "/resources/manual-" + guideId, kind: "guide" },
+        ]);
+        const card = ListPublicCatalogueResponse.parse(
+          await ok(await call("/public/catalogue?type=template&access=free&q=" + encodeURIComponent(title))),
+        ).items.find((entry) => entry.slug === "manual-" + id);
+        assert.equal(card?.summary, templateDetails.purpose);
+        // The details change no more than the text, released or not.
+        for (const change of ["purpose='Changed'", "needs=null", "related_items=null", "ai_drafted=false"])
+          await assert.rejects(
+            pool.query(`update valo_manual_library set ${change} where id=$1`, [full.id]),
+            /Save corrections as a new revision/,
+          );
+        // A withdrawn guide drops from the page; the template stays, and the editor sees the guide is no
+        // longer live.
+        await revision(await act(guideId, "withdraw", releasedGuide));
+        assert.equal((await page()).relatedGuides, undefined);
+        assert.equal((await page()).purpose, templateDetails.purpose);
+        const reopened = await revision(await call(item(id)));
+        assert.deepEqual(
+          reopened.relatedGuides.map((entry) => [entry.itemId, entry.live]),
+          [
+            [guideId, false],
+            [missingGuide, false],
+          ],
+        );
+      },
+    );
     await t.test(
       "a distinct verified owner may release only the exact source-checked regulatory revision",
       () => exerciseManualRegulatoryOwner(call, editor),
@@ -549,8 +654,17 @@ test(
         assert.equal((await call(corrected)).status, 404);
         assert.equal((await call("/public/templates/manual-" + id)).status, 404);
         const guideId = randomUUID();
+        // The same text and file saved as a guide, which has none of a template's entry details.
         const guide = await revision(
-          await draft(guideId, { ...data, kind: "practical_guide", requestId: randomUUID() }),
+          await draft(guideId, {
+            ...data,
+            kind: "practical_guide",
+            requestId: randomUUID(),
+            purpose: undefined,
+            needs: undefined,
+            limits: undefined,
+            aiDrafted: undefined,
+          }),
         );
         assert.ok(guide.body.includes(text));
         assert.equal(guide.fileFormat, null);
@@ -637,6 +751,44 @@ test(
           await page.getByRole("button", { name: "Save draft and preview" }).click();
           await expect(preview).toContainText("Awaiting the owner's source check.");
           await expect(page.getByRole("button", { name: "Publish this version" })).toHaveCount(0);
+          // A template's entry details (docs/architecture/library-entries.md): the editor writes them,
+          // previews them with the statement they make, and cannot publish the template without them.
+          await page.getByRole("button", { name: "New item", exact: true }).click();
+          await page.getByLabel("Title", { exact: true }).fill("Synthetic browser template");
+          await page.getByLabel("Content type").selectOption("template");
+          await page.getByLabel("Template text or description").fill("Synthetic template text.");
+          await page.getByRole("button", { name: "Save draft and preview" }).click();
+          const details = preview.getByTestId("preview-entry-details");
+          await expect(details.getByTestId("preview-missing")).toContainText(
+            "add what it is for, its limits and how it was written",
+          );
+          await page.getByRole("button", { name: "Publish this version" }).click();
+          await expect(
+            page.getByRole("alert").filter({ hasText: "Say what this template is for" }),
+          ).toBeVisible();
+          await page.getByLabel("What it is for").fill("Keep a synthetic record in the browser test.");
+          await page
+            .getByLabel("What you need (optional)")
+            .fill("The first synthetic fact\nThe second synthetic fact");
+          await page
+            .getByLabel("Limits you should know")
+            .fill("A synthetic template; it shows only what is entered.");
+          await page.getByLabel("Drafted with AI").check();
+          await page.getByLabel("Find a guide by its title").fill("Synthetic industry editor");
+          await page.getByRole("button", { name: `Add “${title}” · Industry introduction` }).click();
+          await page.getByRole("button", { name: "Save draft and preview" }).click();
+          await expect(details).toContainText("Keep a synthetic record in the browser test.");
+          await expect(
+            details.getByRole("listitem").filter({ hasText: "The second synthetic fact" }),
+          ).toBeVisible();
+          // The withdrawn introduction is named, and readers would not see it until it is published.
+          await expect(details).toContainText(title + " (readers see it once it is published)");
+          await expect(details.getByTestId("preview-statement")).toHaveText(
+            "Drafted with AI. A Valo Content editor read this version before releasing it. Valo ran no AI review of it, and no Nigerian legal, tax or sector specialist reviewed it.",
+          );
+          await expect(details.getByTestId("preview-missing")).toHaveCount(0);
+          await page.getByRole("button", { name: "Publish this version" }).click();
+          await expect(preview).toContainText("Readers can see version 2.");
           assert.deepEqual(staff.errors, []);
           assert.deepEqual(publicPage.errors, []);
           assert.deepEqual(staff.unknown, []);
@@ -748,11 +900,42 @@ test(
         const invoice = after.items.find((entry) => entry.retainedId === "TPL-01")!;
         const latest = async () =>
           GetManualLibraryRevisionResponse.parse(await ok(await call(item(invoice.itemId!))));
+        // A template is filed with the entry details proposed for it, its related guides linked by the
+        // library items its guides are filed under (docs/architecture/library-entries.md).
+        const { RETAINED_ENTRY_DETAILS } = await import("../modules/manual-library/retained-entry-details");
+        const { retainedItemId } = await import("../modules/manual-library/retained");
+        const proposal = RETAINED_ENTRY_DETAILS["TPL-01"]!;
+        const proposedDetails = {
+          purpose: proposal.purpose,
+          needs: proposal.needs.join("\n"),
+          limits: proposal.limits,
+          relatedItems: proposal.guides.map(retainedItemId),
+          aiDrafted: true,
+        };
+        const detailsOf = (r: {
+          purpose: unknown;
+          needs: unknown;
+          limits: unknown;
+          relatedItems: unknown;
+          aiDrafted: unknown;
+        }) => ({
+          purpose: r.purpose,
+          needs: r.needs,
+          limits: r.limits,
+          relatedItems: r.relatedItems,
+          aiDrafted: r.aiDrafted,
+        });
+        assert.ok(after.items.every((entry) => (entry.details !== null) === entry.kind.endsWith("template")));
         if (loaded.includes("TPL-01")) {
           assert.equal(invoice.formText, "filed");
+          assert.equal(invoice.details, "filed");
           const r = await latest();
           assert.equal(r.formText, proposed);
           assert.deepEqual(r.formFit, { templateId: "TPL-01", state: "fits", problems: [] });
+          assert.deepEqual(detailsOf(r), proposedDetails);
+          assert.ok(
+            r.relatedGuides.every((entry) => entry.title !== null && entry.kind === "practical_guide"),
+          );
         }
         const base = await latest();
         await revision(
@@ -798,6 +981,46 @@ test(
         assert.equal(filedForm.fileFormat, base.fileFormat);
         assert.deepEqual(
           LoadRetainedDraftsResponse.parse(await ok(await call(retained, { load: "form_text" }))).loaded,
+          [],
+        );
+        // The version saved above has no entry details, and filing the form text kept that: the
+        // invoice now waits for its details, as does each template that was in the library before this
+        // test filed the drafts. Filing them adds a draft version with the proposed details, keeping its
+        // text, file and form text.
+        assert.deepEqual(detailsOf(filedForm), {
+          purpose: null,
+          needs: null,
+          limits: null,
+          relatedItems: [],
+          aiDrafted: null,
+        });
+        const noDetails = withForm.status.items
+          .filter((entry) => entry.details === "proposed" && entry.itemId !== null)
+          .map((entry) => entry.retainedId);
+        assert.ok(noDetails.includes("TPL-01"));
+        assert.deepEqual(
+          noDetails.filter((id) => id !== "TPL-01" && loaded.includes(id)),
+          [],
+          "every template filed here was filed with its entry details",
+        );
+        const withDetails = LoadRetainedDraftsResponse.parse(
+          await ok(await call(retained, { load: "details" })),
+        );
+        assert.deepEqual(withDetails.loaded, noDetails);
+        assert.equal(withDetails.remaining, 0);
+        const detailed = await latest();
+        assert.equal(detailed.version, filedForm.version + 1);
+        assert.equal(detailed.state, "draft");
+        assert.deepEqual(detailsOf(detailed), proposedDetails);
+        assert.equal(detailed.formText, proposed);
+        assert.equal(detailed.body, base.body);
+        assert.equal(detailed.fileFormat, base.fileFormat);
+        assert.equal(
+          withDetails.status.items.find((entry) => entry.retainedId === "TPL-01")!.details,
+          "filed",
+        );
+        assert.deepEqual(
+          LoadRetainedDraftsResponse.parse(await ok(await call(retained, { load: "details" }))).loaded,
           [],
         );
         assert.deepEqual(await publicLists(), shownBefore);

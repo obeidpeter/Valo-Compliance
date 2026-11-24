@@ -53,11 +53,14 @@ export function RetainedDrafts() {
   const status = useListRetainedDrafts({ query: { retry: false } });
   const formTextWaiting =
     status.data?.items.filter((item) => item.formText === "proposed" && item.itemId !== null).length ?? 0;
+  // Filed templates whose latest version lacks what it is for, its limits and how it was written.
+  const detailsWaiting =
+    status.data?.items.filter((item) => item.details === "proposed" && item.itemId !== null).length ?? 0;
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  async function fileAll(load: "missing" | "form_text" = "missing") {
+  async function fileAll(load: "missing" | "form_text" | "details" = "missing") {
     setBusy(true);
     setError("");
     setMessage("");
@@ -75,7 +78,9 @@ export function RetainedDrafts() {
       setMessage(
         load === "form_text"
           ? `Filed the form text of ${formatCount(filed)} ${filed === 1 ? "template" : "templates"} as a new draft version. Each is private until it is published.`
-          : `Filed ${formatCount(filed)} ${filed === 1 ? "draft" : "drafts"}. Each is private until it is published.`,
+          : load === "details"
+            ? `Filed the proposed details of ${formatCount(filed)} ${filed === 1 ? "template" : "templates"} as a new draft version. Each is private until it is published.`
+            : `Filed ${formatCount(filed)} ${filed === 1 ? "draft" : "drafts"}. Each is private until it is published.`,
       );
     } catch (e) {
       setError(describeError(e).message);
@@ -142,6 +147,27 @@ export function RetainedDrafts() {
               </button>
             </div>
           )}
+          {detailsWaiting > 0 && (
+            <div className="mt-3 grid gap-1">
+              <p className="text-sm">
+                {formatCount(detailsWaiting)}{" "}
+                {detailsWaiting === 1 ? "filed template does" : "filed templates do"} not yet say what{" "}
+                {detailsWaiting === 1 ? "it is" : "they are"} for, {detailsWaiting === 1 ? "its" : "their"}{" "}
+                limits and how {detailsWaiting === 1 ? "it was" : "they were"} written, which a template needs
+                before it is published. Filing saves the details proposed for each with a new draft version,
+                keeping the text, file and form text of the latest one.
+              </p>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm justify-self-start"
+                disabled={busy}
+                onClick={() => void fileAll("details")}
+                data-testid="button-file-details"
+              >
+                {busy ? "Filing…" : "File the proposed details"}
+              </button>
+            </div>
+          )}
           <p className="mt-2 text-sm" role="status" aria-live="polite">
             {message}
           </p>
@@ -185,6 +211,13 @@ export function RetainedDrafts() {
                             {item.formText === "filed"
                               ? "Form text for its fill-in form: filed with the latest version"
                               : "Form text for its fill-in form: proposed, not filed yet"}
+                          </span>
+                        )}
+                        {item.details && item.state !== "not_in_library" && (
+                          <span className="text-muted-foreground">
+                            {item.details === "filed"
+                              ? "What it is for, its limits and how it was written: filed with the latest version"
+                              : "What it is for, its limits and how it was written: proposed, not filed yet"}
                           </span>
                         )}
                       </li>

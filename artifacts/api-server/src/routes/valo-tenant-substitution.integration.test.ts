@@ -9,6 +9,7 @@ import {
 } from "../test-support/contract-operations";
 import { requestIdentifiers } from "../test-support/request-identifiers";
 import { saysUnexpectedFailure } from "../platform/http-errors";
+import { templateDetailColumns } from "../test-support/template-details";
 
 /**
  * SEC-001 and IAM-003: changing a workspace, draft, order or file identifier must not
@@ -608,6 +609,7 @@ test(
         fileFormat: "docx",
         fileBytes: Buffer.from("synthetic"),
         formText: await proposedFormText("TPL-01"),
+        ...templateDetailColumns,
         createdBy: formEdition.editor,
       });
       await db

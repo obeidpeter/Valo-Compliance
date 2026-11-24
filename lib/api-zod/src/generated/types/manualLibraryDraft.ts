@@ -31,4 +31,32 @@ export interface ManualLibraryDraft {
      * @nullable
      */
   formText?: string | null;
+  /**
+     * For a template only: what it is for, shown on its page and as its summary in the library.
+     * @maxLength 400
+     * @nullable
+     */
+  purpose?: string | null;
+  /**
+     * For a template only: what a customer needs to complete it, one item to a line, up to 12 lines of up to 120 characters.
+     * @maxLength 1600
+     * @nullable
+     */
+  needs?: string | null;
+  /**
+     * For a template only: what it does not do, shown as its limits.
+     * @maxLength 800
+     * @nullable
+     */
+  limits?: string | null;
+  /**
+     * For a template only: the library items of its related guides. A guide is shown on the page only while it is released.
+     * @maxItems 6
+     */
+  relatedItems?: string[];
+  /**
+     * For a template only: whether AI drafted its text. The page's statement of how it was written follows it.
+     * @nullable
+     */
+  aiDrafted?: boolean | null;
 }

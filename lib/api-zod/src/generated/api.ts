@@ -909,7 +909,14 @@ export const GetReleasedTemplateResponse = zod.object({
   "licenceText": zod.string(),
   "taxTreatment": zod.string()
 }).optional(),
-  "formats": zod.array(zod.enum(['docx', 'pdf']))
+  "formats": zod.array(zod.enum(['docx', 'pdf'])),
+  "purpose": zod.string().optional().describe('A staff-library template\'s purpose, released with its version. Absent when the version has none.'),
+  "needs": zod.array(zod.string()).optional().describe('What a customer needs to complete a staff-library template, one item each.'),
+  "relatedGuides": zod.array(zod.object({
+  "title": zod.string(),
+  "href": zod.string(),
+  "kind": zod.enum(['guide', 'guidance', 'industry_introduction', 'industry_pack'])
+})).optional().describe('A staff-library template\'s related guides that are released now.')
 })
 
 
@@ -4159,6 +4166,7 @@ export const ListRetainedDraftsResponse = zod.object({
   "liveVersion": zod.int().nullable(),
   "shown": zod.boolean(),
   "formText": zod.union([zod.literal('proposed'),zod.literal('filed'),zod.literal(null)]).nullable().describe('For a template with a fill-in form: whether the library\'s latest version carries the form text proposed for it (filed) or not yet (proposed). Null for every other draft.'),
+  "details": zod.union([zod.literal('proposed'),zod.literal('filed'),zod.literal(null)]).nullable().describe('For a template: whether the library\'s latest version says what it is for, its limits and how it was written (filed), or not yet, so that its proposed details wait to be filed (proposed). Null for every other draft.'),
   "sourceCheck": zod.union([zod.object({
   "checkedAt": zod.coerce.date(),
   "holds": zod.int().min(listRetainedDraftsResponseItemsItemSourceCheckOneHoldsMin),
@@ -4172,7 +4180,7 @@ export const ListRetainedDraftsResponse = zod.object({
 
 
 export const LoadRetainedDraftsBody = zod.object({
-  "load": zod.enum(['missing', 'form_text']).describe('missing files the drafts not in the library yet; form_text files a new draft version of each filed template whose latest version lacks the form text proposed for it')
+  "load": zod.enum(['missing', 'form_text', 'details']).describe('missing files the drafts not in the library yet; form_text files a new draft version of each filed template whose latest version lacks the form text proposed for it; details files a new draft version of each filed template whose latest version lacks its entry details, with the details proposed for it')
 })
 
 export const loadRetainedDraftsResponseRemainingMin = 0;
@@ -4202,6 +4210,7 @@ export const LoadRetainedDraftsResponse = zod.object({
   "liveVersion": zod.int().nullable(),
   "shown": zod.boolean(),
   "formText": zod.union([zod.literal('proposed'),zod.literal('filed'),zod.literal(null)]).nullable().describe('For a template with a fill-in form: whether the library\'s latest version carries the form text proposed for it (filed) or not yet (proposed). Null for every other draft.'),
+  "details": zod.union([zod.literal('proposed'),zod.literal('filed'),zod.literal(null)]).nullable().describe('For a template: whether the library\'s latest version says what it is for, its limits and how it was written (filed), or not yet, so that its proposed details wait to be filed (proposed). Null for every other draft.'),
   "sourceCheck": zod.union([zod.object({
   "checkedAt": zod.coerce.date(),
   "holds": zod.int().min(loadRetainedDraftsResponseStatusItemsItemSourceCheckOneHoldsMin),
@@ -4251,7 +4260,18 @@ export const GetManualLibraryRevisionResponse = zod.object({
   "templateId": zod.string().nullable(),
   "state": zod.enum(['no_template', 'no_form', 'fits', 'does_not_fit']),
   "problems": zod.array(zod.string().max(getManualLibraryRevisionResponseFormFitOneProblemsItemMax)).max(getManualLibraryRevisionResponseFormFitOneProblemsMax)
-}).describe('How a revision\'s form text fits the fill-in form of the template it is filed as, found by its title.'),zod.null()])
+}).describe('How a revision\'s form text fits the fill-in form of the template it is filed as, found by its title.'),zod.null()]),
+  "purpose": zod.string().nullable(),
+  "needs": zod.string().nullable(),
+  "limits": zod.string().nullable(),
+  "relatedItems": zod.array(zod.uuid()),
+  "aiDrafted": zod.boolean().nullable().describe('A template\'s entry details (docs/architecture/library-entries.md), released with the version.'),
+  "relatedGuides": zod.array(zod.object({
+  "itemId": zod.uuid(),
+  "title": zod.string().nullable(),
+  "kind": zod.union([zod.literal('practical_guide'),zod.literal('industry_introduction'),zod.literal('industry_pack'),zod.literal('template'),zod.literal('premium_template'),zod.literal('regulatory_article'),zod.literal(null)]).nullable(),
+  "live": zod.boolean()
+})).describe('The related guides by their library items, as the editor sees them: the title and kind of each item\'s latest version, whether a version of it is released now, or nulls for an item not in the library yet.')
 })
 
 
@@ -4269,6 +4289,14 @@ export const saveManualLibraryDraftBodyUploadBase64Max = 2796204;
 
 export const saveManualLibraryDraftBodyFormTextMax = 60000;
 
+export const saveManualLibraryDraftBodyPurposeMax = 400;
+
+export const saveManualLibraryDraftBodyNeedsMax = 1600;
+
+export const saveManualLibraryDraftBodyLimitsMax = 800;
+
+export const saveManualLibraryDraftBodyRelatedItemsMax = 6;
+
 
 
 export const SaveManualLibraryDraftBody = zod.object({
@@ -4283,7 +4311,12 @@ export const SaveManualLibraryDraftBody = zod.object({
   "format": zod.enum(['docx', 'pdf']),
   "base64": zod.string().max(saveManualLibraryDraftBodyUploadBase64Max)
 }).optional(),
-  "formText": zod.string().max(saveManualLibraryDraftBodyFormTextMax).nullish().describe('For a template only: its wording with its placeholders named, for its fill-in form. Omitted or null, the version has none.')
+  "formText": zod.string().max(saveManualLibraryDraftBodyFormTextMax).nullish().describe('For a template only: its wording with its placeholders named, for its fill-in form. Omitted or null, the version has none.'),
+  "purpose": zod.string().max(saveManualLibraryDraftBodyPurposeMax).nullish().describe('For a template only: what it is for, shown on its page and as its summary in the library.'),
+  "needs": zod.string().max(saveManualLibraryDraftBodyNeedsMax).nullish().describe('For a template only: what a customer needs to complete it, one item to a line, up to 12 lines of up to 120 characters.'),
+  "limits": zod.string().max(saveManualLibraryDraftBodyLimitsMax).nullish().describe('For a template only: what it does not do, shown as its limits.'),
+  "relatedItems": zod.array(zod.uuid()).max(saveManualLibraryDraftBodyRelatedItemsMax).optional().describe('For a template only: the library items of its related guides. A guide is shown on the page only while it is released.'),
+  "aiDrafted": zod.boolean().nullish().describe('For a template only: whether AI drafted its text. The page\'s statement of how it was written follows it.')
 })
 
 export const saveManualLibraryDraftResponseDigestRegExp = new RegExp('^[0-9a-f]{64}$');
@@ -4318,7 +4351,18 @@ export const SaveManualLibraryDraftResponse = zod.object({
   "templateId": zod.string().nullable(),
   "state": zod.enum(['no_template', 'no_form', 'fits', 'does_not_fit']),
   "problems": zod.array(zod.string().max(saveManualLibraryDraftResponseFormFitOneProblemsItemMax)).max(saveManualLibraryDraftResponseFormFitOneProblemsMax)
-}).describe('How a revision\'s form text fits the fill-in form of the template it is filed as, found by its title.'),zod.null()])
+}).describe('How a revision\'s form text fits the fill-in form of the template it is filed as, found by its title.'),zod.null()]),
+  "purpose": zod.string().nullable(),
+  "needs": zod.string().nullable(),
+  "limits": zod.string().nullable(),
+  "relatedItems": zod.array(zod.uuid()),
+  "aiDrafted": zod.boolean().nullable().describe('A template\'s entry details (docs/architecture/library-entries.md), released with the version.'),
+  "relatedGuides": zod.array(zod.object({
+  "itemId": zod.uuid(),
+  "title": zod.string().nullable(),
+  "kind": zod.union([zod.literal('practical_guide'),zod.literal('industry_introduction'),zod.literal('industry_pack'),zod.literal('template'),zod.literal('premium_template'),zod.literal('regulatory_article'),zod.literal(null)]).nullable(),
+  "live": zod.boolean()
+})).describe('The related guides by their library items, as the editor sees them: the title and kind of each item\'s latest version, whether a version of it is released now, or nulls for an item not in the library yet.')
 })
 
 
@@ -4368,7 +4412,18 @@ export const ActOnManualLibraryResponse = zod.object({
   "templateId": zod.string().nullable(),
   "state": zod.enum(['no_template', 'no_form', 'fits', 'does_not_fit']),
   "problems": zod.array(zod.string().max(actOnManualLibraryResponseFormFitOneProblemsItemMax)).max(actOnManualLibraryResponseFormFitOneProblemsMax)
-}).describe('How a revision\'s form text fits the fill-in form of the template it is filed as, found by its title.'),zod.null()])
+}).describe('How a revision\'s form text fits the fill-in form of the template it is filed as, found by its title.'),zod.null()]),
+  "purpose": zod.string().nullable(),
+  "needs": zod.string().nullable(),
+  "limits": zod.string().nullable(),
+  "relatedItems": zod.array(zod.uuid()),
+  "aiDrafted": zod.boolean().nullable().describe('A template\'s entry details (docs/architecture/library-entries.md), released with the version.'),
+  "relatedGuides": zod.array(zod.object({
+  "itemId": zod.uuid(),
+  "title": zod.string().nullable(),
+  "kind": zod.union([zod.literal('practical_guide'),zod.literal('industry_introduction'),zod.literal('industry_pack'),zod.literal('template'),zod.literal('premium_template'),zod.literal('regulatory_article'),zod.literal(null)]).nullable(),
+  "live": zod.boolean()
+})).describe('The related guides by their library items, as the editor sees them: the title and kind of each item\'s latest version, whether a version of it is released now, or nulls for an item not in the library yet.')
 })
 
 

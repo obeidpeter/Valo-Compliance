@@ -10,6 +10,7 @@ import {
   ListPublicCatalogueResponse,
 } from "@workspace/api-zod";
 import { wordFromText } from "../modules/manual-library/files";
+import { templateDetails } from "./template-details";
 
 type Call = (path: string, body?: unknown, actor?: string) => Promise<Response>;
 
@@ -29,6 +30,7 @@ export async function exercisePremiumManualTemplate(call: Call, editor: string) 
     baseVersion: 0,
     fileMode: "upload",
     upload: { format: "docx", base64: bytes.toString("base64") },
+    ...templateDetails,
   };
   const draft = (value: unknown) => call(path + "/drafts", value, editor);
   const libraryCard = async () => {
@@ -405,6 +407,7 @@ export async function exercisePremiumFormDocument(call: Call, editor: string) {
         fileMode: "upload",
         upload: { format: "docx", base64: bytes.toString("base64") },
         ...(withForm ? { formText } : {}),
+        ...templateDetails,
       },
       editor,
     );

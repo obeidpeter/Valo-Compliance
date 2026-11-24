@@ -1,4 +1,4 @@
-import { baselineTemplates } from "@workspace/valo-core";
+import { baselineTemplates, libraryTemplateStatement } from "@workspace/valo-core";
 import { isManualTemplate, type releasedManualEntries } from "../manual-library";
 import { templateCategory, type ReleasedLibraryItem } from "./valo-catalogue";
 import { templatePreview } from "./template-preview";
@@ -52,7 +52,8 @@ export function manualCatalogue(row: PublicRevision): ReleasedLibraryItem {
     title: row.title,
     type: template ? "template" : row.kind === "regulatory_article" ? "guidance" : "article",
     industry: row.industry ?? "All industries",
-    summary: summary(row),
+    // A template released with its entry details is listed by what it is for.
+    summary: (template && row.purpose) || summary(row),
     ...(template ? { templateId: row.slug } : {}),
     category: template
       ? manualTemplateCategory(row.title)
@@ -74,24 +75,38 @@ export function manualCatalogue(row: PublicRevision): ReleasedLibraryItem {
     href: (template ? "/library/" : "/resources/") + row.slug,
   };
 }
-export function manualTemplate(row: PublicRevision) {
+/**
+ * A released staff-library template's page (docs/architecture/library-entries.md): its entry details
+ * as released with its version, the statement of how it was written and checked that follows from
+ * them, and its related guides that are released now, from `released`.
+ */
+export function manualTemplate(row: PublicRevision, released: readonly PublicRevision[] = []) {
+  const related = (row.relatedItems ?? []).flatMap((itemId) => {
+    const guide = released.find((entry) => entry.itemId === itemId && !isManualTemplate(entry.kind));
+    return guide
+      ? [{ title: guide.title, href: "/resources/" + guide.slug, kind: manualResourceKind(guide) }]
+      : [];
+  });
   return {
     id: row.id,
     templateId: row.slug,
     slug: row.slug,
     title: row.title,
-    summary: summary(row),
+    summary: row.purpose ?? summary(row),
     version: row.version,
     publicationMethod: "manual" as const,
     reviewedAt: row.publishedAt!.toISOString(),
     access: row.kind === "premium_template" ? ("premium" as const) : ("free" as const),
     reviewBy: null,
-    disclosure,
+    disclosure: libraryTemplateStatement(row.aiDrafted),
     scope: "Business template",
-    limitations: "Everyday business use.",
+    limitations: row.limits ?? "",
     preview: [templatePreview(row.body)],
     developmentOnly: true,
     commercialLicenceAccepted: false,
     formats: [row.fileFormat!],
+    ...(row.purpose ? { purpose: row.purpose } : {}),
+    ...(row.needs ? { needs: row.needs.split("\n") } : {}),
+    ...(related.length ? { relatedGuides: related } : {}),
   };
 }

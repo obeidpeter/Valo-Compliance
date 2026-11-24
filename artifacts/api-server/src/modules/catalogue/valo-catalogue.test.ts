@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { paginateReleasedItems } from "./valo-catalogue";
-import { manualCatalogue, manualResource } from "./manual-presentation";
+import { manualCatalogue, manualResource, manualTemplate } from "./manual-presentation";
 import { releasedDocumentText, sampleFieldsPreview, templatePreview } from "./template-preview";
 import { escapeLikePattern } from "../manual-library";
 import { verifiedRightsApplicability } from "../publication/rights-applicability";
@@ -73,6 +73,11 @@ test("manualCatalogue maps regulatory articles to guidance, uses sourceCheckedAt
     closedAt: null,
     regulatorySources: null,
     sourceCheckedAt: null as Date | null,
+    purpose: null as string | null,
+    needs: null as string | null,
+    limits: null as string | null,
+    relatedItems: null as string[] | null,
+    aiDrafted: null as boolean | null,
   };
   const regulatory = manualCatalogue({
     ...base,
@@ -206,4 +211,72 @@ test("a premium template's preview names only the sample fields its text marks, 
   assert.deepEqual(sampleFieldsPreview("No fields at all."), [
     "SAMPLE FIELD: Business name [your information]",
   ]);
+});
+
+// DOC-003, EDP-008: a staff-library template's page says what it is for, what a customer needs, its
+// limits, how it was written and checked, and links its related guides while they are released.
+test("a staff-library template's page shows its released details, its statement and only its released related guides", () => {
+  const publishedAt = new Date("2026-11-24T09:00:00Z");
+  const row = (
+    itemId: string,
+    kind: "template" | "practical_guide" | "regulatory_article",
+    title: string,
+  ) => ({
+    id: itemId.replace(/.$/, "9"),
+    itemId,
+    version: 1,
+    slug: "manual-" + itemId,
+    kind,
+    industry: null,
+    title,
+    body: "Synthetic text of the item.",
+    digest: "a".repeat(64),
+    fileFormat: kind === "template" ? ("docx" as const) : null,
+    state: "published" as const,
+    createdAt: publishedAt,
+    publishedAt,
+    closedAt: null,
+    regulatorySources: null,
+    sourceCheckedAt: null,
+    purpose: null as string | null,
+    needs: null as string | null,
+    limits: null as string | null,
+    relatedItems: null as string[] | null,
+    aiDrafted: null as boolean | null,
+  });
+  const guide = row("00000000-0000-4000-8000-0000000000a1", "practical_guide", "Synthetic guide");
+  const article = row("00000000-0000-4000-8000-0000000000a2", "regulatory_article", "Synthetic article");
+  const unreleased = "00000000-0000-4000-8000-0000000000a3";
+  const template = {
+    ...row("00000000-0000-4000-8000-0000000000b1", "template", "Synthetic register"),
+    purpose: "Keep a synthetic record.",
+    needs: "The first synthetic fact\nThe second synthetic fact",
+    limits: "It does not prove anything about the synthetic record.",
+    relatedItems: [guide.itemId, unreleased, article.itemId],
+    aiDrafted: true,
+  };
+  const page = manualTemplate(template, [guide, article, template]);
+  assert.equal(page.summary, "Keep a synthetic record.");
+  assert.equal(page.purpose, "Keep a synthetic record.");
+  assert.deepEqual(page.needs, ["The first synthetic fact", "The second synthetic fact"]);
+  assert.equal(page.limitations, "It does not prove anything about the synthetic record.");
+  assert.match(page.disclosure, /^Drafted with AI\. .*Valo ran no AI review of it/);
+  assert.match(page.disclosure, /no Nigerian legal, tax or sector specialist reviewed it\.$/);
+  // A related guide that is not released is left out; each one shown says what kind of guide it is.
+  assert.deepEqual(page.relatedGuides, [
+    { title: "Synthetic guide", href: "/resources/" + guide.slug, kind: "guide" },
+    { title: "Synthetic article", href: "/resources/" + article.slug, kind: "guidance" },
+  ]);
+  assert.match(manualTemplate({ ...template, aiDrafted: false }).disclosure, /^Written without AI\./);
+  assert.equal(manualCatalogue(template).summary, "Keep a synthetic record.");
+  // A version released before the details existed shows none, and says only what is known.
+  const older = manualTemplate(row("00000000-0000-4000-8000-0000000000c1", "template", "Synthetic older"));
+  assert.equal(older.purpose, undefined);
+  assert.equal(older.needs, undefined);
+  assert.equal(older.relatedGuides, undefined);
+  assert.equal(older.limitations, "");
+  assert.equal(
+    older.disclosure,
+    "A Valo Content editor read this version before releasing it. No Nigerian legal, tax or sector specialist reviewed it.",
+  );
 });

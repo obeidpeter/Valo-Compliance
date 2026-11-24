@@ -8,6 +8,6 @@
 import type { RetainedDraftLoadLoad } from './retainedDraftLoadLoad';
 
 export interface RetainedDraftLoad {
-  /** missing files the drafts not in the library yet; form_text files a new draft version of each filed template whose latest version lacks the form text proposed for it */
+  /** missing files the drafts not in the library yet; form_text files a new draft version of each filed template whose latest version lacks the form text proposed for it; details files a new draft version of each filed template whose latest version lacks its entry details, with the details proposed for it */
   load: RetainedDraftLoadLoad;
 }

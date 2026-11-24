@@ -545,6 +545,22 @@ export const ReleasedTemplateFormatsItem = {
   pdf: 'pdf',
 } as const;
 
+export type RelatedGuideKind = typeof RelatedGuideKind[keyof typeof RelatedGuideKind];
+
+
+export const RelatedGuideKind = {
+  guide: 'guide',
+  guidance: 'guidance',
+  industry_introduction: 'industry_introduction',
+  industry_pack: 'industry_pack',
+} as const;
+
+export interface RelatedGuide {
+  title: string;
+  href: string;
+  kind: RelatedGuideKind;
+}
+
 export interface ReleasedTemplate {
   id: string;
   templateId: string;
@@ -565,6 +581,12 @@ export interface ReleasedTemplate {
   commercialLicenceAccepted: boolean;
   offer?: TemplateOffer;
   formats: ReleasedTemplateFormatsItem[];
+  /** A staff-library template's purpose, released with its version. Absent when the version has none. */
+  purpose?: string;
+  /** What a customer needs to complete a staff-library template, one item each. */
+  needs?: string[];
+  /** A staff-library template's related guides that are released now. */
+  relatedGuides?: RelatedGuide[];
 }
 
 export interface CataloguePage {
@@ -1866,7 +1888,7 @@ export interface OwnerGuidanceReceipt {
 }
 
 /**
- * missing files the drafts not in the library yet; form_text files a new draft version of each filed template whose latest version lacks the form text proposed for it
+ * missing files the drafts not in the library yet; form_text files a new draft version of each filed template whose latest version lacks the form text proposed for it; details files a new draft version of each filed template whose latest version lacks its entry details, with the details proposed for it
  */
 export type RetainedDraftLoadLoad = typeof RetainedDraftLoadLoad[keyof typeof RetainedDraftLoadLoad];
 
@@ -1874,10 +1896,11 @@ export type RetainedDraftLoadLoad = typeof RetainedDraftLoadLoad[keyof typeof Re
 export const RetainedDraftLoadLoad = {
   missing: 'missing',
   form_text: 'form_text',
+  details: 'details',
 } as const;
 
 export interface RetainedDraftLoad {
-  /** missing files the drafts not in the library yet; form_text files a new draft version of each filed template whose latest version lacks the form text proposed for it */
+  /** missing files the drafts not in the library yet; form_text files a new draft version of each filed template whose latest version lacks the form text proposed for it; details files a new draft version of each filed template whose latest version lacks its entry details, with the details proposed for it */
   load: RetainedDraftLoadLoad;
 }
 
@@ -1924,6 +1947,18 @@ export const RetainedDraftFormText = {
   filed: 'filed',
 } as const;
 
+/**
+ * For a template: whether the library's latest version says what it is for, its limits and how it was written (filed), or not yet, so that its proposed details wait to be filed (proposed). Null for every other draft.
+ * @nullable
+ */
+export type RetainedDraftDetails = typeof RetainedDraftDetails[keyof typeof RetainedDraftDetails] | null;
+
+
+export const RetainedDraftDetails = {
+  proposed: 'proposed',
+  filed: 'filed',
+} as const;
+
 export interface RetainedDraft {
   retainedId: string;
   kind: RetainedDraftKind;
@@ -1943,6 +1978,11 @@ export interface RetainedDraft {
      * @nullable
      */
   formText: RetainedDraftFormText;
+  /**
+     * For a template: whether the library's latest version says what it is for, its limits and how it was written (filed), or not yet, so that its proposed details wait to be filed (proposed). Null for every other draft.
+     * @nullable
+     */
+  details: RetainedDraftDetails;
   sourceCheck: RetainedDraftSourceCheck | null;
 }
 
@@ -2039,6 +2079,30 @@ export type ManualLibraryRevisionLive = {
   digest: string;
 } | null;
 
+/**
+ * @nullable
+ */
+export type ManualLibraryRevisionRelatedGuidesItemKind = typeof ManualLibraryRevisionRelatedGuidesItemKind[keyof typeof ManualLibraryRevisionRelatedGuidesItemKind] | null;
+
+
+export const ManualLibraryRevisionRelatedGuidesItemKind = {
+  practical_guide: 'practical_guide',
+  industry_introduction: 'industry_introduction',
+  industry_pack: 'industry_pack',
+  template: 'template',
+  premium_template: 'premium_template',
+  regulatory_article: 'regulatory_article',
+} as const;
+
+export type ManualLibraryRevisionRelatedGuidesItem = {
+  itemId: string;
+  /** @nullable */
+  title: string | null;
+  /** @nullable */
+  kind: ManualLibraryRevisionRelatedGuidesItemKind;
+  live: boolean;
+};
+
 export type ManualFormFitState = typeof ManualFormFitState[keyof typeof ManualFormFitState];
 
 
@@ -2090,6 +2154,20 @@ export interface ManualLibraryRevision {
      */
   formText: string | null;
   formFit: ManualFormFit | null;
+  /** @nullable */
+  purpose: string | null;
+  /** @nullable */
+  needs: string | null;
+  /** @nullable */
+  limits: string | null;
+  relatedItems: string[];
+  /**
+     * A template's entry details (docs/architecture/library-entries.md), released with the version.
+     * @nullable
+     */
+  aiDrafted: boolean | null;
+  /** The related guides by their library items, as the editor sees them: the title and kind of each item's latest version, whether a version of it is released now, or nulls for an item not in the library yet. */
+  relatedGuides: ManualLibraryRevisionRelatedGuidesItem[];
 }
 
 export type ManualLibraryDraftKind = typeof ManualLibraryDraftKind[keyof typeof ManualLibraryDraftKind];
@@ -2149,6 +2227,34 @@ export interface ManualLibraryDraft {
      * @nullable
      */
   formText?: string | null;
+  /**
+     * For a template only: what it is for, shown on its page and as its summary in the library.
+     * @maxLength 400
+     * @nullable
+     */
+  purpose?: string | null;
+  /**
+     * For a template only: what a customer needs to complete it, one item to a line, up to 12 lines of up to 120 characters.
+     * @maxLength 1600
+     * @nullable
+     */
+  needs?: string | null;
+  /**
+     * For a template only: what it does not do, shown as its limits.
+     * @maxLength 800
+     * @nullable
+     */
+  limits?: string | null;
+  /**
+     * For a template only: the library items of its related guides. A guide is shown on the page only while it is released.
+     * @maxItems 6
+     */
+  relatedItems?: string[];
+  /**
+     * For a template only: whether AI drafted its text. The page's statement of how it was written follows it.
+     * @nullable
+     */
+  aiDrafted?: boolean | null;
 }
 
 export type ManualLibraryActionAction = typeof ManualLibraryActionAction[keyof typeof ManualLibraryActionAction];

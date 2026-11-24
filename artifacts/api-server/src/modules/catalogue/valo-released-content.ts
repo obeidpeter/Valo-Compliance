@@ -328,8 +328,12 @@ export async function releasedTemplate(slug: string) {
   if (slug.startsWith("manual-")) {
     const [row] = await releasedManualEntries(slug);
     if (!row || !isManualTemplate(row.kind)) throw new ValoProblem(404, "This template is unavailable.");
-    const offer = row.kind === "premium_template" ? await offerForReleasedEdition(row.id) : undefined;
-    return { ...manualTemplate(row), offer };
+    const [offer, released] = await Promise.all([
+      row.kind === "premium_template" ? offerForReleasedEdition(row.id) : undefined,
+      // Its related guides are shown only while they are released (docs/architecture/library-entries.md).
+      row.relatedItems?.length ? releasedManualEntries({ summaryOnly: true }) : [],
+    ]);
+    return { ...manualTemplate(row, released), offer };
   }
   const row = (await liveOperationalVersions()).find((r) => r.slug === slug);
   if (!row)
