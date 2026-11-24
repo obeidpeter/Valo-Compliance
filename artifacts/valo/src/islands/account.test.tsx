@@ -30,9 +30,10 @@ const ACCOUNT = [
   ["/workspace/account", "Sign-in and security"],
   ["/workspace/privacy", "Privacy and data"],
   ["/workspace/purchases", "Purchases"],
+  ["/workspace/support", "Support requests"],
 ];
 
-test("signed in, a server-rendered page's header has the workspace, the account menu with its three pages, closed, and sign out", () => {
+test("signed in, a server-rendered page's header has the workspace, the account menu with its four pages, closed, and sign out", () => {
   const html = draw(signedIn, "header");
   assert.deepEqual(links(html), [["/workspace", "Workspace"], ...ACCOUNT]);
   // The menu is a button that says it is closed and names the list it shows, which starts hidden.
@@ -47,7 +48,7 @@ test("signed in, a server-rendered page's header has the workspace, the account 
   assert.equal(html.replace(/<[^>]+>/g, "").includes("synthetic-header@example.test"), false);
 });
 
-test("signed in, the phone's menu on a server-rendered page lists the workspace, the account's three pages and sign out", () => {
+test("signed in, the phone's menu on a server-rendered page lists the workspace, the account's four pages and sign out", () => {
   const html = draw(signedIn, "menu");
   assert.deepEqual(links(html), [["/workspace", "Workspace"], ...ACCOUNT]);
   assert.match(html, /<nav\b[^>]*aria-label="Account"/);
