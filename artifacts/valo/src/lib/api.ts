@@ -1,16 +1,10 @@
 import type { CanonicalDocument, DocumentBlock } from "@workspace/api-client-react";
-import {
-  DOCUMENT_FIELD_LABELS,
-  guidedDataFromBlocks,
-  guidedDataIssues,
-  guidedFieldIssue,
-  guidedRenderableBlocks,
-} from "@workspace/valo-core/guided-runtime";
-import type { GuidedTemplateId } from "@workspace/valo-core/guided";
+import { DOCUMENT_FIELD_LABELS, guidedFieldIssue } from "@workspace/valo-core/guided-runtime";
 import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
 import { GUIDED_SPECS_V2 } from "@workspace/valo-core/guided-specs-v2";
+import { documentGaps } from "@workspace/valo-core/document-completeness";
 
-import { formIssues, formViewV2, type FormValue, type FormView } from "./form-view";
+import type { FormView } from "./form-view";
 import { askedAs, saidAs } from "./guided-money";
 
 export { describeError, type DescribedError, type ErrorKind } from "./describe-error";
@@ -82,12 +76,25 @@ function guidedIssueSelector(spec: Questions, key: string): string | undefined {
   return `#gt-${table.id}-add`;
 }
 
-/** What a document still needs before it is complete, with jump selectors where a control exists. */
+/** What a document still needs before it is complete, with jump selectors where a control exists:
+ * what `documentGaps` finds, in the editor's words. */
 export function missingFieldItems(content: CanonicalDocument): MissingFieldItem[] {
+  const gaps = documentGaps(content);
+  if (gaps.kind === "unreadable")
+    return [
+      {
+        label:
+          "This document's saved questions cannot be read. Restore an earlier version, and do not treat this one as complete.",
+      },
+    ];
   const out: MissingFieldItem[] = [];
-  let visible: readonly DocumentBlock[] = content.blocks;
-  const issueItems = (spec: Questions, issues: Record<string, string>) => {
-    for (const [key, message] of Object.entries(issues)) {
+  if (gaps.kind === "typed") {
+    for (const k of gaps.fields) out.push({ label: FIELD_LABELS[k], selector: `#f-${k}` });
+    if (gaps.text) out.push({ label: "The document's text", selector: '[data-testid="input-block-0"]' });
+  } else {
+    const spec: Questions =
+      gaps.kind === "form" ? GUIDED_SPECS_V2[gaps.templateId]! : GUIDED_SPECS_V1[gaps.templateId];
+    for (const [key, message] of Object.entries(gaps.issues)) {
       const selector = guidedIssueSelector(spec, key);
       out.push(
         selector
@@ -95,43 +102,10 @@ export function missingFieldItems(content: CanonicalDocument): MissingFieldItem[
           : { label: neededLine(spec, key, message) },
       );
     }
-  };
-  try {
-    const answers = guidedDataFromBlocks(content.blocks);
-    if (content.formAnswers) {
-      // A form document (forms v2) fills its template's own wording from its answers.
-      const spec = GUIDED_SPECS_V2[content.formAnswers.templateId as GuidedTemplateId];
-      if (!spec || answers) throw Error("UNSUPPORTED_FORM_DOCUMENT");
-      const issues = formIssues(formViewV2(spec), content.formAnswers as FormValue);
-      issueItems(spec, issues);
-      // While an answer is missing or wrong, the blanks in the wording are its slots, already
-      // listed by their questions; once the answers are complete, any blank left is listed below.
-      if (Object.keys(issues).length) return out;
-    } else if (answers) {
-      const spec = GUIDED_SPECS_V1[answers.templateId];
-      issueItems(spec, guidedDataIssues(spec, answers));
-      // A v1 form's blocks are the contract's own; its runtime types them more loosely.
-      visible = guidedRenderableBlocks(content) as DocumentBlock[];
-    } else {
-      (Object.keys(FIELD_LABELS) as (keyof CanonicalDocument["fields"])[]).forEach((k) => {
-        if (!content.fields[k]?.trim()) out.push({ label: FIELD_LABELS[k], selector: `#f-${k}` });
-      });
-      if (!content.blocks.some((b) => b.text.trim() || b.rows.some((r) => r.some((c) => c.trim()))))
-        out.push({ label: "The document's text", selector: '[data-testid="input-block-0"]' });
-    }
-  } catch {
-    return [
-      {
-        label:
-          "This document's saved questions cannot be read. Restore an earlier version, and do not treat this one as complete.",
-      },
-    ];
   }
-  const body = visible.flatMap((b) => [b.text, ...b.rows.flat()]).join("\n");
-  const placeholders = [...new Set(body.match(/\[[^\]\n]{0,140}\]|\{\{[^}\n]{1,140}\}\}|_{3,}/g) ?? [])];
-  if (placeholders.length)
+  if (gaps.blanks.length)
     out.push({
-      label: `Blanks still in the text (${placeholders.length}): ${placeholders.slice(0, 5).join(", ")}`,
+      label: `Blanks still in the text (${gaps.blanks.length}): ${gaps.blanks.slice(0, 5).join(", ")}`,
     });
   return out;
 }
