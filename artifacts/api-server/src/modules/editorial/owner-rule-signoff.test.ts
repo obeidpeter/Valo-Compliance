@@ -391,8 +391,14 @@ test("each rule prepared in the repository could be signed against copies of its
   const retained = retainedGuidePassages();
   const camaWords = ["CAMA-814"].map((id) => retained(id)!.text).join("\n");
   const ntaaWords = ["NTAA-11", "NTAA-147-DEFINITIONS"].map((id) => retained(id)!.text).join("\n");
+  const f33Words = ["NAFDAC-F33-PAGE-2", "NAFDAC-F33-PAGE-7"].map((id) => retained(id)!.text).join("\n\f");
   const record = (instrument: string) => guideAmendmentRecords.find((r) => r.instrument === instrument)!;
-  const records = [record("CAC-CAMA-2020"), record("NDPC-NDPA-2023"), record("NASS-NTAA-2025")];
+  const records = [
+    record("CAC-CAMA-2020"),
+    record("NDPC-NDPA-2023"),
+    record("NASS-NTAA-2025"),
+    record("NAFDAC-CAP-F33"),
+  ];
   // A day after the latest search the records describe, so the test holds when they are refreshed,
   // and no earlier than midday on the scenarios' date, which the checker will not assess ahead of.
   const latest = Math.max(...records.flatMap((r) => r.searches.map((s) => Date.parse(s.searchedAt))));
@@ -412,10 +418,11 @@ test("each rule prepared in the repository could be signed against copies of its
     copy("SV-010", `Front matter. ${camaWords} More text.`, record("CAC-CAMA-2020").rawSha256, 1),
     copy("S04", `Front matter.\n${ndpaWords}\nMore text.`, record("NDPC-NDPA-2023").rawSha256, 2),
     copy("NASS-NTAA-2025", `Front matter. ${ntaaWords} More text.`, record("NASS-NTAA-2025").rawSha256, 3),
+    copy("NAFDAC-CAP-F33", `Front matter.\f${f33Words}\fMore text.`, record("NAFDAC-CAP-F33").rawSha256, 4),
   ];
   const { policy } = await guidancePolicy();
   assert.equal(policy.ownerApproved, true);
-  assert.equal(signoff.ownerRuleCandidates.length, 3);
+  assert.equal(signoff.ownerRuleCandidates.length, 4);
   for (const candidate of signoff.ownerRuleCandidates) {
     const id = candidate.rule.id;
     const prepared = signoff.prepareOwnerRule(candidate, {
@@ -437,8 +444,14 @@ test("each rule prepared in the repository could be signed against copies of its
     // The owner's adoption is the rights record, and the rule says how it was released.
     assert.equal(prepared.bundle.rights.status, "cleared");
     assert.match(prepared.bundle.rights.evidence, /adopts it as Valo's own/);
-    // Each rule carries the owner's own answer for it.
-    const answer = id === "ntaa-11-company-return" ? '("I adopt it too")' : '("I adopt it")';
+    // Each rule carries the owner's own answer for it; the product-registration rule, which the owner
+    // did not answer for, the words the owner left the decision to the coding agent in.
+    const answer =
+      id === "ntaa-11-company-return"
+        ? '("I adopt it too")'
+        : id === "nafdac-f33-product-registration"
+          ? '("Implement all (make the best decisions for me)")'
+          : '("I adopt it")';
     assert.ok(prepared.bundle.rights.evidence.includes(answer), id);
     assert.equal(prepared.bundle.rights.evidenceHash, sha256(prepared.bundle.rights.evidence));
     assert.equal(prepared.rule.provenance, "owner_signoff");
