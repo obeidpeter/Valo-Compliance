@@ -26,8 +26,11 @@ export type GuidedSpecV2 = {
   tables: readonly GuidedTableV2[];
   /** Slots left for completion by hand, such as signatures: never filled, never invented. */
   blanks: readonly string[];
-  /** Slots the form works out itself (`calc.*`), and how, from the answers. */
-  calculated?: Readonly<Record<string, (data: GuidedDataV2) => string | null>>;
+  /** Slots the form works out itself (`calc.*`), and how: from the answers and, in a repeating row or
+   * group, that row's answers. Null while the answers needed are not all given and valid. */
+  calculated?: Readonly<
+    Record<string, (data: GuidedDataV2, row?: Readonly<Record<string, string>>) => string | null>
+  >;
   /** Choice options that keep no passage of the text, each declared so that none is missed. */
   keepsNothing?: readonly { question: string; option: string }[];
 };

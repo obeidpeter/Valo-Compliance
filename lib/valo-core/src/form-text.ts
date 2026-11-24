@@ -7,11 +7,14 @@
  *   line), bullet lists (`- `), and pipe tables whose first row is the header and whose second row is
  *   the separator (`| --- |`);
  * - a slot, the placeholder as printed and then its name: `[ ]{=agreementReference}`;
- * - a span, text kept only for one answer to a choice: `{?term=fixed}…{/?}` inline, or the same marks
- *   alone on their own lines around whole blocks. `{?term=}` keeps its text only while the choice is
- *   unanswered. Spans do not nest;
+ * - a span, text kept only for one answer to a choice: `{?term=fixed}…{/?}` inline, the same marks
+ *   alone on their own lines around whole blocks, or around a whole table row, opening at the start of
+ *   its first cell and closing at the end of its last. `{?term=}` keeps its text only while the choice
+ *   is unanswered, and `{?notes}` only while the question `notes` has an answer. Spans do not nest;
  * - a repeating table row, `| {*deliverables} [ ]{=deliverables.item} | … |`, printed once for each
- *   row of the form's table of that name.
+ *   row of the form's table of that name, and a repeating group of blocks, between `{*topics}` and
+ *   `{/*}` alone on their own lines, printed once for each row of that table. A group holds no span
+ *   or other group around blocks.
  *
  * Anything else in braces, an HTML tag, a link, an image or emphasis marks is refused, so released
  * wording can only ever print as plain text. The grammar is frozen with the v2 forms: a change to it
@@ -19,18 +22,21 @@
  */
 export const FORM_TEXT_GRAMMAR = 1;
 
-export type FormSpan = { question: string; option: string };
+/** A passage kept for one answer to a choice (`option`), while the choice is unanswered (`""`), or
+ * while a question has an answer (`null`). */
+export type FormSpan = { question: string; option: string | null };
 export type FormInline =
   | { kind: "text"; text: string }
   | { kind: "slot"; name: string; placeholder: string }
   | { kind: "span"; span: FormSpan; parts: FormInline[] };
-export type FormRow = { repeat: string | null; cells: FormInline[][] };
+export type FormRow = { repeat: string | null; span: FormSpan | null; cells: FormInline[][] };
 export type FormNode =
   | { kind: "heading"; level: 2 | 3; parts: FormInline[] }
   | { kind: "paragraph"; lines: FormInline[][] }
   | { kind: "list"; items: FormInline[][] }
   | { kind: "table"; header: FormInline[][]; rows: FormRow[] }
-  | { kind: "span"; span: FormSpan; nodes: FormNode[] };
+  | { kind: "span"; span: FormSpan; nodes: FormNode[] }
+  | { kind: "repeat"; table: string; nodes: FormNode[] };
 export type FormText = { title: string; nodes: FormNode[] };
 
 export class FormTextError extends Error {
@@ -48,6 +54,20 @@ const QUESTION = /^[a-z][A-Za-z0-9]*$/;
 const OPTION = /^[a-z0-9_]*$/;
 /** At most what the contract can hold, with room: 8,000 characters a block, 100 blocks. */
 const MAX_SOURCE = 60_000;
+/** A span's opening mark: `{?question=option}`, `{?question=}` or `{?question}`. */
+const SPAN_OPEN = /^\{\?([^=}]*)(=([^}]*))?\}/;
+const TABLE_NAME = /^[a-z][A-Za-z0-9]*$/;
+
+function spanOf(mark: RegExpExecArray, line: number): FormSpan {
+  const question = mark[1]!,
+    option = mark[2] === undefined ? null : mark[3]!;
+  if (!QUESTION.test(question) || (option !== null && !OPTION.test(option)))
+    throw new FormTextError(
+      line,
+      `"${mark[0]}" is not a span mark: {?question=option}, {?question=} or {?question}`,
+    );
+  return { question, option };
+}
 
 /** Reads one line's inline marks: text, slots and inline spans. */
 function inline(source: string, line: number, allowSpan = true): FormInline[] {
@@ -70,21 +90,14 @@ function inline(source: string, line: number, allowSpan = true): FormInline[] {
       i += slot[0].length;
       continue;
     }
-    const open = /^\{\?([^=}]*)=([^}]*)\}/.exec(rest);
+    const open = SPAN_OPEN.exec(rest);
     if (open) {
       if (!allowSpan) throw new FormTextError(line, "spans do not nest");
-      const question = open[1]!,
-        option = open[2]!;
-      if (!QUESTION.test(question) || !OPTION.test(option))
-        throw new FormTextError(line, `"${open[0]}" does not name a choice and an option`);
+      const span = spanOf(open, line);
       const close = rest.indexOf("{/?}", open[0].length);
       if (close < 0) throw new FormTextError(line, `"${open[0]}" is not closed on its line`);
       flush();
-      parts.push({
-        kind: "span",
-        span: { question, option },
-        parts: inline(rest.slice(open[0].length, close), line, false),
-      });
+      parts.push({ kind: "span", span, parts: inline(rest.slice(open[0].length, close), line, false) });
       i += close + "{/?}".length;
       continue;
     }
@@ -113,6 +126,37 @@ const cellsOf = (row: string, line: number) => {
     .map((cell) => cell.trim());
 };
 
+/** A table row's cells, with a repeat mark and a span around the whole row read off. */
+function tableRow(raw: string, line: number, columns: number, inSpan: boolean): FormRow {
+  const cells = cellsOf(raw, line);
+  if (cells.length !== columns) throw new FormTextError(line, "every row has as many cells as the header");
+  const repeat = /^\{\*([a-z][A-Za-z0-9]*)\}\s*/.exec(cells[0]!);
+  if (repeat) cells[0] = cells[0]!.slice(repeat[0].length);
+  const last = cells.length - 1,
+    open = SPAN_OPEN.exec(cells[0]!);
+  // A span opening at the start of the first cell and closing at the end of the last keeps the row.
+  const wrapsRow =
+    open !== null &&
+    cells[last]!.endsWith("{/?}") &&
+    (last === 0
+      ? cells[0]!.split("{/?}").length === 2
+      : !cells[0]!.includes("{/?}") && !cells[last]!.includes("{?"));
+  let span: FormSpan | null = null;
+  if (wrapsRow) {
+    if (repeat)
+      throw new FormTextError(line, "a repeating row is printed for each row of its table: it takes no span");
+    if (inSpan) throw new FormTextError(line, "spans do not nest");
+    span = spanOf(open, line);
+    cells[0] = cells[0]!.slice(open[0].length).trim();
+    cells[last] = cells[last]!.slice(0, -"{/?}".length).trim();
+  }
+  return {
+    repeat: repeat?.[1] ?? null,
+    span,
+    cells: cells.map((cell) => inline(cell, line, span === null)),
+  };
+}
+
 /** Parses form text, or throws `FormTextError` naming the first line it cannot read. */
 export function parseFormText(source: string): FormText {
   if (source.length > MAX_SOURCE) throw new FormTextError(1, "the text is too long");
@@ -129,8 +173,11 @@ export function parseFormText(source: string): FormText {
   const title = lines[first]!.slice(2).trim();
   if (/[[\]{}<`*]/.test(title)) throw new FormTextError(first + 1, "the title is plain words");
   const root: FormNode[] = [];
-  let into = root,
-    openSpan: { span: FormSpan; nodes: FormNode[]; line: number } | null = null;
+  // The span or repeating group open around blocks, if any: they do not nest.
+  let open: { node: Extract<FormNode, { kind: "span" | "repeat" }>; line: number } | null = null;
+  const into = () => open?.node.nodes ?? root;
+  const isMark = (trimmed: string) =>
+    trimmed === "{/?}" || trimmed === "{/*}" || /^\{[?*][^}]*\}$/.test(trimmed);
   let i = first + 1;
   while (i < lines.length) {
     const raw = lines[i]!,
@@ -140,30 +187,36 @@ export function parseFormText(source: string): FormText {
       i++;
       continue;
     }
-    const blockOpen = /^\{\?([^=}]*)=([^}]*)\}$/.exec(trimmed);
-    if (blockOpen) {
-      if (openSpan) throw new FormTextError(line, "spans do not nest");
-      const question = blockOpen[1]!,
-        option = blockOpen[2]!;
-      if (!QUESTION.test(question) || !OPTION.test(option))
-        throw new FormTextError(line, `"${trimmed}" does not name a choice and an option`);
-      openSpan = { span: { question, option }, nodes: [], line };
-      into = openSpan.nodes;
+    const spanOpen = /^\{\?[^}]*\}$/.test(trimmed) ? SPAN_OPEN.exec(trimmed) : null;
+    const groupOpen = /^\{\*([^}]*)\}$/.exec(trimmed);
+    if (spanOpen || groupOpen) {
+      if (open) throw new FormTextError(line, "spans and repeating groups do not nest");
+      if (groupOpen) {
+        if (!TABLE_NAME.test(groupOpen[1]!))
+          throw new FormTextError(line, `"${trimmed}" does not name a table of the form`);
+        open = { node: { kind: "repeat", table: groupOpen[1]!, nodes: [] }, line };
+      } else open = { node: { kind: "span", span: spanOf(spanOpen!, line), nodes: [] }, line };
+      root.push(open.node);
       i++;
       continue;
     }
-    if (trimmed === "{/?}") {
-      if (!openSpan) throw new FormTextError(line, "a span closes that was not opened");
-      root.push({ kind: "span", span: openSpan.span, nodes: openSpan.nodes });
-      openSpan = null;
-      into = root;
+    if (trimmed === "{/?}" || trimmed === "{/*}") {
+      const kind = trimmed === "{/?}" ? "span" : "repeat";
+      if (open?.node.kind !== kind)
+        throw new FormTextError(
+          line,
+          kind === "span"
+            ? "a span closes that was not opened"
+            : "a repeating group closes that was not opened",
+        );
+      open = null;
       i++;
       continue;
     }
     if (/^#\s/.test(trimmed)) throw new FormTextError(line, "the text has one title");
     const heading = /^(##|###) (\S.*)$/.exec(trimmed);
     if (heading) {
-      into.push({ kind: "heading", level: heading[1] === "##" ? 2 : 3, parts: inline(heading[2]!, line) });
+      into().push({ kind: "heading", level: heading[1] === "##" ? 2 : 3, parts: inline(heading[2]!, line) });
       i++;
       continue;
     }
@@ -174,7 +227,7 @@ export function parseFormText(source: string): FormText {
         items.push(inline(lines[i]!.trim().slice(2), i + 1));
         i++;
       }
-      into.push({ kind: "list", items });
+      into().push({ kind: "list", items });
       continue;
     }
     if (trimmed.startsWith("|")) {
@@ -189,16 +242,14 @@ export function parseFormText(source: string): FormText {
       i += 2;
       const rows: FormRow[] = [];
       while (i < lines.length && lines[i]!.trim().startsWith("|")) {
-        const cells = cellsOf(lines[i]!, i + 1);
-        if (cells.length !== header.length)
-          throw new FormTextError(i + 1, "every row has as many cells as the header");
-        const repeat = /^\{\*([a-z][A-Za-z0-9]*)\}\s*/.exec(cells[0]!);
-        if (repeat) cells[0] = cells[0]!.slice(repeat[0].length);
-        rows.push({ repeat: repeat?.[1] ?? null, cells: cells.map((cell) => inline(cell, i + 1)) });
+        const row = tableRow(lines[i]!, i + 1, header.length, open?.node.kind === "span");
+        if (row.repeat && open?.node.kind === "repeat")
+          throw new FormTextError(i + 1, "a repeating row cannot sit in a repeating group");
+        rows.push(row);
         i++;
       }
       if (header.length > 10) throw new FormTextError(line, "a table has at most 10 columns");
-      into.push({ kind: "table", header, rows });
+      into().push({ kind: "table", header, rows });
       continue;
     }
     // A paragraph: lines until a blank line or another kind of block.
@@ -210,20 +261,24 @@ export function parseFormText(source: string): FormText {
         next.startsWith("#") ||
         next.startsWith("- ") ||
         next.startsWith("|") ||
-        next === "{/?}" ||
-        /^\{\?[^}]*\}$/.test(next)
+        isMark(next)
       )
         break;
       paragraph.push(inline(next, i + 1));
       i++;
     }
-    into.push({ kind: "paragraph", lines: paragraph });
+    into().push({ kind: "paragraph", lines: paragraph });
   }
-  if (openSpan) throw new FormTextError(openSpan.line, "a span is not closed");
+  if (open)
+    throw new FormTextError(
+      open.line,
+      open.node.kind === "span" ? "a span is not closed" : "a repeating group is not closed",
+    );
   return { title, nodes: root };
 }
 
-/** Every slot in the text, in order, with the repeating row it sits in, if any. */
+/** Every slot in the text, in order, with the table whose rows fill it, if any: the table of its
+ * repeating row, or of the repeating group it sits in. */
 export function formTextSlots(text: FormText) {
   const found: { name: string; placeholder: string; row: string | null }[] = [];
   const walkInline = (parts: FormInline[], row: string | null) => {
@@ -232,23 +287,24 @@ export function formTextSlots(text: FormText) {
       if (part.kind === "span") walkInline(part.parts, row);
     }
   };
-  const walk = (nodes: FormNode[]) => {
+  const walk = (nodes: FormNode[], group: string | null) => {
     for (const node of nodes) {
-      if (node.kind === "heading") walkInline(node.parts, null);
-      if (node.kind === "paragraph") for (const l of node.lines) walkInline(l, null);
-      if (node.kind === "list") for (const item of node.items) walkInline(item, null);
+      if (node.kind === "heading") walkInline(node.parts, group);
+      if (node.kind === "paragraph") for (const l of node.lines) walkInline(l, group);
+      if (node.kind === "list") for (const item of node.items) walkInline(item, group);
       if (node.kind === "table") {
-        for (const cell of node.header) walkInline(cell, null);
-        for (const row of node.rows) for (const cell of row.cells) walkInline(cell, row.repeat);
+        for (const cell of node.header) walkInline(cell, group);
+        for (const row of node.rows) for (const cell of row.cells) walkInline(cell, row.repeat ?? group);
       }
-      if (node.kind === "span") walk(node.nodes);
+      if (node.kind === "span") walk(node.nodes, group);
+      if (node.kind === "repeat") walk(node.nodes, node.table);
     }
   };
-  walk(text.nodes);
+  walk(text.nodes, null);
   return found;
 }
 
-/** Every span in the text, inline or around blocks. */
+/** Every span in the text: inline, around blocks or around a table row. */
 export function formTextSpans(text: FormText): FormSpan[] {
   const found: FormSpan[] = [];
   const walkInline = (parts: FormInline[]) => {
@@ -265,12 +321,16 @@ export function formTextSpans(text: FormText): FormSpan[] {
       if (node.kind === "list") node.items.forEach(walkInline);
       if (node.kind === "table") {
         node.header.forEach(walkInline);
-        for (const row of node.rows) row.cells.forEach(walkInline);
+        for (const row of node.rows) {
+          if (row.span) found.push(row.span);
+          row.cells.forEach(walkInline);
+        }
       }
       if (node.kind === "span") {
         found.push(node.span);
         walk(node.nodes);
       }
+      if (node.kind === "repeat") walk(node.nodes);
     }
   };
   walk(text.nodes);

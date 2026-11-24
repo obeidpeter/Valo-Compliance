@@ -358,6 +358,262 @@ test("compiling prints the text's own words, fills each slot with its answer and
   assert.doesNotMatch(printed(signing), /Synthetic Signer/);
 });
 
+// Optional passages, rows kept for a choice, and groups of blocks repeated for each row of a table.
+const minutesSource = `# Synthetic minutes
+
+Meeting: [Title]{=meetingTitle}
+{?notes}Notes: [Notes]{=notes}{/?}
+
+{*topics}
+### [Topic]{=topics.topic}
+
+Outcome: [Outcome]{=topics.outcome}
+{/*}
+
+| Charge | Amount |
+| --- | ---: |
+| {*items} [Item]{=items.description} | [Calculated]{=calc.line} |
+| {?discountMode=supplied}Agreed discount | [Deduction]{=calc.discount}{/?} |
+| {?discountMode=}[Agreed discount, if any] | [ ]{/?} |
+| Total | [Calculated]{=calc.total} |
+
+| Action | Owner |
+| --- | --- |
+| {*actions} [ ]{=actions.action} | [ ]{=actions.owner} |
+
+{?apologies}
+Apologies were received.
+{/?}
+`;
+const amount = (value: string | undefined) =>
+  /^(0|[1-9]\d{0,23})$/.test(value ?? "") ? BigInt(value!) : null;
+const minutesSpec: GuidedSpecV2 = {
+  schemaVersion: 2,
+  templateId: "TPL-08",
+  title: "Synthetic minutes",
+  fields: [
+    { id: "meetingTitle", label: "Meeting", type: "text", required: true, tokens: ["meetingTitle"] },
+    { id: "notes", label: "Notes", type: "long_text", required: false, tokens: ["notes"] },
+    { id: "apologies", label: "Apologies", type: "text", required: false },
+    {
+      id: "discountMode",
+      label: "Include an agreed discount?",
+      type: "select",
+      required: true,
+      clause: true,
+      options: [
+        { value: "none", label: "No discount" },
+        { value: "supplied", label: "Supply an agreed amount" },
+      ],
+    },
+    {
+      id: "discountKobo",
+      label: "Agreed discount in whole kobo",
+      type: "money_kobo",
+      required: true,
+      when: { field: "discountMode", equals: "supplied" },
+    },
+  ],
+  tables: [
+    {
+      id: "topics",
+      label: "Topics",
+      minRows: 1,
+      maxRows: 10,
+      columns: [
+        { id: "topic", label: "Topic", type: "text", required: true },
+        { id: "outcome", label: "Outcome", type: "long_text", required: true },
+      ],
+    },
+    {
+      id: "items",
+      label: "Charges",
+      minRows: 1,
+      maxRows: 10,
+      columns: [
+        { id: "description", label: "Charge", type: "text", required: true },
+        { id: "amountKobo", label: "Amount in whole kobo", type: "money_kobo", required: true },
+      ],
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      minRows: 0,
+      maxRows: 10,
+      columns: [
+        { id: "action", label: "Action", type: "text", required: true },
+        { id: "owner", label: "Owner", type: "text", required: true },
+      ],
+    },
+  ],
+  blanks: [],
+  keepsNothing: [{ question: "discountMode", option: "none" }],
+  calculated: {
+    "calc.line": (_data, row) => {
+      const value = amount(row?.amountKobo);
+      return value === null ? null : formatKobo(value);
+    },
+    "calc.discount": (data) => {
+      const value = amount(data.values.discountKobo);
+      return value === null ? null : formatKobo(value);
+    },
+    "calc.total": (data) => {
+      const lines = (data.tables.items ?? []).map((row) => amount(row.amountKobo));
+      if (!lines.length || lines.some((line) => line === null)) return null;
+      const discount = data.values.discountMode === "supplied" ? amount(data.values.discountKobo) : 0n;
+      if (discount === null) return null;
+      return formatKobo(lines.reduce((sum: bigint, line) => sum + line!, 0n) - discount);
+    },
+  },
+};
+const minutes = parseFormText(minutesSource);
+
+test("form text keeps optional passages, rows kept for a choice, and groups of blocks repeated for each row", () => {
+  assert.deepEqual(
+    minutes.nodes.map((n) => n.kind),
+    ["paragraph", "repeat", "table", "table", "span"],
+  );
+  assert.deepEqual(
+    formTextSpans(minutes).map((s) => `${s.question}=${s.option}`),
+    ["notes=null", "discountMode=supplied", "discountMode=", "apologies=null"],
+  );
+  assert.deepEqual(
+    formTextSlots(minutes)
+      .filter((slot) => slot.row)
+      .map((slot) => [slot.name, slot.row]),
+    [
+      ["topics.topic", "topics"],
+      ["topics.outcome", "topics"],
+      ["items.description", "items"],
+      ["calc.line", "items"],
+      ["actions.action", "actions"],
+      ["actions.owner", "actions"],
+    ],
+  );
+  assert.deepEqual(formFit(minutesSpec, minutes), []);
+  const refused: [string, RegExp][] = [
+    ["# T\n\n{?a=b}\n{*topics}\nx\n{/*}\n{/?}", /do not nest/],
+    ["# T\n\n{*topics}\n{?a=b}\nx\n{/?}\n{/*}", /do not nest/],
+    ["# T\n\n{*topics}\n| A |\n| --- |\n| {*items} x |\n{/*}", /cannot sit in a repeating group/],
+    ["# T\n\n| A | B |\n| --- | --- |\n| {*items} {?a=b}x | y{/?} |", /takes no span/],
+    ["# T\n\n{?a=b}\n| A | B |\n| --- | --- |\n| {?c=d}x | y{/?} |\n{/?}", /do not nest/],
+    ["# T\n\n{*topics}\nNever closed.", /repeating group is not closed/],
+    ["# T\n\n{*topics}\nx\n{/?}", /span closes that was not opened/],
+    ["# T\n\nx\n\n{/*}", /repeating group closes that was not opened/],
+    ["# T\n\n{*Bad-name}\nx\n{/*}", /does not name a table/],
+    ["# T\n\n{?bad-name}x{/?}", /is not a span mark/],
+    ["# T\n\n| A | B |\n| --- | --- |\n| {?a=b}x | {?c=d}y{/?} |", /not closed on its line/],
+  ];
+  for (const [bad, reason] of refused)
+    assert.throws(
+      () => parseFormText(bad),
+      (error: unknown) => error instanceof FormTextError && reason.test(error.message),
+      bad,
+    );
+  // A passage kept while a question is answered is only for an answer the document may go without.
+  const field = (id: string) => minutesSpec.fields.find((f) => f.id === id)!;
+  const others = (id: string) => minutesSpec.fields.filter((f) => f.id !== id);
+  const fit = (change: Partial<GuidedSpecV2>, source = minutesSource) =>
+    formFit({ ...minutesSpec, ...change }, parseFormText(source));
+  assert.ok(
+    fit({ fields: [...others("notes"), { ...field("notes"), required: true }] }).some((p) =>
+      p.includes('kept only while "notes" is answered, but it must be answered'),
+    ),
+  );
+  assert.ok(
+    fit({}, minutesSource + "\n{?discountMode}x{/?}\n").some((p) => p.includes('"discountMode" is a choice')),
+  );
+  assert.ok(
+    fit({}, minutesSource + "\n{?missing}x{/?}\n").some((p) =>
+      p.includes('"missing" is answered, which is not a question'),
+    ),
+  );
+  assert.ok(
+    fit({ tables: minutesSpec.tables.filter((t) => t.id !== "topics") }).some((p) =>
+      p.includes('a group of blocks repeats for "topics"'),
+    ),
+  );
+  // A group is counted once for each row its table can hold.
+  assert.ok(
+    fit({
+      tables: minutesSpec.tables.map((t) => (t.id === "topics" ? { ...t, maxRows: 45 } : t)),
+    }).some((p) => p.includes("more than 90 blocks")),
+  );
+});
+
+test("compiling repeats a group for each row, keeps a row for its choice, and prints an optional passage only once answered", () => {
+  const printed = (r: ReturnType<typeof compileForm>) =>
+    r.blocks
+      .map((b) => (b.type === "table" ? b.rows.map((row) => row.join(" | ")).join("\n") : b.text))
+      .join("\n");
+  // Nothing answered: one group and one row of placeholders for the tables that need a row, none
+  // for the table that may be left empty, the discount's unanswered row, and no optional passage.
+  const empty = compileForm(minutesSpec, minutes, emptyFormData(minutesSpec));
+  assert.equal(
+    printed(empty),
+    [
+      "Meeting: [Title]",
+      "[Topic]",
+      "Outcome: [Outcome]",
+      "Charge | Amount",
+      "[Item] | [Calculated]",
+      "[Agreed discount, if any] | [ ]",
+      "Total | [Calculated]",
+      "Action | Owner",
+    ].join("\n"),
+  );
+  assert.deepEqual(
+    empty.blocks.map((b) => b.type),
+    ["paragraph", "heading", "paragraph", "table", "table"],
+  );
+  // Answered.
+  const data = emptyFormData(minutesSpec);
+  data.values = {
+    ...data.values,
+    meetingTitle: "Synthetic review",
+    notes: "Synthetic note",
+    discountMode: "supplied",
+    discountKobo: "5000",
+  };
+  data.tables.topics = [
+    { topic: "Synthetic budget", outcome: "Agreed" },
+    { topic: "Synthetic hiring", outcome: "Deferred" },
+  ];
+  data.tables.items = [
+    { description: "Synthetic hall", amountKobo: "100000" },
+    { description: "Synthetic lunch", amountKobo: "25000" },
+  ];
+  data.tables.actions = [{ action: "Synthetic follow-up", owner: "Synthetic owner" }];
+  const full = compileForm(minutesSpec, minutes, data);
+  assert.equal(
+    printed(full),
+    [
+      "Meeting: Synthetic review\nNotes: Synthetic note",
+      "Synthetic budget",
+      "Outcome: Agreed",
+      "Synthetic hiring",
+      "Outcome: Deferred",
+      "Charge | Amount",
+      "Synthetic hall | ₦1,000.00",
+      "Synthetic lunch | ₦250.00",
+      "Agreed discount | ₦50.00",
+      "Total | ₦1,200.00",
+      "Action | Owner",
+      "Synthetic follow-up | Synthetic owner",
+    ].join("\n"),
+  );
+  assert.deepEqual(full.unfilled, []);
+  assert.deepEqual(full.selectedClauses, ["discountMode=supplied"]);
+  // No discount: neither discount row prints. An optional answer given prints its passage.
+  const none = compileForm(minutesSpec, minutes, {
+    ...data,
+    values: { ...data.values, discountMode: "none", notes: "", apologies: "Synthetic absentee" },
+  });
+  assert.doesNotMatch(printed(none), /discount|Notes:/i);
+  assert.match(printed(none), /Total \| ₦1,250\.00/);
+  assert.match(printed(none), /Apologies were received\./);
+});
+
 test("a save is refused for answers the form does not take, and keeps answers that are not valid yet as a draft", () => {
   const data = emptyFormData(spec);
   assert.deepEqual(formAnswerIssues(spec, data).refused, []);
