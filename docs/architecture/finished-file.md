@@ -87,7 +87,10 @@ The documents list and the business library say which files are finished.
 
 ## Slices
 
-| # | Pull request | Requirements |
+The three slices come in one pull request, each in commits of its own, since each is small and they
+are verified together.
+
+| # | Slice | Requirements |
 | --- | --- | --- |
 | 1 | The "Still needed" list moves into `valo-core` unchanged, in a commit of its own; then it takes a v2 document's form text and lists unfilled slots instead of every blank, and says whether a document is complete. Tests for each kind of document. | EDT-005 |
 | 2 | The server: the job's `finished` column (a migration with its upgrade test and runbook), the request's check, the worker's check, the finished notice in the renderer, and the reply. Database tests: a complete version makes a finished file without the draft label; an incomplete one is refused with what is missing; a marked draft is still made for either; a finished job of an incomplete version fails in the worker. | EDT-005, EDT-006, EDT-009 |
