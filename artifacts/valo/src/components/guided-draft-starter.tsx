@@ -1,29 +1,13 @@
-import { useState } from "react";
 import { useLocation } from "wouter";
-import { useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, Loader2 } from "lucide-react";
-import {
-  ApiError,
-  useCreateDocument,
-  useGetWorkspace,
-  useStartFormDocument,
-  useListFormTemplates,
-  getGetWorkspaceQueryKey,
-  getListFormTemplatesQueryKey,
-  getListDocumentsQueryKey,
-  type BusinessDocument,
-  type CanonicalDocument,
-} from "@workspace/api-client-react";
 import { GUIDED_TEMPLATE_IDS, type GuidedTemplateId } from "@workspace/valo-core/guided";
 import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
-import { GUIDED_SPECS_V2 } from "@workspace/valo-core/guided-specs-v2";
-import { compileGuidedContent } from "@workspace/valo-core/guided-runtime";
 import { describeError } from "@/lib/api";
-import { live } from "@/lib/checker";
 import { DOCUMENT_PURPOSES } from "@/lib/document-kinds";
-import { prefillGuidedData, savedBusinessName } from "@/lib/guided-prefill";
+import { savedBusinessName } from "@/lib/guided-prefill";
 import type { LandingTask } from "@/lib/landing-tasks";
 import { cn } from "@/lib/utils";
+import { useStartGuided } from "@/hooks/use-start-guided";
 
 /**
  * The documents the workspace asks questions for, each a button that starts one and opens its
@@ -31,55 +15,11 @@ import { cn } from "@/lib/utils";
  * `chosen` is the task a visitor picked before they had an account: its documents come first.
  */
 export function GuidedDraftStarter({ chosen }: { chosen?: LandingTask | undefined }) {
-  const [starting, setStarting] = useState<GuidedTemplateId | null>(null);
-  const ws = useGetWorkspace({ query: { queryKey: getGetWorkspaceQueryKey(), ...live } });
-  const businessName = savedBusinessName(ws.data?.profile);
-  // The templates whose form (forms v2) can be started now, with a released edition of their wording.
-  const formTemplates = useListFormTemplates({
-    query: { queryKey: getListFormTemplatesQueryKey(), staleTime: 60_000 },
-  });
-  const create = useCreateDocument(),
-    startForm = useStartFormDocument(),
-    qc = useQueryClient(),
-    [, navigate] = useLocation();
-  const pending = create.isPending || startForm.isPending;
-  function start(id: GuidedTemplateId) {
-    setStarting(id);
-    const opened = (doc: BusinessDocument) => {
-      void qc.invalidateQueries({ queryKey: getGetWorkspaceQueryKey() });
-      void qc.invalidateQueries({ queryKey: getListDocumentsQueryKey() });
-      navigate("/workspace/documents/" + doc.id);
-    };
-    const questionsOnly = () =>
-      create.mutate(
-        {
-          data: {
-            // The title is printed as the document's heading, so it starts as the kind's own name.
-            title: GUIDED_SPECS_V1[id].title,
-            content: compileGuidedContent(prefillGuidedData(id, ws.data?.profile)) as CanonicalDocument,
-          },
-        },
-        { onSuccess: opened, onError: () => setStarting(null) },
-      );
-    const listed = formTemplates.data?.templates.some((t) => t.templateId === id);
-    if (!GUIDED_SPECS_V2[id] || (formTemplates.isSuccess && !listed)) return questionsOnly();
-    // A kind whose template's wording is released with a form that fills it starts as that form
-    // (forms v2), with the saved business name filled in by the server. Should the list not have
-    // loaded, or the wording be withdrawn meanwhile, the server says so and the document starts with
-    // its questions as before.
-    startForm.mutate(
-      { data: { templateId: id } },
-      {
-        onSuccess: opened,
-        onError: (error) => {
-          if (error instanceof ApiError && (error.status === 404 || error.status === 409)) {
-            startForm.reset();
-            questionsOnly();
-          } else setStarting(null);
-        },
-      },
-    );
-  }
+  const [, navigate] = useLocation();
+  const { start, starting, pending, workspace, error } = useStartGuided((doc) =>
+    navigate("/workspace/documents/" + doc.id),
+  );
+  const businessName = savedBusinessName(workspace.data?.profile);
   /** One document's button. `place` tells the chosen task's buttons from the full list's. */
   const kind = (id: GuidedTemplateId, place: "chosen" | "all") => (
     <li key={id}>
@@ -145,9 +85,9 @@ export function GuidedDraftStarter({ chosen }: { chosen?: LandingTask | undefine
       <p role="status" className="sr-only">
         {starting && pending ? `Starting your ${GUIDED_SPECS_V1[starting].title.toLowerCase()}…` : ""}
       </p>
-      {(create.isError || startForm.isError) && (
+      {error && (
         <p role="alert" className="mt-4 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          {describeError(create.error ?? startForm.error).message}
+          {describeError(error).message}
         </p>
       )}
     </div>
