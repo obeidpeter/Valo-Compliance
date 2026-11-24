@@ -39,6 +39,7 @@ import {
 import { asDevelopmentOwner, type StaffActor } from "../staff";
 import { ValoProblem } from "../../platform/valo-problem";
 import { planStoredRuleRelease } from "./valo-rule-release";
+import { ownerRuleCandidates, type OwnerRuleCandidate } from "./owner-rule-candidates";
 
 /**
  * Requirements-checker rules released on the development owner's sign-off (decision 0020).
@@ -53,46 +54,7 @@ import { planStoredRuleRelease } from "./valo-rule-release";
  * bindings and the earlier version's supersession. The database refuses an owner-signed release
  * without that sign-off (migration rule_owner_signoffs).
  */
-export type OwnerRuleCandidate = {
-  rule: Pick<
-    ReleasedRule,
-    | "id"
-    | "requirementVersionId"
-    | "title"
-    | "jurisdiction"
-    | "validFrom"
-    | "validTo"
-    | "reason"
-    | "nextStep"
-    | "relatedTemplateIds"
-  > &
-    Partial<Pick<ReleasedRule, "condition" | "evaluator">>;
-  risk: PublicationBundle["candidate"]["risk"];
-  scope: string;
-  limitations: string;
-  assumptions: string[];
-  /** Anything recorded here holds the whole rule (EDP-005). */
-  unresolvedMaterialIssues: string[];
-  missingEvidence: string[];
-  sources: {
-    id: string;
-    /** A passage the guides use; its words, place and official text come from today's capture. */
-    passageId: string;
-    /** The registered official source that capture is of. */
-    leadId: string;
-    /** Where the quote is, as the customer sees it ("section 814(1)"). */
-    locator: string;
-    /** The words of the passage the rule shows the customer. */
-    quote: string;
-  }[];
-  claims: PublicationBundle["candidate"]["claims"];
-  rights: PublicationBundle["rights"];
-  scenarios: OwnerRuleBundle["scenarios"];
-};
-
-/** The rules prepared for the owner's sign-off. None is prepared yet: the first come from decision
- * 0020's research notes. */
-export const ownerRuleCandidates: OwnerRuleCandidate[] = [];
+export { ownerRuleCandidates, type OwnerRuleCandidate } from "./owner-rule-candidates";
 
 const refusal = "Only the designated development owner can sign requirements-checker rules.";
 const day = 86_400_000;
