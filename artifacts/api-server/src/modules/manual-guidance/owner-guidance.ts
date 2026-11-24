@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, getTableColumns, inArray, sql } from "drizzle-orm";
 import { sha256 } from "@workspace/valo-core";
 import { DecideOwnerGuidanceBody, RefreshOwnerGuidanceBody } from "@workspace/api-zod";
 import { registeredManualGuidance, checkManualRegulatorySources } from "./regulatory-evidence";
@@ -131,8 +131,11 @@ export function decideOwnerGuidance(actor: StaffActor, itemId: string, body: unk
     }
     const { valoManualLibrary: t, valoManualRegulatoryChecks: c } = await import("@workspace/db");
     await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${itemId},811))`);
+    // An article has no form text, and a database the form text migration has not reached yet has no
+    // such column: the signing reads neither.
+    const { formText: _formText, ...articleColumns } = getTableColumns(t);
     const [target] = await tx
-      .select()
+      .select(articleColumns)
       .from(t)
       .where(and(eq(t.itemId, itemId), eq(t.version, input.version), eq(t.kind, "regulatory_article")));
     if (!target || target.digest !== input.digest) throw conflict();

@@ -58,6 +58,14 @@ with three marks:
   `{?ipArrangement=}` marking what prints while the question is unanswered;
 - a **repeating row** of a table, bound to one of the form's tables, with calculated cells.
 
+Reading the twelve retained drafts in slice 4 added three marks to the grammar before it shipped (slice
+2), each needed for a finished document: a passage kept **while an optional question has an answer**,
+`{?notes}…{/?}`, allowed only for a question the form may go without, so that a required answer's
+placeholder always shows; a span **around a whole table row**, for an invoice's discount and tax rows;
+and a **repeating group** of blocks, `{*topics}` and `{/*}`, for meeting minutes' topics, each with its
+heading. An answer printed within a sentence keeps to one line, its line breaks printed as commas; a
+slot that is a line of its own keeps each answer on lines of its own.
+
 Anything else in braces, and any HTML, link or image, is refused. The grammar is frozen with the v2
 spec; a change to either makes v3.
 
@@ -123,11 +131,11 @@ fills only the business's own details: never a counterparty, an address, a date,
 | # | Pull request | Requirements |
 | --- | --- | --- |
 | 1 | The five premium v1 forms need a verified purchase of a live edition of their template to start, or to be added to a document, decided by one database function for the scoped workspace. The starter shows the server's refusal; slice 7 says so before a press. | DOC-005, EDT-001 |
-| 2 | valo-core: the form-text grammar, the v2 spec types and first specs, the fit check, compiling and the answer-type rules. Pure code, not yet used. | EDT-001, EDT-002 |
-| 3 | The contract, the revision codec and the renderer: headings, header rows, clauses on form documents only. v1's bytes and HTML pinned. | EDT-002, EDT-006, EDT-009 |
-| 4 | The library's form text: its column and trigger, the annotation maps of the retained drafts, the staff action that files them as private drafts, and the staff preview of the fit. | EDT-001, EDT-002, DOC-004 |
-| 5 | Starting, editing, saving and exporting the free v2 forms, with the document's form record. | EDT-001, EDT-002, EDT-005, EDT-006, DOC-005 |
-| 6 | The premium v2 forms (TPL-13 to TPL-17). | DOC-004, DOC-005, DOC-007, EDT-010 |
+| 2 | valo-core: the form-text grammar, the v2 spec types, the fit check, compiling and the answer-type rules. Pure code, not yet used. Shipped with slice 3. | EDT-001, EDT-002 |
+| 3 | The renderer: headings and header rows that repeat on each page, v1's HTML pinned. The contract and the revision codec take them in slice 5, with the documents that use them. | EDT-002, EDT-006, EDT-009 |
+| 4 | The library's form text: its column and trigger, the staff save and preview of the fit, the action that files proposed form text as private drafts, and the first v2 form and annotation map, the invoice's (TPL-01). | EDT-001, EDT-002, DOC-004 |
+| 5 | Starting, editing, saving and exporting the free v2 forms, with the document's form record, and the maps and forms of the other six free templates (TPL-02, 03, 04, 05, 08, 12). | EDT-001, EDT-002, EDT-005, EDT-006, DOC-005 |
+| 6 | The premium v2 forms (TPL-13 to TPL-17), with their maps: each agreement's schedules need more question-to-wording decisions than a free form's. | DOC-004, DOC-005, DOC-007, EDT-010 |
 | 7 | The starter, the template page, examples and the profile's details. | EDT-001, DOC-005, PRO-003 (in part) |
 
 Tests that pin v1 stay unchanged throughout, among them `valo-guided.test.ts`, `valo-render.test.ts`,

@@ -1,6 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { and, desc, eq, getTableColumns, ilike, isNull, ne, or, sql } from "drizzle-orm";
 import { baselineTemplates, coveragePlan, digest, sha256 } from "@workspace/valo-core";
+import { FormTextError, parseFormText } from "@workspace/valo-core/form-text";
+import { formFit } from "@workspace/valo-core/guided-runtime-v2";
+import { GUIDED_SPECS_V2 } from "@workspace/valo-core/guided-specs-v2";
+import type { GuidedTemplateId } from "@workspace/valo-core/guided";
 import {
   ActOnManualLibraryBody,
   LoadRetainedDraftsBody,
@@ -40,6 +44,32 @@ function summary(row: RevisionMeta) {
     industry: row.industry,
   };
 }
+/** The registered template an entry is filed as, by its title, as the access check finds it. */
+const registeredTemplate = (title: string) =>
+  baselineTemplates.find((entry) => entry.title.toLowerCase() === title.toLowerCase());
+/**
+ * How a revision's form text fits the fill-in form of the template it is filed as (forms v2): the
+ * staff preview of the fit. A form is joined only to an edition whose text it fits.
+ */
+export function formTextFit(row: Pick<Revision, "title" | "formText">) {
+  if (row.formText === null) return null;
+  const template = registeredTemplate(row.title);
+  if (!template) return { templateId: null, state: "no_template" as const, problems: [] };
+  const spec = GUIDED_SPECS_V2[template.id as GuidedTemplateId];
+  if (!spec) return { templateId: template.id, state: "no_form" as const, problems: [] };
+  let problems: string[];
+  try {
+    problems = formFit(spec, parseFormText(row.formText));
+  } catch (error) {
+    if (!(error instanceof FormTextError)) throw error;
+    problems = [error.message];
+  }
+  return {
+    templateId: template.id,
+    state: problems.length ? ("does_not_fit" as const) : ("fits" as const),
+    problems: problems.slice(0, 200).map((problem) => problem.slice(0, 400)),
+  };
+}
 async function detail(tx: Tx, row: RevisionMeta) {
   const { valoManualLibrary: t } = await import("@workspace/db");
   const [live] = await tx
@@ -52,6 +82,8 @@ async function detail(tx: Tx, row: RevisionMeta) {
     body: row.body,
     digest: row.digest,
     fileFormat: row.fileFormat,
+    formText: row.formText,
+    formFit: formTextFit(row),
     createdBy: row.createdBy,
     createdAt: row.createdAt.toISOString(),
     publishedAt: row.publishedAt?.toISOString() ?? null,
@@ -74,7 +106,7 @@ async function withEditor<T>(actor: SourceStaffActor, work: (tx: Tx) => Promise<
     });
   } catch (error) {
     const e = pgError(error);
-    if (e.code === "42P01")
+    if (e.code === "42P01" || e.code === "42703")
       throw new ValoProblem(503, "Apply the editorial library migration before using the publisher.");
     if (e.code === "23505")
       throw new ValoProblem(
@@ -173,9 +205,25 @@ export async function saveManualDraft(actor: SourceStaffActor, itemId: string, v
   const title = input.title.trim();
   if (!title || hasControlCharacters(title)) throw new ValoProblem(422, "Enter a title on one line.");
   if (isManualTemplate(input.kind)) {
-    const registered = baselineTemplates.find((entry) => entry.title.toLowerCase() === title.toLowerCase());
+    const registered = registeredTemplate(title);
     if (registered && (registered.access === "premium") !== (input.kind === "premium_template"))
       throw new ValoProblem(422, "Choose the access level registered for this template.");
+  }
+  // A template's form text, for its fill-in form: read now, so that only text the forms can fill is
+  // saved. Empty means the version has none.
+  const formText = input.formText?.trim() ? normalize(input.formText) : null;
+  if (formText !== null) {
+    if (!isManualTemplate(input.kind))
+      throw new ValoProblem(422, "Only a template has form text. Clear the form text to save this item.");
+    try {
+      parseFormText(formText);
+    } catch (error) {
+      if (!(error instanceof FormTextError)) throw error;
+      throw new ValoProblem(
+        422,
+        `The form text cannot be read at line ${error.line}: ${error.reason}. Correct it, then save again.`,
+      );
+    }
   }
   const premium = input.kind === "premium_template";
   if (premium && (input.fileMode === "text" || !input.body.trim() || input.body.trim().length > 600))
@@ -220,6 +268,7 @@ export async function saveManualDraft(actor: SourceStaffActor, itemId: string, v
           file = { bytes: base.bytes, format: base.format };
         } else file = upload?.file ?? wordFromText(title, body);
       }
+      // Form text joins the digest only when present, so every earlier revision keeps its digest.
       const hash = digest({
         kind: input.kind,
         industry: input.industry,
@@ -227,6 +276,7 @@ export async function saveManualDraft(actor: SourceStaffActor, itemId: string, v
         body,
         fileFormat: file?.format ?? null,
         fileHash: file ? sha256(file.bytes) : null,
+        ...(formText === null ? {} : { formText }),
       });
       const [retry] = await tx.select(metadataColumns(t)).from(t).where(eq(t.id, input.requestId));
       if (retry) {
@@ -255,6 +305,7 @@ export async function saveManualDraft(actor: SourceStaffActor, itemId: string, v
           digest: hash,
           fileFormat: file?.format ?? null,
           fileBytes: file?.bytes ?? null,
+          formText,
           createdBy: actor.identityId,
         })
         .returning(metadataColumns(t));
@@ -378,6 +429,8 @@ export async function releasedManualEntries(
     closedBy: _closer,
     publishedBy: _editor,
     regulatoryCheckId: _privateCheck,
+    // Form text is read only by staff and, through the forms, by the customers it is for (DOC-004).
+    formText: _formText,
     body: fullBody,
     ...restFields
   } = getTableColumns(t);
@@ -435,7 +488,15 @@ type RetainedState = "not_in_library" | Revision["state"];
  */
 export async function retainedDraftStatus(actor: SourceStaffActor) {
   const { retainedDrafts, retainedItemId } = await import("./retained");
+  const { proposedFormText } = await import("./form-text-maps");
   const drafts = await retainedDrafts();
+  // The form text proposed for each template that has a map, by its hash.
+  const proposals = new Map<string, string>();
+  for (const draft of drafts)
+    if (draft.template) {
+      const proposal = await proposedFormText(draft.retainedId);
+      if (proposal !== null) proposals.set(draft.retainedId, sha256(proposal));
+    }
   const { library, checks } = await withEditor(actor, async (tx) => {
     const { valoManualLibrary: t, valoManualRegulatoryChecks: c } = await import("@workspace/db");
     const library = await tx
@@ -446,6 +507,7 @@ export async function retainedDraftStatus(actor: SourceStaffActor) {
         title: t.title,
         industry: t.industry,
         state: t.state,
+        formTextSha256: sql<string | null>`encode(sha256(convert_to(${t.formText}, 'UTF8')), 'hex')`,
       })
       .from(t);
     const checks = await tx
@@ -491,6 +553,7 @@ export async function retainedDraftStatus(actor: SourceStaffActor) {
       : found.live !== null
         ? "published"
         : found.latest.state;
+    const proposal = proposals.get(draft.retainedId);
     return {
       retainedId: draft.retainedId,
       kind: draft.kind,
@@ -501,6 +564,12 @@ export async function retainedDraftStatus(actor: SourceStaffActor) {
       version: found?.latest.version ?? null,
       liveVersion: found?.live ?? null,
       shown: Boolean(found && shownItems.has(found.itemId)),
+      // Whether the item's latest version carries the form text proposed for its fill-in form.
+      formText: !proposal
+        ? null
+        : found?.latest.formTextSha256 === proposal
+          ? ("filed" as const)
+          : ("proposed" as const),
       sourceCheck:
         draft.kind === "regulatory_article" && check
           ? {
@@ -519,23 +588,55 @@ export async function retainedDraftStatus(actor: SourceStaffActor) {
   };
 }
 
+/** The filed templates whose latest version lacks the form text proposed for them. */
+const withoutFormText = (status: Awaited<ReturnType<typeof retainedDraftStatus>>) =>
+  status.items.filter((item) => item.formText === "proposed" && item.itemId !== null);
+
 /**
  * Files the next retained drafts that are not in the library as private drafts, through the same
  * draft check as an editor's own (`saveManualDraft`), under the editor who asked. A template gets the
- * reviewed route's blank Word master, made from the same section. Nothing is published: each draft
- * waits for an editor to preview and publish it, and a regulatory guide for the owner's source check.
+ * reviewed route's blank Word master, made from the same section, and the form text proposed for its
+ * fill-in form, if a map is written for it. With `form_text`, files instead a new draft version of each
+ * filed template whose latest version lacks its proposed form text, keeping that version's title, text
+ * and file. Nothing is published: each draft waits for an editor to preview and publish it, and a
+ * regulatory guide for the owner's source check.
  */
 export async function loadRetainedDrafts(actor: SourceStaffActor, value: unknown) {
-  LoadRetainedDraftsBody.strict().parse(value);
+  const { load } = LoadRetainedDraftsBody.strict().parse(value);
   const { retainedDrafts, retainedItemId, retainedTemplateFile } = await import("./retained");
+  const { proposedFormText } = await import("./form-text-maps");
   const before = await retainedDraftStatus(actor);
-  const drafts = new Map((await retainedDrafts()).map((draft) => [draft.retainedId, draft]));
   const loaded: string[] = [];
+  if (load === "form_text") {
+    for (const item of withoutFormText(before).slice(0, RETAINED_DRAFTS_PER_REQUEST)) {
+      const latest = await getManualRevision(actor, item.itemId!);
+      try {
+        await saveManualDraft(actor, latest.itemId, {
+          requestId: randomUUID(),
+          baseVersion: latest.version,
+          title: latest.title,
+          kind: latest.kind,
+          industry: latest.industry,
+          body: latest.body,
+          fileMode: latest.fileFormat ? "keep" : "text",
+          formText: await proposedFormText(item.retainedId),
+        });
+        loaded.push(item.retainedId);
+      } catch (error) {
+        // Another editor saved a version a moment ago: the next request sees it.
+        if (!(error instanceof ValoProblem && error.status === 409)) throw error;
+      }
+    }
+    const status = await retainedDraftStatus(actor);
+    return { loaded, remaining: withoutFormText(status).length, status };
+  }
+  const drafts = new Map((await retainedDrafts()).map((draft) => [draft.retainedId, draft]));
   for (const item of before.items
     .filter((entry) => entry.state === "not_in_library")
     .slice(0, RETAINED_DRAFTS_PER_REQUEST)) {
     const draft = drafts.get(item.retainedId)!;
     const file = draft.template ? await retainedTemplateFile(draft.template) : undefined;
+    const formText = draft.template ? await proposedFormText(draft.retainedId) : null;
     try {
       await saveManualDraft(actor, retainedItemId(draft.retainedId), {
         requestId: randomUUID(),
@@ -546,6 +647,7 @@ export async function loadRetainedDrafts(actor: SourceStaffActor, value: unknown
         body: draft.body,
         fileMode: file ? "upload" : "text",
         ...(file ? { upload: { format: "docx", base64: file.toString("base64") } } : {}),
+        ...(formText === null ? {} : { formText }),
       });
       loaded.push(draft.retainedId);
     } catch (error) {

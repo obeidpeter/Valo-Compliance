@@ -3668,6 +3668,7 @@ export const ListRetainedDraftsResponse = zod.object({
   "version": zod.int().nullable(),
   "liveVersion": zod.int().nullable(),
   "shown": zod.boolean(),
+  "formText": zod.union([zod.literal('proposed'),zod.literal('filed'),zod.literal(null)]).nullable().describe('For a template with a fill-in form: whether the library\'s latest version carries the form text proposed for it (filed) or not yet (proposed). Null for every other draft.'),
   "sourceCheck": zod.union([zod.object({
   "checkedAt": zod.coerce.date(),
   "holds": zod.int().min(listRetainedDraftsResponseItemsItemSourceCheckOneHoldsMin),
@@ -3681,7 +3682,7 @@ export const ListRetainedDraftsResponse = zod.object({
 
 
 export const LoadRetainedDraftsBody = zod.object({
-  "load": zod.enum(['missing'])
+  "load": zod.enum(['missing', 'form_text']).describe('missing files the drafts not in the library yet; form_text files a new draft version of each filed template whose latest version lacks the form text proposed for it')
 })
 
 export const loadRetainedDraftsResponseRemainingMin = 0;
@@ -3710,6 +3711,7 @@ export const LoadRetainedDraftsResponse = zod.object({
   "version": zod.int().nullable(),
   "liveVersion": zod.int().nullable(),
   "shown": zod.boolean(),
+  "formText": zod.union([zod.literal('proposed'),zod.literal('filed'),zod.literal(null)]).nullable().describe('For a template with a fill-in form: whether the library\'s latest version carries the form text proposed for it (filed) or not yet (proposed). Null for every other draft.'),
   "sourceCheck": zod.union([zod.object({
   "checkedAt": zod.coerce.date(),
   "holds": zod.int().min(loadRetainedDraftsResponseStatusItemsItemSourceCheckOneHoldsMin),
@@ -3729,6 +3731,10 @@ export const GetManualLibraryRevisionParams = zod.object({
 
 export const getManualLibraryRevisionResponseDigestRegExp = new RegExp('^[0-9a-f]{64}$');
 export const getManualLibraryRevisionResponseLiveOneDigestRegExp = new RegExp('^[0-9a-f]{64}$');
+export const getManualLibraryRevisionResponseFormFitOneProblemsItemMax = 400;
+
+export const getManualLibraryRevisionResponseFormFitOneProblemsMax = 200;
+
 
 
 export const GetManualLibraryRevisionResponse = zod.object({
@@ -3749,7 +3755,13 @@ export const GetManualLibraryRevisionResponse = zod.object({
   "live": zod.union([zod.object({
   "version": zod.int(),
   "digest": zod.string().regex(getManualLibraryRevisionResponseLiveOneDigestRegExp)
-}),zod.null()])
+}),zod.null()]),
+  "formText": zod.string().nullable().describe('The template\'s wording with its placeholders named, for its fill-in form. Staff only.'),
+  "formFit": zod.union([zod.object({
+  "templateId": zod.string().nullable(),
+  "state": zod.enum(['no_template', 'no_form', 'fits', 'does_not_fit']),
+  "problems": zod.array(zod.string().max(getManualLibraryRevisionResponseFormFitOneProblemsItemMax)).max(getManualLibraryRevisionResponseFormFitOneProblemsMax)
+}).describe('How a revision\'s form text fits the fill-in form of the template it is filed as, found by its title.'),zod.null()])
 })
 
 
@@ -3765,6 +3777,8 @@ export const saveManualLibraryDraftBodyBodyMax = 60000;
 
 export const saveManualLibraryDraftBodyUploadBase64Max = 2796204;
 
+export const saveManualLibraryDraftBodyFormTextMax = 60000;
+
 
 
 export const SaveManualLibraryDraftBody = zod.object({
@@ -3778,11 +3792,16 @@ export const SaveManualLibraryDraftBody = zod.object({
   "upload": zod.object({
   "format": zod.enum(['docx', 'pdf']),
   "base64": zod.string().max(saveManualLibraryDraftBodyUploadBase64Max)
-}).optional()
+}).optional(),
+  "formText": zod.string().max(saveManualLibraryDraftBodyFormTextMax).nullish().describe('For a template only: its wording with its placeholders named, for its fill-in form. Omitted or null, the version has none.')
 })
 
 export const saveManualLibraryDraftResponseDigestRegExp = new RegExp('^[0-9a-f]{64}$');
 export const saveManualLibraryDraftResponseLiveOneDigestRegExp = new RegExp('^[0-9a-f]{64}$');
+export const saveManualLibraryDraftResponseFormFitOneProblemsItemMax = 400;
+
+export const saveManualLibraryDraftResponseFormFitOneProblemsMax = 200;
+
 
 
 export const SaveManualLibraryDraftResponse = zod.object({
@@ -3803,7 +3822,13 @@ export const SaveManualLibraryDraftResponse = zod.object({
   "live": zod.union([zod.object({
   "version": zod.int(),
   "digest": zod.string().regex(saveManualLibraryDraftResponseLiveOneDigestRegExp)
-}),zod.null()])
+}),zod.null()]),
+  "formText": zod.string().nullable().describe('The template\'s wording with its placeholders named, for its fill-in form. Staff only.'),
+  "formFit": zod.union([zod.object({
+  "templateId": zod.string().nullable(),
+  "state": zod.enum(['no_template', 'no_form', 'fits', 'does_not_fit']),
+  "problems": zod.array(zod.string().max(saveManualLibraryDraftResponseFormFitOneProblemsItemMax)).max(saveManualLibraryDraftResponseFormFitOneProblemsMax)
+}).describe('How a revision\'s form text fits the fill-in form of the template it is filed as, found by its title.'),zod.null()])
 })
 
 
@@ -3823,6 +3848,10 @@ export const ActOnManualLibraryBody = zod.object({
 
 export const actOnManualLibraryResponseDigestRegExp = new RegExp('^[0-9a-f]{64}$');
 export const actOnManualLibraryResponseLiveOneDigestRegExp = new RegExp('^[0-9a-f]{64}$');
+export const actOnManualLibraryResponseFormFitOneProblemsItemMax = 400;
+
+export const actOnManualLibraryResponseFormFitOneProblemsMax = 200;
+
 
 
 export const ActOnManualLibraryResponse = zod.object({
@@ -3843,7 +3872,13 @@ export const ActOnManualLibraryResponse = zod.object({
   "live": zod.union([zod.object({
   "version": zod.int(),
   "digest": zod.string().regex(actOnManualLibraryResponseLiveOneDigestRegExp)
-}),zod.null()])
+}),zod.null()]),
+  "formText": zod.string().nullable().describe('The template\'s wording with its placeholders named, for its fill-in form. Staff only.'),
+  "formFit": zod.union([zod.object({
+  "templateId": zod.string().nullable(),
+  "state": zod.enum(['no_template', 'no_form', 'fits', 'does_not_fit']),
+  "problems": zod.array(zod.string().max(actOnManualLibraryResponseFormFitOneProblemsItemMax)).max(actOnManualLibraryResponseFormFitOneProblemsMax)
+}).describe('How a revision\'s form text fits the fill-in form of the template it is filed as, found by its title.'),zod.null()])
 })
 
 

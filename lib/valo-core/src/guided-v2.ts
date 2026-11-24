@@ -1,4 +1,4 @@
-import type { GuidedField, GuidedTable, GuidedTemplateId } from "./guided";
+import type { GuidedField, GuidedSpec, GuidedTable, GuidedTemplateId } from "./guided";
 
 /**
  * The second version of the fill-in forms (docs/architecture/forms-v2.md). A v2 form fills the
@@ -33,6 +33,8 @@ export type GuidedSpecV2 = {
   >;
   /** Choice options that keep no passage of the text, each declared so that none is missed. */
   keepsNothing?: readonly { question: string; option: string }[];
+  /** v1's date order checks, carried with its questions: a later date before an earlier one. */
+  dateOrder?: GuidedSpec["dateOrder"];
 };
 export type GuidedDataV2 = {
   schemaVersion: 2;

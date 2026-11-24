@@ -1750,14 +1750,19 @@ export interface OwnerGuidanceReceipt {
   state: OwnerGuidanceReceiptState;
 }
 
+/**
+ * missing files the drafts not in the library yet; form_text files a new draft version of each filed template whose latest version lacks the form text proposed for it
+ */
 export type RetainedDraftLoadLoad = typeof RetainedDraftLoadLoad[keyof typeof RetainedDraftLoadLoad];
 
 
 export const RetainedDraftLoadLoad = {
   missing: 'missing',
+  form_text: 'form_text',
 } as const;
 
 export interface RetainedDraftLoad {
+  /** missing files the drafts not in the library yet; form_text files a new draft version of each filed template whose latest version lacks the form text proposed for it */
   load: RetainedDraftLoadLoad;
 }
 
@@ -1792,6 +1797,18 @@ export const RetainedDraftState = {
   replaced: 'replaced',
 } as const;
 
+/**
+ * For a template with a fill-in form: whether the library's latest version carries the form text proposed for it (filed) or not yet (proposed). Null for every other draft.
+ * @nullable
+ */
+export type RetainedDraftFormText = typeof RetainedDraftFormText[keyof typeof RetainedDraftFormText] | null;
+
+
+export const RetainedDraftFormText = {
+  proposed: 'proposed',
+  filed: 'filed',
+} as const;
+
 export interface RetainedDraft {
   retainedId: string;
   kind: RetainedDraftKind;
@@ -1806,6 +1823,11 @@ export interface RetainedDraft {
   /** @nullable */
   liveVersion: number | null;
   shown: boolean;
+  /**
+     * For a template with a fill-in form: whether the library's latest version carries the form text proposed for it (filed) or not yet (proposed). Null for every other draft.
+     * @nullable
+     */
+  formText: RetainedDraftFormText;
   sourceCheck: RetainedDraftSourceCheck | null;
 }
 
@@ -1902,6 +1924,30 @@ export type ManualLibraryRevisionLive = {
   digest: string;
 } | null;
 
+export type ManualFormFitState = typeof ManualFormFitState[keyof typeof ManualFormFitState];
+
+
+export const ManualFormFitState = {
+  no_template: 'no_template',
+  no_form: 'no_form',
+  fits: 'fits',
+  does_not_fit: 'does_not_fit',
+} as const;
+
+/**
+ * How a revision's form text fits the fill-in form of the template it is filed as, found by its title.
+ */
+export interface ManualFormFit {
+  /** @nullable */
+  templateId: string | null;
+  state: ManualFormFitState;
+  /**
+     * @maxItems 200
+     * @items.maxLength 400
+     */
+  problems: string[];
+}
+
 export interface ManualLibraryRevision {
   itemId: string;
   version: number;
@@ -1923,6 +1969,12 @@ export interface ManualLibraryRevision {
   /** @nullable */
   publishedBy: string | null;
   live: ManualLibraryRevisionLive;
+  /**
+     * The template's wording with its placeholders named, for its fill-in form. Staff only.
+     * @nullable
+     */
+  formText: string | null;
+  formFit: ManualFormFit | null;
 }
 
 export type ManualLibraryDraftKind = typeof ManualLibraryDraftKind[keyof typeof ManualLibraryDraftKind];
@@ -1976,6 +2028,12 @@ export interface ManualLibraryDraft {
   body: string;
   fileMode: ManualLibraryDraftFileMode;
   upload?: ManualLibraryDraftUpload;
+  /**
+     * For a template only: its wording with its placeholders named, for its fill-in form. Omitted or null, the version has none.
+     * @maxLength 60000
+     * @nullable
+     */
+  formText?: string | null;
 }
 
 export type ManualLibraryActionAction = typeof ManualLibraryActionAction[keyof typeof ManualLibraryActionAction];

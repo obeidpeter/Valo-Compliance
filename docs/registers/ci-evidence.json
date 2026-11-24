@@ -3192,6 +3192,27 @@
       "file": "artifacts/api-server/src/lib/valo-render.test.ts",
       "test": "a form's headings print as headings and its table's header row repeats on each page, in HTML and Word, with every text escaped",
       "proves": "Headings of level 2 and 3 print as h2 and h3 in HTML and in Word's heading styles, a table's header row prints in HTML's table head and is marked in Word to repeat on each page, and markup in a heading or cell prints as text; no document uses them yet."
+    },
+    {
+      "requirement": "EDT-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/manual-library/form-text-maps.test.ts",
+      "test": "every map turns its retained draft into form text that the v2 form fits exactly",
+      "proves": "The invoice's (TPL-01) annotation map turns its hash-checked retained draft into form text that the invoice's second-version form fits with no problem, every placeholder filled by one of v1's questions, a calculation or a new question listed with its reason, so none is left out silently; the text is only proposed for the staff library and nothing is released."
+    },
+    {
+      "requirement": "EDT-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/manual-library/form-text-maps.test.ts",
+      "test": "an invoice's answers fill its own wording: items, discount and tax rows, totals and optional lines",
+      "proves": "With synthetic answers, the invoice form prints the template's own wording with each placeholder filled, one row for each item with its line amount, the discount and tax rows only when supplied, the total by v1's arithmetic, and no total while the discount exceeds the subtotal; no customer document is made with it yet."
+    },
+    {
+      "requirement": "DOC-004",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-manual-library.integration.test.ts",
+      "test": "manual publishing through staff HTTP routes and public readers",
+      "proves": "Against PostgreSQL, a published library template's form text appears in none of the public template, catalogue, resource and discovery responses nor in the public entry reader, while staff read it with its fit to the template's form; form text on a guide, or that the form-text grammar cannot read, is refused."
     }
   ]
 }

@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { RetainedDraftFormText } from './retainedDraftFormText';
 import type { RetainedDraftKind } from './retainedDraftKind';
 import type { RetainedDraftSourceCheck } from './retainedDraftSourceCheck';
 import type { RetainedDraftState } from './retainedDraftState';
@@ -23,5 +24,10 @@ export interface RetainedDraft {
   /** @nullable */
   liveVersion: number | null;
   shown: boolean;
+  /**
+     * For a template with a fill-in form: whether the library's latest version carries the form text proposed for it (filed) or not yet (proposed). Null for every other draft.
+     * @nullable
+     */
+  formText: RetainedDraftFormText;
   sourceCheck: RetainedDraftSourceCheck | null;
 }

@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { ManualFormFit } from './manualFormFit';
 import type { ManualLibraryRevisionFileFormat } from './manualLibraryRevisionFileFormat';
 import type { ManualLibraryRevisionKind } from './manualLibraryRevisionKind';
 import type { ManualLibraryRevisionLive } from './manualLibraryRevisionLive';
@@ -31,4 +32,10 @@ export interface ManualLibraryRevision {
   /** @nullable */
   publishedBy: string | null;
   live: ManualLibraryRevisionLive;
+  /**
+     * The template's wording with its placeholders named, for its fill-in form. Staff only.
+     * @nullable
+     */
+  formText: string | null;
+  formFit: ManualFormFit | null;
 }
