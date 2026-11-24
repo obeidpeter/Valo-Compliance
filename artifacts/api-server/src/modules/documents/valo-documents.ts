@@ -1,8 +1,8 @@
 import { serializeRevision } from "./valo-revision-codec";
 import { randomUUID } from "node:crypto";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import type { db, valoDocumentRevisions, valoDocuments } from "@workspace/db";
-import { baselineTemplates, sha256 } from "@workspace/valo-core";
+import { sha256 } from "@workspace/valo-core";
 import { documentInput, documentUpdate } from "../../lib/valo-validation";
 import { z } from "zod";
 import { guidedDataFromBlocks, guidedFieldIssue } from "@workspace/valo-core/guided-runtime";
@@ -11,6 +11,7 @@ import { GUIDED_SPECS_V2 } from "@workspace/valo-core/guided-specs-v2";
 import { StartFormDocumentBody } from "@workspace/api-zod";
 import { ValoProblem } from "../../platform/valo-problem";
 import {
+  assertFormAvailable,
   assertPlainContent,
   checkFormContent,
   documentFormText,
@@ -27,26 +28,6 @@ import {
   type WorkspaceActor,
 } from "../workspaces";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
-/** The premium forms (TPL-13 to TPL-17) by template, with the title the staff library registers. */
-const premiumForms = new Map(
-  baselineTemplates.filter((t) => t.guided && t.access === "premium").map((t) => [t.id, t.title]),
-);
-/** A workspace may start a premium form, or add one to a document, only while it holds a verified
- * purchase of a live edition of its template (forms v2, slice 1). The database function answers for
- * the workspace this transaction is scoped to and for nothing else. A document already made stays the
- * customer's, and keeps saving and making files (the finishing plan's delegated decision 3). */
-async function assertFormAvailable(tx: Tx, templateId: string) {
-  const title = premiumForms.get(templateId);
-  if (title === undefined) return;
-  const { rows } = await tx.execute<{ held: boolean }>(
-    sql`select public.valo_workspace_holds_template(${templateId}, ${title}) as held`,
-  );
-  if (rows[0]?.held !== true)
-    throw new ValoProblem(
-      403,
-      "This form comes with a template you buy. Buy the template first, then start the document here. Your other documents are unchanged.",
-    );
-}
 function serialize(
   document: typeof valoDocuments.$inferSelect,
   revision: typeof valoDocumentRevisions.$inferSelect,

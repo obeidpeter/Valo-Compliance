@@ -31,6 +31,26 @@ const formTextOf = (source: string) => {
   }
 };
 
+/** The premium forms (TPL-13 to TPL-17) by template, with the title the staff library registers. */
+const premiumForms = new Map(
+  baselineTemplates.filter((t) => t.guided && t.access === "premium").map((t) => [t.id, t.title]),
+);
+/** A workspace may start a premium form, or add one to a document, only while it holds a verified
+ * purchase of a live edition of its template (forms v2, slice 1). The database function answers for
+ * the workspace this transaction is scoped to and for nothing else. A document already made stays the
+ * customer's, and keeps saving and making files (the finishing plan's delegated decision 3). */
+export async function assertFormAvailable(tx: Tx, templateId: string) {
+  const title = premiumForms.get(templateId);
+  if (title === undefined) return;
+  const { rows } = await tx.execute<{ held: boolean }>(
+    sql`select public.valo_workspace_holds_template(${templateId}, ${title}) as held`,
+  );
+  if (rows[0]?.held !== true)
+    throw new ValoProblem(
+      403,
+      "This form comes with a template you buy. Buy the template first, then start the document here. Your other documents are unchanged.",
+    );
+}
 /** A document that was not started from a form holds none of a form document's parts. */
 export function assertPlainContent(content: Content) {
   if (
