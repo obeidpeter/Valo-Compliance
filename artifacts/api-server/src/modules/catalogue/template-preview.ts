@@ -22,3 +22,32 @@ export function templatePreview(body: string) {
   if (cut) text = text.slice(0, Math.max(text.lastIndexOf(" ", PREVIEW_LENGTH), 1)).trimEnd();
   return cut || kept.length < paragraphs.length ? `${text} …` : text;
 }
+
+/** A released document's text in reading order, as its page previews it: each block's text, and a
+ * table's rows one to a line, their cells separated by a bar. */
+export function releasedDocumentText(content: {
+  blocks: readonly { text: string; rows: readonly (readonly string[])[] }[];
+}) {
+  return content.blocks
+    .map((block) =>
+      [block.text, ...block.rows.map((row) => row.join(" | "))].filter((t) => t.trim()).join("\n"),
+    )
+    .filter(Boolean)
+    .join("\n\n");
+}
+
+/**
+ * A premium template's public preview, generated separately from its text (DOC-004): the sample
+ * fields its text marks for the buyer to fill, by their names, and never its wording, which is the
+ * buyer's alone.
+ */
+export function sampleFieldsPreview(text: string) {
+  const fields = [
+    ...new Set((text.match(/\[[^\]\n]{2,60}\]/g) ?? []).map((field) => field.slice(1, -1).trim())),
+  ]
+    .filter((field) => /\p{L}/u.test(field))
+    .slice(0, 12);
+  return fields.length
+    ? [`SAMPLE FIELDS: ${fields.join("; ")} [your information]`]
+    : ["SAMPLE FIELD: Business name [your information]"];
+}

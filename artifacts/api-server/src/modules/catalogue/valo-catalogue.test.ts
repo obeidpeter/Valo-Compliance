@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { paginateReleasedItems } from "./valo-catalogue";
 import { manualCatalogue, manualResource } from "./manual-presentation";
-import { templatePreview } from "./template-preview";
+import { releasedDocumentText, sampleFieldsPreview, templatePreview } from "./template-preview";
 import { escapeLikePattern } from "../manual-library";
 import { verifiedRightsApplicability } from "../publication/rights-applicability";
 test("synthetic already-eligible catalogue metadata produces nonzero counts, filters and pagination", () => {
@@ -172,4 +172,38 @@ test("a staff-library template's page previews the opening of its text in whole 
   // A first paragraph longer than the preview is cut at a word.
   const cut = templatePreview("word ".repeat(300).trim());
   assert.ok(cut.endsWith("word …") && cut.length <= 702, cut);
+});
+
+test("a reviewed template's page previews the opening of its own released text, a table's rows one to a line", () => {
+  const text = releasedDocumentText({
+    blocks: [
+      { text: "Synthetic stock register", rows: [] },
+      {
+        text: "",
+        rows: [
+          ["Item", "Unit"],
+          ["Synthetic item", "Box"],
+        ],
+      },
+      { text: "   ", rows: [] },
+      { text: "Synthetic closing line", rows: [] },
+    ],
+  });
+  assert.equal(
+    text,
+    "Synthetic stock register\n\nItem | Unit\nSynthetic item | Box\n\nSynthetic closing line",
+  );
+  assert.equal(templatePreview(text), text);
+});
+
+test("a premium template's preview names only the sample fields its text marks, never its wording", () => {
+  const text =
+    "This synthetic agreement binds [Customer name] and [Provider name]. The [Customer name] pays within [ ] days.";
+  assert.deepEqual(sampleFieldsPreview(text), [
+    "SAMPLE FIELDS: Customer name; Provider name [your information]",
+  ]);
+  assert.ok(!sampleFieldsPreview(text).join(" ").includes("binds"));
+  assert.deepEqual(sampleFieldsPreview("No fields at all."), [
+    "SAMPLE FIELD: Business name [your information]",
+  ]);
 });
