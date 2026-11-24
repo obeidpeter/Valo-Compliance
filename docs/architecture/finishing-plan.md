@@ -66,6 +66,16 @@ What is left falls into five kinds:
 
 Small, and none needs a decision. This is where work starts.
 
+**Done on 24 November 2026.** Every row below is built, tested and merged into the integration
+branch: the release notice
+([#243](https://github.com/obeidpeter/Valo-Compliance/pull/243)), the guide reviews
+([#245](https://github.com/obeidpeter/Valo-Compliance/pull/245)), the support requests and
+checkout's daily limit ([#244](https://github.com/obeidpeter/Valo-Compliance/pull/244)), the
+records ([#246](https://github.com/obeidpeter/Valo-Compliance/pull/246)), the NAFDAC rule
+([#247](https://github.com/obeidpeter/Valo-Compliance/pull/247)) and the tests
+([#248](https://github.com/obeidpeter/Valo-Compliance/pull/248)). The NAFDAC rule, like the other
+three, is released only when the owner signs it.
+
 | What is left | Requirements | Size |
 | --- | --- | --- |
 | A rule released on the owner's sign-off shows no notice of how it was released on a customer's result, while the sign-off panel says "Shown with it". Show the notice on the result, in the saved result and in its download (checked twice) | EDP-008 | S |
@@ -80,7 +90,7 @@ Small, and none needs a decision. This is where work starts.
 
 | What is left | Requirements | Size |
 | --- | --- | --- |
-| **Forms that produce the document.** A form's file prints each question with its answer. For an invoice that is close to the document; for the five agreements it is not an agreement. Join each form to its template: the answers fill the template's own wording and layout, with clause choices where the template has them. This needs a second version of the forms. The freeze of 21 November is released for it, on the terms of [delegated decision 1](#decisions-made-under-the-owners-delegation) (checked twice) | EDT-001, EDT-002, EDT-006 | L |
+| **Forms that produce the document.** A form's file prints each question with its answer. For an invoice that is close to the document; for the five agreements it is not an agreement. Join each form to its template: the answers fill the template's own wording and layout, with clause choices where the template has them. This needs a second version of the forms. The freeze of 21 November is released for it, on the terms of [delegated decision 1](#decisions-made-under-the-owners-delegation) (checked twice). The design, with its slices, is [forms-v2.md](forms-v2.md): a form fills only wording released in the staff library, never the retained drafts | EDT-001, EDT-002, EDT-006 | L |
 | With it: a document made from a form records its template and version; the five premium forms check for a purchase, which they do not today; a template's page starts its form; questions carry examples and are filled from the business profile; the server checks answer types (checked twice for the purchase check) | DOC-005, EDT-001, PRO-003 | M |
 | **A finished file.** Every file carries "INCOMPLETE DRAFT" on each page, complete or not, and the Word files filed from the retained drafts carry "BLANK DEVELOPMENT TEMPLATE". Check completeness on the server when a file is asked for, and print a complete document without the draft notice (checked twice) | EDT-005, EDT-006, EDT-009 | M |
 | **Library templates as full entries.** A template released from the staff library has a title, text and file only. Give it what the reviewed route's entries have: saving, recommendations, "make my own copy" in the workspace, what it is for, what it needs, its limits, related guidance, and a statement of how it was written and checked (the wording is the owner's to approve) | DOC-001, DOC-003, DOC-006, DOC-009, EDP-008 | M |

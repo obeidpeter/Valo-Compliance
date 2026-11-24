@@ -3164,6 +3164,13 @@
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
       "test": "a drafting request the assistant does not take says so, shows where to go instead, offers no adviser and no save, and leads to a new request",
       "proves": "In Chromium, a draft preview whose status is unsupported shows \"This request cannot be drafted by Valo. Nothing was generated.\" and the server's sentence naming a scoped published resource, an official authority or an independent adviser, offers no save and no adviser, and links to a new request."
+    },
+    {
+      "requirement": "DOC-005",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-manual-library.integration.test.ts",
+      "test": "manual publishing through staff HTTP routes and public readers",
+      "proves": "Against PostgreSQL, a workspace with only an unpaid order, or none, cannot start the premium Service agreement form (TPL-13) or add it to a plain document; once its purchase of the live edition is verified through the API it can, another workspace still cannot, and after a reversal no new one starts while the document already made still saves."
     }
   ]
 }

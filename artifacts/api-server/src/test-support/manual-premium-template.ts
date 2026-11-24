@@ -139,6 +139,43 @@ export async function exercisePremiumManualTemplate(call: Call, editor: string) 
     );
   const [order, secondTab] = await Promise.all([orderFor(account), orderFor(account)]);
   assert.equal(order.id, secondTab.id);
+  // DOC-005 and EDT-001: the form of a premium template (here TPL-13, "Service agreement") starts only
+  // in a workspace that holds a verified purchase of a live edition of that template, and cannot be
+  // added to a plain document without one. An order saved but not paid is not a purchase.
+  const { createDocument, saveDocument } = await import("../modules/documents");
+  const { compileGuidedContent, emptyGuidedData } = await import("@workspace/valo-core/guided-runtime");
+  const serviceForm = {
+    title: "Service agreement",
+    content: compileGuidedContent(emptyGuidedData("TPL-13")),
+  };
+  const startForm = (holder: typeof account) =>
+    runInWorkspaceScope(holder.workspaceId, () => createDocument(holder, serviceForm));
+  const refusedForm = { status: 403, message: /comes with a template you buy/ };
+  await assert.rejects(startForm(account), refusedForm);
+  const plain = await runInWorkspaceScope(account.workspaceId, () =>
+    createDocument(account, {
+      title: "Synthetic plain document",
+      content: {
+        fields: {
+          issuerName: "",
+          recipientName: "",
+          documentNumber: "",
+          issueDate: "",
+          dueDate: "",
+          notes: "",
+        },
+        blocks: [{ id: "section-1", type: "paragraph", text: "Synthetic text", rows: [] }],
+        selectedClauses: [],
+        formatting: { font: "sans", accent: "forest" },
+      },
+    }),
+  );
+  await assert.rejects(
+    runInWorkspaceScope(account.workspaceId, () =>
+      saveDocument(account, plain.id, { ...serviceForm, expectedRevision: plain.revision }),
+    ),
+    refusedForm,
+  );
   // Previous versions could save a second order for the same edition from another tab.
   const legacyId = randomUUID();
   await db.insert(valoOrders).values({
@@ -241,6 +278,14 @@ export async function exercisePremiumManualTemplate(call: Call, editor: string) 
   );
   // The same verified answer arriving again, as from the event worker, changes nothing.
   await settleVerifiedOrder(order.id, verified);
+  // Once the purchase is verified the form starts, and the plain document can take its questions; a
+  // workspace that has not bought the template is still refused.
+  const made = await startForm(account);
+  await runInWorkspaceScope(account.workspaceId, () =>
+    saveDocument(account, plain.id, { ...serviceForm, expectedRevision: plain.revision }),
+  );
+  const stranger = await resolveWorkspace("synthetic-premium-stranger-" + itemId);
+  await assert.rejects(startForm(stranger), refusedForm);
   assert.equal((await startLegacy()).status, 409);
   await assert.rejects(orderFor(account), /payment for this edition is already on record/);
   assert.ok(
@@ -260,6 +305,12 @@ export async function exercisePremiumManualTemplate(call: Call, editor: string) 
   assert.deepEqual(Buffer.from(await file.arrayBuffer()), bytes);
   assert.equal((await download(first.id, other)).status, 403);
   await settleVerifiedOrder(order.id, { ...verified, status: "reversed" });
+  // A reversal ends new starts of the form; the document already made stays the customer's and saves.
+  await assert.rejects(startForm(account), refusedForm);
+  const kept = await runInWorkspaceScope(account.workspaceId, () =>
+    saveDocument(account, made.id, { ...serviceForm, expectedRevision: made.revision }),
+  );
+  assert.equal(kept.revision, made.revision + 1);
   assert.deepEqual(await checkoutFiles(reader), []);
   assert.deepEqual(await owned(reader), []);
   assert.equal((await download(first.id, reader)).status, 403);
