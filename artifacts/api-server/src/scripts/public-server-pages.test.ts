@@ -1,6 +1,7 @@
 import { after, before, test } from "node:test";
 import assert from "node:assert/strict";
 import { setTimeout as delay } from "node:timers/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { expect } from "@playwright/test";
@@ -9,6 +10,9 @@ import { menuProblems, phoneProblems, ready } from "../test-support/app-in-brows
 import { oldWordsIn } from "../test-support/old-words";
 import { industries, industry, items, resources, serverAnswer } from "../test-support/public-answers";
 import { HYDRATION, startWebServer } from "../test-support/web-server";
+import { baselineTemplates } from "@workspace/valo-core";
+import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
+import { readTemplateIntake } from "../modules/publication/operational-intake";
 
 /**
  * Decision 0011: the public pages the server renders, checked against the compiled web app in
@@ -1049,4 +1053,38 @@ test("a server-rendered page's banner tells a visitor to use made-up details, an
     const html = await (await fetch(web.origin + path)).text();
     assert.equal(/<meta name="description" content="([^"]*)"\/>/.exec(html)?.[1], description, path);
   }
+});
+
+// DOC-004: a premium template's text is the buyer's alone. No file the web app's build serves, its
+// pages or its scripts, holds any of it; a page shows only its public description.
+test("no file the web app's build serves holds a sentence of any premium template's text", async () => {
+  const build = resolve(import.meta.dirname, "../../../valo/.next");
+  const served: string[] = [];
+  for (const folder of ["server", "static"])
+    for (const name of await readdir(resolve(build, folder), { recursive: true }))
+      served.push(resolve(build, folder, name));
+  // Each file's text, its whitespace and escaped line breaks read as single spaces.
+  const texts: string[] = [];
+  for (const path of served) {
+    const text = await readFile(path, "utf8").catch(() => null);
+    if (text !== null) texts.push(text.replace(/\\n|\s+/g, " "));
+  }
+  const all = texts.join("\n");
+  assert.ok(texts.length > 50, `the build holds only ${texts.length} readable files`);
+  // The scan reads the scripts: a question's label, which the workspace's scripts carry, is found.
+  assert.ok(all.includes(GUIDED_SPECS_V1["TPL-01"].fields[0]!.label), "a bundled question's label");
+  const premium = baselineTemplates.filter((template) => template.access === "premium");
+  assert.ok(premium.length >= 28);
+  const found: string[] = [];
+  for (const template of premium) {
+    const { section } = await readTemplateIntake(template.id);
+    // Plain sentences of the text, which a script would carry as they are.
+    const sentences = section.body
+      .split(/(?<=[.!?])\s+/)
+      .map((sentence) => sentence.replace(/\s+/g, " ").trim())
+      .filter((sentence) => sentence.length >= 60 && /^[A-Za-z0-9 ,.;:()-]+$/.test(sentence));
+    assert.ok(sentences.length > 0, `${template.id} has sentences to look for`);
+    for (const sentence of sentences) if (all.includes(sentence)) found.push(`${template.id}: ${sentence}`);
+  }
+  assert.deepEqual(found, []);
 });
