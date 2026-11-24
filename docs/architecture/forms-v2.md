@@ -122,7 +122,7 @@ fills only the business's own details: never a counterparty, an address, a date,
 
 | # | Pull request | Requirements |
 | --- | --- | --- |
-| 1 | The five premium v1 forms need a verified purchase of a live edition of their template to start, or to be added to a document. The starter says so. | DOC-005, EDT-001 |
+| 1 | The five premium v1 forms need a verified purchase of a live edition of their template to start, or to be added to a document, decided by one database function for the scoped workspace. The starter shows the server's refusal; slice 7 says so before a press. | DOC-005, EDT-001 |
 | 2 | valo-core: the form-text grammar, the v2 spec types and first specs, the fit check, compiling and the answer-type rules. Pure code, not yet used. | EDT-001, EDT-002 |
 | 3 | The contract, the revision codec and the renderer: headings, header rows, clauses on form documents only. v1's bytes and HTML pinned. | EDT-002, EDT-006, EDT-009 |
 | 4 | The library's form text: its column and trigger, the annotation maps of the retained drafts, the staff action that files them as private drafts, and the staff preview of the fit. | EDT-001, EDT-002, DOC-004 |
