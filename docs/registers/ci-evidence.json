@@ -3215,6 +3215,13 @@
       "proves": "The invoice's (TPL-01) annotation map turns its hash-checked retained draft into form text that the invoice's second-version form fits with no problem, every placeholder filled by one of v1's questions, a calculation or a new question listed with its reason, so none is left out silently; the text is only proposed for the staff library and nothing is released."
     },
     {
+      "requirement": "EDT-001",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/guided-fields.test.tsx",
+      "test": "a v2 form's question shows its example under its input, and the input is described by it",
+      "proves": "Drawn from the offer letter's second-version form, each question that has an example shows it under its input as \"For example: ...\", and the input is described by that hint for a screen reader; the questions-only form shows no example."
+    },
+    {
       "requirement": "EDT-002",
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/manual-library/form-text-maps.test.ts",
@@ -3241,6 +3248,27 @@
       "file": "artifacts/api-server/src/modules/manual-library/form-text-maps.test.ts",
       "test": "an invoice form document is saved as its answers make it, hashed as V2, and its file prints the template's wording with only its note among its fields",
       "proves": "An invoice form document holds its answers, its chosen passages, its headings and tables with header rows, and its own fields taken from the answers; the contract accepts it, it is hashed in the V2 revision format so no V1 hash changes, and its file prints the template's wording with only its note among the document's fields."
+    },
+    {
+      "requirement": "DOC-005",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "the New document page says which documents use their template's own wording, and sends a premium template the workspace has not bought to the library to buy it, instead of starting it",
+      "proves": "On the New document page, a premium template the workspace has not bought is a link to it in the library, in the chosen task and in the full list, and never a button that starts it; a template whose wording is released for its form says it uses that wording; and loading the page starts nothing."
+    },
+    {
+      "requirement": "DOC-005",
+      "job": "foundation",
+      "file": "artifacts/valo/src/public-screens/template-detail.test.tsx",
+      "test": "a premium template's page says a purchase opens its questions as well as its file, for a template that has questions",
+      "proves": "A premium template's page tells a visitor who holds no purchase, before any press, that a purchase is needed to answer its questions as well as to download it, when the template has questions, and to download it otherwise."
+    },
+    {
+      "requirement": "EDT-001",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/start-template-document.test.tsx",
+      "test": "the page offers to answer the template's questions only for a template that has them, and says whether the document uses the template's own wording",
+      "proves": "A template's page offers to start the document its questions make only for one of the twelve templates that have questions, and says whether that document will use the template's own released wording."
     }
   ]
 }

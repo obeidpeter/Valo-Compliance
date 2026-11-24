@@ -30,6 +30,8 @@ type Plan = {
     >
   >;
   blanks?: readonly string[];
+  /** A hint shown under each named question (EDT-001): never saved, never printed. */
+  examples?: Readonly<Record<string, string>>;
   calculated?: GuidedSpecV2["calculated"];
   keepsNothing?: GuidedSpecV2["keepsNothing"];
   derived?: GuidedSpecV2["derived"];
@@ -89,6 +91,11 @@ function fromV1(templateId: GuidedTemplateId, plan: Plan) {
   for (const field of v1.fields)
     if (!fields.some((f) => f.id === field.id) && !plan.dropped?.[field.id])
       throw Error(`V2_QUESTION_NEITHER_KEPT_NOR_DROPPED:${field.id}`);
+  for (const [id, example] of Object.entries(plan.examples ?? {})) {
+    const at = fields.findIndex((f) => f.id === id);
+    if (at < 0) throw Error(`V2_EXAMPLE_UNKNOWN:${id}`);
+    fields[at] = { ...fields[at]!, example };
+  }
   const spec: GuidedSpecV2 = {
     schemaVersion: 2,
     templateId,
@@ -229,6 +236,9 @@ const invoice = fromV1("TPL-01", {
     { question: "taxMode", option: "none" },
     { question: "discountMode", option: "none" },
   ],
+  examples: {
+    relatedReference: "PO-2026-014",
+  },
 });
 
 /** An optional question for one line of a template's wording that v1 does not ask for. */
@@ -285,6 +295,11 @@ const quotation = fromV1("TPL-02", {
     { question: "taxMode", option: "none" },
     { question: "discountMode", option: "none" },
   ],
+  examples: {
+    customerInputs: "Your logo files and the delivery address by 5 December",
+    assumptions: "Prices hold until the date this quotation is valid until",
+    paymentArrangement: "Half on order, the rest on delivery",
+  },
 });
 
 const receipt = fromV1("TPL-03", {
@@ -325,6 +340,10 @@ const receipt = fromV1("TPL-03", {
   dropped: {
     recipientAddress:
       "The receipt's wording names the payer and gives no place for the payer's address, so the form does not ask for it.",
+  },
+  examples: {
+    relatedReference: "INV-2026-031",
+    recordedBy: "The cashier at the front desk",
   },
 });
 
@@ -387,6 +406,13 @@ const purchaseOrder = fromV1("TPL-04", {
     { question: "taxMode", option: "none" },
     { question: "discountMode", option: "none" },
   ],
+  examples: {
+    purchasingContact: "The purchasing officer, on the office phone",
+    relatedQuotation: "QUO-2026-007",
+    receivingContact: "The store keeper at the warehouse gate",
+    specificationNotes: "Cartons of 12, each labelled with this order's number",
+    changeNote: "Replaces version 1: item 2's quantity raised from 10 to 12",
+  },
 });
 
 const deliveryNote = fromV1("TPL-05", {
@@ -452,6 +478,14 @@ const deliveryNote = fromV1("TPL-05", {
     { question: "deliveryStatus", option: "planned" },
     { question: "deliveryStatus", option: "unconfirmed" },
   ],
+  examples: {
+    relatedOrder: "PO-2026-014",
+    batchReferences: "Batch 2611-A",
+    otherNotes: "Delivered to the side entrance",
+    handedOverBy: "The driver, for the supplier",
+    outstandingAction: "Two cartons to follow",
+    followUp: "The store keeper, by 2 December",
+  },
 });
 
 /** A column of one of v1's tables, by id. */
@@ -528,6 +562,16 @@ const minutes = fromV1("TPL-08", {
     { question: "recordStatus", option: "circulated" },
     { question: "recordStatus", option: "corrected" },
   ],
+  examples: {
+    meetingReference: "MTG-2026-11",
+    meetingTime: "10:00 West Africa Time",
+    apologies: "The finance officer",
+    unresolvedQuestions: "Whether to renew the shop's lease",
+    supportingRecords: "October sales report",
+    circulatedTo: "To everyone present, by email, on 25 November",
+    corrections: "Item 2's figure corrected to ₦150,000",
+    versionNote: "Version 2, with the corrected figure",
+  },
 });
 
 /** A payment reminder's answer to one of v1's questions, when given and valid. */
@@ -677,6 +721,11 @@ const reminder = fromV1("TPL-12", {
     },
   },
   keepsNothing: [{ question: "disputeKind", option: "none" }],
+  examples: {
+    invoiceReference: "INV-2026-031",
+    disputeQuestion: "Whether the second delivery arrived complete",
+    senderRole: "Accounts officer",
+  },
 });
 
 /**
@@ -754,6 +803,12 @@ const offerLetter = fromV1("TPL-17", {
   },
   // Completed by hand once the candidate responds, as the draft's heading says.
   blanks: ["responseReference", "outstandingMatter", "startConfirmed"],
+  examples: {
+    allowances: "A transport allowance of ₦20,000 a month, paid with the salary",
+    firstDayContact: "The office manager, at reception",
+    joiningArrangements: "Arrive at 8am at reception with a valid ID",
+    payBasis: "A fixed monthly salary, paid by bank transfer on the last working day",
+  },
 });
 
 /**
@@ -850,6 +905,16 @@ const employmentContract = fromV1("TPL-16", {
   // Completed by hand once the parties agree and sign, as the agreement record says.
   blanks: ["representativeAuthority", "signatureRecord", "copyProvided"],
   keepsNothing: [{ question: "probation", option: "no" }],
+  examples: {
+    contractVersion: "1",
+    engagementPlace: "Ikeja, Lagos State",
+    qualifications: "A valid driving licence, held",
+    earlierService: "None confirmed",
+    allowances: "A transport allowance of ₦20,000 a month, paid with the salary",
+    workContact: "The HR officer, by email or on the office phone",
+    payBasis: "A fixed monthly salary, paid by bank transfer on the last working day",
+    policies: "Employee handbook, version 2, from the HR office",
+  },
 });
 
 /**
@@ -904,6 +969,10 @@ const nonDisclosure = fromV1("TPL-15", {
     "authorityB",
     "signatureB",
   ],
+  examples: {
+    approvedTools: "The parties' shared drive, open only to the named staff",
+    jurisdiction: "Lagos State",
+  },
 });
 
 /** v1's questions for one party of an agreement, filling the one placeholder the draft gives that
@@ -1042,6 +1111,14 @@ const serviceAgreement = fromV1("TPL-13", {
     "providerSignature",
     "providerDate",
   ],
+  examples: {
+    purposeUsers: "The customer's own management accounts, for its directors",
+    reviewPeriods: "5 working days to review each deliverable, then 10 to correct it",
+    customerInputs: "Bank statements by the 5th of each month",
+    providerAssumptions: "The statements arrive complete and on time",
+    subcontractors: "None",
+    jurisdiction: "Lagos State",
+  },
 });
 
 /** A new required question for one line of an agreement's wording that v1 does not ask for. */
@@ -1145,6 +1222,15 @@ const consultancyAgreement = fromV1("TPL-14", {
     "consultantAuthority",
     "consultantSignature",
   ],
+  examples: {
+    clientDecisionMaker: "The managing director",
+    consultantLead: "The lead consultant",
+    questionsPurpose: "Whether to open a second branch, to decide by the end of March",
+    usersCirculation: "The client's board only, not for publication",
+    reviewPeriods: "Draft report by 31 January, then 5 working days to review and 5 to correct",
+    keyPeople: "The lead consultant, with no subcontractors; files kept on the client's shared drive",
+    jurisdiction: "Lagos State",
+  },
 });
 
 /** The v2 forms, by template. A template without one stays on its v1 form. */

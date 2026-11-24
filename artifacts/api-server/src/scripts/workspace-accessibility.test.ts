@@ -215,7 +215,10 @@ const answers: Record<string, unknown> = {
   }),
   [`GET /workspace/documents`]: api.ListDocumentsResponse.parse([document(3)]),
   // No template's wording is released for its form: every document starts with its questions.
-  [`GET /workspace/form-templates`]: api.ListFormTemplatesResponse.parse({ templates: [] }),
+  [`GET /workspace/form-templates`]: api.ListFormTemplatesResponse.parse({
+    templates: [],
+    needsPurchase: [],
+  }),
   [`GET /workspace/documents/${DOCUMENT}`]: api.GetDocumentResponse.parse(document(3)),
   [`GET /workspace/documents/${DOCUMENT}/revisions`]: api.ListDocumentRevisionsResponse.parse([
     document(3),
@@ -1870,7 +1873,10 @@ test("the New document page starts the invoice as its form once its template's w
         status: 200,
         contentType: "application/json",
         body: JSON.stringify(
-          api.ListFormTemplatesResponse.parse({ templates: [{ templateId: "TPL-01", editionVersion: 1 }] }),
+          api.ListFormTemplatesResponse.parse({
+            templates: [{ templateId: "TPL-01", editionVersion: 1 }],
+            needsPurchase: [],
+          }),
         ),
       });
     } else if (method === "POST" && path === "/workspace/form-documents") {
@@ -1918,6 +1924,77 @@ test("the New document page starts the invoice as its form once its template's w
     assert.deepEqual(errors, []);
   } finally {
     await close();
+  }
+});
+
+// EDT-001 and DOC-005: a form fills its template's own wording, and a premium template's comes
+// with the template bought (forms v2, slice 7).
+test("the New document page says which documents use their template's own wording, and sends a premium template the workspace has not bought to the library to buy it, instead of starting it", async () => {
+  const started: string[] = [];
+  const listing: Api = async (route, method, path, query) => {
+    if (method === "GET" && path === "/workspace/form-templates") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(
+          api.ListFormTemplatesResponse.parse({
+            templates: [
+              { templateId: "TPL-01", editionVersion: 1 },
+              { templateId: "TPL-17", editionVersion: 2 },
+            ],
+            needsPurchase: ["TPL-13", "TPL-16"],
+          }),
+        ),
+      });
+    } else if (method === "POST") {
+      started.push(path);
+      throw Error("nothing is started in this test");
+    } else await answer(route, method, path, query);
+  };
+  /** The library's premium templates, searched for this template's name. */
+  const library = (id: "TPL-13" | "TPL-16") =>
+    `/library?type=template&access=premium&q=${encodeURIComponent(GUIDED_SPECS_V1[id].title)}`;
+  for (const open of [desktop, phone]) {
+    const { page, errors, unknown, close } = await open("/workspace/documents/new?start=hire", listing);
+    try {
+      await ready(page);
+      // In the chosen task and in the full list: the offer letter uses its template's own wording;
+      // the employment contract, not bought, is a link to buy it, and is not a button that starts it.
+      for (const prefix of ["chosen-", ""]) {
+        const offer = page.getByTestId(`button-start-${prefix}TPL-17`);
+        await expect(offer.getByTestId(`state-${prefix}TPL-17`)).toHaveText(
+          "Uses the template's own wording",
+        );
+        const buy = page.getByTestId(`link-buy-${prefix}TPL-16`);
+        await expect(buy).toHaveAttribute("href", library("TPL-16"));
+        await expect(buy.getByTestId(`state-${prefix}TPL-16`)).toHaveText("Buy the template first");
+        await expect(buy).toContainText(GUIDED_SPECS_V1["TPL-16"].title);
+        await expect(page.getByTestId(`button-start-${prefix}TPL-16`)).toHaveCount(0);
+      }
+      await expect(page.getByTestId("chosen-task").getByRole("link")).toHaveCount(1);
+      await expect(page.getByTestId("chosen-task").getByRole("button")).toHaveCount(1);
+      // In the full list, the invoice uses its template's wording too, and the service agreement is
+      // to buy. Every other document starts with its questions, with no state of its own.
+      await expect(page.getByTestId("state-TPL-01")).toHaveText("Uses the template's own wording");
+      await expect(page.getByTestId("link-buy-TPL-13")).toHaveAttribute("href", library("TPL-13"));
+      await expect(page.getByTestId("state-TPL-13")).toHaveText("Buy the template first");
+      await expect(page.locator('[data-testid^="button-start-TPL-"]')).toHaveCount(
+        GUIDED_TEMPLATE_IDS.length - 2,
+      );
+      await expect(page.locator('[data-testid^="state-"]')).toHaveCount(6);
+      for (const id of GUIDED_TEMPLATE_IDS.filter(
+        (id) => !["TPL-01", "TPL-13", "TPL-16", "TPL-17"].includes(id),
+      ))
+        await expect(page.getByTestId(`button-start-${id}`)).not.toContainText(/wording|Buy/);
+      if (open === phone)
+        assert.deepEqual(await phoneProblems(page, "the New document page, two to buy"), []);
+      else assert.deepEqual((await wcagFailures(page)).failures, []);
+      assert.deepEqual(started, []);
+      assert.deepEqual(unknown, []);
+      assert.deepEqual(errors, []);
+    } finally {
+      await close();
+    }
   }
 });
 

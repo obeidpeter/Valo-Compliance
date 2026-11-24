@@ -4266,7 +4266,7 @@ export const getListFormTemplatesUrl = () => {
 }
 
 /**
- * The templates whose form (forms v2) a workspace can start now: each free template with a released edition of its wording that its form fits, and each premium template whose edition the workspace bought has such wording. A template not listed starts with its questions only.
+ * The templates whose form (forms v2) a workspace can start now: each free template with a released edition of its wording that its form fits, and each premium template whose edition the workspace bought has such wording. A template not listed starts with its questions only, and a premium template the workspace holds no live edition of is listed as needing a purchase first.
  */
 export const listFormTemplates = async ( options?: Parameters<typeof customFetch>[1]): Promise<FormTemplates> => {
 
@@ -4312,7 +4312,7 @@ export type ListFormTemplatesQueryResult = NonNullable<Awaited<ReturnType<typeof
 export type ListFormTemplatesQueryError = ErrorType<AuthErrorResponse>
 
 
-/** The templates whose form (forms v2) a workspace can start now: each free template with a released edition of its wording that its form fits, and each premium template whose edition the workspace bought has such wording. A template not listed starts with its questions only. */
+/** The templates whose form (forms v2) a workspace can start now: each free template with a released edition of its wording that its form fits, and each premium template whose edition the workspace bought has such wording. A template not listed starts with its questions only, and a premium template the workspace holds no live edition of is listed as needing a purchase first. */
 export function useListFormTemplates<TData = Awaited<ReturnType<typeof listFormTemplates>>, TError = ErrorType<AuthErrorResponse>>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listFormTemplates>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -4323,7 +4323,7 @@ export function useListFormTemplates<TData = Awaited<ReturnType<typeof listFormT
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/** The templates whose form (forms v2) a workspace can start now: each free template with a released edition of its wording that its form fits, and each premium template whose edition the workspace bought has such wording. A template not listed starts with its questions only. */
+/** The templates whose form (forms v2) a workspace can start now: each free template with a released edition of its wording that its form fits, and each premium template whose edition the workspace bought has such wording. A template not listed starts with its questions only, and a premium template the workspace holds no live edition of is listed as needing a purchase first. */
 export function useListFormTemplates<TData = Awaited<ReturnType<typeof listFormTemplates>>, TError = ErrorType<AuthErrorResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listFormTemplates>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -4334,12 +4334,12 @@ export function useListFormTemplates<TData = Awaited<ReturnType<typeof listFormT
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/** The templates whose form (forms v2) a workspace can start now: each free template with a released edition of its wording that its form fits, and each premium template whose edition the workspace bought has such wording. A template not listed starts with its questions only. */
+/** The templates whose form (forms v2) a workspace can start now: each free template with a released edition of its wording that its form fits, and each premium template whose edition the workspace bought has such wording. A template not listed starts with its questions only, and a premium template the workspace holds no live edition of is listed as needing a purchase first. */
 export function useListFormTemplates<TData = Awaited<ReturnType<typeof listFormTemplates>>, TError = ErrorType<AuthErrorResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listFormTemplates>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/** The templates whose form (forms v2) a workspace can start now: each free template with a released edition of its wording that its form fits, and each premium template whose edition the workspace bought has such wording. A template not listed starts with its questions only. */
+/** The templates whose form (forms v2) a workspace can start now: each free template with a released edition of its wording that its form fits, and each premium template whose edition the workspace bought has such wording. A template not listed starts with its questions only, and a premium template the workspace holds no live edition of is listed as needing a purchase first. */
 export function useListFormTemplates<TData = Awaited<ReturnType<typeof listFormTemplates>>, TError = ErrorType<AuthErrorResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listFormTemplates>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient

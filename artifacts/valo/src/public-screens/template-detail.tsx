@@ -13,6 +13,7 @@ import { PublicLink as Link } from "@/components/public-link";
 import { PremiumTemplateDetailAction } from "@/components/premium-template-detail-action";
 import { describeError } from "@/lib/describe-error";
 import { basePath } from "@/lib/env";
+import { StartTemplateDocument, guidedTemplateFor } from "@/components/start-template-document";
 import { formatDay, formatNaira } from "@/lib/format";
 import { useOwnedTemplateEditions } from "@/lib/use-owned-template-editions";
 import { fromServer } from "@/lib/server-data";
@@ -97,6 +98,7 @@ function CustomerActions({ t, canUse }: { t: ReleasedTemplate; canUse: boolean }
   const createErr = create.isError ? describeError(create.error) : null;
   return (
     <div className="grid gap-3 empty:hidden">
+      {canUse && <StartTemplateDocument templateId={t.templateId} title={t.title} />}
       {t.publicationMethod !== "manual" && <SaveTemplateButton releaseId={t.id} templateId={t.templateId} />}
       {t.publicationMethod !== "manual" && canUse && (
         <>
@@ -264,8 +266,10 @@ export function TemplateDetail({
                   <PremiumTemplateDetailAction edition={t} owned={ownsEdition} />
                 )}
                 {t.access === "premium" && !ownsEdition && (
-                  <p className="text-sm text-muted-foreground">
-                    Downloading this version requires an active purchase in your workspace.
+                  <p className="text-sm text-muted-foreground" data-testid="text-purchase-needed">
+                    {guidedTemplateFor(t.templateId, t.title)
+                      ? "Downloading this version, or answering its questions, requires an active purchase in your workspace."
+                      : "Downloading this version requires an active purchase in your workspace."}
                   </p>
                 )}
                 {signedIn ? (

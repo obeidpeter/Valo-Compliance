@@ -3134,10 +3134,13 @@ export const SaveDocumentResponse = zod.object({
 
 
 /**
- * The templates whose form (forms v2) a workspace can start now: each free template with a released edition of its wording that its form fits, and each premium template whose edition the workspace bought has such wording. A template not listed starts with its questions only.
+ * The templates whose form (forms v2) a workspace can start now: each free template with a released edition of its wording that its form fits, and each premium template whose edition the workspace bought has such wording. A template not listed starts with its questions only, and a premium template the workspace holds no live edition of is listed as needing a purchase first.
  */
 export const listFormTemplatesResponseTemplatesItemTemplateIdRegExp = new RegExp('^TPL-[0-9]{2}$');
 export const listFormTemplatesResponseTemplatesMax = 40;
+
+export const listFormTemplatesResponseNeedsPurchaseItemRegExp = new RegExp('^TPL-[0-9]{2}$');
+export const listFormTemplatesResponseNeedsPurchaseMax = 40;
 
 
 
@@ -3145,7 +3148,8 @@ export const ListFormTemplatesResponse = zod.object({
   "templates": zod.array(zod.object({
   "templateId": zod.string().regex(listFormTemplatesResponseTemplatesItemTemplateIdRegExp),
   "editionVersion": zod.int()
-})).max(listFormTemplatesResponseTemplatesMax)
+})).max(listFormTemplatesResponseTemplatesMax),
+  "needsPurchase": zod.array(zod.string().regex(listFormTemplatesResponseNeedsPurchaseItemRegExp)).max(listFormTemplatesResponseNeedsPurchaseMax).describe('The premium templates whose form, with its wording or its questions only, this workspace can start only once it holds a verified purchase of a live edition.')
 })
 
 

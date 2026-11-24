@@ -1,29 +1,14 @@
-import { useState } from "react";
 import { useLocation } from "wouter";
-import { useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, Loader2 } from "lucide-react";
-import {
-  ApiError,
-  useCreateDocument,
-  useGetWorkspace,
-  useStartFormDocument,
-  useListFormTemplates,
-  getGetWorkspaceQueryKey,
-  getListFormTemplatesQueryKey,
-  getListDocumentsQueryKey,
-  type BusinessDocument,
-  type CanonicalDocument,
-} from "@workspace/api-client-react";
 import { GUIDED_TEMPLATE_IDS, type GuidedTemplateId } from "@workspace/valo-core/guided";
 import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
-import { GUIDED_SPECS_V2 } from "@workspace/valo-core/guided-specs-v2";
-import { compileGuidedContent } from "@workspace/valo-core/guided-runtime";
 import { describeError } from "@/lib/api";
-import { live } from "@/lib/checker";
 import { DOCUMENT_PURPOSES } from "@/lib/document-kinds";
-import { prefillGuidedData, savedBusinessName } from "@/lib/guided-prefill";
+import { savedBusinessName } from "@/lib/guided-prefill";
 import type { LandingTask } from "@/lib/landing-tasks";
 import { cn } from "@/lib/utils";
+import { basePath } from "@/lib/env";
+import { useStartGuided } from "@/hooks/use-start-guided";
 
 /**
  * The documents the workspace asks questions for, each a button that starts one and opens its
@@ -31,85 +16,77 @@ import { cn } from "@/lib/utils";
  * `chosen` is the task a visitor picked before they had an account: its documents come first.
  */
 export function GuidedDraftStarter({ chosen }: { chosen?: LandingTask | undefined }) {
-  const [starting, setStarting] = useState<GuidedTemplateId | null>(null);
-  const ws = useGetWorkspace({ query: { queryKey: getGetWorkspaceQueryKey(), ...live } });
-  const businessName = savedBusinessName(ws.data?.profile);
-  // The templates whose form (forms v2) can be started now, with a released edition of their wording.
-  const formTemplates = useListFormTemplates({
-    query: { queryKey: getListFormTemplatesQueryKey(), staleTime: 60_000 },
-  });
-  const create = useCreateDocument(),
-    startForm = useStartFormDocument(),
-    qc = useQueryClient(),
-    [, navigate] = useLocation();
-  const pending = create.isPending || startForm.isPending;
-  function start(id: GuidedTemplateId) {
-    setStarting(id);
-    const opened = (doc: BusinessDocument) => {
-      void qc.invalidateQueries({ queryKey: getGetWorkspaceQueryKey() });
-      void qc.invalidateQueries({ queryKey: getListDocumentsQueryKey() });
-      navigate("/workspace/documents/" + doc.id);
-    };
-    const questionsOnly = () =>
-      create.mutate(
-        {
-          data: {
-            // The title is printed as the document's heading, so it starts as the kind's own name.
-            title: GUIDED_SPECS_V1[id].title,
-            content: compileGuidedContent(prefillGuidedData(id, ws.data?.profile)) as CanonicalDocument,
-          },
-        },
-        { onSuccess: opened, onError: () => setStarting(null) },
-      );
-    const listed = formTemplates.data?.templates.some((t) => t.templateId === id);
-    if (!GUIDED_SPECS_V2[id] || (formTemplates.isSuccess && !listed)) return questionsOnly();
-    // A kind whose template's wording is released with a form that fills it starts as that form
-    // (forms v2), with the saved business name filled in by the server. Should the list not have
-    // loaded, or the wording be withdrawn meanwhile, the server says so and the document starts with
-    // its questions as before.
-    startForm.mutate(
-      { data: { templateId: id } },
-      {
-        onSuccess: opened,
-        onError: (error) => {
-          if (error instanceof ApiError && (error.status === 404 || error.status === 409)) {
-            startForm.reset();
-            questionsOnly();
-          } else setStarting(null);
-        },
-      },
-    );
-  }
-  /** One document's button. `place` tells the chosen task's buttons from the full list's. */
-  const kind = (id: GuidedTemplateId, place: "chosen" | "all") => (
-    <li key={id}>
-      <button
-        type="button"
-        className={cn(
-          "surface group flex h-full w-full items-center gap-4 p-5 text-left transition-shadow hover:shadow-[var(--shadow-md)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-60",
-          place === "chosen" && "border-primary",
-        )}
-        disabled={pending}
-        onClick={() => start(id)}
-        data-testid={(place === "chosen" ? "button-start-chosen-" : "button-start-") + id}
-      >
-        <span className="min-w-0 flex-1">
-          <span className="block font-medium">{GUIDED_SPECS_V1[id].title}</span>
-          <span className="mt-1 block text-sm leading-relaxed text-muted-foreground">
-            {DOCUMENT_PURPOSES[id]}
-          </span>
-        </span>
-        {starting === id && pending ? (
-          <Loader2 className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" aria-hidden="true" />
-        ) : (
-          <ArrowRight
-            className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
-            aria-hidden="true"
-          />
-        )}
-      </button>
-    </li>
+  const [, navigate] = useLocation();
+  const { start, starting, pending, workspace, formTemplates, error } = useStartGuided((doc) =>
+    navigate("/workspace/documents/" + doc.id),
   );
+  const businessName = savedBusinessName(workspace.data?.profile);
+  const listed = new Set(formTemplates.data?.templates.map((t) => t.templateId));
+  const toBuy = new Set(formTemplates.data?.needsPurchase);
+  const tile =
+    "surface group flex h-full w-full items-center gap-4 p-5 text-left transition-shadow hover:shadow-[var(--shadow-md)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-60";
+  /** A document's name, what it is for, and, when it has one, its state: `prefix` tells the chosen
+   * task's copy from the full list's. */
+  const words = (id: GuidedTemplateId, prefix: string, state: string | null) => (
+    <span className="min-w-0 flex-1">
+      <span className="block font-medium">{GUIDED_SPECS_V1[id].title}</span>
+      <span className="mt-1 block text-sm leading-relaxed text-muted-foreground">
+        {DOCUMENT_PURPOSES[id]}
+      </span>
+      {state && (
+        <span
+          className="mt-1.5 block text-xs font-medium text-foreground"
+          data-testid={"state-" + prefix + id}
+        >
+          {state}
+        </span>
+      )}
+    </span>
+  );
+  const arrow = (
+    <ArrowRight
+      className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
+      aria-hidden="true"
+    />
+  );
+  /** One document's button. `place` tells the chosen task's buttons from the full list's. */
+  const kind = (id: GuidedTemplateId, place: "chosen" | "all") => {
+    const prefix = place === "chosen" ? "chosen-" : "";
+    // A premium template this workspace has not bought starts neither form: it leads to the template
+    // in the library, where it can be bought, instead of to a refusal. The library is a public page,
+    // served by the server: a full load (decision 0011).
+    if (toBuy.has(id))
+      return (
+        <li key={id}>
+          <a
+            className={cn(tile, place === "chosen" && "border-primary")}
+            href={`${basePath}/library?type=template&access=premium&q=${encodeURIComponent(GUIDED_SPECS_V1[id].title)}`}
+            data-testid={"link-buy-" + prefix + id}
+          >
+            {words(id, prefix, "Buy the template first")}
+            {arrow}
+          </a>
+        </li>
+      );
+    return (
+      <li key={id}>
+        <button
+          type="button"
+          className={cn(tile, place === "chosen" && "border-primary")}
+          disabled={pending}
+          onClick={() => start(id)}
+          data-testid={(place === "chosen" ? "button-start-chosen-" : "button-start-") + id}
+        >
+          {words(id, prefix, listed.has(id) ? "Uses the template's own wording" : null)}
+          {starting === id && pending ? (
+            <Loader2 className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" aria-hidden="true" />
+          ) : (
+            arrow
+          )}
+        </button>
+      </li>
+    );
+  };
   return (
     <div data-testid="guided-draft-starter">
       {chosen && (
@@ -145,9 +122,9 @@ export function GuidedDraftStarter({ chosen }: { chosen?: LandingTask | undefine
       <p role="status" className="sr-only">
         {starting && pending ? `Starting your ${GUIDED_SPECS_V1[starting].title.toLowerCase()}…` : ""}
       </p>
-      {(create.isError || startForm.isError) && (
+      {error && (
         <p role="alert" className="mt-4 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          {describeError(create.error ?? startForm.error).message}
+          {describeError(error).message}
         </p>
       )}
     </div>
