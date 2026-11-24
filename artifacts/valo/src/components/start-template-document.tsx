@@ -19,15 +19,16 @@ export function guidedTemplateFor(templateId: string, title: string): GuidedTemp
 /**
  * On a template's page, for a signed-in reader who may use it, the button that starts its document as
  * the New document page would: as its form when its wording is released for one, else with its
- * questions. The document opens in the workspace, which is the browser app: a full load (decision
- * 0011).
+ * questions, and a line that says which. The document opens in the workspace, which is the browser
+ * app: a full load (decision 0011).
  */
 export function StartTemplateDocument({ templateId, title }: { templateId: string; title: string }) {
   const id = guidedTemplateFor(templateId, title);
-  const { start, starting, pending, error } = useStartGuided((doc) =>
+  const { start, starting, pending, formTemplates, error } = useStartGuided((doc) =>
     window.location.assign(`${basePath}/workspace/documents/${encodeURIComponent(doc.id)}`),
   );
   if (!id) return null;
+  const ownWording = formTemplates.data?.templates.some((t) => t.templateId === id) ?? false;
   return (
     <div className="grid gap-2">
       <button
@@ -40,7 +41,11 @@ export function StartTemplateDocument({ templateId, title }: { templateId: strin
         <ClipboardList className="h-4 w-4" aria-hidden />
         {starting === id && pending ? "Starting your document…" : "Answer its questions"}
       </button>
-      <p className="text-sm text-muted-foreground">Valo sets the document out from your answers.</p>
+      <p className="text-sm text-muted-foreground" data-testid="text-start-hint">
+        {ownWording
+          ? "The document uses this template's own wording, filled in from your answers."
+          : "Valo sets the document out from your answers."}
+      </p>
       {error && (
         <p role="alert" className="text-sm text-red-800" data-testid="text-start-error">
           {describeError(error).message}
