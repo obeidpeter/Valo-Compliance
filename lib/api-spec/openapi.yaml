@@ -2735,7 +2735,7 @@ components:
     LibraryExport:
       type: object
       additionalProperties: false
-      required: [id, documentId, documentTitle, revisionId, revision, format, readyAt, expiresAt, downloadUrl, template]
+      required: [id, documentId, documentTitle, revisionId, revision, format, finished, readyAt, expiresAt, downloadUrl, template]
       properties:
         id: { type: string, format: uuid }
         documentId: { type: string, format: uuid }
@@ -2743,6 +2743,7 @@ components:
         revisionId: { type: string, format: uuid }
         revision: { type: integer }
         format: { type: string, enum: [docx, pdf] }
+        finished: { type: boolean, description: "A finished file, printed without the draft notice; otherwise a marked draft." }
         readyAt: { type: string, format: date-time }
         expiresAt: { type: [string, "null"], format: date-time }
         downloadUrl: { type: string }

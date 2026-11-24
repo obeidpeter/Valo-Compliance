@@ -2,7 +2,7 @@ import type { CanonicalDocument, DocumentBlock } from "@workspace/api-client-rea
 import { DOCUMENT_FIELD_LABELS, guidedFieldIssue } from "@workspace/valo-core/guided-runtime";
 import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
 import { GUIDED_SPECS_V2 } from "@workspace/valo-core/guided-specs-v2";
-import { documentGaps } from "@workspace/valo-core/document-completeness";
+import { documentComplete, documentGaps } from "@workspace/valo-core/document-completeness";
 import type { FormText } from "@workspace/valo-core/form-text";
 
 import type { FormView } from "./form-view";
@@ -113,6 +113,17 @@ export function missingFieldItems(
       label: `Blanks still in the text (${gaps.blanks.length}): ${gaps.blanks.slice(0, 5).join(", ")}`,
     });
   return out;
+}
+
+/** Whether a document's file can be a finished one, without the draft notice
+ * (docs/architecture/finished-file.md): complete, still lacking something, or typed by hand, which is
+ * always made as a marked draft. The server checks the saved version again when the file is asked for. */
+export function finishedFileState(
+  content: CanonicalDocument,
+  formText?: FormText | null,
+): "complete" | "incomplete" | "typed" {
+  const gaps = documentGaps(content, formText);
+  return gaps.kind === "typed" ? "typed" : documentComplete(gaps) ? "complete" : "incomplete";
 }
 
 /** What a document still needs before it is complete, one line each, in the order of its questions. */

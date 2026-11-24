@@ -45,8 +45,8 @@ export function LibraryExports() {
                   {file.documentTitle}
                 </Link>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {FILE_FORMAT_NAMES[file.format]} · version {file.revision} · ready{" "}
-                  {formatDateTime(file.readyAt)}
+                  {file.finished ? "Finished" : "Draft"} {FILE_FORMAT_NAMES[file.format]} · version{" "}
+                  {file.revision} · ready {formatDateTime(file.readyAt)}
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {file.template

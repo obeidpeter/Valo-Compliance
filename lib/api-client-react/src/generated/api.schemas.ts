@@ -1769,6 +1769,8 @@ export interface LibraryExport {
   revisionId: string;
   revision: number;
   format: LibraryExportFormat;
+  /** A finished file, printed without the draft notice; otherwise a marked draft. */
+  finished: boolean;
   readyAt: string;
   /** @nullable */
   expiresAt: string | null;

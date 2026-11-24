@@ -202,6 +202,7 @@ export async function listWorkspaceExports(actor: WorkspaceActor) {
       revisionId: job.revisionId,
       revision: job.revision,
       format: job.format,
+      finished: job.finished,
       readyAt: asset.createdAt.toISOString(),
       expiresAt: asset.retentionAt?.toISOString() ?? null,
       downloadUrl: `/api/v1/exports/${job.id}/file`,

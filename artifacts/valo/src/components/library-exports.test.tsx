@@ -15,6 +15,7 @@ const fromTemplate: LibraryExport = {
   revisionId: "00000000-0000-4000-8000-00000000c001",
   revision: 2,
   format: "pdf",
+  finished: false,
   readyAt: "2026-11-19T10:00:00.000Z",
   expiresAt: null,
   downloadUrl: "/api/v1/exports/00000000-0000-4000-8000-00000000e001/file",
@@ -27,6 +28,7 @@ const blank: LibraryExport = {
   documentTitle: "Synthetic blank draft",
   revision: 1,
   format: "docx",
+  finished: true,
   downloadUrl: "/api/v1/exports/00000000-0000-4000-8000-00000000e002/file",
   template: null,
 };
@@ -49,10 +51,13 @@ test("the business library lists each ready export with its revision, its downlo
   const first = html.slice(html.indexOf("Synthetic stock register"), html.indexOf("Synthetic blank draft"));
   const second = html.slice(html.indexOf("Synthetic blank draft"));
   assert.ok(first.includes("PDF · version 2"), first);
+  // Each file says whether it is a finished file or a marked draft (docs/architecture/finished-file.md).
+  assert.ok(first.includes("Draft PDF"), first);
   assert.ok(first.includes("Made from template TPL-07, version 3"), first);
   assert.ok(first.includes(`href="${fromTemplate.downloadUrl}"`), first);
   assert.ok(html.includes(`href="/workspace/documents/${fromTemplate.documentId}"`), html);
   assert.ok(second.includes("Word · version 1"), second);
+  assert.ok(second.includes("Finished Word"), second);
   assert.ok(second.includes("Not made from a template"), second);
   assert.ok(second.includes(`href="${blank.downloadUrl}"`), second);
   assert.ok(html.includes("2 ready"), html);

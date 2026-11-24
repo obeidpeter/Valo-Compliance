@@ -3969,6 +3969,7 @@ export const ListWorkspaceExportsResponseItem = zod.object({
   "revisionId": zod.uuid(),
   "revision": zod.int(),
   "format": zod.enum(['docx', 'pdf']),
+  "finished": zod.boolean().describe('A finished file, printed without the draft notice; otherwise a marked draft.'),
   "readyAt": zod.coerce.date(),
   "expiresAt": zod.coerce.date().nullable(),
   "downloadUrl": zod.string(),

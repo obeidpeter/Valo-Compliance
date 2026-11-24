@@ -1714,7 +1714,7 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/exports/valo-exports.integration.test.ts",
       "test": "real development PostgreSQL, private file storage and renderer integration",
-      "proves": "An export request for a synthetic draft without the incomplete-draft acknowledgement is refused with 422, and the acknowledged PDF export carries the INCOMPLETE DRAFT notice."
+      "proves": "A finished file, asked for without the incomplete-draft acknowledgement, is refused with 422 for a synthetic document typed by hand and for an invoice with its questions unanswered; a complete invoice makes one, printed without the INCOMPLETE DRAFT notice beside its marked draft, which carries it, as the acknowledged PDF export does; and the worker refuses a finished job of an incomplete version at once."
     },
     {
       "requirement": "EDT-006",
@@ -3269,6 +3269,27 @@
       "file": "artifacts/valo/src/components/start-template-document.test.tsx",
       "test": "the page offers to answer the template's questions only for a template that has them, and says whether the document uses the template's own wording",
       "proves": "A template's page offers to start the document its questions make only for one of the twelve templates that have questions, and says whether that document will use the template's own released wording."
+    },
+    {
+      "requirement": "EDT-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-document-completeness.test.ts",
+      "test": "a form document is complete once every answer it shows is valid and no slot is left unfilled, and a blank left for completion by hand, such as a signature, is not an omission",
+      "proves": "For each of the twelve v2 forms, a document with its questions unanswered lacks them, and one with every answer valid is complete, read against its form text; a blank left for completion by hand, such as a signature, is not counted as missing."
+    },
+    {
+      "requirement": "EDT-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-document-completeness.test.ts",
+      "test": "a document typed by hand is never complete in this sense: what it lacks is listed, its empty fields, its text and the blanks in it",
+      "proves": "A document typed by hand is never complete, so its file is always a marked draft, while what it lacks, its empty fields, its missing text and the blanks left in it, is still listed."
+    },
+    {
+      "requirement": "EDT-005",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "a complete document's file panel offers the finished file, without the draft notice, and an incomplete or typed one says how its file is made instead",
+      "proves": "The file panel of a complete invoice offers its finished file and asks for it without the draft acknowledgement, while an invoice with its questions unanswered and a document typed by hand are offered none and are told how their file is made."
     }
   ]
 }
