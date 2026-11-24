@@ -1,5 +1,5 @@
 import type { GuidedField, GuidedTemplateId } from "./guided";
-import { guidedFieldIssue } from "./guided-runtime-v1";
+import { guidedFieldIssue, printedCalendarDate } from "./guided-runtime-v1";
 import { GUIDED_SPECS_V1 } from "./guided-specs-v1";
 import type { GuidedDataV2, GuidedFieldV2, GuidedSpecV2 } from "./guided-v2";
 import { formatKobo, lineTotal } from "./money";
@@ -452,6 +452,82 @@ const deliveryNote = fromV1("TPL-05", {
   ],
 });
 
+/** A column of one of v1's tables, by id. */
+const columnOf = (templateId: GuidedTemplateId, table: string, column: string) =>
+  GUIDED_SPECS_V1[templateId].tables.find((t) => t.id === table)?.columns.find((c) => c.id === column);
+
+const minutes = fromV1("TPL-08", {
+  questions: [
+    { v1: "issuerName", join: { tokens: ["issuerName"] } },
+    { v1: "meetingTitle", join: { tokens: ["meetingTitle"] } },
+    lineQuestion("meetingReference", "Meeting reference, if any", "Meeting reference: [ ]", "text"),
+    { v1: "issueDate", join: { tokens: ["issueDate"] } },
+    lineQuestion("meetingTime", "Time and timezone, if recorded", "Time and timezone: [If recorded]", "text"),
+    { v1: "location", join: { tokens: ["location"] } },
+    { v1: "chair", join: { tokens: ["chair"] } },
+    { v1: "minuteTaker", join: { tokens: ["minuteTaker"] } },
+    lineQuestion(
+      "apologies",
+      "Apologies, or those invited but absent, if any",
+      "Apologies or invited but absent: [Separate supplied list, if any]",
+    ),
+    { v1: "recordStatus", join: { tokens: ["recordStatus"], clause: true } },
+    { v1: "confirmation", join: { tokens: ["confirmation"] } },
+    lineQuestion("unresolvedQuestions", "Unresolved questions, if any", "Unresolved questions: [ ]"),
+    { v1: "nextMeeting", join: { tokens: ["nextMeeting"] } },
+    lineQuestion(
+      "supportingRecords",
+      "Supporting-record references, if any",
+      "Supporting-record references: [ ]",
+      "text",
+    ),
+    lineQuestion(
+      "circulatedTo",
+      "When and to whom the minutes were circulated, if they were",
+      "Circulated on/to: [Only if actually circulated]",
+      "text",
+    ),
+    lineQuestion(
+      "corrections",
+      "Corrections requested or made, if any",
+      "Corrections requested or made: [ ]",
+    ),
+    lineQuestion("versionNote", "Version or change note, if any", "Version/change note: [ ]", "text"),
+  ],
+  dropped: {
+    meetingType:
+      "The minutes' wording does not print the kind of meeting: the template is for an ordinary business meeting, and its closing note says it does not certify statutory governance procedure, quorum or approval.",
+    boardAssumptions:
+      "The template is for an ordinary business meeting and has no place for board governance assumptions; its closing note says it does not certify statutory governance procedure, quorum or approval.",
+  },
+  tables: {
+    decisions: {
+      maxRows: {
+        rows: 20,
+        why: "Each topic prints a heading, its discussion and its outcome, so the form takes up to 20 topics, which keeps the longest minutes within what a document holds.",
+      },
+    },
+  },
+  calculated: {
+    "calc.attendee": (_data, row) => {
+      const name = valid(columnOf("TPL-08", "attendees", "name"), row?.name);
+      if (!name) return null;
+      const role = valid(columnOf("TPL-08", "attendees", "role"), row?.role);
+      return role ? `${name} (${role})` : name;
+    },
+    "calc.actionDate": (_data, row) => {
+      const date = valid(columnOf("TPL-08", "actions", "dueDate"), row?.dueDate);
+      // The draft's own words for an action with no date agreed.
+      return date ? printedCalendarDate(date) : "not agreed";
+    },
+  },
+  keepsNothing: [
+    { question: "recordStatus", option: "draft" },
+    { question: "recordStatus", option: "circulated" },
+    { question: "recordStatus", option: "corrected" },
+  ],
+});
+
 /** The v2 forms, by template. A template without one stays on its v1 form. */
 export const GUIDED_SPECS_V2: Readonly<Partial<Record<GuidedTemplateId, GuidedSpecV2>>> = {
   "TPL-01": invoice.spec,
@@ -459,6 +535,7 @@ export const GUIDED_SPECS_V2: Readonly<Partial<Record<GuidedTemplateId, GuidedSp
   "TPL-03": receipt.spec,
   "TPL-04": purchaseOrder.spec,
   "TPL-05": deliveryNote.spec,
+  "TPL-08": minutes.spec,
 };
 /** What each v2 form adds to and leaves out of its v1 questions, with the reasons. */
 export const GUIDED_CHANGES_V2: Readonly<Partial<Record<GuidedTemplateId, GuidedChangesV2>>> = {
@@ -467,4 +544,5 @@ export const GUIDED_CHANGES_V2: Readonly<Partial<Record<GuidedTemplateId, Guided
   "TPL-03": receipt.changes,
   "TPL-04": purchaseOrder.changes,
   "TPL-05": deliveryNote.changes,
+  "TPL-08": minutes.changes,
 };

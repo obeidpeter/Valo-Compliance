@@ -297,6 +297,51 @@ export const FORM_TEXT_MAPS: Readonly<Partial<Record<GuidedTemplateId, readonly 
       to: "This note reflects the movement and handover facts entered by the issuer. A prepared or dispatched note does not establish completed delivery. Any acknowledgement is limited to what is actually recorded; payment, product fitness and regulatory approval are not established by this document.",
     },
   ],
+  "TPL-08": [
+    {
+      from: "**Business/team:** [ ]  \n**Meeting:** [Title and purpose]  \nMeeting reference: [ ]",
+      to: "Business/team: [ ]{=issuerName}\nMeeting: [Title and purpose]{=meetingTitle}\n{?meetingReference}Meeting reference: [ ]{=meetingReference}{/?}",
+      why: "The meeting reference is optional: its line prints once it is given.",
+    },
+    {
+      from: "Date: [ ]  \nTime and timezone: [If recorded]  \nLocation or method: [ ]  \nFacilitator: [If supplied]  \nNote-taker: [If supplied]",
+      to: "Date: [ ]{=issueDate}\n{?meetingTime}Time and timezone: [If recorded]{=meetingTime}{/?}\nLocation or method: [ ]{=location}\nFacilitator: [If supplied]{=chair}\nNote-taker: [If supplied]{=minuteTaker}",
+      why: "The time is optional: its line prints once it is given. The chair the form asks for is the facilitator, and its minute taker the note-taker.",
+    },
+    {
+      from: "**Present:** [Actual attendees]  \n**Apologies or invited but absent:** [Separate supplied list, if any]",
+      to: "| Present |\n|---|\n| {*attendees} [Actual attendees]{=calc.attendee} |\n\n{?apologies}Apologies or invited but absent: [Separate supplied list, if any]{=apologies}{/?}",
+      why: "Each attendee the form lists prints as a row of its own, with their role once it is given, so that a long list fits what a document holds. The apologies are optional: they print once given.",
+    },
+    {
+      from: "Record status: **[Draft notes / circulated / corrected version / actual recorded confirmation]**",
+      to: "Record status: [Draft notes / circulated / corrected version / actual recorded confirmation]{=recordStatus}",
+    },
+    {
+      from: "### [Topic 1]\n\nDiscussion summary: [Concise factual summary]\n\nOutcome: [Actual decision, proposal, deferred item or unresolved question, clearly labelled]\n\n### [Topic 2, if needed]\n\nDiscussion summary: [ ]\n\nOutcome: [ ]",
+      to: "{*decisions}\n### [Topic 1]{=decisions.topic}\n\nDiscussion summary: [Concise factual summary]{=decisions.discussion}\n\nOutcome: [Actual decision, proposal, deferred item or unresolved question, clearly labelled]{=decisions.outcome}\n{/*}",
+      why: "One topic prints for each topic the form lists, with its discussion and outcome, so the draft's second sample topic goes.",
+    },
+    {
+      from: "| Action reference | Agreed next action | Owner or “unassigned” | Target date or “not agreed” | Actual status |\n|---|---|---|---|---|\n| [ ] | [ ] | [ ] | [ ] | [Open / in progress / completed with recorded outcome / deferred] |\n| [ ] | [ ] | [ ] | [ ] | [ ] |",
+      to: "| Agreed next action | Owner or “unassigned” | Target date or “not agreed” |\n|---|---|---|\n| {*actions} [ ]{=actions.action} | [ ]{=actions.owner} | [ ]{=calc.actionDate} |",
+      why: "One row prints for each action the form lists, so the draft's second sample row goes. The form asks each action, its owner and any date, printed as not agreed when none is given, and asks no reference or status for an action, so those columns go.",
+    },
+    {
+      from: "Unresolved questions: [ ]  \nNext review or meeting: [Proposed/agreed details, if any]  \nSupporting-record references: [ ]",
+      to: "{?unresolvedQuestions}Unresolved questions: [ ]{=unresolvedQuestions}{/?}\n\n{?nextMeeting}Next review or meeting: [Proposed/agreed details, if any]{=nextMeeting}{/?}\n\n{?supportingRecords}Supporting-record references: [ ]{=supportingRecords}{/?}",
+      why: "Each follow-up is optional: it prints once it is given, as a paragraph of its own so that no paragraph can grow past what a document block holds.",
+    },
+    {
+      from: "Circulated on/to: [Only if actually circulated]  \nCorrections requested or made: [ ]  \nConfirmed by/date: [Only an actual recorded confirmation; otherwise omit or show not recorded]  \nVersion/change note: [ ]",
+      to: "{?circulatedTo}Circulated on/to: [Only if actually circulated]{=circulatedTo}{/?}\n\n{?corrections}Corrections requested or made: [ ]{=corrections}{/?}\n\n{?recordStatus=confirmed}Confirmed by/date: [Only an actual recorded confirmation; otherwise omit or show not recorded]{=confirmation}{/?}{?recordStatus=}Confirmed by/date: [Only an actual recorded confirmation; otherwise omit or show not recorded]{/?}\n\n{?versionNote}Version/change note: [ ]{=versionNote}{/?}",
+      why: "Each record-review line is optional and prints once it is given, as a paragraph of its own. The confirmation prints only for minutes whose status is an actual recorded confirmation, with its details; for any other status it is left out, as the draft says, and it prints as the draft has it while the status is unanswered.",
+    },
+    {
+      from: "*These minutes record the supplied account of an ordinary business meeting. A proposal is not a decision; an action date passing is not evidence of completion. This general template does not certify statutory governance procedure, quorum, approval or a person's signature.*",
+      to: "These minutes record the supplied account of an ordinary business meeting. A proposal is not a decision; an action date passing is not evidence of completion. This general template does not certify statutory governance procedure, quorum, approval or a person's signature.",
+    },
+  ],
 };
 
 /** Applies a map's changes to a draft, each to text that occurs exactly once. */

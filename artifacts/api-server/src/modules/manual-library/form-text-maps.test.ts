@@ -48,7 +48,7 @@ function choiceCombinations(spec: GuidedSpecV2) {
 }
 
 test("every map turns its retained draft into form text that the v2 form fits exactly", async () => {
-  assert.deepEqual(mapped, ["TPL-01", "TPL-02", "TPL-03", "TPL-04", "TPL-05"]);
+  assert.deepEqual(mapped, ["TPL-01", "TPL-02", "TPL-03", "TPL-04", "TPL-05", "TPL-08"]);
   for (const templateId of mapped) {
     const spec = GUIDED_SPECS_V2[templateId];
     assert.ok(spec, templateId);
@@ -440,6 +440,62 @@ test("a delivery note's answers fill its own wording: its status keeps the dispa
     GUIDED_CHANGES_V2["TPL-05"]!.dropped.map((d) => d.id),
     ["deliveryItems.condition"],
   );
+});
+
+test("meeting minutes' answers fill their own wording: the attendees, a heading, discussion and outcome for each topic, the actions, and a confirmation only once recorded", async () => {
+  const spec = GUIDED_SPECS_V2["TPL-08"]!;
+  const text = parseFormText((await proposedFormText("TPL-08"))!);
+  const data = emptyFormData(spec);
+  data.values = {
+    ...data.values,
+    issuerName: "Synthetic Traders",
+    meetingTitle: "Synthetic monthly review",
+    issueDate: "2026-11-05",
+    location: "Synthetic office",
+    chair: "Synthetic chair",
+    minuteTaker: "Synthetic minute taker",
+    recordStatus: "draft",
+  };
+  data.tables.attendees = [
+    { name: "Synthetic chair", role: "Owner" },
+    { name: "Synthetic staff member", role: "" },
+  ];
+  data.tables.decisions = [
+    {
+      topic: "Synthetic stock",
+      discussion: "Synthetic stock levels reviewed",
+      outcome: "Synthetic reorder agreed",
+    },
+  ];
+  data.tables.actions = [{ action: "Synthetic reorder", owner: "Synthetic staff member", dueDate: "" }];
+  const shown = (values: Record<string, string>) =>
+    compileForm(spec, text, { ...data, values: { ...data.values, ...values } }).blocks.map((b) =>
+      b.type === "table" ? b.rows.map((r) => r.join(" | ")).join("\n") : b.text,
+    );
+  const draft = shown({});
+  assert.deepEqual(draft.slice(0, 11), [
+    "Business/team: Synthetic Traders\nMeeting: Synthetic monthly review",
+    "Date: 5 Nov 2026\nLocation or method: Synthetic office\nFacilitator: Synthetic chair\nNote-taker: Synthetic minute taker",
+    "Present\nSynthetic chair (Owner)\nSynthetic staff member",
+    "Record status: Draft notes",
+    "Topics and outcomes",
+    "Synthetic stock",
+    "Discussion summary: Synthetic stock levels reviewed",
+    "Outcome: Synthetic reorder agreed",
+    "Action list",
+    "Agreed next action | Owner or \u201cunassigned\u201d | Target date or \u201cnot agreed\u201d\nSynthetic reorder | Synthetic staff member | not agreed",
+    "Questions and follow-up",
+  ]);
+  // Draft minutes print no confirmation; confirmed ones print theirs.
+  assert.ok(!draft.some((line) => line.startsWith("Confirmed by/date")));
+  const confirmed = shown({
+    recordStatus: "confirmed",
+    confirmation: "Synthetic confirmation at the next meeting",
+  });
+  assert.ok(confirmed.includes("Confirmed by/date: Synthetic confirmation at the next meeting"));
+  assert.deepEqual(compileForm(spec, text, data).unfilled, []);
+  // Up to 20 topics, each with its heading, discussion and outcome.
+  assert.equal(spec.tables.find((t) => t.id === "decisions")!.maxRows, 20);
 });
 
 test("an invoice form document is saved as its answers make it, hashed as V2, and its file prints the template's wording with only its note among its fields", async () => {
