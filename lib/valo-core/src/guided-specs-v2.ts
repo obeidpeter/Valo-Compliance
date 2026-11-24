@@ -852,6 +852,60 @@ const employmentContract = fromV1("TPL-16", {
   keepsNothing: [{ question: "probation", option: "no" }],
 });
 
+/**
+ * The non-disclosure agreement (TPL-15), a premium form. The retained text is a mutual agreement, so
+ * v1's one-way option has no wording (the design note's example). Each party's name, legal form,
+ * registration and address fill the one placeholder the draft gives that party, in that order.
+ */
+const nonDisclosure = fromV1("TPL-15", {
+  questions: [
+    { v1: "issuerName", join: { tokens: ["partyA", "issuerName"] } },
+    { v1: "issuerLegalForm", join: { tokens: ["partyA"] } },
+    { v1: "issuerRegistration", join: { tokens: ["partyA"] } },
+    { v1: "issuerAddress", join: { tokens: ["partyA", "issuerAddress"] } },
+    { v1: "recipientName", join: { tokens: ["partyB", "recipientName"] } },
+    { v1: "recipientLegalForm", join: { tokens: ["partyB"] } },
+    { v1: "recipientRegistration", join: { tokens: ["partyB"] } },
+    { v1: "recipientAddress", join: { tokens: ["partyB", "recipientAddress"] } },
+    { v1: "documentNumber", join: { tokens: ["documentNumber"] } },
+    { v1: "issueDate", join: { tokens: ["issueDate"] } },
+    { v1: "purpose", join: { tokens: ["purpose"] } },
+    { v1: "disclosureStart", join: { tokens: ["disclosureStart"] } },
+    { v1: "disclosureEnd", join: { tokens: ["disclosureEnd"] } },
+    { v1: "duration", join: { tokens: ["duration"] } },
+    { v1: "permittedRecipients", join: { tokens: ["permittedRecipients"] } },
+    { v1: "jurisdiction", join: { tokens: ["jurisdiction"] } },
+    { v1: "protectedInfo", join: { tokens: ["protectedInfo"] } },
+    lineQuestion(
+      "approvedTools",
+      "Approved tools and storage locations for the information, if any",
+      "Approved tools and storage locations, if any: [ ]",
+    ),
+    { v1: "returnTerms", join: { tokens: ["returnTerms"] } },
+    { v1: "disputeTerms", join: { tokens: ["disputeTerms"] } },
+  ],
+  dropped: {
+    direction:
+      "The retained text is a mutual agreement only: each party is a Discloser when it supplies information and a Recipient when it receives the other's. Wording for a one-way agreement is the owner's to decide (design note, owner's point 3).",
+    discloser: "It is asked only for a one-way agreement, which the retained text does not provide.",
+    exclusions:
+      "The agreement sets out what falls outside its definition itself, in clause 1, and has no place for further exclusions; an express exclusion needs wording of its own.",
+  },
+  // Completed by hand: the register as each disclosure occurs, as the draft says, and the signatures.
+  blanks: [
+    "registerReference",
+    "registerInformation",
+    "registerParties",
+    "registerEnd",
+    "signatoryA",
+    "authorityA",
+    "signatureA",
+    "signatoryB",
+    "authorityB",
+    "signatureB",
+  ],
+});
+
 /** The v2 forms, by template. A template without one stays on its v1 form. */
 export const GUIDED_SPECS_V2: Readonly<Partial<Record<GuidedTemplateId, GuidedSpecV2>>> = {
   "TPL-01": invoice.spec,
@@ -861,6 +915,7 @@ export const GUIDED_SPECS_V2: Readonly<Partial<Record<GuidedTemplateId, GuidedSp
   "TPL-05": deliveryNote.spec,
   "TPL-08": minutes.spec,
   "TPL-12": reminder.spec,
+  "TPL-15": nonDisclosure.spec,
   "TPL-16": employmentContract.spec,
   "TPL-17": offerLetter.spec,
 };
@@ -873,6 +928,7 @@ export const GUIDED_CHANGES_V2: Readonly<Partial<Record<GuidedTemplateId, Guided
   "TPL-05": deliveryNote.changes,
   "TPL-08": minutes.changes,
   "TPL-12": reminder.changes,
+  "TPL-15": nonDisclosure.changes,
   "TPL-16": employmentContract.changes,
   "TPL-17": offerLetter.changes,
 };

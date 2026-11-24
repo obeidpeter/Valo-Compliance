@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { baselineTemplates } from "@workspace/valo-core";
 import { parseFormText, type FormInline, type FormNode } from "@workspace/valo-core/form-text";
 import type { GuidedTemplateId } from "@workspace/valo-core/guided";
 import {
@@ -73,6 +74,7 @@ test("every map turns its retained draft into form text that the v2 form fits ex
     "TPL-05",
     "TPL-08",
     "TPL-12",
+    "TPL-15",
     "TPL-16",
     "TPL-17",
   ]);
@@ -98,6 +100,12 @@ test("form text adds no words: with its slots left empty, every combination of c
     const { section } = await readTemplateIntake(templateId);
     const draft = words(section.body);
     const text = parseFormText((await proposedFormText(templateId))!);
+    // The form text's title shows only in the staff library's outline: a document is named by its own
+    // title. A draft without a title line may take the template's registered title; any other title,
+    // like every block, prints only the draft's words.
+    const ownTitle = /^# \S/.test(section.body.trim().split("\n")[0]!);
+    const registeredTitle =
+      !ownTitle && text.title === baselineTemplates.find((template) => template.id === templateId)!.title;
     // Calculations left empty too: they print their placeholders. A choice that also fills a slot,
     // such as a delivery's status, is an answer there, so its slot is left empty like any other.
     const empty = (choices: Record<string, string>): GuidedSpecV2 => ({
@@ -117,12 +125,16 @@ test("form text adds no words: with its slots left empty, every combination of c
     // their order; every other map keeps their order too.
     const moves = FORM_TEXT_MAPS[templateId]!.some((change) => change.moves);
     const combinations = choiceCombinations(spec);
-    assert.ok(combinations.length > 1, templateId);
+    // More than one combination exactly when the form has a choice: the non-disclosure agreement has
+    // none, only an optional sentence.
+    const hasChoice =
+      spec.fields.some((f) => f.clause || f.type === "acknowledgement") || Boolean(spec.derived);
+    assert.equal(combinations.length > 1, hasChoice, templateId);
     for (const choices of combinations) {
       const data = emptyFormData(spec);
       data.values = { ...data.values, ...choices };
       const out = compileForm(empty(choices), text, data);
-      const printed = [...words(out.title), ...printedWords(out.blocks)];
+      const printed = [...(registeredTitle ? [] : words(out.title)), ...printedWords(out.blocks)];
       assert.ok(
         moves ? fromWords(printed, draft) : subsequence(printed, draft),
         `${templateId} ${JSON.stringify(choices)}`,
@@ -884,6 +896,93 @@ test("an employment contract's answers fill its own clauses once each: Schedule 
     empty.some((line) =>
       line.startsWith("[Include only a separately validated, expressly agreed probation clause:"),
     ),
+  );
+});
+
+test("a non-disclosure agreement's answers fill its mutual wording: each party's identity, the purpose and periods, the governing law, and the register and signatures left for completion by hand", async () => {
+  const spec = GUIDED_SPECS_V2["TPL-15"]!;
+  const text = parseFormText((await proposedFormText("TPL-15"))!);
+  assert.equal(text.title, "Non-disclosure agreement");
+  const data = emptyFormData(spec);
+  data.values = {
+    ...data.values,
+    issuerName: "Synthetic Alpha Ltd",
+    issuerLegalForm: "private company limited by shares",
+    issuerRegistration: "RC 000001",
+    issuerAddress: "1 Synthetic Road\nIkeja, Lagos",
+    recipientName: "Synthetic Beta Ltd",
+    recipientLegalForm: "private company limited by shares",
+    recipientAddress: "2 Synthetic Street, Yaba, Lagos",
+    documentNumber: "SYN-NDA-001",
+    issueDate: "2026-11-24",
+    purpose: "evaluating a synthetic joint supply arrangement",
+    disclosureStart: "2026-12-01",
+    disclosureEnd: "2027-03-31",
+    duration: "two years from each disclosure",
+    permittedRecipients: "each party's directors and finance staff who need to know",
+    jurisdiction: "Lagos State",
+    protectedInfo: "price lists and supplier terms",
+    returnTerms: "14 days",
+    disputeTerms: "each party's managing director after 10 working days",
+  };
+  const compiled = (values: Record<string, string> = {}) =>
+    compileForm(spec, text, { ...data, values: { ...data.values, ...values } });
+  const out = compiled();
+  const shown = out.blocks.map((b) =>
+    b.type === "table" ? b.rows.map((r) => r.join(" | ")).join("\n") : b.text,
+  );
+  assert.deepEqual(shown.slice(0, 7), [
+    "Parties, purpose and periods",
+    "This mutual agreement is between Synthetic Alpha Ltd, private company limited by shares, RC 000001, 1 Synthetic Road, Ikeja, Lagos",
+    "and Synthetic Beta Ltd, private company limited by shares, 2 Synthetic Street, Yaba, Lagos. Agreement reference SYN-NDA-001; date 24 Nov 2026. Each is a Discloser when supplying its information and a Recipient when receiving the other's information.",
+    "Permitted purpose: evaluating a synthetic joint supply arrangement.",
+    "Disclosure period: 1 Dec 2026 to 31 Mar 2027. Protection period for each disclosure: two years from each disclosure.",
+    "Named contacts and permitted recipient categories: each party's directors and finance staff who need to know.",
+    "Nigerian State/FCT and relevant governing-law choice: Lagos State. Courts of competent jurisdiction/location: Lagos State. Complete these entries and the signature authority before signing. This is not a non-compete, employment restraint, data-processing agreement or permission to conceal misconduct.",
+  ]);
+  const containing = (words: string) => shown.find((line) => line.includes(words));
+  assert.match(
+    containing("Examples relevant")!,
+    /Examples relevant to this exchange: price lists and supplier terms\./,
+  );
+  // Without approved tools, their sentence does not print and none is approved.
+  assert.match(containing("unapproved AI system")!, /external service\. No password, payment credential/);
+  assert.match(
+    compiled({ approvedTools: "the synthetic shared drive" })
+      .blocks.map((b) => b.text)
+      .join("\n"),
+    /external service\. Approved tools and storage locations, if any: the synthetic shared drive\. No password/,
+  );
+  assert.match(containing("securely delete copies")!, /copies within 14 days, confirming/);
+  assert.match(
+    containing("escalate to")!,
+    /escalate to each party's managing director after 10 working days, without preventing/,
+  );
+  assert.ok(shown.includes("Notice addresses/email: Party A 1 Synthetic Road, Ikeja, Lagos;"));
+  assert.ok(
+    shown.some((line) => line.startsWith("Party B 2 Synthetic Street, Yaba, Lagos. Notices must identify")),
+  );
+  // The exchange register and the signatures are completed by hand.
+  assert.ok(
+    shown.includes(
+      "Disclosure reference/date | Information/category and purpose | Discloser/approved recipients | Protection end or agreed basis\n[ ] | [ ] | [ ] | [ ]\n[ ] | [ ] | [ ] | [ ]",
+    ),
+  );
+  assert.ok(
+    shown.some((line) =>
+      line.startsWith(
+        "Party A legal name Synthetic Alpha Ltd; signatory/name/capacity [ ]; authority reference [ ]; signature/date [ ]. Party B legal name Synthetic Beta Ltd; signatory/name/capacity [ ]",
+      ),
+    ),
+  );
+  assert.deepEqual(out.unfilled, []);
+  assert.deepEqual(out.selectedClauses, []);
+  // A disclosure end before its start is a draft answer and leaves its placeholder.
+  assert.match(
+    compiled({ disclosureEnd: "2026-11-01" })
+      .blocks.map((b) => b.text)
+      .join("\n"),
+    /Disclosure period: 1 Dec 2026 to \[end\]\./,
   );
 });
 

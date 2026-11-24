@@ -418,6 +418,49 @@ export const FORM_TEXT_MAPS: Readonly<Partial<Record<GuidedTemplateId, readonly 
       why: "The timing and dispute paragraphs print in their places in the letter above, chosen from the answers; the rest is direction for the form and its checks, not wording of the letter.",
     },
   ],
+  "TPL-15": [
+    {
+      from: "### Parties, purpose and periods\n\nThis mutual agreement is between **[Party A legal name, entity type and address]** and **[Party B legal name, entity type and address]**. Agreement reference [ ]; date [ ].",
+      to: "# Non-disclosure agreement\n\n### Parties, purpose and periods\n\nThis mutual agreement is between [Party A legal name, entity type and address]{=partyA}\n\nand [Party B legal name, entity type and address]{=partyB}. Agreement reference [ ]{=documentNumber}; date [ ]{=issueDate}.",
+      why: "The draft has no title line, so the form text takes the template's registered title, which the staff library shows and no document prints. The two parties print as paragraphs of their own, since both addresses together can be longer than a document block holds.",
+    },
+    {
+      from: "Permitted purpose: **[describe the proposed discussion, project or evaluation narrowly]**. Disclosure period: [start] to [end]. Protection period for each disclosure: [agreed duration and start event]. Named contacts and permitted recipient categories: [ ]. Nigerian State/FCT and relevant governing-law choice: [ ]. Courts of competent jurisdiction/location: [ ].",
+      to: "Permitted purpose: [describe the proposed discussion, project or evaluation narrowly]{=purpose}.\n\nDisclosure period: [start]{=disclosureStart} to [end]{=disclosureEnd}. Protection period for each disclosure: [agreed duration and start event]{=duration}.\n\nNamed contacts and permitted recipient categories: [ ]{=permittedRecipients}.\n\nNigerian State/FCT and relevant governing-law choice: [ ]{=jurisdiction}. Courts of competent jurisdiction/location: [ ]{=jurisdiction}.",
+      why: "The entries print as paragraphs of their own, since together they can be longer than a document block holds. v1 asks the State/FCT and the Nigerian-law scope in one answer, which names the courts' location too.",
+    },
+    {
+      from: "Examples relevant to this exchange: [ ].",
+      to: "Examples relevant to this exchange: [ ]{=protectedInfo}.",
+    },
+    {
+      from: " Approved tools and storage locations, if any: [ ].",
+      to: "{?approvedTools} Approved tools and storage locations, if any: [ ]{=approvedTools}.{/?}",
+      why: "Approved tools and storage locations are optional: the sentence prints once they are given, and without them no tool or location is approved.",
+    },
+    {
+      from: "return or securely delete copies within [agreed period], confirming",
+      to: "return or securely delete copies within [agreed period]{=returnTerms}, confirming",
+    },
+    {
+      from: "escalate to [decision-makers] after [agreed period], without",
+      to: "escalate to [decision-makers]{=disputeTerms}, without",
+      why: "v1 asks the escalation arrangements in one answer, which names the decision-makers and the period, so the period's placeholder goes.",
+    },
+    {
+      from: "Notice addresses/email: Party A [ ]; Party B [ ]. Notices",
+      to: "Notice addresses/email: Party A [ ]{=issuerAddress};\n\nParty B [ ]{=recipientAddress}. Notices",
+      why: "Each party's address prints as its notice address, in a paragraph of its own, since both together can be longer than a document block holds.",
+    },
+    {
+      from: "| [ ] | [ ] | [ ] | [ ] |\n| [ ] | [ ] | [ ] | [ ] |",
+      to: "| [ ]{=registerReference} | [ ]{=registerInformation} | [ ]{=registerParties} | [ ]{=registerEnd} |\n| [ ]{=registerReference} | [ ]{=registerInformation} | [ ]{=registerParties} | [ ]{=registerEnd} |",
+    },
+    {
+      from: "Party A legal name [ ]; signatory/name/capacity [ ]; authority reference [ ]; signature/date [ ]. Party B legal name [ ]; signatory/name/capacity [ ]; authority reference [ ]; signature/date [ ].",
+      to: "Party A legal name [ ]{=issuerName}; signatory/name/capacity [ ]{=signatoryA}; authority reference [ ]{=authorityA}; signature/date [ ]{=signatureA}. Party B legal name [ ]{=recipientName}; signatory/name/capacity [ ]{=signatoryB}; authority reference [ ]{=authorityB}; signature/date [ ]{=signatureB}.",
+    },
+  ],
   "TPL-16": [
     {
       from: "Contract reference: [ ] · Version: [ ] · Date: [ ]",
