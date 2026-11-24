@@ -20,16 +20,11 @@ export type ReviewedAdvisory = {
  * them; any other path, including the same chain reached as a production dependency, still
  * blocks. Remove an entry once a fixed release can be adopted.
  */
-export const REVIEWED_DEPENDENCY_ADVISORIES: readonly ReviewedAdvisory[] = [
-  {
-    id: "GHSA-fc5q-39xc-vjpf",
-    package: "picomatch",
-    within: ["lib__api-spec>orval>"],
-    reason:
-      "orval generates the API client at build time from the repository's fixed configuration and is never shipped. No fixed picomatch exists (4.0.7 is the latest release), and the latest orval still depends on it.",
-    reviewedOn: "2026-11-17",
-  },
-];
+// None is tolerated today. The one there was, GHSA-fc5q-39xc-vjpf in picomatch (reviewed on
+// 17 November 2026), is withdrawn: GitHub's page for it says so from 18 November 2026, and on
+// 24 November 2026 `pnpm audit --json` reported no advisory for the lockfile. Should it return,
+// the gate blocks it until it is reviewed again.
+export const REVIEWED_DEPENDENCY_ADVISORIES: readonly ReviewedAdvisory[] = [];
 
 type WhyNode = { dependencies?: Record<string, WhyNode> };
 type WhyImporter = WhyNode & {
