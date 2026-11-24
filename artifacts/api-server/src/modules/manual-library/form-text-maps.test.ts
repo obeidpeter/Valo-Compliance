@@ -34,12 +34,12 @@ function subsequence(part: string[], whole: string[]) {
   }
   return true;
 }
-/** Every combination of answers to the form's choices, each also unanswered. */
+/** Every combination of answers to the form's choices and confirmations, each also unanswered. */
 function choiceCombinations(spec: GuidedSpecV2) {
   let combinations: Record<string, string>[] = [{}];
-  for (const choice of spec.fields.filter((f) => f.clause))
+  for (const choice of spec.fields.filter((f) => f.clause || f.type === "acknowledgement"))
     combinations = combinations.flatMap((values) =>
-      ["", ...(choice.options ?? []).map((o) => o.value)].map((option) => ({
+      ["", ...(choice.clause ? (choice.options ?? []).map((o) => o.value) : ["yes"])].map((option) => ({
         ...values,
         [choice.id]: option,
       })),
@@ -48,7 +48,7 @@ function choiceCombinations(spec: GuidedSpecV2) {
 }
 
 test("every map turns its retained draft into form text that the v2 form fits exactly", async () => {
-  assert.deepEqual(mapped, ["TPL-01", "TPL-02"]);
+  assert.deepEqual(mapped, ["TPL-01", "TPL-02", "TPL-03"]);
   for (const templateId of mapped) {
     const spec = GUIDED_SPECS_V2[templateId];
     assert.ok(spec, templateId);
@@ -254,6 +254,51 @@ test("a quotation's answers fill its own wording: items, discount and tax rows, 
   // The new questions are optional: without them, their lines are left out.
   const plain = compileForm(spec, text, { ...data, values: { ...data.values, paymentArrangement: "" } });
   assert.ok(!plain.blocks.some((b) => b.text.startsWith("Proposed payment arrangement")));
+});
+
+test("a receipt's answers fill its own wording, and it states the payment was received only once the business confirms it", async () => {
+  const spec = GUIDED_SPECS_V2["TPL-03"]!;
+  const text = parseFormText((await proposedFormText("TPL-03"))!);
+  const data = emptyFormData(spec);
+  data.values = {
+    ...data.values,
+    issuerName: "Synthetic Supplies Ltd",
+    issuerAddress: "1 Synthetic Road, Ikeja",
+    recipientName: "Synthetic Payer Ltd",
+    documentNumber: "SYN-REC-001",
+    issueDate: "2026-11-03",
+    paymentDate: "2026-11-02",
+    receivedKobo: "265002",
+    paymentMethod: "transfer",
+    paymentReference: "SYN-TRF-9",
+    purpose: "Payment for invoice SYN-INV-001",
+    relatedReference: "SYN-INV-001",
+    recordedBy: "Synthetic cashier",
+  };
+  const shown = (values: Record<string, string>) =>
+    compileForm(spec, text, { ...data, values: { ...data.values, ...values } }).blocks.map((b) =>
+      b.type === "table" ? b.rows.map((r) => r.join(" | ")).join("\n") : b.text,
+    );
+  const unconfirmed = shown({});
+  assert.deepEqual(unconfirmed, [
+    "Synthetic Supplies Ltd\n1 Synthetic Road, Ikeja",
+    "Receipt reference: SYN-REC-001\nDate issued: 3 Nov 2026",
+    "Received from: Synthetic Payer Ltd",
+    "Payment acknowledged by issuer | Detail\nAmount received | ₦2,650.02\nDate received | 2 Nov 2026\nPayment method, if recorded | Bank transfer\nPayment reference, if recorded | SYN-TRF-9",
+    "Payment for: Payment for invoice SYN-INV-001\nRelated invoice or order, if any: SYN-INV-001",
+    "Recorded by: Synthetic cashier",
+    "Issuer acknowledgement: Receipt acknowledgement not yet recorded \u2014 not evidence of payment.",
+    "Prepared from information supplied by the issuer. Valo has not independently verified this payment. This customer business receipt is separate from a receipt issued for a purchase from Valo.",
+  ]);
+  const confirmed = shown({ acknowledgement: "yes" });
+  assert.equal(
+    confirmed[6],
+    "Issuer acknowledgement: The issuer confirms that the payment described above was received according to their records.",
+  );
+  assert.deepEqual(
+    compileForm(spec, text, { ...data, values: { ...data.values, acknowledgement: "yes" } }).unfilled,
+    [],
+  );
 });
 
 test("an invoice form document is saved as its answers make it, hashed as V2, and its file prints the template's wording with only its note among its fields", async () => {

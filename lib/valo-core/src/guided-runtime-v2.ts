@@ -114,6 +114,11 @@ export function formFit(spec: GuidedSpecV2, text: FormText): string[] {
   for (const blank of spec.blanks)
     if (!slotNames.has(blank)) problems.push(`the blank "${blank}" is not in the text`);
   const choices = new Map(spec.fields.filter((f) => f.clause).map((f) => [f.id, f]));
+  // A confirmation may keep the passage its template prints once it is given, `{?q=yes}`, with the
+  // one printed until then, `{?q=}`: a receipt's acknowledgement, for example. It fills no slot.
+  const confirmations = new Map(
+    spec.fields.filter((f) => f.type === "acknowledgement").map((f) => [f.id, f]),
+  );
   for (const span of spans) {
     if (span.option === null) {
       // Kept while a question has an answer: only for an answer the document may go without.
@@ -122,10 +127,17 @@ export function formFit(spec: GuidedSpecV2, text: FormText): string[] {
         problems.push(`a passage is kept while "${span.question}" is answered, which is not a question`);
       else if (field.clause) problems.push(`"${span.question}" is a choice: its passages name its options`);
       else if (field.type === "acknowledgement")
-        problems.push(`"${span.question}" is a confirmation and keeps no passage`);
+        problems.push(`"${span.question}" is a confirmation: its passages name "yes" or nothing`);
       else if (field.required)
         problems.push(
           `a passage is kept only while "${span.question}" is answered, but it must be answered: its placeholder shows until it is`,
+        );
+      continue;
+    }
+    if (confirmations.has(span.question)) {
+      if (span.option !== "yes" && span.option !== "")
+        problems.push(
+          `a passage is kept for "${span.question}=${span.option}", but a confirmation is "yes" or not given`,
         );
       continue;
     }
@@ -146,6 +158,13 @@ export function formFit(spec: GuidedSpecV2, text: FormText): string[] {
         problems.push(`"${choice.id}=${option.value}" keeps no passage and is not declared to keep none`);
     if (!spans.some((s) => s.question === choice.id && s.option === ""))
       problems.push(`the choice "${choice.id}" prints nothing while it is unanswered`);
+  }
+  for (const confirmation of confirmations.values()) {
+    const kept = spans.filter((s) => s.question === confirmation.id);
+    if (kept.length && !(kept.some((s) => s.option === "yes") && kept.some((s) => s.option === "")))
+      problems.push(
+        `the confirmation "${confirmation.id}" keeps a passage either once it is given or until then: it must keep both`,
+      );
   }
   // The largest document the form can make: a repeating group is printed once for each row its table
   // can hold.

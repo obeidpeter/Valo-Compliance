@@ -672,3 +672,36 @@ test("a save is refused for answers the form does not take, and keeps answers th
   assert.match(drafts.drafts.fee!, /whole kobo/);
   assert.match(drafts.drafts.supplierName!, /required/);
 });
+
+test("a confirmation keeps the passage printed once it is given with the one printed until then, and no other", () => {
+  const spec: GuidedSpecV2 = {
+    schemaVersion: 2,
+    templateId: "TPL-03",
+    title: "Synthetic",
+    fields: [{ id: "ack", label: "Confirm", type: "acknowledgement", required: true }],
+    tables: [],
+    blanks: [],
+  };
+  const both = parseFormText("# T\n\nStatus: {?ack=yes}Confirmed.{/?}{?ack=}Not yet confirmed.{/?}\n");
+  assert.deepEqual(formFit(spec, both), []);
+  const answered = (ack: string) => ({
+    schemaVersion: 2 as const,
+    templateId: "TPL-03" as const,
+    values: { ack },
+    tables: {},
+  });
+  assert.equal(compileForm(spec, both, answered("yes")).blocks[0]!.text, "Status: Confirmed.");
+  assert.equal(compileForm(spec, both, answered("")).blocks[0]!.text, "Status: Not yet confirmed.");
+  const problems = (source: string) => formFit(spec, parseFormText(source));
+  assert.ok(
+    problems("# T\n\n{?ack=yes}Confirmed.{/?}\n").some((p) => p.includes('"ack" keeps a passage either')),
+  );
+  assert.ok(
+    problems("# T\n\n{?ack=yes}Y{/?}{?ack=}N{/?}{?ack=no}No{/?}\n").some((p) =>
+      p.includes('a confirmation is "yes" or not given'),
+    ),
+  );
+  assert.ok(
+    problems("# T\n\n{?ack}Confirmed.{/?}\n").some((p) => p.includes('its passages name "yes" or nothing')),
+  );
+});

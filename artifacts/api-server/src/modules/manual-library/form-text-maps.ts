@@ -142,6 +142,54 @@ export const FORM_TEXT_MAPS: Readonly<Partial<Record<GuidedTemplateId, readonly 
       to: "This quotation describes the issuer's proposed offer. It does not record payment, delivery or customer acceptance. Any later acceptance or agreement should be recorded accurately and linked to the version concerned.",
     },
   ],
+  "TPL-03": [
+    {
+      from: "**[Issuing business/person]**  \n[Contact/address]",
+      to: "[Issuing business/person]{=issuerName}\n[Contact/address]{=issuerAddress}",
+    },
+    {
+      from: "Receipt reference: [ ]  \nDate issued: [ ]",
+      to: "Receipt reference: [ ]{=documentNumber}\nDate issued: [ ]{=issueDate}",
+    },
+    { from: "**Received from:** [Payer name]", to: "Received from: [Payer name]{=recipientName}" },
+    {
+      from: "| Amount received | **[Currency and amount]** |",
+      to: "| Amount received | [Currency and amount]{=receivedKobo} |",
+    },
+    { from: "| Date received | [ ] |", to: "| Date received | [ ]{=paymentDate} |" },
+    {
+      from: "| Payment method, if recorded | [ ] |",
+      to: "| Payment method, if recorded | [ ]{=paymentMethod} |",
+    },
+    {
+      from: "| Payment reference, if recorded | [ ] |",
+      to: "| Payment reference, if recorded | [ ]{=paymentReference} |",
+    },
+    {
+      from: "| Payment for | [Description] |\n| Related invoice or order, if any | [Reference] |",
+      to: "\nPayment for: [Description]{=purpose}\n{?relatedReference}Related invoice or order, if any: [Reference]{=relatedReference}{/?}",
+      why: "What the payment was for can be longer than a table cell holds, so it prints below the table, with the related reference after it as in the draft. The related reference is optional: its line prints once it is given.",
+    },
+    {
+      from: "## Allocation, if supplied\n\n| Invoice/order or purpose | Amount allocated |\n|---|---:|\n| [Reference or purpose] | [ ] |\n| Unallocated amount, if any | [Calculated] |\n\n",
+      to: "",
+      why: 'The form asks for what the payment was for and any known allocation in one answer, printed under "Payment for", and asks no amount by allocation, so this section goes.',
+    },
+    {
+      from: "Notes: [Factual notes, if any]  \nRecorded by: [Actual name/role, if supplied]",
+      to: "{?notes}Notes: [Factual notes, if any]{=notes}{/?}\n{?recordedBy}Recorded by: [Actual name/role, if supplied]{=recordedBy}{/?}",
+      why: "The notes and who recorded the payment are optional: each line prints once it is given.",
+    },
+    {
+      from: "**Issuer acknowledgement:** [Confirmed statement only after the actual user confirmation: \u201cThe issuer confirms that the payment described above was received according to their records.\u201d Otherwise the incomplete draft states: \u201cReceipt acknowledgement not yet recorded \u2014 not evidence of payment.\u201d]",
+      to: "Issuer acknowledgement: {?acknowledgement=yes}The issuer confirms that the payment described above was received according to their records.{/?}{?acknowledgement=}Receipt acknowledgement not yet recorded \u2014 not evidence of payment.{/?}",
+      why: "The statement that the payment was received prints only once the business confirms it; until then the receipt prints the statement the draft gives for an incomplete one. The draft's directions around them are for the form, not wording of the receipt.",
+    },
+    {
+      from: "*Prepared from information supplied by the issuer. Valo has not independently verified this payment. This customer business receipt is separate from a receipt issued for a purchase from Valo.*",
+      to: "Prepared from information supplied by the issuer. Valo has not independently verified this payment. This customer business receipt is separate from a receipt issued for a purchase from Valo.",
+    },
+  ],
 };
 
 /** Applies a map's changes to a draft, each to text that occurs exactly once. */

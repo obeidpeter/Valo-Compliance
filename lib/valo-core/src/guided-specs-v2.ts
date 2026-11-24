@@ -241,13 +241,56 @@ const quotation = fromV1("TPL-02", {
   ],
 });
 
+const receipt = fromV1("TPL-03", {
+  questions: [
+    { v1: "issuerName", join: { tokens: ["issuerName"] } },
+    { v1: "issuerAddress", join: { tokens: ["issuerAddress"] } },
+    { v1: "recipientName", join: { tokens: ["recipientName"] } },
+    { v1: "documentNumber", join: { tokens: ["documentNumber"] } },
+    { v1: "issueDate", join: { tokens: ["issueDate"] } },
+    { v1: "paymentDate", join: { tokens: ["paymentDate"] } },
+    { v1: "receivedKobo", join: { tokens: ["receivedKobo"] } },
+    { v1: "paymentMethod", join: { tokens: ["paymentMethod"] } },
+    { v1: "paymentReference", join: { tokens: ["paymentReference"] } },
+    { v1: "purpose", join: { tokens: ["purpose"] } },
+    {
+      added: {
+        id: "relatedReference",
+        label: "Related invoice or order reference, if any",
+        type: "text",
+        required: false,
+        tokens: ["relatedReference"],
+      },
+      why: 'The template prints "Related invoice or order, if any: [Reference]" and v1 asks nothing for it.',
+    },
+    { v1: "acknowledgement" },
+    { v1: "notes", join: { tokens: ["notes"] } },
+    {
+      added: {
+        id: "recordedBy",
+        label: "Name and role of the person who recorded the payment, if any",
+        type: "text",
+        required: false,
+        tokens: ["recordedBy"],
+      },
+      why: 'The template prints "Recorded by: [Actual name/role, if supplied]" and v1 asks nothing for it.',
+    },
+  ],
+  dropped: {
+    recipientAddress:
+      "The receipt's wording names the payer and gives no place for the payer's address, so the form does not ask for it.",
+  },
+});
+
 /** The v2 forms, by template. A template without one stays on its v1 form. */
 export const GUIDED_SPECS_V2: Readonly<Partial<Record<GuidedTemplateId, GuidedSpecV2>>> = {
   "TPL-01": invoice.spec,
   "TPL-02": quotation.spec,
+  "TPL-03": receipt.spec,
 };
 /** What each v2 form adds to and leaves out of its v1 questions, with the reasons. */
 export const GUIDED_CHANGES_V2: Readonly<Partial<Record<GuidedTemplateId, GuidedChangesV2>>> = {
   "TPL-01": invoice.changes,
   "TPL-02": quotation.changes,
+  "TPL-03": receipt.changes,
 };

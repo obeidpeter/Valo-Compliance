@@ -89,7 +89,9 @@ has v2's headings and header rows.) Following decision 1:
 **The fit check** joins a form to an edition only when every token names a slot, every slot is filled
 by a question, a calculation or a declared blank, every span names an option of a choice, every choice
 prints something while unanswered, and the largest possible document fits the contract. A failure
-names its problems and the edition is not offered.
+names its problems and the edition is not offered. A confirmation fills no slot; it may keep the passage
+its template prints once it is given with the one printed until then, as a receipt's acknowledgement does,
+and no other (slice 5c).
 
 ### 3. Compiling and checking
 
