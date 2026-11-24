@@ -227,13 +227,19 @@ test("each amendment record matches the retained texts it describes", () => {
       rawSHA256: string;
       retrievedAt: string;
     }[]),
+    retained("docs/content-candidates/source-evidence/nafdac_cap_f33_retrieval.json") as {
+      url: string;
+      rawSHA256: string;
+      retrievedAt: string;
+    },
   ];
   const cama = guideAmendmentRecords.find((r) => r.instrument === "CAC-CAMA-2020")!,
-    ntaa = guideAmendmentRecords.find((r) => r.instrument === "NASS-NTAA-2025")!;
-  assert.equal(guideAmendmentRecords.length, 2 + capturedTexts.length);
+    ntaa = guideAmendmentRecords.find((r) => r.instrument === "NASS-NTAA-2025")!,
+    f33 = guideAmendmentRecords.find((r) => r.instrument === "NAFDAC-CAP-F33")!;
+  assert.equal(guideAmendmentRecords.length, 3 + capturedTexts.length);
 
   // Each record of an Act kept in the repository describes the very file its passages were read from.
-  for (const record of [cama, ntaa]) {
+  for (const record of [cama, ntaa, f33]) {
     const fetched = retrieval.find((r) => r.url === record.url);
     assert.equal(fetched?.rawSHA256, record.rawSha256, record.title);
   }
@@ -271,6 +277,9 @@ test("each amendment record matches the retained texts it describes", () => {
     const settled = record.notRead.length === 0 && record.conflicts.every((conflict) => !conflict.open);
     assert.equal(settled, text.id !== "NIPC-LABOUR-ACT", text.id);
   }
+  // The guides' records were made before the fixed day these tests prepare guides on. A record made
+  // since, for a checker rule (the NAFDAC Act's, on 24 November 2026), is only never dated ahead.
+  const guideRecords = new Set([cama.instrument, ntaa.instrument, ...capturedTexts.map((t) => t.id)]);
   for (const record of guideAmendmentRecords) {
     assert.ok((guidanceOfficialHosts as readonly string[]).includes(new URL(record.url).hostname));
     assert.ok(record.searches.length >= 2, record.title);
@@ -280,10 +289,24 @@ test("each amendment record matches the retained texts it describes", () => {
         search.url,
       );
       assert.match(search.rawSha256, /^[a-f0-9]{64}$/);
-      assert.ok(Date.parse(search.searchedAt) <= +day);
+      assert.ok(
+        Date.parse(search.searchedAt) <= (guideRecords.has(record.instrument) ? +day : Date.now()),
+        search.url,
+      );
     }
     assert.ok(record.limits.includes("No Gazette index was searched"), "the record says what it did not do");
   }
+
+  // The NAFDAC Act: its commencement as its retained text prints it, and nothing found to amend it.
+  const f33Pages = retained("docs/content-candidates/source-evidence/nafdac_cap_f33_pages.json") as {
+    pages: { pdfPage: number; exactExtractedText: string }[];
+  };
+  assert.ok(
+    f33Pages.pages.find((p) => p.pdfPage === 2)!.exactExtractedText.includes(f33.commencement.printed),
+  );
+  assert.deepEqual([f33.amendments, f33.notRead, f33.conflicts], [[], [], []]);
+  // The Act's own address was among the places searched, and served the file the record describes.
+  assert.equal(f33.searches.find((search) => search.url === f33.url)?.rawSha256, f33.rawSha256);
 
   // The Companies Act: its commencement, and the two amending Acts found. The Business Facilitation
   // Act is checked against its retained text.

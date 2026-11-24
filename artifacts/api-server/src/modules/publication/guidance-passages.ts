@@ -50,6 +50,8 @@ const paths = {
   businessName: "docs/content-candidates/business-name-source-passages.json",
   businessNameRetrieval: "docs/content-candidates/business-name-source-retrieval.json",
   businessNameCandidate: "docs/valo/evidence/business-name/candidate.json",
+  f33Pages: "docs/content-candidates/source-evidence/nafdac_cap_f33_pages.json",
+  f33Retrieval: "docs/content-candidates/source-evidence/nafdac_cap_f33_retrieval.json",
 } as const;
 
 type Extracted = {
@@ -178,5 +180,53 @@ export function retainedGuidePassages(
       effectiveFrom: fetchedAt,
     },
   });
+  // The Food, Drugs and Related Products (Registration, etc.) Act, Cap F33, as NAFDAC serves it: the
+  // two pages the product-registration rule quotes, each extracted whole (`pdftotext -layout`).
+  const f33Pages = json(paths.f33Pages) as {
+    sourceID: string;
+    sourceRawSHA256: string;
+    locators: string[];
+    pages: { pdfPage: number; exactExtractedText: string; textSHA256: string }[];
+  };
+  const f33 = json(paths.f33Retrieval) as Retrieval & { sourceID: string };
+  if (
+    f33.sourceID !== "NAFDAC-CAP-F33" ||
+    f33.httpStatus !== 200 ||
+    f33Pages.sourceID !== f33.sourceID ||
+    f33Pages.sourceRawSHA256 !== f33.rawSHA256
+  )
+    fail("GUIDE_PASSAGES_SOURCE_IDENTITY_CHANGED");
+  const f33Instrument: GuideInstrument = {
+    id: "NAFDAC-CAP-F33",
+    kind: "act",
+    url: f33.url,
+    rawSha256: f33.rawSHA256,
+    title: "Food, Drugs and Related Products (Registration, etc.) Act, Cap F33",
+    issuingBody: "National Agency for Food and Drug Administration and Control (official copy)",
+    retrievedAt: new Date(f33.retrievedAt).toISOString(),
+    effectiveFrom: "1993-01-27T00:00:00+01:00",
+  };
+  // Each page's recorded locator names its sections, as "sections1(1)-(2),2(1)-(3): PDFpage2" and
+  // "section13: PDFpages6-8; ...", which `locatorSections` reads only in part; the sections are
+  // named here as those locators give them.
+  for (const [page, sections] of [
+    [2, ["1", "2"]],
+    [7, ["13"]],
+  ] as const) {
+    const extract = f33Pages.pages.find((p) => p.pdfPage === page);
+    const locator = f33Pages.locators.find((l) => l.includes(page === 2 ? "PDFpage2" : "PDFpage7"));
+    if (!extract || !locator) fail(`GUIDE_PASSAGES_RETRIEVAL_MISSING:NAFDAC-F33-PAGE-${page}`);
+    add({
+      id: `NAFDAC-F33-PAGE-${page}`,
+      recordedLocator: locator,
+      text: extract.exactExtractedText,
+      hash: extract.textSHA256,
+      sections: [...sections],
+      instrument: f33Instrument,
+    });
+  }
+  // The effective date above is the one the Act's text prints at its head.
+  if (!passages.get("NAFDAC-F33-PAGE-2")?.text.includes("[27th January, 1993]"))
+    fail("GUIDE_PASSAGES_COMMENCEMENT_CHANGED");
   return (id) => passages.get(id);
 }

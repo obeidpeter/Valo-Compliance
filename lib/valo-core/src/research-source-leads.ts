@@ -74,6 +74,15 @@ export const guidanceSourceLeads = [
     sourceLocator: "docs/architecture/decisions/0017-clear-guidance-holds.md",
   },
   {
+    id: "NAFDAC-CAP-F33",
+    title: "Food, Drugs and Related Products (Registration, etc.) Act, Cap F33, NAFDAC copy",
+    url: "https://www.nafdac.gov.ng/wp-content/uploads/Files/Resources/Regulations/NAFDAC_Acts/FOOD-DRUGS-AND-RELATED-PRODUCTS-REGISTRATION-ACT-Cap.F.33.pdf",
+    category: "regulatory",
+    baselineNotes:
+      "The copy the product-registration rule quotes (sections 1 and 13). NAFDAC lists the Act among its laws; see the Act's amendment record.",
+    sourceLocator: "https://nafdac.gov.ng/about-nafdac/nafdac-laws/",
+  },
+  {
     id: "NRS-TAXID-HOW",
     title: "Nigeria Revenue Service: how Tax ID retrieval works",
     url: "https://taxid.nrs.gov.ng/how-it-works",
