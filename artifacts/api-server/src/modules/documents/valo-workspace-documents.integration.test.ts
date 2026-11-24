@@ -232,7 +232,19 @@ test(
           assert.ok(
             started.content.blocks.filter((block) => block.type === "table").every((t) => t.headerRows === 1),
           );
-          assert.equal(started.content.blocks[0]!.text, "[Seller name]\n[Seller contact/address]");
+          // The workspace's saved business name is filled in as the issuing business, and nothing
+          // else; a workspace with no saved profile starts with the placeholder.
+          assert.deepEqual(
+            Object.entries(started.content.formAnswers?.values ?? {}).filter(([, value]) => value !== ""),
+            [["issuerName", "Synthetic development business"]],
+          );
+          assert.equal(
+            started.content.blocks[0]!.text,
+            "Synthetic development business\n[Seller contact/address]",
+          );
+          const unnamed = await typed(inB(() => startFormDocument(b, { templateId: "TPL-01" })));
+          assert.equal(unnamed.content.formAnswers?.values.issuerName, "");
+          assert.equal(unnamed.content.blocks[0]!.text, "[Seller name]\n[Seller contact/address]");
           // Its form text is the workspace's own to read, and no other's.
           assert.equal((await inA(() => getDocumentForm(a, started.id))).formText, formText);
           await assert.rejects(

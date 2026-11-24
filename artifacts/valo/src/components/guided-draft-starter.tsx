@@ -3,14 +3,18 @@ import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, Loader2 } from "lucide-react";
 import {
+  ApiError,
   useCreateDocument,
   useGetWorkspace,
+  useStartFormDocument,
   getGetWorkspaceQueryKey,
   getListDocumentsQueryKey,
+  type BusinessDocument,
   type CanonicalDocument,
 } from "@workspace/api-client-react";
 import { GUIDED_TEMPLATE_IDS, type GuidedTemplateId } from "@workspace/valo-core/guided";
 import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
+import { GUIDED_SPECS_V2 } from "@workspace/valo-core/guided-specs-v2";
 import { compileGuidedContent } from "@workspace/valo-core/guided-runtime";
 import { describeError } from "@/lib/api";
 import { live } from "@/lib/checker";
@@ -29,25 +33,42 @@ export function GuidedDraftStarter({ chosen }: { chosen?: LandingTask | undefine
   const ws = useGetWorkspace({ query: { queryKey: getGetWorkspaceQueryKey(), ...live } });
   const businessName = savedBusinessName(ws.data?.profile);
   const create = useCreateDocument(),
+    startForm = useStartFormDocument(),
     qc = useQueryClient(),
     [, navigate] = useLocation();
+  const pending = create.isPending || startForm.isPending;
   function start(id: GuidedTemplateId) {
     setStarting(id);
-    create.mutate(
-      {
-        data: {
-          // The title is printed as the document's heading, so it starts as the kind's own name.
-          title: GUIDED_SPECS_V1[id].title,
-          content: compileGuidedContent(prefillGuidedData(id, ws.data?.profile)) as CanonicalDocument,
+    const opened = (doc: BusinessDocument) => {
+      void qc.invalidateQueries({ queryKey: getGetWorkspaceQueryKey() });
+      void qc.invalidateQueries({ queryKey: getListDocumentsQueryKey() });
+      navigate("/workspace/documents/" + doc.id);
+    };
+    const questionsOnly = () =>
+      create.mutate(
+        {
+          data: {
+            // The title is printed as the document's heading, so it starts as the kind's own name.
+            title: GUIDED_SPECS_V1[id].title,
+            content: compileGuidedContent(prefillGuidedData(id, ws.data?.profile)) as CanonicalDocument,
+          },
         },
-      },
+        { onSuccess: opened, onError: () => setStarting(null) },
+      );
+    if (!GUIDED_SPECS_V2[id]) return questionsOnly();
+    // A kind whose template's wording is released with a form that fills it starts as that form
+    // (forms v2), with the saved business name filled in by the server. Until then the server says
+    // so, and the document starts with the questions as before.
+    startForm.mutate(
+      { data: { templateId: id } },
       {
-        onSuccess: (doc) => {
-          void qc.invalidateQueries({ queryKey: getGetWorkspaceQueryKey() });
-          void qc.invalidateQueries({ queryKey: getListDocumentsQueryKey() });
-          navigate("/workspace/documents/" + doc.id);
+        onSuccess: opened,
+        onError: (error) => {
+          if (error instanceof ApiError && (error.status === 404 || error.status === 409)) {
+            startForm.reset();
+            questionsOnly();
+          } else setStarting(null);
         },
-        onError: () => setStarting(null),
       },
     );
   }
@@ -60,7 +81,7 @@ export function GuidedDraftStarter({ chosen }: { chosen?: LandingTask | undefine
           "surface group flex h-full w-full items-center gap-4 p-5 text-left transition-shadow hover:shadow-[var(--shadow-md)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-60",
           place === "chosen" && "border-primary",
         )}
-        disabled={create.isPending}
+        disabled={pending}
         onClick={() => start(id)}
         data-testid={(place === "chosen" ? "button-start-chosen-" : "button-start-") + id}
       >
@@ -70,7 +91,7 @@ export function GuidedDraftStarter({ chosen }: { chosen?: LandingTask | undefine
             {DOCUMENT_PURPOSES[id]}
           </span>
         </span>
-        {starting === id && create.isPending ? (
+        {starting === id && pending ? (
           <Loader2 className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" aria-hidden="true" />
         ) : (
           <ArrowRight
@@ -114,13 +135,11 @@ export function GuidedDraftStarter({ chosen }: { chosen?: LandingTask | undefine
         </ul>
       </section>
       <p role="status" className="sr-only">
-        {starting && create.isPending
-          ? `Starting your ${GUIDED_SPECS_V1[starting].title.toLowerCase()}…`
-          : ""}
+        {starting && pending ? `Starting your ${GUIDED_SPECS_V1[starting].title.toLowerCase()}…` : ""}
       </p>
-      {create.isError && (
+      {(create.isError || startForm.isError) && (
         <p role="alert" className="mt-4 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          {describeError(create.error).message}
+          {describeError(create.error ?? startForm.error).message}
         </p>
       )}
     </div>

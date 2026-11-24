@@ -6,9 +6,11 @@ import {
   guidedFieldIssue,
   guidedRenderableBlocks,
 } from "@workspace/valo-core/guided-runtime";
-import type { GuidedSpec } from "@workspace/valo-core/guided";
+import type { GuidedTemplateId } from "@workspace/valo-core/guided";
 import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
+import { GUIDED_SPECS_V2 } from "@workspace/valo-core/guided-specs-v2";
 
+import { formIssues, formViewV2, type FormValue, type FormView } from "./form-view";
 import { askedAs, saidAs } from "./guided-money";
 
 export { describeError, type DescribedError, type ErrorKind } from "./describe-error";
@@ -43,12 +45,15 @@ export const FIELD_LABELS: Record<keyof CanonicalDocument["fields"], string> = D
 /** What the questions say of a required answer that was simply not given. */
 const UNANSWERED = guidedFieldIssue({ id: "", label: "", type: "text", required: true }, "");
 
+/** A form's questions, of either version, as far as naming and finding them needs. */
+type Questions = Pick<FormView, "fields" | "tables">;
+
 /**
  * One line of the list for something a guided document still needs: the question as the editor
  * asks it, a table's row and column by name, then what is wrong with the answer unless it was
  * simply not given.
  */
-function neededLine(spec: GuidedSpec, key: string, message: string): string {
+function neededLine(spec: Questions, key: string, message: string): string {
   const [tableId, row, columnId] = key.split(":");
   const field = spec.fields.find((f) => f.id === key);
   const table = spec.tables.find((t) => t.id === tableId);
@@ -68,7 +73,7 @@ export type MissingFieldItem = {
   selector?: string;
 };
 
-function guidedIssueSelector(spec: GuidedSpec, key: string): string | undefined {
+function guidedIssueSelector(spec: Questions, key: string): string | undefined {
   const [tableId, row, columnId] = key.split(":");
   if (spec.fields.some((f) => f.id === key)) return `#g-${key}`;
   const table = spec.tables.find((t) => t.id === tableId);
@@ -81,18 +86,30 @@ function guidedIssueSelector(spec: GuidedSpec, key: string): string | undefined 
 export function missingFieldItems(content: CanonicalDocument): MissingFieldItem[] {
   const out: MissingFieldItem[] = [];
   let visible: readonly DocumentBlock[] = content.blocks;
+  const issueItems = (spec: Questions, issues: Record<string, string>) => {
+    for (const [key, message] of Object.entries(issues)) {
+      const selector = guidedIssueSelector(spec, key);
+      out.push(
+        selector
+          ? { label: neededLine(spec, key, message), selector }
+          : { label: neededLine(spec, key, message) },
+      );
+    }
+  };
   try {
     const answers = guidedDataFromBlocks(content.blocks);
-    if (answers) {
+    if (content.formAnswers) {
+      // A form document (forms v2) fills its template's own wording from its answers.
+      const spec = GUIDED_SPECS_V2[content.formAnswers.templateId as GuidedTemplateId];
+      if (!spec || answers) throw Error("UNSUPPORTED_FORM_DOCUMENT");
+      const issues = formIssues(formViewV2(spec), content.formAnswers as FormValue);
+      issueItems(spec, issues);
+      // While an answer is missing or wrong, the blanks in the wording are its slots, already
+      // listed by their questions; once the answers are complete, any blank left is listed below.
+      if (Object.keys(issues).length) return out;
+    } else if (answers) {
       const spec = GUIDED_SPECS_V1[answers.templateId];
-      for (const [key, message] of Object.entries(guidedDataIssues(spec, answers))) {
-        const selector = guidedIssueSelector(spec, key);
-        out.push(
-          selector
-            ? { label: neededLine(spec, key, message), selector }
-            : { label: neededLine(spec, key, message) },
-        );
-      }
+      issueItems(spec, guidedDataIssues(spec, answers));
       // A v1 form's blocks are the contract's own; its runtime types them more loosely.
       visible = guidedRenderableBlocks(content) as DocumentBlock[];
     } else {

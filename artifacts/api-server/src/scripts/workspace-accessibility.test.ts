@@ -3,7 +3,12 @@ import assert from "node:assert/strict";
 import { setTimeout as delay } from "node:timers/promises";
 import { expect, type Page } from "@playwright/test";
 import * as api from "@workspace/api-zod";
+import { sha256 } from "@workspace/valo-core";
+import { parseFormText } from "@workspace/valo-core/form-text";
 import { GUIDED_TEMPLATE_IDS } from "@workspace/valo-core/guided";
+import { emptyFormData, formDocumentContent } from "@workspace/valo-core/guided-runtime-v2";
+import { GUIDED_SPECS_V2 } from "@workspace/valo-core/guided-specs-v2";
+import type { GuidedDataV2 } from "@workspace/valo-core/guided-v2";
 import {
   compileGuidedContent,
   emptyGuidedData,
@@ -19,6 +24,7 @@ import {
   wcagFailures,
   type Api,
 } from "../test-support/app-in-browser";
+import { proposedFormText } from "../modules/manual-library/form-text-maps";
 import { oldWordsIn } from "../test-support/old-words";
 import { answers as publicAnswers } from "../test-support/public-answers";
 
@@ -1249,10 +1255,23 @@ test("a document starts in one place: the home and the documents screen each hav
     }
   }
 
-  // Each way to start saves a new document, named for what was chosen, and opens its editor.
+  // Each way to start saves a new document, named for what was chosen, and opens its editor. A kind
+  // with a form that fills its template's wording asks for that first; while the wording is not
+  // released, the server says so and the document starts with its questions.
   const created: { title: string }[] = [];
+  const formStarts: unknown[] = [];
   const creating: Api = async (route, method, path, query) => {
-    if (method === "POST" && path === "/workspace/documents") {
+    if (method === "POST" && path === "/workspace/form-documents") {
+      formStarts.push(route.request().postDataJSON());
+      await route.fulfill({
+        status: 409,
+        contentType: "application/json",
+        body: JSON.stringify({
+          error:
+            "This template's wording is not released for its form yet. Start its questions-only form instead.",
+        }),
+      });
+    } else if (method === "POST" && path === "/workspace/documents") {
       created.push(route.request().postDataJSON() as { title: string });
       await route.fulfill({
         status: 201,
@@ -1278,6 +1297,12 @@ test("a document starts in one place: the home and the documents screen each hav
       await expect(page.locator("main h1")).toHaveText("New document");
     }
     assert.equal(created.length, GUIDED_TEMPLATE_IDS.length);
+    assert.deepEqual(
+      formStarts,
+      GUIDED_TEMPLATE_IDS.filter((id) => GUIDED_SPECS_V2[id]).map((templateId) => ({ templateId })),
+    );
+    // No error is shown for a form that is not released yet: the document simply starts as before.
+    await expect(page.getByRole("alert")).toHaveCount(0);
     await page.getByTestId("button-new-draft").click();
     await page.waitForURL(editor);
     assert.equal(created.length, GUIDED_TEMPLATE_IDS.length + 1);
@@ -1651,6 +1676,149 @@ test("a new form is not marked as wrong: each unanswered question is marked as s
     assert.ok(sent.length >= 1, "the answers were saved");
     assert.deepEqual(errors, []);
     assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
+
+/**
+ * The same document as an invoice started from its form (forms v2): the wording of a released
+ * edition of its template, filled from its answers. The edition is synthetic; its form text is the
+ * one proposed for the invoice.
+ */
+const EDITION = "00000000-0000-4000-8000-00000000b001";
+async function formInvoice(revision: number) {
+  const spec = GUIDED_SPECS_V2["TPL-01"]!;
+  const formText = (await proposedFormText("TPL-01"))!;
+  const answers = emptyFormData(spec);
+  answers.values.issuerName = profile.businessName;
+  const { unfilled: _unfilled, ...content } = formDocumentContent(spec, parseFormText(formText), answers);
+  const started = {
+    ...document(revision),
+    title: spec.title,
+    content,
+    form: { version: 2, edition: EDITION, digest: sha256(formText) },
+  };
+  const stubs = except({
+    [`GET /workspace/documents/${DOCUMENT}`]: api.GetDocumentResponse.parse(started),
+    [`GET /workspace/documents/${DOCUMENT}/revisions`]: api.ListDocumentRevisionsResponse.parse([started]),
+    [`GET /workspace/documents/${DOCUMENT}/form`]: api.GetDocumentFormResponse.parse({
+      edition: EDITION,
+      editionVersion: 1,
+      title: "Invoice",
+      formText,
+    }),
+  });
+  return { spec, formText, started, stubs };
+}
+
+// EDT-001: "Implement the 12 designated guided templates using typed field schemas, conditional
+// questions, examples and server validation." EDT-002: "Persist a structured document with
+// paragraphs, lists, tables, field values, selected clauses, formatting tokens and template version."
+test("an invoice started from its form asks its questions and fills its template's own wording as they are answered: the wording is not edited directly, what is still needed is listed by question, the preview shows the wording with its header rows, and a save sends the answers with exactly the wording they make", async () => {
+  const { spec, formText, started, stubs } = await formInvoice(3);
+  const sent: { title: string; content: { formAnswers?: GuidedDataV2; blocks: unknown[] } }[] = [];
+  const saving: Api = async (route, method, path, query) => {
+    if (method === "PATCH" && path === `/workspace/documents/${DOCUMENT}`) {
+      sent.push(route.request().postDataJSON() as (typeof sent)[number]);
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(
+          api.SaveDocumentResponse.parse({
+            ...started,
+            ...sent.at(-1),
+            revision: 3 + sent.length,
+            id: DOCUMENT,
+          }),
+        ),
+      });
+    } else await stubs(route, method, path, query);
+  };
+  const { page, errors, unknown, close } = await desktop(`/workspace/documents/${DOCUMENT}`, saving);
+  try {
+    await ready(page);
+    const questions = page.getByTestId("guided-fields");
+    await expect(questions.locator("header h2")).toHaveText(spec.title);
+    // The saved business name the document started with is its answer.
+    await expect(page.locator("#g-issuerName")).toHaveValue(profile.businessName);
+    // The wording is the released template's: no part of it is edited directly, and the page says
+    // where it comes from.
+    await expect(page.getByTestId("text-form-wording")).toBeVisible();
+    for (const id of ["button-add-paragraph", "button-add-list", "button-add-table", "input-block-0"])
+      await expect(page.getByTestId(id)).toHaveCount(0);
+    // What it still needs is listed by each question's own name, as for the questions-only form.
+    const needed = await page.getByTestId("card-missing").locator("li").allInnerTexts();
+    const table = spec.tables[0]!;
+    assert.deepEqual(
+      needed.map((line) => line.trim()),
+      [
+        ...spec.fields.filter((f) => f.required && !f.when && f.id !== "issuerName").map((f) => f.label),
+        ...table.columns
+          .filter((c) => c.required && !c.when)
+          .map((c) => `${table.label}, row 1: ${c.label.replace("whole kobo", "naira")}`),
+      ],
+    );
+    assert.deepEqual((await wcagFailures(page)).failures, []);
+
+    // An answer fills its place in the wording, which the preview shows with its header rows, and
+    // without the questions-only form's list of names and dates: they are in the wording.
+    await page.locator("#g-recipientName").fill("Synthetic Buyer Ltd");
+    await page.getByRole("tab", { name: "Preview", exact: true }).click();
+    const preview = page.getByTestId("preview-doc");
+    await expect(preview).toContainText("Bill to: Synthetic Buyer Ltd");
+    await expect(preview.locator("table").first().locator("thead th")).toHaveText([
+      "Invoice reference",
+      "Issue date",
+      "Currency",
+    ]);
+    await expect(preview.locator("dl")).toHaveCount(0);
+    assert.deepEqual(oldWordsIn(await preview.innerText()), []);
+    assert.deepEqual((await wcagFailures(page)).failures, []);
+
+    // The save sends the answers and exactly the wording they make from the edition, nothing more.
+    await expect(page.getByTestId("status-save")).toContainText("Saved", { timeout: 15_000 });
+    const last = sent.at(-1)!;
+    assert.equal(last.content.formAnswers?.values.recipientName, "Synthetic Buyer Ltd");
+    const made = formDocumentContent(
+      spec,
+      parseFormText(formText),
+      last.content.formAnswers!,
+      started.content,
+    );
+    assert.deepEqual(last.content.blocks, made.blocks);
+    assert.ok(!("unfilled" in last.content));
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
+
+test("the New document page starts the invoice as its form once its template's wording is released, and opens it", async () => {
+  const { started } = await formInvoice(1);
+  const created: unknown[] = [];
+  const starting: Api = async (route, method, path, query) => {
+    if (method === "POST" && path === "/workspace/form-documents") {
+      assert.deepEqual(route.request().postDataJSON(), { templateId: "TPL-01" });
+      await route.fulfill({
+        status: 201,
+        contentType: "application/json",
+        body: JSON.stringify(api.StartFormDocumentResponse.parse(started)),
+      });
+    } else if (method === "POST" && path === "/workspace/documents") {
+      created.push(route.request().postDataJSON());
+      await route.fulfill({ status: 500, contentType: "application/json", body: "{}" });
+    } else await answer(route, method, path, query);
+  };
+  const { page, errors, close } = await desktop("/workspace/documents/new", starting);
+  try {
+    await ready(page);
+    await page.getByTestId("button-start-TPL-01").click();
+    await page.waitForURL(new RegExp(`/workspace/documents/${DOCUMENT}$`));
+    // The form document is the only document started: the questions-only one is not.
+    assert.deepEqual(created, []);
+    assert.deepEqual(errors, []);
   } finally {
     await close();
   }

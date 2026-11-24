@@ -275,12 +275,19 @@ export function formAnswerIssues(spec: GuidedSpecV2, data: GuidedDataV2) {
         const value = row[column.id] ?? "";
         const refusal = structural(column, value, `${table.label}, row ${index + 1}, ${column.label}`);
         if (refusal) refused.push(refusal);
-        else if (guidedVisible(table, data.values)) {
+        else if (guidedVisible(table, data.values) && guidedVisible(column, { ...data.values, ...row })) {
+          // Keyed as v1 keys a table cell's issue, so the editor shows both alike.
           const issue = guidedFieldIssue(column, value);
-          if (issue) drafts[`${id}.${index}.${column.id}`] = issue;
+          if (issue) drafts[`${id}:${index}:${column.id}`] = issue;
         }
       }
     });
+  }
+  // A table the form shows needs its fewest rows, as in v1.
+  for (const table of spec.tables) {
+    const rows = data.tables[table.id] ?? [];
+    if (guidedVisible(table, data.values) && rows.length < table.minRows)
+      drafts[table.id] = `Supply ${table.minRows}–${table.maxRows} rows.`;
   }
   return { refused, drafts };
 }

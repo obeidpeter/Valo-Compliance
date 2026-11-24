@@ -4,6 +4,8 @@ import type { CanonicalDocument } from "@workspace/api-client-react";
 import { GUIDED_TEMPLATE_IDS } from "@workspace/valo-core/guided";
 import { compileGuidedContent, emptyGuidedData } from "@workspace/valo-core/guided-runtime";
 import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
+import { emptyFormData } from "@workspace/valo-core/guided-runtime-v2";
+import { GUIDED_SPECS_V2 } from "@workspace/valo-core/guided-specs-v2";
 import { blankContent, missingFieldItems, missingFields } from "./api";
 import { askedAs } from "./guided-money";
 
@@ -114,4 +116,64 @@ test("missingFieldItems maps missing details to matching editor jump selectors",
     guidedItems.find((i) => i.label === "Goods, work and agreed charges, row 1: Description")?.selector,
     "#gt-items-0-description",
   );
+});
+
+/**
+ * An invoice started from its form (forms v2), with these answers given and this wording: a form
+ * document's blocks are its template's wording as the answers fill it, so a test may give any.
+ */
+const formStarted = (answers: Record<string, string> = {}, wording = "[Seller name]") => {
+  const data = emptyFormData(GUIDED_SPECS_V2["TPL-01"]!);
+  data.values = { ...data.values, ...answers };
+  return {
+    ...blankContent(),
+    blocks: [{ id: "valo-guided-v2:TPL-01:block:0", type: "paragraph", text: wording, rows: [] }],
+    formAnswers: data,
+  } as CanonicalDocument;
+};
+
+// EDT-005: "Highlight unresolved fields, inconsistent dates and missing party details."
+test("what an invoice started from its form still needs is listed as for its questions-only form, with the same jump to each question, and its unfilled places are not counted twice", () => {
+  // A v2 form asks v1's questions, so it needs what the questions-only invoice needs.
+  assert.deepEqual(missingFields(formStarted()), missingFields(started("TPL-01")));
+  const items = missingFieldItems(formStarted());
+  assert.equal(items.find((i) => i.label === "Issuing business legal name")?.selector, "#g-issuerName");
+  assert.equal(
+    items.find((i) => i.label === "Goods, work and agreed charges, row 1: Description")?.selector,
+    "#gt-items-0-description",
+  );
+  // While answers are missing, the wording's placeholders are theirs: no blanks line is added.
+  assert.ok(!missingFields(formStarted()).some((line) => line.startsWith("Blanks still in the text")));
+  // A wrong answer keeps what is wrong with it after the question.
+  assert.ok(
+    missingFields(formStarted({ issueDate: "2026-02-30" })).includes(
+      "Issue date: Enter a real date (YYYY-MM-DD).",
+    ),
+  );
+});
+
+test("an invoice started from its form whose answers are complete lists only a blank left in its wording, and one whose answers belong to no form says it cannot be read", () => {
+  const complete = formStarted({
+    issuerName: "Synthetic Supplies Ltd",
+    issuerAddress: "1 Synthetic Road, Ikeja",
+    recipientName: "Synthetic Buyer Ltd",
+    documentNumber: "SYN-INV-001",
+    issueDate: "2026-11-02",
+    dueDate: "2026-11-30",
+    billingBasis: "Synthetic October supplies",
+    taxMode: "none",
+    discountMode: "none",
+  });
+  complete.formAnswers!.tables.items = [
+    { description: "Synthetic paper", quantity: "2", unit: "each", otherUnit: "", unitPriceKobo: "150000" },
+  ];
+  complete.blocks[0]!.text = "Synthetic Supplies Ltd";
+  assert.deepEqual(missingFields(complete), []);
+  complete.blocks[0]!.text = "Signed: [Signature]";
+  assert.deepEqual(missingFields(complete), ["Blanks still in the text (1): [Signature]"]);
+  const unknown = formStarted();
+  unknown.formAnswers!.templateId = "TPL-99";
+  assert.deepEqual(missingFields(unknown), [
+    "This document's saved questions cannot be read. Restore an earlier version, and do not treat this one as complete.",
+  ]);
 });

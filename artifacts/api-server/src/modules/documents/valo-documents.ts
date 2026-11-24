@@ -5,7 +5,7 @@ import type { db, valoDocumentRevisions, valoDocuments } from "@workspace/db";
 import { baselineTemplates, sha256 } from "@workspace/valo-core";
 import { documentInput, documentUpdate } from "../../lib/valo-validation";
 import { z } from "zod";
-import { guidedDataFromBlocks } from "@workspace/valo-core/guided-runtime";
+import { guidedDataFromBlocks, guidedFieldIssue } from "@workspace/valo-core/guided-runtime";
 import { emptyFormData, formDocumentContent } from "@workspace/valo-core/guided-runtime-v2";
 import { StartFormDocumentBody } from "@workspace/api-zod";
 import { ValoProblem } from "../../platform/valo-problem";
@@ -20,6 +20,7 @@ import {
   authorizeWorkspaceWrite,
   limitWorkspaceWrite,
   recordWorkspaceEvent,
+  savedBusinessName,
   type WorkspaceActor,
 } from "../workspaces";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -257,11 +258,13 @@ export async function startFormDocument(actor: WorkspaceActor, raw: unknown) {
     await authorizeWorkspaceWrite(tx, actor);
     const form = await freeFormEdition(tx, templateId);
     await limitWorkspaceWrite(tx, actor, "document");
-    const { unfilled: _unfilled, ...content } = formDocumentContent(
-      form.spec,
-      form.text,
-      emptyFormData(form.spec),
-    );
+    // The saved business name is filled in as the issuing business, as the questions-only form's
+    // starter fills it in, and only when it is a valid answer. Nothing else is assumed.
+    const answers = emptyFormData(form.spec);
+    const name = await savedBusinessName(tx, actor);
+    const issuer = form.spec.fields.find((field) => field.id === "issuerName");
+    if (name && issuer && !guidedFieldIssue(issuer, name)) answers.values.issuerName = name;
+    const { unfilled: _unfilled, ...content } = formDocumentContent(form.spec, form.text, answers);
     const input = documentInput.parse({ title: form.spec.title, content });
     const id = randomUUID();
     const document = singleRow(
