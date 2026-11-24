@@ -69,6 +69,11 @@ slot that is a line of its own keeps each answer on lines of its own.
 A map's change may place the draft's own words elsewhere, as a payment reminder's timing paragraph
 moves from the draft's list of choices into the letter; it says so, and why.
 
+A draft without a title line, as three of the agreements are, takes the template's registered title
+as its form text's title; only the staff library shows it, since a document is named by its own
+title (slice 6). Every bracketed placeholder of the draft becomes a slot, unless it prints only while
+a choice is unanswered, as the draft's own direction.
+
 Anything else in braces, and any HTML, link or image, is refused. The grammar is frozen with the v2
 spec; a change to either makes v3.
 
@@ -86,7 +91,14 @@ has v2's headings and header rows.) Following decision 1:
 - a question the edition has no wording for is dropped, with its reason (for example TPL-15's one-way
   option: the retained text is mutual only);
 - **blanks** are slots left for completion by hand, such as signatures, never filled or invented
-  (EDT-005);
+  (EDT-005). An agreement's schedule entry that v1 does not ask and no clause relies on is a blank
+  too, as the drafts tell the parties to complete their schedules before signing; one a clause
+  relies on, such as the review period that a service agreement's acceptance clause names, is a new
+  question (slice 6);
+- an agreement whose draft names its parties by role, as the Customer and the Provider, takes a
+  **new choice** of which party plays which, since v1 asks for a first and a second party; each
+  party's details and signature name print in its role, and the draft's sentence while it is
+  unanswered (slice 6: the service and consultancy agreements);
 - a **table change** drops a v1 column the wording has no place for, or takes fewer rows than v1
   allows where each row prints blocks of its own, each with its reason (slice 5c: the delivery note's
   per-item condition, and the meeting minutes' topics, up to 20);
@@ -157,7 +169,7 @@ fills only the business's own details: never a counterparty, an address, a date,
 | 3 | The renderer: headings and header rows that repeat on each page, v1's HTML pinned. The contract and the revision codec take them in slice 5, with the documents that use them. | EDT-002, EDT-006, EDT-009 |
 | 4 | The library's form text: its column and trigger, the staff save and preview of the fit, the action that files proposed form text as private drafts, and the first v2 form and annotation map, the invoice's (TPL-01). | EDT-001, EDT-002, DOC-004 |
 | 5 | Starting, editing, saving and exporting the free v2 forms, with the document's form record, and the maps and forms of the other six free templates (TPL-02, 03, 04, 05, 08, 12). In three pull requests: 5a, the server, the contract and the form record, with the invoice; 5b, the editor and the workspace around it (its questions filling the wording as they are answered, the preview, what is still needed, reused details, making another and converting, the documents list and the starter's form-first start); 5c, the other six maps, in two pull requests: the quotation, receipt and purchase order (TPL-02, 03 and 04), then the delivery note, the meeting minutes and the payment reminder letter (TPL-05, 08 and 12), whose drafts ask more of the v1 questions than the first three do. | EDT-001, EDT-002, EDT-005, EDT-006, DOC-005 |
-| 6 | The premium v2 forms (TPL-13 to TPL-17), with their maps: each agreement's schedules need more question-to-wording decisions than a free form's. In three pull requests: 6a, starting a premium form from the edition the workspace bought, with the order it was bought under recorded on the document, and the offer letter (TPL-17), the shortest of the five; 6b, the employment contract (TPL-16); 6c, the service, consultancy and non-disclosure agreements (TPL-13, 14 and 15), whose retained drafts have no title line and name their parties' roles. | DOC-004, DOC-005, DOC-007, EDT-010 |
+| 6 | The premium v2 forms (TPL-13 to TPL-17), with their maps: each agreement's schedules need more question-to-wording decisions than a free form's. In two pull requests: 6a, starting a premium form from the edition the workspace bought, with the order it was bought under recorded on the document, and the offer letter (TPL-17), the shortest of the five; 6b, the employment contract and the service, consultancy and non-disclosure agreements (TPL-16, 13, 14 and 15), three of whose retained drafts have no title line and name their parties' roles. | DOC-004, DOC-005, DOC-007, EDT-010 |
 | 7 | The starter, the template page, examples and the profile's details. | EDT-001, DOC-005, PRO-003 (in part) |
 
 Tests that pin v1 stay unchanged throughout, among them `valo-guided.test.ts`, `valo-render.test.ts`,
