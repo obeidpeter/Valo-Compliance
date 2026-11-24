@@ -30,13 +30,13 @@ No recorded evidence at all: none.
 
 ## Tests cited as evidence
 
-`docs/registers/ci-evidence.json` holds 437 citations of 293 tests for 126 requirements (decision 0010).
+`docs/registers/ci-evidence.json` holds 452 citations of 299 tests for 126 requirements (decision 0010).
 A CI job fails when a test cited for it does not pass, and each run's `readiness-report` artifact lists every citation's result.
 A citation is partial evidence: it never accepts a requirement.
 
 | Requirement | Cited tests | CI jobs |
 | --- | ---: | --- |
-| ADM-001 | 2 | postgres |
+| ADM-001 | 4 | postgres |
 | ADM-002 | 4 | foundation, postgres |
 | ADM-003 | 2 | postgres |
 | ADM-004 | 4 | foundation, postgres |
@@ -45,7 +45,7 @@ A citation is partial evidence: it never accepts a requirement.
 | ADM-007 | 4 | foundation, postgres |
 | ADM-008 | 4 | postgres |
 | ADM-009 | 3 | foundation, postgres |
-| AI-001 | 1 | foundation |
+| AI-001 | 3 | foundation, postgres, web-performance |
 | AI-002 | 3 | foundation |
 | AI-003 | 2 | foundation |
 | AI-004 | 3 | foundation, postgres |
@@ -86,12 +86,12 @@ A citation is partial evidence: it never accepts a requirement.
 | EDP-012 | 3 | foundation, postgres |
 | EDT-001 | 3 | foundation, web-performance |
 | EDT-002 | 4 | foundation, postgres |
-| EDT-003 | 3 | postgres, web-performance |
-| EDT-004 | 2 | foundation, postgres |
+| EDT-003 | 4 | postgres, web-performance |
+| EDT-004 | 6 | foundation, postgres, web-performance |
 | EDT-005 | 10 | foundation, postgres, web-performance |
 | EDT-006 | 4 | foundation, postgres |
 | EDT-007 | 3 | postgres |
-| EDT-008 | 3 | postgres |
+| EDT-008 | 4 | postgres |
 | EDT-009 | 4 | foundation |
 | EDT-010 | 2 | foundation, postgres |
 | IAM-001 | 3 | foundation |
@@ -105,7 +105,7 @@ A citation is partial evidence: it never accepts a requirement.
 | NFR-006 | 17 | foundation, web-performance |
 | NFR-007 | 3 | web-performance |
 | NFR-008 | 12 | foundation, web-performance |
-| NFR-009 | 7 | postgres, web-performance |
+| NFR-009 | 8 | postgres, web-performance |
 | NFR-010 | 3 | foundation |
 | NFR-011 | 2 | foundation |
 | OPS-001 | 4 | foundation |
@@ -116,11 +116,11 @@ A citation is partial evidence: it never accepts a requirement.
 | OPS-006 | 1 | foundation |
 | OPS-008 | 2 | foundation |
 | PAY-001 | 2 | foundation, postgres |
-| PAY-002 | 2 | foundation, postgres |
+| PAY-002 | 3 | foundation, postgres |
 | PAY-003 | 3 | foundation, postgres |
-| PAY-004 | 2 | foundation, postgres |
+| PAY-004 | 3 | foundation, postgres |
 | PAY-005 | 1 | postgres |
-| PAY-006 | 1 | postgres |
+| PAY-006 | 2 | postgres |
 | PAY-007 | 1 | postgres |
 | PAY-008 | 3 | foundation, postgres |
 | PAY-009 | 3 | foundation |
@@ -139,7 +139,7 @@ A citation is partial evidence: it never accepts a requirement.
 | RUL-006 | 6 | foundation, postgres, web-performance |
 | RUL-007 | 3 | foundation, postgres |
 | RUL-008 | 3 | foundation |
-| RUL-009 | 2 | postgres |
+| RUL-009 | 3 | postgres |
 | SEC-001 | 3 | postgres |
 | SEC-002 | 3 | foundation, postgres |
 | SEC-003 | 1 | foundation |

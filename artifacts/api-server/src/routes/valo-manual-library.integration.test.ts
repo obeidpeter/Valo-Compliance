@@ -169,6 +169,8 @@ test(
         const { resolveWorkspace } = await import("../modules/workspaces");
         const { runInWorkspaceScope } = await import("@workspace/db");
         res.locals.valoActor = await resolveWorkspace(session.identityId);
+        // The identity middleware gives checkout the account's address on record; here, a synthetic one.
+        res.locals.valoContactEmail = session.identityId + "@example.invalid";
         runInWorkspaceScope(res.locals.valoActor.workspaceId, next);
       },
     );

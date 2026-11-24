@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { test } from "node:test";
-import { and, count, eq, inArray } from "drizzle-orm";
+import { and, count, eq, inArray, isNotNull } from "drizzle-orm";
 import {
   db,
   pool,
@@ -156,6 +156,57 @@ test(
           assert.equal(recovered.status, "manual_fallback");
           assert.equal(recovered.providerCalls, null);
           assert.equal(recovered.modelUsed, null);
+        },
+      );
+      // AI-001: "unsupported customer legal requests are directed to a scoped published resource,
+      // official authority or independent adviser; no adviser availability is implied."
+      await t.test(
+        "a legal request the assistant does not take is answered with where to go instead, calls no model, drafts none of its notes and cannot be saved",
+        async () => {
+          let adapterCalls = 0;
+          const legal = {
+            ...structuredClone(customerAICases[0]!.input),
+            idempotencyKey: randomUUID(),
+            draftingInstruction: "Draft a non-disclosure agreement for my synthetic staff.",
+            contextLines: ["Synthetic note: our staff handle the supplier price lists."],
+          };
+          const reply = await createCustomerAIDraft(a, legal, async () => {
+            adapterCalls++;
+            throw Error("Controlled negative transport, never a real provider call");
+          });
+          assert.equal(reply.status, "unsupported");
+          assert.equal(reply.providerCalls, 0);
+          assert.equal(reply.modelUsed, null);
+          assert.equal(adapterCalls, 0);
+          assert.ok(
+            reply.limitations.includes(
+              "This request exceeds the four bounded business tasks. Use a scoped published resource, official authority or independent adviser; no adviser availability is implied.",
+            ),
+          );
+          // Nothing in the reply offers an adviser or says one is standing by.
+          for (const line of reply.limitations)
+            assert.doesNotMatch(
+              line,
+              /\b(book|contact|call|speak|talk)\b.{0,25}\b(adviser|advisor|lawyer)|\b(adviser|advisor|lawyer)s? (is|are) (available|ready|on hand)/i,
+            );
+          // The request and its notes are not drafted into the preview.
+          assert.doesNotMatch(JSON.stringify(reply.content), /non-disclosure|supplier price lists/i);
+          const loaded = await getCustomerAIDraft(a, reply.id);
+          assert.equal(loaded.status, "unsupported");
+          assert.deepEqual(loaded.limitations, reply.limitations);
+          await assert.rejects(
+            acceptCustomerAIDraft(a, reply.id, {
+              title: reply.title,
+              content: reply.content,
+              confirmBusinessDraft: true,
+            }),
+            { status: 422 },
+          );
+          const [accepted] = await db
+            .select({ n: count() })
+            .from(valoAIDrafts)
+            .where(and(eq(valoAIDrafts.id, reply.id), isNotNull(valoAIDrafts.acceptedDocumentId)));
+          assert.equal(accepted!.n, 0);
         },
       );
       await t.test(

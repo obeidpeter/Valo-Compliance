@@ -393,6 +393,28 @@ test(
         });
       },
     );
+    // ADM-001: "an author cannot change payment configuration". Checkout's switch is a system control:
+    // content staff are refused it, the refusal records nothing, and checkout keeps running.
+    await t.test(
+      "content staff are refused checkout's switch: a pause or a resume by them is refused, records nothing, and checkout keeps running",
+      async () => {
+        for (const action of ["pause_service", "resume_service"] as const) {
+          const requestKey = randomUUID();
+          await assert.rejects(
+            controls.actOnSourceControls(fresh(staff), { action, service: "checkout", requestKey, reason }),
+            { status: 403 },
+          );
+          const recorded = await db.execute(
+            sql`select 1 from valo_safety_control_audit where request_key=${requestKey}::uuid`,
+          );
+          assert.equal(recorded.rows.length, 0, action);
+        }
+        assert.equal(
+          await state.withSafetyDispatch("checkout", async () => "checkout still runs"),
+          "checkout still runs",
+        );
+      },
+    );
     await t.test(
       "a checkout pause stops checkout but not AI or free guidance, and records its reason, actor and customer impact",
       async () => {

@@ -110,6 +110,36 @@ test(
           assert.match(res.headers.get("cache-control") ?? "", /no-store/);
         },
       );
+      // ADM-001: "an author cannot change payment configuration". A content editor with a fresh second
+      // factor is a valid staff session, and is refused every finance read and write.
+      await t.test("content staff are refused the payment concerns and every finance action", async () => {
+        const content = `synthetic-dispute-content-${randomUUID()}`;
+        await db.insert(valoStaffAssignments).values({
+          id: randomUUID(),
+          identityId: content,
+          role: "content",
+          grantedBy: "synthetic",
+          reason: "Verify content staff cannot change payments.",
+        });
+        try {
+          assert.equal((await request("/admin/payment-concerns", content)).status, 403);
+          const writes: [string, unknown][] = [
+            [`/admin/payment-concerns/${randomUUID()}/action`, { requestKey: randomUUID() }],
+            ["/admin/disputes/link", { orderId: f.order.id, providerId: f.providerId }],
+            [`/admin/disputes/${randomUUID()}/hold`, { requestKey: randomUUID() }],
+            [`/admin/dispute-actions/${randomUUID()}/execute`, { expectedVersion: 1, acknowledgement: true }],
+          ];
+          for (const [path, body] of writes)
+            assert.equal((await request(path, content, body)).status, 403, path);
+          // The finance user is still allowed, so the refusals were for the role.
+          assert.equal((await request("/admin/payment-concerns", f.staff.identityId)).status, 200);
+        } finally {
+          await db
+            .update(valoStaffAssignments)
+            .set({ active: false })
+            .where(eq(valoStaffAssignments.identityId, content));
+        }
+      });
       await t.test(
         "customer route binds the active workspace; public provider facts cannot be submitted",
         async () => {

@@ -3242,3 +3242,276 @@ test("with nothing for sale and no order, the purchases screen says so in plain 
     await close();
   }
 });
+
+// AI-001: "unsupported customer legal requests are directed to a scoped published resource, official
+// authority or independent adviser; no adviser availability is implied." The sentence is the one the
+// server adds to such a reply (its database test shows that); the screen shows it and offers no save.
+test("a drafting request the assistant does not take says so, shows where to go instead, offers no adviser and no save, and leads to a new request", async () => {
+  const redirect =
+    "This request exceeds the four bounded business tasks. Use a scoped published resource, official authority or independent adviser; no adviser availability is implied.";
+  const unsupported = api.GetCustomerAIDraftResponse.parse({
+    ...(answers[`GET /workspace/ai-drafts/${DRAFT}`] as object),
+    status: "unsupported",
+    limitations: ["Synthetic test fixture limitation.", redirect],
+  });
+  const { page, errors, unknown, close } = await desktop(
+    `/workspace/ai/${DRAFT}`,
+    except({ [`GET /workspace/ai-drafts/${DRAFT}`]: unsupported }),
+  );
+  try {
+    await ready(page);
+    const main = page.locator("main");
+    await expect(main).toContainText("Unsupported");
+    await expect(main).toContainText("This request cannot be drafted by Valo. Nothing was generated.");
+    await expect(main.getByText(redirect)).toBeVisible();
+    await expect(page.getByTestId("button-accept-draft")).toHaveCount(0);
+    const next = page.getByTestId("link-new-request");
+    await expect(next).toHaveText("Start a new request");
+    await expect(next).toHaveAttribute("href", "/workspace/ai");
+    const shown = (await main.innerText()).replace(/\s+/g, " ");
+    assert.doesNotMatch(
+      shown,
+      /\b(book|contact|call|speak|talk)\b.{0,25}\b(adviser|advisor|lawyer)|\b(adviser|advisor|lawyer)s? (is|are) (available|ready|on hand)/i,
+    );
+    assert.deepEqual((await wcagFailures(page)).failures, []);
+    await next.click();
+    await expect(page).toHaveURL(/\/workspace\/ai$/);
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
+
+/** A server for the editor's saves: it holds `held()` and refuses a save made from an older version
+ * with 409 and the version it holds, as the API does (EDT-004). `GET` answers with the version it
+ * holds, under `titleAt(version)`. Every save it is sent is kept in `sent`. */
+function documentServer(titleAt: (version: number) => string = () => "Synthetic invoice") {
+  const sent: { expectedRevision: number; title: string }[] = [];
+  const state = { held: 3, down: false };
+  const json = (route: Parameters<Api>[0], status: number, body: unknown) =>
+    route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) });
+  const serve: Api = async (route, method, path, query) => {
+    // With the connection down nothing reaches the server.
+    if (state.down) return route.abort("internetdisconnected");
+    if (method === "PATCH" && path === `/workspace/documents/${DOCUMENT}`) {
+      const body = route.request().postDataJSON() as (typeof sent)[number];
+      sent.push(body);
+      if (body.expectedRevision !== state.held)
+        return json(route, 409, {
+          error: "This document was saved somewhere else after you opened it. Your text here was not saved.",
+          currentRevision: state.held,
+        });
+      state.held += 1;
+      return json(route, 200, api.SaveDocumentResponse.parse({ ...document(state.held), title: body.title }));
+    }
+    if (method === "GET" && path === `/workspace/documents/${DOCUMENT}`)
+      return json(
+        route,
+        200,
+        api.GetDocumentResponse.parse({ ...document(state.held), title: titleAt(state.held) }),
+      );
+    await answer(route, method, path, query);
+  };
+  return { sent, state, serve };
+}
+
+// EDT-004: "two open tabs cannot silently overwrite each other". The server refuses a save made from
+// an older version. The editor says so with the version now saved, stops saving, keeps what was
+// typed, and saves it as the newest version only when the customer asks.
+test("when the document was saved somewhere else, the editor says so with the version now saved, stops saving, keeps what was typed, and saves it as the newest version only when asked", async () => {
+  const server = documentServer((v) =>
+    v > 3 ? "Synthetic invoice, saved in another tab" : "Synthetic invoice",
+  );
+  const { page, errors, unknown, close } = await desktop(`/workspace/documents/${DOCUMENT}`, server.serve);
+  try {
+    await ready(page);
+    const title = page.getByTestId("input-title"),
+      status = page.getByTestId("status-save"),
+      conflict = page.getByTestId("notice").filter({ hasText: "Changed somewhere else" });
+    await expect(status).toHaveText("Saved · version 3");
+    // Another tab saves twice after this one opened version 3.
+    server.state.held = 5;
+    await title.fill("Synthetic invoice, typed here");
+    await expect.poll(() => server.sent.length).toBe(1);
+    assert.equal(server.sent[0]!.expectedRevision, 3);
+    await expect(status).toHaveText("Not saved — changed somewhere else");
+    await expect(conflict.locator("p").first()).toHaveText("Changed somewhere else — now at version 5");
+    await expect(conflict).toContainText("What you typed here is still on the screen and has not been lost.");
+    await expect(title).toHaveValue("Synthetic invoice, typed here");
+    // Nothing more is saved on its own while the two versions differ. The wait is longer than the
+    // autosave's.
+    await title.fill("Synthetic invoice, typed here, and more");
+    await page.waitForTimeout(2200);
+    assert.equal(server.sent.length, 1);
+    await expect(status).toHaveText("Not saved — changed somewhere else");
+    // Asked to, the editor saves what was typed over the newest version, and says so.
+    await conflict.getByTestId("button-keep-mine").click();
+    await expect(status).toHaveText("Saved · version 6");
+    assert.equal(server.sent.length, 2);
+    assert.deepEqual(
+      { expectedRevision: server.sent[1]!.expectedRevision, title: server.sent[1]!.title },
+      { expectedRevision: 5, title: "Synthetic invoice, typed here, and more" },
+    );
+    await expect(title).toHaveValue("Synthetic invoice, typed here, and more");
+    await expect(conflict).toHaveCount(0);
+    assert.deepEqual(oldWordsIn(await page.locator("main").innerText()), []);
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
+
+test("when the document was saved somewhere else, the customer can load the newest version instead: the editor asks first, keeping changes nothing, and going ahead shows the newest version without saving anything", async () => {
+  const server = documentServer((v) =>
+    v > 3 ? "Synthetic invoice, saved in another tab" : "Synthetic invoice",
+  );
+  const { page, errors, unknown, close } = await desktop(`/workspace/documents/${DOCUMENT}`, server.serve);
+  try {
+    await ready(page);
+    const title = page.getByTestId("input-title"),
+      status = page.getByTestId("status-save"),
+      dialog = page.getByTestId("dialog-confirm");
+    server.state.held = 5;
+    await title.fill("Synthetic invoice, typed here");
+    await expect(status).toHaveText("Not saved — changed somewhere else");
+    await page.getByTestId("button-load-theirs").click();
+    await expect(dialog.locator("h2")).toHaveText("Discard what you typed here?");
+    await dialog.getByTestId("button-keep").click();
+    await expect(dialog).toBeHidden();
+    await expect(title).toHaveValue("Synthetic invoice, typed here");
+    await expect(status).toHaveText("Not saved — changed somewhere else");
+    await page.getByTestId("button-load-theirs").click();
+    await dialog.getByTestId("button-confirm").click();
+    await expect(title).toHaveValue("Synthetic invoice, saved in another tab");
+    await expect(status).toHaveText("Saved · version 5");
+    await page.waitForTimeout(2200);
+    assert.equal(server.sent.length, 1, "loading the newest version saves nothing");
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
+
+// EDT-004: "show saving/saved/offline states". The editor's saves go out even offline, so a save
+// made then fails, and the editor saves again on its own when the connection returns.
+test("offline, the editor says so; a save that cannot go out says it is not saved and keeps what was typed; and when the connection returns the editor saves what was typed on its own", async () => {
+  const server = documentServer();
+  const { page, errors, unknown, close } = await desktop(`/workspace/documents/${DOCUMENT}`, server.serve);
+  try {
+    await ready(page);
+    const title = page.getByTestId("input-title"),
+      status = page.getByTestId("status-save"),
+      offline = page.getByTestId("notice").filter({ hasText: "You are offline" }),
+      failed = page.locator('p[role="alert"]', { hasText: "What you typed is still here." });
+    await expect(status).toHaveText("Saved · version 3");
+    server.state.down = true;
+    await page.context().setOffline(true);
+    await expect(offline).toContainText(
+      "Keep editing — your changes stay in this browser tab and will save automatically when your connection returns.",
+    );
+    await title.fill("Synthetic invoice, typed offline");
+    await expect(status).toHaveText("Not saved");
+    await expect(failed).toHaveText(
+      "You seem to be offline. Reconnect and try again. What you typed is still here.",
+    );
+    await expect(title).toHaveValue("Synthetic invoice, typed offline");
+    assert.equal(server.sent.length, 0);
+    server.state.down = false;
+    await page.context().setOffline(false);
+    await expect(status).toHaveText("Saved · version 4");
+    assert.deepEqual(server.sent, [
+      { ...server.sent[0]!, expectedRevision: 3, title: "Synthetic invoice, typed offline" },
+    ]);
+    await expect(offline).toHaveCount(0);
+    await expect(failed).toHaveCount(0);
+    await expect(title).toHaveValue("Synthetic invoice, typed offline");
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
+
+// EDT-004: "retry preserves unsaved text in memory".
+test("a save the server could not take says what happened, keeps what was typed, and Retry sends exactly what is on the screen", async () => {
+  const server = documentServer();
+  let refuse = true;
+  const serve: Api = async (route, method, path, query) => {
+    if (refuse && method === "PATCH" && path === `/workspace/documents/${DOCUMENT}`) {
+      refuse = false;
+      return route.fulfill({
+        status: 503,
+        contentType: "application/json",
+        body: JSON.stringify({ error: "Synthetic test fixture: saving is briefly unavailable." }),
+      });
+    }
+    await server.serve(route, method, path, query);
+  };
+  const { page, errors, unknown, close } = await desktop(`/workspace/documents/${DOCUMENT}`, serve);
+  try {
+    await ready(page);
+    const title = page.getByTestId("input-title"),
+      status = page.getByTestId("status-save");
+    await title.fill("Synthetic invoice, kept through a failed save");
+    await expect(status).toHaveText("Not saved");
+    await expect(page.locator('p[role="alert"]', { hasText: "What you typed is still here." })).toHaveText(
+      "Synthetic test fixture: saving is briefly unavailable. What you typed is still here.",
+    );
+    await expect(title).toHaveValue("Synthetic invoice, kept through a failed save");
+    assert.equal(server.sent.length, 0);
+    await page.getByTestId("button-retry-save").click();
+    await expect(status).toHaveText("Saved · version 4");
+    assert.equal(server.sent.length, 1);
+    assert.equal(server.sent[0]!.title, "Synthetic invoice, kept through a failed save");
+    assert.equal(server.sent[0]!.expectedRevision, 3);
+    await expect(page.getByTestId("button-retry-save")).toHaveCount(0);
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
+
+// EDT-003: "Support section-level text editing, undo, preview and a clear draft status."
+test("undo and redo step back and forward through the editor's changes, with the buttons and with the keyboard outside a text box, and each step is saved as shown", async () => {
+  const server = documentServer();
+  const { page, errors, unknown, close } = await desktop(`/workspace/documents/${DOCUMENT}`, server.serve);
+  try {
+    await ready(page);
+    const title = page.getByTestId("input-title"),
+      status = page.getByTestId("status-save"),
+      undo = page.getByTestId("button-undo"),
+      redo = page.getByTestId("button-redo");
+    await expect(undo).toBeDisabled();
+    await expect(redo).toBeDisabled();
+    // Two changes, far enough apart to be two steps.
+    await title.fill("Synthetic invoice, first change");
+    await page.waitForTimeout(900);
+    await title.fill("Synthetic invoice, second change");
+    await undo.click();
+    await expect(title).toHaveValue("Synthetic invoice, first change");
+    await expect(redo).toBeEnabled();
+    await redo.click();
+    await expect(title).toHaveValue("Synthetic invoice, second change");
+    // The keyboard, with focus outside a text box, where the browser's own undo does not apply.
+    await page.getByTestId("status-save").click();
+    await page.keyboard.press("Control+z");
+    await expect(title).toHaveValue("Synthetic invoice, first change");
+    await page.keyboard.press("Control+z");
+    await expect(title).toHaveValue("Synthetic invoice");
+    await expect(undo).toBeDisabled();
+    await page.keyboard.press("Control+Shift+z");
+    await expect(title).toHaveValue("Synthetic invoice, first change");
+    // What is saved is what the screen shows.
+    await expect(status).toHaveText(/^Saved · version \d+$/);
+    assert.equal(server.sent.at(-1)!.title, "Synthetic invoice, first change");
+    assert.equal(server.sent.at(-1)!.expectedRevision, server.state.held - 1);
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});

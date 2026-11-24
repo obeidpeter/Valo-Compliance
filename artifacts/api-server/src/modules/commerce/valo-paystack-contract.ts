@@ -117,6 +117,9 @@ function testSecret() {
   return setting("PAYSTACK_SECRET_KEY");
 }
 /** Only the fixed provider host is reachable; discard all instrument/customer data. */
+/** Paystack's API, the only address a Paystack request goes to. Tests that stand in for Paystack
+ * match requests against it, so no other file names the address. */
+export const PAYSTACK_API = "https://api.paystack.co";
 export async function paystackRequest(
   path: string,
   body?: unknown,
@@ -126,7 +129,7 @@ export async function paystackRequest(
   const key = testSecret();
   let response: Response;
   try {
-    response = await fetch("https://api.paystack.co" + path, {
+    response = await fetch(PAYSTACK_API + path, {
       method,
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       ...(body ? { body: JSON.stringify(body) } : {}),

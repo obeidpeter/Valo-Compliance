@@ -16,7 +16,7 @@ import {
 } from "@workspace/db";
 import { resolveWorkspace } from "../workspaces";
 import * as commerce from "./valo-commerce";
-import { verifiedTransaction } from "./valo-paystack-contract";
+import { PAYSTACK_API, verifiedTransaction } from "./valo-paystack-contract";
 import { quotaSubjectHash } from "../../lib/valo-quota";
 import { setting } from "../../platform/settings";
 import { financeHeldFixture } from "./valo-finance-test-fixture";
@@ -492,6 +492,171 @@ test(
           assert.equal(day.length, 1);
           assert.equal(day[0]!.daily, true);
           assert.ok(day[0]!.used >= 1);
+        },
+      );
+      /** A Paystack test merchant for one subtest, with Paystack itself stood in for: `verify`
+       * answers for the references `paid` maps to a transaction and fails for every other one. No
+       * request leaves this process, and the settings are removed again afterwards. */
+      async function withStandInMerchant(
+        paid: Map<string, ReturnType<typeof response>>,
+        run: (verified: string[]) => Promise<void>,
+      ) {
+        assert.equal(Boolean(process.env.PAYSTACK_SECRET_KEY), false);
+        assert.equal(process.env.VALO_SANDBOX_CHECKOUT_ENABLED, undefined);
+        const verified: string[] = [];
+        const realFetch = globalThis.fetch;
+        process.env.VALO_SANDBOX_CHECKOUT_ENABLED = "true";
+        process.env.PAYSTACK_SECRET_KEY = "sk_test_synthetic_fixture_not_a_key";
+        globalThis.fetch = (async (input: Parameters<typeof fetch>[0], init?: RequestInit) => {
+          const url = input instanceof Request ? input.url : String(input);
+          if (!url.startsWith(PAYSTACK_API + "/")) return realFetch(input, init);
+          const reference = decodeURIComponent(url.split("/transaction/verify/")[1] ?? "");
+          verified.push(reference);
+          const transaction = paid.get(reference);
+          return transaction
+            ? Response.json({ status: true, data: transaction })
+            : new Response("{}", { status: 502 });
+        }) as typeof fetch;
+        try {
+          await run(verified);
+        } finally {
+          globalThis.fetch = realFetch;
+          delete process.env.VALO_SANDBOX_CHECKOUT_ENABLED;
+          delete process.env.PAYSTACK_SECRET_KEY;
+        }
+      }
+      const charge = async (reference: string) => {
+        const id = Math.floor(Math.random() * 1e12);
+        eventKeys.push(`test:charge.success:${id}`);
+        const recorded = await commerce.recordPaymentEvent(
+          Buffer.from(JSON.stringify({ event: "charge.success", data: { id, reference } })),
+        );
+        return { id, key: `test:charge.success:${id}`, recorded };
+      };
+      const events = (keys: string[]) =>
+        db.select().from(valoPaymentEvents).where(inArray(valoPaymentEvents.eventKey, keys));
+      // PAY-004 and NFR-009: "invalid, replayed and duplicate events cannot create a new purchase";
+      // "bounded retriable jobs". The worker takes every pending event in the database, so it runs
+      // until none of this subtest's events is pending, and other tests' events fail their check.
+      await t.test(
+        "with a test merchant, the event worker checks a recorded charge with Paystack on the server and settles it once, sends an unmatched reference to review at once, and stops retrying a charge it cannot check after five attempts",
+        async () => {
+          const paid = await fixture(),
+            unverifiable = await fixture();
+          const settled = response(paid);
+          await withStandInMerchant(new Map([[paid!.reference, settled]]), async (verified) => {
+            const good = await charge(paid!.reference),
+              unmatched = await charge(`valo-test-unmatched-${randomUUID()}`),
+              failing = await charge(unverifiable!.reference);
+            assert.equal(good.recorded.duplicate, false);
+            // The same delivery again is recorded once.
+            const replay = await commerce.recordPaymentEvent(
+              Buffer.from(
+                JSON.stringify({
+                  event: "charge.success",
+                  data: { id: good.id, reference: paid!.reference },
+                }),
+              ),
+            );
+            assert.equal(replay.duplicate, true);
+            const mine = [good.key, unmatched.key, failing.key];
+            for (let run = 0; run < 12; run++) {
+              await commerce.processPaymentEvents();
+              if ((await events(mine)).every((e) => e.status !== "pending")) break;
+            }
+            const byKey = new Map((await events(mine)).map((e) => [e.eventKey, e]));
+            assert.deepEqual(
+              { status: byKey.get(good.key)!.status, failure: byKey.get(good.key)!.failure },
+              { status: "processed", failure: null },
+            );
+            assert.deepEqual(
+              { status: byKey.get(unmatched.key)!.status, attempts: byKey.get(unmatched.key)!.attempts },
+              { status: "needs_review", attempts: 1 },
+            );
+            assert.deepEqual(
+              { status: byKey.get(failing.key)!.status, attempts: byKey.get(failing.key)!.attempts },
+              { status: "needs_review", attempts: 5 },
+            );
+            // Each attempt asked Paystack once; the settled charge was not asked again.
+            assert.equal(verified.filter((r) => r === paid!.reference).length, 1);
+            assert.equal(verified.filter((r) => r === unverifiable!.reference).length, 5);
+            const [order] = await db.select().from(valoOrders).where(eq(valoOrders.id, paid!.id));
+            assert.deepEqual(
+              { status: order!.status, providerTransactionId: order!.providerTransactionId },
+              { status: "verified_success", providerTransactionId: settled.id },
+            );
+            const grants = await db
+              .select()
+              .from(valoEntitlements)
+              .where(inArray(valoEntitlements.orderId, [paid!.id, unverifiable!.id]));
+            assert.deepEqual(
+              grants.map((g) => [g.orderId, g.status]),
+              [[paid!.id, "active"]],
+            );
+            const [still] = await db.select().from(valoOrders).where(eq(valoOrders.id, unverifiable!.id));
+            assert.notEqual(still!.status, "verified_success");
+          });
+        },
+      );
+      await t.test(
+        "two event workers at once settle a charge once: one purchase, one grant, one receipt to send and one settlement in the audit trail",
+        async () => {
+          const paid = await fixture();
+          await withStandInMerchant(new Map([[paid!.reference, response(paid)]]), async () => {
+            const good = await charge(paid!.reference);
+            for (let run = 0; run < 12; run++) {
+              await Promise.all([commerce.processPaymentEvents(), commerce.processPaymentEvents()]);
+              if ((await events([good.key])).every((e) => e.status !== "pending")) break;
+            }
+            assert.equal((await events([good.key]))[0]!.status, "processed");
+            const grants = await db
+              .select()
+              .from(valoEntitlements)
+              .where(eq(valoEntitlements.orderId, paid!.id));
+            const receipts = await db
+              .select()
+              .from(valoPurchaseOutbox)
+              .where(eq(valoPurchaseOutbox.orderId, paid!.id));
+            const settledEvents = await db
+              .select()
+              .from(valoEvents)
+              .where(
+                and(eq(valoEvents.entityId, paid!.id), eq(valoEvents.action, "payment.verified_success")),
+              );
+            assert.deepEqual([grants.length, receipts.length, settledEvents.length], [1, 1, 1]);
+          });
+        },
+      );
+      // PAY-006: "interrupted browser sessions recover their purchase without requiring an unnecessary
+      // second payment". The customer paid on Paystack's page and never came back to Valo.
+      await t.test(
+        "a status refresh checks an interrupted payment with Paystack on the server and recovers the purchase, and the order then refuses a second payment",
+        async () => {
+          const paid = await fixture();
+          await db.update(valoOrders).set({ status: "pending" }).where(eq(valoOrders.id, paid!.id));
+          await withStandInMerchant(new Map([[paid!.reference, response(paid)]]), async (verified) => {
+            const recovered = await commerce.refreshOrder(a, paid!.id);
+            assert.equal(recovered.status, "verified_success");
+            assert.deepEqual(verified, [paid!.reference]);
+            const grants = await db
+              .select()
+              .from(valoEntitlements)
+              .where(eq(valoEntitlements.orderId, paid!.id));
+            assert.deepEqual(
+              grants.map((g) => g.status),
+              ["active"],
+            );
+            await assert.rejects(commerce.startCheckout(a, paid!.id, "synthetic-buyer@example.invalid"), {
+              status: 409,
+              message: "This purchase is already verified. Do not pay again.",
+            });
+            // A second refresh changes nothing.
+            assert.equal((await commerce.refreshOrder(a, paid!.id)).status, "verified_success");
+            assert.equal(
+              (await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId, paid!.id))).length,
+              1,
+            );
+          });
         },
       );
       console.log(

@@ -178,6 +178,68 @@ export async function exercisePremiumManualTemplate(call: Call, editor: string) 
     currency: "NGN" as const,
     metadata: { valoOrderId: order.id, workspaceId: account.workspaceId },
   };
+  // PAY-002 and PAY-006 through the API, with Paystack stood in for: the server creates the checkout
+  // and returns Paystack's hosted page, keeps it for a retry, and grants the edition only once its own
+  // check with Paystack says the payment succeeded. No request leaves this process.
+  const hosted = "https://checkout.paystack.com/synthetic-" + order.id.slice(0, 8);
+  const asked: { path: string; body: Record<string, unknown> | undefined }[] = [];
+  await withStandInPaystack(
+    (path, body) => {
+      asked.push({ path, body });
+      if (path === "/transaction/initialize")
+        return { authorization_url: hosted, reference: order.reference };
+      if (path === "/transaction/verify/" + encodeURIComponent(order.reference)) return verified;
+      return undefined;
+    },
+    async () => {
+      const checkout = () => call("/workspace/orders/" + order.id + "/checkout", {}, reader);
+      const started = await checkout();
+      assert.equal(started.status, 200);
+      assert.deepEqual(await started.json(), { url: hosted });
+      assert.equal(asked.length, 1);
+      // Paystack is asked for this order's own reference and amount, for the customer's address on
+      // record, returning to the purchases page. No card or payment detail passes through Valo.
+      const sent = asked[0]!.body!;
+      assert.deepEqual(
+        { reference: sent.reference, amount: sent.amount, currency: sent.currency, email: sent.email },
+        {
+          reference: order.reference,
+          amount: order.amountKobo,
+          currency: "NGN",
+          email: reader + "@example.invalid",
+        },
+      );
+      assert.match(String(sent.callback_url), /\/workspace\/purchases$/);
+      assert.doesNotMatch(JSON.stringify(sent), /card|cvv|pan\b|authorization_code|pin\b/i);
+      // Starting it again, as from another tab, returns the same page without asking Paystack again.
+      const again = await checkout();
+      assert.equal(again.status, 200);
+      assert.deepEqual(await again.json(), { url: hosted });
+      assert.equal(asked.length, 1);
+      const [stored] = await db.select().from(valoOrders).where(eq(valoOrders.id, order.id));
+      assert.deepEqual(
+        { status: stored!.status, checkoutUrl: stored!.checkoutUrl },
+        { status: "pending", checkoutUrl: hosted },
+      );
+      // Coming back to Valo is not proof of payment: nothing is granted until the server checks.
+      assert.deepEqual(await owned(reader), []);
+      const refreshed = await call("/workspace/orders/" + order.id + "/refresh", {}, reader);
+      assert.equal(refreshed.status, 200);
+      assert.equal(((await refreshed.json()) as { status: string }).status, "verified_success");
+      assert.deepEqual(
+        asked.map((a) => a.path),
+        ["/transaction/initialize", "/transaction/verify/" + encodeURIComponent(order.reference)],
+      );
+      assert.deepEqual(await owned(reader), [first.id]);
+      const paidAgain = await checkout();
+      assert.equal(paidAgain.status, 409);
+      assert.equal(
+        ((await paidAgain.json()) as { error: string }).error,
+        "This purchase is already verified. Do not pay again.",
+      );
+    },
+  );
+  // The same verified answer arriving again, as from the event worker, changes nothing.
   await settleVerifiedOrder(order.id, verified);
   assert.equal((await startLegacy()).status, 409);
   await assert.rejects(orderFor(account), /payment for this edition is already on record/);
@@ -251,4 +313,34 @@ export async function exercisePremiumManualTemplate(call: Call, editor: string) 
   await readRevision(await act("withdraw", next));
   assert.equal(await libraryCard(), undefined);
   assert.equal((await call("/public/templates/manual-" + itemId)).status, 404);
+}
+
+/** A Paystack test merchant for the length of `run`, with Paystack itself stood in for: `answer`
+ * gives the data for a path, or nothing for a failed request. Only requests to Paystack's API are
+ * answered here; the settings and `fetch` are put back afterwards. */
+async function withStandInPaystack(
+  answer: (path: string, body: Record<string, unknown> | undefined) => unknown,
+  run: () => Promise<void>,
+) {
+  assert.equal(Boolean(process.env.PAYSTACK_SECRET_KEY), false);
+  assert.equal(process.env.VALO_SANDBOX_CHECKOUT_ENABLED, undefined);
+  const { PAYSTACK_API } = await import("../modules/commerce");
+  const realFetch = globalThis.fetch;
+  process.env.VALO_SANDBOX_CHECKOUT_ENABLED = "true";
+  process.env.PAYSTACK_SECRET_KEY = "sk_test_synthetic_fixture_not_a_key";
+  globalThis.fetch = (async (input: Parameters<typeof fetch>[0], init?: RequestInit) => {
+    const url = new URL(input instanceof Request ? input.url : String(input));
+    if (url.origin !== PAYSTACK_API) return realFetch(input, init);
+    const body =
+      typeof init?.body === "string" ? (JSON.parse(init.body) as Record<string, unknown>) : undefined;
+    const data = answer(url.pathname, body);
+    return data === undefined ? new Response("{}", { status: 502 }) : Response.json({ status: true, data });
+  }) as typeof fetch;
+  try {
+    await run();
+  } finally {
+    globalThis.fetch = realFetch;
+    delete process.env.VALO_SANDBOX_CHECKOUT_ENABLED;
+    delete process.env.PAYSTACK_SECRET_KEY;
+  }
 }
