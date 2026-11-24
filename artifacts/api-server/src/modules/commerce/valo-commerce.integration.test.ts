@@ -16,7 +16,7 @@ import {
 } from "@workspace/db";
 import { resolveWorkspace } from "../workspaces";
 import * as commerce from "./valo-commerce";
-import { verifiedTransaction } from "./valo-paystack-contract";
+import { PAYSTACK_API, verifiedTransaction } from "./valo-paystack-contract";
 import { quotaSubjectHash } from "../../lib/valo-quota";
 import { setting } from "../../platform/settings";
 import { financeHeldFixture } from "./valo-finance-test-fixture";
@@ -509,7 +509,7 @@ test(
         process.env.PAYSTACK_SECRET_KEY = "sk_test_synthetic_fixture_not_a_key";
         globalThis.fetch = (async (input: Parameters<typeof fetch>[0], init?: RequestInit) => {
           const url = input instanceof Request ? input.url : String(input);
-          if (!url.startsWith("https://api.paystack.co/")) return realFetch(input, init);
+          if (!url.startsWith(PAYSTACK_API + "/")) return realFetch(input, init);
           const reference = decodeURIComponent(url.split("/transaction/verify/")[1] ?? "");
           verified.push(reference);
           const transaction = paid.get(reference);

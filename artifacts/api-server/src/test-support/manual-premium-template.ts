@@ -324,12 +324,13 @@ async function withStandInPaystack(
 ) {
   assert.equal(Boolean(process.env.PAYSTACK_SECRET_KEY), false);
   assert.equal(process.env.VALO_SANDBOX_CHECKOUT_ENABLED, undefined);
+  const { PAYSTACK_API } = await import("../modules/commerce");
   const realFetch = globalThis.fetch;
   process.env.VALO_SANDBOX_CHECKOUT_ENABLED = "true";
   process.env.PAYSTACK_SECRET_KEY = "sk_test_synthetic_fixture_not_a_key";
   globalThis.fetch = (async (input: Parameters<typeof fetch>[0], init?: RequestInit) => {
     const url = new URL(input instanceof Request ? input.url : String(input));
-    if (url.origin !== "https://api.paystack.co") return realFetch(input, init);
+    if (url.origin !== PAYSTACK_API) return realFetch(input, init);
     const body =
       typeof init?.body === "string" ? (JSON.parse(init.body) as Record<string, unknown>) : undefined;
     const data = answer(url.pathname, body);
