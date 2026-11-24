@@ -7,6 +7,7 @@ import { documentInput, documentUpdate } from "../../lib/valo-validation";
 import { z } from "zod";
 import { guidedDataFromBlocks, guidedFieldIssue } from "@workspace/valo-core/guided-runtime";
 import { emptyFormData, formDocumentContent } from "@workspace/valo-core/guided-runtime-v2";
+import { GUIDED_SPECS_V2 } from "@workspace/valo-core/guided-specs-v2";
 import { StartFormDocumentBody } from "@workspace/api-zod";
 import { ValoProblem } from "../../platform/valo-problem";
 import {
@@ -18,6 +19,7 @@ import {
 } from "./valo-form-documents";
 import { singleRow } from "../../platform/rows";
 import {
+  authorizeWorkspaceRead,
   authorizeWorkspaceWrite,
   limitWorkspaceWrite,
   recordWorkspaceEvent,
@@ -290,6 +292,28 @@ export async function startFormDocument(actor: WorkspaceActor, raw: unknown) {
     return { document, revision };
   });
   return serialize(document, revision);
+}
+/**
+ * The templates whose form a workspace can start now: each free template with a v2 form and a released
+ * edition of its wording that the form fits, with that edition's version. The starter starts any
+ * other template with its questions only, so that no start is refused in the ordinary course.
+ */
+export async function listFormTemplates(actor: WorkspaceActor) {
+  const { db } = await import("@workspace/db");
+  return db.transaction(async (tx) => {
+    await authorizeWorkspaceRead(tx, actor);
+    const templates: { templateId: string; editionVersion: number }[] = [];
+    for (const templateId of Object.keys(GUIDED_SPECS_V2)) {
+      try {
+        const form = await freeFormEdition(tx, templateId);
+        templates.push({ templateId, editionVersion: form.editionVersion });
+      } catch (error) {
+        // No released edition, one the form does not fit, or a premium template: not startable.
+        if (!(error instanceof ValoProblem) || (error.status !== 404 && error.status !== 409)) throw error;
+      }
+    }
+    return { templates };
+  });
 }
 /** The form text of the edition a workspace's document was started with, for its editor to fill. */
 export async function getDocumentForm(actor: WorkspaceActor, id: string) {

@@ -7,7 +7,9 @@ import {
   useCreateDocument,
   useGetWorkspace,
   useStartFormDocument,
+  useListFormTemplates,
   getGetWorkspaceQueryKey,
+  getListFormTemplatesQueryKey,
   getListDocumentsQueryKey,
   type BusinessDocument,
   type CanonicalDocument,
@@ -32,6 +34,10 @@ export function GuidedDraftStarter({ chosen }: { chosen?: LandingTask | undefine
   const [starting, setStarting] = useState<GuidedTemplateId | null>(null);
   const ws = useGetWorkspace({ query: { queryKey: getGetWorkspaceQueryKey(), ...live } });
   const businessName = savedBusinessName(ws.data?.profile);
+  // The templates whose form (forms v2) can be started now, with a released edition of their wording.
+  const formTemplates = useListFormTemplates({
+    query: { queryKey: getListFormTemplatesQueryKey(), staleTime: 60_000 },
+  });
   const create = useCreateDocument(),
     startForm = useStartFormDocument(),
     qc = useQueryClient(),
@@ -55,10 +61,12 @@ export function GuidedDraftStarter({ chosen }: { chosen?: LandingTask | undefine
         },
         { onSuccess: opened, onError: () => setStarting(null) },
       );
-    if (!GUIDED_SPECS_V2[id]) return questionsOnly();
+    const listed = formTemplates.data?.templates.some((t) => t.templateId === id);
+    if (!GUIDED_SPECS_V2[id] || (formTemplates.isSuccess && !listed)) return questionsOnly();
     // A kind whose template's wording is released with a form that fills it starts as that form
-    // (forms v2), with the saved business name filled in by the server. Until then the server says
-    // so, and the document starts with the questions as before.
+    // (forms v2), with the saved business name filled in by the server. Should the list not have
+    // loaded, or the wording be withdrawn meanwhile, the server says so and the document starts with
+    // its questions as before.
     startForm.mutate(
       { data: { templateId: id } },
       {

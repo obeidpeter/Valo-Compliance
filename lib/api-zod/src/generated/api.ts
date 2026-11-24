@@ -3134,6 +3134,22 @@ export const SaveDocumentResponse = zod.object({
 
 
 /**
+ * The templates whose form (forms v2) a workspace can start now: each free template with a released edition of its wording that its form fits. A template not listed starts with its questions only.
+ */
+export const listFormTemplatesResponseTemplatesItemTemplateIdRegExp = new RegExp('^TPL-[0-9]{2}$');
+export const listFormTemplatesResponseTemplatesMax = 40;
+
+
+
+export const ListFormTemplatesResponse = zod.object({
+  "templates": zod.array(zod.object({
+  "templateId": zod.string().regex(listFormTemplatesResponseTemplatesItemTemplateIdRegExp),
+  "editionVersion": zod.int()
+})).max(listFormTemplatesResponseTemplatesMax)
+})
+
+
+/**
  * Starts a document from a template's form (forms v2): from the most recently released edition of its wording, when the form fits it. The answers start as given, or else empty apart from the workspace's saved business name; an answer the form does not take is refused.
  */
 export const startFormDocumentBodyTemplateIdRegExp = new RegExp('^TPL-[0-9]{2}$');

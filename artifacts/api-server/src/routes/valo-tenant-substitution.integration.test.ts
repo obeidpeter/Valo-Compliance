@@ -1122,6 +1122,7 @@ test(
           "GET /workspace/disputes": {},
           "GET /workspace/documents": {},
           "POST /workspace/form-documents": { body: () => ({ templateId: "TPL-01" }) },
+          "GET /workspace/form-templates": {},
           "GET /workspace/privacy-cases": {},
           "GET /workspace/purchases": {},
           "GET /workspace/owned-template-editions": {},

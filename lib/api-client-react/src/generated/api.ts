@@ -71,6 +71,7 @@ import type {
   FinancePaymentConcerns,
   FinanceRefunds,
   FormDocumentStart,
+  FormTemplates,
   GetCommerceReceipt200,
   GetCorrectionNoticesParams,
   GetCustomerSupportCaseParams,
@@ -4255,6 +4256,107 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       > => {
       return useMutation(getSaveDocumentMutationOptions(options), queryClient);
     }
+
+export const getListFormTemplatesUrl = () => {
+
+
+
+
+  return `/api/workspace/form-templates`
+}
+
+/**
+ * The templates whose form (forms v2) a workspace can start now: each free template with a released edition of its wording that its form fits. A template not listed starts with its questions only.
+ */
+export const listFormTemplates = async ( options?: Parameters<typeof customFetch>[1]): Promise<FormTemplates> => {
+
+  return customFetch<FormTemplates>(getListFormTemplatesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListFormTemplatesQueryKey = () => {
+    return [
+    "listFormTemplates"
+    ] as const;
+    }
+
+
+export const getListFormTemplatesQueryOptions = <TData = Awaited<ReturnType<typeof listFormTemplates>>, TError = ErrorType<AuthErrorResponse>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listFormTemplates>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListFormTemplatesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listFormTemplates>>> = ({ signal }) => listFormTemplates({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listFormTemplates>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListFormTemplatesQueryResult = NonNullable<Awaited<ReturnType<typeof listFormTemplates>>>
+export type ListFormTemplatesQueryError = ErrorType<AuthErrorResponse>
+
+
+/** The templates whose form (forms v2) a workspace can start now: each free template with a released edition of its wording that its form fits. A template not listed starts with its questions only. */
+export function useListFormTemplates<TData = Awaited<ReturnType<typeof listFormTemplates>>, TError = ErrorType<AuthErrorResponse>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listFormTemplates>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listFormTemplates>>,
+          TError,
+          Awaited<ReturnType<typeof listFormTemplates>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** The templates whose form (forms v2) a workspace can start now: each free template with a released edition of its wording that its form fits. A template not listed starts with its questions only. */
+export function useListFormTemplates<TData = Awaited<ReturnType<typeof listFormTemplates>>, TError = ErrorType<AuthErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listFormTemplates>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listFormTemplates>>,
+          TError,
+          Awaited<ReturnType<typeof listFormTemplates>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** The templates whose form (forms v2) a workspace can start now: each free template with a released edition of its wording that its form fits. A template not listed starts with its questions only. */
+export function useListFormTemplates<TData = Awaited<ReturnType<typeof listFormTemplates>>, TError = ErrorType<AuthErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listFormTemplates>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** The templates whose form (forms v2) a workspace can start now: each free template with a released edition of its wording that its form fits. A template not listed starts with its questions only. */
+export function useListFormTemplates<TData = Awaited<ReturnType<typeof listFormTemplates>>, TError = ErrorType<AuthErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listFormTemplates>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListFormTemplatesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getStartFormDocumentUrl = () => {
 

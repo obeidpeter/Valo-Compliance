@@ -214,6 +214,8 @@ const answers: Record<string, unknown> = {
     documentCount: 1,
   }),
   [`GET /workspace/documents`]: api.ListDocumentsResponse.parse([document(3)]),
+  // No template's wording is released for its form: every document starts with its questions.
+  [`GET /workspace/form-templates`]: api.ListFormTemplatesResponse.parse({ templates: [] }),
   [`GET /workspace/documents/${DOCUMENT}`]: api.GetDocumentResponse.parse(document(3)),
   [`GET /workspace/documents/${DOCUMENT}/revisions`]: api.ListDocumentRevisionsResponse.parse([
     document(3),
@@ -1255,9 +1257,8 @@ test("a document starts in one place: the home and the documents screen each hav
     }
   }
 
-  // Each way to start saves a new document, named for what was chosen, and opens its editor. A kind
-  // with a form that fills its template's wording asks for that first; while the wording is not
-  // released, the server says so and the document starts with its questions.
+  // Each way to start saves a new document, named for what was chosen, and opens its editor. No
+  // template's wording is released for its form here, so none is asked for.
   const created: { title: string }[] = [];
   const formStarts: unknown[] = [];
   const creating: Api = async (route, method, path, query) => {
@@ -1297,11 +1298,7 @@ test("a document starts in one place: the home and the documents screen each hav
       await expect(page.locator("main h1")).toHaveText("New document");
     }
     assert.equal(created.length, GUIDED_TEMPLATE_IDS.length);
-    assert.deepEqual(
-      formStarts,
-      GUIDED_TEMPLATE_IDS.filter((id) => GUIDED_SPECS_V2[id]).map((templateId) => ({ templateId })),
-    );
-    // No error is shown for a form that is not released yet: the document simply starts as before.
+    assert.deepEqual(formStarts, []);
     await expect(page.getByRole("alert")).toHaveCount(0);
     await page.getByTestId("button-new-draft").click();
     await page.waitForURL(editor);
@@ -1863,20 +1860,44 @@ test("'Make another like this' starts an invoice made from its form through its 
   }
 });
 
-test("the New document page starts the invoice as its form once its template's wording is released, and opens it", async () => {
+test("the New document page starts the invoice as its form once its template's wording is released, and opens it, and starts it with its questions should the wording be withdrawn meanwhile", async () => {
   const { started } = await formInvoice(1);
   const created: unknown[] = [];
+  let withdrawn = false;
   const starting: Api = async (route, method, path, query) => {
-    if (method === "POST" && path === "/workspace/form-documents") {
+    if (method === "GET" && path === "/workspace/form-templates") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(
+          api.ListFormTemplatesResponse.parse({ templates: [{ templateId: "TPL-01", editionVersion: 1 }] }),
+        ),
+      });
+    } else if (method === "POST" && path === "/workspace/form-documents") {
       assert.deepEqual(route.request().postDataJSON(), { templateId: "TPL-01" });
+      await route.fulfill(
+        withdrawn
+          ? {
+              status: 409,
+              contentType: "application/json",
+              body: JSON.stringify({
+                error:
+                  "This template's wording is not released for its form yet. Start its questions-only form instead.",
+              }),
+            }
+          : {
+              status: 201,
+              contentType: "application/json",
+              body: JSON.stringify(api.StartFormDocumentResponse.parse(started)),
+            },
+      );
+    } else if (method === "POST" && path === "/workspace/documents") {
+      created.push(route.request().postDataJSON());
       await route.fulfill({
         status: 201,
         contentType: "application/json",
-        body: JSON.stringify(api.StartFormDocumentResponse.parse(started)),
+        body: JSON.stringify(api.CreateDocumentResponse.parse(document(1))),
       });
-    } else if (method === "POST" && path === "/workspace/documents") {
-      created.push(route.request().postDataJSON());
-      await route.fulfill({ status: 500, contentType: "application/json", body: "{}" });
     } else await answer(route, method, path, query);
   };
   const { page, errors, close } = await desktop("/workspace/documents/new", starting);
@@ -1886,6 +1907,14 @@ test("the New document page starts the invoice as its form once its template's w
     await page.waitForURL(new RegExp(`/workspace/documents/${DOCUMENT}$`));
     // The form document is the only document started: the questions-only one is not.
     assert.deepEqual(created, []);
+    // Withdrawn after the list was read: the server refuses the form, and the invoice starts with its
+    // questions, with no error shown.
+    withdrawn = true;
+    await page.goBack();
+    await expect(page.locator("main h1")).toHaveText("New document");
+    await page.getByTestId("button-start-TPL-01").click();
+    await page.waitForURL(new RegExp(`/workspace/documents/${DOCUMENT}$`));
+    assert.equal(created.length, 1);
     assert.deepEqual(errors, []);
   } finally {
     await close();

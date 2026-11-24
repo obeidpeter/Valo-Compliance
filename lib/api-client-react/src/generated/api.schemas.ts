@@ -1248,6 +1248,17 @@ export interface FormDocumentStart {
   formAnswers?: FormAnswers;
 }
 
+export type FormTemplatesTemplatesItem = {
+  /** @pattern ^TPL-[0-9]{2}$ */
+  templateId: string;
+  editionVersion: number;
+};
+
+export interface FormTemplates {
+  /** @maxItems 40 */
+  templates: FormTemplatesTemplatesItem[];
+}
+
 export interface DocumentFormText {
   edition: string;
   editionVersion: number;
