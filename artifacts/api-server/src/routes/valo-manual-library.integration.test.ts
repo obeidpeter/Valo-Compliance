@@ -9,7 +9,10 @@ import { strToU8, unzipSync, zipSync } from "fflate";
 import { ValoProblem } from "../platform/valo-problem";
 import { wordFromText } from "../modules/manual-library/files";
 import { exerciseManualRegulatoryOwner } from "../test-support/manual-regulatory-owner";
-import { exercisePremiumManualTemplate } from "../test-support/manual-premium-template";
+import {
+  exercisePremiumFormDocument,
+  exercisePremiumManualTemplate,
+} from "../test-support/manual-premium-template";
 import { exercisePremiumPriceCommand } from "../test-support/premium-price-command";
 import { exerciseOwnerRuleRoutes } from "../test-support/owner-rule-routes";
 import {
@@ -786,6 +789,11 @@ test(
         );
         assert.deepEqual(await publicLists(), shownBefore);
       },
+    );
+    // Last, so that the editions it releases are not found by title when the retained drafts are filed.
+    await t.test(
+      "a premium form starts only from an edition the workspace bought with its wording, under its own verified order, which the document keeps",
+      () => exercisePremiumFormDocument(call, editor),
     );
     assert.deepEqual(
       await billing(),

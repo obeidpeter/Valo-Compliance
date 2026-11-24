@@ -1,8 +1,8 @@
 import { serializeRevision } from "./valo-revision-codec";
 import { randomUUID } from "node:crypto";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import type { db, valoDocumentRevisions, valoDocuments } from "@workspace/db";
-import { baselineTemplates, sha256 } from "@workspace/valo-core";
+import { sha256 } from "@workspace/valo-core";
 import { documentInput, documentUpdate } from "../../lib/valo-validation";
 import { z } from "zod";
 import { guidedDataFromBlocks, guidedFieldIssue } from "@workspace/valo-core/guided-runtime";
@@ -11,10 +11,11 @@ import { GUIDED_SPECS_V2 } from "@workspace/valo-core/guided-specs-v2";
 import { StartFormDocumentBody } from "@workspace/api-zod";
 import { ValoProblem } from "../../platform/valo-problem";
 import {
+  assertFormAvailable,
   assertPlainContent,
   checkFormContent,
   documentFormText,
-  freeFormEdition,
+  formEdition,
   startingAnswers,
 } from "./valo-form-documents";
 import { singleRow } from "../../platform/rows";
@@ -27,26 +28,6 @@ import {
   type WorkspaceActor,
 } from "../workspaces";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
-/** The premium forms (TPL-13 to TPL-17) by template, with the title the staff library registers. */
-const premiumForms = new Map(
-  baselineTemplates.filter((t) => t.guided && t.access === "premium").map((t) => [t.id, t.title]),
-);
-/** A workspace may start a premium form, or add one to a document, only while it holds a verified
- * purchase of a live edition of its template (forms v2, slice 1). The database function answers for
- * the workspace this transaction is scoped to and for nothing else. A document already made stays the
- * customer's, and keeps saving and making files (the finishing plan's delegated decision 3). */
-async function assertFormAvailable(tx: Tx, templateId: string) {
-  const title = premiumForms.get(templateId);
-  if (title === undefined) return;
-  const { rows } = await tx.execute<{ held: boolean }>(
-    sql`select public.valo_workspace_holds_template(${templateId}, ${title}) as held`,
-  );
-  if (rows[0]?.held !== true)
-    throw new ValoProblem(
-      403,
-      "This form comes with a template you buy. Buy the template first, then start the document here. Your other documents are unchanged.",
-    );
-}
 function serialize(
   document: typeof valoDocuments.$inferSelect,
   revision: typeof valoDocumentRevisions.$inferSelect,
@@ -260,7 +241,7 @@ export async function startFormDocument(actor: WorkspaceActor, raw: unknown) {
   const { db, valoDocuments } = await import("@workspace/db");
   const { document, revision } = await db.transaction(async (tx) => {
     await authorizeWorkspaceWrite(tx, actor);
-    const form = await freeFormEdition(tx, templateId);
+    const form = await formEdition(tx, templateId);
     await limitWorkspaceWrite(tx, actor, "document");
     let answers;
     if (formAnswers) answers = startingAnswers(form.spec, formAnswers);
@@ -285,6 +266,8 @@ export async function startFormDocument(actor: WorkspaceActor, raw: unknown) {
           formVersion: 2,
           formEdition: form.edition,
           formDigest: form.digest,
+          // A premium form's record names the workspace's own order it was started under (DOC-007).
+          formOrder: form.purchase,
         })
         .returning(),
     );
@@ -294,9 +277,10 @@ export async function startFormDocument(actor: WorkspaceActor, raw: unknown) {
   return serialize(document, revision);
 }
 /**
- * The templates whose form a workspace can start now: each free template with a v2 form and a released
- * edition of its wording that the form fits, with that edition's version. The starter starts any
- * other template with its questions only, so that no start is refused in the ordinary course.
+ * The templates whose form a workspace can start now, with the version of the edition each starts
+ * from: each free template with a v2 form and a released edition of its wording that the form fits,
+ * and each premium one whose bought edition has such wording. The starter starts any other template
+ * with its questions only, so that no start is refused in the ordinary course.
  */
 export async function listFormTemplates(actor: WorkspaceActor) {
   const { db } = await import("@workspace/db");
@@ -305,11 +289,12 @@ export async function listFormTemplates(actor: WorkspaceActor) {
     const templates: { templateId: string; editionVersion: number }[] = [];
     for (const templateId of Object.keys(GUIDED_SPECS_V2)) {
       try {
-        const form = await freeFormEdition(tx, templateId);
+        const form = await formEdition(tx, templateId);
         templates.push({ templateId, editionVersion: form.editionVersion });
       } catch (error) {
-        // No released edition, one the form does not fit, or a premium template: not startable.
-        if (!(error instanceof ValoProblem) || (error.status !== 404 && error.status !== 409)) throw error;
+        // No released edition, one the form does not fit, or a premium template the workspace has
+        // not bought: not startable.
+        if (!(error instanceof ValoProblem) || ![403, 404, 409].includes(error.status)) throw error;
       }
     }
     return { templates };

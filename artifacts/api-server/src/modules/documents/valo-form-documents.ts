@@ -31,6 +31,26 @@ const formTextOf = (source: string) => {
   }
 };
 
+/** The premium forms (TPL-13 to TPL-17) by template, with the title the staff library registers. */
+const premiumForms = new Map(
+  baselineTemplates.filter((t) => t.guided && t.access === "premium").map((t) => [t.id, t.title]),
+);
+/** A workspace may start a premium form, or add one to a document, only while it holds a verified
+ * purchase of a live edition of its template (forms v2, slice 1). The database function answers for
+ * the workspace this transaction is scoped to and for nothing else. A document already made stays the
+ * customer's, and keeps saving and making files (the finishing plan's delegated decision 3). */
+export async function assertFormAvailable(tx: Tx, templateId: string) {
+  const title = premiumForms.get(templateId);
+  if (title === undefined) return;
+  const { rows } = await tx.execute<{ held: boolean }>(
+    sql`select public.valo_workspace_holds_template(${templateId}, ${title}) as held`,
+  );
+  if (rows[0]?.held !== true)
+    throw new ValoProblem(
+      403,
+      "This form comes with a template you buy. Buy the template first, then start the document here. Your other documents are unchanged.",
+    );
+}
 /** A document that was not started from a form holds none of a form document's parts. */
 export function assertPlainContent(content: Content) {
   if (
@@ -45,33 +65,54 @@ export function assertPlainContent(content: Content) {
 }
 
 /**
- * The released edition a workspace may start a free template's form from: the most recently
- * released one with form text, by the template's registered title, and only while the form fits it.
+ * The released edition a workspace may start a template's form from, by the template's registered
+ * title, and only while the form fits it. For a free template, the most recently released edition
+ * with form text. For a premium template (slice 6), the most recently released one with form text
+ * that the workspace bought, with the order it was bought under: a workspace that holds no live
+ * edition is told to buy the template first, and one whose edition has no form text yet starts the
+ * questions-only form, as for a free template.
  */
-export async function freeFormEdition(tx: Tx, templateId: string) {
+export async function formEdition(tx: Tx, templateId: string) {
   const spec = GUIDED_SPECS_V2[templateId as GuidedTemplateId];
   const template = baselineTemplates.find((entry) => entry.id === templateId);
-  if (!spec || !template || template.access !== "free")
+  if (!spec || !template)
     throw new ValoProblem(
       404,
       "This template has no form that fills its wording yet. Start its questions-only form instead.",
     );
-  const { rows } = await tx.execute<{ edition: string; version: number; form_text: string }>(
-    sql`select edition, version, form_text from public.valo_free_form_edition(${template.title})`,
+  const premium = template.access === "premium";
+  const { rows } = await tx.execute<{
+    edition: string;
+    version: number;
+    form_text: string;
+    purchase: string | null;
+  }>(
+    premium
+      ? sql`select edition, version, form_text, purchase from public.valo_premium_form_edition(${template.title})`
+      : sql`select edition, version, form_text, null::uuid as purchase from public.valo_free_form_edition(${template.title})`,
   );
   const row = rows[0];
-  if (!row)
+  if (!row) {
+    if (premium) await assertFormAvailable(tx, templateId);
     throw new ValoProblem(
       409,
       "This template's wording is not released for its form yet. Start its questions-only form instead.",
     );
+  }
   const text = formTextOf(row.form_text);
   if (!text || formFit(spec, text).length > 0)
     throw new ValoProblem(
       409,
       "This template's released wording does not match its form yet. Start its questions-only form instead.",
     );
-  return { spec, text, edition: row.edition, editionVersion: row.version, digest: sha256(row.form_text) };
+  return {
+    spec,
+    text,
+    edition: row.edition,
+    editionVersion: row.version,
+    digest: sha256(row.form_text),
+    purchase: row.purchase,
+  };
 }
 
 /** The edition one of the scoped workspace's documents was started with, and its form text. */

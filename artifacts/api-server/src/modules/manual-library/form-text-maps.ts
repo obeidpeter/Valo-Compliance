@@ -418,6 +418,54 @@ export const FORM_TEXT_MAPS: Readonly<Partial<Record<GuidedTemplateId, readonly 
       why: "The timing and dispute paragraphs print in their places in the letter above, chosen from the answers; the rest is direction for the form and its checks, not wording of the letter.",
     },
   ],
+  "TPL-17": [
+    {
+      from: "[Employer legal name and address]  \n[Date] · Reference [ ]\n\nDear [Candidate name],",
+      to: "[Employer legal name and address]{=employer}\n[Date]{=issueDate} · Reference [ ]{=documentNumber}\n\n[ ]{=candidate}\n\nDear [Candidate name]{=recipientName},",
+      why: "The candidate's name and address print above the greeting, where a letter names its reader; the draft has no placeholder for them there, so this one prints as [ ] until they are given.",
+    },
+    {
+      from: "We are pleased to offer you the position of **[Role]** with [Employer], reporting to [Role/person]. The proposed start date is [Date] and the normal work location or remote arrangement is [ ]. The principal duties are set out in [attached role description and version].",
+      to: "We are pleased to offer you the position of [Role]{=role} with [Employer]{=issuerName}, reporting to [Role/person]{=reportsTo}. The proposed start date is [Date]{=startDate} and the normal work location or remote arrangement is [ ]{=workplace}.\n\nThe principal duties are set out in [attached role description and version]{=duties}.",
+      why: "The duties print as a paragraph of their own, so that no paragraph can grow past what a document block holds.",
+    },
+    {
+      from: "| Item | Offer detail |\n|---|---|\n| Employment duration | [Indefinite / fixed term with stated end and basis] |\n| Gross basic pay and currency | [Amount per period and calculation basis] |\n| Payment cycle and method | [ ] |\n| Additional allowances or variable pay | [Specific terms or none offered] |\n| Working days, hours, breaks and additional-work arrangements | [ ] |\n| Annual leave and other leave/pay terms | [Complete validated terms or exact attached schedule] |\n| Pension and other applicable benefits | [Complete validated arrangements or exact attached schedule] |\n| Notice and any initial review period | [Validated terms; no default probation] |",
+      to: "- Employment duration: {?termType=open}Indefinite{/?}{?termType=fixed}fixed term with stated end [ ]{=endDate}{/?}{?termType=}[Indefinite / fixed term with stated end and basis]{/?}\n\n- Gross basic pay and currency: [Amount]{=grossPayKobo} per [period]{=payPeriod}\n\n- Payment cycle and method: [ ]{=payBasis}\n\n- Additional allowances or variable pay: [Specific terms or none offered]{=allowances}\n\n- Working days, hours, breaks and additional-work arrangements: [ ]{=hours}\n\n- Annual leave and other leave/pay terms: [Complete validated terms or exact attached schedule]{=leaveTerms}\n\n- Pension and other applicable benefits: [Complete validated arrangements or exact attached schedule]{=benefits}\n\n- Notice and any initial review period: [Validated terms]{=terminationTerms}{?probation=no}; no default probation{/?}{?probation=}; no default probation{/?}\n\n{?probation=yes}\n- [ ]{=probationTerms}\n{/?}",
+      why: 'The proposed terms print one to a line, each a list of its own, since each answer can be longer than a table cell holds, so the table\'s headings go. The duration prints as the choice made, with a fixed term\'s end date; v1 asks no basis for a fixed term. The gross pay prints in naira for its period; v1 asks how it is calculated, its cycle and its method in one answer, printed under "Payment cycle and method". The notice terms print with "no default probation" while no review period is agreed or the question is unanswered; an agreed one prints on its own line below them.',
+    },
+    {
+      from: "This offer is accompanied by [employment contract reference/version and schedules].",
+      to: "This offer is accompanied by [employment contract reference/version and schedules]{=contractReference}.",
+    },
+    {
+      from: "The specific conditions still to be completed are [condition, responsible party, appropriate evidence and agreed timetable], or [no outstanding conditions]. We will communicate the outcome of each condition accurately.",
+      to: "{?conditions=listed}The specific conditions still to be completed are [condition, responsible party, appropriate evidence and agreed timetable]{=conditionDetails}. We will communicate the outcome of each condition accurately.{/?}{?conditions=none}The specific conditions still to be completed: no outstanding conditions.{/?}{?conditions=}The specific conditions still to be completed are [condition, responsible party, appropriate evidence and agreed timetable], or [no outstanding conditions]. We will communicate the outcome of each condition accurately.{/?}",
+      why: "The conditions print as the choice made: the conditions listed, with the promise to report each outcome, or that there are no outstanding conditions. The sentence prints as the draft has it while the question is unanswered.",
+    },
+    {
+      from: "Please contact [name/channel] to ask questions or provide your response by [employer-selected response date, if supplied].",
+      to: "Please contact [name/channel]{=representative} to ask questions or provide your response{?responseDate} by [employer-selected response date, if supplied]{=responseDate}{/?}.",
+      why: "The response date is optional: it prints once it is given.",
+    },
+    {
+      from: "use [actual agreed response method].",
+      to: "use [actual agreed response method]{=responseMethod}.",
+    },
+    {
+      from: "Your proposed first-day contact is [ ], and the practical joining arrangements are [ ].",
+      to: "Your proposed first-day contact is [ ]{=firstDayContact}, and the practical joining arrangements are [ ]{=joiningArrangements}.",
+    },
+    {
+      from: "[Authorised employer representative]  \n[Role]  \n[Contact]",
+      to: "[Authorised employer representative]{=representative}",
+      why: "v1 asks for the authorised representative and how to reach them in one answer, which signs the letter here, so the lines for their role and contact go.",
+    },
+    {
+      from: "Candidate response: [accepted stated version / questions / changes requested / declined / no response recorded]  \nDate and response reference: [ ]  \nOutstanding matter: [ ]  \nFinal start arrangements confirmed on: [actual date, if confirmed]",
+      to: "Candidate response: [accepted stated version / questions / changes requested / declined / no response recorded]{=responseStatus}\nDate and response reference: [ ]{=responseReference}\nOutstanding matter: [ ]{=outstandingMatter}\nFinal start arrangements confirmed on: [actual date, if confirmed]{=startConfirmed}",
+    },
+  ],
 };
 
 /** Applies a map's changes to a draft, each to text that occurs exactly once. */
