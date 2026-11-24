@@ -294,7 +294,8 @@ function FieldInput({
   onChange,
   spoken,
 }: {
-  field: GuidedField;
+  /** A question, with the example a v2 form may give it (forms v2: a hint, never saved or printed). */
+  field: GuidedField & { example?: string | undefined };
   id: string;
   value: string;
   error?: string | undefined;
@@ -304,6 +305,7 @@ function FieldInput({
   spoken?: string;
 }) {
   const helpId = id + "-help",
+    exampleId = id + "-example",
     errId = id + "-error";
   // A required question nobody has answered yet is marked as still needed, not as a mistake. It is
   // shown as one only once the customer has been to it and left it empty. A wrong answer is shown
@@ -318,7 +320,14 @@ function FieldInput({
     if (!event.currentTarget.contains(event.relatedTarget)) setVisited(true);
   };
   const described =
-    [help && helpId, shown && errId, money && id + "-ngn"].filter(Boolean).join(" ") || undefined;
+    [help && helpId, f.example && exampleId, shown && errId, money && id + "-ngn"]
+      .filter(Boolean)
+      .join(" ") || undefined;
+  const example = f.example && (
+    <p id={exampleId} className="hint" data-testid={"example-" + id}>
+      For example: {f.example}
+    </p>
+  );
   const common = {
     id,
     disabled,
@@ -376,6 +385,7 @@ function FieldInput({
             {help}
           </p>
         )}
+        {example}
         {shown && (
           <p id={errId} className="hint !text-destructive">
             {shown}
@@ -461,6 +471,7 @@ function FieldInput({
           {help}
         </p>
       )}
+      {example}
       {shown && (
         <p id={errId} className="hint !text-destructive">
           {shown}

@@ -3215,6 +3215,13 @@
       "proves": "The invoice's (TPL-01) annotation map turns its hash-checked retained draft into form text that the invoice's second-version form fits with no problem, every placeholder filled by one of v1's questions, a calculation or a new question listed with its reason, so none is left out silently; the text is only proposed for the staff library and nothing is released."
     },
     {
+      "requirement": "EDT-001",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/guided-fields.test.tsx",
+      "test": "a v2 form's question shows its example under its input, and the input is described by it",
+      "proves": "Drawn from the offer letter's second-version form, each question that has an example shows it under its input as \"For example: ...\", and the input is described by that hint for a screen reader; the questions-only form shows no example."
+    },
+    {
       "requirement": "EDT-002",
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/manual-library/form-text-maps.test.ts",
