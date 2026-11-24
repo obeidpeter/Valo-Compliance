@@ -86,13 +86,14 @@ test("no copy is offered of a document whose saved questions cannot be read", ()
   assert.equal(anotherLike(altered), null);
 });
 
-test("an invoice started from its form is made like another through its form: every answer is kept but its reference and its dates, and nothing is invented", () => {
+test("an invoice started from its form is made like another through its form: every answer is kept but its references and its dates, and nothing is invented", () => {
   const answers = emptyFormData(GUIDED_SPECS_V2["TPL-01"]!);
   answers.values = {
     ...answers.values,
     issuerName: "Synthetic Trading Ltd",
     recipientName: "Synthetic Customer Enterprises",
     documentNumber: "INV-0007",
+    relatedReference: "SYN-PO-12",
     issueDate: "2026-11-18",
     dueDate: "2026-12-02",
     billingBasis: "Synthetic supplies",
@@ -106,7 +107,7 @@ test("an invoice started from its form is made like another through its form: ev
   const copied = anotherFormLike(content)!;
   assert.deepEqual(copied, {
     ...answers,
-    values: { ...answers.values, documentNumber: "", issueDate: "", dueDate: "" },
+    values: { ...answers.values, documentNumber: "", relatedReference: "", issueDate: "", dueDate: "" },
   });
   // The copy is the new document's own: changing it leaves the saved answers as they were.
   copied.tables.items![0]!.description = "Changed";

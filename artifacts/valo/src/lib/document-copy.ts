@@ -29,11 +29,15 @@ export function anotherLike(content: CanonicalDocument): CanonicalDocument | nul
   return compileGuidedContent({ ...answers, values }, content) as CanonicalDocument;
 }
 
+/** The questions that name one transaction, left blank in a copy. */
+const REFERENCES: readonly string[] = ["documentNumber", "relatedReference"];
+
 /**
  * The answers a new form document (forms v2) starts with when it is made like a saved one: all of
- * the saved one's answers, except its reference and its dates, left blank for the customer to give.
- * The new document fills the wording of its template's edition released at the time. Null for a
- * document not made from a v2 form, or from a form this site does not have.
+ * the saved one's answers, except its references and its dates, left blank for the customer to give.
+ * A reference names one transaction: the document's own, and the order, quotation or project a v2
+ * invoice relates to. The new document fills the wording of its template's edition released at the
+ * time. Null for a document not made from a v2 form, or from a form this site does not have.
  */
 export function anotherFormLike(content: CanonicalDocument): GuidedDataV2 | null {
   const answers = content.formAnswers;
@@ -41,7 +45,7 @@ export function anotherFormLike(content: CanonicalDocument): GuidedDataV2 | null
   if (!answers || !spec) return null;
   const values = { ...answers.values };
   for (const field of spec.fields)
-    if (field.type === "date" || field.id === "documentNumber") values[field.id] = "";
+    if (field.type === "date" || REFERENCES.includes(field.id)) values[field.id] = "";
   return {
     schemaVersion: 2,
     templateId: spec.templateId,
