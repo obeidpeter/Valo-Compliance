@@ -78,8 +78,13 @@ test("actual export entries and worker startup reject before database, queue or 
       "export const RENDER_VERSION='controlled';export const exportMime=()=>'';export const renderDocument=()=>{globalThis.guardEffects.render++};export const closeRenderer=async()=>{};",
     ],
     ["valo-validation", "export const documentInput={parse:x=>x};"],
-    // The export code reaches the revision codec through the documents module's index.
-    ["documents", "export const serializeRevision=x=>x;"],
+    // The export code reaches the revision codec, and the check that a form document's content is
+    // what its answers make, through the documents module's index. The check reads the database, so
+    // reaching it counts as an effect and stops the work.
+    [
+      "documents",
+      "export const serializeRevision=x=>x;export const checkFormContent=async()=>{globalThis.guardEffects.services++;throw Error('FORM_CHECK_EFFECT')};",
+    ],
     ["logger", "export const logger={info(){},warn(){},error(){}};"],
     // The worker reaches the reminder worker through the tasks module's index.
     ["tasks", "export const reconcileDueReminders=async()=>{globalThis.guardEffects.services++};"],
