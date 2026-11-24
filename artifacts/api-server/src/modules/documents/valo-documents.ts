@@ -6,7 +6,15 @@ import { baselineTemplates, sha256 } from "@workspace/valo-core";
 import { documentInput, documentUpdate } from "../../lib/valo-validation";
 import { z } from "zod";
 import { guidedDataFromBlocks } from "@workspace/valo-core/guided-runtime";
+import { emptyFormData, formDocumentContent } from "@workspace/valo-core/guided-runtime-v2";
+import { StartFormDocumentBody } from "@workspace/api-zod";
 import { ValoProblem } from "../../platform/valo-problem";
+import {
+  assertPlainContent,
+  checkFormContent,
+  documentFormText,
+  freeFormEdition,
+} from "./valo-form-documents";
 import { singleRow } from "../../platform/rows";
 import {
   authorizeWorkspaceWrite,
@@ -50,6 +58,11 @@ function serialize(
     updatedAt: revision.createdAt.toISOString(),
     status: "business_draft" as const,
     templateVersion: document.templateVersionId ?? null,
+    // The form a document was started with, which never changes (forms v2).
+    form:
+      document.formEdition && document.formDigest
+        ? { version: 2 as const, edition: document.formEdition, digest: document.formDigest }
+        : null,
   };
 }
 export async function listDocuments(actor: WorkspaceActor) {
@@ -141,6 +154,8 @@ async function createDocumentRecordInTransaction(
 ) {
   const { valoDocuments } = await import("@workspace/db");
   const input = documentInput.parse(raw);
+  // A form document starts only from its form (`startFormDocument`), with its edition recorded.
+  assertPlainContent(input.content);
   const id = randomUUID();
   await authorizeWorkspaceWrite(tx, actor);
   const form = guidedDataFromBlocks(input.content.blocks);
@@ -198,6 +213,11 @@ export async function saveDocument(actor: WorkspaceActor, id: string, raw: unkno
           eq(valoDocumentRevisions.revision, expectedRevision),
         ),
       );
+    // A form document's content is exactly what its answers make from its edition; any other
+    // document holds no form document's parts.
+    if (existing.formEdition && existing.formDigest)
+      await checkFormContent(tx, { id, formDigest: existing.formDigest }, input.content);
+    else assertPlainContent(input.content);
     if (current?.content.financialInput && !input.content.financialInput)
       throw new ValoProblem(
         422,
@@ -224,4 +244,55 @@ export async function saveDocument(actor: WorkspaceActor, id: string, raw: unkno
     return { document: updatedDocument, revision: savedRevision };
   });
   return serialize(document, revision);
+}
+/**
+ * Starts a document from a free template's form (forms v2): from the most recently released edition
+ * of its wording, while the form fits it, with the answers empty. The document records the edition
+ * and its text's SHA-256, which never change.
+ */
+export async function startFormDocument(actor: WorkspaceActor, raw: unknown) {
+  const { templateId } = StartFormDocumentBody.strict().parse(raw);
+  const { db, valoDocuments } = await import("@workspace/db");
+  const { document, revision } = await db.transaction(async (tx) => {
+    await authorizeWorkspaceWrite(tx, actor);
+    const form = await freeFormEdition(tx, templateId);
+    await limitWorkspaceWrite(tx, actor, "document");
+    const { unfilled: _unfilled, ...content } = formDocumentContent(
+      form.spec,
+      form.text,
+      emptyFormData(form.spec),
+    );
+    const input = documentInput.parse({ title: form.spec.title, content });
+    const id = randomUUID();
+    const document = singleRow(
+      await tx
+        .insert(valoDocuments)
+        .values({
+          id,
+          workspaceId: actor.workspaceId,
+          currentRevision: 1,
+          formVersion: 2,
+          formEdition: form.edition,
+          formDigest: form.digest,
+        })
+        .returning(),
+    );
+    const revision = await appendRevision(tx, actor, id, 1, input);
+    return { document, revision };
+  });
+  return serialize(document, revision);
+}
+/** The form text of the edition a workspace's document was started with, for its editor to fill. */
+export async function getDocumentForm(actor: WorkspaceActor, id: string) {
+  const { db, valoDocuments } = await import("@workspace/db");
+  const form = await db.transaction(async (tx) => {
+    // The database function answers only for the scoped workspace; the workspace filter stays too.
+    const [document] = await tx
+      .select({ id: valoDocuments.id })
+      .from(valoDocuments)
+      .where(and(eq(valoDocuments.id, id), eq(valoDocuments.workspaceId, actor.workspaceId)));
+    return document ? documentFormText(tx, id) : undefined;
+  });
+  if (!form) throw new ValoProblem(404, "This document is not made from a form.");
+  return { edition: form.edition, editionVersion: form.version, title: form.title, formText: form.form_text };
 }

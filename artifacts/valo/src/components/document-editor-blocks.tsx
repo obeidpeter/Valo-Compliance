@@ -21,6 +21,7 @@ const BLOCK_NAMES: Record<DocumentBlockType, string> = {
   paragraph: "Paragraph",
   list: "List",
   table: "Table",
+  heading: "Heading",
 };
 
 export function SaveIndicator({

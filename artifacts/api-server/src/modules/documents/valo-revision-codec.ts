@@ -6,20 +6,28 @@ type CanonicalDocument = z.infer<typeof CreateDocumentBody>;
  * The persisted extension fields identify V2 without changing historic rows. */
 export function serializeRevision(input: CanonicalDocument): string {
   const m = input.content.financialInput;
+  const c = input.content;
+  // A form document (forms v2) holds parts V1 never had: its answers, chosen passages, headings and
+  // header rows. It is hashed as V2, so no V1 hash changes.
+  const formDocument =
+    c.formAnswers !== undefined ||
+    c.selectedClauses.length > 0 ||
+    c.blocks.some((b) => b.type === "heading" || b.level !== undefined || b.headerRows !== undefined);
   const extended =
-    !!m &&
-    ([
-      "deliveryKobo",
-      "discountPercent",
-      "taxPercent",
-      "taxBaseKobo",
-      "currency",
-      "requestedTotalKobo",
-      "disputedKobo",
-      "optionalLines",
-    ].some((key) => (m as unknown as Record<string, unknown>)[key] !== undefined) ||
-      m.lines.some((l) => l.currency !== undefined) ||
-      m.paymentRecord?.duplicatesConfirmed !== undefined);
+    formDocument ||
+    (!!m &&
+      ([
+        "deliveryKobo",
+        "discountPercent",
+        "taxPercent",
+        "taxBaseKobo",
+        "currency",
+        "requestedTotalKobo",
+        "disputedKobo",
+        "optionalLines",
+      ].some((key) => (m as unknown as Record<string, unknown>)[key] !== undefined) ||
+        m.lines.some((l) => l.currency !== undefined) ||
+        m.paymentRecord?.duplicatesConfirmed !== undefined));
   if (!extended) return serializeRevisionV1(input);
   const data = JSON.parse(JSON.stringify(input)),
     validated = JSON.parse(JSON.stringify(CreateDocumentBody.parse(input)));

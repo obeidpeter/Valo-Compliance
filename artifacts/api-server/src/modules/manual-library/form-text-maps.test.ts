@@ -2,7 +2,16 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { parseFormText } from "@workspace/valo-core/form-text";
 import type { GuidedTemplateId } from "@workspace/valo-core/guided";
-import { compileForm, emptyFormData, formFit } from "@workspace/valo-core/guided-runtime-v2";
+import {
+  compileForm,
+  emptyFormData,
+  formDocumentContent,
+  formFit,
+} from "@workspace/valo-core/guided-runtime-v2";
+import { GUIDED_DOCUMENT_NOTE } from "@workspace/valo-core/guided-runtime";
+import { documentInput } from "../../lib/valo-validation";
+import { controlledHtml } from "../../lib/valo-render";
+import { serializeRevision } from "../documents";
 import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
 import { GUIDED_CHANGES_V2, GUIDED_SPECS_V2 } from "@workspace/valo-core/guided-specs-v2";
 import type { GuidedSpecV2 } from "@workspace/valo-core/guided-v2";
@@ -179,4 +188,49 @@ test("an invoice's answers fill its own wording: items, discount and tax rows, t
   );
   const over = compileForm(spec, text, { ...data, values: { ...data.values, discountKobo: "999999999" } });
   assert.ok(over.unfilled.includes("calc.total"));
+});
+
+test("an invoice form document is saved as its answers make it, hashed as V2, and its file prints the template's wording with only its note among its fields", async () => {
+  const spec = GUIDED_SPECS_V2["TPL-01"]!;
+  const text = parseFormText((await proposedFormText("TPL-01"))!);
+  const data = emptyFormData(spec);
+  data.values = {
+    ...data.values,
+    issuerName: "Synthetic Supplies Ltd",
+    recipientName: "Synthetic Buyer Ltd",
+    documentNumber: "SYN-INV-004",
+    issueDate: "2026-11-30",
+    dueDate: "2026-11-02",
+    billingBasis: "Synthetic supplies",
+    taxMode: "none",
+    discountMode: "none",
+  };
+  const { unfilled, ...content } = formDocumentContent(spec, text, data);
+  // The document's own fields come from the answers as v1 takes them: a payment date before the
+  // issue date is left out.
+  assert.deepEqual(content.fields, {
+    issuerName: "Synthetic Supplies Ltd",
+    recipientName: "Synthetic Buyer Ltd",
+    documentNumber: "SYN-INV-004",
+    issueDate: "2026-11-30",
+    dueDate: "",
+    notes: GUIDED_DOCUMENT_NOTE,
+  });
+  assert.deepEqual(content.formAnswers, data);
+  assert.deepEqual(content.selectedClauses, ["taxMode=none", "discountMode=none"]);
+  assert.ok(unfilled.includes("items.description"));
+  const tables = content.blocks.filter((b) => b.type === "table");
+  assert.ok(tables.length === 3 && tables.every((t) => t.headerRows === 1));
+  // The contract and its checks take it, and it is hashed as V2, so no V1 hash changes.
+  const input = documentInput.parse({ title: "Invoice", content });
+  assert.match(serializeRevision(input), /^valo-document-revision-v2\n/);
+  // Its file prints the template's own wording with its header rows, and of the document's fields
+  // only its note: the names and dates are in the wording.
+  const html = controlledHtml({ title: "Invoice", content }, 1);
+  assert.match(
+    html,
+    /<thead><tr><th>Invoice reference<\/th><th>Issue date<\/th><th>Currency<\/th><\/tr><\/thead>/,
+  );
+  assert.match(html, /Bill to: Synthetic Buyer Ltd/);
+  assert.equal((html.match(/class="field"/g) ?? []).length, 1);
 });

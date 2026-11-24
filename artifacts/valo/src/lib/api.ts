@@ -80,7 +80,7 @@ function guidedIssueSelector(spec: GuidedSpec, key: string): string | undefined 
 /** What a document still needs before it is complete, with jump selectors where a control exists. */
 export function missingFieldItems(content: CanonicalDocument): MissingFieldItem[] {
   const out: MissingFieldItem[] = [];
-  let visible = content.blocks;
+  let visible: readonly DocumentBlock[] = content.blocks;
   try {
     const answers = guidedDataFromBlocks(content.blocks);
     if (answers) {
@@ -93,7 +93,8 @@ export function missingFieldItems(content: CanonicalDocument): MissingFieldItem[
             : { label: neededLine(spec, key, message) },
         );
       }
-      visible = guidedRenderableBlocks(content);
+      // A v1 form's blocks are the contract's own; its runtime types them more loosely.
+      visible = guidedRenderableBlocks(content) as DocumentBlock[];
     } else {
       (Object.keys(FIELD_LABELS) as (keyof CanonicalDocument["fields"])[]).forEach((k) => {
         if (!content.fields[k]?.trim()) out.push({ label: FIELD_LABELS[k], selector: `#f-${k}` });

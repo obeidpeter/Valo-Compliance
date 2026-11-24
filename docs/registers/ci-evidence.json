@@ -3213,6 +3213,20 @@
       "file": "artifacts/api-server/src/routes/valo-manual-library.integration.test.ts",
       "test": "manual publishing through staff HTTP routes and public readers",
       "proves": "Against PostgreSQL, a published library template's form text appears in none of the public template, catalogue, resource and discovery responses nor in the public entry reader, while staff read it with its fit to the template's form; form text on a guide, or that the form-text grammar cannot read, is refused."
+    },
+    {
+      "requirement": "DOC-005",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/documents/valo-workspace-documents.integration.test.ts",
+      "test": "development PostgreSQL tenant, concurrency, history and durable-ticket proof",
+      "proves": "Against PostgreSQL, an invoice document started from its form records the released staff-library edition and the SHA-256 of its wording, which the database refuses to change; another workspace cannot read that wording, and after the edition is withdrawn no new form starts from it while the document already made keeps its edition and saves."
+    },
+    {
+      "requirement": "EDT-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/manual-library/form-text-maps.test.ts",
+      "test": "an invoice form document is saved as its answers make it, hashed as V2, and its file prints the template's wording with only its note among its fields",
+      "proves": "An invoice form document holds its answers, its chosen passages, its headings and tables with header rows, and its own fields taken from the answers; the contract accepts it, it is hashed in the V2 revision format so no V1 hash changes, and its file prints the template's wording with only its note among the document's fields."
     }
   ]
 }

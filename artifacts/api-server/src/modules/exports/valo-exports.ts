@@ -1,5 +1,5 @@
 import { reconcileExportOrphans } from "./valo-export-recovery";
-import { serializeRevision } from "../documents";
+import { checkFormContent, serializeRevision } from "../documents";
 import { randomUUID } from "node:crypto";
 import { and, eq, gt, isNull, ne, or, desc } from "drizzle-orm";
 import {
@@ -498,6 +498,23 @@ export async function executeExport(
             eq(valoDocumentRevisions.documentId, job.documentId),
           ),
         );
+      // A form document's file prints only what its answers make from the edition it was started
+      // with (forms v2): checked again here, before rendering.
+      if (row && (row.content as { formAnswers?: unknown }).formAnswers !== undefined) {
+        const { valoDocuments } = await import("@workspace/db");
+        await db.transaction(async (tx) => {
+          const [document] = await tx
+            .select({ formDigest: valoDocuments.formDigest })
+            .from(valoDocuments)
+            .where(and(eq(valoDocuments.id, job.documentId), eq(valoDocuments.workspaceId, workspaceId)));
+          if (!document?.formDigest) throw new Error("FORM_RECORD_MISSING");
+          await checkFormContent(
+            tx,
+            { id: job.documentId, formDigest: document.formDigest },
+            documentInput.parse({ title: row.title, content: row.content }).content,
+          );
+        });
+      }
       return row;
     });
     // PostgreSQL JSONB reorders object keys. Reconstruct the same validated v1 input

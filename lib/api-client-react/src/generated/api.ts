@@ -58,6 +58,7 @@ import type {
   DisputeInformationInput,
   DisputeInformationList,
   DisputeIntentInput,
+  DocumentFormText,
   DocumentInput,
   DocumentUpdate,
   DownloadPrivacyCaseResult200,
@@ -69,6 +70,7 @@ import type {
   FinanceDisputeLink,
   FinancePaymentConcerns,
   FinanceRefunds,
+  FormDocumentStart,
   GetCommerceReceipt200,
   GetCorrectionNoticesParams,
   GetCustomerSupportCaseParams,
@@ -4253,6 +4255,186 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       > => {
       return useMutation(getSaveDocumentMutationOptions(options), queryClient);
     }
+
+export const getStartFormDocumentUrl = () => {
+
+
+
+
+  return `/api/workspace/form-documents`
+}
+
+/**
+ * Starts a document from a template's form (forms v2): from the most recently released edition of its wording, when the form fits it. The answers start empty.
+ */
+export const startFormDocument = async (formDocumentStart: FormDocumentStart, options?: Parameters<typeof customFetch>[1]): Promise<BusinessDocument> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<BusinessDocument>(getStartFormDocumentUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(formDocumentStart)
+  }
+);}
+
+
+
+
+
+export const getStartFormDocumentMutationKey = () => ['startFormDocument'] as const;
+
+export const getStartFormDocumentMutationOptions = <TError = ErrorType<AuthErrorResponse | WriteLimitResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startFormDocument>>, TError,StartFormDocumentMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof startFormDocument>>, TError,StartFormDocumentMutationVariables, TContext> => {
+
+const mutationKey = getStartFormDocumentMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof startFormDocument>>, StartFormDocumentMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  startFormDocument(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type StartFormDocumentMutationResult = NonNullable<Awaited<ReturnType<typeof startFormDocument>>>
+    export type StartFormDocumentMutationBody = BodyType<FormDocumentStart>
+    export type StartFormDocumentMutationError = ErrorType<AuthErrorResponse | WriteLimitResponse>
+    export type StartFormDocumentMutationVariables = {data: BodyType<FormDocumentStart>}
+
+    /** Starts a document from a template's form (forms v2): from the most recently released edition of its wording, when the form fits it. The answers start empty. */
+export const useStartFormDocument = <TError = ErrorType<AuthErrorResponse | WriteLimitResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startFormDocument>>, TError,StartFormDocumentMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof startFormDocument>>,
+        TError,
+        StartFormDocumentMutationVariables,
+        TContext
+      > => {
+      return useMutation(getStartFormDocumentMutationOptions(options), queryClient);
+    }
+
+export const getGetDocumentFormUrl = (id: string,) => {
+
+
+
+
+  return `/api/workspace/documents/${encodeURIComponent(String(id))}/form`
+}
+
+export const getDocumentForm = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<DocumentFormText> => {
+
+  return customFetch<DocumentFormText>(getGetDocumentFormUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetDocumentFormQueryKey = (id: string,) => {
+    return [
+    "getDocumentForm", ...(id ? [id] : [])
+    ] as const;
+    }
+
+
+export const getGetDocumentFormQueryOptions = <TData = Awaited<ReturnType<typeof getDocumentForm>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDocumentForm>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetDocumentFormQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDocumentForm>>> = ({ signal }) => getDocumentForm(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDocumentForm>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetDocumentFormQueryResult = NonNullable<Awaited<ReturnType<typeof getDocumentForm>>>
+export type GetDocumentFormQueryError = ErrorType<AuthErrorResponse | QuotaErrorResponse>
+
+
+export function useGetDocumentForm<TData = Awaited<ReturnType<typeof getDocumentForm>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDocumentForm>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getDocumentForm>>,
+          TError,
+          Awaited<ReturnType<typeof getDocumentForm>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetDocumentForm<TData = Awaited<ReturnType<typeof getDocumentForm>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDocumentForm>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getDocumentForm>>,
+          TError,
+          Awaited<ReturnType<typeof getDocumentForm>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetDocumentForm<TData = Awaited<ReturnType<typeof getDocumentForm>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDocumentForm>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetDocumentForm<TData = Awaited<ReturnType<typeof getDocumentForm>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDocumentForm>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetDocumentFormQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getListDocumentRevisionsUrl = (id: string,) => {
 

@@ -9,13 +9,20 @@ import type { CanonicalDocumentFields } from './canonicalDocumentFields';
 import type { CanonicalDocumentFormatting } from './canonicalDocumentFormatting';
 import type { DocumentBlock } from './documentBlock';
 import type { FinancialInput } from './financialInput';
+import type { FormAnswers } from './formAnswers';
 
 export interface CanonicalDocument {
   fields: CanonicalDocumentFields;
   /** @maxItems 100 */
   blocks: DocumentBlock[];
-  /** @maxItems 0 */
+  /**
+     * The passages a form document's answers keep, as question=option. Empty for every other document.
+     * @maxItems 40
+     * @items.maxLength 120
+     * @items.pattern ^[a-z][A-Za-z0-9]*=[a-z0-9_]+$
+     */
   selectedClauses: string[];
+  formAnswers?: FormAnswers;
   financialInput?: FinancialInput;
   formatting: CanonicalDocumentFormatting;
 }

@@ -163,6 +163,28 @@ export const DocumentBlockType = {
   paragraph: 'paragraph',
   list: 'list',
   table: 'table',
+  heading: 'heading',
+} as const;
+
+/**
+ * A heading's level. Only a form document (forms v2) has headings.
+ */
+export type DocumentBlockLevel = typeof DocumentBlockLevel[keyof typeof DocumentBlockLevel];
+
+
+export const DocumentBlockLevel = {
+  NUMBER_2: 2,
+  NUMBER_3: 3,
+} as const;
+
+/**
+ * A table's first row is its header, repeated on each page. Only a form document's tables have one.
+ */
+export type DocumentBlockHeaderRows = typeof DocumentBlockHeaderRows[keyof typeof DocumentBlockHeaderRows];
+
+
+export const DocumentBlockHeaderRows = {
+  NUMBER_1: 1,
 } as const;
 
 export interface DocumentBlock {
@@ -180,6 +202,10 @@ export interface DocumentBlock {
      * @items.items.maxLength 1000
      */
   rows: string[][];
+  /** A heading's level. Only a form document (forms v2) has headings. */
+  level?: DocumentBlockLevel;
+  /** A table's first row is its header, repeated on each page. Only a form document's tables have one. */
+  headerRows?: DocumentBlockHeaderRows;
 }
 
 export type CanonicalDocumentFields = {
@@ -218,14 +244,61 @@ export type CanonicalDocumentFormatting = {
   accent: CanonicalDocumentFormattingAccent;
 };
 
+export type FormAnswersSchemaVersion = typeof FormAnswersSchemaVersion[keyof typeof FormAnswersSchemaVersion];
+
+
+export const FormAnswersSchemaVersion = {
+  NUMBER_2: 2,
+} as const;
+
+export type FormAnswersValues = {[key: string]: string};
+
+export type FormAnswersTablesItem = {[key: string]: string};
+
+export type FormAnswersTables = {[key: string]: FormAnswersTablesItem[]};
+
+/**
+ * A form document's answers (forms v2). Its blocks are exactly what these answers make from the form text of the edition it was started with.
+ */
+export interface FormAnswers {
+  schemaVersion: FormAnswersSchemaVersion;
+  /** @pattern ^TPL-[0-9]{2}$ */
+  templateId: string;
+  values: FormAnswersValues;
+  tables: FormAnswersTables;
+}
+
 export interface CanonicalDocument {
   fields: CanonicalDocumentFields;
   /** @maxItems 100 */
   blocks: DocumentBlock[];
-  /** @maxItems 0 */
+  /**
+     * The passages a form document's answers keep, as question=option. Empty for every other document.
+     * @maxItems 40
+     * @items.maxLength 120
+     * @items.pattern ^[a-z][A-Za-z0-9]*=[a-z0-9_]+$
+     */
   selectedClauses: string[];
+  formAnswers?: FormAnswers;
   financialInput?: FinancialInput;
   formatting: CanonicalDocumentFormatting;
+}
+
+export type DocumentFormVersion = typeof DocumentFormVersion[keyof typeof DocumentFormVersion];
+
+
+export const DocumentFormVersion = {
+  NUMBER_2: 2,
+} as const;
+
+/**
+ * The form a document was started with: its version, the released edition whose form text it fills, and that text's SHA-256. It never changes.
+ */
+export interface DocumentForm {
+  version: DocumentFormVersion;
+  edition: string;
+  /** @pattern ^[0-9a-f]{64}$ */
+  digest: string;
 }
 
 export type BusinessDocumentStatus = typeof BusinessDocumentStatus[keyof typeof BusinessDocumentStatus];
@@ -247,6 +320,7 @@ export interface BusinessDocument {
   status: BusinessDocumentStatus;
   /** @nullable */
   templateVersion: string | null;
+  form: DocumentForm | null;
 }
 
 export type CustomerAIInputTone = typeof CustomerAIInputTone[keyof typeof CustomerAIInputTone];
@@ -1160,6 +1234,18 @@ export interface DocumentUpdate {
      */
   title: string;
   content: CanonicalDocument;
+}
+
+export interface FormDocumentStart {
+  /** @pattern ^TPL-[0-9]{2}$ */
+  templateId: string;
+}
+
+export interface DocumentFormText {
+  edition: string;
+  editionVersion: number;
+  title: string;
+  formText: string;
 }
 
 export type SourceControlAction = {

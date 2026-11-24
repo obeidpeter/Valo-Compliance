@@ -15,7 +15,24 @@ import {
   valoWorkspaces,
 } from "@workspace/db";
 import { createTicket } from "../support";
-import { listDocuments, getDocument, listRevisions, createDocument, saveDocument } from "./valo-documents";
+import {
+  listDocuments,
+  getDocument,
+  getDocumentForm,
+  listRevisions,
+  createDocument,
+  saveDocument,
+  startFormDocument,
+} from "./valo-documents";
+import { serializeRevision } from "./valo-revision-codec";
+import { runInWorkspaceScope, valoManualLibrary, valoStaffAssignments } from "@workspace/db";
+import { sha256 } from "@workspace/valo-core";
+import { parseFormText } from "@workspace/valo-core/form-text";
+import { formDocumentContent } from "@workspace/valo-core/guided-runtime-v2";
+import { GUIDED_SPECS_V2 } from "@workspace/valo-core/guided-specs-v2";
+import type { GuidedDataV2 } from "@workspace/valo-core/guided-v2";
+import { proposedFormText } from "../manual-library/form-text-maps";
+import { GetDocumentResponse } from "@workspace/api-zod";
 import { resolveWorkspace, getWorkspace, saveProfile } from "../workspaces";
 import { syntheticDocument, syntheticProfile } from "../../lib/valo-test-fixtures";
 
@@ -160,6 +177,216 @@ test(
           assert.equal(cases.length, 1, "the enquiry opened exactly one support case for staff");
           assert.equal(cases[0]!.status, "open");
           assert.equal(cases[0]!.workspaceId, a.workspaceId);
+        },
+      );
+      await t.test(
+        "a form document starts from the released invoice edition, saves only what its answers make, and keeps its edition after withdrawal",
+        async () => {
+          const inA = <T>(work: () => Promise<T>) => runInWorkspaceScope(a.workspaceId, work);
+          const inB = <T>(work: () => Promise<T>) => runInWorkspaceScope(b.workspaceId, work);
+          // Only a free template with a v2 form starts one.
+          await assert.rejects(
+            inA(() => startFormDocument(a, { templateId: "TPL-06" })),
+            { status: 404 },
+          );
+          await assert.rejects(
+            inA(() => startFormDocument(a, { templateId: "TPL-13" })),
+            { status: 404 },
+          );
+          // A Content editor releases the invoice's form text in the staff library.
+          const formText = (await proposedFormText("TPL-01"))!;
+          const editor = `synthetic-form-editor-${run}`,
+            edition = randomUUID();
+          await db.insert(valoStaffAssignments).values({
+            id: randomUUID(),
+            identityId: editor,
+            role: "content",
+            grantedBy: "synthetic test",
+            reason: "Synthetic form document test",
+          });
+          await db.insert(valoManualLibrary).values({
+            id: edition,
+            itemId: edition,
+            version: 1,
+            slug: "manual-" + edition,
+            kind: "template",
+            title: "Invoice",
+            body: "Synthetic invoice description",
+            digest: "a".repeat(64),
+            fileFormat: "docx",
+            fileBytes: Buffer.from("synthetic"),
+            formText,
+            createdBy: editor,
+          });
+          await db
+            .update(valoManualLibrary)
+            .set({ state: "published", publishedBy: editor, publishedAt: new Date() })
+            .where(eq(valoManualLibrary.id, edition));
+          // Responses as the contract types them.
+          const typed = async (made: Promise<unknown>) => GetDocumentResponse.parse(await made);
+          const started = await typed(inA(() => startFormDocument(a, { templateId: "TPL-01" })));
+          assert.equal(started.title, "Invoice");
+          assert.deepEqual(started.form, { version: 2, edition, digest: sha256(formText) });
+          assert.equal(started.content.formAnswers?.templateId, "TPL-01");
+          assert.ok(started.content.blocks.every((block) => block.id.startsWith("valo-guided-v2:TPL-01:")));
+          assert.ok(
+            started.content.blocks.filter((block) => block.type === "table").every((t) => t.headerRows === 1),
+          );
+          assert.equal(started.content.blocks[0]!.text, "[Seller name]\n[Seller contact/address]");
+          // Its form text is the workspace's own to read, and no other's.
+          assert.equal((await inA(() => getDocumentForm(a, started.id))).formText, formText);
+          await assert.rejects(
+            inB(() => getDocumentForm(b, started.id)),
+            { status: 404 },
+          );
+          const plainDocument = await createDocument(a, syntheticDocument);
+          await assert.rejects(
+            inA(() => getDocumentForm(a, plainDocument.id)),
+            { status: 404 },
+          );
+          // A save keeps exactly what the answers make from the edition.
+          const spec = GUIDED_SPECS_V2["TPL-01"]!,
+            text = parseFormText(formText);
+          const answers: GuidedDataV2 = structuredClone(started.content.formAnswers as GuidedDataV2);
+          answers.values = {
+            ...answers.values,
+            issuerName: "Synthetic Supplies Ltd",
+            recipientName: "Synthetic Buyer Ltd",
+            documentNumber: "SYN-INV-002",
+            issueDate: "2026-11-02",
+            dueDate: "2026-11-30",
+            billingBasis: "Synthetic supplies",
+            taxMode: "none",
+            discountMode: "none",
+          };
+          answers.tables.items = [
+            {
+              description: "Synthetic paper",
+              quantity: "2",
+              unit: "each",
+              otherUnit: "",
+              unitPriceKobo: "150000",
+            },
+          ];
+          const contentFor = (data: GuidedDataV2) => {
+            const { unfilled: _unfilled, ...content } = formDocumentContent(
+              spec,
+              text,
+              data,
+              started.content,
+            );
+            return content;
+          };
+          const saved = await typed(
+            inA(() =>
+              saveDocument(a, started.id, {
+                expectedRevision: 1,
+                title: "Invoice",
+                content: contentFor(answers),
+              }),
+            ),
+          );
+          assert.equal(saved.revision, 2);
+          assert.equal(saved.content.fields.issuerName, "Synthetic Supplies Ltd");
+          assert.deepEqual(saved.form, started.form);
+          assert.ok(
+            saved.content.blocks.some((block) =>
+              block.rows.some((row) => row.join(" | ") === "Invoice total | ₦3,000.00"),
+            ),
+          );
+          assert.equal(
+            saved.contentHash,
+            sha256(serializeRevision({ title: "Invoice", content: contentFor(answers) })),
+          );
+          assert.match(
+            serializeRevision({ title: "Invoice", content: contentFor(answers) }),
+            /^valo-document-revision-v2\n/,
+          );
+          // Changed wording, answers the form does not take, and a save without answers are refused.
+          const changed = contentFor(answers);
+          changed.blocks = changed.blocks.map((block, i) =>
+            i === 0 ? { ...block, text: "Synthetic other words" } : block,
+          );
+          await assert.rejects(
+            inA(() =>
+              saveDocument(a, started.id, { expectedRevision: 2, title: "Invoice", content: changed }),
+            ),
+            { status: 422, message: /comes from its released template/ },
+          );
+          await assert.rejects(
+            inA(() =>
+              saveDocument(a, started.id, {
+                expectedRevision: 2,
+                title: "Invoice",
+                content: contentFor({ ...answers, values: { ...answers.values, unknownQuestion: "x" } }),
+              }),
+            ),
+            { status: 422, message: /Some answers cannot be saved/ },
+          );
+          const { formAnswers: _answers, ...withoutAnswers } = contentFor(answers);
+          await assert.rejects(
+            inA(() =>
+              saveDocument(a, started.id, { expectedRevision: 2, title: "Invoice", content: withoutAnswers }),
+            ),
+            { status: 422, message: /Save it with the form's answers/ },
+          );
+          // A plain document holds no form document's parts.
+          const heading = {
+            id: "section-2",
+            type: "heading" as const,
+            level: 2 as const,
+            text: "Synthetic",
+            rows: [],
+          };
+          await assert.rejects(
+            createDocument(a, {
+              ...syntheticDocument,
+              content: { ...syntheticDocument.content, blocks: [heading] },
+            }),
+            { status: 422, message: /belong to a document started from a form/ },
+          );
+          await assert.rejects(
+            saveDocument(a, plainDocument.id, {
+              expectedRevision: 1,
+              title: syntheticDocument.title,
+              content: { ...syntheticDocument.content, formAnswers: answers },
+            }),
+            { status: 422, message: /belong to a document started from a form/ },
+          );
+          // The record never changes: the database refuses it (the query error's cause).
+          await assert.rejects(
+            db
+              .update(valoDocuments)
+              .set({ formDigest: "b".repeat(64) })
+              .where(eq(valoDocuments.id, started.id)),
+            (error: unknown) =>
+              /keeps the form it was started with/.test(String((error as { cause?: unknown }).cause)),
+          );
+          // Withdrawn, the edition starts no new form; the document made from it stays its owner's.
+          await db
+            .update(valoManualLibrary)
+            .set({ state: "withdrawn", closedBy: editor, closedAt: new Date() })
+            .where(eq(valoManualLibrary.id, edition));
+          await assert.rejects(
+            inA(() => startFormDocument(a, { templateId: "TPL-01" })),
+            { status: 409 },
+          );
+          const after = await inA(() =>
+            saveDocument(a, started.id, {
+              expectedRevision: 2,
+              title: "Invoice",
+              content: contentFor({
+                ...answers,
+                values: { ...answers.values, documentNumber: "SYN-INV-003" },
+              }),
+            }),
+          );
+          assert.equal(after.revision, 3);
+          assert.equal((await inA(() => getDocumentForm(a, started.id))).edition, edition);
+          await db
+            .update(valoStaffAssignments)
+            .set({ active: false })
+            .where(eq(valoStaffAssignments.identityId, editor));
         },
       );
       await t.test("suspended membership is not automatically restored", async () => {

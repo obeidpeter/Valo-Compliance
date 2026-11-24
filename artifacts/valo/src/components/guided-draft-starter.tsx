@@ -7,6 +7,7 @@ import {
   useGetWorkspace,
   getGetWorkspaceQueryKey,
   getListDocumentsQueryKey,
+  type CanonicalDocument,
 } from "@workspace/api-client-react";
 import { GUIDED_TEMPLATE_IDS, type GuidedTemplateId } from "@workspace/valo-core/guided";
 import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
@@ -37,7 +38,7 @@ export function GuidedDraftStarter({ chosen }: { chosen?: LandingTask | undefine
         data: {
           // The title is printed as the document's heading, so it starts as the kind's own name.
           title: GUIDED_SPECS_V1[id].title,
-          content: compileGuidedContent(prefillGuidedData(id, ws.data?.profile)),
+          content: compileGuidedContent(prefillGuidedData(id, ws.data?.profile)) as CanonicalDocument,
         },
       },
       {
