@@ -531,7 +531,7 @@ export default function DocumentEditor({ id }: { id: string }) {
     );
   }
 
-  const missing = missingFieldItems(content);
+  const missing = missingFieldItems(content, formText);
   function focusEditorTarget(selector: string) {
     if (tab !== "edit") setTab("edit");
     requestAnimationFrame(() => {

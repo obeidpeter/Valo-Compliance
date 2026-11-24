@@ -3,6 +3,7 @@ import { DOCUMENT_FIELD_LABELS, guidedFieldIssue } from "@workspace/valo-core/gu
 import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
 import { GUIDED_SPECS_V2 } from "@workspace/valo-core/guided-specs-v2";
 import { documentGaps } from "@workspace/valo-core/document-completeness";
+import type { FormText } from "@workspace/valo-core/form-text";
 
 import type { FormView } from "./form-view";
 import { askedAs, saidAs } from "./guided-money";
@@ -77,9 +78,13 @@ function guidedIssueSelector(spec: Questions, key: string): string | undefined {
 }
 
 /** What a document still needs before it is complete, with jump selectors where a control exists:
- * what `documentGaps` finds, in the editor's words. */
-export function missingFieldItems(content: CanonicalDocument): MissingFieldItem[] {
-  const gaps = documentGaps(content);
+ * what `documentGaps` finds, in the editor's words. Given a form document's form text, the blanks it
+ * lists are the slots left unfilled, not the blanks completed by hand, such as signatures. */
+export function missingFieldItems(
+  content: CanonicalDocument,
+  formText?: FormText | null,
+): MissingFieldItem[] {
+  const gaps = documentGaps(content, formText);
   if (gaps.kind === "unreadable")
     return [
       {
