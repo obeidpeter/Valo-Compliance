@@ -679,6 +679,83 @@ const reminder = fromV1("TPL-12", {
   keepsNothing: [{ question: "disputeKind", option: "none" }],
 });
 
+/**
+ * The offer letter (TPL-17), a premium form. The employer's name and address head the letter as the
+ * draft's one placeholder for them, and the candidate's print above the greeting; the proposed terms
+ * print one to a line, since each can be longer than a table cell holds.
+ */
+const offerLetter = fromV1("TPL-17", {
+  questions: [
+    { v1: "issuerName", join: { tokens: ["employer", "issuerName"] } },
+    { v1: "issuerAddress", join: { tokens: ["employer"] } },
+    { v1: "recipientName", join: { tokens: ["candidate", "recipientName"] } },
+    { v1: "recipientAddress", join: { tokens: ["candidate"] } },
+    { v1: "documentNumber", join: { tokens: ["documentNumber"] } },
+    { v1: "issueDate", join: { tokens: ["issueDate"] } },
+    { v1: "role", join: { tokens: ["role"] } },
+    { v1: "reportsTo", join: { tokens: ["reportsTo"] } },
+    { v1: "duties", join: { tokens: ["duties"] } },
+    { v1: "workplace", join: { tokens: ["workplace"] } },
+    { v1: "startDate", join: { tokens: ["startDate"] } },
+    { v1: "termType", join: { clause: true } },
+    { v1: "endDate", join: { tokens: ["endDate"] } },
+    { v1: "terminationTerms", join: { tokens: ["terminationTerms"] } },
+    { v1: "grossPayKobo", join: { tokens: ["grossPayKobo"] } },
+    { v1: "payPeriod", join: { tokens: ["payPeriod"] } },
+    { v1: "payBasis", join: { tokens: ["payBasis"] } },
+    {
+      added: {
+        id: "allowances",
+        label: "Additional allowances or variable pay, or none offered",
+        type: "long_text",
+        required: true,
+        tokens: ["allowances"],
+      },
+      why: 'The letter prints "Additional allowances or variable pay: [Specific terms or none offered]" and v1 asks nothing for it.',
+    },
+    { v1: "hours", join: { tokens: ["hours"] } },
+    { v1: "leaveTerms", join: { tokens: ["leaveTerms"] } },
+    { v1: "benefits", join: { tokens: ["benefits"] } },
+    { v1: "probation", join: { clause: true } },
+    { v1: "probationTerms", join: { tokens: ["probationTerms"] } },
+    { v1: "contractReference", join: { tokens: ["contractReference"] } },
+    { v1: "conditions", join: { clause: true } },
+    { v1: "conditionDetails", join: { tokens: ["conditionDetails"] } },
+    { v1: "responseDate", join: { tokens: ["responseDate"] } },
+    { v1: "responseMethod", join: { tokens: ["responseMethod"] } },
+    { v1: "representative", join: { tokens: ["representative"] } },
+    {
+      added: {
+        id: "firstDayContact",
+        label: "Proposed first-day contact",
+        type: "text",
+        required: true,
+        tokens: ["firstDayContact"],
+      },
+      why: 'The letter prints "Your proposed first-day contact is [ ]" and v1 asks nothing for it.',
+    },
+    {
+      added: {
+        id: "joiningArrangements",
+        label: "Practical joining arrangements",
+        type: "long_text",
+        required: true,
+        tokens: ["joiningArrangements"],
+      },
+      why: 'The letter prints "the practical joining arrangements are [ ]" and v1 asks nothing for it.',
+    },
+    { v1: "responseStatus", join: { tokens: ["responseStatus"] } },
+  ],
+  dropped: {
+    policies:
+      "The letter names the employment contract and schedules it is accompanied by, which v1 asks as the contract reference; the policies the contract incorporates are listed in the contract itself.",
+    legalChecks:
+      "The letter has no place for the business's own check of the legal scope and of mandatory terms still unresolved: it asks the candidate to say if anything is missing or inconsistent, and the employment contract it is accompanied by holds the terms.",
+  },
+  // Completed by hand once the candidate responds, as the draft's heading says.
+  blanks: ["responseReference", "outstandingMatter", "startConfirmed"],
+});
+
 /** The v2 forms, by template. A template without one stays on its v1 form. */
 export const GUIDED_SPECS_V2: Readonly<Partial<Record<GuidedTemplateId, GuidedSpecV2>>> = {
   "TPL-01": invoice.spec,
@@ -688,6 +765,7 @@ export const GUIDED_SPECS_V2: Readonly<Partial<Record<GuidedTemplateId, GuidedSp
   "TPL-05": deliveryNote.spec,
   "TPL-08": minutes.spec,
   "TPL-12": reminder.spec,
+  "TPL-17": offerLetter.spec,
 };
 /** What each v2 form adds to and leaves out of its v1 questions, with the reasons. */
 export const GUIDED_CHANGES_V2: Readonly<Partial<Record<GuidedTemplateId, GuidedChangesV2>>> = {
@@ -698,4 +776,5 @@ export const GUIDED_CHANGES_V2: Readonly<Partial<Record<GuidedTemplateId, Guided
   "TPL-05": deliveryNote.changes,
   "TPL-08": minutes.changes,
   "TPL-12": reminder.changes,
+  "TPL-17": offerLetter.changes,
 };
