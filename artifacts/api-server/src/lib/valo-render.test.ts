@@ -2,10 +2,23 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { unzipSync, strFromU8 } from "fflate";
 import { compileGuidedContent } from "@workspace/valo-core/guided-runtime";
-import { controlledHtml, renderDocument, DRAFT_NOTICE, PURCHASE_NOTICE } from "./valo-render";
+import {
+  blocksHtml,
+  controlledHtml,
+  docxBlocks,
+  renderDocument,
+  DRAFT_NOTICE,
+  PURCHASE_NOTICE,
+  RENDER_VERSION,
+  type PrintedBlock,
+} from "./valo-render";
 import { syntheticDocument } from "./valo-test-fixtures";
 import { completeGuidedTestData } from "./valo-guided-test-fixtures";
 import { readerContainsText } from "./valo-reader-checks";
+import { createHash } from "node:crypto";
+import { Document, Packer } from "docx";
+import { GUIDED_TEMPLATE_IDS } from "@workspace/valo-core/guided";
+import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
 
 test("reader comparison tolerates extraction spacing, never changed parties, currency or money", () => {
   assert.equal(readerContainsText("Fictional BusinessA", "Fictional Business A"), true);
@@ -333,4 +346,70 @@ test("document text that tries to fetch a URL, read a local file or run script d
     await rm(directory, { recursive: true, force: true });
     await closeRenderer();
   }
+});
+
+// Forms v2, slice 3 (docs/architecture/forms-v2.md): the renderer prints a heading and a table's
+// header row for a form that fills a template's own wording. The twelve v1 forms print exactly as
+// before, so RENDER_VERSION is unchanged: each one's HTML is pinned here. A change to how one of
+// them prints changes its hash, and must come with a new RENDER_VERSION.
+const PRINTED_V1_HTML: Record<string, string> = {
+  "TPL-01": "6d7ad99ca365abc00e73bc260f4f52eedc6ee4f873a654aa1550295842b31457",
+  "TPL-02": "8271b9b2673d2ce1ef9ade8b6ff3df8e6d7806e992d52db68ee544753dd96ff3",
+  "TPL-03": "628932ddbf8679db605b1b5f4dfe5bcdf954337988805771008604f85afe23e6",
+  "TPL-04": "e1e91d72324bc3f0231cc0ce3ed8c2ed92c7cc762822c476df54130f430c91a3",
+  "TPL-05": "17da6256697ece9ae27ebed99caf515977a263b2decbb6c1c3d93274b07987c2",
+  "TPL-08": "97e67ff0991b2bea1dbeb1735b829e2abc417f5a201409deab861a31c0884a86",
+  "TPL-12": "f9de4863bb4286c3c050b1a0ac615ba6e800e56ffbc1d3dd558aeec4551b8dda",
+  "TPL-13": "255621e26642a431f9ffa90b246f224f69eaab896f9b56dad9594cc236e2c95d",
+  "TPL-14": "48fbc8de726b32b59e684863ef708dfeeb0cf25396e4cdb1defe019bb9005af4",
+  "TPL-15": "5854a68cc8cf39f87779d6d78d6449030704db8a8892a1f98881346deb68a666",
+  "TPL-16": "2c7be59fd584c9849d2e2c8a05bf190228f3eaf32b2f2e5b82fc742e4ccfa114",
+  "TPL-17": "7901009a98cc109edd89781463ed9164e48dd2e5d51d4a991b3ba767dc88ef72",
+};
+test("the twelve forms' printed HTML is unchanged by the form layout's headings and header rows", () => {
+  for (const id of GUIDED_TEMPLATE_IDS) {
+    const html = controlledHtml(
+      { title: GUIDED_SPECS_V1[id].title, content: compileGuidedContent(completeGuidedTestData(id)) },
+      3,
+    );
+    assert.equal(createHash("sha256").update(html).digest("hex"), PRINTED_V1_HTML[id], id);
+  }
+  assert.equal(RENDER_VERSION, "manual-draft-5");
+});
+test("a form's headings print as headings and its table's header row repeats on each page, in HTML and Word, with every text escaped", async () => {
+  const blocks: PrintedBlock[] = [
+    { id: "h1", type: "heading", level: 2, text: "1. Parties <script>alert(1)</script>", rows: [] },
+    { id: "h2", type: "heading", level: 3, text: "1.1 Who signs", rows: [] },
+    { id: "p", type: "paragraph", text: "Synthetic words & more", rows: [] },
+    {
+      id: "t",
+      type: "table",
+      text: "",
+      headerRows: 1,
+      rows: [
+        ["Deliverable", "Agreed timing"],
+        ["Synthetic <b>files</b>", "30 days"],
+      ],
+    },
+  ];
+  const html = blocksHtml(blocks);
+  assert.match(html, /<h2>1\. Parties &lt;script&gt;alert\(1\)&lt;\/script&gt;<\/h2>/);
+  assert.match(html, /<h3>1\.1 Who signs<\/h3>/);
+  assert.match(html, /<p>Synthetic words &amp; more<\/p>/);
+  assert.match(
+    html,
+    /<table><thead><tr><th>Deliverable<\/th><th>Agreed timing<\/th><\/tr><\/thead><tbody><tr><td>Synthetic &lt;b&gt;files&lt;\/b&gt;<\/td><td>30 days<\/td><\/tr><\/tbody><\/table>/,
+  );
+  assert.doesNotMatch(html, /<script|<b>/);
+  // A table without a header row prints as before.
+  assert.equal(
+    blocksHtml([{ id: "t", type: "table", text: "", rows: [["a", "b"]] }]),
+    "<table><tbody><tr><td>a</td><td>b</td></tr></tbody></table>",
+  );
+  const word = await Packer.toBuffer(new Document({ sections: [{ children: docxBlocks(blocks) }] }));
+  const xml = strFromU8(unzipSync(new Uint8Array(word))["word/document.xml"]!);
+  assert.match(xml, /<w:pStyle w:val="Heading2"\/>/);
+  assert.match(xml, /<w:pStyle w:val="Heading3"\/>/);
+  assert.equal((xml.match(/<w:tblHeader\/>/g) ?? []).length, 1);
+  assert.match(xml, /1\. Parties &lt;script&gt;/);
 });
