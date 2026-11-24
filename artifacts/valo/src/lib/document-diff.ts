@@ -1,8 +1,6 @@
 import type { CanonicalDocument } from "@workspace/api-client-react";
-import type { GuidedData } from "@workspace/valo-core/guided";
-import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
-import { guidedDataFromBlocks } from "@workspace/valo-core/guided-runtime";
 import { FIELD_LABELS } from "./api";
+import { documentAnswers } from "./form-view";
 import { formatDay, formatNaira } from "./format";
 import { askedAs } from "./guided-money";
 
@@ -12,9 +10,9 @@ export type DocumentDiffEntry = {
   currentValue: string;
 };
 
-function safeGuided(content: CanonicalDocument): GuidedData | null {
+function safeGuided(content: CanonicalDocument) {
   try {
-    return guidedDataFromBlocks(content.blocks);
+    return documentAnswers(content);
   } catch {
     // Non-guided or unsupported guided content compares via standard fields and blocks.
     return null;
@@ -50,11 +48,18 @@ export function summarizeDocumentDiff(
   const currentGuided = safeGuided(current.content);
   const olderGuided = safeGuided(older.content);
 
-  if (currentGuided && olderGuided && currentGuided.templateId === olderGuided.templateId) {
-    const spec = GUIDED_SPECS_V1[currentGuided.templateId];
+  // Versions of a document made from a form are compared question by question; a document keeps
+  // the form it was started with, so its versions are of the same form.
+  if (
+    currentGuided &&
+    olderGuided &&
+    currentGuided.value.templateId === olderGuided.value.templateId &&
+    currentGuided.value.schemaVersion === olderGuided.value.schemaVersion
+  ) {
+    const spec = currentGuided.view;
     for (const field of spec.fields) {
-      const a = (olderGuided.values[field.id] ?? "").trim();
-      const b = (currentGuided.values[field.id] ?? "").trim();
+      const a = (olderGuided.value.values[field.id] ?? "").trim();
+      const b = (currentGuided.value.values[field.id] ?? "").trim();
       if (a === b) continue;
       const kind = field.type === "money_kobo" ? "money" : field.type === "date" ? "date" : "text";
       changes.push({
@@ -64,8 +69,8 @@ export function summarizeDocumentDiff(
       });
     }
     for (const table of spec.tables) {
-      const olderRows = olderGuided.tables[table.id] ?? [];
-      const currentRows = currentGuided.tables[table.id] ?? [];
+      const olderRows = olderGuided.value.tables[table.id] ?? [];
+      const currentRows = currentGuided.value.tables[table.id] ?? [];
       if (JSON.stringify(olderRows) !== JSON.stringify(currentRows)) {
         changes.push({
           label: table.label,

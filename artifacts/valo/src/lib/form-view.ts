@@ -1,5 +1,5 @@
 import type { GuidedData, GuidedSpec, GuidedTemplateId } from "@workspace/valo-core/guided";
-import { guidedDataIssues } from "@workspace/valo-core/guided-runtime";
+import { guidedDataFromBlocks, guidedDataIssues } from "@workspace/valo-core/guided-runtime";
 import { formAnswerIssues } from "@workspace/valo-core/guided-runtime-v2";
 import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
 import { GUIDED_SPECS_V2 } from "@workspace/valo-core/guided-specs-v2";
@@ -65,4 +65,23 @@ export function formIssues(view: FormView, value: FormValue): Record<string, str
   if (!spec) return { form: "These answers belong to a form this site does not have." };
   const { refused, drafts } = formAnswerIssues(spec, value as GuidedDataV2);
   return refused.length ? { ...drafts, form: refused.join(" ") } : drafts;
+}
+
+/**
+ * A guided document's questions and answers, whichever version of the forms made it: a v2 form's
+ * answers are the document's own (`formAnswers`), a v1 form's are read from its blocks. Null for a
+ * document typed by hand. Throws when they cannot be read: a v1 form's blocks that were altered, or a
+ * form this site does not have.
+ */
+export function documentAnswers(content: {
+  blocks: Parameters<typeof guidedDataFromBlocks>[0];
+  formAnswers?: { templateId: string } | undefined;
+}): { view: FormView; value: FormValue } | null {
+  if (content.formAnswers) {
+    const spec = GUIDED_SPECS_V2[content.formAnswers.templateId as GuidedTemplateId];
+    if (!spec) throw Error("UNSUPPORTED_FORM_DOCUMENT");
+    return { view: formViewV2(spec), value: content.formAnswers as FormValue };
+  }
+  const answers = guidedDataFromBlocks(content.blocks);
+  return answers ? { view: GUIDED_SPECS_V1[answers.templateId], value: answers } : null;
 }

@@ -1,7 +1,7 @@
 import type { BusinessDocument, CanonicalDocument } from "@workspace/api-client-react";
-import { guidedDataFromBlocks } from "@workspace/valo-core/guided-runtime";
 import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
 import { missingFields } from "./api";
+import { documentAnswers } from "./form-view";
 
 export type DocumentStatusFilter = "all" | "incomplete" | "complete" | "hidden";
 
@@ -19,12 +19,12 @@ function readRecipientAndNumber(content: CanonicalDocument): {
   kindTitle: string;
 } {
   try {
-    const guided = guidedDataFromBlocks(content.blocks);
-    if (guided && guided.templateId in GUIDED_SPECS_V1) {
+    const form = documentAnswers(content);
+    if (form) {
       return {
-        recipient: (guided.values.recipientName ?? content.fields.recipientName ?? "").trim(),
-        reference: (guided.values.documentNumber ?? content.fields.documentNumber ?? "").trim(),
-        kindTitle: GUIDED_SPECS_V1[guided.templateId].title,
+        recipient: (form.value.values.recipientName ?? content.fields.recipientName ?? "").trim(),
+        reference: (form.value.values.documentNumber ?? content.fields.documentNumber ?? "").trim(),
+        kindTitle: form.view.title,
       };
     }
   } catch {
@@ -40,8 +40,8 @@ function readRecipientAndNumber(content: CanonicalDocument): {
 /** A plain customer-facing label for what kind of document this is (e.g. "Invoice", "Freeform"). */
 export function documentKindLabel(doc: Pick<BusinessDocument, "content">): string {
   try {
-    const guided = guidedDataFromBlocks(doc.content.blocks);
-    if (guided && guided.templateId in GUIDED_SPECS_V1) return GUIDED_SPECS_V1[guided.templateId].title;
+    const form = documentAnswers(doc.content);
+    if (form) return form.view.title;
   } catch {
     // Fall back safely when guided metadata cannot be parsed.
   }
