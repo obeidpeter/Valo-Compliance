@@ -3031,6 +3031,34 @@
       "file": "artifacts/api-server/src/scripts/tester-tasks.integration.test.ts",
       "test": "a business owner's first tasks work in a browser against the real API and database",
       "proves": "A report sent from the page to the real API and a real database is answered on the page with \"Enquiry received\" and a reference. This shows the receipt, not what staff then see or do."
+    },
+    {
+      "requirement": "EDP-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/owner-rule-release.test.ts",
+      "test": "each result says how its rule was released, and an owner-signed rule never says it was AI reviewed",
+      "proves": "The checker gives each result its rule's release notice: a rule released on the owner's sign-off says so and that it was not reviewed by a Nigerian legal, tax or sector specialist, claiming no AI or professional review; a rule released on the reviewed route gives its AI-review disclosure; a synthetic fixture gives none."
+    },
+    {
+      "requirement": "EDP-008",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/assessment-result.test.tsx",
+      "test": "a result shows how its rule was released, and an older saved result shows no notice",
+      "proves": "The results screen shows each rule's release notice beside the rule's name, and a result saved before notices were recorded shows none."
+    },
+    {
+      "requirement": "ADM-004",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/editorial/owner-rule-signoff.integration.test.ts",
+      "test": "the development owner watches a prepared rule's sources, signs the exact version shown, supersedes it and withdraws it",
+      "proves": "A prepared rule stays out of the checker until its sources are watched and read and the recently verified development owner signs the exact version shown; the checker then gives it with the owner's release notice, the next signed version supersedes it, and a withdrawal takes it out of the checker."
+    },
+    {
+      "requirement": "ADM-007",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-manual-library.integration.test.ts",
+      "test": "manual publishing through staff HTTP routes and public readers",
+      "proves": "A Content editor's withdrawal takes a released practical guide off the public site, whose page then answers 404, and the withdrawn version cannot be published again. The test does not show a recorded reason or the customers affected."
     }
   ]
 }
