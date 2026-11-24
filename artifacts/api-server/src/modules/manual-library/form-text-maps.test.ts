@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { parseFormText } from "@workspace/valo-core/form-text";
+import { parseFormText, type FormInline, type FormNode } from "@workspace/valo-core/form-text";
 import type { GuidedTemplateId } from "@workspace/valo-core/guided";
 import {
   compileForm,
@@ -123,6 +123,36 @@ test("form text adds no words: with its slots left empty, every combination of c
       const leavesOut = !subsequence(words(change.from), words(change.to.replace(/\{[^}]*\}/g, "")));
       if (leavesOut || change.to.includes("{?") || change.moves) assert.ok(change.why, change.from);
     }
+  }
+});
+
+test("no placeholder is left out silently: every bracketed placeholder of the text is a slot, unless it prints only while a choice is unanswered", async () => {
+  const literal = /\[[^\]]*\]/;
+  for (const templateId of mapped) {
+    const text = parseFormText((await proposedFormText(templateId))!);
+    const left: string[] = [];
+    const inline = (parts: FormInline[], unanswered: boolean) => {
+      for (const part of parts) {
+        if (part.kind === "text" && !unanswered && literal.test(part.text)) left.push(part.text);
+        if (part.kind === "span") inline(part.parts, unanswered || part.span.option === "");
+      }
+    };
+    const walk = (nodes: FormNode[], unanswered: boolean) => {
+      for (const node of nodes) {
+        if (node.kind === "heading") inline(node.parts, unanswered);
+        if (node.kind === "paragraph") for (const line of node.lines) inline(line, unanswered);
+        if (node.kind === "list") for (const item of node.items) inline(item, unanswered);
+        if (node.kind === "table") {
+          for (const cell of node.header) inline(cell, unanswered);
+          for (const row of node.rows)
+            for (const cell of row.cells) inline(cell, unanswered || row.span?.option === "");
+        }
+        if (node.kind === "span") walk(node.nodes, unanswered || node.span.option === "");
+        if (node.kind === "repeat") walk(node.nodes, unanswered);
+      }
+    };
+    walk(text.nodes, false);
+    assert.deepEqual(left, [], templateId);
   }
 });
 
