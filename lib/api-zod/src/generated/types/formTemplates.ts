@@ -10,4 +10,10 @@ import type { FormTemplatesTemplatesItem } from './formTemplatesTemplatesItem';
 export interface FormTemplates {
   /** @maxItems 40 */
   templates: FormTemplatesTemplatesItem[];
+  /**
+     * The premium templates whose form, with its wording or its questions only, this workspace can start only once it holds a verified purchase of a live edition.
+     * @maxItems 40
+     * @items.pattern ^TPL-[0-9]{2}$
+     */
+  needsPurchase: string[];
 }

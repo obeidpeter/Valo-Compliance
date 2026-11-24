@@ -574,7 +574,7 @@ paths:
   /workspace/form-templates:
     get:
       operationId: listFormTemplates
-      description: "The templates whose form (forms v2) a workspace can start now: each free template with a released edition of its wording that its form fits, and each premium template whose edition the workspace bought has such wording. A template not listed starts with its questions only."
+      description: "The templates whose form (forms v2) a workspace can start now: each free template with a released edition of its wording that its form fits, and each premium template whose edition the workspace bought has such wording. A template not listed starts with its questions only, and a premium template the workspace holds no live edition of is listed as needing a purchase first."
       responses:
         "200":
           description: The templates whose form can be started, with the version of the edition each starts from
@@ -2469,7 +2469,7 @@ components:
         formAnswers: { $ref: "#/components/schemas/FormAnswers" }
     FormTemplates:
       type: object
-      required: [templates]
+      required: [templates, needsPurchase]
       properties:
         templates:
           type: array
@@ -2480,6 +2480,11 @@ components:
             properties:
               templateId: { type: string, pattern: "^TPL-[0-9]{2}$" }
               editionVersion: { type: integer }
+        needsPurchase:
+          type: array
+          maxItems: 40
+          description: "The premium templates whose form, with its wording or its questions only, this workspace can start only once it holds a verified purchase of a live edition."
+          items: { type: string, pattern: "^TPL-[0-9]{2}$" }
     DocumentFormText:
       type: object
       required: [edition, editionVersion, title, formText]

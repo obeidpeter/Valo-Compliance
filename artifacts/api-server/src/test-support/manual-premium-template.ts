@@ -431,11 +431,15 @@ export async function exercisePremiumFormDocument(call: Call, editor: string) {
     (await inScope(holder, () => listFormTemplates(holder))).templates.filter(
       (t) => t.templateId === "TPL-17",
     );
+  // Whether the starter is told the offer letter needs a purchase before either of its forms starts.
+  const needsPurchase = async (holder: typeof buyer) =>
+    (await inScope(holder, () => listFormTemplates(holder))).needsPurchase.includes("TPL-17");
   const buyFirst = { status: 403, message: /comes with a template you buy/ };
   const questionsOnly = { status: 409, message: /Start its questions-only form instead/ };
   // Without a purchase, the form is not offered and does not start.
   await assert.rejects(start(buyer), buyFirst);
   assert.deepEqual(await startable(buyer), []);
+  assert.equal(await needsPurchase(buyer), true);
   const buy = async (edition: { id: string }) => {
     const priceId = randomUUID();
     await db.insert(valoPrices).values({
@@ -468,11 +472,14 @@ export async function exercisePremiumFormDocument(call: Call, editor: string) {
   const first = await buy(plain.revision);
   await assert.rejects(start(buyer), questionsOnly);
   assert.deepEqual(await startable(buyer), []);
+  assert.equal(await needsPurchase(buyer), false);
   // Once the edition with form text is bought, its form is offered and starts from it, under that
   // edition's order, which the document records; another workspace is still refused.
   const second = await buy(formed.revision);
   assert.deepEqual(await startable(buyer), [{ templateId: "TPL-17", editionVersion: 1 }]);
+  assert.equal(await needsPurchase(buyer), false);
   assert.deepEqual(await startable(stranger), []);
+  assert.equal(await needsPurchase(stranger), true);
   await assert.rejects(start(stranger), buyFirst);
   const made = GetDocumentResponse.parse(await start(buyer));
   assert.deepEqual(made.form, { version: 2, edition: formed.revision.id, digest: sha256(formText) });
@@ -525,6 +532,7 @@ export async function exercisePremiumFormDocument(call: Call, editor: string) {
   assert.deepEqual(await startable(buyer), []);
   await settleVerifiedOrder(first.order.id, { ...first.verified, status: "reversed" });
   await assert.rejects(start(buyer), buyFirst);
+  assert.equal(await needsPurchase(buyer), true);
   // A document made like this one is a new start, refused the same way.
   await assert.rejects(
     start(buyer, { templateId: "TPL-17", formAnswers: saved.content.formAnswers }),

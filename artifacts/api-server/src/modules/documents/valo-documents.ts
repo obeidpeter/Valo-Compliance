@@ -13,6 +13,8 @@ import { ValoProblem } from "../../platform/valo-problem";
 import {
   assertFormAvailable,
   assertPlainContent,
+  holdsTemplate,
+  premiumFormIds,
   checkFormContent,
   documentFormText,
   formEdition,
@@ -279,8 +281,9 @@ export async function startFormDocument(actor: WorkspaceActor, raw: unknown) {
 /**
  * The templates whose form a workspace can start now, with the version of the edition each starts
  * from: each free template with a v2 form and a released edition of its wording that the form fits,
- * and each premium one whose bought edition has such wording. The starter starts any other template
- * with its questions only, so that no start is refused in the ordinary course.
+ * and each premium one whose bought edition has such wording; and the premium templates the workspace
+ * holds no live edition of, which neither form starts until it buys one. The starter starts any other
+ * template with its questions only, so that no start is refused in the ordinary course.
  */
 export async function listFormTemplates(actor: WorkspaceActor) {
   const { db } = await import("@workspace/db");
@@ -297,7 +300,11 @@ export async function listFormTemplates(actor: WorkspaceActor) {
         if (!(error instanceof ValoProblem) || ![403, 404, 409].includes(error.status)) throw error;
       }
     }
-    return { templates };
+    // The premium forms this workspace must buy before either form starts: the starter says so.
+    const needsPurchase: string[] = [];
+    for (const templateId of premiumFormIds())
+      if (!(await holdsTemplate(tx, templateId))) needsPurchase.push(templateId);
+    return { templates, needsPurchase };
   });
 }
 /** The form text of the edition a workspace's document was started with, for its editor to fill. */

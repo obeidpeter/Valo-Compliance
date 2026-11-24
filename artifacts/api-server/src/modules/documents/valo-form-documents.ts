@@ -35,17 +35,24 @@ const formTextOf = (source: string) => {
 const premiumForms = new Map(
   baselineTemplates.filter((t) => t.guided && t.access === "premium").map((t) => [t.id, t.title]),
 );
+/** Whether the scoped workspace holds a verified purchase of a live edition of a premium template;
+ * true for a template that is not premium. */
+export async function holdsTemplate(tx: Tx, templateId: string) {
+  const title = premiumForms.get(templateId);
+  if (title === undefined) return true;
+  const { rows } = await tx.execute<{ held: boolean }>(
+    sql`select public.valo_workspace_holds_template(${templateId}, ${title}) as held`,
+  );
+  return rows[0]?.held === true;
+}
+/** The premium forms (TPL-13 to TPL-17), by template id. */
+export const premiumFormIds = () => [...premiumForms.keys()];
 /** A workspace may start a premium form, or add one to a document, only while it holds a verified
  * purchase of a live edition of its template (forms v2, slice 1). The database function answers for
  * the workspace this transaction is scoped to and for nothing else. A document already made stays the
  * customer's, and keeps saving and making files (the finishing plan's delegated decision 3). */
 export async function assertFormAvailable(tx: Tx, templateId: string) {
-  const title = premiumForms.get(templateId);
-  if (title === undefined) return;
-  const { rows } = await tx.execute<{ held: boolean }>(
-    sql`select public.valo_workspace_holds_template(${templateId}, ${title}) as held`,
-  );
-  if (rows[0]?.held !== true)
+  if (!(await holdsTemplate(tx, templateId)))
     throw new ValoProblem(
       403,
       "This form comes with a template you buy. Buy the template first, then start the document here. Your other documents are unchanged.",

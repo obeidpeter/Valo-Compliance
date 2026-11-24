@@ -215,7 +215,10 @@ const answers: Record<string, unknown> = {
   }),
   [`GET /workspace/documents`]: api.ListDocumentsResponse.parse([document(3)]),
   // No template's wording is released for its form: every document starts with its questions.
-  [`GET /workspace/form-templates`]: api.ListFormTemplatesResponse.parse({ templates: [] }),
+  [`GET /workspace/form-templates`]: api.ListFormTemplatesResponse.parse({
+    templates: [],
+    needsPurchase: [],
+  }),
   [`GET /workspace/documents/${DOCUMENT}`]: api.GetDocumentResponse.parse(document(3)),
   [`GET /workspace/documents/${DOCUMENT}/revisions`]: api.ListDocumentRevisionsResponse.parse([
     document(3),
@@ -1870,7 +1873,10 @@ test("the New document page starts the invoice as its form once its template's w
         status: 200,
         contentType: "application/json",
         body: JSON.stringify(
-          api.ListFormTemplatesResponse.parse({ templates: [{ templateId: "TPL-01", editionVersion: 1 }] }),
+          api.ListFormTemplatesResponse.parse({
+            templates: [{ templateId: "TPL-01", editionVersion: 1 }],
+            needsPurchase: [],
+          }),
         ),
       });
     } else if (method === "POST" && path === "/workspace/form-documents") {
