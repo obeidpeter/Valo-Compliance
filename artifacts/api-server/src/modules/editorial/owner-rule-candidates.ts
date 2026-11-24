@@ -47,22 +47,26 @@ export type OwnerRuleCandidate = {
 };
 
 /**
- * The rights record of the rules below. The development owner chose its basis on 24 November 2026,
- * answering "I adopt it" when asked what the rights record of these two rules' wording should state:
- * the owner adopts the wording as Valo's own and allows its commercial use. What a customer is told
- * comes from the research notes the rules' calculations are (committed on 14 November 2026, with no
- * record of how they were written); each rule's title, scope, limits, assumptions and claims were
- * written for it on 24 November 2026. The owner signs each version's exact wording, rights record
- * included (its hash is in the manifest).
+ * The rights records of the rules below. The development owner chose their basis on 24 November
+ * 2026, answering "I adopt it" for the business-name and privacy rules and "I adopt it too" for the
+ * company-return rule when asked what each rights record should state: the owner adopts the wording
+ * as Valo's own and allows its commercial use. What a customer is told comes from the research notes
+ * the rules' calculations are (committed on 14 November 2026, with no record of how they were
+ * written); each rule's title, scope, limits, assumptions and claims were written for it on 24
+ * November 2026. The owner signs each version's exact wording, rights record included (its hash is in
+ * the manifest).
  */
 const ownerAdoption =
   "On 24 November 2026 the Valo development owner chose the basis for the wording of the business-name and privacy rules: the owner adopts it as Valo's own and allows its commercial use (\"I adopt it\"). What the requirements check tells a customer comes from the research notes committed on 14 November 2026, with no record of how they were written; each rule's title, scope, limits, assumptions and claims were written for it on 24 November 2026. The owner adopts each version's wording by signing it. Official text is quoted no more than 20 words in a row, as the guidance policy's point 7 allows. No copyright opinion, exclusivity, non-infringement or clearance of anyone else's rights is claimed.";
-const ownerAdoptedRights: PublicationBundle["rights"] = {
+const companyReturnAdoption =
+  "On 24 November 2026 the Valo development owner chose the basis for the wording of the company-return rule: the owner adopts it as Valo's own and allows its commercial use (\"I adopt it too\"). What the requirements check tells a customer comes from the research note committed on 14 November 2026, with no record of how it was written; the rule's title, scope, limits, assumptions and claims were written for it on 24 November 2026. The owner adopts each version's wording by signing it. Official text is quoted no more than 20 words in a row, as the guidance policy's point 7 allows. No copyright opinion, exclusivity, non-infringement or clearance of anyone else's rights is claimed.";
+const adopted = (evidence: string): PublicationBundle["rights"] => ({
   status: "cleared",
-  evidence: ownerAdoption,
-  evidenceHash: sha256(ownerAdoption),
+  evidence,
+  evidenceHash: sha256(evidence),
   commercialUse: true,
-};
+});
+const ownerAdoptedRights = adopted(ownerAdoption);
 
 /** A scenario's answers: only the rich answers its rule's calculation reads, the rest unknown. */
 const answers = (rich: RichCheckerFacts) =>
@@ -571,7 +575,183 @@ const collectionInformationRule: OwnerRuleCandidate = {
   ],
 };
 
-/** The rules prepared for the owner's sign-off: the first two of decision 0020's research notes. The
- * other two wait for their holds (decision 0020, Consequences). Preparing a rule here releases
- * nothing: the owner signs each version in Staff → System. */
-export const ownerRuleCandidates: OwnerRuleCandidate[] = [businessNameRule, collectionInformationRule];
+// Sections 11 and 147 of the Nigeria Tax Administration Act 2025, from the National Assembly's copy
+// (NASS-NTAA-2025). Its official copies give different commencement dates (26 June 2025 and
+// 1 January 2026 at their heads, and 1 January 2025 in the Gazette copy's section 148); under each the
+// Act is in force from 1 January 2026, and on 24 November 2026 the development owner decided this rule
+// applies from that day ("yes, prepare the NTAA rule from 1 January 2026"). The amendment record keeps
+// the commencement question open for section 148 alone.
+// Section 147 was compared between the copies only for three definitions, so the rule quotes only
+// the definition of a Nigerian company. The research note is the tax candidate in
+// `checker-source-candidates.ts`.
+const ntaa = { leadId: "NASS-NTAA-2025" } as const;
+const nigerianCompany = {
+  legalForm: "company",
+  incorporatedInNigeria: true,
+  incorporatedAsCompany: true,
+  accountingPeriodStart: "2026-01-01",
+  accountingPeriodEnd: "2026-12-31",
+} as const;
+const nigerianCompanyQuote =
+  '"Nigerian Company" means —\n         (a) any company formed or incorporated under any law in Nigeria ;';
+const selfAssessmentQuote =
+  "Service, shall file a self-assessment return with the Service in the prescribed\nform at least once a year";
+
+const companyReturnRule: OwnerRuleCandidate = {
+  rule: {
+    id: "ntaa-11-company-return",
+    requirementVersionId: "NTAA-11-COMPANY-RETURN",
+    title: "Filing your company's self-assessment tax return each year",
+    jurisdiction: { level: "federal" },
+    validFrom: "2026-01-01",
+    validTo: null,
+    reason:
+      "Section 11 of the Nigeria Tax Administration Act 2025 says every company must file a self-assessment return with the Nigeria Revenue Service at least once a year.",
+    nextStep:
+      "Compare your company's filing with section 11 for each year of assessment, and file its self-assessment return with the Nigeria Revenue Service.",
+    relatedTemplateIds: [],
+    evaluator: {
+      family: "tax",
+      version: "source-family-v1",
+      algorithmHash: sourceFamilyAlgorithmHashes.tax,
+    },
+  },
+  risk: "tax",
+  scope:
+    "Whether a company must file a self-assessment return with the Nigeria Revenue Service under section 11 of the Nigeria Tax Administration Act 2025, read with section 147's meaning of a Nigerian company, which also covers a company whose effective place of management or control is Nigeria, for years of assessment from 1 January 2026.",
+  limitations:
+    "It does not work out the tax due, the tax rate, small-company status, withholding treatment, the time for filing (section 11(5)) or a non-resident company's return (section 11(2)). A period that runs across 1 January 2026 needs the evidence for that period, and no earlier law is covered. Section 147's other definitions, including \"Company\", were not compared between the Act's two official copies; the calculation reads them from the National Assembly's copy.",
+  assumptions: [
+    "The Act is taken to be in force from 1 January 2026. Its official copies give 26 June 2025 and 1 January 2026 at their heads, and the Gazette copy's section 148 gives 1 January 2025; under each it is in force from 1 January 2026. The development owner decided this on 24 November 2026.",
+    "The company's legal form, where it was incorporated, where it is managed and its accounting period are taken as the customer gives them; Valo does not verify them.",
+  ],
+  unresolvedMaterialIssues: [],
+  missingEvidence: [],
+  sources: [
+    {
+      id: "ntaa-11",
+      passageId: "NTAA-11",
+      ...ntaa,
+      locator: "section 11(1)",
+      quote: selfAssessmentQuote,
+    },
+    {
+      id: "ntaa-147",
+      passageId: "NTAA-147-DEFINITIONS",
+      ...ntaa,
+      locator: 'section 147, "Nigerian Company"',
+      quote: nigerianCompanyQuote,
+    },
+  ],
+  claims: [
+    {
+      text: "Every company, including one granted exemption from incorporation and whether or not it is liable to pay tax, must file a self-assessment return with the Nigeria Revenue Service at least once a year.",
+      kind: "source_statement",
+      sourceId: "ntaa-11",
+      quote: selfAssessmentQuote,
+      locator: "section 11(1)",
+      numbers: [],
+    },
+    {
+      text: "The return subsection (2) requires of a non-resident company is not needed in a year in which the company only earns income on which the tax deducted at source is the final tax.",
+      kind: "source_statement",
+      sourceId: "ntaa-11",
+      quote: "where a non-resident company only earns income on which the amount",
+      locator: "section 11(3)",
+      numbers: [],
+    },
+    {
+      text: "A company that permanently ceases operation in Nigeria must file the returns for the year it ceases and any outstanding return.",
+      kind: "source_statement",
+      sourceId: "ntaa-11",
+      quote: "company shall file the returns for the year of cessation and any outstanding",
+      locator: "section 11(4)",
+      numbers: [],
+    },
+    {
+      text: "A Nigerian company includes any company formed or incorporated under any law in Nigeria.",
+      kind: "source_statement",
+      sourceId: "ntaa-147",
+      quote: nigerianCompanyQuote,
+      locator: 'section 147, "Nigerian Company"',
+      numbers: [],
+    },
+  ],
+  rights: adopted(companyReturnAdoption),
+  scenarios: [
+    scenario("nigerian-company-2026-accounts", { tax: nigerianCompany }, "Likely relevant"),
+    scenario(
+      "company-limited-by-guarantee",
+      { tax: { ...nigerianCompany, legalForm: "company_limited_by_guarantee" } },
+      "Likely relevant",
+    ),
+    scenario(
+      "company-ceased-operations",
+      { tax: { ...nigerianCompany, companyStatus: "permanently_ceased" } },
+      "Likely relevant",
+    ),
+    scenario(
+      "accounts-run-across-1-january-2026",
+      { tax: { ...nigerianCompany, accountingPeriodStart: "2025-07-01", accountingPeriodEnd: "2026-06-30" } },
+      "May apply",
+    ),
+    scenario(
+      "individual-trading-under-a-business-name",
+      { tax: { legalForm: "individual_business_name", incorporatedAsCompany: false } },
+      "Not indicated by these answers",
+    ),
+    scenario(
+      "unincorporated-partnership",
+      { tax: { legalForm: "ordinary_unincorporated_partnership", incorporatedAsCompany: false } },
+      "More information needed",
+    ),
+    scenario(
+      "foreign-company-managed-in-nigeria",
+      {
+        tax: {
+          legalForm: "foreign_company",
+          incorporatedInNigeria: false,
+          effectiveManagementCountry: "Nigeria",
+        },
+      },
+      "May apply",
+    ),
+    scenario(
+      "non-resident-foreign-company",
+      {
+        tax: {
+          legalForm: "foreign_company",
+          incorporatedInNigeria: false,
+          effectiveManagementCountry: "outside_Nigeria",
+          nonresident: true,
+        },
+      },
+      "Not indicated by these answers",
+    ),
+    scenario(
+      "foreign-label-but-incorporated-in-nigeria",
+      { tax: { legalForm: "foreign_company", incorporatedInNigeria: true } },
+      "More information needed",
+    ),
+    scenario(
+      "incorporated-trustees",
+      { tax: { legalForm: "incorporated_trustees", incorporatedInNigeria: true } },
+      "More information needed",
+    ),
+    scenario(
+      "where-incorporated-unknown",
+      { tax: { legalForm: "company", incorporatedInNigeria: notKnown } },
+      "More information needed",
+    ),
+    scenario("nothing-answered", {}, "More information needed"),
+  ],
+};
+
+/** The rules prepared for the owner's sign-off: three of decision 0020's four research notes. The
+ * NAFDAC note waits for a registered official copy of its Act (decision 0020, Consequences).
+ * Preparing a rule here releases nothing: the owner signs each version in Staff → System. */
+export const ownerRuleCandidates: OwnerRuleCandidate[] = [
+  businessNameRule,
+  collectionInformationRule,
+  companyReturnRule,
+];

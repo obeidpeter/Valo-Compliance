@@ -61,6 +61,7 @@ export async function exerciseOwnerRuleRoutes(call: Call, editor: string) {
     assert.deepEqual(items.map((item) => item.ruleId).sort(), [
       "cac-business-name-814",
       "ndpa-27-collection-information",
+      "ntaa-11-company-return",
     ]);
     for (const item of items) {
       // Nothing is released, nothing can be signed, and a calculated rule's customer words are in its

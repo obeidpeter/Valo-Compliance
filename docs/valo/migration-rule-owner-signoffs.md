@@ -14,8 +14,8 @@ database yet.
   published again: that takes a new version and a new sign-off.
 - Releases on the reviewed route are unchanged, and it reads and changes no existing row.
 
-**The application code depends on this migration only for owner-signed rules.** Two rules are
-prepared for the sign-off panel (Staff → System, "Requirements check: rule sign-off"), and neither is
+**The application code depends on this migration only for owner-signed rules.** Three rules are
+prepared for the sign-off panel (Staff → System, "Requirements check: rule sign-off"), and none is
 released until the owner signs it there.
 Until the migration is applied, signing a rule fails because its sign-off table is missing; the
 checker, the panel's list and the reviewed route work as before.
