@@ -66,6 +66,16 @@ What is left falls into five kinds:
 
 Small, and none needs a decision. This is where work starts.
 
+**Done on 24 November 2026.** Every row below is built, tested and merged into the integration
+branch: the release notice
+([#243](https://github.com/obeidpeter/Valo-Compliance/pull/243)), the guide reviews
+([#245](https://github.com/obeidpeter/Valo-Compliance/pull/245)), the support requests and
+checkout's daily limit ([#244](https://github.com/obeidpeter/Valo-Compliance/pull/244)), the
+records ([#246](https://github.com/obeidpeter/Valo-Compliance/pull/246)), the NAFDAC rule
+([#247](https://github.com/obeidpeter/Valo-Compliance/pull/247)) and the tests
+([#248](https://github.com/obeidpeter/Valo-Compliance/pull/248)). The NAFDAC rule, like the other
+three, is released only when the owner signs it.
+
 | What is left | Requirements | Size |
 | --- | --- | --- |
 | A rule released on the owner's sign-off shows no notice of how it was released on a customer's result, while the sign-off panel says "Shown with it". Show the notice on the result, in the saved result and in its download (checked twice) | EDP-008 | S |
