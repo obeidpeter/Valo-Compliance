@@ -303,8 +303,17 @@ export function compileForm(spec: GuidedSpecV2, text: FormText, data: GuidedData
     const answers = data.tables[table.id] ?? [];
     return answers.length ? answers : table.minRows > 0 ? [{}] : [];
   };
-  const render = (parts: FormInline[], row?: Row): string =>
-    parts
+  // An answer printed within a sentence keeps to one line: its line breaks print as commas. A slot
+  // that is a line of its own prints each answer, and each answer's lines, on lines of their own.
+  const oneLine = (answer: string) =>
+    answer
+      .split(/\n+/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .join(", ");
+  const render = (parts: FormInline[], row?: Row): string => {
+    const alone = parts.filter((p) => p.kind !== "text" || p.text.trim()).length === 1;
+    return parts
       .map((part) => {
         if (part.kind === "text") return part.text;
         if (part.kind === "span") return choice(part.span) ? render(part.parts, row) : "";
@@ -318,15 +327,16 @@ export function compileForm(spec: GuidedSpecV2, text: FormText, data: GuidedData
           const answers = (filling.get(part.name) ?? [])
             .map((field) => printed(field, data.values[field.id], data.values))
             .filter((a): a is string => a !== null);
-          value = answers.length ? answers.join(", ") : null;
+          value = answers.length ? (alone ? answers.join("\n") : answers.join(", ")) : null;
         }
         if (value === null) {
           note(part.name);
           return part.placeholder;
         }
-        return value;
+        return alone ? value : oneLine(value);
       })
       .join("");
+  };
   const blocks: FormBlock[] = [];
   const id = () => `${GUIDED_V2_PREFIX}${spec.templateId}:${blocks.length + 1}`;
   const walk = (nodes: FormNode[], row?: Row) => {

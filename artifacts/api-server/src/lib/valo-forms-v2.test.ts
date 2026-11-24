@@ -614,6 +614,31 @@ test("compiling repeats a group for each row, keeps a row for its choice, and pr
   assert.match(printed(none), /Apologies were received\./);
 });
 
+test("an answer within a sentence prints on one line, and a slot on a line of its own keeps each answer's lines", () => {
+  const lines = parseFormText("# T\n\nBetween [Party]{=party} and us.\n\nAddress:\n[Address]{=party}\n");
+  const lineSpec: GuidedSpecV2 = {
+    schemaVersion: 2,
+    templateId: "TPL-13",
+    title: "T",
+    fields: [
+      { id: "name", label: "Name", type: "text", required: true, tokens: ["party"] },
+      { id: "address", label: "Address", type: "long_text", required: true, tokens: ["party"] },
+    ],
+    tables: [],
+    blanks: [],
+  };
+  assert.deepEqual(formFit(lineSpec, lines), []);
+  const data = emptyFormData(lineSpec);
+  data.values = { name: "Synthetic Ltd", address: "1 Synthetic Road\n\nSynthetic Town " };
+  assert.deepEqual(
+    compileForm(lineSpec, lines, data).blocks.map((b) => b.text),
+    [
+      "Between Synthetic Ltd, 1 Synthetic Road, Synthetic Town and us.",
+      "Address:\nSynthetic Ltd\n1 Synthetic Road\n\nSynthetic Town",
+    ],
+  );
+});
+
 test("a save is refused for answers the form does not take, and keeps answers that are not valid yet as a draft", () => {
   const data = emptyFormData(spec);
   assert.deepEqual(formAnswerIssues(spec, data).refused, []);
