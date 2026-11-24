@@ -69,8 +69,10 @@ slot that is a line of its own keeps each answer on lines of its own.
 Anything else in braces, and any HTML, link or image, is refused. The grammar is frozen with the v2
 spec; a change to either makes v3.
 
-**The v2 spec** sits beside v1 (`guided-specs-v2.ts`, `guided-runtime-v2.ts`); v1's files do not change
-and the package's `./guided-specs` and `./guided-runtime` stay pinned to v1. Following decision 1:
+**The v2 spec** sits beside v1 (`guided-specs-v2.ts`, `guided-runtime-v2.ts`); v1's behaviour does not
+change, and the package's `./guided-specs` and `./guided-runtime` stay pinned to v1. (Slice 5a widened
+one v1 type only, so that v1's functions, which leave other blocks untouched, accept a document that
+has v2's headings and header rows.) Following decision 1:
 
 - every question v2 keeps is taken from `GUIDED_SPECS_V1` by reference, with its label, help, options,
   type and conditions unchanged, and a test compares them;
@@ -134,7 +136,7 @@ fills only the business's own details: never a counterparty, an address, a date,
 | 2 | valo-core: the form-text grammar, the v2 spec types, the fit check, compiling and the answer-type rules. Pure code, not yet used. Shipped with slice 3. | EDT-001, EDT-002 |
 | 3 | The renderer: headings and header rows that repeat on each page, v1's HTML pinned. The contract and the revision codec take them in slice 5, with the documents that use them. | EDT-002, EDT-006, EDT-009 |
 | 4 | The library's form text: its column and trigger, the staff save and preview of the fit, the action that files proposed form text as private drafts, and the first v2 form and annotation map, the invoice's (TPL-01). | EDT-001, EDT-002, DOC-004 |
-| 5 | Starting, editing, saving and exporting the free v2 forms, with the document's form record, and the maps and forms of the other six free templates (TPL-02, 03, 04, 05, 08, 12). | EDT-001, EDT-002, EDT-005, EDT-006, DOC-005 |
+| 5 | Starting, editing, saving and exporting the free v2 forms, with the document's form record, and the maps and forms of the other six free templates (TPL-02, 03, 04, 05, 08, 12). In three pull requests: 5a, the server, the contract and the form record, with the invoice; 5b, the editor; 5c, the other six maps. | EDT-001, EDT-002, EDT-005, EDT-006, DOC-005 |
 | 6 | The premium v2 forms (TPL-13 to TPL-17), with their maps: each agreement's schedules need more question-to-wording decisions than a free form's. | DOC-004, DOC-005, DOC-007, EDT-010 |
 | 7 | The starter, the template page, examples and the profile's details. | EDT-001, DOC-005, PRO-003 (in part) |
 

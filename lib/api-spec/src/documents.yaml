@@ -68,6 +68,40 @@ paths:
         "404": { $ref: "#/components/responses/AuthError" }
         "409": { $ref: "#/components/responses/AuthError" }
         "429": { $ref: "#/components/responses/WriteLimit" }
+  /workspace/form-documents:
+    post:
+      operationId: startFormDocument
+      description: "Starts a document from a template's form (forms v2): from the most recently released edition of its wording, when the form fits it. The answers start empty."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/FormDocumentStart" }
+      responses:
+        "201":
+          description: The new form document
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BusinessDocument" }
+        "401": { $ref: "#/components/responses/AuthError" }
+        "403": { $ref: "#/components/responses/AuthError" }
+        "409": { $ref: "#/components/responses/AuthError" }
+        "429": { $ref: "#/components/responses/WriteLimit" }
+  /workspace/documents/{id}/form:
+    get:
+      operationId: getDocumentForm
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: "The form text of the edition the document was started with, for its editor to fill. Only the workspace that owns the document can read it."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DocumentFormText" }
+        "401": { $ref: "#/components/responses/AuthError" }
+        "403": { $ref: "#/components/responses/AuthError" }
+        "404": { $ref: "#/components/responses/AuthError" }
+        "429": { $ref: "#/components/responses/QuotaError" }
   /workspace/documents/{id}/revisions:
     get:
       operationId: listDocumentRevisions
@@ -101,3 +135,17 @@ schemas:
       expectedRevision: { type: integer, minimum: 1 }
       title: { type: string, minLength: 1, maxLength: 160 }
       content: { $ref: "#/components/schemas/CanonicalDocument" }
+  FormDocumentStart:
+    type: object
+    additionalProperties: false
+    required: [templateId]
+    properties:
+      templateId: { type: string, pattern: "^TPL-[0-9]{2}$" }
+  DocumentFormText:
+    type: object
+    required: [edition, editionVersion, title, formText]
+    properties:
+      edition: { type: string, format: uuid }
+      editionVersion: { type: integer }
+      title: { type: string }
+      formText: { type: string }

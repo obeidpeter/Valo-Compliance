@@ -13,4 +13,5 @@ export const DocumentBlockType = {
   paragraph: 'paragraph',
   list: 'list',
   table: 'table',
+  heading: 'heading',
 } as const;

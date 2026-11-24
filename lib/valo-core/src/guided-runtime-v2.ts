@@ -1,5 +1,6 @@
 import { formatKobo } from "./money";
 import {
+  GUIDED_DOCUMENT_NOTE,
   guidedCalendarDate,
   guidedFieldIssue,
   guidedVisible,
@@ -407,4 +408,59 @@ export function compileForm(spec: GuidedSpecV2, text: FormText, data: GuidedData
       return f.options?.some((o) => o.value === answer) ? [`${f.id}=${answer}`] : [];
     });
   return { title: text.title, blocks, selectedClauses, unfilled };
+}
+
+/** A form document's block, as the contract holds it: a heading keeps its level, and a table's
+ * first row is its header, repeated on each page. */
+export type FormDocumentBlock = {
+  id: string;
+  type: "paragraph" | "list" | "table" | "heading";
+  text: string;
+  rows: string[][];
+  level?: 2 | 3;
+  headerRows?: 1;
+};
+/**
+ * The saved document a form's answers make (forms v2): the edition's wording filled in, the passages
+ * kept, the answers themselves, and the document's own fields taken from the answers as v1 takes
+ * them, so that the documents list and the files show the same names and dates. The note and the
+ * formatting are the document's own and carry over from the previous revision.
+ */
+export function formDocumentContent(
+  spec: GuidedSpecV2,
+  text: FormText,
+  data: GuidedDataV2,
+  previous?: {
+    fields: { notes: string };
+    formatting: { font: "serif" | "sans"; accent: "forest" | "charcoal" };
+  },
+) {
+  const compiled = compileForm(spec, text, data);
+  const v = data.values;
+  const plain = (key: string, max = 160) => ((v[key] ?? "").length <= max ? (v[key] ?? "") : "");
+  const issueDate = guidedCalendarDate(v.issueDate ?? "") ? v.issueDate! : "";
+  const due = v.dueDate ?? "";
+  const dueDate =
+    spec.templateId === "TPL-01" && guidedCalendarDate(due) && (!issueDate || due >= issueDate) ? due : "";
+  return {
+    fields: {
+      issuerName: plain("issuerName"),
+      recipientName: plain("recipientName"),
+      documentNumber: plain("documentNumber", 80),
+      issueDate,
+      dueDate,
+      notes: previous?.fields.notes ?? GUIDED_DOCUMENT_NOTE,
+    },
+    blocks: compiled.blocks.map((block): FormDocumentBlock =>
+      block.type === "heading"
+        ? { id: block.id, type: "heading", level: block.level, text: block.text, rows: [] }
+        : block.type === "table"
+          ? { ...block, headerRows: 1 }
+          : block,
+    ),
+    selectedClauses: compiled.selectedClauses,
+    formatting: previous?.formatting ?? { font: "serif" as const, accent: "forest" as const },
+    formAnswers: data,
+    unfilled: compiled.unfilled,
+  };
 }

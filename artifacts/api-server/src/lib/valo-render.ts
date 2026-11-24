@@ -19,6 +19,7 @@ import {
   guidedRenderableBlocks,
   printedCalendarDate,
 } from "@workspace/valo-core/guided-runtime";
+import { GUIDED_V2_PREFIX } from "@workspace/valo-core/guided-v2";
 import { chromiumLaunchPath } from "../platform/chromium";
 import {
   GUIDANCE_DRAFT_NOTICE,
@@ -122,9 +123,13 @@ export type PrintedBlock = {
   type: "paragraph" | "list" | "table" | "heading";
   text: string;
   rows: string[][];
-  level?: 2 | 3;
-  headerRows?: 0 | 1;
+  level?: 2 | 3 | undefined;
+  headerRows?: 0 | 1 | undefined;
 };
+/** A document made from a form, v1's questions or v2's filled wording, prints only its note among its
+ * fields: the names and dates are in its own text. */
+const madeFromForm = (blocks: readonly { id: string }[]) =>
+  blocks.some((b) => b.id.startsWith(GUIDED_PREFIX) || b.id.startsWith(GUIDED_V2_PREFIX));
 const usesFormLayout = (blocks: readonly PrintedBlock[]) =>
   blocks.some((b) => b.type === "heading" || Boolean(b.headerRows));
 /** The blocks' HTML, as the page and the PDF print them. Every text is escaped. */
@@ -164,11 +169,7 @@ export function controlledHtml(raw: unknown, revision: number, mode: RenderMode 
   const e = escapeHtml;
   const font = content.formatting.font === "serif" ? "Georgia, serif" : "Arial, sans-serif";
   const colour = content.formatting.accent === "forest" ? "#214d3b" : "#292724";
-  const fields = printedFields(
-    content.fields,
-    content.blocks.some((b) => b.id.startsWith(GUIDED_PREFIX)),
-    mode,
-  );
+  const fields = printedFields(content.fields, madeFromForm(content.blocks), mode);
   const printed: PrintedBlock[] = guidedRenderableBlocks(content);
   const blocks = blocksHtml(printed, mode);
   const layout = usesFormLayout(printed) ? FORM_LAYOUT_STYLE : "";
@@ -186,11 +187,7 @@ export async function renderDocument(
 ): Promise<Buffer> {
   const notice = noticeFor(mode);
   const { title, content } = documentInput.parse(raw);
-  const fields = printedFields(
-    content.fields,
-    content.blocks.some((b) => b.id.startsWith(GUIDED_PREFIX)),
-    mode,
-  );
+  const fields = printedFields(content.fields, madeFromForm(content.blocks), mode);
   if (format === "docx") {
     const children: (Paragraph | Table)[] = [
       new Paragraph({ text: notice }),

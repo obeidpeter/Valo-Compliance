@@ -15,9 +15,11 @@ import { createTicket } from "../modules/support";
 import {
   listDocuments,
   getDocument,
+  getDocumentForm,
   listRevisions,
   createDocument,
   saveDocument,
+  startFormDocument,
 } from "../modules/documents";
 import { getWorkspace, saveProfile } from "../modules/workspaces";
 import requirementsRouter from "./valo-requirements";
@@ -205,6 +207,13 @@ router.get("/workspace/documents/:id", async (req, res) => {
 });
 router.patch("/workspace/documents/:id", async (req, res) => {
   res.json(await saveDocument(res.locals.valoActor, z.string().uuid().parse(req.params.id), req.body));
+});
+router.post("/workspace/form-documents", async (req, res) => {
+  res.status(201).json(await startFormDocument(res.locals.valoActor, req.body));
+});
+router.get("/workspace/documents/:id/form", async (req, res) => {
+  res.set("Cache-Control", "private, no-store");
+  res.json(await getDocumentForm(res.locals.valoActor, z.string().uuid().parse(req.params.id)));
 });
 router.get("/workspace/documents/:id/revisions", async (req, res) => {
   res.json(await listRevisions(res.locals.valoActor, z.string().uuid().parse(req.params.id)));

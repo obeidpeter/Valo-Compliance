@@ -7,6 +7,7 @@
  */
 import type { BusinessDocumentStatus } from './businessDocumentStatus';
 import type { CanonicalDocument } from './canonicalDocument';
+import type { DocumentForm } from './documentForm';
 
 export interface BusinessDocument {
   revisionId: string;
@@ -20,4 +21,5 @@ export interface BusinessDocument {
   status: BusinessDocumentStatus;
   /** @nullable */
   templateVersion: string | null;
+  form: DocumentForm | null;
 }

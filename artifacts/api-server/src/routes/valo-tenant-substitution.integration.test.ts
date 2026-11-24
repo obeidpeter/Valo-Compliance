@@ -71,6 +71,7 @@ const CASE_KEYS = [
   "GET /workspace/documents/{id}",
   "PATCH /workspace/documents/{id}",
   "GET /workspace/documents/{id}/revisions",
+  "GET /workspace/documents/{id}/form",
   "POST /workspace/orders/{id}/checkout",
   "GET /workspace/orders/{id}/dispute-information",
   "POST /workspace/orders/{id}/dispute-information",
@@ -113,6 +114,14 @@ const REQUEST_FIELDS_NOT_WORKSPACE_OWNED: Record<string, string> = {
     "Block identifiers inside the document's own content, chosen by the client.",
   "POST /workspace/ai-drafts/{id}/accept body.content.blocks[].id":
     "Block identifiers inside the draft's own content, chosen by the client.",
+  "POST /workspace/form-documents body.templateId":
+    "Public catalogue template identifier; the document is started in the caller's own workspace.",
+  "POST /workspace/documents body.content.formAnswers.templateId":
+    "The public catalogue template a document's own answers belong to; a form document starts only from its form, which records its edition.",
+  "PATCH /workspace/documents/{id} body.content.formAnswers.templateId":
+    "The public catalogue template a document's own answers belong to; the save is checked against the edition the document records.",
+  "POST /workspace/ai-drafts/{id}/accept body.content.formAnswers.templateId":
+    "The public catalogue template a draft's own answers belong to; a form document starts only from its form, which records its edition.",
 };
 
 /**
@@ -413,7 +422,9 @@ test(
       },
     });
     const { default: app } = await import("../app");
-    const { db, pool, valoAIDrafts, valoOrders, valoPrices } = await import("@workspace/db");
+    const { db, pool, valoAIDrafts, valoManualLibrary, valoOrders, valoPrices, valoStaffAssignments } =
+      await import("@workspace/db");
+    const { eq } = await import("drizzle-orm");
     const { resolveWorkspace, saveProfile } = await import("../modules/workspaces");
     const { syntheticDocument, syntheticProfile } = await import("../lib/valo-test-fixtures");
     const { financeHeldFixture } = await import("../modules/commerce/valo-finance-test-fixture");
@@ -450,6 +461,7 @@ test(
     const json = (reply: Reply) => JSON.parse(reply.text) as Record<string, unknown>;
     const identity = (role: string) => `synthetic-tenant-${tag}-${role}`;
 
+    let formEdition: { id: string; editor: string } | undefined;
     try {
       // The owner's resources, created through the same API wherever the test
       // environment allows it.
@@ -571,6 +583,41 @@ test(
       const supportCase = (json(supportCases).cases as { id: string; version: number }[])[0]!;
       assert.ok(supportCase);
 
+      // A form document starts only from a released edition of its template's wording: a
+      // synthetic library row that a synthetic Content editor releases here, withdrawn at the end.
+      const { proposedFormText } = await import("../modules/manual-library/form-text-maps");
+      formEdition = { id: randomUUID(), editor: identity("form-editor") };
+      await db.insert(valoStaffAssignments).values({
+        id: randomUUID(),
+        identityId: formEdition.editor,
+        role: "content",
+        grantedBy: "synthetic test",
+        reason: "Synthetic form edition for the substitution proof",
+      });
+      await db.insert(valoManualLibrary).values({
+        id: formEdition.id,
+        itemId: formEdition.id,
+        version: 1,
+        slug: "manual-" + formEdition.id,
+        kind: "template",
+        title: "Invoice",
+        body: "Synthetic invoice description",
+        digest: "a".repeat(64),
+        fileFormat: "docx",
+        fileBytes: Buffer.from("synthetic"),
+        formText: await proposedFormText("TPL-01"),
+        createdBy: formEdition.editor,
+      });
+      await db
+        .update(valoManualLibrary)
+        .set({ state: "published", publishedBy: formEdition.editor, publishedAt: new Date() })
+        .where(eq(valoManualLibrary.id, formEdition.id));
+      const createdFormDocument = await call(owner, "POST", "/workspace/form-documents", {
+        templateId: "TPL-01",
+      });
+      assert.equal(createdFormDocument.status, 201, createdFormDocument.text);
+      const formDocument = json(createdFormDocument) as { id: string };
+
       const content = syntheticDocument.content;
       const cases: Record<(typeof CASE_KEYS)[number], Case> = {
         "GET /v1/documents/{id}/exports": { params: { id: document.id }, ownerStatus: 200 },
@@ -613,6 +660,7 @@ test(
           ownerStatus: 200,
         },
         "GET /workspace/documents/{id}/revisions": { params: { id: document.id }, ownerStatus: 200 },
+        "GET /workspace/documents/{id}/form": { params: { id: formDocument.id }, ownerStatus: 200 },
         "POST /workspace/orders/{id}/checkout": { params: { id: orderId }, body: {} },
         "GET /workspace/orders/{id}/dispute-information": { params: { id: orderId } },
         "POST /workspace/orders/{id}/dispute-information": {
@@ -1071,6 +1119,7 @@ test(
           "GET /workspace/data-exports": {},
           "GET /workspace/disputes": {},
           "GET /workspace/documents": {},
+          "POST /workspace/form-documents": { body: () => ({ templateId: "TPL-01" }) },
           "GET /workspace/privacy-cases": {},
           "GET /workspace/purchases": {},
           "GET /workspace/owned-template-editions": {},
@@ -1175,6 +1224,17 @@ test(
         }
       });
     } finally {
+      // The synthetic edition starts no further form after this test.
+      if (formEdition) {
+        await db
+          .update(valoManualLibrary)
+          .set({ state: "withdrawn", closedBy: formEdition.editor, closedAt: new Date() })
+          .where(eq(valoManualLibrary.id, formEdition.id));
+        await db
+          .update(valoStaffAssignments)
+          .set({ active: false })
+          .where(eq(valoStaffAssignments.identityId, formEdition.editor));
+      }
       if (previousOrigin === undefined) delete process.env.VALO_TRUSTED_ORIGIN;
       else process.env.VALO_TRUSTED_ORIGIN = previousOrigin;
       await new Promise<void>((resolve, reject) =>

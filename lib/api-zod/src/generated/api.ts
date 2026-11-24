@@ -133,7 +133,18 @@ export const createCustomerAIDraftResponseContentBlocksItemRowsMax = 100;
 
 export const createCustomerAIDraftResponseContentBlocksMax = 100;
 
-export const createCustomerAIDraftResponseContentSelectedClausesMax = 0;
+export const createCustomerAIDraftResponseContentSelectedClausesItemMax = 120;
+
+
+export const createCustomerAIDraftResponseContentSelectedClausesItemRegExp = new RegExp('^[a-z][A-Za-z0-9]*=[a-z0-9_]+$');
+export const createCustomerAIDraftResponseContentSelectedClausesMax = 40;
+
+export const createCustomerAIDraftResponseContentFormAnswersTemplateIdRegExp = new RegExp('^TPL-[0-9]{2}$');
+export const createCustomerAIDraftResponseContentFormAnswersValuesMaxOne = 4400;
+
+export const createCustomerAIDraftResponseContentFormAnswersTablesItemMaxOne = 4400;
+
+export const createCustomerAIDraftResponseContentFormAnswersTablesMaxOne = 100;
 
 export const createCustomerAIDraftResponseContentFinancialInputLinesItemDescriptionMax = 200;
 
@@ -189,11 +200,19 @@ export const CreateCustomerAIDraftResponse = zod.object({
 }),
   "blocks": zod.array(zod.object({
   "id": zod.string().min(1).max(createCustomerAIDraftResponseContentBlocksItemIdMax),
-  "type": zod.enum(['paragraph', 'list', 'table']),
+  "type": zod.enum(['paragraph', 'list', 'table', 'heading']),
   "text": zod.string().max(createCustomerAIDraftResponseContentBlocksItemTextMax),
-  "rows": zod.array(zod.array(zod.string().max(createCustomerAIDraftResponseContentBlocksItemRowsItemItemMax)).max(createCustomerAIDraftResponseContentBlocksItemRowsItemMax)).max(createCustomerAIDraftResponseContentBlocksItemRowsMax)
+  "rows": zod.array(zod.array(zod.string().max(createCustomerAIDraftResponseContentBlocksItemRowsItemItemMax)).max(createCustomerAIDraftResponseContentBlocksItemRowsItemMax)).max(createCustomerAIDraftResponseContentBlocksItemRowsMax),
+  "level": zod.union([zod.literal(2),zod.literal(3)]).optional().describe('A heading\'s level. Only a form document (forms v2) has headings.'),
+  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its header, repeated on each page. Only a form document\'s tables have one.')
 })).max(createCustomerAIDraftResponseContentBlocksMax),
-  "selectedClauses": zod.array(zod.string()).max(createCustomerAIDraftResponseContentSelectedClausesMax),
+  "selectedClauses": zod.array(zod.string().max(createCustomerAIDraftResponseContentSelectedClausesItemMax).regex(createCustomerAIDraftResponseContentSelectedClausesItemRegExp)).max(createCustomerAIDraftResponseContentSelectedClausesMax).describe('The passages a form document\'s answers keep, as question=option. Empty for every other document.'),
+  "formAnswers": zod.object({
+  "schemaVersion": zod.literal(2),
+  "templateId": zod.string().regex(createCustomerAIDraftResponseContentFormAnswersTemplateIdRegExp),
+  "values": zod.record(zod.string(), zod.string().max(createCustomerAIDraftResponseContentFormAnswersValuesMaxOne)),
+  "tables": zod.record(zod.string(), zod.array(zod.record(zod.string(), zod.string().max(createCustomerAIDraftResponseContentFormAnswersTablesItemMaxOne))).max(createCustomerAIDraftResponseContentFormAnswersTablesMaxOne))
+}).optional().describe('A form document\'s answers (forms v2). Its blocks are exactly what these answers make from the form text of the edition it was started with.'),
   "financialInput": zod.object({
   "kind": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
   "lines": zod.array(zod.object({
@@ -272,7 +291,18 @@ export const getCustomerAIDraftResponseContentBlocksItemRowsMax = 100;
 
 export const getCustomerAIDraftResponseContentBlocksMax = 100;
 
-export const getCustomerAIDraftResponseContentSelectedClausesMax = 0;
+export const getCustomerAIDraftResponseContentSelectedClausesItemMax = 120;
+
+
+export const getCustomerAIDraftResponseContentSelectedClausesItemRegExp = new RegExp('^[a-z][A-Za-z0-9]*=[a-z0-9_]+$');
+export const getCustomerAIDraftResponseContentSelectedClausesMax = 40;
+
+export const getCustomerAIDraftResponseContentFormAnswersTemplateIdRegExp = new RegExp('^TPL-[0-9]{2}$');
+export const getCustomerAIDraftResponseContentFormAnswersValuesMaxOne = 4400;
+
+export const getCustomerAIDraftResponseContentFormAnswersTablesItemMaxOne = 4400;
+
+export const getCustomerAIDraftResponseContentFormAnswersTablesMaxOne = 100;
 
 export const getCustomerAIDraftResponseContentFinancialInputLinesItemDescriptionMax = 200;
 
@@ -328,11 +358,19 @@ export const GetCustomerAIDraftResponse = zod.object({
 }),
   "blocks": zod.array(zod.object({
   "id": zod.string().min(1).max(getCustomerAIDraftResponseContentBlocksItemIdMax),
-  "type": zod.enum(['paragraph', 'list', 'table']),
+  "type": zod.enum(['paragraph', 'list', 'table', 'heading']),
   "text": zod.string().max(getCustomerAIDraftResponseContentBlocksItemTextMax),
-  "rows": zod.array(zod.array(zod.string().max(getCustomerAIDraftResponseContentBlocksItemRowsItemItemMax)).max(getCustomerAIDraftResponseContentBlocksItemRowsItemMax)).max(getCustomerAIDraftResponseContentBlocksItemRowsMax)
+  "rows": zod.array(zod.array(zod.string().max(getCustomerAIDraftResponseContentBlocksItemRowsItemItemMax)).max(getCustomerAIDraftResponseContentBlocksItemRowsItemMax)).max(getCustomerAIDraftResponseContentBlocksItemRowsMax),
+  "level": zod.union([zod.literal(2),zod.literal(3)]).optional().describe('A heading\'s level. Only a form document (forms v2) has headings.'),
+  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its header, repeated on each page. Only a form document\'s tables have one.')
 })).max(getCustomerAIDraftResponseContentBlocksMax),
-  "selectedClauses": zod.array(zod.string()).max(getCustomerAIDraftResponseContentSelectedClausesMax),
+  "selectedClauses": zod.array(zod.string().max(getCustomerAIDraftResponseContentSelectedClausesItemMax).regex(getCustomerAIDraftResponseContentSelectedClausesItemRegExp)).max(getCustomerAIDraftResponseContentSelectedClausesMax).describe('The passages a form document\'s answers keep, as question=option. Empty for every other document.'),
+  "formAnswers": zod.object({
+  "schemaVersion": zod.literal(2),
+  "templateId": zod.string().regex(getCustomerAIDraftResponseContentFormAnswersTemplateIdRegExp),
+  "values": zod.record(zod.string(), zod.string().max(getCustomerAIDraftResponseContentFormAnswersValuesMaxOne)),
+  "tables": zod.record(zod.string(), zod.array(zod.record(zod.string(), zod.string().max(getCustomerAIDraftResponseContentFormAnswersTablesItemMaxOne))).max(getCustomerAIDraftResponseContentFormAnswersTablesMaxOne))
+}).optional().describe('A form document\'s answers (forms v2). Its blocks are exactly what these answers make from the form text of the edition it was started with.'),
   "financialInput": zod.object({
   "kind": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
   "lines": zod.array(zod.object({
@@ -413,7 +451,18 @@ export const acceptCustomerAIDraftBodyContentBlocksItemRowsMax = 100;
 
 export const acceptCustomerAIDraftBodyContentBlocksMax = 100;
 
-export const acceptCustomerAIDraftBodyContentSelectedClausesMax = 0;
+export const acceptCustomerAIDraftBodyContentSelectedClausesItemMax = 120;
+
+
+export const acceptCustomerAIDraftBodyContentSelectedClausesItemRegExp = new RegExp('^[a-z][A-Za-z0-9]*=[a-z0-9_]+$');
+export const acceptCustomerAIDraftBodyContentSelectedClausesMax = 40;
+
+export const acceptCustomerAIDraftBodyContentFormAnswersTemplateIdRegExp = new RegExp('^TPL-[0-9]{2}$');
+export const acceptCustomerAIDraftBodyContentFormAnswersValuesMaxOne = 4400;
+
+export const acceptCustomerAIDraftBodyContentFormAnswersTablesItemMaxOne = 4400;
+
+export const acceptCustomerAIDraftBodyContentFormAnswersTablesMaxOne = 100;
 
 export const acceptCustomerAIDraftBodyContentFinancialInputLinesItemDescriptionMax = 200;
 
@@ -466,11 +515,19 @@ export const AcceptCustomerAIDraftBody = zod.object({
 }),
   "blocks": zod.array(zod.object({
   "id": zod.string().min(1).max(acceptCustomerAIDraftBodyContentBlocksItemIdMax),
-  "type": zod.enum(['paragraph', 'list', 'table']),
+  "type": zod.enum(['paragraph', 'list', 'table', 'heading']),
   "text": zod.string().max(acceptCustomerAIDraftBodyContentBlocksItemTextMax),
-  "rows": zod.array(zod.array(zod.string().max(acceptCustomerAIDraftBodyContentBlocksItemRowsItemItemMax)).max(acceptCustomerAIDraftBodyContentBlocksItemRowsItemMax)).max(acceptCustomerAIDraftBodyContentBlocksItemRowsMax)
+  "rows": zod.array(zod.array(zod.string().max(acceptCustomerAIDraftBodyContentBlocksItemRowsItemItemMax)).max(acceptCustomerAIDraftBodyContentBlocksItemRowsItemMax)).max(acceptCustomerAIDraftBodyContentBlocksItemRowsMax),
+  "level": zod.union([zod.literal(2),zod.literal(3)]).optional().describe('A heading\'s level. Only a form document (forms v2) has headings.'),
+  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its header, repeated on each page. Only a form document\'s tables have one.')
 })).max(acceptCustomerAIDraftBodyContentBlocksMax),
-  "selectedClauses": zod.array(zod.string()).max(acceptCustomerAIDraftBodyContentSelectedClausesMax),
+  "selectedClauses": zod.array(zod.string().max(acceptCustomerAIDraftBodyContentSelectedClausesItemMax).regex(acceptCustomerAIDraftBodyContentSelectedClausesItemRegExp)).max(acceptCustomerAIDraftBodyContentSelectedClausesMax).describe('The passages a form document\'s answers keep, as question=option. Empty for every other document.'),
+  "formAnswers": zod.object({
+  "schemaVersion": zod.literal(2),
+  "templateId": zod.string().regex(acceptCustomerAIDraftBodyContentFormAnswersTemplateIdRegExp),
+  "values": zod.record(zod.string(), zod.string().max(acceptCustomerAIDraftBodyContentFormAnswersValuesMaxOne)),
+  "tables": zod.record(zod.string(), zod.array(zod.record(zod.string(), zod.string().max(acceptCustomerAIDraftBodyContentFormAnswersTablesItemMaxOne))).max(acceptCustomerAIDraftBodyContentFormAnswersTablesMaxOne))
+}).optional().describe('A form document\'s answers (forms v2). Its blocks are exactly what these answers make from the form text of the edition it was started with.'),
   "financialInput": zod.object({
   "kind": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
   "lines": zod.array(zod.object({
@@ -538,7 +595,18 @@ export const acceptCustomerAIDraftResponseContentBlocksItemRowsMax = 100;
 
 export const acceptCustomerAIDraftResponseContentBlocksMax = 100;
 
-export const acceptCustomerAIDraftResponseContentSelectedClausesMax = 0;
+export const acceptCustomerAIDraftResponseContentSelectedClausesItemMax = 120;
+
+
+export const acceptCustomerAIDraftResponseContentSelectedClausesItemRegExp = new RegExp('^[a-z][A-Za-z0-9]*=[a-z0-9_]+$');
+export const acceptCustomerAIDraftResponseContentSelectedClausesMax = 40;
+
+export const acceptCustomerAIDraftResponseContentFormAnswersTemplateIdRegExp = new RegExp('^TPL-[0-9]{2}$');
+export const acceptCustomerAIDraftResponseContentFormAnswersValuesMaxOne = 4400;
+
+export const acceptCustomerAIDraftResponseContentFormAnswersTablesItemMaxOne = 4400;
+
+export const acceptCustomerAIDraftResponseContentFormAnswersTablesMaxOne = 100;
 
 export const acceptCustomerAIDraftResponseContentFinancialInputLinesItemDescriptionMax = 200;
 
@@ -576,6 +644,7 @@ export const acceptCustomerAIDraftResponseContentFinancialInputPaymentRecordPaym
 export const acceptCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const acceptCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsMax = 40;
 
+export const acceptCustomerAIDraftResponseFormOneDigestRegExp = new RegExp('^[0-9a-f]{64}$');
 
 
 export const AcceptCustomerAIDraftResponse = zod.object({
@@ -594,11 +663,19 @@ export const AcceptCustomerAIDraftResponse = zod.object({
 }),
   "blocks": zod.array(zod.object({
   "id": zod.string().min(1).max(acceptCustomerAIDraftResponseContentBlocksItemIdMax),
-  "type": zod.enum(['paragraph', 'list', 'table']),
+  "type": zod.enum(['paragraph', 'list', 'table', 'heading']),
   "text": zod.string().max(acceptCustomerAIDraftResponseContentBlocksItemTextMax),
-  "rows": zod.array(zod.array(zod.string().max(acceptCustomerAIDraftResponseContentBlocksItemRowsItemItemMax)).max(acceptCustomerAIDraftResponseContentBlocksItemRowsItemMax)).max(acceptCustomerAIDraftResponseContentBlocksItemRowsMax)
+  "rows": zod.array(zod.array(zod.string().max(acceptCustomerAIDraftResponseContentBlocksItemRowsItemItemMax)).max(acceptCustomerAIDraftResponseContentBlocksItemRowsItemMax)).max(acceptCustomerAIDraftResponseContentBlocksItemRowsMax),
+  "level": zod.union([zod.literal(2),zod.literal(3)]).optional().describe('A heading\'s level. Only a form document (forms v2) has headings.'),
+  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its header, repeated on each page. Only a form document\'s tables have one.')
 })).max(acceptCustomerAIDraftResponseContentBlocksMax),
-  "selectedClauses": zod.array(zod.string()).max(acceptCustomerAIDraftResponseContentSelectedClausesMax),
+  "selectedClauses": zod.array(zod.string().max(acceptCustomerAIDraftResponseContentSelectedClausesItemMax).regex(acceptCustomerAIDraftResponseContentSelectedClausesItemRegExp)).max(acceptCustomerAIDraftResponseContentSelectedClausesMax).describe('The passages a form document\'s answers keep, as question=option. Empty for every other document.'),
+  "formAnswers": zod.object({
+  "schemaVersion": zod.literal(2),
+  "templateId": zod.string().regex(acceptCustomerAIDraftResponseContentFormAnswersTemplateIdRegExp),
+  "values": zod.record(zod.string(), zod.string().max(acceptCustomerAIDraftResponseContentFormAnswersValuesMaxOne)),
+  "tables": zod.record(zod.string(), zod.array(zod.record(zod.string(), zod.string().max(acceptCustomerAIDraftResponseContentFormAnswersTablesItemMaxOne))).max(acceptCustomerAIDraftResponseContentFormAnswersTablesMaxOne))
+}).optional().describe('A form document\'s answers (forms v2). Its blocks are exactly what these answers make from the form text of the edition it was started with.'),
   "financialInput": zod.object({
   "kind": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
   "lines": zod.array(zod.object({
@@ -643,7 +720,12 @@ export const AcceptCustomerAIDraftResponse = zod.object({
   "createdAt": zod.string(),
   "updatedAt": zod.string(),
   "status": zod.enum(['business_draft']),
-  "templateVersion": zod.string().nullable()
+  "templateVersion": zod.string().nullable(),
+  "form": zod.union([zod.object({
+  "version": zod.literal(2),
+  "edition": zod.uuid(),
+  "digest": zod.string().regex(acceptCustomerAIDraftResponseFormOneDigestRegExp)
+}).describe('The form a document was started with: its version, the released edition whose form text it fills, and that text\'s SHA-256. It never changes.'),zod.null()])
 })
 
 
@@ -1063,7 +1145,18 @@ export const createTemplateDraftResponseContentBlocksItemRowsMax = 100;
 
 export const createTemplateDraftResponseContentBlocksMax = 100;
 
-export const createTemplateDraftResponseContentSelectedClausesMax = 0;
+export const createTemplateDraftResponseContentSelectedClausesItemMax = 120;
+
+
+export const createTemplateDraftResponseContentSelectedClausesItemRegExp = new RegExp('^[a-z][A-Za-z0-9]*=[a-z0-9_]+$');
+export const createTemplateDraftResponseContentSelectedClausesMax = 40;
+
+export const createTemplateDraftResponseContentFormAnswersTemplateIdRegExp = new RegExp('^TPL-[0-9]{2}$');
+export const createTemplateDraftResponseContentFormAnswersValuesMaxOne = 4400;
+
+export const createTemplateDraftResponseContentFormAnswersTablesItemMaxOne = 4400;
+
+export const createTemplateDraftResponseContentFormAnswersTablesMaxOne = 100;
 
 export const createTemplateDraftResponseContentFinancialInputLinesItemDescriptionMax = 200;
 
@@ -1101,6 +1194,7 @@ export const createTemplateDraftResponseContentFinancialInputPaymentRecordPaymen
 export const createTemplateDraftResponseContentFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const createTemplateDraftResponseContentFinancialInputPaymentRecordPaymentsMax = 40;
 
+export const createTemplateDraftResponseFormOneDigestRegExp = new RegExp('^[0-9a-f]{64}$');
 
 
 export const CreateTemplateDraftResponse = zod.object({
@@ -1119,11 +1213,19 @@ export const CreateTemplateDraftResponse = zod.object({
 }),
   "blocks": zod.array(zod.object({
   "id": zod.string().min(1).max(createTemplateDraftResponseContentBlocksItemIdMax),
-  "type": zod.enum(['paragraph', 'list', 'table']),
+  "type": zod.enum(['paragraph', 'list', 'table', 'heading']),
   "text": zod.string().max(createTemplateDraftResponseContentBlocksItemTextMax),
-  "rows": zod.array(zod.array(zod.string().max(createTemplateDraftResponseContentBlocksItemRowsItemItemMax)).max(createTemplateDraftResponseContentBlocksItemRowsItemMax)).max(createTemplateDraftResponseContentBlocksItemRowsMax)
+  "rows": zod.array(zod.array(zod.string().max(createTemplateDraftResponseContentBlocksItemRowsItemItemMax)).max(createTemplateDraftResponseContentBlocksItemRowsItemMax)).max(createTemplateDraftResponseContentBlocksItemRowsMax),
+  "level": zod.union([zod.literal(2),zod.literal(3)]).optional().describe('A heading\'s level. Only a form document (forms v2) has headings.'),
+  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its header, repeated on each page. Only a form document\'s tables have one.')
 })).max(createTemplateDraftResponseContentBlocksMax),
-  "selectedClauses": zod.array(zod.string()).max(createTemplateDraftResponseContentSelectedClausesMax),
+  "selectedClauses": zod.array(zod.string().max(createTemplateDraftResponseContentSelectedClausesItemMax).regex(createTemplateDraftResponseContentSelectedClausesItemRegExp)).max(createTemplateDraftResponseContentSelectedClausesMax).describe('The passages a form document\'s answers keep, as question=option. Empty for every other document.'),
+  "formAnswers": zod.object({
+  "schemaVersion": zod.literal(2),
+  "templateId": zod.string().regex(createTemplateDraftResponseContentFormAnswersTemplateIdRegExp),
+  "values": zod.record(zod.string(), zod.string().max(createTemplateDraftResponseContentFormAnswersValuesMaxOne)),
+  "tables": zod.record(zod.string(), zod.array(zod.record(zod.string(), zod.string().max(createTemplateDraftResponseContentFormAnswersTablesItemMaxOne))).max(createTemplateDraftResponseContentFormAnswersTablesMaxOne))
+}).optional().describe('A form document\'s answers (forms v2). Its blocks are exactly what these answers make from the form text of the edition it was started with.'),
   "financialInput": zod.object({
   "kind": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
   "lines": zod.array(zod.object({
@@ -1168,7 +1270,12 @@ export const CreateTemplateDraftResponse = zod.object({
   "createdAt": zod.string(),
   "updatedAt": zod.string(),
   "status": zod.enum(['business_draft']),
-  "templateVersion": zod.string().nullable()
+  "templateVersion": zod.string().nullable(),
+  "form": zod.union([zod.object({
+  "version": zod.literal(2),
+  "edition": zod.uuid(),
+  "digest": zod.string().regex(createTemplateDraftResponseFormOneDigestRegExp)
+}).describe('The form a document was started with: its version, the released edition whose form text it fills, and that text\'s SHA-256. It never changes.'),zod.null()])
 })
 
 
@@ -2117,7 +2224,18 @@ export const listDocumentsResponseContentBlocksItemRowsMax = 100;
 
 export const listDocumentsResponseContentBlocksMax = 100;
 
-export const listDocumentsResponseContentSelectedClausesMax = 0;
+export const listDocumentsResponseContentSelectedClausesItemMax = 120;
+
+
+export const listDocumentsResponseContentSelectedClausesItemRegExp = new RegExp('^[a-z][A-Za-z0-9]*=[a-z0-9_]+$');
+export const listDocumentsResponseContentSelectedClausesMax = 40;
+
+export const listDocumentsResponseContentFormAnswersTemplateIdRegExp = new RegExp('^TPL-[0-9]{2}$');
+export const listDocumentsResponseContentFormAnswersValuesMaxOne = 4400;
+
+export const listDocumentsResponseContentFormAnswersTablesItemMaxOne = 4400;
+
+export const listDocumentsResponseContentFormAnswersTablesMaxOne = 100;
 
 export const listDocumentsResponseContentFinancialInputLinesItemDescriptionMax = 200;
 
@@ -2155,6 +2273,7 @@ export const listDocumentsResponseContentFinancialInputPaymentRecordPaymentsItem
 export const listDocumentsResponseContentFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const listDocumentsResponseContentFinancialInputPaymentRecordPaymentsMax = 40;
 
+export const listDocumentsResponseFormOneDigestRegExp = new RegExp('^[0-9a-f]{64}$');
 
 
 export const ListDocumentsResponseItem = zod.object({
@@ -2173,11 +2292,19 @@ export const ListDocumentsResponseItem = zod.object({
 }),
   "blocks": zod.array(zod.object({
   "id": zod.string().min(1).max(listDocumentsResponseContentBlocksItemIdMax),
-  "type": zod.enum(['paragraph', 'list', 'table']),
+  "type": zod.enum(['paragraph', 'list', 'table', 'heading']),
   "text": zod.string().max(listDocumentsResponseContentBlocksItemTextMax),
-  "rows": zod.array(zod.array(zod.string().max(listDocumentsResponseContentBlocksItemRowsItemItemMax)).max(listDocumentsResponseContentBlocksItemRowsItemMax)).max(listDocumentsResponseContentBlocksItemRowsMax)
+  "rows": zod.array(zod.array(zod.string().max(listDocumentsResponseContentBlocksItemRowsItemItemMax)).max(listDocumentsResponseContentBlocksItemRowsItemMax)).max(listDocumentsResponseContentBlocksItemRowsMax),
+  "level": zod.union([zod.literal(2),zod.literal(3)]).optional().describe('A heading\'s level. Only a form document (forms v2) has headings.'),
+  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its header, repeated on each page. Only a form document\'s tables have one.')
 })).max(listDocumentsResponseContentBlocksMax),
-  "selectedClauses": zod.array(zod.string()).max(listDocumentsResponseContentSelectedClausesMax),
+  "selectedClauses": zod.array(zod.string().max(listDocumentsResponseContentSelectedClausesItemMax).regex(listDocumentsResponseContentSelectedClausesItemRegExp)).max(listDocumentsResponseContentSelectedClausesMax).describe('The passages a form document\'s answers keep, as question=option. Empty for every other document.'),
+  "formAnswers": zod.object({
+  "schemaVersion": zod.literal(2),
+  "templateId": zod.string().regex(listDocumentsResponseContentFormAnswersTemplateIdRegExp),
+  "values": zod.record(zod.string(), zod.string().max(listDocumentsResponseContentFormAnswersValuesMaxOne)),
+  "tables": zod.record(zod.string(), zod.array(zod.record(zod.string(), zod.string().max(listDocumentsResponseContentFormAnswersTablesItemMaxOne))).max(listDocumentsResponseContentFormAnswersTablesMaxOne))
+}).optional().describe('A form document\'s answers (forms v2). Its blocks are exactly what these answers make from the form text of the edition it was started with.'),
   "financialInput": zod.object({
   "kind": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
   "lines": zod.array(zod.object({
@@ -2222,7 +2349,12 @@ export const ListDocumentsResponseItem = zod.object({
   "createdAt": zod.string(),
   "updatedAt": zod.string(),
   "status": zod.enum(['business_draft']),
-  "templateVersion": zod.string().nullable()
+  "templateVersion": zod.string().nullable(),
+  "form": zod.union([zod.object({
+  "version": zod.literal(2),
+  "edition": zod.uuid(),
+  "digest": zod.string().regex(listDocumentsResponseFormOneDigestRegExp)
+}).describe('The form a document was started with: its version, the released edition whose form text it fills, and that text\'s SHA-256. It never changes.'),zod.null()])
 })
 export const ListDocumentsResponse = zod.array(ListDocumentsResponseItem)
 
@@ -2253,7 +2385,18 @@ export const createDocumentBodyContentBlocksItemRowsMax = 100;
 
 export const createDocumentBodyContentBlocksMax = 100;
 
-export const createDocumentBodyContentSelectedClausesMax = 0;
+export const createDocumentBodyContentSelectedClausesItemMax = 120;
+
+
+export const createDocumentBodyContentSelectedClausesItemRegExp = new RegExp('^[a-z][A-Za-z0-9]*=[a-z0-9_]+$');
+export const createDocumentBodyContentSelectedClausesMax = 40;
+
+export const createDocumentBodyContentFormAnswersTemplateIdRegExp = new RegExp('^TPL-[0-9]{2}$');
+export const createDocumentBodyContentFormAnswersValuesMaxOne = 4400;
+
+export const createDocumentBodyContentFormAnswersTablesItemMaxOne = 4400;
+
+export const createDocumentBodyContentFormAnswersTablesMaxOne = 100;
 
 export const createDocumentBodyContentFinancialInputLinesItemDescriptionMax = 200;
 
@@ -2306,11 +2449,19 @@ export const CreateDocumentBody = zod.object({
 }),
   "blocks": zod.array(zod.object({
   "id": zod.string().min(1).max(createDocumentBodyContentBlocksItemIdMax),
-  "type": zod.enum(['paragraph', 'list', 'table']),
+  "type": zod.enum(['paragraph', 'list', 'table', 'heading']),
   "text": zod.string().max(createDocumentBodyContentBlocksItemTextMax),
-  "rows": zod.array(zod.array(zod.string().max(createDocumentBodyContentBlocksItemRowsItemItemMax)).max(createDocumentBodyContentBlocksItemRowsItemMax)).max(createDocumentBodyContentBlocksItemRowsMax)
+  "rows": zod.array(zod.array(zod.string().max(createDocumentBodyContentBlocksItemRowsItemItemMax)).max(createDocumentBodyContentBlocksItemRowsItemMax)).max(createDocumentBodyContentBlocksItemRowsMax),
+  "level": zod.union([zod.literal(2),zod.literal(3)]).optional().describe('A heading\'s level. Only a form document (forms v2) has headings.'),
+  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its header, repeated on each page. Only a form document\'s tables have one.')
 })).max(createDocumentBodyContentBlocksMax),
-  "selectedClauses": zod.array(zod.string()).max(createDocumentBodyContentSelectedClausesMax),
+  "selectedClauses": zod.array(zod.string().max(createDocumentBodyContentSelectedClausesItemMax).regex(createDocumentBodyContentSelectedClausesItemRegExp)).max(createDocumentBodyContentSelectedClausesMax).describe('The passages a form document\'s answers keep, as question=option. Empty for every other document.'),
+  "formAnswers": zod.object({
+  "schemaVersion": zod.literal(2),
+  "templateId": zod.string().regex(createDocumentBodyContentFormAnswersTemplateIdRegExp),
+  "values": zod.record(zod.string(), zod.string().max(createDocumentBodyContentFormAnswersValuesMaxOne)),
+  "tables": zod.record(zod.string(), zod.array(zod.record(zod.string(), zod.string().max(createDocumentBodyContentFormAnswersTablesItemMaxOne))).max(createDocumentBodyContentFormAnswersTablesMaxOne))
+}).optional().describe('A form document\'s answers (forms v2). Its blocks are exactly what these answers make from the form text of the edition it was started with.'),
   "financialInput": zod.object({
   "kind": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
   "lines": zod.array(zod.object({
@@ -2377,7 +2528,18 @@ export const createDocumentResponseContentBlocksItemRowsMax = 100;
 
 export const createDocumentResponseContentBlocksMax = 100;
 
-export const createDocumentResponseContentSelectedClausesMax = 0;
+export const createDocumentResponseContentSelectedClausesItemMax = 120;
+
+
+export const createDocumentResponseContentSelectedClausesItemRegExp = new RegExp('^[a-z][A-Za-z0-9]*=[a-z0-9_]+$');
+export const createDocumentResponseContentSelectedClausesMax = 40;
+
+export const createDocumentResponseContentFormAnswersTemplateIdRegExp = new RegExp('^TPL-[0-9]{2}$');
+export const createDocumentResponseContentFormAnswersValuesMaxOne = 4400;
+
+export const createDocumentResponseContentFormAnswersTablesItemMaxOne = 4400;
+
+export const createDocumentResponseContentFormAnswersTablesMaxOne = 100;
 
 export const createDocumentResponseContentFinancialInputLinesItemDescriptionMax = 200;
 
@@ -2415,6 +2577,7 @@ export const createDocumentResponseContentFinancialInputPaymentRecordPaymentsIte
 export const createDocumentResponseContentFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const createDocumentResponseContentFinancialInputPaymentRecordPaymentsMax = 40;
 
+export const createDocumentResponseFormOneDigestRegExp = new RegExp('^[0-9a-f]{64}$');
 
 
 export const CreateDocumentResponse = zod.object({
@@ -2433,11 +2596,19 @@ export const CreateDocumentResponse = zod.object({
 }),
   "blocks": zod.array(zod.object({
   "id": zod.string().min(1).max(createDocumentResponseContentBlocksItemIdMax),
-  "type": zod.enum(['paragraph', 'list', 'table']),
+  "type": zod.enum(['paragraph', 'list', 'table', 'heading']),
   "text": zod.string().max(createDocumentResponseContentBlocksItemTextMax),
-  "rows": zod.array(zod.array(zod.string().max(createDocumentResponseContentBlocksItemRowsItemItemMax)).max(createDocumentResponseContentBlocksItemRowsItemMax)).max(createDocumentResponseContentBlocksItemRowsMax)
+  "rows": zod.array(zod.array(zod.string().max(createDocumentResponseContentBlocksItemRowsItemItemMax)).max(createDocumentResponseContentBlocksItemRowsItemMax)).max(createDocumentResponseContentBlocksItemRowsMax),
+  "level": zod.union([zod.literal(2),zod.literal(3)]).optional().describe('A heading\'s level. Only a form document (forms v2) has headings.'),
+  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its header, repeated on each page. Only a form document\'s tables have one.')
 })).max(createDocumentResponseContentBlocksMax),
-  "selectedClauses": zod.array(zod.string()).max(createDocumentResponseContentSelectedClausesMax),
+  "selectedClauses": zod.array(zod.string().max(createDocumentResponseContentSelectedClausesItemMax).regex(createDocumentResponseContentSelectedClausesItemRegExp)).max(createDocumentResponseContentSelectedClausesMax).describe('The passages a form document\'s answers keep, as question=option. Empty for every other document.'),
+  "formAnswers": zod.object({
+  "schemaVersion": zod.literal(2),
+  "templateId": zod.string().regex(createDocumentResponseContentFormAnswersTemplateIdRegExp),
+  "values": zod.record(zod.string(), zod.string().max(createDocumentResponseContentFormAnswersValuesMaxOne)),
+  "tables": zod.record(zod.string(), zod.array(zod.record(zod.string(), zod.string().max(createDocumentResponseContentFormAnswersTablesItemMaxOne))).max(createDocumentResponseContentFormAnswersTablesMaxOne))
+}).optional().describe('A form document\'s answers (forms v2). Its blocks are exactly what these answers make from the form text of the edition it was started with.'),
   "financialInput": zod.object({
   "kind": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
   "lines": zod.array(zod.object({
@@ -2482,7 +2653,12 @@ export const CreateDocumentResponse = zod.object({
   "createdAt": zod.string(),
   "updatedAt": zod.string(),
   "status": zod.enum(['business_draft']),
-  "templateVersion": zod.string().nullable()
+  "templateVersion": zod.string().nullable(),
+  "form": zod.union([zod.object({
+  "version": zod.literal(2),
+  "edition": zod.uuid(),
+  "digest": zod.string().regex(createDocumentResponseFormOneDigestRegExp)
+}).describe('The form a document was started with: its version, the released edition whose form text it fills, and that text\'s SHA-256. It never changes.'),zod.null()])
 })
 
 
@@ -2514,7 +2690,18 @@ export const getDocumentResponseContentBlocksItemRowsMax = 100;
 
 export const getDocumentResponseContentBlocksMax = 100;
 
-export const getDocumentResponseContentSelectedClausesMax = 0;
+export const getDocumentResponseContentSelectedClausesItemMax = 120;
+
+
+export const getDocumentResponseContentSelectedClausesItemRegExp = new RegExp('^[a-z][A-Za-z0-9]*=[a-z0-9_]+$');
+export const getDocumentResponseContentSelectedClausesMax = 40;
+
+export const getDocumentResponseContentFormAnswersTemplateIdRegExp = new RegExp('^TPL-[0-9]{2}$');
+export const getDocumentResponseContentFormAnswersValuesMaxOne = 4400;
+
+export const getDocumentResponseContentFormAnswersTablesItemMaxOne = 4400;
+
+export const getDocumentResponseContentFormAnswersTablesMaxOne = 100;
 
 export const getDocumentResponseContentFinancialInputLinesItemDescriptionMax = 200;
 
@@ -2552,6 +2739,7 @@ export const getDocumentResponseContentFinancialInputPaymentRecordPaymentsItemRe
 export const getDocumentResponseContentFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const getDocumentResponseContentFinancialInputPaymentRecordPaymentsMax = 40;
 
+export const getDocumentResponseFormOneDigestRegExp = new RegExp('^[0-9a-f]{64}$');
 
 
 export const GetDocumentResponse = zod.object({
@@ -2570,11 +2758,19 @@ export const GetDocumentResponse = zod.object({
 }),
   "blocks": zod.array(zod.object({
   "id": zod.string().min(1).max(getDocumentResponseContentBlocksItemIdMax),
-  "type": zod.enum(['paragraph', 'list', 'table']),
+  "type": zod.enum(['paragraph', 'list', 'table', 'heading']),
   "text": zod.string().max(getDocumentResponseContentBlocksItemTextMax),
-  "rows": zod.array(zod.array(zod.string().max(getDocumentResponseContentBlocksItemRowsItemItemMax)).max(getDocumentResponseContentBlocksItemRowsItemMax)).max(getDocumentResponseContentBlocksItemRowsMax)
+  "rows": zod.array(zod.array(zod.string().max(getDocumentResponseContentBlocksItemRowsItemItemMax)).max(getDocumentResponseContentBlocksItemRowsItemMax)).max(getDocumentResponseContentBlocksItemRowsMax),
+  "level": zod.union([zod.literal(2),zod.literal(3)]).optional().describe('A heading\'s level. Only a form document (forms v2) has headings.'),
+  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its header, repeated on each page. Only a form document\'s tables have one.')
 })).max(getDocumentResponseContentBlocksMax),
-  "selectedClauses": zod.array(zod.string()).max(getDocumentResponseContentSelectedClausesMax),
+  "selectedClauses": zod.array(zod.string().max(getDocumentResponseContentSelectedClausesItemMax).regex(getDocumentResponseContentSelectedClausesItemRegExp)).max(getDocumentResponseContentSelectedClausesMax).describe('The passages a form document\'s answers keep, as question=option. Empty for every other document.'),
+  "formAnswers": zod.object({
+  "schemaVersion": zod.literal(2),
+  "templateId": zod.string().regex(getDocumentResponseContentFormAnswersTemplateIdRegExp),
+  "values": zod.record(zod.string(), zod.string().max(getDocumentResponseContentFormAnswersValuesMaxOne)),
+  "tables": zod.record(zod.string(), zod.array(zod.record(zod.string(), zod.string().max(getDocumentResponseContentFormAnswersTablesItemMaxOne))).max(getDocumentResponseContentFormAnswersTablesMaxOne))
+}).optional().describe('A form document\'s answers (forms v2). Its blocks are exactly what these answers make from the form text of the edition it was started with.'),
   "financialInput": zod.object({
   "kind": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
   "lines": zod.array(zod.object({
@@ -2619,7 +2815,12 @@ export const GetDocumentResponse = zod.object({
   "createdAt": zod.string(),
   "updatedAt": zod.string(),
   "status": zod.enum(['business_draft']),
-  "templateVersion": zod.string().nullable()
+  "templateVersion": zod.string().nullable(),
+  "form": zod.union([zod.object({
+  "version": zod.literal(2),
+  "edition": zod.uuid(),
+  "digest": zod.string().regex(getDocumentResponseFormOneDigestRegExp)
+}).describe('The form a document was started with: its version, the released edition whose form text it fills, and that text\'s SHA-256. It never changes.'),zod.null()])
 })
 
 
@@ -2654,7 +2855,18 @@ export const saveDocumentBodyContentBlocksItemRowsMax = 100;
 
 export const saveDocumentBodyContentBlocksMax = 100;
 
-export const saveDocumentBodyContentSelectedClausesMax = 0;
+export const saveDocumentBodyContentSelectedClausesItemMax = 120;
+
+
+export const saveDocumentBodyContentSelectedClausesItemRegExp = new RegExp('^[a-z][A-Za-z0-9]*=[a-z0-9_]+$');
+export const saveDocumentBodyContentSelectedClausesMax = 40;
+
+export const saveDocumentBodyContentFormAnswersTemplateIdRegExp = new RegExp('^TPL-[0-9]{2}$');
+export const saveDocumentBodyContentFormAnswersValuesMaxOne = 4400;
+
+export const saveDocumentBodyContentFormAnswersTablesItemMaxOne = 4400;
+
+export const saveDocumentBodyContentFormAnswersTablesMaxOne = 100;
 
 export const saveDocumentBodyContentFinancialInputLinesItemDescriptionMax = 200;
 
@@ -2708,11 +2920,19 @@ export const SaveDocumentBody = zod.object({
 }),
   "blocks": zod.array(zod.object({
   "id": zod.string().min(1).max(saveDocumentBodyContentBlocksItemIdMax),
-  "type": zod.enum(['paragraph', 'list', 'table']),
+  "type": zod.enum(['paragraph', 'list', 'table', 'heading']),
   "text": zod.string().max(saveDocumentBodyContentBlocksItemTextMax),
-  "rows": zod.array(zod.array(zod.string().max(saveDocumentBodyContentBlocksItemRowsItemItemMax)).max(saveDocumentBodyContentBlocksItemRowsItemMax)).max(saveDocumentBodyContentBlocksItemRowsMax)
+  "rows": zod.array(zod.array(zod.string().max(saveDocumentBodyContentBlocksItemRowsItemItemMax)).max(saveDocumentBodyContentBlocksItemRowsItemMax)).max(saveDocumentBodyContentBlocksItemRowsMax),
+  "level": zod.union([zod.literal(2),zod.literal(3)]).optional().describe('A heading\'s level. Only a form document (forms v2) has headings.'),
+  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its header, repeated on each page. Only a form document\'s tables have one.')
 })).max(saveDocumentBodyContentBlocksMax),
-  "selectedClauses": zod.array(zod.string()).max(saveDocumentBodyContentSelectedClausesMax),
+  "selectedClauses": zod.array(zod.string().max(saveDocumentBodyContentSelectedClausesItemMax).regex(saveDocumentBodyContentSelectedClausesItemRegExp)).max(saveDocumentBodyContentSelectedClausesMax).describe('The passages a form document\'s answers keep, as question=option. Empty for every other document.'),
+  "formAnswers": zod.object({
+  "schemaVersion": zod.literal(2),
+  "templateId": zod.string().regex(saveDocumentBodyContentFormAnswersTemplateIdRegExp),
+  "values": zod.record(zod.string(), zod.string().max(saveDocumentBodyContentFormAnswersValuesMaxOne)),
+  "tables": zod.record(zod.string(), zod.array(zod.record(zod.string(), zod.string().max(saveDocumentBodyContentFormAnswersTablesItemMaxOne))).max(saveDocumentBodyContentFormAnswersTablesMaxOne))
+}).optional().describe('A form document\'s answers (forms v2). Its blocks are exactly what these answers make from the form text of the edition it was started with.'),
   "financialInput": zod.object({
   "kind": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
   "lines": zod.array(zod.object({
@@ -2779,7 +2999,18 @@ export const saveDocumentResponseContentBlocksItemRowsMax = 100;
 
 export const saveDocumentResponseContentBlocksMax = 100;
 
-export const saveDocumentResponseContentSelectedClausesMax = 0;
+export const saveDocumentResponseContentSelectedClausesItemMax = 120;
+
+
+export const saveDocumentResponseContentSelectedClausesItemRegExp = new RegExp('^[a-z][A-Za-z0-9]*=[a-z0-9_]+$');
+export const saveDocumentResponseContentSelectedClausesMax = 40;
+
+export const saveDocumentResponseContentFormAnswersTemplateIdRegExp = new RegExp('^TPL-[0-9]{2}$');
+export const saveDocumentResponseContentFormAnswersValuesMaxOne = 4400;
+
+export const saveDocumentResponseContentFormAnswersTablesItemMaxOne = 4400;
+
+export const saveDocumentResponseContentFormAnswersTablesMaxOne = 100;
 
 export const saveDocumentResponseContentFinancialInputLinesItemDescriptionMax = 200;
 
@@ -2817,6 +3048,7 @@ export const saveDocumentResponseContentFinancialInputPaymentRecordPaymentsItemR
 export const saveDocumentResponseContentFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const saveDocumentResponseContentFinancialInputPaymentRecordPaymentsMax = 40;
 
+export const saveDocumentResponseFormOneDigestRegExp = new RegExp('^[0-9a-f]{64}$');
 
 
 export const SaveDocumentResponse = zod.object({
@@ -2835,11 +3067,19 @@ export const SaveDocumentResponse = zod.object({
 }),
   "blocks": zod.array(zod.object({
   "id": zod.string().min(1).max(saveDocumentResponseContentBlocksItemIdMax),
-  "type": zod.enum(['paragraph', 'list', 'table']),
+  "type": zod.enum(['paragraph', 'list', 'table', 'heading']),
   "text": zod.string().max(saveDocumentResponseContentBlocksItemTextMax),
-  "rows": zod.array(zod.array(zod.string().max(saveDocumentResponseContentBlocksItemRowsItemItemMax)).max(saveDocumentResponseContentBlocksItemRowsItemMax)).max(saveDocumentResponseContentBlocksItemRowsMax)
+  "rows": zod.array(zod.array(zod.string().max(saveDocumentResponseContentBlocksItemRowsItemItemMax)).max(saveDocumentResponseContentBlocksItemRowsItemMax)).max(saveDocumentResponseContentBlocksItemRowsMax),
+  "level": zod.union([zod.literal(2),zod.literal(3)]).optional().describe('A heading\'s level. Only a form document (forms v2) has headings.'),
+  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its header, repeated on each page. Only a form document\'s tables have one.')
 })).max(saveDocumentResponseContentBlocksMax),
-  "selectedClauses": zod.array(zod.string()).max(saveDocumentResponseContentSelectedClausesMax),
+  "selectedClauses": zod.array(zod.string().max(saveDocumentResponseContentSelectedClausesItemMax).regex(saveDocumentResponseContentSelectedClausesItemRegExp)).max(saveDocumentResponseContentSelectedClausesMax).describe('The passages a form document\'s answers keep, as question=option. Empty for every other document.'),
+  "formAnswers": zod.object({
+  "schemaVersion": zod.literal(2),
+  "templateId": zod.string().regex(saveDocumentResponseContentFormAnswersTemplateIdRegExp),
+  "values": zod.record(zod.string(), zod.string().max(saveDocumentResponseContentFormAnswersValuesMaxOne)),
+  "tables": zod.record(zod.string(), zod.array(zod.record(zod.string(), zod.string().max(saveDocumentResponseContentFormAnswersTablesItemMaxOne))).max(saveDocumentResponseContentFormAnswersTablesMaxOne))
+}).optional().describe('A form document\'s answers (forms v2). Its blocks are exactly what these answers make from the form text of the edition it was started with.'),
   "financialInput": zod.object({
   "kind": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
   "lines": zod.array(zod.object({
@@ -2884,7 +3124,192 @@ export const SaveDocumentResponse = zod.object({
   "createdAt": zod.string(),
   "updatedAt": zod.string(),
   "status": zod.enum(['business_draft']),
-  "templateVersion": zod.string().nullable()
+  "templateVersion": zod.string().nullable(),
+  "form": zod.union([zod.object({
+  "version": zod.literal(2),
+  "edition": zod.uuid(),
+  "digest": zod.string().regex(saveDocumentResponseFormOneDigestRegExp)
+}).describe('The form a document was started with: its version, the released edition whose form text it fills, and that text\'s SHA-256. It never changes.'),zod.null()])
+})
+
+
+/**
+ * Starts a document from a template's form (forms v2): from the most recently released edition of its wording, when the form fits it. The answers start empty.
+ */
+export const startFormDocumentBodyTemplateIdRegExp = new RegExp('^TPL-[0-9]{2}$');
+
+
+export const StartFormDocumentBody = zod.object({
+  "templateId": zod.string().regex(startFormDocumentBodyTemplateIdRegExp)
+})
+
+export const startFormDocumentResponseContentFieldsIssuerNameMax = 160;
+
+export const startFormDocumentResponseContentFieldsRecipientNameMax = 160;
+
+export const startFormDocumentResponseContentFieldsDocumentNumberMax = 80;
+
+export const startFormDocumentResponseContentFieldsIssueDateMax = 10;
+
+export const startFormDocumentResponseContentFieldsDueDateMax = 10;
+
+export const startFormDocumentResponseContentFieldsNotesMax = 5000;
+
+export const startFormDocumentResponseContentBlocksItemIdMax = 80;
+
+export const startFormDocumentResponseContentBlocksItemTextMax = 8000;
+
+export const startFormDocumentResponseContentBlocksItemRowsItemItemMax = 1000;
+
+export const startFormDocumentResponseContentBlocksItemRowsItemMax = 10;
+
+export const startFormDocumentResponseContentBlocksItemRowsMax = 100;
+
+export const startFormDocumentResponseContentBlocksMax = 100;
+
+export const startFormDocumentResponseContentSelectedClausesItemMax = 120;
+
+
+export const startFormDocumentResponseContentSelectedClausesItemRegExp = new RegExp('^[a-z][A-Za-z0-9]*=[a-z0-9_]+$');
+export const startFormDocumentResponseContentSelectedClausesMax = 40;
+
+export const startFormDocumentResponseContentFormAnswersTemplateIdRegExp = new RegExp('^TPL-[0-9]{2}$');
+export const startFormDocumentResponseContentFormAnswersValuesMaxOne = 4400;
+
+export const startFormDocumentResponseContentFormAnswersTablesItemMaxOne = 4400;
+
+export const startFormDocumentResponseContentFormAnswersTablesMaxOne = 100;
+
+export const startFormDocumentResponseContentFinancialInputLinesItemDescriptionMax = 200;
+
+export const startFormDocumentResponseContentFinancialInputLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
+export const startFormDocumentResponseContentFinancialInputLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const startFormDocumentResponseContentFinancialInputLinesItemCurrencyMin = 3;
+export const startFormDocumentResponseContentFinancialInputLinesItemCurrencyMax = 3;
+
+export const startFormDocumentResponseContentFinancialInputLinesMax = 40;
+
+export const startFormDocumentResponseContentFinancialInputTaxAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const startFormDocumentResponseContentFinancialInputTaxLabelMax = 80;
+
+export const startFormDocumentResponseContentFinancialInputDiscountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const startFormDocumentResponseContentFinancialInputDeliveryKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const startFormDocumentResponseContentFinancialInputDiscountPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
+export const startFormDocumentResponseContentFinancialInputTaxPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
+export const startFormDocumentResponseContentFinancialInputTaxBaseKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const startFormDocumentResponseContentFinancialInputCurrencyMin = 3;
+export const startFormDocumentResponseContentFinancialInputCurrencyMax = 3;
+
+export const startFormDocumentResponseContentFinancialInputRequestedTotalKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const startFormDocumentResponseContentFinancialInputDisputedKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const startFormDocumentResponseContentFinancialInputOptionalLinesItemDescriptionMax = 240;
+
+export const startFormDocumentResponseContentFinancialInputOptionalLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
+export const startFormDocumentResponseContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const startFormDocumentResponseContentFinancialInputOptionalLinesItemCurrencyRegExp = new RegExp('^[A-Z]{3}$');
+export const startFormDocumentResponseContentFinancialInputOptionalLinesMax = 40;
+
+export const startFormDocumentResponseContentFinancialInputAmountDueKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const startFormDocumentResponseContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const startFormDocumentResponseContentFinancialInputPaymentRecordPaymentsItemReferenceMax = 80;
+
+export const startFormDocumentResponseContentFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const startFormDocumentResponseContentFinancialInputPaymentRecordPaymentsMax = 40;
+
+export const startFormDocumentResponseFormOneDigestRegExp = new RegExp('^[0-9a-f]{64}$');
+
+
+export const StartFormDocumentResponse = zod.object({
+  "revisionId": zod.uuid(),
+  "id": zod.string(),
+  "title": zod.string(),
+  "revision": zod.int(),
+  "content": zod.object({
+  "fields": zod.object({
+  "issuerName": zod.string().max(startFormDocumentResponseContentFieldsIssuerNameMax),
+  "recipientName": zod.string().max(startFormDocumentResponseContentFieldsRecipientNameMax),
+  "documentNumber": zod.string().max(startFormDocumentResponseContentFieldsDocumentNumberMax),
+  "issueDate": zod.string().max(startFormDocumentResponseContentFieldsIssueDateMax),
+  "dueDate": zod.string().max(startFormDocumentResponseContentFieldsDueDateMax),
+  "notes": zod.string().max(startFormDocumentResponseContentFieldsNotesMax)
+}),
+  "blocks": zod.array(zod.object({
+  "id": zod.string().min(1).max(startFormDocumentResponseContentBlocksItemIdMax),
+  "type": zod.enum(['paragraph', 'list', 'table', 'heading']),
+  "text": zod.string().max(startFormDocumentResponseContentBlocksItemTextMax),
+  "rows": zod.array(zod.array(zod.string().max(startFormDocumentResponseContentBlocksItemRowsItemItemMax)).max(startFormDocumentResponseContentBlocksItemRowsItemMax)).max(startFormDocumentResponseContentBlocksItemRowsMax),
+  "level": zod.union([zod.literal(2),zod.literal(3)]).optional().describe('A heading\'s level. Only a form document (forms v2) has headings.'),
+  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its header, repeated on each page. Only a form document\'s tables have one.')
+})).max(startFormDocumentResponseContentBlocksMax),
+  "selectedClauses": zod.array(zod.string().max(startFormDocumentResponseContentSelectedClausesItemMax).regex(startFormDocumentResponseContentSelectedClausesItemRegExp)).max(startFormDocumentResponseContentSelectedClausesMax).describe('The passages a form document\'s answers keep, as question=option. Empty for every other document.'),
+  "formAnswers": zod.object({
+  "schemaVersion": zod.literal(2),
+  "templateId": zod.string().regex(startFormDocumentResponseContentFormAnswersTemplateIdRegExp),
+  "values": zod.record(zod.string(), zod.string().max(startFormDocumentResponseContentFormAnswersValuesMaxOne)),
+  "tables": zod.record(zod.string(), zod.array(zod.record(zod.string(), zod.string().max(startFormDocumentResponseContentFormAnswersTablesItemMaxOne))).max(startFormDocumentResponseContentFormAnswersTablesMaxOne))
+}).optional().describe('A form document\'s answers (forms v2). Its blocks are exactly what these answers make from the form text of the edition it was started with.'),
+  "financialInput": zod.object({
+  "kind": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
+  "lines": zod.array(zod.object({
+  "description": zod.string().min(1).max(startFormDocumentResponseContentFinancialInputLinesItemDescriptionMax),
+  "quantity": zod.string().regex(startFormDocumentResponseContentFinancialInputLinesItemQuantityRegExp),
+  "unitPriceKobo": zod.string().regex(startFormDocumentResponseContentFinancialInputLinesItemUnitPriceKoboRegExp),
+  "currency": zod.string().min(startFormDocumentResponseContentFinancialInputLinesItemCurrencyMin).max(startFormDocumentResponseContentFinancialInputLinesItemCurrencyMax).optional()
+})).max(startFormDocumentResponseContentFinancialInputLinesMax),
+  "taxAmountKobo": zod.string().regex(startFormDocumentResponseContentFinancialInputTaxAmountKoboRegExp).nullable(),
+  "taxLabel": zod.string().max(startFormDocumentResponseContentFinancialInputTaxLabelMax),
+  "discountKobo": zod.string().regex(startFormDocumentResponseContentFinancialInputDiscountKoboRegExp).nullable(),
+  "deliveryKobo": zod.string().regex(startFormDocumentResponseContentFinancialInputDeliveryKoboRegExp).optional(),
+  "discountPercent": zod.string().regex(startFormDocumentResponseContentFinancialInputDiscountPercentRegExp).optional(),
+  "taxPercent": zod.string().regex(startFormDocumentResponseContentFinancialInputTaxPercentRegExp).optional(),
+  "taxBaseKobo": zod.string().regex(startFormDocumentResponseContentFinancialInputTaxBaseKoboRegExp).optional(),
+  "currency": zod.string().min(startFormDocumentResponseContentFinancialInputCurrencyMin).max(startFormDocumentResponseContentFinancialInputCurrencyMax).optional(),
+  "requestedTotalKobo": zod.string().regex(startFormDocumentResponseContentFinancialInputRequestedTotalKoboRegExp).optional(),
+  "disputedKobo": zod.string().regex(startFormDocumentResponseContentFinancialInputDisputedKoboRegExp).optional(),
+  "optionalLines": zod.array(zod.object({
+  "description": zod.string().min(1).max(startFormDocumentResponseContentFinancialInputOptionalLinesItemDescriptionMax),
+  "quantity": zod.string().regex(startFormDocumentResponseContentFinancialInputOptionalLinesItemQuantityRegExp),
+  "unitPriceKobo": zod.string().regex(startFormDocumentResponseContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp),
+  "selected": zod.boolean(),
+  "currency": zod.string().regex(startFormDocumentResponseContentFinancialInputOptionalLinesItemCurrencyRegExp).optional()
+})).max(startFormDocumentResponseContentFinancialInputOptionalLinesMax).optional(),
+  "amountDueKobo": zod.string().regex(startFormDocumentResponseContentFinancialInputAmountDueKoboRegExp).nullable(),
+  "paymentRecord": zod.object({
+  "invoiceAmountKobo": zod.string().regex(startFormDocumentResponseContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp),
+  "duplicatesConfirmed": zod.boolean().optional(),
+  "payments": zod.array(zod.object({
+  "reference": zod.string().min(1).max(startFormDocumentResponseContentFinancialInputPaymentRecordPaymentsItemReferenceMax),
+  "amountKobo": zod.string().regex(startFormDocumentResponseContentFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp)
+})).max(startFormDocumentResponseContentFinancialInputPaymentRecordPaymentsMax)
+}).optional()
+}).optional(),
+  "formatting": zod.object({
+  "font": zod.enum(['sans', 'serif']),
+  "accent": zod.enum(['forest', 'charcoal'])
+})
+}),
+  "contentHash": zod.string(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string(),
+  "status": zod.enum(['business_draft']),
+  "templateVersion": zod.string().nullable(),
+  "form": zod.union([zod.object({
+  "version": zod.literal(2),
+  "edition": zod.uuid(),
+  "digest": zod.string().regex(startFormDocumentResponseFormOneDigestRegExp)
+}).describe('The form a document was started with: its version, the released edition whose form text it fills, and that text\'s SHA-256. It never changes.'),zod.null()])
+})
+
+
+export const GetDocumentFormParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const GetDocumentFormResponse = zod.object({
+  "edition": zod.uuid(),
+  "editionVersion": zod.int(),
+  "title": zod.string(),
+  "formText": zod.string()
 })
 
 
@@ -2916,7 +3341,18 @@ export const listDocumentRevisionsResponseContentBlocksItemRowsMax = 100;
 
 export const listDocumentRevisionsResponseContentBlocksMax = 100;
 
-export const listDocumentRevisionsResponseContentSelectedClausesMax = 0;
+export const listDocumentRevisionsResponseContentSelectedClausesItemMax = 120;
+
+
+export const listDocumentRevisionsResponseContentSelectedClausesItemRegExp = new RegExp('^[a-z][A-Za-z0-9]*=[a-z0-9_]+$');
+export const listDocumentRevisionsResponseContentSelectedClausesMax = 40;
+
+export const listDocumentRevisionsResponseContentFormAnswersTemplateIdRegExp = new RegExp('^TPL-[0-9]{2}$');
+export const listDocumentRevisionsResponseContentFormAnswersValuesMaxOne = 4400;
+
+export const listDocumentRevisionsResponseContentFormAnswersTablesItemMaxOne = 4400;
+
+export const listDocumentRevisionsResponseContentFormAnswersTablesMaxOne = 100;
 
 export const listDocumentRevisionsResponseContentFinancialInputLinesItemDescriptionMax = 200;
 
@@ -2954,6 +3390,7 @@ export const listDocumentRevisionsResponseContentFinancialInputPaymentRecordPaym
 export const listDocumentRevisionsResponseContentFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const listDocumentRevisionsResponseContentFinancialInputPaymentRecordPaymentsMax = 40;
 
+export const listDocumentRevisionsResponseFormOneDigestRegExp = new RegExp('^[0-9a-f]{64}$');
 
 
 export const ListDocumentRevisionsResponseItem = zod.object({
@@ -2972,11 +3409,19 @@ export const ListDocumentRevisionsResponseItem = zod.object({
 }),
   "blocks": zod.array(zod.object({
   "id": zod.string().min(1).max(listDocumentRevisionsResponseContentBlocksItemIdMax),
-  "type": zod.enum(['paragraph', 'list', 'table']),
+  "type": zod.enum(['paragraph', 'list', 'table', 'heading']),
   "text": zod.string().max(listDocumentRevisionsResponseContentBlocksItemTextMax),
-  "rows": zod.array(zod.array(zod.string().max(listDocumentRevisionsResponseContentBlocksItemRowsItemItemMax)).max(listDocumentRevisionsResponseContentBlocksItemRowsItemMax)).max(listDocumentRevisionsResponseContentBlocksItemRowsMax)
+  "rows": zod.array(zod.array(zod.string().max(listDocumentRevisionsResponseContentBlocksItemRowsItemItemMax)).max(listDocumentRevisionsResponseContentBlocksItemRowsItemMax)).max(listDocumentRevisionsResponseContentBlocksItemRowsMax),
+  "level": zod.union([zod.literal(2),zod.literal(3)]).optional().describe('A heading\'s level. Only a form document (forms v2) has headings.'),
+  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its header, repeated on each page. Only a form document\'s tables have one.')
 })).max(listDocumentRevisionsResponseContentBlocksMax),
-  "selectedClauses": zod.array(zod.string()).max(listDocumentRevisionsResponseContentSelectedClausesMax),
+  "selectedClauses": zod.array(zod.string().max(listDocumentRevisionsResponseContentSelectedClausesItemMax).regex(listDocumentRevisionsResponseContentSelectedClausesItemRegExp)).max(listDocumentRevisionsResponseContentSelectedClausesMax).describe('The passages a form document\'s answers keep, as question=option. Empty for every other document.'),
+  "formAnswers": zod.object({
+  "schemaVersion": zod.literal(2),
+  "templateId": zod.string().regex(listDocumentRevisionsResponseContentFormAnswersTemplateIdRegExp),
+  "values": zod.record(zod.string(), zod.string().max(listDocumentRevisionsResponseContentFormAnswersValuesMaxOne)),
+  "tables": zod.record(zod.string(), zod.array(zod.record(zod.string(), zod.string().max(listDocumentRevisionsResponseContentFormAnswersTablesItemMaxOne))).max(listDocumentRevisionsResponseContentFormAnswersTablesMaxOne))
+}).optional().describe('A form document\'s answers (forms v2). Its blocks are exactly what these answers make from the form text of the edition it was started with.'),
   "financialInput": zod.object({
   "kind": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
   "lines": zod.array(zod.object({
@@ -3021,7 +3466,12 @@ export const ListDocumentRevisionsResponseItem = zod.object({
   "createdAt": zod.string(),
   "updatedAt": zod.string(),
   "status": zod.enum(['business_draft']),
-  "templateVersion": zod.string().nullable()
+  "templateVersion": zod.string().nullable(),
+  "form": zod.union([zod.object({
+  "version": zod.literal(2),
+  "edition": zod.uuid(),
+  "digest": zod.string().regex(listDocumentRevisionsResponseFormOneDigestRegExp)
+}).describe('The form a document was started with: its version, the released edition whose form text it fills, and that text\'s SHA-256. It never changes.'),zod.null()])
 })
 export const ListDocumentRevisionsResponse = zod.array(ListDocumentRevisionsResponseItem)
 

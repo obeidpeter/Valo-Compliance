@@ -2,11 +2,15 @@ import { GUIDED_SPECS_V1 } from "./guided-specs-v1";
 import type { GuidedData, GuidedField, GuidedSpec, GuidedTemplateId } from "./guided";
 import { financialBlocks, formatKobo, recordedBalance, type FinancialInput, type Parsed } from "./money";
 export const GUIDED_PREFIX = "valo-guided-v1:";
+/** A document block. A v1 form makes only paragraphs and tables of its own and passes every other
+ * block through untouched, including a v2 form's headings and header rows (forms v2). */
 export type GuidedBlock = {
   id: string;
-  type: "paragraph" | "list" | "table";
+  type: "paragraph" | "list" | "table" | "heading";
   text: string;
   rows: string[][];
+  level?: 2 | 3 | undefined;
+  headerRows?: 1 | undefined;
 };
 type Content = {
   fields: {

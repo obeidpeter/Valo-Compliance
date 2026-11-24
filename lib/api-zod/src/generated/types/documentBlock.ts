@@ -5,6 +5,8 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { DocumentBlockHeaderRows } from './documentBlockHeaderRows';
+import type { DocumentBlockLevel } from './documentBlockLevel';
 import type { DocumentBlockType } from './documentBlockType';
 
 export interface DocumentBlock {
@@ -22,4 +24,8 @@ export interface DocumentBlock {
      * @items.items.maxLength 1000
      */
   rows: string[][];
+  /** A heading's level. Only a form document (forms v2) has headings. */
+  level?: DocumentBlockLevel;
+  /** A table's first row is its header, repeated on each page. Only a form document's tables have one. */
+  headerRows?: DocumentBlockHeaderRows;
 }

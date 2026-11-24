@@ -100,6 +100,7 @@ const document = (revision: number) => ({
   updatedAt: at(16 + revision),
   status: "business_draft",
   templateVersion: null,
+  form: null,
 });
 const task = (n: number, state: "not_started" | "in_progress" | "completed_by_user" | "needs_review") => ({
   id: TASK.slice(0, -1) + n,
