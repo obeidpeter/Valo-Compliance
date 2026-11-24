@@ -3913,6 +3913,7 @@ export const ListDocumentExportsResponseItem = zod.object({
   "format": zod.enum(['docx', 'pdf']),
   "renderVersion": zod.string(),
   "sourceHash": zod.string(),
+  "finished": zod.boolean().describe('A finished file, printed without the draft notice; otherwise a marked draft.'),
   "status": zod.enum(['queued', 'running', 'retrying', 'ready', 'failed']),
   "attempts": zod.int(),
   "errorCode": zod.string().nullable(),
@@ -3937,7 +3938,7 @@ export const CreateDocumentExportHeader = zod.object({
 export const CreateDocumentExportBody = zod.object({
   "revisionId": zod.uuid(),
   "format": zod.enum(['docx', 'pdf']),
-  "acknowledgeDraft": zod.boolean()
+  "acknowledgeDraft": zod.boolean().describe('True makes a marked draft of any saved version. False asks for a finished file, without the draft notice, made only of a complete version (docs/architecture/finished-file.md).')
 })
 
 export const CreateDocumentExportResponse = zod.object({
@@ -3948,6 +3949,7 @@ export const CreateDocumentExportResponse = zod.object({
   "format": zod.enum(['docx', 'pdf']),
   "renderVersion": zod.string(),
   "sourceHash": zod.string(),
+  "finished": zod.boolean().describe('A finished file, printed without the draft notice; otherwise a marked draft.'),
   "status": zod.enum(['queued', 'running', 'retrying', 'ready', 'failed']),
   "attempts": zod.int(),
   "errorCode": zod.string().nullable(),
@@ -3967,6 +3969,7 @@ export const ListWorkspaceExportsResponseItem = zod.object({
   "revisionId": zod.uuid(),
   "revision": zod.int(),
   "format": zod.enum(['docx', 'pdf']),
+  "finished": zod.boolean().describe('A finished file, printed without the draft notice; otherwise a marked draft.'),
   "readyAt": zod.coerce.date(),
   "expiresAt": zod.coerce.date().nullable(),
   "downloadUrl": zod.string(),
@@ -3995,6 +3998,7 @@ export const RetryDocumentExportResponse = zod.object({
   "format": zod.enum(['docx', 'pdf']),
   "renderVersion": zod.string(),
   "sourceHash": zod.string(),
+  "finished": zod.boolean().describe('A finished file, printed without the draft notice; otherwise a marked draft.'),
   "status": zod.enum(['queued', 'running', 'retrying', 'ready', 'failed']),
   "attempts": zod.int(),
   "errorCode": zod.string().nullable(),

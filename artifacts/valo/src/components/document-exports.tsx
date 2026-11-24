@@ -24,18 +24,23 @@ const FAILURES: Record<string, string> = {
   EXPORT_EXPIRED: "This file has expired. You can make it again from the same saved version.",
   EXPORT_SIZE_LIMIT: "The document is too large to make into a file.",
   RENDER_OR_STORAGE_UNAVAILABLE: "The file could not be made just now. Try again in a moment.",
+  DOCUMENT_INCOMPLETE:
+    "This saved version is not complete, so its file can only be a marked draft. Give what Still needed lists and save, or make a marked draft.",
 };
 
 function ExportButton({
   documentId,
   revisionId,
   format,
+  finished = false,
   disabled,
   onCreated,
 }: {
   documentId: string;
   revisionId: string;
   format: "docx" | "pdf";
+  /** A finished file, without the draft notice, rather than a marked draft. */
+  finished?: boolean;
   disabled: boolean;
   onCreated: () => void;
 }) {
@@ -52,14 +57,19 @@ function ExportButton({
   return (
     <div>
       <button
-        className="btn btn-ghost btn-sm"
+        className={finished ? "btn btn-primary btn-sm" : "btn btn-ghost btn-sm"}
         disabled={disabled || create.isPending}
         onClick={() =>
-          create.mutate({ id: documentId, data: { revisionId, format, acknowledgeDraft: true } })
+          create.mutate({ id: documentId, data: { revisionId, format, acknowledgeDraft: !finished } })
         }
+        data-testid={(finished ? "button-finished-" : "button-draft-") + format}
       >
         <Download className="h-4 w-4" aria-hidden="true" />
-        {create.isPending ? "Asking…" : `Make a ${FILE_FORMAT_NAMES[format]} file`}
+        {create.isPending
+          ? "Asking…"
+          : finished
+            ? `Make the finished ${FILE_FORMAT_NAMES[format]} file`
+            : `Make a ${FILE_FORMAT_NAMES[format]} file`}
       </button>
       {create.isError && (
         <p role="alert" className="mt-2 text-sm text-destructive">
@@ -76,6 +86,7 @@ export function DocumentExports({
   revisionNumber,
   disabled,
   missingCount = 0,
+  finishedFile = "incomplete",
   finDirty = false,
   onSaveNow,
   onApplyFinancial,
@@ -89,6 +100,9 @@ export function DocumentExports({
   revisionNumber: number;
   disabled: boolean;
   missingCount?: number;
+  /** Whether the saved version can be made as a finished file, without the draft notice: complete,
+   * still lacking something, or typed by hand, which is always made as a marked draft. */
+  finishedFile?: "complete" | "incomplete" | "typed";
   finDirty?: boolean;
   onSaveNow?: () => void;
   onApplyFinancial?: () => void;
@@ -147,9 +161,10 @@ export function DocumentExports({
         Download this document
       </h2>
       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-        A Word file and a PDF are made from the same saved version, and a draft notice appears on every page
-        of each. The file is your own document. It is not a Valo template, proof of payment or a government
-        tax invoice, and no professional has reviewed it.
+        A Word file and a PDF are made from the same saved version. A finished file is made once nothing is
+        missing from the details Valo checks; a draft copy says on every page that it is a draft. The file is
+        your own document. It is not a Valo template, proof of payment or a government tax invoice, and no
+        professional has reviewed it.
       </p>
       <div
         role="group"
@@ -200,6 +215,37 @@ export function DocumentExports({
           )}
           <span>{acknowledged ? "Draft copy notice confirmed" : "Confirm draft copy notice below"}</span>
         </div>
+      </div>
+      <div className="mt-4 grid gap-2" data-testid="finished-file">
+        {finishedFile === "complete" ? (
+          <>
+            <p className="text-sm">
+              Nothing is missing from the details Valo checks, so saved version {revisionNumber} can be made
+              as a finished file, without the draft notice. Read the whole document before you use it.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              {(["docx", "pdf"] as const).map((format) => (
+                <ExportButton
+                  key={`${revisionId}-finished-${format}`}
+                  documentId={documentId}
+                  revisionId={revisionId}
+                  format={format}
+                  finished
+                  disabled={disabled}
+                  onCreated={() => {
+                    void jobs.refetch();
+                  }}
+                />
+              ))}
+            </div>
+          </>
+        ) : (
+          <p className="text-sm text-muted-foreground" data-testid="text-finished-unavailable">
+            {finishedFile === "typed"
+              ? "A document typed by hand is made as a draft copy: no questions say what it must hold."
+              : "Once nothing is missing from Still needed, you can make the finished file, without the draft notice."}
+          </p>
+        )}
       </div>
       <label htmlFor={checkbox} className="my-4 flex items-start gap-3 text-sm">
         <input
@@ -298,8 +344,8 @@ export function DocumentExports({
           <li key={job.id} className="flex flex-wrap items-center justify-between gap-3 py-4">
             <div className="min-w-0">
               <p className="text-sm font-medium">
-                {FILE_FORMAT_NAMES[job.format]} · version {job.revision} ·{" "}
-                {job.errorCode === "EXPORT_EXPIRED" ? "expired" : STATUS_WORDS[job.status]}
+                {job.finished ? "Finished" : "Draft"} {FILE_FORMAT_NAMES[job.format]} · version {job.revision}{" "}
+                · {job.errorCode === "EXPORT_EXPIRED" ? "expired" : STATUS_WORDS[job.status]}
               </p>
               {(job.size !== null || job.attempts > 1) && (
                 <p className="text-xs text-muted-foreground">

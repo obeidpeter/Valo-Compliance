@@ -1,5 +1,6 @@
 import { reconcileExportOrphans } from "./valo-export-recovery";
-import { checkFormContent, serializeRevision } from "../documents";
+import { checkFormContent, savedVersionGaps, serializeRevision } from "../documents";
+import { documentComplete } from "@workspace/valo-core/document-completeness";
 import { randomUUID } from "node:crypto";
 import { and, eq, gt, isNull, ne, or, desc } from "drizzle-orm";
 import {
@@ -78,6 +79,7 @@ function publicJob(
     format: job.format,
     renderVersion: job.renderVersion,
     sourceHash: job.sourceHash,
+    finished: job.finished,
     status: expired ? "failed" : job.status,
     attempts: job.attempts,
     errorCode: expired ? EXPORT_EXPIRED : job.errorCode,
@@ -200,6 +202,7 @@ export async function listWorkspaceExports(actor: WorkspaceActor) {
       revisionId: job.revisionId,
       revision: job.revision,
       format: job.format,
+      finished: job.finished,
       readyAt: asset.createdAt.toISOString(),
       expiresAt: asset.retentionAt?.toISOString() ?? null,
       downloadUrl: `/api/v1/exports/${job.id}/file`,
@@ -212,17 +215,17 @@ export async function listWorkspaceExports(actor: WorkspaceActor) {
 export async function requestExport(actor: WorkspaceActor, documentId: string, key: string, raw: unknown) {
   developmentExportsOnly();
   const input = CreateDocumentExportBody.strict().parse(raw);
-  if (!input.acknowledgeDraft)
-    throw new ValoProblem(
-      422,
-      "Say that you want a draft copy before a file is made. Every file is marked as an incomplete draft on each page.",
-    );
+  // A marked draft is made of any saved version once the customer says they want one; otherwise the
+  // file asked for is a finished one, made only of a complete version (docs/architecture/finished-file.md).
+  const finished = !input.acknowledgeDraft;
+  // A marked draft's request is recorded as it always was, so a key used before still matches.
   const fingerprint = sha256(
     JSON.stringify({
       documentId,
       revisionId: input.revisionId,
       format: input.format,
       renderVersion: RENDER_VERSION,
+      ...(finished ? { finished } : {}),
     }),
   );
   const id = await db.transaction(async (tx) => {
@@ -238,6 +241,20 @@ export async function requestExport(actor: WorkspaceActor, documentId: string, k
         ),
       );
     if (!revision) throw new ValoProblem(404, "That saved version of the document was not found.");
+    if (finished) {
+      const gaps = await savedVersionGaps(
+        tx,
+        documentId,
+        documentInput.parse({ title: revision.title, content: revision.content }).content,
+      );
+      if (!documentComplete(gaps))
+        throw new ValoProblem(
+          422,
+          gaps.kind === "typed"
+            ? "A document typed by hand is made as a marked draft: no questions say what it must hold. Say that you want a draft copy to make its file."
+            : "This saved version is not complete yet, so its file can only be a marked draft. Give what Still needed lists and save, or say that you want a draft copy.",
+        );
+    }
     const [created] = await tx
       .insert(valoExportJobs)
       .values({
@@ -249,6 +266,7 @@ export async function requestExport(actor: WorkspaceActor, documentId: string, k
         format: input.format,
         renderVersion: RENDER_VERSION,
         sourceHash: revision.contentHash,
+        finished,
         requestedBy: actor.identityId,
         queueId: randomUUID(),
       })
@@ -265,6 +283,7 @@ export async function requestExport(actor: WorkspaceActor, documentId: string, k
               eq(valoExportJobs.revisionId, revision.id),
               eq(valoExportJobs.format, input.format),
               eq(valoExportJobs.renderVersion, RENDER_VERSION),
+              eq(valoExportJobs.finished, finished),
             ),
           );
     if (!existing) throw new Error("EXPORT_TRANSACTION_FAILED");
@@ -515,6 +534,14 @@ export async function executeExport(
           );
         });
       }
+      // A finished file is made only of a complete version: checked again here, before rendering.
+      if (row && job.finished) {
+        const content = documentInput.parse({ title: row.title, content: row.content }).content;
+        const complete = await db.transaction(async (tx) =>
+          documentComplete(await savedVersionGaps(tx, job.documentId, content)),
+        );
+        if (!complete) throw new Error("DOCUMENT_INCOMPLETE");
+      }
       return row;
     });
     // PostgreSQL JSONB reorders object keys. Reconstruct the same validated v1 input
@@ -529,7 +556,12 @@ export async function executeExport(
       sha256(serializeRevision(savedInput!)) !== job.sourceHash
     )
       throw new Error("REVISION_INTEGRITY_FAILED");
-    const rendering = renderDocument(savedInput, job.format, job.revision);
+    const rendering = renderDocument(
+      savedInput,
+      job.format,
+      job.revision,
+      job.finished ? "business_finished" : "business_draft",
+    );
     // Only prevents an unhandled rejection while onStage runs; `await rendering` below rethrows it.
     void rendering.catch(() => {});
     await onStage?.("rendering");
@@ -617,6 +649,7 @@ export async function executeExport(
         ? "EXPORT_ACCESS_REVOKED"
         : [
               "REVISION_INTEGRITY_FAILED",
+              "DOCUMENT_INCOMPLETE",
               "EXPORT_ACCESS_REVOKED",
               "EXPORT_SIZE_LIMIT",
               "PRIVATE_FILE_CHECKSUM_MISMATCH",
@@ -627,7 +660,12 @@ export async function executeExport(
     await db.transaction(async (tx) => {
       const changed = await tx
         .update(valoExportJobs)
-        .set({ status: job.attempts < 3 ? "retrying" : "failed", errorCode: safe, updatedAt: new Date() })
+        // An incomplete version stays incomplete: its finished file fails at once.
+        .set({
+          status: job.attempts < 3 && safe !== "DOCUMENT_INCOMPLETE" ? "retrying" : "failed",
+          errorCode: safe,
+          updatedAt: new Date(),
+        })
         .where(
           and(
             eq(valoExportJobs.id, id),

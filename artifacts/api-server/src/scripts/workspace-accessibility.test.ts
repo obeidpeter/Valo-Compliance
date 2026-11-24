@@ -27,6 +27,7 @@ import {
 import { proposedFormText } from "../modules/manual-library/form-text-maps";
 import { oldWordsIn } from "../test-support/old-words";
 import { answers as publicAnswers } from "../test-support/public-answers";
+import { everyAnswer } from "../test-support/complete-answers";
 
 /**
  * NFR-006: "WCAG 2.2 AA target across critical flows; keyboard, visible focus, screen-reader labels,
@@ -461,6 +462,7 @@ const answers: Record<string, unknown> = {
       revisionId: document(3).revisionId,
       revision: 3,
       format: "pdf",
+      finished: false,
       readyAt: at(18),
       expiresAt: at(25),
       downloadUrl: "/api/v1/exports/00000000-0000-4000-8000-00000000a601/file",
@@ -476,6 +478,7 @@ const answers: Record<string, unknown> = {
       format: "pdf",
       renderVersion: "synthetic-render",
       sourceHash: "f".repeat(64),
+      finished: false,
       status: "ready",
       attempts: 1,
       errorCode: null,
@@ -1991,6 +1994,78 @@ test("the New document page says which documents use their template's own wordin
       else assert.deepEqual((await wcagFailures(page)).failures, []);
       assert.deepEqual(started, []);
       assert.deepEqual(unknown, []);
+      assert.deepEqual(errors, []);
+    } finally {
+      await close();
+    }
+  }
+});
+
+// EDT-005: "final export blocks mandatory omissions or requires a deliberately watermarked incomplete
+// draft" (docs/architecture/finished-file.md).
+test("a complete document's file panel offers the finished file, without the draft notice, and an incomplete or typed one says how its file is made instead", async () => {
+  const complete = {
+    ...document(3),
+    title: GUIDED_SPECS_V1["TPL-01"].title,
+    content: compileGuidedContent(everyAnswer(emptyGuidedData("TPL-01"), GUIDED_SPECS_V1["TPL-01"])),
+  };
+  const made = api.ListDocumentExportsResponse.parse(answers[`GET /v1/documents/${DOCUMENT}/exports`])[0]!;
+  const asked: unknown[] = [];
+  const finishing: Api = async (route, method, path, query) => {
+    const reply = (body: unknown, status = 200) =>
+      route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) });
+    if (method === "GET" && path === `/workspace/documents/${DOCUMENT}`)
+      await reply(api.GetDocumentResponse.parse(complete));
+    else if (method === "GET" && path === `/workspace/documents/${DOCUMENT}/revisions`)
+      await reply(api.ListDocumentRevisionsResponse.parse([complete]));
+    else if (method === "GET" && path === `/v1/documents/${DOCUMENT}/exports`)
+      await reply(api.ListDocumentExportsResponse.parse(asked.length ? [{ ...made, finished: true }] : []));
+    else if (method === "POST" && path === `/v1/documents/${DOCUMENT}/exports`) {
+      asked.push(route.request().postDataJSON());
+      await reply(api.CreateDocumentExportResponse.parse({ ...made, finished: true, status: "queued" }), 202);
+    } else await answer(route, method, path, query);
+  };
+  {
+    const { page, errors, unknown, close } = await desktop(`/workspace/documents/${DOCUMENT}`, finishing);
+    try {
+      await ready(page);
+      const files = page.getByTestId("private-exports");
+      await expect(files.getByTestId("finished-file")).toContainText(
+        "Nothing is missing from the details Valo checks, so saved version 3 can be made as a finished file, without the draft notice.",
+      );
+      // The finished file needs no draft notice confirmed; the draft copy still does.
+      await expect(files.getByTestId("button-draft-pdf")).toBeDisabled();
+      await files.getByRole("button", { name: "Make the finished PDF file", exact: true }).click();
+      await expect.poll(() => asked.length).toBe(1);
+      assert.deepEqual(asked, [{ revisionId: complete.revisionId, format: "pdf", acknowledgeDraft: false }]);
+      await expect(files.locator("li")).toContainText("Finished PDF · version 3");
+      assert.deepEqual((await wcagFailures(page)).failures, []);
+      assert.deepEqual(unknown, []);
+      assert.deepEqual(errors, []);
+    } finally {
+      await close();
+    }
+  }
+  // An invoice with its questions unanswered, and a document typed by hand: no finished file is offered.
+  for (const [doc, says] of [
+    [
+      invoice(3),
+      "Once nothing is missing from Still needed, you can make the finished file, without the draft notice.",
+    ],
+    [document(3), "A document typed by hand is made as a draft copy: no questions say what it must hold."],
+  ] as const) {
+    const { page, errors, close } = await desktop(
+      `/workspace/documents/${DOCUMENT}`,
+      except({
+        [`GET /workspace/documents/${DOCUMENT}`]: api.GetDocumentResponse.parse(doc),
+        [`GET /workspace/documents/${DOCUMENT}/revisions`]: api.ListDocumentRevisionsResponse.parse([doc]),
+      }),
+    );
+    try {
+      await ready(page);
+      const files = page.getByTestId("private-exports");
+      await expect(files.getByTestId("text-finished-unavailable")).toHaveText(says);
+      await expect(files.locator('[data-testid^="button-finished-"]')).toHaveCount(0);
       assert.deepEqual(errors, []);
     } finally {
       await close();

@@ -1,5 +1,6 @@
 import {
   pgTable,
+  boolean,
   uuid,
   text,
   integer,
@@ -24,6 +25,9 @@ export const valoExportJobs = pgTable(
     format: text("format").notNull().$type<"docx" | "pdf">(),
     renderVersion: text("render_version").notNull(),
     sourceHash: text("source_hash").notNull(),
+    /** A finished file, made only of a complete version and printed without the draft notice
+     * (docs/architecture/finished-file.md); otherwise a marked draft. */
+    finished: boolean("finished").notNull().default(false),
     requestedBy: text("requested_by").notNull(),
     queueId: uuid("queue_id").notNull(),
     status: text("status")
@@ -43,6 +47,7 @@ export const valoExportJobs = pgTable(
       t.revisionId,
       t.format,
       t.renderVersion,
+      t.finished,
     ),
     uniqueIndex("valo_export_workspace_unique").on(t.id, t.workspaceId),
     index("valo_export_dispatch_idx").on(t.status, t.createdAt),

@@ -16,6 +16,8 @@ export interface ExportJob {
   format: ExportJobFormat;
   renderVersion: string;
   sourceHash: string;
+  /** A finished file, printed without the draft notice; otherwise a marked draft. */
+  finished: boolean;
   status: ExportJobStatus;
   attempts: number;
   /** @nullable */

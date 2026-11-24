@@ -30,7 +30,7 @@ import {
   type DocumentBlockType,
 } from "@workspace/api-client-react";
 import { ErrorState, Notice, Skel } from "@/components/states";
-import { FIELD_LABELS, describeError, missingFieldItems, newBlockId } from "@/lib/api";
+import { FIELD_LABELS, describeError, finishedFileState, missingFieldItems, newBlockId } from "@/lib/api";
 import { suggestedDocumentTitle } from "@/lib/document-list-helpers";
 import {
   applyCustomerDetailsToGuided,
@@ -531,7 +531,7 @@ export default function DocumentEditor({ id }: { id: string }) {
     );
   }
 
-  const missing = missingFieldItems(content);
+  const missing = missingFieldItems(content, formText);
   function focusEditorTarget(selector: string) {
     if (tab !== "edit") setTab("edit");
     requestAnimationFrame(() => {
@@ -1401,6 +1401,7 @@ export default function DocumentEditor({ id }: { id: string }) {
             revisionNumber={doc.data.revision}
             disabled={finDirty || !["idle", "saved"].includes(state)}
             missingCount={missing.length}
+            finishedFile={finishedFileState(content, formText)}
             finDirty={finDirty}
             onSaveNow={() => saveEverything()}
             onApplyFinancial={applyFinancial}

@@ -40,6 +40,12 @@ export const RENDER_VERSION = "manual-draft-5";
  * or a government tax invoice (PAY-009), an official approval or legal advice. */
 export const DRAFT_NOTICE =
   "INCOMPLETE DRAFT — details as the business entered them. Not proof of payment, a government tax invoice, an official approval or legal advice.";
+/** Printed where the draft notice is, on a finished file: one made only of a complete version
+ * (docs/architecture/finished-file.md). It keeps what the draft notice says of the details and of what
+ * the file is not (EDP-008), and drops only the claim that it is an incomplete draft. The words are a
+ * proposal for the owner. */
+export const FINISHED_NOTICE =
+  "Prepared with Valo from the details the business entered. Not proof of payment, a government tax invoice, an official approval or legal advice.";
 export const TEMPLATE_NOTICE =
   "BLANK DEVELOPMENT TEMPLATE — complete with your own business information. Not regulatory guidance or verified business facts.";
 export const PURCHASE_NOTICE =
@@ -47,6 +53,7 @@ export const PURCHASE_NOTICE =
 export { GUIDANCE_NOTICE, GUIDANCE_DRAFT_NOTICE, GUIDE_PART_PREFIX };
 type RenderMode =
   | "business_draft"
+  | "business_finished"
   | "template_sample"
   | "purchase_receipt"
   | "guidance"
@@ -54,6 +61,8 @@ type RenderMode =
   | "practical_guide";
 const guide = (mode: RenderMode) =>
   mode === "guidance" || mode === "guidance_draft" || mode === "practical_guide";
+/** A customer's own document, as a marked draft or as a finished file. */
+const customer = (mode: RenderMode) => mode === "business_draft" || mode === "business_finished";
 /** A named part's name and the rest of its text, or nothing when the block is not one. */
 function guidePart(mode: RenderMode, block: { id: string; type: string; text: string }) {
   if (!guide(mode) || block.type !== "paragraph" || !block.id.startsWith(GUIDE_PART_PREFIX)) return null;
@@ -73,7 +82,9 @@ const noticeFor = (mode: RenderMode) =>
           ? GUIDANCE_NOTICE
           : mode === "guidance_draft"
             ? GUIDANCE_DRAFT_NOTICE
-            : DRAFT_NOTICE;
+            : mode === "business_finished"
+              ? FINISHED_NOTICE
+              : DRAFT_NOTICE;
 export const exportMime = {
   docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   pdf: "application/pdf",
@@ -91,7 +102,7 @@ type Fields = Record<keyof typeof DOCUMENT_FIELD_LABELS, string>;
 const savedLine = (mode: RenderMode, revision: number) =>
   guide(mode)
     ? `Valo · Guide version ${revision}`
-    : mode === "business_draft"
+    : customer(mode)
       ? `Valo · Saved version ${revision}`
       : `Valo · Saved revision ${revision}`;
 /**
@@ -104,7 +115,7 @@ const savedLine = (mode: RenderMode, revision: number) =>
  */
 function printedFields(fields: Fields, guided: boolean, mode: RenderMode): (readonly [string, string])[] {
   if (guide(mode)) return [];
-  if (mode !== "business_draft") return guided ? [["Notes", fields.notes]] : Object.entries(fields);
+  if (!customer(mode)) return guided ? [["Notes", fields.notes]] : Object.entries(fields);
   const names = guided
     ? (["notes"] as const)
     : (["issuerName", "recipientName", "documentNumber", "issueDate", "dueDate", "notes"] as const);

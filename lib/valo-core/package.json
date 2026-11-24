@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "exports": { ".": "./src/index.ts", "./money": "./src/money.ts", "./customer-document": "./src/customer-document.ts", "./guided": "./src/guided.ts", "./guided-specs": "./src/guided-specs-v1.ts", "./guided-runtime": "./src/guided-runtime-v1.ts", "./form-text": "./src/form-text.ts", "./guided-v2": "./src/guided-v2.ts", "./guided-runtime-v2": "./src/guided-runtime-v2.ts", "./guided-specs-v2": "./src/guided-specs-v2.ts", "./checker-business-name": "./src/checker-business-name.ts", "./checker-source-candidates": "./src/checker-source-candidates.ts" },
+  "exports": { ".": "./src/index.ts", "./money": "./src/money.ts", "./customer-document": "./src/customer-document.ts", "./guided": "./src/guided.ts", "./guided-specs": "./src/guided-specs-v1.ts", "./guided-runtime": "./src/guided-runtime-v1.ts", "./form-text": "./src/form-text.ts", "./guided-v2": "./src/guided-v2.ts", "./guided-runtime-v2": "./src/guided-runtime-v2.ts", "./guided-specs-v2": "./src/guided-specs-v2.ts", "./document-completeness": "./src/document-completeness.ts", "./checker-business-name": "./src/checker-business-name.ts", "./checker-source-candidates": "./src/checker-source-candidates.ts" },
   "dependencies": { "zod": "catalog:" },
   "devDependencies": { "@types/node": "catalog:" }
 }
