@@ -192,6 +192,14 @@ const privacyCase = {
 
 /** Synthetic answers, each checked against the contract's schema, keyed by method and API path. */
 const answers: Record<string, unknown> = {
+  // The workspace's support requests page (WRK-001) lists the customer's own requests.
+  "GET /workspace/support-cases": api.ListCustomerSupportCasesResponse.parse({
+    cases: [],
+    page: 1,
+    pageSize: 25,
+    hasMore: false,
+    notice: "Synthetic test fixture: a note in the server's own words.",
+  }),
   [`GET /workspace`]: api.GetWorkspaceResponse.parse({
     id: WORKSPACE,
     profileRevision: 3,
@@ -661,6 +669,7 @@ const SIGNED_IN: { path: string; title: string; area?: string }[] = [
   { path: "/workspace/purchases", title: "Purchases and licences" },
   { path: "/workspace/account", title: "Sign-in and security" },
   { path: "/workspace/privacy", title: "Your data and privacy requests" },
+  { path: "/workspace/support", title: "Support requests" },
   { path: "/staff", title: "Staff operations", area: "content" },
   { path: "/staff", title: "Staff operations", area: "support" },
   { path: "/staff", title: "Staff operations", area: "finance" },
@@ -889,6 +898,7 @@ const ACCOUNT: [path: string, label: string][] = [
   ["/workspace/account", "Sign-in and security"],
   ["/workspace/privacy", "Privacy and data"],
   ["/workspace/purchases", "Purchases"],
+  ["/workspace/support", "Support requests"],
 ];
 
 test("on a desktop, every workspace screen's header lists the five sections and marks its own, and the screen shows its section's pages as tabs with its own page marked", async () => {
@@ -952,7 +962,7 @@ test("on a desktop, every workspace screen's header lists the five sections and 
   }
 });
 
-test("the account menu lists the account's three pages, closes with Escape, a click elsewhere or focus moving on, returns focus to its button, and leaves sign out beside it", async () => {
+test("the account menu lists the account's four pages, closes with Escape, a click elsewhere or focus moving on, returns focus to its button, and leaves sign out beside it", async () => {
   const { page, errors, close } = await desktop("/workspace");
   try {
     await ready(page);
@@ -1074,7 +1084,7 @@ test("on a phone, the workspace's bottom bar lists the five sections with every 
 test("the phone's opened menu fits a short screen and a phone on its side: every control in it comes to rest on screen and clear of the bottom bar", async () => {
   const problems: string[] = [];
   // Signed in, the menu is at its longest on a public screen: the site's five pages, the workspace,
-  // the account's three pages and sign out. Inside the workspace it has help, those pages and sign out.
+  // the account's four pages and sign out. Inside the workspace it has help, those pages and sign out.
   for (const path of ["/checker", "/workspace/account", "/workspace"]) {
     const { page, errors, close } = await phone(path);
     try {

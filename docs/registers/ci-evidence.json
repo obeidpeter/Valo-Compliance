@@ -1895,8 +1895,8 @@
       "requirement": "NFR-006",
       "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
-      "test": "the account menu lists the account's three pages, closes with Escape, a click elsewhere or focus moving on, returns focus to its button, and leaves sign out beside it",
-      "proves": "With the keyboard alone, Enter on the header's account button shows its three links and sets aria-expanded, Tab moves into them, Escape hides them and returns focus to the button, and tabbing past the last link hides them; a click elsewhere hides them too, and following a link opens its page with the list hidden. No assistive technology is used."
+      "test": "the account menu lists the account's four pages, closes with Escape, a click elsewhere or focus moving on, returns focus to its button, and leaves sign out beside it",
+      "proves": "With the keyboard alone, Enter on the header's account button shows its four links and sets aria-expanded, Tab moves into them, Escape hides them and returns focus to the button, and tabbing past the last link hides them; a click elsewhere hides them too, and following a link opens its page with the list hidden. No assistive technology is used."
     },
     {
       "requirement": "NFR-006",
@@ -1945,7 +1945,7 @@
       "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
       "test": "on a phone, the workspace's bottom bar lists the five sections with every word fitting, marks the screen's own, replaces the public pages' two buttons, and the menu lists the account's pages",
-      "proves": "On an emulated Moto G4 phone with touch, signed in through a stand-in identity, the workspace's bottom bar shows its five sections with every word inside its button at 360 and at 320 pixels wide, and the opened menu lists help, the account's three pages and sign out; no real device or other browser is tested."
+      "proves": "On an emulated Moto G4 phone with touch, signed in through a stand-in identity, the workspace's bottom bar shows its five sections with every word inside its button at 360 and at 320 pixels wide, and the opened menu lists help, the account's four pages and sign out; no real device or other browser is tested."
     },
     {
       "requirement": "NFR-008",
