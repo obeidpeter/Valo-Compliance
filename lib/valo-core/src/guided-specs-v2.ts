@@ -906,6 +906,144 @@ const nonDisclosure = fromV1("TPL-15", {
   ],
 });
 
+/** v1's questions for one party of an agreement, filling the one placeholder the draft gives that
+ * party with its name, legal form, registration and address, in that order. */
+const party = (side: "issuer" | "recipient", slot: string): Plan["questions"][number][] => [
+  { v1: `${side}Name`, join: { tokens: [slot, `${side}Name`] } },
+  { v1: `${side}LegalForm`, join: { tokens: [slot] } },
+  { v1: `${side}Registration`, join: { tokens: [slot] } },
+  { v1: `${side}Address`, join: { tokens: [slot] } },
+];
+
+/**
+ * The service agreement (TPL-13), a premium form. The draft names its parties as the Customer and the
+ * Provider; v1 asks for a first and a second party, so a new choice says which party provides the
+ * services, and the parties' placeholders and signatures print accordingly.
+ */
+const serviceAgreement = fromV1("TPL-13", {
+  questions: [
+    ...party("issuer", "firstParty"),
+    ...party("recipient", "secondParty"),
+    {
+      added: {
+        id: "providerParty",
+        label: "Which party provides the services?",
+        type: "select",
+        required: true,
+        options: [
+          { value: "first", label: "First party" },
+          { value: "second", label: "Second party" },
+        ],
+        clause: true,
+      },
+      why: "The agreement names its parties as the Customer and the Provider, and v1 asks only for a first and a second party: the choice puts each party's details in its own place.",
+    },
+    { v1: "documentNumber", join: { tokens: ["documentNumber"] } },
+    { v1: "issueDate", join: { tokens: ["issueDate"] } },
+    { v1: "startDate", join: { tokens: ["startDate"] } },
+    { v1: "termType", join: { tokens: ["endTerm"] } },
+    { v1: "endDate", join: { tokens: ["endTerm"] } },
+    { v1: "jurisdiction", join: { tokens: ["jurisdiction"] } },
+    { v1: "scope", join: { tokens: ["scope"] } },
+    {
+      added: {
+        id: "purposeUsers",
+        label: "Intended purpose and users of the services and deliverables",
+        type: "text",
+        required: true,
+        tokens: ["purposeUsers"],
+      },
+      why: 'Schedule A prints "Intended purpose and users: [ ]" and Schedule C "Intended permitted use: [ ]", which the licence and the rights record rely on, and v1 asks nothing for them.',
+    },
+    {
+      added: {
+        id: "reviewPeriods",
+        label: "Review period and correction period for the deliverables",
+        type: "text",
+        required: true,
+        tokens: ["reviewPeriods"],
+      },
+      why: 'Schedule A prints "Review period and correction period: [ ]", which the review and correction clause relies on, and v1 asks nothing for it.',
+    },
+    {
+      added: {
+        id: "customerInputs",
+        label: "Information, access and decisions the customer will provide, with their dates, or none",
+        type: "long_text",
+        required: true,
+        tokens: ["customerInputs"],
+      },
+      why: 'Schedule A prints "Customer inputs, access and dates: [ ]", which the clause on responsibilities relies on, and v1 asks nothing for it.',
+    },
+    {
+      added: {
+        id: "providerAssumptions",
+        label: "Provider dependencies and agreed assumptions, or none",
+        type: "long_text",
+        required: true,
+        tokens: ["providerAssumptions"],
+      },
+      why: 'Schedule A prints "Provider dependencies and agreed assumptions: [ ]", which the clause on responsibilities relies on, and v1 asks nothing for it.',
+    },
+    { v1: "changeControl", join: { tokens: ["changeControl"] } },
+    {
+      added: {
+        id: "subcontractors",
+        label: "Approved subcontractors, systems and access, or none",
+        type: "long_text",
+        required: true,
+        tokens: ["subcontractors"],
+      },
+      why: 'Schedule A prints "Approved subcontractors, systems and access: [ ]", which the subcontracting clause relies on, and v1 asks nothing for it.',
+    },
+    { v1: "feeKobo", join: { tokens: ["feeKobo"] } },
+    { v1: "paymentTerms", join: { tokens: ["paymentTerms"] } },
+    { v1: "expensesTerms", join: { tokens: ["expensesTerms"] } },
+    { v1: "taxTreatment", join: { tokens: ["taxTreatment"] } },
+    {
+      added: {
+        id: "rightsArrangement",
+        label: "Rights arrangement for the new deliverables",
+        type: "select",
+        required: true,
+        options: [
+          { value: "licence", label: "Licence" },
+          { value: "assignment", label: "Assignment" },
+        ],
+        tokens: ["rightsArrangement"],
+      },
+      why: 'Schedule C prints "Chosen arrangement, Licence or Assignment, select one: [ ]", which the rights clause requires, and v1 asks nothing for it.',
+    },
+    { v1: "ipTerms", join: { tokens: ["ipTerms"] } },
+    { v1: "terminationTerms", join: { tokens: ["terminationTerms"] } },
+    { v1: "confidentialityTerms", join: { tokens: ["confidentialityTerms"] } },
+    { v1: "disputeTerms", join: { tokens: ["disputeTerms"] } },
+  ],
+  dropped: {
+    liabilityTerms:
+      "The agreement imposes no blanket exclusion, indemnity or liability cap and says any negotiated limitation needs its own explicit, reviewed wording, so it has no place for one.",
+  },
+  // Completed by hand: each signatory's authority, the entries the parties settle as they sign
+  // (an advance, the deliverables the rights record covers, third-party materials, any item for
+  // separate rights resolution, the notice addresses and incident contacts), and the signatures.
+  blanks: [
+    "signatoryAuthority",
+    "advance",
+    "deliverablesCovered",
+    "thirdPartyMaterials",
+    "rightsResolution",
+    "noticeContacts",
+    "customerSignatory",
+    "customerCapacity",
+    "customerSignature",
+    "customerDate",
+    "providerSignatory",
+    "providerCapacity",
+    "providerSignature",
+    "providerDate",
+  ],
+});
+
 /** The v2 forms, by template. A template without one stays on its v1 form. */
 export const GUIDED_SPECS_V2: Readonly<Partial<Record<GuidedTemplateId, GuidedSpecV2>>> = {
   "TPL-01": invoice.spec,
@@ -915,6 +1053,7 @@ export const GUIDED_SPECS_V2: Readonly<Partial<Record<GuidedTemplateId, GuidedSp
   "TPL-05": deliveryNote.spec,
   "TPL-08": minutes.spec,
   "TPL-12": reminder.spec,
+  "TPL-13": serviceAgreement.spec,
   "TPL-15": nonDisclosure.spec,
   "TPL-16": employmentContract.spec,
   "TPL-17": offerLetter.spec,
@@ -928,6 +1067,7 @@ export const GUIDED_CHANGES_V2: Readonly<Partial<Record<GuidedTemplateId, Guided
   "TPL-05": deliveryNote.changes,
   "TPL-08": minutes.changes,
   "TPL-12": reminder.changes,
+  "TPL-13": serviceAgreement.changes,
   "TPL-15": nonDisclosure.changes,
   "TPL-16": employmentContract.changes,
   "TPL-17": offerLetter.changes,

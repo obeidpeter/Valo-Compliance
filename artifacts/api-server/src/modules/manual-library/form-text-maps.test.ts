@@ -74,6 +74,7 @@ test("every map turns its retained draft into form text that the v2 form fits ex
     "TPL-05",
     "TPL-08",
     "TPL-12",
+    "TPL-13",
     "TPL-15",
     "TPL-16",
     "TPL-17",
@@ -984,6 +985,117 @@ test("a non-disclosure agreement's answers fill its mutual wording: each party's
       .join("\n"),
     /Disclosure period: 1 Dec 2026 to \[end\]\./,
   );
+});
+
+test("a service agreement's answers fill its wording with each party in the role chosen, the deliverables as rows of their own, the schedules one entry to a line, and the signatures left for completion by hand", async () => {
+  const spec = GUIDED_SPECS_V2["TPL-13"]!;
+  const text = parseFormText((await proposedFormText("TPL-13"))!);
+  assert.equal(text.title, "Service agreement");
+  const data = emptyFormData(spec);
+  data.values = {
+    ...data.values,
+    issuerName: "Synthetic Provider Ltd",
+    issuerLegalForm: "private company limited by shares",
+    issuerRegistration: "RC 000002",
+    issuerAddress: "3 Synthetic Avenue, Surulere, Lagos",
+    recipientName: "Synthetic Customer Ltd",
+    recipientLegalForm: "private company limited by shares",
+    recipientAddress: "4 Synthetic Close, Yaba, Lagos",
+    providerParty: "first",
+    documentNumber: "SYN-SA-001",
+    issueDate: "2026-11-24",
+    startDate: "2026-12-01",
+    termType: "fixed",
+    endDate: "2027-05-31",
+    jurisdiction: "Lagos State",
+    scope: "Monthly bookkeeping for two synthetic shops; payroll excluded",
+    purposeUsers: "the customer's management, for its own accounts",
+    reviewPeriods: "5 working days to review; 10 to correct",
+    customerInputs: "Bank statements by the 5th of each month",
+    providerAssumptions: "Statements arrive complete",
+    changeControl: "Changes agreed in writing by the two managing directors",
+    subcontractors: "None",
+    feeKobo: "15000000",
+    paymentTerms: "Monthly in arrears, due 14 days after invoice",
+    expensesTerms: "None without written approval",
+    taxTreatment: "Fees exclude any applicable tax",
+    rightsArrangement: "licence",
+    ipTerms: "The provider keeps its own templates and methods",
+    terminationTerms: "30 days' notice by either party",
+    confidentialityTerms: "Two years after the engagement ends",
+    disputeTerms: "The managing directors, after 15 days",
+  };
+  data.tables.deliverables = [
+    {
+      description: "Monthly management accounts",
+      acceptance: "Reconciled to bank statements",
+      timing: "By the 15th, by email",
+    },
+  ];
+  const compiled = (values: Record<string, string> = {}) =>
+    compileForm(spec, text, { ...data, values: { ...data.values, ...values } });
+  const shownOf = (out: ReturnType<typeof compiled>) =>
+    out.blocks.map((b) => (b.type === "table" ? b.rows.map((r) => r.join(" | ")).join("\n") : b.text));
+  const out = compiled();
+  const shown = shownOf(out);
+  // The first party provides the services here, so it prints as the Provider.
+  assert.deepEqual(shown.slice(1, 4), [
+    "This agreement is between Synthetic Customer Ltd, private company limited by shares, 4 Synthetic Close, Yaba, Lagos (Customer)",
+    "and Synthetic Provider Ltd, private company limited by shares, RC 000002, 3 Synthetic Avenue, Surulere, Lagos (Provider).",
+    "Agreement reference: SYN-SA-001. Date of agreement: 24 Nov 2026. Start date: 1 Dec 2026. End date or completion event: Fixed end date, 31 May 2027. Each signatory's authority reference: [ ].",
+  ]);
+  assert.ok(
+    shown.some((line) =>
+      line.includes(
+        "Republic of Nigeria and Lagos State. The parties select the courts of competent jurisdiction in Lagos State.",
+      ),
+    ),
+  );
+  assert.ok(
+    shown.includes(
+      " | Milestones and delivery format/location | Objective acceptance criteria for each deliverable\nMonthly management accounts | By the 15th, by email | Reconciled to bank statements",
+    ),
+  );
+  const lists = out.blocks.filter((b) => b.type === "list").map((b) => b.text);
+  for (const line of [
+    "Services, deliverables and explicit exclusions: Monthly bookkeeping for two synthetic shops; payroll excluded",
+    "Customer and Provider contacts/decision authority: Changes agreed in writing by the two managing directors",
+    "Currency and fee calculation: \u20a6150,000.00",
+    "Advance and how credited/refunded: [ ]",
+    "Tax inclusion/exclusion and verified treatment; Any verified withholding basis and evidence: Fees exclude any applicable tax",
+    "Chosen arrangement, Licence or Assignment, select one: Licence",
+    "Intended permitted use: the customer's management, for its own accounts",
+    "Convenience notice; Breach remedy period; Disruption exit period; Approved non-cancellable commitments and termination calculation: 30 days' notice by either party",
+    "Notice addresses and incident contacts: [ ]",
+    "State/FCT, governing-law entry and court location completed: Lagos State",
+  ])
+    assert.ok(lists.includes(line), line);
+  assert.ok(
+    shown
+      .at(-1)!
+      .startsWith(
+        "For the Customer: legal name Synthetic Customer Ltd; signatory name [ ]; capacity and authority [ ]; signature [ ]; date [ ]. For the Provider: legal name Synthetic Provider Ltd; signatory name [ ];",
+      ),
+  );
+  assert.deepEqual(out.selectedClauses, ["providerParty=first"]);
+  assert.deepEqual(out.unfilled, []);
+  // With the second party providing the services, the roles swap; unanswered, the draft's
+  // placeholders print.
+  const swapped = shownOf(compiled({ providerParty: "second", termType: "open" }));
+  assert.equal(
+    swapped[1],
+    "This agreement is between Synthetic Provider Ltd, private company limited by shares, RC 000002, 3 Synthetic Avenue, Surulere, Lagos (Customer)",
+  );
+  assert.ok(
+    swapped[3]!.includes("End date or completion event: Open-ended, with specified termination terms."),
+  );
+  assert.ok(swapped.at(-1)!.startsWith("For the Customer: legal name Synthetic Provider Ltd;"));
+  const unanswered = shownOf(compiled({ providerParty: "" }));
+  assert.equal(
+    unanswered[1],
+    "This agreement is between [Customer legal name, entity type, registration reference if applicable, address] (Customer) and [Provider legal name, entity type, registration reference if applicable, address] (Provider).",
+  );
+  assert.ok(unanswered.at(-1)!.startsWith("For the Customer: legal name [ ]; signatory name [ ];"));
 });
 
 test("an invoice form document is saved as its answers make it, hashed as V2, and its file prints the template's wording with only its note among its fields", async () => {
