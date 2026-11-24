@@ -13,5 +13,12 @@ export interface OwnerRuleScenario {
   expectedLabel: string | null;
   /** @nullable */
   actualLabel: string | null;
+  /**
+     * What the requirements check would tell the customer for these answers, were this version released; null when the rule gives no result for them.
+     * @nullable
+     */
+  actualReason: string | null;
+  /** @nullable */
+  actualNextStep: string | null;
   passed: boolean;
 }

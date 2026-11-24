@@ -199,14 +199,26 @@ export function OwnerCheckerRules() {
                   <dt className="font-semibold">When it applies</dt>
                   <dd>{item.appliesWhen}</dd>
                 </div>
-                <div>
-                  <dt className="font-semibold">What it tells the customer</dt>
-                  <dd>{item.reason}</dd>
-                </div>
-                <div>
-                  <dt className="font-semibold">Next step it suggests</dt>
-                  <dd>{item.nextStep}</dd>
-                </div>
+                {item.reason === null || item.nextStep === null ? (
+                  <div>
+                    <dt className="font-semibold">What it tells the customer</dt>
+                    <dd>
+                      It depends on their answers. Each scenario below shows what the requirements check would
+                      tell the customer, and the next step it would suggest.
+                    </dd>
+                  </div>
+                ) : (
+                  <>
+                    <div>
+                      <dt className="font-semibold">What it tells the customer</dt>
+                      <dd>{item.reason}</dd>
+                    </div>
+                    <div>
+                      <dt className="font-semibold">Next step it suggests</dt>
+                      <dd>{item.nextStep}</dd>
+                    </div>
+                  </>
+                )}
               </dl>
               <p className="text-sm text-muted-foreground">Shown with it: {item.disclosure}.</p>
               <section aria-label="Official sources">
@@ -239,30 +251,24 @@ export function OwnerCheckerRules() {
               </section>
               <section aria-label="Scenarios">
                 <h4 className="font-semibold">Scenarios</h4>
-                <table className="mt-2 w-full text-left text-sm">
-                  <thead>
-                    <tr>
-                      <th scope="col">Scenario</th>
-                      <th scope="col">Expected</th>
-                      <th scope="col">Result</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {item.scenarios.map((s) => (
-                      <tr key={s.id}>
-                        <td>
-                          {s.id}
-                          {s.critical ? " (critical)" : ""}
-                        </td>
-                        <td>{label(s.expectedLabel)}</td>
-                        <td>
-                          {label(s.actualLabel)}
-                          {s.passed ? "" : " · does not match"}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <ul className="mt-2 space-y-3">
+                  {item.scenarios.map((s) => (
+                    <li key={s.id} className="rounded-lg border border-border p-3 text-sm">
+                      <p className="font-medium">
+                        {s.id}
+                        {s.critical ? " (critical)" : ""}
+                      </p>
+                      <p>
+                        Expected: {label(s.expectedLabel)}. Result: {label(s.actualLabel)}
+                        {s.passed ? "." : " · does not match."}
+                      </p>
+                      {s.actualReason !== null && (
+                        <p className="mt-1">What the customer is told: {s.actualReason}</p>
+                      )}
+                      {s.actualNextStep !== null && <p>Next step: {s.actualNextStep}</p>}
+                    </li>
+                  ))}
+                </ul>
                 <p className="mt-2 text-sm">
                   It would change the result for {formatCount(item.changedProfiles)} of the{" "}
                   {formatCount(item.profilesRun)} most recent saved checks.

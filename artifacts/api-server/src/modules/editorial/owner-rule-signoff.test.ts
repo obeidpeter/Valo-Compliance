@@ -7,6 +7,7 @@ import {
   evaluateOwnerRuleBundle,
   ownerConfirmedChecks,
   ownerRuleMatchesBundle,
+  planRuleRelease,
   sha256,
 } from "@workspace/valo-core";
 
@@ -368,6 +369,91 @@ test("every rule prepared in the repository names registered sources and the gui
         if (kept) assert.ok(kept.text.includes(q), `${c.rule.id}: ${s.id}`);
         assert.ok(q.trim().split(/\s+/).length <= signoff.OWNER_RULE_QUOTE_WORDS, `${c.rule.id}: ${q}`);
       }
+    }
+  }
+});
+
+test("each rule prepared in the repository could be signed against copies of its official texts that hold its passages: its evidence passes and every scenario gives the result it expects", async () => {
+  const { readFileSync } = await import("node:fs");
+  const { fileURLToPath } = await import("node:url");
+  const { capturedGuidePassages, guideAmendmentRecords, guidancePolicy, retainedGuidePassages } =
+    await import("../publication");
+  const root = fileURLToPath(new URL("../../../../../", import.meta.url));
+  // The words of the two Acts as the research notes kept them. The guides cut the data protection
+  // Act's passages from a capture by their opening and closing words and checksums, so a copy that
+  // holds these words holds exactly those passages.
+  const ndpaResearch = JSON.parse(
+    readFileSync(`${root}docs/content-candidates/source-evidence/ndpa-captured-passages.json`, "utf8"),
+  ) as { passages: { id: string; exactText: string }[] };
+  const ndpaWords = ndpaResearch.passages.map((p) => p.exactText).join("\n");
+  const retained = retainedGuidePassages();
+  const camaWords = ["CAMA-814"].map((id) => retained(id)!.text).join("\n");
+  const record = (instrument: string) => guideAmendmentRecords.find((r) => r.instrument === instrument)!;
+  const records = [record("CAC-CAMA-2020"), record("NDPC-NDPA-2023")];
+  // A day after the latest search the records describe, so the test holds when they are refreshed,
+  // and no earlier than midday on the scenarios' date, which the checker will not assess ahead of.
+  const latest = Math.max(...records.flatMap((r) => r.searches.map((s) => Date.parse(s.searchedAt))));
+  const scenarioDay = Date.parse(`${signoff.ownerRuleCandidates[0]!.scenarios[0]!.asOfDate}T12:00:00Z`);
+  const now = new Date(Math.max(latest + 86_400_000, scenarioDay));
+  const checkedAt = new Date(+now - 3_600_000).toISOString();
+  const copy = (leadId: string, text: string, rawChecksum: string, n: number) => ({
+    leadId,
+    url: allSourceLeads.find((l) => l.id === leadId)!.url,
+    snapshotId: `00000000-0000-4000-8000-00000000000${n}`,
+    checkedAt,
+    rawChecksum,
+    textChecksum: sha256(text),
+    text,
+  });
+  const captures = [
+    copy("SV-010", `Front matter. ${camaWords} More text.`, record("CAC-CAMA-2020").rawSha256, 1),
+    copy("S04", `Front matter.\n${ndpaWords}\nMore text.`, record("NDPC-NDPA-2023").rawSha256, 2),
+  ];
+  const { policy } = await guidancePolicy();
+  assert.equal(policy.ownerApproved, true);
+  assert.equal(signoff.ownerRuleCandidates.length, 2);
+  for (const candidate of signoff.ownerRuleCandidates) {
+    const id = candidate.rule.id;
+    const prepared = signoff.prepareOwnerRule(candidate, {
+      version: 1,
+      captures,
+      passages: capturedGuidePassages(captures),
+      records: guideAmendmentRecords,
+      policy,
+      confirmed: ownerConfirmedChecks,
+      now,
+    });
+    assert.deepEqual(prepared.holds, [], id);
+    assert.deepEqual(
+      evaluateOwnerRuleBundle(prepared.bundle, now),
+      { decision: "eligible", reasons: [] },
+      id,
+    );
+    assert.equal(ownerRuleMatchesBundle(prepared.rule, prepared.bundle), true, id);
+    // The owner's adoption is the rights record, and the rule says how it was released.
+    assert.equal(prepared.bundle.rights.status, "cleared");
+    assert.match(prepared.bundle.rights.evidence, /adopts it as Valo's own/);
+    assert.equal(prepared.bundle.rights.evidenceHash, sha256(prepared.bundle.rights.evidence));
+    assert.equal(prepared.rule.provenance, "owner_signoff");
+    const plan = planRuleRelease({
+      candidate: prepared.rule,
+      current: [],
+      scenarios: candidate.scenarios,
+      profiles: [],
+      now,
+      asOfDate: candidate.scenarios[0]!.asOfDate,
+      trustedManifestHashes: new Set<string>(),
+    });
+    assert.deepEqual(plan.reasons, [], id);
+    for (const s of plan.scenarios) {
+      assert.equal(s.passed, true, `${id}: ${s.id} gave ${s.actualLabel}`);
+      assert.ok(s.critical && s.actualReason && s.actualNextStep, `${id}: ${s.id}`);
+    }
+    // Each label a scenario expects is one the checker gives, and the rule's sources hold its quotes.
+    assert.ok(new Set(candidate.scenarios.map((s) => s.expectedLabel)).size >= 3, id);
+    for (const source of prepared.rule.sources) {
+      const text = prepared.bundle.sources.find((b) => b.id === source.id)!.text;
+      assert.ok(text.includes(source.quote), `${id}: ${source.id}`);
     }
   }
 });

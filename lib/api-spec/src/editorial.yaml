@@ -185,8 +185,12 @@ schemas:
     properties:
       ruleId: { type: string }
       title: { type: string }
-      reason: { type: string }
-      nextStep: { type: string }
+      reason:
+        description: What the rule tells a customer when it applies; null when a fixed calculation words it for each customer's answers (see each scenario).
+        type: [string, "null"]
+      nextStep:
+        description: The next step the rule suggests when it applies; null when a fixed calculation words it for each customer's answers.
+        type: [string, "null"]
       appliesWhen: { type: string }
       jurisdiction: { type: string }
       validFrom: { type: string }
@@ -251,12 +255,16 @@ schemas:
       limits: { type: string }
   OwnerRuleScenario:
     type: object
-    required: [id, critical, expectedLabel, actualLabel, passed]
+    required: [id, critical, expectedLabel, actualLabel, actualReason, actualNextStep, passed]
     properties:
       id: { type: string }
       critical: { type: boolean }
       expectedLabel: { type: [string, "null"] }
       actualLabel: { type: [string, "null"] }
+      actualReason:
+        description: What the requirements check would tell the customer for these answers, were this version released; null when the rule gives no result for them.
+        type: [string, "null"]
+      actualNextStep: { type: [string, "null"] }
       passed: { type: boolean }
   OwnerRuleSourceWatch:
     type: object

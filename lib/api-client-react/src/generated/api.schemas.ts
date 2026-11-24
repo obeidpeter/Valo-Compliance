@@ -1474,6 +1474,13 @@ export interface OwnerRuleScenario {
   expectedLabel: string | null;
   /** @nullable */
   actualLabel: string | null;
+  /**
+     * What the requirements check would tell the customer for these answers, were this version released; null when the rule gives no result for them.
+     * @nullable
+     */
+  actualReason: string | null;
+  /** @nullable */
+  actualNextStep: string | null;
   passed: boolean;
 }
 
@@ -1485,8 +1492,16 @@ export type OwnerRuleItemLive = {
 export interface OwnerRuleItem {
   ruleId: string;
   title: string;
-  reason: string;
-  nextStep: string;
+  /**
+     * What the rule tells a customer when it applies; null when a fixed calculation words it for each customer's answers (see each scenario).
+     * @nullable
+     */
+  reason: string | null;
+  /**
+     * The next step the rule suggests when it applies; null when a fixed calculation words it for each customer's answers.
+     * @nullable
+     */
+  nextStep: string | null;
   appliesWhen: string;
   jurisdiction: string;
   validFrom: string;
