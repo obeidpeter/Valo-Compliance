@@ -4876,6 +4876,7 @@ export const PreviewAssessmentResponse = zod.object({
   "assessedProposition": zod.string().optional(),
   "factsNotice": zod.string().optional(),
   "sourceReviewHold": zod.string().optional(),
+  "releaseNotice": zod.string().optional().describe('How the rule behind this item was released (EDP-008). A result saved before the notice was recorded has none.'),
   "sourceLinkedTaskEligible": zod.boolean().optional(),
   "missingAnswerStates": zod.array(zod.object({
   "field": zod.string(),
@@ -5322,6 +5323,7 @@ export const PreviewWorkspaceAssessmentResponse = zod.object({
   "assessedProposition": zod.string().optional(),
   "factsNotice": zod.string().optional(),
   "sourceReviewHold": zod.string().optional(),
+  "releaseNotice": zod.string().optional().describe('How the rule behind this item was released (EDP-008). A result saved before the notice was recorded has none.'),
   "sourceLinkedTaskEligible": zod.boolean().optional(),
   "missingAnswerStates": zod.array(zod.object({
   "field": zod.string(),
@@ -5766,6 +5768,7 @@ export const ListAssessmentsResponseItem = zod.object({
   "assessedProposition": zod.string().optional(),
   "factsNotice": zod.string().optional(),
   "sourceReviewHold": zod.string().optional(),
+  "releaseNotice": zod.string().optional().describe('How the rule behind this item was released (EDP-008). A result saved before the notice was recorded has none.'),
   "sourceLinkedTaskEligible": zod.boolean().optional(),
   "missingAnswerStates": zod.array(zod.object({
   "field": zod.string(),
@@ -6612,6 +6615,7 @@ export const CreateAssessmentResponse = zod.object({
   "assessedProposition": zod.string().optional(),
   "factsNotice": zod.string().optional(),
   "sourceReviewHold": zod.string().optional(),
+  "releaseNotice": zod.string().optional().describe('How the rule behind this item was released (EDP-008). A result saved before the notice was recorded has none.'),
   "sourceLinkedTaskEligible": zod.boolean().optional(),
   "missingAnswerStates": zod.array(zod.object({
   "field": zod.string(),
@@ -7062,6 +7066,7 @@ export const GetAssessmentResponse = zod.object({
   "assessedProposition": zod.string().optional(),
   "factsNotice": zod.string().optional(),
   "sourceReviewHold": zod.string().optional(),
+  "releaseNotice": zod.string().optional().describe('How the rule behind this item was released (EDP-008). A result saved before the notice was recorded has none.'),
   "sourceLinkedTaskEligible": zod.boolean().optional(),
   "missingAnswerStates": zod.array(zod.object({
   "field": zod.string(),

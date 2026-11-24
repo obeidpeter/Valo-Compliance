@@ -192,3 +192,28 @@ test("each result says in words whether it is federal, a state's or a local gove
   // A state's or a local government's requirement is never marked as federal.
   assert.equal(page.split("Federal · Rule").length - 1, 1);
 });
+
+// EDP-008: each result says how its rule was released, as the server recorded it with the result.
+// A result saved before the notice was recorded shows none, and the page invents none.
+test("a result shows how its rule was released, and an older saved result shows no notice", () => {
+  const notice = "Synthetic release notice; not reviewed by a Nigerian legal, tax or sector specialist";
+  const page = renderToStaticMarkup(
+    React.createElement(
+      QueryClientProvider,
+      { client: new QueryClient() },
+      React.createElement(AssessmentResultView, {
+        result: {
+          ...result,
+          items: [
+            item("SYN-SIGNED", "Likely relevant", { releaseNotice: notice }),
+            item("SYN-OLDER", "Likely relevant", {}),
+          ],
+        },
+      }),
+    ),
+  );
+  assert.ok(page.includes(`data-testid="release-notice-SYN-SIGNED">${notice}</p>`));
+  // The notice sits with the rule's name, above why it is shown.
+  assert.ok(page.indexOf("release-notice-SYN-SIGNED") < page.indexOf('data-testid="why-SYN-SIGNED"'));
+  assert.ok(!page.includes("release-notice-SYN-OLDER"));
+});

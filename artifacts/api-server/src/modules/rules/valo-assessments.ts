@@ -27,6 +27,7 @@ import {
   ruleSchema,
   publicationSchema,
   changedCheckerFactPaths,
+  comparableItemDigest,
   explainAssessmentChanges,
   sourceFamilyBindingMatches,
   type CheckerFacts,
@@ -385,7 +386,7 @@ export async function compareAssessments(actor: WorkspaceActor, id: string, prev
       addedRuleIds: [...after.keys()].filter((k) => !before.has(k)),
       removedRuleIds: [...before.keys()].filter((k) => !after.has(k)),
       changedRuleIds: [...after.keys()].filter(
-        (k) => before.has(k) && digest(before.get(k)) !== digest(after.get(k)),
+        (k) => before.has(k) && comparableItemDigest(before.get(k)!) !== comparableItemDigest(after.get(k)!),
       ),
       explanations: explainAssessmentChanges(previous.result.items, current.result.items, changedFacts),
     });

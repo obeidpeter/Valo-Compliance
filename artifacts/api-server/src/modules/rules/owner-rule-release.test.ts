@@ -3,9 +3,11 @@ import test from "node:test";
 import {
   assess,
   checkerFactsSchema,
+  disclosure,
   evaluateOwnerRuleBundle,
   evaluatePublication,
   ownerRuleBundleSchema,
+  ownerRuleDisclosure,
   ownerRuleMatchesBundle,
   releaseEvidence,
   ruleSchema,
@@ -184,6 +186,35 @@ test("the checker holds an owner-signed rule until the registry trusts its manif
   assert.deepEqual(
     trusted.items.map((item) => [item.ruleId, item.label]),
     [["synthetic-owner-rule", "Likely relevant"]],
+  );
+});
+
+// EDP-008: "Show 'AI drafted and reviewed; not reviewed by a Nigerian legal, tax or sector
+// specialist', source-check date, scope and material limitations on detail pages and exports",
+// accepted when there is "no 'lawyer approved', 'professionally verified', 'guaranteed compliant'
+// or equivalent claim without actual supporting review".
+test("each result says how its rule was released, and an owner-signed rule never says it was AI reviewed", () => {
+  const { rule, reviewed } = release();
+  const notices = (r: unknown) => {
+    const parsed = ruleSchema.parse(r);
+    return assess(facts(), [parsed], asOfDate, now, {
+      trustedManifestHashes: new Set([parsed.manifestHash]),
+      fixtureMode: true,
+    }).items.map((item) => item.releaseNotice);
+  };
+  assert.deepEqual(notices(rule), [ownerRuleDisclosure]);
+  assert.deepEqual(notices(reviewed.rule), [disclosure]);
+  // A synthetic fixture is never shown as Nigerian guidance and carries no notice.
+  assert.deepEqual(notices({ ...rule, provenance: "synthetic_fixture" }), [undefined]);
+  // The owner's notice claims no AI review and no professional review.
+  assert.doesNotMatch(ownerRuleDisclosure, /\bAI\b|lawyer approved|professionally verified|guaranteed/i);
+  assert.match(ownerRuleDisclosure, /not reviewed by a Nigerian legal, tax or sector specialist/);
+  // A result that misses every rule's condition still says how the rule was released.
+  assert.deepEqual(
+    assess(facts({ legalForm: "individual" }), [rule], asOfDate, now, {
+      trustedManifestHashes: new Set([rule.manifestHash]),
+    }).items.map((item) => [item.label, item.releaseNotice]),
+    [["Not indicated by these answers", ownerRuleDisclosure]],
   );
 });
 

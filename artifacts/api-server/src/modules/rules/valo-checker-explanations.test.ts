@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   assess,
   checkerFactsSchema,
+  comparableItemDigest,
   explainAssessmentChanges,
   factNames,
   ruleSchema,
@@ -158,5 +159,30 @@ test("the same profile under two rule versions is reproducible and the compariso
       ["synthetic-company", "added"],
       ["synthetic-premises", "removed"],
     ],
+  );
+});
+
+// CMP-005 with EDP-008: a result saved before release notices were recorded compares as unchanged
+// with the same rule version's result now, which carries one. A new version is still a change.
+test("a release notice alone is no change between two saved results, and a new rule version still is", () => {
+  const first = rule("synthetic-premises", "premises", "yes");
+  const saved = assess(facts, [first], asOfDate, now, { fixtureMode: true }).items;
+  const notice = "Synthetic release notice.";
+  const withNotice = saved.map((item) => ({ ...item, releaseNotice: notice }));
+  assert.equal(comparableItemDigest(saved[0]!), comparableItemDigest(withNotice[0]!));
+  assert.deepEqual(explainAssessmentChanges(saved, withNotice, []), []);
+  // Anything else that differs is still compared.
+  assert.notEqual(
+    comparableItemDigest(saved[0]!),
+    comparableItemDigest({ ...withNotice[0]!, nextStep: "Another next step." }),
+  );
+  const second = ruleSchema.parse({ ...first, version: 2 });
+  const later = assess(facts, [second], asOfDate, now, { fixtureMode: true }).items.map((item) => ({
+    ...item,
+    releaseNotice: notice,
+  }));
+  assert.deepEqual(
+    explainAssessmentChanges(saved, later, []).map((c) => [c.change, c.previousVersion, c.currentVersion]),
+    [["changed", 1, 2]],
   );
 });

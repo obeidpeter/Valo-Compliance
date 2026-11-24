@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { digest } from "./publication";
+import { digest, disclosure, ownerRuleDisclosure } from "./publication";
 import {
   richCheckerFactsSchema,
   sourceFamilyReleaseSchema,
@@ -190,10 +190,21 @@ export type RuleItem = {
   sourceLinkedTaskEligible?: boolean;
   factsNotice?: string;
   sourceReviewHold?: string;
+  /** How the item's rule was released (EDP-008), as `releaseNotice` gives it. */
+  releaseNotice?: string;
   jurisdiction: ReleasedRule["jurisdiction"];
   sources: ReleasedRule["sources"];
   relatedTemplateIds: string[];
 };
+/** EDP-008: what a result says about how its rule was released. A rule released on the reviewed
+ * route was AI drafted and reviewed, and its bundle says so; one released on the owner's sign-off
+ * was not, and says what was done instead (decision 0020). A synthetic fixture is never shown as
+ * Nigerian guidance and says nothing. */
+export function releaseNotice(rule: Pick<ReleasedRule, "provenance">): { releaseNotice?: string } {
+  if (rule.provenance === "owner_signoff") return { releaseNotice: ownerRuleDisclosure };
+  if (rule.provenance === "editorial_release") return { releaseNotice: disclosure };
+  return {};
+}
 const absent = (v: unknown) =>
   v === undefined ||
   v === null ||
@@ -381,6 +392,7 @@ export function assess(
         requirementVersionId: r.requirementVersionId,
         title: r.title,
         ...outcome,
+        ...releaseNotice(r),
         jurisdiction: r.jurisdiction,
         sources: r.sources,
         relatedTemplateIds: r.relatedTemplateIds,
@@ -427,6 +439,7 @@ export function assess(
         truth === "unknown"
           ? "Answer the missing questions or confirm with the named authority."
           : r.nextStep,
+      ...releaseNotice(r),
       jurisdiction: r.jurisdiction,
       sources: r.sources,
       relatedTemplateIds: r.relatedTemplateIds,

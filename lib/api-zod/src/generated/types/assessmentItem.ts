@@ -20,6 +20,8 @@ export interface AssessmentItem {
   assessedProposition?: string;
   factsNotice?: string;
   sourceReviewHold?: string;
+  /** How the rule behind this item was released (EDP-008). A result saved before the notice was recorded has none. */
+  releaseNotice?: string;
   sourceLinkedTaskEligible?: boolean;
   missingAnswerStates?: MissingAnswerState[];
   missingFacts: string[];

@@ -23,6 +23,14 @@ export type AssessmentChange = {
   changedFacts: string[];
 };
 
+/** The digest a comparison reads an item by. Its release notice is left out: the notice follows from
+ * the rule's version, which is compared, and a result saved before notices were recorded has none
+ * (EDP-008), so that alone is no change. */
+export function comparableItemDigest(item: object): string {
+  const { releaseNotice: _notice, ...rest } = item as { releaseNotice?: unknown };
+  return digest(rest);
+}
+
 const related = (fact: string, path: string) =>
   fact === path || path.startsWith(fact + ".") || fact.startsWith(path + ".");
 
@@ -56,7 +64,7 @@ export function explainAssessmentChanges<T extends ComparableItem>(
     ...current.flatMap((now) => {
       const old = before.get(now.ruleId);
       if (!old) return [explain("added", undefined, now)];
-      return digest(old) === digest(now) ? [] : [explain("changed", old, now)];
+      return comparableItemDigest(old) === comparableItemDigest(now) ? [] : [explain("changed", old, now)];
     }),
     ...previous.filter((old) => !after.has(old.ruleId)).map((old) => explain("removed", old)),
   ];
