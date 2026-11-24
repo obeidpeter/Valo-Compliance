@@ -25,6 +25,8 @@ export const COVERAGE_AREAS = {
     title: "payment",
     sources: [
       api("modules/commerce/valo-commerce.ts"),
+      api("modules/commerce/checkout-editions.ts"),
+      api("modules/commerce/premium-prices.ts"),
       api("modules/commerce/valo-dispute-actions.ts"),
       api("modules/commerce/valo-dispute-provider.ts"),
       api("modules/commerce/valo-dispute-schema.ts"),
@@ -46,10 +48,12 @@ export const COVERAGE_AREAS = {
       [api("modules/commerce/valo-dispute-action-crash.ts")]:
         "crash injection for the recovery tests, not product code",
     },
+    // The checkout's editions and the premium price command are payment code without the prefix.
     pattern:
-      /^artifacts\/api-server\/src\/(lib|routes|middlewares|platform|modules\/commerce)\/valo-(commerce|refund|dispute|paystack|payment|receipt|checkout|order|entitlement)[a-z-]*\.ts$/,
+      /^artifacts\/api-server\/src\/(?:(?:lib|routes|middlewares|platform|modules\/commerce)\/valo-(?:commerce|refund|dispute|paystack|payment|receipt|checkout|order|entitlement)[a-z-]*|modules\/commerce\/(?:checkout-editions|premium-prices))\.ts$/,
     tests: [
       api("modules/commerce/valo-commerce.integration.test.ts"),
+      api("modules/commerce/premium-prices.test.ts"),
       api("modules/commerce/valo-refunds.integration.test.ts"),
       api("modules/commerce/valo-refund-provider.test.ts"),
       api("modules/commerce/valo-dispute-provider.test.ts"),
@@ -105,12 +109,18 @@ export const COVERAGE_AREAS = {
       "lib/valo-core/src/checker-rich.ts",
       "lib/valo-core/src/checker-business-name.ts",
       "lib/valo-core/src/checker-source-candidates.ts",
+      // A rule version's release plan (ADM-004) and its owner-signed bundle (decision 0020).
+      "lib/valo-core/src/rule-release.ts",
+      "lib/valo-core/src/owner-rule-release.ts",
       api("modules/rules/valo-assessments.ts"),
     ],
     excluded: {},
     pattern:
-      /^(lib\/valo-core\/src\/checker[a-z-]*|artifacts\/api-server\/src\/modules\/rules\/valo-assessments)\.ts$/,
+      /^(lib\/valo-core\/src\/(?:checker[a-z-]*|rule-release|owner-rule-release)|artifacts\/api-server\/src\/modules\/rules\/valo-assessments)\.ts$/,
     tests: [
+      api("modules/editorial/valo-rule-release.test.ts"),
+      api("modules/rules/owner-rule-release.test.ts"),
+      api("modules/editorial/owner-rule-signoff.test.ts"),
       api("modules/rules/valo-checker-rich.test.ts"),
       "artifacts/valo/src/lib/rich-checker.test.ts",
       api("routes/valo-checker-http.integration.test.ts"),
