@@ -65,33 +65,54 @@ export function assertPlainContent(content: Content) {
 }
 
 /**
- * The released edition a workspace may start a free template's form from: the most recently
- * released one with form text, by the template's registered title, and only while the form fits it.
+ * The released edition a workspace may start a template's form from, by the template's registered
+ * title, and only while the form fits it. For a free template, the most recently released edition
+ * with form text. For a premium template (slice 6), the most recently released one with form text
+ * that the workspace bought, with the order it was bought under: a workspace that holds no live
+ * edition is told to buy the template first, and one whose edition has no form text yet starts the
+ * questions-only form, as for a free template.
  */
-export async function freeFormEdition(tx: Tx, templateId: string) {
+export async function formEdition(tx: Tx, templateId: string) {
   const spec = GUIDED_SPECS_V2[templateId as GuidedTemplateId];
   const template = baselineTemplates.find((entry) => entry.id === templateId);
-  if (!spec || !template || template.access !== "free")
+  if (!spec || !template)
     throw new ValoProblem(
       404,
       "This template has no form that fills its wording yet. Start its questions-only form instead.",
     );
-  const { rows } = await tx.execute<{ edition: string; version: number; form_text: string }>(
-    sql`select edition, version, form_text from public.valo_free_form_edition(${template.title})`,
+  const premium = template.access === "premium";
+  const { rows } = await tx.execute<{
+    edition: string;
+    version: number;
+    form_text: string;
+    purchase: string | null;
+  }>(
+    premium
+      ? sql`select edition, version, form_text, purchase from public.valo_premium_form_edition(${template.title})`
+      : sql`select edition, version, form_text, null::uuid as purchase from public.valo_free_form_edition(${template.title})`,
   );
   const row = rows[0];
-  if (!row)
+  if (!row) {
+    if (premium) await assertFormAvailable(tx, templateId);
     throw new ValoProblem(
       409,
       "This template's wording is not released for its form yet. Start its questions-only form instead.",
     );
+  }
   const text = formTextOf(row.form_text);
   if (!text || formFit(spec, text).length > 0)
     throw new ValoProblem(
       409,
       "This template's released wording does not match its form yet. Start its questions-only form instead.",
     );
-  return { spec, text, edition: row.edition, editionVersion: row.version, digest: sha256(row.form_text) };
+  return {
+    spec,
+    text,
+    edition: row.edition,
+    editionVersion: row.version,
+    digest: sha256(row.form_text),
+    purchase: row.purchase,
+  };
 }
 
 /** The edition one of the scoped workspace's documents was started with, and its form text. */

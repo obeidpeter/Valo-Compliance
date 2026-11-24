@@ -15,7 +15,7 @@ import {
   assertPlainContent,
   checkFormContent,
   documentFormText,
-  freeFormEdition,
+  formEdition,
   startingAnswers,
 } from "./valo-form-documents";
 import { singleRow } from "../../platform/rows";
@@ -241,7 +241,7 @@ export async function startFormDocument(actor: WorkspaceActor, raw: unknown) {
   const { db, valoDocuments } = await import("@workspace/db");
   const { document, revision } = await db.transaction(async (tx) => {
     await authorizeWorkspaceWrite(tx, actor);
-    const form = await freeFormEdition(tx, templateId);
+    const form = await formEdition(tx, templateId);
     await limitWorkspaceWrite(tx, actor, "document");
     let answers;
     if (formAnswers) answers = startingAnswers(form.spec, formAnswers);
@@ -266,6 +266,8 @@ export async function startFormDocument(actor: WorkspaceActor, raw: unknown) {
           formVersion: 2,
           formEdition: form.edition,
           formDigest: form.digest,
+          // A premium form's record names the workspace's own order it was started under (DOC-007).
+          formOrder: form.purchase,
         })
         .returning(),
     );
@@ -275,9 +277,10 @@ export async function startFormDocument(actor: WorkspaceActor, raw: unknown) {
   return serialize(document, revision);
 }
 /**
- * The templates whose form a workspace can start now: each free template with a v2 form and a released
- * edition of its wording that the form fits, with that edition's version. The starter starts any
- * other template with its questions only, so that no start is refused in the ordinary course.
+ * The templates whose form a workspace can start now, with the version of the edition each starts
+ * from: each free template with a v2 form and a released edition of its wording that the form fits,
+ * and each premium one whose bought edition has such wording. The starter starts any other template
+ * with its questions only, so that no start is refused in the ordinary course.
  */
 export async function listFormTemplates(actor: WorkspaceActor) {
   const { db } = await import("@workspace/db");
@@ -286,11 +289,12 @@ export async function listFormTemplates(actor: WorkspaceActor) {
     const templates: { templateId: string; editionVersion: number }[] = [];
     for (const templateId of Object.keys(GUIDED_SPECS_V2)) {
       try {
-        const form = await freeFormEdition(tx, templateId);
+        const form = await formEdition(tx, templateId);
         templates.push({ templateId, editionVersion: form.editionVersion });
       } catch (error) {
-        // No released edition, one the form does not fit, or a premium template: not startable.
-        if (!(error instanceof ValoProblem) || (error.status !== 404 && error.status !== 409)) throw error;
+        // No released edition, one the form does not fit, or a premium template the workspace has
+        // not bought: not startable.
+        if (!(error instanceof ValoProblem) || ![403, 404, 409].includes(error.status)) throw error;
       }
     }
     return { templates };

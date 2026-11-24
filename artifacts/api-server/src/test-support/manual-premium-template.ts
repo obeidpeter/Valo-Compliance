@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { eq, sql } from "drizzle-orm";
 import {
+  GetDocumentResponse,
   GetManualLibraryRevisionResponse,
   GetReleasedTemplateResponse,
   GetCustomerPurchasesResponse,
@@ -364,6 +365,192 @@ export async function exercisePremiumManualTemplate(call: Call, editor: string) 
   await readRevision(await act("withdraw", next));
   assert.equal(await libraryCard(), undefined);
   assert.equal((await call("/public/templates/manual-" + itemId)).status, 404);
+}
+
+/**
+ * Forms v2, slice 6 (DOC-005, DOC-007, EDT-010): a premium template's form starts only from an edition
+ * the workspace bought that has released form text, under the workspace's own verified order, which
+ * the document records and keeps. A workspace that holds a live edition without form text starts the
+ * questions-only form, and one that holds none is told to buy the template first. A reversal closes
+ * new starts; the document already made stays its owner's, saves and reads its wording.
+ */
+export async function exercisePremiumFormDocument(call: Call, editor: string) {
+  const { db, valoDocuments, valoPrices, runInWorkspaceScope } = await import("@workspace/db");
+  const { resolveWorkspace } = await import("../modules/workspaces");
+  const { createOrder, settleVerifiedOrder } = await import("../modules/commerce");
+  const { getDocumentForm, listFormTemplates, saveDocument, startFormDocument } =
+    await import("../modules/documents");
+  const { proposedFormText } = await import("../modules/manual-library/form-text-maps");
+  const { parseFormText } = await import("@workspace/valo-core/form-text");
+  const { formDocumentContent } = await import("@workspace/valo-core/guided-runtime-v2");
+  const { GUIDED_SPECS_V2 } = await import("@workspace/valo-core/guided-specs-v2");
+  const { sha256 } = await import("@workspace/valo-core");
+  const formText = (await proposedFormText("TPL-17"))!;
+  const run = randomUUID();
+  // Two released premium editions of the offer letter: the first without form text, the second with
+  // the proposed form text, which the staff library previews against the v2 form.
+  const { bytes } = wordFromText("Synthetic offer letter", "Only the purchaser may read this sentence.");
+  const release = async (withForm: boolean) => {
+    const itemId = randomUUID();
+    const path = "/admin/manual-library/" + itemId;
+    const response = await call(
+      path + "/drafts",
+      {
+        kind: "premium_template",
+        title: "Offer letter",
+        body: "Public description of the synthetic offer letter.",
+        industry: null,
+        requestId: randomUUID(),
+        baseVersion: 0,
+        fileMode: "upload",
+        upload: { format: "docx", base64: bytes.toString("base64") },
+        ...(withForm ? { formText } : {}),
+      },
+      editor,
+    );
+    assert.equal(response.status, 200);
+    const draft = GetManualLibraryRevisionResponse.parse(await response.json());
+    assert.deepEqual(draft.formFit, withForm ? { templateId: "TPL-17", state: "fits", problems: [] } : null);
+    const published = await call(
+      path + "/actions",
+      { action: "publish", version: draft.version, digest: draft.digest },
+      editor,
+    );
+    assert.equal(published.status, 200);
+    return { path, revision: draft };
+  };
+  const plain = await release(false),
+    formed = await release(true);
+  const buyer = await resolveWorkspace("synthetic-premium-form-buyer-" + run),
+    stranger = await resolveWorkspace("synthetic-premium-form-stranger-" + run);
+  const inScope = <T>(holder: typeof buyer, work: () => Promise<T>) =>
+    runInWorkspaceScope(holder.workspaceId, work);
+  const start = (holder: typeof buyer, body: unknown = { templateId: "TPL-17" }) =>
+    inScope(holder, () => startFormDocument(holder, body));
+  const startable = async (holder: typeof buyer) =>
+    (await inScope(holder, () => listFormTemplates(holder))).templates.filter(
+      (t) => t.templateId === "TPL-17",
+    );
+  const buyFirst = { status: 403, message: /comes with a template you buy/ };
+  const questionsOnly = { status: 409, message: /Start its questions-only form instead/ };
+  // Without a purchase, the form is not offered and does not start.
+  await assert.rejects(start(buyer), buyFirst);
+  assert.deepEqual(await startable(buyer), []);
+  const buy = async (edition: { id: string }) => {
+    const priceId = randomUUID();
+    await db.insert(valoPrices).values({
+      id: priceId,
+      contentVersionId: edition.id,
+      title: "Synthetic premium form fixture",
+      amountKobo: 10000,
+      licenceVersion: "fixture-1",
+      licenceText: "Test use only",
+      taxTreatment: "Synthetic",
+      approvalReference: "LOCAL_TEST_ONLY",
+      effectiveFrom: new Date(Date.now() - 1000),
+    });
+    const order = await inScope(buyer, () =>
+      createOrder(buyer, { priceId, acceptedLicenceVersion: "fixture-1", requestKey: randomUUID() }),
+    );
+    const verified = {
+      id: String(Number.parseInt(randomUUID().replaceAll("-", "").slice(0, 12), 16)),
+      domain: "test" as const,
+      status: "success" as const,
+      reference: order.reference,
+      amount: order.amountKobo,
+      currency: "NGN" as const,
+      metadata: { valoOrderId: order.id, workspaceId: buyer.workspaceId },
+    };
+    await settleVerifiedOrder(order.id, verified);
+    return { order, verified };
+  };
+  // A bought edition without form text starts the questions-only form.
+  const first = await buy(plain.revision);
+  await assert.rejects(start(buyer), questionsOnly);
+  assert.deepEqual(await startable(buyer), []);
+  // Once the edition with form text is bought, its form is offered and starts from it, under that
+  // edition's order, which the document records; another workspace is still refused.
+  const second = await buy(formed.revision);
+  assert.deepEqual(await startable(buyer), [{ templateId: "TPL-17", editionVersion: 1 }]);
+  assert.deepEqual(await startable(stranger), []);
+  await assert.rejects(start(stranger), buyFirst);
+  const made = GetDocumentResponse.parse(await start(buyer));
+  assert.deepEqual(made.form, { version: 2, edition: formed.revision.id, digest: sha256(formText) });
+  assert.equal(made.title, "Offer letter");
+  const recorded = async () =>
+    (
+      await db
+        .select({ formOrder: valoDocuments.formOrder })
+        .from(valoDocuments)
+        .where(eq(valoDocuments.id, made.id))
+    )[0]?.formOrder;
+  assert.equal(await recorded(), second.order.id);
+  assert.equal((await inScope(buyer, () => getDocumentForm(buyer, made.id))).formText, formText);
+  await assert.rejects(
+    inScope(stranger, () => getDocumentForm(stranger, made.id)),
+    { status: 404 },
+  );
+  // Its answers fill the letter's wording, and a save keeps exactly what they make.
+  const spec = GUIDED_SPECS_V2["TPL-17"]!,
+    text = parseFormText(formText);
+  const answers = structuredClone(made.content.formAnswers!) as Parameters<typeof formDocumentContent>[2];
+  answers.values = {
+    ...answers.values,
+    issuerName: "Synthetic Employer Ltd",
+    recipientName: "Synthetic Candidate",
+    role: "Synthetic accounts officer",
+  };
+  const contentFor = (data: typeof answers) => {
+    const { unfilled: _unfilled, ...content } = formDocumentContent(spec, text, data, made.content);
+    return content;
+  };
+  const saved = GetDocumentResponse.parse(
+    await inScope(buyer, () =>
+      saveDocument(buyer, made.id, {
+        expectedRevision: 1,
+        title: "Offer letter",
+        content: contentFor(answers),
+      }),
+    ),
+  );
+  assert.equal(saved.revision, 2);
+  assert.ok(
+    saved.content.blocks.some((block) => block.text === "Dear Synthetic Candidate,"),
+    "the answers fill the letter's own words",
+  );
+  // Reversed, the edition with form text starts no new form: the live edition still held without
+  // one starts the questions-only form, and with no purchase left the business is told to buy first.
+  await settleVerifiedOrder(second.order.id, { ...second.verified, status: "reversed" });
+  await assert.rejects(start(buyer), questionsOnly);
+  assert.deepEqual(await startable(buyer), []);
+  await settleVerifiedOrder(first.order.id, { ...first.verified, status: "reversed" });
+  await assert.rejects(start(buyer), buyFirst);
+  // A document made like this one is a new start, refused the same way.
+  await assert.rejects(
+    start(buyer, { templateId: "TPL-17", formAnswers: saved.content.formAnswers }),
+    buyFirst,
+  );
+  // The document made stays its owner's: it saves, reads its wording and keeps its order.
+  const kept = await inScope(buyer, () =>
+    saveDocument(buyer, made.id, {
+      expectedRevision: 2,
+      title: "Offer letter",
+      content: contentFor({ ...answers, values: { ...answers.values, role: "Synthetic finance officer" } }),
+    }),
+  );
+  assert.equal(kept.revision, 3);
+  assert.deepEqual(kept.form, made.form);
+  assert.equal((await inScope(buyer, () => getDocumentForm(buyer, made.id))).formText, formText);
+  assert.equal(await recorded(), second.order.id);
+  // Both editions are withdrawn again, so that no later check finds them.
+  for (const { path, revision } of [plain, formed]) {
+    const withdrawn = await call(
+      path + "/actions",
+      { action: "withdraw", version: revision.version, digest: revision.digest },
+      editor,
+    );
+    assert.equal(withdrawn.status, 200);
+  }
 }
 
 /** A Paystack test merchant for the length of `run`, with Paystack itself stood in for: `answer`

@@ -499,6 +499,13 @@
       "proves": "While a refund is pending or partial the template entitlement stays active, a full refund suspends it, and the customer's saved draft still exists afterwards."
     },
     {
+      "requirement": "EDT-010",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-manual-library.integration.test.ts",
+      "test": "manual publishing through staff HTTP routes and public readers",
+      "proves": "Against PostgreSQL, once a workspace's purchase of the premium offer letter edition is reversed, its form no longer starts or makes a copy, while the document already started from it still saves new revisions and reads its edition's wording."
+    },
+    {
       "requirement": "DOC-008",
       "job": "foundation",
       "file": "scripts/src/valo/customer-wording.test.ts",
@@ -1183,6 +1190,13 @@
       "file": "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai.integration.test.ts",
       "test": "development AI persistence, private ownership, atomic acceptance and quotas",
       "proves": "Two concurrent acceptances of one synthetic AI draft, made without any provider call, create a single document, and accepting that draft again with a different title is refused with a conflict."
+    },
+    {
+      "requirement": "DOC-007",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-manual-library.integration.test.ts",
+      "test": "manual publishing through staff HTTP routes and public readers",
+      "proves": "Against PostgreSQL, a premium offer letter form (TPL-17) started from the edition a workspace bought records that edition, the SHA-256 of its wording and the workspace's own verified order of it, and keeps all three after the order is reversed."
     },
     {
       "requirement": "EDP-001",
