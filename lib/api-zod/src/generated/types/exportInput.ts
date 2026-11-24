@@ -10,5 +10,6 @@ import type { ExportInputFormat } from './exportInputFormat';
 export interface ExportInput {
   revisionId: string;
   format: ExportInputFormat;
+  /** True makes a marked draft of any saved version. False asks for a finished file, without the draft notice, made only of a complete version (docs/architecture/finished-file.md). */
   acknowledgeDraft: boolean;
 }

@@ -744,7 +744,7 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/ExportJob" }
         "409": { description: Key reused for different content or conflicting operation. }
-        "422": { description: Invalid fields or missing deliberate draft acknowledgement. }
+        "422": { description: "Invalid fields, or a finished file asked for of a saved version that is not complete." }
   /v1/exports:
     get:
       operationId: listWorkspaceExports
@@ -2706,12 +2706,14 @@ components:
       properties:
         revisionId: { type: string, format: uuid }
         format: { type: string, enum: [docx, pdf] }
-        acknowledgeDraft: { type: boolean }
+        acknowledgeDraft:
+          type: boolean
+          description: "True makes a marked draft of any saved version. False asks for a finished file, without the draft notice, made only of a complete version (docs/architecture/finished-file.md)."
     ExportRetryInput: { type: object, additionalProperties: false }
     ExportJob:
       type: object
       additionalProperties: false
-      required: [id, documentId, revisionId, revision, format, renderVersion, sourceHash, status, attempts, errorCode, checksum, size, downloadUrl, createdAt, updatedAt]
+      required: [id, documentId, revisionId, revision, format, renderVersion, sourceHash, finished, status, attempts, errorCode, checksum, size, downloadUrl, createdAt, updatedAt]
       properties:
         id: { type: string, format: uuid }
         documentId: { type: string, format: uuid }
@@ -2720,6 +2722,7 @@ components:
         format: { type: string, enum: [docx, pdf] }
         renderVersion: { type: string }
         sourceHash: { type: string }
+        finished: { type: boolean, description: "A finished file, printed without the draft notice; otherwise a marked draft." }
         status: { type: string, enum: [queued, running, retrying, ready, failed] }
         attempts: { type: integer }
         errorCode: { type: [string, "null"] }

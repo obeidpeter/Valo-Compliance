@@ -1697,6 +1697,7 @@ export const ExportInputFormat = {
 export interface ExportInput {
   revisionId: string;
   format: ExportInputFormat;
+  /** True makes a marked draft of any saved version. False asks for a finished file, without the draft notice, made only of a complete version (docs/architecture/finished-file.md). */
   acknowledgeDraft: boolean;
 }
 
@@ -1729,6 +1730,8 @@ export interface ExportJob {
   format: ExportJobFormat;
   renderVersion: string;
   sourceHash: string;
+  /** A finished file, printed without the draft notice; otherwise a marked draft. */
+  finished: boolean;
   status: ExportJobStatus;
   attempts: number;
   /** @nullable */

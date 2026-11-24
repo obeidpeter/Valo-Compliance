@@ -476,6 +476,7 @@ const answers: Record<string, unknown> = {
       format: "pdf",
       renderVersion: "synthetic-render",
       sourceHash: "f".repeat(64),
+      finished: false,
       status: "ready",
       attempts: 1,
       errorCode: null,

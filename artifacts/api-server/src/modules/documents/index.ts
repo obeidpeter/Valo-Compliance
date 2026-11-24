@@ -8,4 +8,4 @@
  */
 export * from "./valo-documents";
 export * from "./valo-revision-codec";
-export { checkFormContent } from "./valo-form-documents";
+export { checkFormContent, savedVersionGaps } from "./valo-form-documents";

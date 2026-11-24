@@ -2,63 +2,14 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { documentComplete, documentGaps } from "@workspace/valo-core/document-completeness";
 import { parseFormText } from "@workspace/valo-core/form-text";
-import { GUIDED_TEMPLATE_IDS, type GuidedField } from "@workspace/valo-core/guided";
+import { GUIDED_TEMPLATE_IDS } from "@workspace/valo-core/guided";
 import { compileGuidedContent, emptyGuidedData } from "@workspace/valo-core/guided-runtime";
 import { emptyFormData, formDocumentContent } from "@workspace/valo-core/guided-runtime-v2";
 import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
 import { GUIDED_SPECS_V2 } from "@workspace/valo-core/guided-specs-v2";
 import type { GuidedDataV2 } from "@workspace/valo-core/guided-v2";
 import { proposedFormText } from "../modules/manual-library/form-text-maps";
-
-/** A valid answer to a question, of its type: a listed option that is a real fact, not "unknown". */
-const valid = (field: GuidedField) =>
-  field.type === "date"
-    ? "2026-11-24"
-    : field.type === "integer" || field.type === "quantity"
-      ? "2"
-      : field.type === "money_kobo"
-        ? "150000"
-        : field.type === "select"
-          ? field.options!.find((option) => !/^(unknown|unanswered|not_applicable)$/i.test(option.value))!
-              .value
-          : field.type === "acknowledgement"
-            ? "yes"
-            : "Synthetic answer";
-
-/** Every question of a form answered validly, and each table given its rows. */
-function answered<
-  T extends { values: Record<string, string>; tables: Record<string, Record<string, string>[]> },
->(
-  data: T,
-  spec: {
-    fields: readonly GuidedField[];
-    tables: readonly { id: string; minRows: number; columns: readonly GuidedField[] }[];
-  },
-): T {
-  return {
-    ...data,
-    values: Object.fromEntries(spec.fields.map((field) => [field.id, valid(field)])),
-    tables: Object.fromEntries(
-      spec.tables.map((table) => [
-        table.id,
-        Array.from({ length: Math.max(table.minRows, 1) }, () =>
-          Object.fromEntries(table.columns.map((column) => [column.id, valid(column)])),
-        ),
-      ]),
-    ),
-  };
-}
-
-/** A payment reminder's balance prints only while something is still owed: here ₦5,000 less a payment
- * of ₦1,000, and no credit. Its letter is incomplete otherwise, which the answers above would make it. */
-const owing = (data: GuidedDataV2): GuidedDataV2 =>
-  data.templateId !== "TPL-12"
-    ? data
-    : {
-        ...data,
-        values: { ...data.values, invoiceAmountKobo: "500000", creditsKobo: "0", disputedKobo: "0" },
-        tables: { ...data.tables, payments: [{ reference: "SYN-PAY-1", amountKobo: "100000" }] },
-      };
+import { everyAnswer, owing } from "../test-support/complete-answers";
 
 // EDT-005: "final export blocks mandatory omissions or requires a deliberately watermarked incomplete
 // draft; never invent legal names, addresses or signatures."
@@ -79,7 +30,7 @@ test("a form document is complete once every answer it shows is valid and no slo
 
     // Every answer given: complete, with the form text. Without it, the blanks left for completion by
     // hand would be counted from the text, as the editor counts them while the form text loads.
-    const full = made(owing(answered(emptyFormData(spec), spec)));
+    const full = made(owing(everyAnswer(emptyFormData(spec), spec)));
     const gaps = documentGaps(full, text);
     assert.deepEqual(gaps, { kind: "form", templateId: id, issues: {}, blanks: [] }, id);
     assert.equal(documentComplete(gaps), true, id);
@@ -97,7 +48,7 @@ test("a document made from questions is complete once its questions report no is
     const empty = documentGaps(compileGuidedContent(emptyGuidedData(id)));
     assert.equal(empty.kind, "questions", id);
     assert.equal(documentComplete(empty), false, id);
-    const gaps = documentGaps(compileGuidedContent(answered(emptyGuidedData(id), spec)));
+    const gaps = documentGaps(compileGuidedContent(everyAnswer(emptyGuidedData(id), spec)));
     assert.deepEqual(gaps, { kind: "questions", templateId: id, issues: {}, blanks: [] }, id);
     assert.equal(documentComplete(gaps), true, id);
   }

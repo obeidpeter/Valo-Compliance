@@ -23,8 +23,9 @@ A file request says which kind it wants, with the field it already has:
 
 - `acknowledgeDraft: true` makes a marked draft, as today, for any saved version.
 - `acknowledgeDraft: false`, refused today, now asks for a finished file. The server makes one only
-  when the saved version is complete. Otherwise it refuses with 422 and says what is still missing,
-  in the words the editor already uses.
+  when the saved version is complete. Otherwise it refuses with 422, sends the customer to the
+  editor's "Still needed" list, which names each missing detail, and offers the marked draft. For a
+  document typed by hand it says why its file is a marked draft.
 
 The export job records which kind it is, in a new column (`finished`), and the job's reply carries it.
 A finished file and a marked draft of the same version are two different jobs. Asking twice with the

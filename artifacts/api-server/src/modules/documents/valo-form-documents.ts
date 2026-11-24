@@ -4,6 +4,7 @@ import type { z } from "zod";
 import type { CreateDocumentBody } from "@workspace/api-zod";
 import type { db } from "@workspace/db";
 import { baselineTemplates, sha256 } from "@workspace/valo-core";
+import { documentGaps } from "@workspace/valo-core/document-completeness";
 import { FormTextError, parseFormText } from "@workspace/valo-core/form-text";
 import type { GuidedTemplateId } from "@workspace/valo-core/guided";
 import { formAnswerIssues, formDocumentContent, formFit } from "@workspace/valo-core/guided-runtime-v2";
@@ -128,6 +129,19 @@ export async function documentFormText(tx: Tx, documentId: string) {
     sql`select edition, version, title, form_text from public.valo_document_form_text(${documentId}::uuid)`,
   );
   return rows[0];
+}
+
+/**
+ * What a saved version of one of the scoped workspace's documents still lacks
+ * (docs/architecture/finished-file.md): a form document is read against the form text of the edition
+ * it was started with, so that a blank left for completion by hand is not counted. A form document
+ * whose form text cannot be read is unreadable.
+ */
+export async function savedVersionGaps(tx: Tx, documentId: string, content: Content) {
+  if (!content.formAnswers) return documentGaps(content);
+  const form = await documentFormText(tx, documentId);
+  const text = form && formTextOf(form.form_text);
+  return text ? documentGaps(content, text) : ({ kind: "unreadable" } as const);
 }
 
 const FIELDS = ["issuerName", "recipientName", "documentNumber", "issueDate", "dueDate"] as const;

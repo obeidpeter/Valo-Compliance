@@ -39,6 +39,10 @@ import {
   writePrivateFile,
 } from "../../platform/valo-private-storage";
 import { syntheticDocument } from "../../lib/valo-test-fixtures";
+import { RENDER_VERSION } from "../../lib/valo-render";
+import { compileGuidedContent, emptyGuidedData } from "@workspace/valo-core/guided-runtime";
+import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
+import { everyAnswer } from "../../test-support/complete-answers";
 
 const enabled = process.env.VALO_RUN_EXPORT_TESTS === "synthetic-development-only";
 // CI keeps private files in a local folder (test-support/run-private-file-tests.mjs); Replit uses
@@ -125,9 +129,11 @@ test(
       await t.test(
         "omissions require explicit watermarked-draft acknowledgement; foreign revisions are concealed",
         async () => {
+          // Without the acknowledgement the file asked for is a finished one, which a document typed by
+          // hand never makes: no questions say what it must hold.
           await assert.rejects(
             () => requestExport(a, doc.id, randomUUID(), { ...request, acknowledgeDraft: false }),
-            { status: 422 },
+            { status: 422, message: /typed by hand is made as a marked draft/ },
           );
           await assert.rejects(() => requestExport(b, doc.id, randomUUID(), request), { status: 404 });
           await assert.rejects(() => listExports(b, doc.id), { status: 404 });
@@ -177,6 +183,66 @@ test(
         assert.equal((await getExport(a, docxId)).job.sourceHash, doc.contentHash);
         assert.equal((await getDocument(a, doc.id)).revision, 2);
       });
+      // EDT-005: "final export blocks mandatory omissions or requires a deliberately watermarked
+      // incomplete draft; never invent legal names, addresses or signatures."
+      await t.test(
+        "a finished file is made only of a complete saved version, without the draft notice and beside its marked draft, and the worker refuses one of an incomplete version",
+        async () => {
+          const word = async (jobId: string) =>
+            strFromU8(unzipSync((await downloadExport(a, jobId)).bytes)["word/document.xml"]!);
+          // An invoice made from its questions with every answer given: complete.
+          const done = await createDocument(a, {
+            title: "Synthetic finished invoice",
+            content: compileGuidedContent(everyAnswer(emptyGuidedData("TPL-01"), GUIDED_SPECS_V1["TPL-01"])),
+          });
+          const asked = { revisionId: done.revisionId, format: "docx", acknowledgeDraft: false };
+          const finished = await requestExport(a, done.id, randomUUID(), asked);
+          assert.equal(finished.finished, true);
+          // The same request again is the same file; its marked draft is another.
+          assert.equal((await requestExport(a, done.id, randomUUID(), asked)).id, finished.id);
+          const marked = await requestExport(a, done.id, randomUUID(), { ...asked, acknowledgeDraft: true });
+          assert.equal(marked.finished, false);
+          assert.notEqual(marked.id, finished.id);
+          await render(finished.id);
+          const printed = await word(finished.id);
+          assert.ok(!printed.includes("INCOMPLETE DRAFT"));
+          assert.ok(printed.includes("Prepared with Valo from the details the business entered."));
+          assert.ok(printed.includes("Saved version 1"));
+          await render(marked.id);
+          assert.ok((await word(marked.id)).includes("INCOMPLETE DRAFT"));
+
+          // An invoice with its questions unanswered makes only a marked draft.
+          const partial = await createDocument(a, {
+            title: "Synthetic unfinished invoice",
+            content: compileGuidedContent(emptyGuidedData("TPL-01")),
+          });
+          await assert.rejects(
+            () => requestExport(a, partial.id, randomUUID(), { ...asked, revisionId: partial.revisionId }),
+            { status: 422, message: /not complete yet/ },
+          );
+          // A finished job of that version written some other way: the worker checks again before it
+          // renders, and the job fails at once, with no retry.
+          const forged = randomUUID();
+          await db.insert(valoExportJobs).values({
+            id: forged,
+            workspaceId: a.workspaceId,
+            documentId: partial.id,
+            revisionId: partial.revisionId,
+            revision: 1,
+            format: "docx",
+            renderVersion: RENDER_VERSION,
+            sourceHash: partial.contentHash,
+            finished: true,
+            requestedBy: a.identityId,
+            queueId: randomUUID(),
+          });
+          await assert.rejects(() => render(forged), /DOCUMENT_INCOMPLETE/);
+          const refused = (await getExport(a, forged)).job;
+          assert.equal(refused.status, "failed");
+          assert.equal(refused.errorCode, "DOCUMENT_INCOMPLETE");
+          assert.equal(refused.attempts, 1);
+        },
+      );
       await t.test(
         `private object ${portable ? "" : "denies anonymous access, "}has a verified checksum, is never returned as a raw key and is never overwritten`,
         async () => {
