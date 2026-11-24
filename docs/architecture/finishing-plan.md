@@ -1,7 +1,12 @@
 # Finishing plan
 
-Status: **proposed** on 24 November 2026. It awaits the owner's approval. Nothing in it is started
-except where a row says so.
+Status: **approved** by the owner on 24 November 2026, in the words "Implement all (make the best
+decisions for me)". The owner left the decisions this plan added to the coding agent. They are
+recorded, with their reasons, under
+[Decisions made under the owner's delegation](#decisions-made-under-the-owners-delegation). Work
+starts with phase 0. Approving the plan approves no spending, launch, live payment, real customer
+data or real message (AGENTS.md section 1): those stay with the owner, and the rows that need one
+say so.
 
 The owner asked for a plan of everything left to implement to finish the platform, apart from the
 owner's own tasks. This is that plan. It covers release R1, the commercial core, and then R2. R3
@@ -75,11 +80,11 @@ Small, and none needs a decision. This is where work starts.
 
 | What is left | Requirements | Size |
 | --- | --- | --- |
-| **Forms that produce the document.** A form's file prints each question with its answer. For an invoice that is close to the document; for the five agreements it is not an agreement. Join each form to its template: the answers fill the template's own wording and layout, with clause choices where the template has them. This needs a second version of the forms, and the forms are frozen by the owner's decision of 21 November until the test with five business owners, so it starts with a design note for the owner (checked twice) | EDT-001, EDT-002, EDT-006 | L |
+| **Forms that produce the document.** A form's file prints each question with its answer. For an invoice that is close to the document; for the five agreements it is not an agreement. Join each form to its template: the answers fill the template's own wording and layout, with clause choices where the template has them. This needs a second version of the forms. The freeze of 21 November is released for it, on the terms of [delegated decision 1](#decisions-made-under-the-owners-delegation) (checked twice) | EDT-001, EDT-002, EDT-006 | L |
 | With it: a document made from a form records its template and version; the five premium forms check for a purchase, which they do not today; a template's page starts its form; questions carry examples and are filled from the business profile; the server checks answer types (checked twice for the purchase check) | DOC-005, EDT-001, PRO-003 | M |
 | **A finished file.** Every file carries "INCOMPLETE DRAFT" on each page, complete or not, and the Word files filed from the retained drafts carry "BLANK DEVELOPMENT TEMPLATE". Check completeness on the server when a file is asked for, and print a complete document without the draft notice (checked twice) | EDT-005, EDT-006, EDT-009 | M |
 | **Library templates as full entries.** A template released from the staff library has a title, text and file only. Give it what the reviewed route's entries have: saving, recommendations, "make my own copy" in the workspace, what it is for, what it needs, its limits, related guidance, and a statement of how it was written and checked (the wording is the owner's to approve) | DOC-001, DOC-003, DOC-006, DOC-009, EDP-008 | M |
-| **Editions.** Warn when a newer edition exists. When an edition is replaced or withdrawn, tell the people who bought or used it, with what they can do. What a buyer keeps is the owner's decision | DOC-007, EDP-011 | M |
+| **Editions.** Warn when a newer edition exists. When an edition is replaced or withdrawn, tell the people who bought or used it, with what they can do. What a buyer keeps is [delegated decision 3](#decisions-made-under-the-owners-delegation) | DOC-007, EDT-010, EDP-011, PAY-009 | M |
 | **Previews.** A real preview for each template instead of two generic lines; a free library template shows a preview, not its whole text; a test that no built page holds premium text | DOC-004 | S to M |
 | The editor: a lock on a template's fixed wording; a check that the preview and the files say the same; a check that Word opens the file; table headings repeated across pages | EDT-002, EDT-003, EDT-006 | M |
 
@@ -104,7 +109,7 @@ Small, and none needs a decision. This is where work starts.
 | **The editorial cases.** Seventeen of the 31 case-bound candidates are unbuilt and each names a text it lacks; the suite's ceiling today is 43 of 60 against a bar of 57. Build them as their texts are retained. Build the scorer for the 60 drafting cases, which has a check for one case only | EDP-010, AI-008 | L |
 | **The audit trail.** Alert on an attempt to change it and on heavy privileged reading; a viewer for staff; a guard on the events table; the restore and backup-removal tools record who ran them and why | ADM-009 | M |
 | **Commercial settings.** A staff screen for prices in place of a command; one-off bundles; quotas and access rules as versioned settings instead of constants; a price carried to a template's next edition | ADM-006 | L |
-| **Only if the reviewed route stays in use:** preparers for the 23 templates without one, which state law and so need sources and a claim map each; a bundle builder and a release request for rules; a restore command | EDP-003 to EDP-006, ADM-004, ADM-005 | L |
+| **The reviewed route, which stays** ([delegated decision 2](#decisions-made-under-the-owners-delegation)): preparers for the 23 templates without one, which state law and so need sources and a claim map each; a bundle builder and a release request for rules; a restore command. Running their reviews needs the owner's AI budget | EDP-003 to EDP-006, ADM-004, ADM-005 | L |
 
 ### Phase 4: messages
 
@@ -132,7 +137,7 @@ a provider and a sender.
 
 | What is left | Requirements | Size |
 | --- | --- | --- |
-| **A customer's own request.** A request from the site can never reach a model: approved AI work must be tied to one of the frozen evaluation cases. The known-issues record says only a budget is missing; the path is missing too. Write the decision record for a standing, owner-approved daily allowance, then build it (checked twice) | AI-001, AI-007 | L |
+| **A customer's own request.** A request from the site can never reach a model: approved AI work must be tied to one of the frozen evaluation cases. The known-issues record says only a budget is missing; the path is missing too. Write the decision record for a standing daily allowance, then build it, off until the owner records an amount ([delegated decision 4](#decisions-made-under-the-owners-delegation)) (checked twice) | AI-001, AI-007 | L |
 | Follow-up questions in plain words, with a way to answer and ask again; today they are field names. Wider recognition of a legal request the assistant must not take, with a reply that names where to go | AI-001 | M |
 | The assistant's notice in plain words (redesign decision 13); the provider's storage setting stated on each request; a staff switch for the customer assistant alone; the time a draft takes, measured; a paid download during an AI outage, tested | AI-009, PRV-002, NFR-004 | S to M |
 
@@ -197,15 +202,8 @@ The plan does not include these. Each phase names the ones it waits on.
 - **Decisions already asked for:** the guidance policy's wording; the drafting assistant's sentence;
   premium prices, licence text and tax treatment; decisions 0016 and 0017; the five decisions on
   team access.
-- **Decisions this plan adds:**
-  1. Phase 1: release the freeze on the forms' questions now, for the second version of the forms,
-     or wait for the test with five business owners.
-  2. Phases 2 and 3: whether the reviewed AI route is still wanted for templates and rules, now
-     that the staff library and the sign-offs release content. It decides the last row of phase 3.
-  3. Phase 1: what a buyer keeps when an edition is replaced or withdrawn.
-  4. Phase 6: a standing daily allowance for customers' own drafting requests.
-  5. Phase 1: the 28 premium drafts' full text is in `docs/content-candidates` in a public
-     repository. Whether that stands is the owner's call.
+- **Decisions this plan added:** left to the coding agent on 24 November 2026, and made below.
+  The owner can reverse any of them; the work that follows one says which.
 - **The test with five business owners**, and a person for the manual accessibility review.
 - **Money:** AI budgets; hosting, database, storage, backups, monitoring and a domain; an email
   provider.
@@ -216,6 +214,51 @@ The plan does not include these. Each phase names the ones it waits on.
   assessment.
 - **Replit:** apply the migrations; adopt the migration ledger or give access to do it.
 - **Launch:** approve the launch change, the merge to `main`, opening traffic and live payments.
+
+## Decisions made under the owner's delegation
+
+On 24 November 2026 the owner approved this plan with "Implement all (make the best decisions for
+me)". The coding agent made the decisions the plan had put to the owner, as follows. Each follows
+the specification where it already says something, and none of them approves spending, a launch,
+live payments, real customer data or a real message.
+
+1. **The forms' questions.** The freeze of 21 November (redesign decision 6) is released for the
+   second version of the forms, on these terms. A question the second version keeps is carried over
+   in the first version's words, so nothing is reworded on a guess before the test. New questions
+   are only those the template's own wording needs, such as a clause choice. Documents already
+   made keep the first version. The test with five business owners then judges the second version,
+   and its findings reword what confuses people, as decision 6 intended. Reason: the forms cannot
+   produce the document without the template's wording (EDT-001, EDT-006), the test has no date,
+   and decision 6 froze wording, not the documents a form produces.
+2. **The reviewed route stays.** It is the route the specification describes (EDP-001 to EDP-012,
+   CMP-008, ADM-005) and the only one that may release content outside development: the staff
+   library and the owner's sign-offs are development routes with a review budget of nothing
+   (decisions 0018 and 0020). Its code and tests are kept working, and the last row of phase 3 is
+   built. Running its reviews needs the owner's AI budget. Whether the development routes are also
+   taken to production is a launch decision for the owner (phase 8).
+3. **What a buyer keeps.** Following DOC-007, EDT-010, PAY-008, PAY-009 and decision 0018:
+   - A customer's saved drafts and the documents made from them stay the customer's, and an update
+     never changes them.
+   - When an edition is **replaced**, the purchase carries to the new edition of the same template
+     at no further charge. The replaced file closes to new downloads, as decision 0018 says; its
+     record stays, and the buyer is told what changed.
+   - When an edition is **withdrawn** as unsafe, nobody can download it again or start a new
+     document from it. The buyer is told why and what they can do: take the replacement when one
+     is released, or ask for a refund under the refund policy, whose terms are the owner's. Drafts
+     made from it can still be opened and downloaded, with a notice that the template was
+     withdrawn.
+   - A **refund** ends new downloads of the bought file, and leaves the drafts.
+   - Nothing says that closing access takes back a file already downloaded (EDT-010).
+
+   The licence text that states this is still the owner's to approve.
+4. **A daily allowance for customers' drafting.** Its decision record is written and its path is
+   built, switched off. The amount is an AI budget, which only the owner sets (AGENTS.md
+   section 1). Until the owner records one, the allowance is nothing and no customer request
+   reaches a model.
+5. **The premium drafts' text stays where it is.** It is frozen content (AGENTS.md section 7) and is
+   already in the repository's public history, which cannot be rewritten (section 1). The
+   repository is public by the owner's decision 0006. The site itself still never serves a premium
+   text without a purchase (DOC-004), which phase 1's previews row tests.
 
 ## Order
 
