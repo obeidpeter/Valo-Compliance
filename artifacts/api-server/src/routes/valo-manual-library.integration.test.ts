@@ -735,10 +735,12 @@ test(
         // A template with a fill-in form is filed with the form text proposed for it, which its v2 form
         // fits. A version saved without it shows the proposal waiting, and filing it adds a draft version
         // with the latest one's text and file.
-        const { proposedFormText } = await import("../modules/manual-library/form-text-maps");
+        const { FORM_TEXT_MAPS, proposedFormText } = await import("../modules/manual-library/form-text-maps");
         const proposed = await proposedFormText("TPL-01");
+        const mapped = Object.keys(FORM_TEXT_MAPS);
+        assert.ok(mapped.includes("TPL-01") && mapped.includes("TPL-02"));
         assert.ok(
-          after.items.every((entry) => (entry.formText !== null) === (entry.retainedId === "TPL-01")),
+          after.items.every((entry) => (entry.formText !== null) === mapped.includes(entry.retainedId)),
         );
         const invoice = after.items.find((entry) => entry.retainedId === "TPL-01")!;
         const latest = async () =>

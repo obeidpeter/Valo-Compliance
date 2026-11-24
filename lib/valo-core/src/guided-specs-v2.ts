@@ -115,6 +115,45 @@ function summary(templateId: GuidedTemplateId, data: GuidedDataV2) {
   return { subtotal, total: subtotal - BigInt(discount) + BigInt(tax) };
 }
 
+/**
+ * The amounts an invoice-like form works out, each from its own answers: its currency, each item
+ * line's unit and amount, the subtotal, the discount as a deduction and the total. Every amount the
+ * form takes is in kobo, printed in naira (`formatKobo`).
+ */
+function pricedCalculations(templateId: GuidedTemplateId): NonNullable<GuidedSpecV2["calculated"]> {
+  return {
+    "calc.currency": () => "NGN",
+    "calc.unit": (_data, row) => (row ? unitOf(templateId, row) : null),
+    "calc.lineAmount": (_data, row) => {
+      const columns = GUIDED_SPECS_V1[templateId].tables.find((t) => t.id === "items")!.columns;
+      const quantity = valid(
+          columns.find((c) => c.id === "quantity"),
+          row?.quantity,
+        ),
+        price = valid(
+          columns.find((c) => c.id === "unitPriceKobo"),
+          row?.unitPriceKobo,
+        );
+      return quantity && price ? formatKobo(lineTotal(quantity, price)) : null;
+    },
+    "calc.subtotal": (data) => {
+      const amounts = summary(templateId, data);
+      return amounts ? formatKobo(amounts.subtotal) : null;
+    },
+    "calc.discount": (data) => {
+      const discount = valid(
+        GUIDED_SPECS_V1[templateId].fields.find((f) => f.id === "discountKobo"),
+        data.values.discountKobo,
+      );
+      return data.values.discountMode === "supplied" && discount ? `−${formatKobo(discount)}` : null;
+    },
+    "calc.total": (data) => {
+      const total = summary(templateId, data)?.total;
+      return total == null ? null : formatKobo(total);
+    },
+  };
+}
+
 const invoice = fromV1("TPL-01", {
   questions: [
     { v1: "issuerName", join: { tokens: ["issuerName"] } },
@@ -144,38 +183,165 @@ const invoice = fromV1("TPL-01", {
     { v1: "paymentInstructions", join: { tokens: ["paymentInstructions"] } },
     { v1: "notes", join: { tokens: ["notes"] } },
   ],
-  calculated: {
-    // Every amount the form takes is in kobo, printed in naira (`formatKobo`).
-    "calc.currency": () => "NGN",
-    "calc.unit": (_data, row) => (row ? unitOf("TPL-01", row) : null),
-    "calc.lineAmount": (_data, row) => {
-      const columns = GUIDED_SPECS_V1["TPL-01"].tables[0]!.columns;
-      const quantity = valid(
-          columns.find((c) => c.id === "quantity"),
-          row?.quantity,
-        ),
-        price = valid(
-          columns.find((c) => c.id === "unitPriceKobo"),
-          row?.unitPriceKobo,
-        );
-      return quantity && price ? formatKobo(lineTotal(quantity, price)) : null;
-    },
-    "calc.subtotal": (data) => {
-      const amounts = summary("TPL-01", data);
-      return amounts ? formatKobo(amounts.subtotal) : null;
-    },
-    "calc.discount": (data) => {
-      const discount = valid(
-        GUIDED_SPECS_V1["TPL-01"].fields.find((f) => f.id === "discountKobo"),
-        data.values.discountKobo,
-      );
-      return data.values.discountMode === "supplied" && discount ? `−${formatKobo(discount)}` : null;
-    },
-    "calc.total": (data) => {
-      const total = summary("TPL-01", data)?.total;
-      return total == null ? null : formatKobo(total);
-    },
+  calculated: pricedCalculations("TPL-01"),
+  keepsNothing: [
+    { question: "taxMode", option: "none" },
+    { question: "discountMode", option: "none" },
+  ],
+});
+
+/** An optional question for one line of a template's wording that v1 does not ask for. */
+const lineQuestion = (
+  id: string,
+  label: string,
+  line: string,
+  type: "text" | "long_text" | "date" = "long_text",
+) => ({
+  added: { id, label, type, required: false, tokens: [id] },
+  why: `The template prints "${line}" and v1 asks nothing for it.`,
+});
+
+const quotation = fromV1("TPL-02", {
+  questions: [
+    { v1: "issuerName", join: { tokens: ["issuerName"] } },
+    { v1: "issuerAddress", join: { tokens: ["issuerAddress"] } },
+    { v1: "recipientName", join: { tokens: ["recipientName"] } },
+    { v1: "recipientAddress", join: { tokens: ["recipientAddress"] } },
+    { v1: "documentNumber", join: { tokens: ["documentNumber"] } },
+    { v1: "issueDate", join: { tokens: ["issueDate"] } },
+    { v1: "validUntil", join: { tokens: ["validUntil"] } },
+    { v1: "scope", join: { tokens: ["scope"] } },
+    { v1: "exclusions", join: { tokens: ["exclusions"] } },
+    { v1: "taxMode", join: { clause: true } },
+    { v1: "taxAmountKobo", join: { tokens: ["taxAmountKobo"] } },
+    { v1: "taxLabel", join: { tokens: ["taxLabel"] } },
+    { v1: "taxBasis", join: { tokens: ["taxBasis"] } },
+    { v1: "discountMode", join: { clause: true } },
+    { v1: "discountKobo" },
+    { v1: "acceptance", join: { tokens: ["acceptance"] } },
+    lineQuestion(
+      "customerInputs",
+      "Information, material or approval needed from the customer, if any",
+      "Information, material or approval needed from the customer: [ ]",
+    ),
+    lineQuestion(
+      "assumptions",
+      "Other stated assumptions or dependencies, if any",
+      "Other stated assumptions or dependencies: [ ]",
+    ),
+    lineQuestion(
+      "paymentArrangement",
+      "Proposed payment arrangement, if any",
+      "Proposed payment arrangement, if supplied: [ ]",
+    ),
+  ],
+  dropped: {
+    notes:
+      "The quotation's wording has no place for further notes. A note the business wants on it goes in the document's own note, which prints with it.",
   },
+  calculated: pricedCalculations("TPL-02"),
+  keepsNothing: [
+    { question: "taxMode", option: "none" },
+    { question: "discountMode", option: "none" },
+  ],
+});
+
+const receipt = fromV1("TPL-03", {
+  questions: [
+    { v1: "issuerName", join: { tokens: ["issuerName"] } },
+    { v1: "issuerAddress", join: { tokens: ["issuerAddress"] } },
+    { v1: "recipientName", join: { tokens: ["recipientName"] } },
+    { v1: "documentNumber", join: { tokens: ["documentNumber"] } },
+    { v1: "issueDate", join: { tokens: ["issueDate"] } },
+    { v1: "paymentDate", join: { tokens: ["paymentDate"] } },
+    { v1: "receivedKobo", join: { tokens: ["receivedKobo"] } },
+    { v1: "paymentMethod", join: { tokens: ["paymentMethod"] } },
+    { v1: "paymentReference", join: { tokens: ["paymentReference"] } },
+    { v1: "purpose", join: { tokens: ["purpose"] } },
+    {
+      added: {
+        id: "relatedReference",
+        label: "Related invoice or order reference, if any",
+        type: "text",
+        required: false,
+        tokens: ["relatedReference"],
+      },
+      why: 'The template prints "Related invoice or order, if any: [Reference]" and v1 asks nothing for it.',
+    },
+    { v1: "acknowledgement" },
+    { v1: "notes", join: { tokens: ["notes"] } },
+    {
+      added: {
+        id: "recordedBy",
+        label: "Name and role of the person who recorded the payment, if any",
+        type: "text",
+        required: false,
+        tokens: ["recordedBy"],
+      },
+      why: 'The template prints "Recorded by: [Actual name/role, if supplied]" and v1 asks nothing for it.',
+    },
+  ],
+  dropped: {
+    recipientAddress:
+      "The receipt's wording names the payer and gives no place for the payer's address, so the form does not ask for it.",
+  },
+});
+
+const purchaseOrder = fromV1("TPL-04", {
+  questions: [
+    { v1: "issuerName", join: { tokens: ["issuerName"] } },
+    lineQuestion(
+      "purchasingContact",
+      "Purchasing contact: the person, phone or email the supplier should use, if any",
+      "Purchasing contact: [ ]",
+      "text",
+    ),
+    { v1: "issuerAddress", join: { tokens: ["issuerAddress"] } },
+    { v1: "recipientName", join: { tokens: ["recipientName"] } },
+    { v1: "recipientAddress", join: { tokens: ["recipientAddress"] } },
+    { v1: "documentNumber", join: { tokens: ["documentNumber"] } },
+    { v1: "issueDate", join: { tokens: ["issueDate"] } },
+    lineQuestion(
+      "relatedQuotation",
+      "Related quotation reference, if any",
+      "Related quotation: [If supplied]",
+      "text",
+    ),
+    { v1: "deliveryLocation", join: { tokens: ["deliveryLocation"] } },
+    lineQuestion(
+      "receivingContact",
+      "Receiving or service contact, if any",
+      "Receiving or service contact: [ ]",
+      "text",
+    ),
+    { v1: "deliveryDate", join: { tokens: ["deliveryDate"] } },
+    lineQuestion(
+      "specificationNotes",
+      "Packaging, specification or scope notes, if any",
+      "Packaging, specification or scope notes supplied by buyer: [ ]",
+    ),
+    { v1: "taxMode", join: { clause: true } },
+    { v1: "taxAmountKobo", join: { tokens: ["taxAmountKobo"] } },
+    { v1: "taxLabel", join: { tokens: ["taxLabel"] } },
+    { v1: "taxBasis", join: { tokens: ["taxBasis"] } },
+    { v1: "discountMode", join: { clause: true } },
+    { v1: "discountKobo" },
+    { v1: "paymentTerms", join: { tokens: ["paymentTerms"] } },
+    { v1: "authority", join: { tokens: ["authority"] } },
+    lineQuestion(
+      "authorisationDate",
+      "Date the order was authorised, if recorded",
+      "Authorisation date: [ ]",
+      "date",
+    ),
+    { v1: "supplierResponse", join: { tokens: ["supplierResponse"] } },
+    lineQuestion(
+      "changeNote",
+      "Change from an earlier version of this order, if any",
+      "Change from earlier version, if any: [ ]",
+    ),
+  ],
+  calculated: pricedCalculations("TPL-04"),
   keepsNothing: [
     { question: "taxMode", option: "none" },
     { question: "discountMode", option: "none" },
@@ -185,8 +351,14 @@ const invoice = fromV1("TPL-01", {
 /** The v2 forms, by template. A template without one stays on its v1 form. */
 export const GUIDED_SPECS_V2: Readonly<Partial<Record<GuidedTemplateId, GuidedSpecV2>>> = {
   "TPL-01": invoice.spec,
+  "TPL-02": quotation.spec,
+  "TPL-03": receipt.spec,
+  "TPL-04": purchaseOrder.spec,
 };
 /** What each v2 form adds to and leaves out of its v1 questions, with the reasons. */
 export const GUIDED_CHANGES_V2: Readonly<Partial<Record<GuidedTemplateId, GuidedChangesV2>>> = {
   "TPL-01": invoice.changes,
+  "TPL-02": quotation.changes,
+  "TPL-03": receipt.changes,
+  "TPL-04": purchaseOrder.changes,
 };

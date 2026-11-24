@@ -5,6 +5,7 @@ import type { GuidedTemplateId } from "@workspace/valo-core/guided";
 import {
   compileForm,
   emptyFormData,
+  formAnswerIssues,
   formDocumentContent,
   formFit,
 } from "@workspace/valo-core/guided-runtime-v2";
@@ -33,12 +34,12 @@ function subsequence(part: string[], whole: string[]) {
   }
   return true;
 }
-/** Every combination of answers to the form's choices, each also unanswered. */
+/** Every combination of answers to the form's choices and confirmations, each also unanswered. */
 function choiceCombinations(spec: GuidedSpecV2) {
   let combinations: Record<string, string>[] = [{}];
-  for (const choice of spec.fields.filter((f) => f.clause))
+  for (const choice of spec.fields.filter((f) => f.clause || f.type === "acknowledgement"))
     combinations = combinations.flatMap((values) =>
-      ["", ...(choice.options ?? []).map((o) => o.value)].map((option) => ({
+      ["", ...(choice.clause ? (choice.options ?? []).map((o) => o.value) : ["yes"])].map((option) => ({
         ...values,
         [choice.id]: option,
       })),
@@ -47,7 +48,7 @@ function choiceCombinations(spec: GuidedSpecV2) {
 }
 
 test("every map turns its retained draft into form text that the v2 form fits exactly", async () => {
-  assert.deepEqual(mapped, ["TPL-01"]);
+  assert.deepEqual(mapped, ["TPL-01", "TPL-02", "TPL-03", "TPL-04"]);
   for (const templateId of mapped) {
     const spec = GUIDED_SPECS_V2[templateId];
     assert.ok(spec, templateId);
@@ -190,6 +191,169 @@ test("an invoice's answers fill its own wording: items, discount and tax rows, t
   assert.ok(over.unfilled.includes("calc.total"));
 });
 
+test("a quotation's answers fill its own wording: items, discount and tax rows, the tax basis, the quoted total and the arrangements given", async () => {
+  const spec = GUIDED_SPECS_V2["TPL-02"]!;
+  const text = parseFormText((await proposedFormText("TPL-02"))!);
+  const data = emptyFormData(spec);
+  data.values = {
+    ...data.values,
+    issuerName: "Synthetic Builders Ltd",
+    issuerAddress: "2 Synthetic Close\nYaba",
+    recipientName: "Synthetic Client Ltd",
+    documentNumber: "SYN-QUO-001",
+    issueDate: "2026-11-02",
+    validUntil: "2026-11-30",
+    scope: "Synthetic shop fit-out",
+    taxMode: "supplied",
+    taxLabel: "Synthetic levy",
+    taxAmountKobo: "1000",
+    taxBasis: "Synthetic basis",
+    discountMode: "supplied",
+    discountKobo: "50000",
+    acceptance: "Synthetic two-week delivery",
+    paymentArrangement: "Synthetic deposit then balance",
+  };
+  data.tables.items = [
+    {
+      description: "Synthetic shelving",
+      quantity: "2",
+      unit: "each",
+      otherUnit: "",
+      unitPriceKobo: "150000",
+    },
+  ];
+  const out = compileForm(spec, text, data);
+  const shown = out.blocks.map((b) =>
+    b.type === "table" ? b.rows.map((r) => r.join(" | ")).join("\n") : b.text,
+  );
+  assert.equal(out.title, "QUOTATION");
+  assert.deepEqual(shown, [
+    "Synthetic Builders Ltd\n2 Synthetic Close\nYaba",
+    "Prepared for: Synthetic Client Ltd",
+    "Quotation reference: SYN-QUO-001\nIssue date: 2 Nov 2026\nCurrency: NGN\nValid until: 30 Nov 2026",
+    "Your request",
+    "Synthetic shop fit-out",
+    "Included in this quotation",
+    "Description | Quantity | Unit | Unit price | Line amount\nSynthetic shelving | 2 | Each | ₦1,500.00 | ₦3,000.00",
+    "Price summary | Amount\nSubtotal | ₦3,000.00\nAgreed discount | −₦500.00\nSynthetic levy | ₦10.00\nQuoted total | ₦2,510.00",
+    "Synthetic basis",
+    "Scope and arrangements",
+    "Proposed delivery or completion: Synthetic two-week delivery",
+    "Proposed payment arrangement, if supplied: Synthetic deposit then balance",
+    "Next step",
+    "Please contact Synthetic Builders Ltd quoting SYN-QUO-001 to confirm your requirements or discuss changes. The price and scope above should be checked again if the requested work changes.",
+    "This quotation describes the issuer's proposed offer. It does not record payment, delivery or customer acceptance. Any later acceptance or agreement should be recorded accurately and linked to the version concerned.",
+  ]);
+  assert.deepEqual(out.unfilled, []);
+  assert.deepEqual(out.selectedClauses, ["taxMode=supplied", "discountMode=supplied"]);
+  // v1's date order holds: a quotation valid only until before its issue date is a draft answer,
+  // which fills no slot, so its optional line is left out until it is corrected.
+  const earlier = { ...data, values: { ...data.values, validUntil: "2026-11-01" } };
+  assert.match(formAnswerIssues(spec, earlier).drafts.validUntil!, /precedes the issue date/);
+  assert.ok(!compileForm(spec, text, earlier).blocks.some((b) => b.text.includes("Valid until")));
+  // The new questions are optional: without them, their lines are left out.
+  const plain = compileForm(spec, text, { ...data, values: { ...data.values, paymentArrangement: "" } });
+  assert.ok(!plain.blocks.some((b) => b.text.startsWith("Proposed payment arrangement")));
+});
+
+test("a receipt's answers fill its own wording, and it states the payment was received only once the business confirms it", async () => {
+  const spec = GUIDED_SPECS_V2["TPL-03"]!;
+  const text = parseFormText((await proposedFormText("TPL-03"))!);
+  const data = emptyFormData(spec);
+  data.values = {
+    ...data.values,
+    issuerName: "Synthetic Supplies Ltd",
+    issuerAddress: "1 Synthetic Road, Ikeja",
+    recipientName: "Synthetic Payer Ltd",
+    documentNumber: "SYN-REC-001",
+    issueDate: "2026-11-03",
+    paymentDate: "2026-11-02",
+    receivedKobo: "265002",
+    paymentMethod: "transfer",
+    paymentReference: "SYN-TRF-9",
+    purpose: "Payment for invoice SYN-INV-001",
+    relatedReference: "SYN-INV-001",
+    recordedBy: "Synthetic cashier",
+  };
+  const shown = (values: Record<string, string>) =>
+    compileForm(spec, text, { ...data, values: { ...data.values, ...values } }).blocks.map((b) =>
+      b.type === "table" ? b.rows.map((r) => r.join(" | ")).join("\n") : b.text,
+    );
+  const unconfirmed = shown({});
+  assert.deepEqual(unconfirmed, [
+    "Synthetic Supplies Ltd\n1 Synthetic Road, Ikeja",
+    "Receipt reference: SYN-REC-001\nDate issued: 3 Nov 2026",
+    "Received from: Synthetic Payer Ltd",
+    "Payment acknowledged by issuer | Detail\nAmount received | ₦2,650.02\nDate received | 2 Nov 2026\nPayment method, if recorded | Bank transfer\nPayment reference, if recorded | SYN-TRF-9",
+    "Payment for: Payment for invoice SYN-INV-001\nRelated invoice or order, if any: SYN-INV-001",
+    "Recorded by: Synthetic cashier",
+    "Issuer acknowledgement: Receipt acknowledgement not yet recorded \u2014 not evidence of payment.",
+    "Prepared from information supplied by the issuer. Valo has not independently verified this payment. This customer business receipt is separate from a receipt issued for a purchase from Valo.",
+  ]);
+  const confirmed = shown({ acknowledgement: "yes" });
+  assert.equal(
+    confirmed[6],
+    "Issuer acknowledgement: The issuer confirms that the payment described above was received according to their records.",
+  );
+  assert.deepEqual(
+    compileForm(spec, text, { ...data, values: { ...data.values, acknowledgement: "yes" } }).unfilled,
+    [],
+  );
+});
+
+test("a purchase order's answers fill its own wording: the buyer's contact, the order lines and total, the delivery arrangement and the order control", async () => {
+  const spec = GUIDED_SPECS_V2["TPL-04"]!;
+  const text = parseFormText((await proposedFormText("TPL-04"))!);
+  const data = emptyFormData(spec);
+  data.values = {
+    ...data.values,
+    issuerName: "Synthetic Retail Ltd",
+    purchasingContact: "Synthetic buyer, 0800 000 0000",
+    issuerAddress: "3 Synthetic Avenue, Surulere",
+    recipientName: "Synthetic Wholesale Ltd",
+    documentNumber: "SYN-PO-001",
+    issueDate: "2026-11-02",
+    deliveryLocation: "Synthetic warehouse",
+    deliveryDate: "2026-11-10",
+    taxMode: "none",
+    discountMode: "none",
+    paymentTerms: "Synthetic 30 days after delivery",
+    authority: "Synthetic purchasing manager",
+    supplierResponse: "Not recorded",
+  };
+  data.tables.items = [
+    { description: "Synthetic cartons", quantity: "10", unit: "each", otherUnit: "", unitPriceKobo: "20000" },
+  ];
+  const out = compileForm(spec, text, data);
+  const shown = out.blocks.map((b) =>
+    b.type === "table" ? b.rows.map((r) => r.join(" | ")).join("\n") : b.text,
+  );
+  assert.equal(out.title, "PURCHASE ORDER");
+  assert.deepEqual(shown, [
+    "Buyer: Synthetic Retail Ltd\nPurchasing contact: Synthetic buyer, 0800 000 0000\n3 Synthetic Avenue, Surulere",
+    "Supplier: Synthetic Wholesale Ltd",
+    "Purchase order reference: SYN-PO-001\nOrder date: 2 Nov 2026\nCurrency: NGN",
+    "Requested supply",
+    "Description and specification | Quantity | Unit | Unit price | Line amount\nSynthetic cartons | 10 | Each | ₦200.00 | ₦2,000.00",
+    "Order amount summary | Amount\nSubtotal | ₦2,000.00\nOrder total | ₦2,000.00",
+    "Delivery or service arrangement",
+    "Deliver to / service location or arrangement: Synthetic warehouse",
+    "Requested or confirmed date, correctly labelled: 10 Nov 2026",
+    "Agreed or proposed payment arrangement, correctly labelled: Synthetic 30 days after delivery",
+    "Order control",
+    "Authorised by: Synthetic purchasing manager",
+    "Supplier response: Not recorded",
+    "Please use SYN-PO-001 in correspondence and related delivery or billing documents. Contact Synthetic buyer, 0800 000 0000 to clarify any difference before proceeding on changed instructions.",
+    "This document records the buyer's stated purchase instruction. Supplier acceptance, delivery and payment are separate events and are not inferred from its preparation.",
+  ]);
+  assert.deepEqual(out.unfilled, []);
+  // Without a purchasing contact, the lines that name one are left out.
+  const noContact = compileForm(spec, text, { ...data, values: { ...data.values, purchasingContact: "" } });
+  assert.ok(
+    noContact.blocks.every((b) => !b.text.includes("Purchasing contact") && !b.text.includes("Contact ")),
+  );
+});
+
 test("an invoice form document is saved as its answers make it, hashed as V2, and its file prints the template's wording with only its note among its fields", async () => {
   const spec = GUIDED_SPECS_V2["TPL-01"]!;
   const text = parseFormText((await proposedFormText("TPL-01"))!);
@@ -219,6 +383,12 @@ test("an invoice form document is saved as its answers make it, hashed as V2, an
   assert.deepEqual(content.formAnswers, data);
   assert.deepEqual(content.selectedClauses, ["taxMode=none", "discountMode=none"]);
   assert.ok(unfilled.includes("items.description"));
+  // Its wording leaves that payment date out too: a date before the date it must follow is a draft
+  // answer, which fills no slot, so the slot keeps its placeholder.
+  assert.ok(unfilled.includes("dueDate"));
+  assert.ok(
+    content.blocks.some((b) => b.text === "Payment date: [Confirmed date and accurate label, if supplied]"),
+  );
   const tables = content.blocks.filter((b) => b.type === "table");
   assert.ok(tables.length === 3 && tables.every((t) => t.headerRows === 1));
   // The contract and its checks take it, and it is hashed as V2, so no V1 hash changes.

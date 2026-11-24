@@ -114,6 +114,11 @@ export function formFit(spec: GuidedSpecV2, text: FormText): string[] {
   for (const blank of spec.blanks)
     if (!slotNames.has(blank)) problems.push(`the blank "${blank}" is not in the text`);
   const choices = new Map(spec.fields.filter((f) => f.clause).map((f) => [f.id, f]));
+  // A confirmation may keep the passage its template prints once it is given, `{?q=yes}`, with the
+  // one printed until then, `{?q=}`: a receipt's acknowledgement, for example. It fills no slot.
+  const confirmations = new Map(
+    spec.fields.filter((f) => f.type === "acknowledgement").map((f) => [f.id, f]),
+  );
   for (const span of spans) {
     if (span.option === null) {
       // Kept while a question has an answer: only for an answer the document may go without.
@@ -122,10 +127,17 @@ export function formFit(spec: GuidedSpecV2, text: FormText): string[] {
         problems.push(`a passage is kept while "${span.question}" is answered, which is not a question`);
       else if (field.clause) problems.push(`"${span.question}" is a choice: its passages name its options`);
       else if (field.type === "acknowledgement")
-        problems.push(`"${span.question}" is a confirmation and keeps no passage`);
+        problems.push(`"${span.question}" is a confirmation: its passages name "yes" or nothing`);
       else if (field.required)
         problems.push(
           `a passage is kept only while "${span.question}" is answered, but it must be answered: its placeholder shows until it is`,
+        );
+      continue;
+    }
+    if (confirmations.has(span.question)) {
+      if (span.option !== "yes" && span.option !== "")
+        problems.push(
+          `a passage is kept for "${span.question}=${span.option}", but a confirmation is "yes" or not given`,
         );
       continue;
     }
@@ -146,6 +158,13 @@ export function formFit(spec: GuidedSpecV2, text: FormText): string[] {
         problems.push(`"${choice.id}=${option.value}" keeps no passage and is not declared to keep none`);
     if (!spans.some((s) => s.question === choice.id && s.option === ""))
       problems.push(`the choice "${choice.id}" prints nothing while it is unanswered`);
+  }
+  for (const confirmation of confirmations.values()) {
+    const kept = spans.filter((s) => s.question === confirmation.id);
+    if (kept.length && !(kept.some((s) => s.option === "yes") && kept.some((s) => s.option === "")))
+      problems.push(
+        `the confirmation "${confirmation.id}" keeps a passage either once it is given or until then: it must keep both`,
+      );
   }
   // The largest document the form can make: a repeating group is printed once for each row its table
   // can hold.
@@ -242,23 +261,7 @@ export function formAnswerIssues(spec: GuidedSpecV2, data: GuidedDataV2) {
     }
   }
   // v1's date order: a later date before an earlier one stays a draft answer of the later date.
-  for (const check of spec.dateOrder ?? []) {
-    const before = fields.get(check.before),
-      after = fields.get(check.after),
-      first = (data.values[check.before] ?? "").trim(),
-      second = (data.values[check.after] ?? "").trim();
-    if (
-      before &&
-      after &&
-      !drafts[check.after] &&
-      guidedVisible(before, data.values) &&
-      guidedVisible(after, data.values) &&
-      guidedCalendarDate(first) &&
-      guidedCalendarDate(second) &&
-      second < first
-    )
-      drafts[check.after] = check.message;
-  }
+  for (const [id, message] of datesOutOfOrder(spec, data)) if (!drafts[id]) drafts[id] = message;
   const tables = new Map(spec.tables.map((t) => [t.id, t]));
   for (const [id, rows] of Object.entries(data.tables)) {
     const table = tables.get(id);
@@ -292,6 +295,33 @@ export function formAnswerIssues(spec: GuidedSpecV2, data: GuidedDataV2) {
   return { refused, drafts };
 }
 
+/**
+ * v1's date order: each later date given before the earlier date it must follow, with the order's
+ * message. Such a date is a draft answer of the later date, so it fills no slot.
+ */
+function datesOutOfOrder(spec: GuidedSpecV2, data: GuidedDataV2) {
+  const fields = new Map(spec.fields.map((f) => [f.id, f]));
+  const late = new Map<string, string>();
+  for (const check of spec.dateOrder ?? []) {
+    const before = fields.get(check.before),
+      after = fields.get(check.after),
+      first = (data.values[check.before] ?? "").trim(),
+      second = (data.values[check.after] ?? "").trim();
+    if (
+      before &&
+      after &&
+      !late.has(check.after) &&
+      guidedVisible(before, data.values) &&
+      guidedVisible(after, data.values) &&
+      guidedCalendarDate(first) &&
+      guidedCalendarDate(second) &&
+      second < first
+    )
+      late.set(check.after, check.message);
+  }
+  return late;
+}
+
 /** An answer as the document prints it, or null while it is empty, hidden or not valid yet. */
 function printed(field: GuidedFieldV2, value: string | undefined, context: Record<string, string>) {
   const answer = (value ?? "").trim();
@@ -322,10 +352,13 @@ export function compileForm(spec: GuidedSpecV2, text: FormText, data: GuidedData
   const note = (name: string) => {
     if (!spec.blanks.includes(name) && !unfilled.includes(name)) unfilled.push(name);
   };
+  // A date before the date it must follow is a draft answer: it fills no slot and keeps no passage.
+  const late = datesOutOfOrder(spec, data);
+  const answerOf = (field: GuidedFieldV2) =>
+    late.has(field.id) ? null : printed(field, data.values[field.id], data.values);
   const choice = (span: FormSpan) => {
     const field = spec.fields.find((f) => f.id === span.question);
-    if (span.option === null)
-      return field ? printed(field, data.values[field.id], data.values) !== null : false;
+    if (span.option === null) return field ? answerOf(field) !== null : false;
     const answer = field && guidedVisible(field, data.values) ? (data.values[field.id] ?? "").trim() : "";
     return span.option === "" ? answer === "" : answer === span.option;
   };
@@ -355,9 +388,7 @@ export function compileForm(spec: GuidedSpecV2, text: FormText, data: GuidedData
           const column = row?.table.columns.find((c) => `${row.table.id}.${c.id}` === part.name);
           value = column ? printed(column, row!.values[column.id], { ...data.values, ...row!.values }) : null;
         } else {
-          const answers = (filling.get(part.name) ?? [])
-            .map((field) => printed(field, data.values[field.id], data.values))
-            .filter((a): a is string => a !== null);
+          const answers = (filling.get(part.name) ?? []).map(answerOf).filter((a): a is string => a !== null);
           value = answers.length ? (alone ? answers.join("\n") : answers.join(", ")) : null;
         }
         if (value === null) {
