@@ -13,8 +13,16 @@ import type { OwnerRuleSource } from './ownerRuleSource';
 export interface OwnerRuleItem {
   ruleId: string;
   title: string;
-  reason: string;
-  nextStep: string;
+  /**
+     * What the rule tells a customer when it applies; null when a fixed calculation words it for each customer's answers (see each scenario).
+     * @nullable
+     */
+  reason: string | null;
+  /**
+     * The next step the rule suggests when it applies; null when a fixed calculation words it for each customer's answers.
+     * @nullable
+     */
+  nextStep: string | null;
   appliesWhen: string;
   jurisdiction: string;
   validFrom: string;

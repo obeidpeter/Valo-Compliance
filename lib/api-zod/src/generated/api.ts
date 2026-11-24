@@ -3221,8 +3221,8 @@ export const ListOwnerRulesResponse = zod.object({
   "items": zod.array(zod.object({
   "ruleId": zod.string(),
   "title": zod.string(),
-  "reason": zod.string(),
-  "nextStep": zod.string(),
+  "reason": zod.string().nullable().describe('What the rule tells a customer when it applies; null when a fixed calculation words it for each customer\'s answers (see each scenario).'),
+  "nextStep": zod.string().nullable().describe('The next step the rule suggests when it applies; null when a fixed calculation words it for each customer\'s answers.'),
   "appliesWhen": zod.string(),
   "jurisdiction": zod.string(),
   "validFrom": zod.string(),
@@ -3269,6 +3269,8 @@ export const ListOwnerRulesResponse = zod.object({
   "critical": zod.boolean(),
   "expectedLabel": zod.string().nullable(),
   "actualLabel": zod.string().nullable(),
+  "actualReason": zod.string().nullable().describe('What the requirements check would tell the customer for these answers, were this version released; null when the rule gives no result for them.'),
+  "actualNextStep": zod.string().nullable(),
   "passed": zod.boolean()
 })),
   "profilesRun": zod.int().min(listOwnerRulesResponseItemsItemProfilesRunMin),
@@ -3302,8 +3304,8 @@ export const watchOwnerRuleSourcesResponseChangedProfilesMin = 0;
 export const WatchOwnerRuleSourcesResponse = zod.object({
   "ruleId": zod.string(),
   "title": zod.string(),
-  "reason": zod.string(),
-  "nextStep": zod.string(),
+  "reason": zod.string().nullable().describe('What the rule tells a customer when it applies; null when a fixed calculation words it for each customer\'s answers (see each scenario).'),
+  "nextStep": zod.string().nullable().describe('The next step the rule suggests when it applies; null when a fixed calculation words it for each customer\'s answers.'),
   "appliesWhen": zod.string(),
   "jurisdiction": zod.string(),
   "validFrom": zod.string(),
@@ -3350,6 +3352,8 @@ export const WatchOwnerRuleSourcesResponse = zod.object({
   "critical": zod.boolean(),
   "expectedLabel": zod.string().nullable(),
   "actualLabel": zod.string().nullable(),
+  "actualReason": zod.string().nullable().describe('What the requirements check would tell the customer for these answers, were this version released; null when the rule gives no result for them.'),
+  "actualNextStep": zod.string().nullable(),
   "passed": zod.boolean()
 })),
   "profilesRun": zod.int().min(watchOwnerRuleSourcesResponseProfilesRunMin),

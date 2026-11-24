@@ -20,6 +20,10 @@ export type RuleReleasePlan = {
     critical: boolean;
     expectedLabel: string | null;
     actualLabel: string | null;
+    /** What the requirements check would tell the customer for these answers, were the rule released;
+     * null when the rule gives no result for them. */
+    actualReason: string | null;
+    actualNextStep: string | null;
     passed: boolean;
   }[];
   /** How many saved profiles were run, and how this rule's result would change for each that changes. */
@@ -85,12 +89,21 @@ export function planRuleRelease(
   const trustedNow = input.trustedManifestHashes;
   const trustedAfter = trustedNow && new Set([...trustedNow, candidate.manifestHash]);
   const scenarios = input.scenarios.map((s) => {
-    const actualLabel =
-      items(s.facts, released, input, trustedAfter, s.asOfDate).find((i) => i.ruleId === candidate.id)
-        ?.label ?? null;
+    const item = items(s.facts, released, input, trustedAfter, s.asOfDate).find(
+      (i) => i.ruleId === candidate.id,
+    );
+    const actualLabel = item?.label ?? null;
     const passed = actualLabel === s.expectedLabel;
     if (!passed && s.critical) reasons.push(`critical_scenario_failed:${s.id}`);
-    return { id: s.id, critical: s.critical, expectedLabel: s.expectedLabel, actualLabel, passed };
+    return {
+      id: s.id,
+      critical: s.critical,
+      expectedLabel: s.expectedLabel,
+      actualLabel,
+      actualReason: item?.reason ?? null,
+      actualNextStep: item?.nextStep ?? null,
+      passed,
+    };
   });
   const changes = input.profiles.flatMap((facts, profile) =>
     explainAssessmentChanges(

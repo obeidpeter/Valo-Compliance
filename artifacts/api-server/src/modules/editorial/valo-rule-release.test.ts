@@ -88,12 +88,16 @@ test("a rule version is ready only with a valid condition, the next version and 
   });
   assert.equal(plan.decision, "ready");
   assert.deepEqual(plan.reasons, []);
+  // Each scenario also says what the customer would be told: the rule's own reason and next step
+  // when it applies, as the requirements check gives them.
   assert.deepEqual(plan.scenarios, [
     {
       id: "company-matches",
       critical: true,
       expectedLabel: "Likely relevant",
       actualLabel: "Likely relevant",
+      actualReason: "Synthetic reason.",
+      actualNextStep: "Synthetic next step.",
       passed: true,
     },
   ]);

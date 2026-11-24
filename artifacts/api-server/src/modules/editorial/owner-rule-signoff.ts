@@ -445,8 +445,10 @@ async function present(candidates: readonly OwnerRuleCandidate[], now: Date, opt
     items.push({
       ruleId: candidate.rule.id,
       title: candidate.rule.title,
-      reason: candidate.rule.reason,
-      nextStep: candidate.rule.nextStep,
+      // A fixed calculation words its result for each customer's answers, and never shows the rule's
+      // own reason or next step: what each scenario's customer is told is in its scenario.
+      reason: candidate.rule.evaluator ? null : candidate.rule.reason,
+      nextStep: candidate.rule.evaluator ? null : candidate.rule.nextStep,
       appliesWhen: describeRuleCondition(candidate.rule),
       jurisdiction: describeRuleJurisdiction(candidate.rule.jurisdiction),
       validFrom: candidate.rule.validFrom,
