@@ -112,21 +112,17 @@ function printedFields(fields: Fields, guided: boolean, mode: RenderMode): (read
     name === "issueDate" || name === "dueDate" ? printedCalendarDate(fields[name]) : fields[name],
   ]);
 }
-export function controlledHtml(raw: unknown, revision: number, mode: RenderMode = "business_draft") {
-  const notice = noticeFor(mode);
-  const { title, content } = documentInput.parse(raw);
+/** A block as a file prints it. */
+export type PrintedBlock = ReturnType<typeof guidedRenderableBlocks>[number];
+/** The blocks' HTML, as the page and the PDF print them. Every text is escaped. */
+export function blocksHtml(blocks: readonly PrintedBlock[], mode: RenderMode = "business_draft") {
   const e = escapeHtml;
-  const font = content.formatting.font === "serif" ? "Georgia, serif" : "Arial, sans-serif";
-  const colour = content.formatting.accent === "forest" ? "#214d3b" : "#292724";
-  const fields = printedFields(
-    content.fields,
-    content.blocks.some((b) => b.id.startsWith(GUIDED_PREFIX)),
-    mode,
-  );
-  const blocks = guidedRenderableBlocks(content)
+  const cells = (row: string[], tag: "td" | "th") =>
+    row.map((cell) => `<${tag}>${e(cell)}</${tag}>`).join("");
+  return blocks
     .map((block) =>
       block.type === "table"
-        ? `<table><tbody>${block.rows.map((row) => `<tr>${row.map((cell) => `<td>${e(cell)}</td>`).join("")}</tr>`).join("")}</tbody></table>`
+        ? `<table><tbody>${block.rows.map((row) => `<tr>${cells(row, "td")}</tr>`).join("")}</tbody></table>`
         : block.type === "list"
           ? `<ul>${block.text
               .split("\n")
@@ -138,6 +134,20 @@ export function controlledHtml(raw: unknown, revision: number, mode: RenderMode 
             ),
     )
     .join("");
+}
+export function controlledHtml(raw: unknown, revision: number, mode: RenderMode = "business_draft") {
+  const notice = noticeFor(mode);
+  const { title, content } = documentInput.parse(raw);
+  const e = escapeHtml;
+  const font = content.formatting.font === "serif" ? "Georgia, serif" : "Arial, sans-serif";
+  const colour = content.formatting.accent === "forest" ? "#214d3b" : "#292724";
+  const fields = printedFields(
+    content.fields,
+    content.blocks.some((b) => b.id.startsWith(GUIDED_PREFIX)),
+    mode,
+  );
+  const printed: PrintedBlock[] = guidedRenderableBlocks(content);
+  const blocks = blocksHtml(printed, mode);
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'"><title>${e(title)}</title><style>
   @page{size:A4;margin:25mm 18mm}body{font:11pt/1.25 ${font};color:#292724;overflow-wrap:anywhere}h1{color:${colour};font-size:23pt}p,li,td{white-space:pre-wrap}table{width:100%;border-collapse:collapse;margin:14pt 0}td{border:1px solid #aaa;padding:7pt;vertical-align:top}tr{break-inside:avoid}.notice{border:1px solid #b6ac94;padding:10pt;color:#675c3b;font-size:9pt}.field{margin:5pt 0}thead{display:table-header-group}</style></head><body>
   <div class="notice">${notice}</div><h1>${e(title)}</h1><p>${savedLine(mode, revision)}</p>
@@ -174,35 +184,7 @@ export async function renderDocument(
           }),
       ),
     ];
-    for (const block of guidedRenderableBlocks(content)) {
-      if (block.type === "table" && block.rows.length)
-        children.push(
-          new Table({
-            width: { size: 100, type: WidthType.PERCENTAGE },
-            rows: block.rows.map(
-              (row) =>
-                new TableRow({
-                  cantSplit: true,
-                  children: (row.length ? row : [""]).map(
-                    (text) => new TableCell({ children: [new Paragraph(text)] }),
-                  ),
-                }),
-            ),
-          }),
-        );
-      else if (block.type === "list")
-        children.push(...block.text.split("\n").map((text) => new Paragraph({ text, bullet: { level: 0 } })));
-      else {
-        const part = guidePart(mode, block);
-        children.push(
-          new Paragraph({
-            children: part
-              ? [new TextRun({ text: part.name, bold: true }), new TextRun(part.rest)]
-              : block.text.split("\n").flatMap((text, i) => [new TextRun({ text, break: i ? 1 : 0 })]),
-          }),
-        );
-      }
-    }
+    children.push(...docxBlocks(guidedRenderableBlocks(content), mode));
     return Packer.toBuffer(
       new Document({
         creator: "Valo",
@@ -239,6 +221,43 @@ export async function renderDocument(
       }),
     );
   }
+  return renderPdf(raw, revision, mode, notice);
+}
+/** The blocks as Word prints them. */
+export function docxBlocks(blocks: readonly PrintedBlock[], mode: RenderMode = "business_draft") {
+  const children: (Paragraph | Table)[] = [];
+  for (const block of blocks) {
+    if (block.type === "table" && block.rows.length)
+      children.push(
+        new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          rows: block.rows.map(
+            (row) =>
+              new TableRow({
+                cantSplit: true,
+                children: (row.length ? row : [""]).map(
+                  (text) => new TableCell({ children: [new Paragraph(text)] }),
+                ),
+              }),
+          ),
+        }),
+      );
+    else if (block.type === "list")
+      children.push(...block.text.split("\n").map((text) => new Paragraph({ text, bullet: { level: 0 } })));
+    else {
+      const part = guidePart(mode, block);
+      children.push(
+        new Paragraph({
+          children: part
+            ? [new TextRun({ text: part.name, bold: true }), new TextRun(part.rest)]
+            : block.text.split("\n").flatMap((text, i) => [new TextRun({ text, break: i ? 1 : 0 })]),
+        }),
+      );
+    }
+  }
+  return children;
+}
+async function renderPdf(raw: unknown, revision: number, mode: RenderMode, notice: string) {
   await acquirePdfSlot();
   let context: BrowserContext | undefined;
   // A hung render closes only its own context; the shared browser keeps serving others.
