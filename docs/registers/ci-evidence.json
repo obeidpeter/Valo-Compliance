@@ -3297,6 +3297,48 @@
       "file": "artifacts/api-server/src/scripts/public-server-pages.test.ts",
       "test": "no file the web app's build serves holds a sentence of any premium template's text",
       "proves": "No file of the web app's production build, its pages or its scripts, holds any plain sentence of the 28 premium templates' text, while a question label the scripts carry is found, so the scan reads them."
+    },
+    {
+      "requirement": "DOC-001",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-manual-library.integration.test.ts",
+      "test": "manual publishing through staff HTTP routes and public readers",
+      "proves": "Against PostgreSQL, a library template saved without what it is for, its limits and how it was written is refused release by the staff route (422) and by the database's guard whoever asks, and a released template's saved details cannot be changed in place."
+    },
+    {
+      "requirement": "DOC-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-manual-library.integration.test.ts",
+      "test": "manual publishing through staff HTTP routes and public readers",
+      "proves": "Against PostgreSQL, a library template released with its entry details shows on its public page what it is for, what a customer needs, its limits, how it was written and its released related guide, is listed by what it is for, and stops showing the guide once that guide is withdrawn."
+    },
+    {
+      "requirement": "DOC-003",
+      "job": "foundation",
+      "file": "artifacts/valo/src/public-screens/template-detail.test.tsx",
+      "test": "a staff-library template's page shows what it is for, what you need, its limits, related guidance and how it was written",
+      "proves": "A staff-library template's rendered page shows what it is for, what you need, its limits, its related guidance with each guide's kind, and how it was written and checked with its release date, and a version released before these details existed shows only the statement."
+    },
+    {
+      "requirement": "DOC-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/manual-library/retained-entry-details.test.ts",
+      "test": "a higher-risk template's proposed limits say when independent advice may be useful, and no proposal promises a result",
+      "proves": "The limits proposed for each retained template in a risk class other than general say when independent advice may be useful, and no proposed detail of the 40 templates says a document is enforceable, binding, compliant, approved or guaranteed."
+    },
+    {
+      "requirement": "EDP-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/catalogue/valo-catalogue.test.ts",
+      "test": "a staff-library template's page shows its released details, its statement and only its released related guides",
+      "proves": "A staff-library template's page says whether AI drafted it, that a Valo Content editor read the version, that Valo ran no AI review of it and that no Nigerian legal, tax or sector specialist reviewed it, and for a version released before its drafting was recorded says only what is known."
+    },
+    {
+      "requirement": "DOC-006",
+      "job": "foundation",
+      "file": "lib/db/scripts/phase1-migrations.test.mjs",
+      "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
+      "proves": "After the library entry details migration, a template revision records whether AI drafted it, a template is released only with that record, and the record cannot be changed once the revision is saved."
     }
   ]
 }
