@@ -191,8 +191,13 @@ const invoice = fromV1("TPL-01", {
 });
 
 /** An optional question for one line of a template's wording that v1 does not ask for. */
-const lineQuestion = (id: string, label: string, line: string) => ({
-  added: { id, label, type: "long_text" as const, required: false, tokens: [id] },
+const lineQuestion = (
+  id: string,
+  label: string,
+  line: string,
+  type: "text" | "long_text" | "date" = "long_text",
+) => ({
+  added: { id, label, type, required: false, tokens: [id] },
   why: `The template prints "${line}" and v1 asks nothing for it.`,
 });
 
@@ -282,15 +287,78 @@ const receipt = fromV1("TPL-03", {
   },
 });
 
+const purchaseOrder = fromV1("TPL-04", {
+  questions: [
+    { v1: "issuerName", join: { tokens: ["issuerName"] } },
+    lineQuestion(
+      "purchasingContact",
+      "Purchasing contact: the person, phone or email the supplier should use, if any",
+      "Purchasing contact: [ ]",
+      "text",
+    ),
+    { v1: "issuerAddress", join: { tokens: ["issuerAddress"] } },
+    { v1: "recipientName", join: { tokens: ["recipientName"] } },
+    { v1: "recipientAddress", join: { tokens: ["recipientAddress"] } },
+    { v1: "documentNumber", join: { tokens: ["documentNumber"] } },
+    { v1: "issueDate", join: { tokens: ["issueDate"] } },
+    lineQuestion(
+      "relatedQuotation",
+      "Related quotation reference, if any",
+      "Related quotation: [If supplied]",
+      "text",
+    ),
+    { v1: "deliveryLocation", join: { tokens: ["deliveryLocation"] } },
+    lineQuestion(
+      "receivingContact",
+      "Receiving or service contact, if any",
+      "Receiving or service contact: [ ]",
+      "text",
+    ),
+    { v1: "deliveryDate", join: { tokens: ["deliveryDate"] } },
+    lineQuestion(
+      "specificationNotes",
+      "Packaging, specification or scope notes, if any",
+      "Packaging, specification or scope notes supplied by buyer: [ ]",
+    ),
+    { v1: "taxMode", join: { clause: true } },
+    { v1: "taxAmountKobo", join: { tokens: ["taxAmountKobo"] } },
+    { v1: "taxLabel", join: { tokens: ["taxLabel"] } },
+    { v1: "taxBasis", join: { tokens: ["taxBasis"] } },
+    { v1: "discountMode", join: { clause: true } },
+    { v1: "discountKobo" },
+    { v1: "paymentTerms", join: { tokens: ["paymentTerms"] } },
+    { v1: "authority", join: { tokens: ["authority"] } },
+    lineQuestion(
+      "authorisationDate",
+      "Date the order was authorised, if recorded",
+      "Authorisation date: [ ]",
+      "date",
+    ),
+    { v1: "supplierResponse", join: { tokens: ["supplierResponse"] } },
+    lineQuestion(
+      "changeNote",
+      "Change from an earlier version of this order, if any",
+      "Change from earlier version, if any: [ ]",
+    ),
+  ],
+  calculated: pricedCalculations("TPL-04"),
+  keepsNothing: [
+    { question: "taxMode", option: "none" },
+    { question: "discountMode", option: "none" },
+  ],
+});
+
 /** The v2 forms, by template. A template without one stays on its v1 form. */
 export const GUIDED_SPECS_V2: Readonly<Partial<Record<GuidedTemplateId, GuidedSpecV2>>> = {
   "TPL-01": invoice.spec,
   "TPL-02": quotation.spec,
   "TPL-03": receipt.spec,
+  "TPL-04": purchaseOrder.spec,
 };
 /** What each v2 form adds to and leaves out of its v1 questions, with the reasons. */
 export const GUIDED_CHANGES_V2: Readonly<Partial<Record<GuidedTemplateId, GuidedChangesV2>>> = {
   "TPL-01": invoice.changes,
   "TPL-02": quotation.changes,
   "TPL-03": receipt.changes,
+  "TPL-04": purchaseOrder.changes,
 };

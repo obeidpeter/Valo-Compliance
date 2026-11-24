@@ -190,6 +190,68 @@ export const FORM_TEXT_MAPS: Readonly<Partial<Record<GuidedTemplateId, readonly 
       to: "Prepared from information supplied by the issuer. Valo has not independently verified this payment. This customer business receipt is separate from a receipt issued for a purchase from Valo.",
     },
   ],
+  "TPL-04": [
+    {
+      from: "**Buyer:** [Business name]  \nPurchasing contact: [ ]  \n[Buyer address, if supplied]",
+      to: "Buyer: [Business name]{=issuerName}\n{?purchasingContact}Purchasing contact: [ ]{=purchasingContact}{/?}\n[Buyer address, if supplied]{=issuerAddress}",
+      why: "The purchasing contact is optional: its line prints once it is given.",
+    },
+    {
+      from: "**Supplier:** [Supplier name]  \n[Supplier contact/address]",
+      to: "Supplier: [Supplier name]{=recipientName}\n{?recipientAddress}[Supplier contact/address]{=recipientAddress}{/?}",
+      why: "The supplier's address is optional: it prints once it is given.",
+    },
+    {
+      from: "Purchase order reference: [ ]  \nOrder date: [ ]  \nRelated quotation: [If supplied]  \nCurrency: [ ]",
+      to: "Purchase order reference: [ ]{=documentNumber}\nOrder date: [ ]{=issueDate}\n{?relatedQuotation}Related quotation: [If supplied]{=relatedQuotation}{/?}\nCurrency: [ ]{=calc.currency}",
+      why: "The related quotation is optional: its line prints once it is given.",
+    },
+    {
+      from: "| [ ] | [ ] | [ ] | [ ] | [Calculated] |\n| [ ] | [ ] | [ ] | [ ] | [Calculated] |",
+      to: "| {*items} [ ]{=items.description} | [ ]{=items.quantity} | [ ]{=calc.unit} | [ ]{=items.unitPriceKobo} | [Calculated]{=calc.lineAmount} |",
+      why: "One row prints for each item the form lists, so the draft's second sample row goes.",
+    },
+    { from: "| Subtotal | [Calculated] |", to: "| Subtotal | [Calculated]{=calc.subtotal} |" },
+    {
+      from: "| [Discount, if supplied] | [Deduction] |",
+      to: "| {?discountMode=supplied}Discount | [Deduction]{=calc.discount}{/?} |\n| {?discountMode=}[Discount, if supplied] | [Deduction]{/?} |",
+      why: 'The discount row prints only when a discount is supplied, labelled "Discount" from the draft\'s own words, since the form asks for no description; it prints as the draft has it while the question is unanswered.',
+    },
+    {
+      from: "| [Additional charge, if supplied] | [ ] |\n",
+      to: "",
+      why: "The form asks for each charge as an item line of its own, as its items table says, so this row goes.",
+    },
+    {
+      from: "| [Validated user-supplied tax line, if any] | [ ] |",
+      to: "| {?taxMode=supplied}[Validated user-supplied tax line, if any]{=taxLabel} | [ ]{=taxAmountKobo}{/?} |\n| {?taxMode=}[Validated user-supplied tax line, if any] | [ ]{/?} |",
+      why: "The tax row prints only when a tax amount and label are supplied; it prints as the draft has it while the question is unanswered.",
+    },
+    {
+      from: "| **Order total** | **[Calculated]** |",
+      to: "| Order total | [Calculated]{=calc.total} |\n\n{?taxMode=supplied}[ ]{=taxBasis}{/?}",
+      why: "The basis of a supplied tax amount prints below the amount summary, as a paragraph of its own.",
+    },
+    {
+      from: "- Deliver to / service location or arrangement: [ ]\n- Receiving or service contact: [ ]\n- Requested or confirmed date, correctly labelled: [ ]\n- Packaging, specification or scope notes supplied by buyer: [ ]\n- Agreed or proposed payment arrangement, correctly labelled: [ ]",
+      to: "- Deliver to / service location or arrangement: [ ]{=deliveryLocation}\n\n- {?receivingContact}Receiving or service contact: [ ]{=receivingContact}{/?}\n\n- Requested or confirmed date, correctly labelled: [ ]{=deliveryDate}\n\n- {?specificationNotes}Packaging, specification or scope notes supplied by buyer: [ ]{=specificationNotes}{/?}\n\n- Agreed or proposed payment arrangement, correctly labelled: [ ]{=paymentTerms}",
+      why: "The receiving contact and the packaging or specification notes are optional: each line prints once it is given. Each line is a list of its own, so that no list can grow past what a document block holds.",
+    },
+    {
+      from: "Authorised by: [Actual person/role or issuer authority]  \nAuthorisation date: [ ]  \nSupplier response: [Actual response and date, or \u201cnot recorded\u201d]  \nChange from earlier version, if any: [ ]",
+      to: "Authorised by: [Actual person/role or issuer authority]{=authority}\n{?authorisationDate}Authorisation date: [ ]{=authorisationDate}{/?}\n\nSupplier response: [Actual response and date, or \u201cnot recorded\u201d]{=supplierResponse}\n\n{?changeNote}Change from earlier version, if any: [ ]{=changeNote}{/?}",
+      why: "The authorisation date and any change from an earlier version are optional: each line prints once it is given. The supplier's response and the change each print as a paragraph of their own, so that no paragraph can grow past what a document block holds.",
+    },
+    {
+      from: "Please use [Purchase order reference] in correspondence and related delivery or billing documents. Contact [Purchasing contact] to clarify any difference before proceeding on changed instructions.",
+      to: "Please use [Purchase order reference]{=documentNumber} in correspondence and related delivery or billing documents.{?purchasingContact} Contact [Purchasing contact]{=purchasingContact} to clarify any difference before proceeding on changed instructions.{/?}",
+      why: "The sentence that names the purchasing contact prints once a contact is given.",
+    },
+    {
+      from: "*This document records the buyer's stated purchase instruction. Supplier acceptance, delivery and payment are separate events and are not inferred from its preparation.*",
+      to: "This document records the buyer's stated purchase instruction. Supplier acceptance, delivery and payment are separate events and are not inferred from its preparation.",
+    },
+  ],
 };
 
 /** Applies a map's changes to a draft, each to text that occurs exactly once. */

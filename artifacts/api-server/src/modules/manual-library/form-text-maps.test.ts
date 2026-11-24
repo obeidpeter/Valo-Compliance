@@ -48,7 +48,7 @@ function choiceCombinations(spec: GuidedSpecV2) {
 }
 
 test("every map turns its retained draft into form text that the v2 form fits exactly", async () => {
-  assert.deepEqual(mapped, ["TPL-01", "TPL-02", "TPL-03"]);
+  assert.deepEqual(mapped, ["TPL-01", "TPL-02", "TPL-03", "TPL-04"]);
   for (const templateId of mapped) {
     const spec = GUIDED_SPECS_V2[templateId];
     assert.ok(spec, templateId);
@@ -298,6 +298,59 @@ test("a receipt's answers fill its own wording, and it states the payment was re
   assert.deepEqual(
     compileForm(spec, text, { ...data, values: { ...data.values, acknowledgement: "yes" } }).unfilled,
     [],
+  );
+});
+
+test("a purchase order's answers fill its own wording: the buyer's contact, the order lines and total, the delivery arrangement and the order control", async () => {
+  const spec = GUIDED_SPECS_V2["TPL-04"]!;
+  const text = parseFormText((await proposedFormText("TPL-04"))!);
+  const data = emptyFormData(spec);
+  data.values = {
+    ...data.values,
+    issuerName: "Synthetic Retail Ltd",
+    purchasingContact: "Synthetic buyer, 0800 000 0000",
+    issuerAddress: "3 Synthetic Avenue, Surulere",
+    recipientName: "Synthetic Wholesale Ltd",
+    documentNumber: "SYN-PO-001",
+    issueDate: "2026-11-02",
+    deliveryLocation: "Synthetic warehouse",
+    deliveryDate: "2026-11-10",
+    taxMode: "none",
+    discountMode: "none",
+    paymentTerms: "Synthetic 30 days after delivery",
+    authority: "Synthetic purchasing manager",
+    supplierResponse: "Not recorded",
+  };
+  data.tables.items = [
+    { description: "Synthetic cartons", quantity: "10", unit: "each", otherUnit: "", unitPriceKobo: "20000" },
+  ];
+  const out = compileForm(spec, text, data);
+  const shown = out.blocks.map((b) =>
+    b.type === "table" ? b.rows.map((r) => r.join(" | ")).join("\n") : b.text,
+  );
+  assert.equal(out.title, "PURCHASE ORDER");
+  assert.deepEqual(shown, [
+    "Buyer: Synthetic Retail Ltd\nPurchasing contact: Synthetic buyer, 0800 000 0000\n3 Synthetic Avenue, Surulere",
+    "Supplier: Synthetic Wholesale Ltd",
+    "Purchase order reference: SYN-PO-001\nOrder date: 2 Nov 2026\nCurrency: NGN",
+    "Requested supply",
+    "Description and specification | Quantity | Unit | Unit price | Line amount\nSynthetic cartons | 10 | Each | ₦200.00 | ₦2,000.00",
+    "Order amount summary | Amount\nSubtotal | ₦2,000.00\nOrder total | ₦2,000.00",
+    "Delivery or service arrangement",
+    "Deliver to / service location or arrangement: Synthetic warehouse",
+    "Requested or confirmed date, correctly labelled: 10 Nov 2026",
+    "Agreed or proposed payment arrangement, correctly labelled: Synthetic 30 days after delivery",
+    "Order control",
+    "Authorised by: Synthetic purchasing manager",
+    "Supplier response: Not recorded",
+    "Please use SYN-PO-001 in correspondence and related delivery or billing documents. Contact Synthetic buyer, 0800 000 0000 to clarify any difference before proceeding on changed instructions.",
+    "This document records the buyer's stated purchase instruction. Supplier acceptance, delivery and payment are separate events and are not inferred from its preparation.",
+  ]);
+  assert.deepEqual(out.unfilled, []);
+  // Without a purchasing contact, the lines that name one are left out.
+  const noContact = compileForm(spec, text, { ...data, values: { ...data.values, purchasingContact: "" } });
+  assert.ok(
+    noContact.blocks.every((b) => !b.text.includes("Purchasing contact") && !b.text.includes("Contact ")),
   );
 });
 
