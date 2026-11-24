@@ -109,7 +109,7 @@ Small, and none needs a decision. This is where work starts.
 | **The editorial cases.** Seventeen of the 31 case-bound candidates are unbuilt and each names a text it lacks; the suite's ceiling today is 43 of 60 against a bar of 57. Build them as their texts are retained. Build the scorer for the 60 drafting cases, which has a check for one case only | EDP-010, AI-008 | L |
 | **The audit trail.** Alert on an attempt to change it and on heavy privileged reading; a viewer for staff; a guard on the events table; the restore and backup-removal tools record who ran them and why | ADM-009 | M |
 | **Commercial settings.** A staff screen for prices in place of a command; one-off bundles; quotas and access rules as versioned settings instead of constants; a price carried to a template's next edition | ADM-006 | L |
-| **The reviewed route, which stays** ([delegated decision 2](#decisions-made-under-the-owners-delegation)): preparers for the 23 templates without one, which state law and so need sources and a claim map each; a bundle builder and a release request for rules; a restore command. Running their reviews needs the owner's AI budget | EDP-003 to EDP-006, ADM-004, ADM-005 | L |
+| **The reviewed route, which stays** ([delegated decision 2](#decisions-made-under-the-owners-delegation)): preparers for the 23 templates without one, which state law and so need sources and a claim map each; a bundle builder and a release request for rules; a restore command; and, for guides, the owner's source check on this route, which decision 0018 requires: until it exists the route approves and admits no guide's reviews. Running their reviews needs the owner's AI budget | EDP-003 to EDP-006, ADM-004, ADM-005 | L |
 
 ### Phase 4: messages
 

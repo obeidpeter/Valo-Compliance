@@ -108,31 +108,34 @@ record describes. That is deliberate: someone has to read the new file and write
 
 ## What happens next, and what is not built
 
-- **The two reviews.** They run only inside an allocation the owner approves, and the owner
-  approves guide reviews apart from template reviews. The steps are the templates' own, with a
-  package of the guides' kind:
+- **The two reviews: refused.** The reviewed route's publisher releases no guide: a guide that
+  says what the law requires is released only on the owner's sign-off in the staff library
+  (decision 0018), after the owner's own check of its sources, and the publisher holds every guide
+  it is given with `REGULATORY_ARTICLE_AWAITING_OWNER_SOURCE_CHECK`. Paid reviews of a guide would
+  therefore release nothing, so none is approved or admitted, since 24 November 2026:
 
-  1. `tsx src/scripts/finite-allocation-approval.ts prepare <package.json> --guide-pairs` writes a
-     package that admits the review pairs of guides and nothing else. Only the owner, or someone on
-     the owner's written instruction, records its approval with the same command's `approve`.
+  1. `tsx src/scripts/finite-allocation-approval.ts prepare <package.json> --guide-pairs` still
+     writes a package of the guides' kind, for reading. The package says that its reviews are not
+     approved or admitted, and `approve` refuses it with `GUIDE_REVIEWS_RELEASE_NOTHING`.
   2. `tsx src/scripts/finite-inference-run.ts --prepare <package id> --candidate=<artifact id>:<sha256>`
-     plans the pair for a prepared guide. It calls no model.
-  3. `--admit` and then `--execute` of the same command admit the pair under the approved package
-     and run the two reviews. This is the step that spends.
-  4. `tsx src/scripts/publish-reviewed-pair.ts <batch id> <result artifact id> <sha256>` saves the
-     version with its reviews and hands it to the publisher, or records the hold.
+     still plans the pair for a prepared guide, and calls no model. Admitting the pair is refused
+     under every package: a guide package with `GUIDE_REVIEWS_RELEASE_NOTHING`, any other with
+     `PACKAGE_EXECUTABLE_PREPARER_UNAVAILABLE` or `WORK_OUTSIDE_PACKAGE`.
 
-  What stands behind these steps has been run for a guide in a test, in a disposable copy of the
-  database with a stand-in for the model and made-up approvals. The guide is prepared from a
-  stored capture. Its pair of reviews is refused while no package is approved, refused under an
-  approved package of template reviews, and admitted under an approved package of guide reviews.
-  The two reviews then go through the real dispatcher, and the publish step releases the guide
-  through the real publisher. One command line has been run for a guide, as a process in a test:
-  the preparing command, against a database that holds no watch on the guide's address. It stops
-  with `GUIDE_HAS_NO_BOUND_SOURCE` and keeps nothing, and it refuses a guide with no claim map and
-  a call without the terms file. Before 22 November 2026 it printed only
-  `FINITE_INFERENCE_RUN_FAILED` there. The other command lines have not been run for a guide. No
-  guide has been through any of this for real.
+  A test shows this for a guide, in a disposable copy of the database with made-up approvals:
+  the guide is prepared from a stored capture and its pair planned. Its approval is refused, and
+  nothing is recorded, sent, reserved or saved. Its pair is also refused while no package is
+  approved, and refused under an approved package of template reviews. A unit test shows the
+  publisher holding a sourced guide that passes every other check. Before 24 November 2026 the pair
+  was admitted under an approved package of guide reviews, and the test ran both reviews through
+  the real dispatcher with a stand-in for the model before the publisher held the guide.
+
+  The route can take a guide again only once it carries the owner's source check, the step
+  decision 0018 requires; the finishing plan's phase 3 builds what the reviewed route still lacks.
+  One command line has been run for a guide, as a process in a test: the preparing command, against
+  a database that holds no watch on the guide's address. It stops with `GUIDE_HAS_NO_BOUND_SOURCE`
+  and keeps nothing, and it refuses a guide with no claim map and a call without the terms file.
+  No guide has been through any of this for real.
 - **Publication.** The publisher makes every check again at release, including that each source is
   still the capture its address serves. A test passes a prepared guide through all of those checks
   in a database transaction that is rolled back. No guide has been published.

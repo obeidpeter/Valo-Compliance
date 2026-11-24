@@ -704,3 +704,30 @@ test("a candidate whose claims or sources were changed after it was built is fou
     /a source has no recorded passage/,
   );
 });
+
+// CMP-008 and EDP-004: the reviewed route's publisher holds a guide that states the law, even one that
+// passes every other check, for the owner's source check, which the route does not have (decision
+// 0018). A guide's reviews would therefore release nothing, and no package admits them
+// (`GUIDE_REVIEWS_RELEASE_NOTHING` in inference-allocation-package.ts).
+test("the publisher holds a sourced guide that passes every other check, for want of the owner's source check", async () => {
+  const { evaluatePublication } = await import("@workspace/valo-core");
+  const { evaluateOperationalRelease } = await import("./publication-publisher");
+  const { syntheticRuleRelease } = await import("../../test-support/synthetic-rule-release");
+  const { bundle } = syntheticRuleRelease({
+    ruleId: "synthetic-sourced-guidance",
+    version: 1,
+    condition: { mode: "all", predicates: [{ field: "legalForm", op: "eq", value: "company" }] },
+    source: {
+      url: "https://www.cac.gov.ng/synthetic-passage",
+      text: "Synthetic official passage for a controlled test.",
+      quote: "Synthetic official passage",
+    },
+    now: new Date(),
+  });
+  assert.equal(bundle.candidate.contentClass, "sourced_guidance");
+  assert.equal(evaluatePublication(bundle).decision, "eligible");
+  assert.deepEqual(evaluateOperationalRelease(bundle), {
+    decision: "hold",
+    reasons: ["REGULATORY_ARTICLE_AWAITING_OWNER_SOURCE_CHECK"],
+  });
+});
