@@ -112,6 +112,52 @@ function printedFields(fields: Fields, guided: boolean, mode: RenderMode): (read
     name === "issueDate" || name === "dueDate" ? printedCalendarDate(fields[name]) : fields[name],
   ]);
 }
+/**
+ * A block as a file prints it: the contract's paragraph, list and table, and, for a form that fills a
+ * template's own wording (forms v2), a heading of level 2 or 3 and a table whose first row is its
+ * header, repeated on each page. A document without these prints exactly as before.
+ */
+export type PrintedBlock = {
+  id: string;
+  type: "paragraph" | "list" | "table" | "heading";
+  text: string;
+  rows: string[][];
+  level?: 2 | 3;
+  headerRows?: 0 | 1;
+};
+const usesFormLayout = (blocks: readonly PrintedBlock[]) =>
+  blocks.some((b) => b.type === "heading" || Boolean(b.headerRows));
+/** The blocks' HTML, as the page and the PDF print them. Every text is escaped. */
+export function blocksHtml(blocks: readonly PrintedBlock[], mode: RenderMode = "business_draft") {
+  const e = escapeHtml;
+  const cells = (row: string[], tag: "td" | "th") =>
+    row.map((cell) => `<${tag}>${e(cell)}</${tag}>`).join("");
+  return blocks
+    .map((block) =>
+      block.type === "heading"
+        ? `<h${block.level === 3 ? 3 : 2}>${e(block.text)}</h${block.level === 3 ? 3 : 2}>`
+        : block.type === "table"
+          ? block.headerRows && block.rows.length
+            ? `<table><thead><tr>${cells(block.rows[0]!, "th")}</tr></thead><tbody>${block.rows
+                .slice(1)
+                .map((row) => `<tr>${cells(row, "td")}</tr>`)
+                .join("")}</tbody></table>`
+            : `<table><tbody>${block.rows.map((row) => `<tr>${cells(row, "td")}</tr>`).join("")}</tbody></table>`
+          : block.type === "list"
+            ? `<ul>${block.text
+                .split("\n")
+                .map((line) => `<li>${e(line)}</li>`)
+                .join("")}</ul>`
+            : ((part) =>
+                part ? `<p><strong>${e(part.name)}</strong>${e(part.rest)}</p>` : `<p>${e(block.text)}</p>`)(
+                guidePart(mode, block),
+              ),
+    )
+    .join("");
+}
+/** The styles a form's headings and header rows need, added only to a document that has them. */
+const FORM_LAYOUT_STYLE =
+  "h2{font-size:14pt;margin:16pt 0 6pt}h3{font-size:12pt;margin:12pt 0 4pt}th{border:1px solid #aaa;padding:7pt;text-align:left;vertical-align:top;background:#f3f0e8}";
 export function controlledHtml(raw: unknown, revision: number, mode: RenderMode = "business_draft") {
   const notice = noticeFor(mode);
   const { title, content } = documentInput.parse(raw);
@@ -123,23 +169,11 @@ export function controlledHtml(raw: unknown, revision: number, mode: RenderMode 
     content.blocks.some((b) => b.id.startsWith(GUIDED_PREFIX)),
     mode,
   );
-  const blocks = guidedRenderableBlocks(content)
-    .map((block) =>
-      block.type === "table"
-        ? `<table><tbody>${block.rows.map((row) => `<tr>${row.map((cell) => `<td>${e(cell)}</td>`).join("")}</tr>`).join("")}</tbody></table>`
-        : block.type === "list"
-          ? `<ul>${block.text
-              .split("\n")
-              .map((line) => `<li>${e(line)}</li>`)
-              .join("")}</ul>`
-          : ((part) =>
-              part ? `<p><strong>${e(part.name)}</strong>${e(part.rest)}</p>` : `<p>${e(block.text)}</p>`)(
-              guidePart(mode, block),
-            ),
-    )
-    .join("");
+  const printed: PrintedBlock[] = guidedRenderableBlocks(content);
+  const blocks = blocksHtml(printed, mode);
+  const layout = usesFormLayout(printed) ? FORM_LAYOUT_STYLE : "";
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'"><title>${e(title)}</title><style>
-  @page{size:A4;margin:25mm 18mm}body{font:11pt/1.25 ${font};color:#292724;overflow-wrap:anywhere}h1{color:${colour};font-size:23pt}p,li,td{white-space:pre-wrap}table{width:100%;border-collapse:collapse;margin:14pt 0}td{border:1px solid #aaa;padding:7pt;vertical-align:top}tr{break-inside:avoid}.notice{border:1px solid #b6ac94;padding:10pt;color:#675c3b;font-size:9pt}.field{margin:5pt 0}thead{display:table-header-group}</style></head><body>
+  @page{size:A4;margin:25mm 18mm}body{font:11pt/1.25 ${font};color:#292724;overflow-wrap:anywhere}h1{color:${colour};font-size:23pt}p,li,td{white-space:pre-wrap}table{width:100%;border-collapse:collapse;margin:14pt 0}td{border:1px solid #aaa;padding:7pt;vertical-align:top}tr{break-inside:avoid}.notice{border:1px solid #b6ac94;padding:10pt;color:#675c3b;font-size:9pt}.field{margin:5pt 0}thead{display:table-header-group}${layout}</style></head><body>
   <div class="notice">${notice}</div><h1>${e(title)}</h1><p>${savedLine(mode, revision)}</p>
   ${fields.map(([key, value]) => `<div class="field"><strong>${e(key)}:</strong> ${e(value || "[Not supplied]")}</div>`).join("")}
   ${blocks}</body></html>`;
@@ -174,35 +208,7 @@ export async function renderDocument(
           }),
       ),
     ];
-    for (const block of guidedRenderableBlocks(content)) {
-      if (block.type === "table" && block.rows.length)
-        children.push(
-          new Table({
-            width: { size: 100, type: WidthType.PERCENTAGE },
-            rows: block.rows.map(
-              (row) =>
-                new TableRow({
-                  cantSplit: true,
-                  children: (row.length ? row : [""]).map(
-                    (text) => new TableCell({ children: [new Paragraph(text)] }),
-                  ),
-                }),
-            ),
-          }),
-        );
-      else if (block.type === "list")
-        children.push(...block.text.split("\n").map((text) => new Paragraph({ text, bullet: { level: 0 } })));
-      else {
-        const part = guidePart(mode, block);
-        children.push(
-          new Paragraph({
-            children: part
-              ? [new TextRun({ text: part.name, bold: true }), new TextRun(part.rest)]
-              : block.text.split("\n").flatMap((text, i) => [new TextRun({ text, break: i ? 1 : 0 })]),
-          }),
-        );
-      }
-    }
+    children.push(...docxBlocks(guidedRenderableBlocks(content), mode));
     return Packer.toBuffer(
       new Document({
         creator: "Valo",
@@ -239,6 +245,49 @@ export async function renderDocument(
       }),
     );
   }
+  return renderPdf(raw, revision, mode, notice);
+}
+/** The blocks as Word prints them: a heading in Word's own heading style, and a table's header row
+ * marked to repeat at the top of each page. */
+export function docxBlocks(blocks: readonly PrintedBlock[], mode: RenderMode = "business_draft") {
+  const children: (Paragraph | Table)[] = [];
+  for (const block of blocks) {
+    if (block.type === "heading")
+      children.push(
+        new Paragraph({ heading: block.level === 3 ? "Heading3" : "Heading2", text: block.text }),
+      );
+    else if (block.type === "table" && block.rows.length)
+      children.push(
+        new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          rows: block.rows.map(
+            (row, index) =>
+              new TableRow({
+                cantSplit: true,
+                ...(block.headerRows && index === 0 ? { tableHeader: true } : {}),
+                children: (row.length ? row : [""]).map(
+                  (text) => new TableCell({ children: [new Paragraph(text)] }),
+                ),
+              }),
+          ),
+        }),
+      );
+    else if (block.type === "list")
+      children.push(...block.text.split("\n").map((text) => new Paragraph({ text, bullet: { level: 0 } })));
+    else {
+      const part = guidePart(mode, block);
+      children.push(
+        new Paragraph({
+          children: part
+            ? [new TextRun({ text: part.name, bold: true }), new TextRun(part.rest)]
+            : block.text.split("\n").flatMap((text, i) => [new TextRun({ text, break: i ? 1 : 0 })]),
+        }),
+      );
+    }
+  }
+  return children;
+}
+async function renderPdf(raw: unknown, revision: number, mode: RenderMode, notice: string) {
   await acquirePdfSlot();
   let context: BrowserContext | undefined;
   // A hung render closes only its own context; the shared browser keeps serving others.

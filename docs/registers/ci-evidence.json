@@ -3171,6 +3171,27 @@
       "file": "artifacts/api-server/src/routes/valo-manual-library.integration.test.ts",
       "test": "manual publishing through staff HTTP routes and public readers",
       "proves": "Against PostgreSQL, a workspace with only an unpaid order, or none, cannot start the premium Service agreement form (TPL-13) or add it to a plain document; once its purchase of the live edition is verified through the API it can, another workspace still cannot, and after a reversal no new one starts while the document already made still saves."
+    },
+    {
+      "requirement": "EDT-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-forms-v2.test.ts",
+      "test": "a form fits a text only when every question, slot, choice and size fits",
+      "proves": "For a synthetic form and form text, the second version's fit check refuses a join where a slot is filled by no question, table column, calculation or declared blank, where a question fills a slot the text lacks, or where a choice has an option with no passage or nothing to print while unanswered; no form is joined to a released edition yet."
+    },
+    {
+      "requirement": "EDT-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-forms-v2.test.ts",
+      "test": "compiling prints the text's own words, fills each slot with its answer and keeps only the chosen passages",
+      "proves": "For a synthetic form and form text, compiling keeps only the passages the answers choose and records them as selected clauses, prints dates and naira amounts as documents do, repeats a table row for each answer row, leaves blanks and not-yet-valid answers as their placeholders, and prints no word the text does not hold; no document is made with it yet."
+    },
+    {
+      "requirement": "EDT-009",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-render.test.ts",
+      "test": "a form's headings print as headings and its table's header row repeats on each page, in HTML and Word, with every text escaped",
+      "proves": "Headings of level 2 and 3 print as h2 and h3 in HTML and in Word's heading styles, a table's header row prints in HTML's table head and is marked in Word to repeat on each page, and markup in a heading or cell prints as text; no document uses them yet."
     }
   ]
 }
