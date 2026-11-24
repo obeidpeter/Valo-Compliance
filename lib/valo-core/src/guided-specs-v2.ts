@@ -756,6 +756,102 @@ const offerLetter = fromV1("TPL-17", {
   blanks: ["responseReference", "outstandingMatter", "startConfirmed"],
 });
 
+/**
+ * The employment contract (TPL-16), a premium form. Each answer prints once, in the clause that names
+ * it; Schedule A keeps the terms the clauses send to it (the leave and the notice), and Schedule B the
+ * documents incorporated. One contact answers the employee's pay, absence, leave and equipment
+ * questions, where the draft names a contact for each.
+ */
+const employmentContract = fromV1("TPL-16", {
+  questions: [
+    { v1: "issuerName", join: { tokens: ["issuerName"] } },
+    { v1: "issuerAddress", join: { tokens: ["issuerAddress"] } },
+    { v1: "recipientName", join: { tokens: ["recipientName"] } },
+    { v1: "recipientAddress", join: { tokens: ["recipientAddress"] } },
+    { v1: "documentNumber", join: { tokens: ["documentNumber"] } },
+    lineQuestion("contractVersion", "Contract version, if any", "Version: [ ]", "text"),
+    // The place before the date: Schedule A prints them in that order.
+    {
+      added: {
+        id: "engagementPlace",
+        label: "Place where the employment is engaged: town and State or FCT",
+        type: "text",
+        required: true,
+        tokens: ["engagement"],
+      },
+      why: 'Schedule A prints "Engagement place/date: [ ]", which the agreement says identifies its Nigerian employment context, and v1 asks for no place.',
+    },
+    { v1: "issueDate", join: { tokens: ["issueDate", "engagement"] } },
+    { v1: "role", join: { tokens: ["role"] } },
+    { v1: "reportsTo", join: { tokens: ["reportsTo"] } },
+    { v1: "duties", join: { tokens: ["duties"] } },
+    { v1: "workplace", join: { tokens: ["workplace"] } },
+    lineQuestion(
+      "qualifications",
+      "Required qualifications or permissions for the role, and their status, if any",
+      "Required qualifications or permissions for the role are [verified requirements and status]",
+    ),
+    { v1: "startDate", join: { tokens: ["startDate"] } },
+    {
+      added: {
+        id: "earlierService",
+        label: "Recognised earlier continuous service, or none confirmed",
+        type: "text",
+        required: true,
+        tokens: ["earlierService"],
+      },
+      why: 'The contract prints "Recognised earlier continuous service, if any, is [date/basis or none confirmed]" and v1 asks nothing for it.',
+    },
+    { v1: "termType", join: { clause: true } },
+    { v1: "endDate", join: { tokens: ["endDate"] } },
+    { v1: "probation", join: { clause: true } },
+    { v1: "probationTerms", join: { tokens: ["probationTerms"] } },
+    { v1: "grossPayKobo", join: { tokens: ["grossPayKobo"] } },
+    { v1: "payPeriod", join: { tokens: ["payPeriod"] } },
+    { v1: "payBasis", join: { tokens: ["payBasis"] } },
+    {
+      added: {
+        id: "allowances",
+        label: "Additional allowances or variable pay, or none offered",
+        type: "long_text",
+        required: true,
+        tokens: ["allowances"],
+      },
+      why: 'The contract prints "Separately identified allowances or variable pay are listed in Schedule A", Schedule A asks for them, and v1 asks nothing for them. The offer letter asks the same question.',
+    },
+    { v1: "hours", join: { tokens: ["hours"] } },
+    {
+      added: {
+        id: "workContact",
+        label: "Contact for the employee's pay, absence, leave and equipment questions",
+        type: "text",
+        required: true,
+        tokens: ["workContact"],
+      },
+      why: "The contract names a contact for payroll queries, for absence, for leave and benefit questions and for reporting a loss of equipment or information, and v1 asks for none.",
+    },
+    { v1: "leaveTerms", join: { tokens: ["leaveTerms"] } },
+    { v1: "benefits", join: { tokens: ["benefits"] } },
+    { v1: "confidentialityTerms", join: { tokens: ["confidentialityTerms"] } },
+    { v1: "grievanceTerms", join: { tokens: ["grievanceTerms"] } },
+    { v1: "terminationTerms", join: { tokens: ["terminationTerms"] } },
+    lineQuestion(
+      "specialConditions",
+      "Special conditions individually agreed and separately checked, if any",
+      "Special conditions individually agreed and separately checked: [ ]",
+    ),
+    { v1: "policies", join: { tokens: ["policies"] } },
+    { v1: "termsReviewed" },
+  ],
+  dropped: {
+    legalChecks:
+      "The contract has no place for the business's own check of the legal scope and of mandatory terms still unresolved. Its Nigerian employment context is the place of engagement in Schedule A, and the confirmation that no material term is knowingly left unresolved is still asked.",
+  },
+  // Completed by hand once the parties agree and sign, as the agreement record says.
+  blanks: ["representativeAuthority", "signatureRecord", "copyProvided"],
+  keepsNothing: [{ question: "probation", option: "no" }],
+});
+
 /** The v2 forms, by template. A template without one stays on its v1 form. */
 export const GUIDED_SPECS_V2: Readonly<Partial<Record<GuidedTemplateId, GuidedSpecV2>>> = {
   "TPL-01": invoice.spec,
@@ -765,6 +861,7 @@ export const GUIDED_SPECS_V2: Readonly<Partial<Record<GuidedTemplateId, GuidedSp
   "TPL-05": deliveryNote.spec,
   "TPL-08": minutes.spec,
   "TPL-12": reminder.spec,
+  "TPL-16": employmentContract.spec,
   "TPL-17": offerLetter.spec,
 };
 /** What each v2 form adds to and leaves out of its v1 questions, with the reasons. */
@@ -776,5 +873,6 @@ export const GUIDED_CHANGES_V2: Readonly<Partial<Record<GuidedTemplateId, Guided
   "TPL-05": deliveryNote.changes,
   "TPL-08": minutes.changes,
   "TPL-12": reminder.changes,
+  "TPL-16": employmentContract.changes,
   "TPL-17": offerLetter.changes,
 };

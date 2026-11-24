@@ -418,6 +418,90 @@ export const FORM_TEXT_MAPS: Readonly<Partial<Record<GuidedTemplateId, readonly 
       why: "The timing and dispute paragraphs print in their places in the letter above, chosen from the answers; the rest is direction for the form and its checks, not wording of the letter.",
     },
   ],
+  "TPL-16": [
+    {
+      from: "Contract reference: [ ] · Version: [ ] · Date: [ ]",
+      to: "Contract reference: [ ]{=documentNumber}{?contractVersion} · Version: [ ]{=contractVersion}{/?} · Date: [ ]{=issueDate}",
+      why: "The version is optional: it prints once it is given.",
+    },
+    {
+      from: "This agreement is between **[Employer legal name]**, of [Employer address], and **[Employee name]**, of [Employee address]. The employer appoints",
+      to: "This agreement is between [Employer legal name]{=issuerName}, of [Employer address]{=issuerAddress},\n\nand [Employee name]{=recipientName}, of [Employee address]{=recipientAddress}. The employer appoints",
+      why: "The two parties print as paragraphs of their own, since both addresses together can be longer than a document block holds.",
+    },
+    {
+      from: "The employee is appointed as **[Role]**, reporting to [Role/person]. The principal duties are [specific duties or attached role-description reference/version].",
+      to: "The employee is appointed as [Role]{=role}, reporting to [Role/person]{=reportsTo}. The principal duties are [specific duties or attached role-description reference/version]{=duties}.",
+    },
+    {
+      from: "The normal work location is [Location/remote arrangement]. Any agreed travel or additional-location arrangement is [specific arrangement or none]. Required qualifications or permissions for the role are [verified requirements and status]; no missing qualification is represented as held.",
+      to: "The normal work location is [Location/remote arrangement]{=workplace}.\n\n{?qualifications}Required qualifications or permissions for the role are [verified requirements and status]{=qualifications}; no missing qualification is represented as held.{/?}",
+      why: "v1 asks for the work location with its remote and travel arrangements in one answer, printed as the normal work location, so the sentence for travel goes. The required qualifications are optional: their sentence prints, as a paragraph of its own, once they are given.",
+    },
+    {
+      from: "Employment starts on [Date]. Recognised earlier continuous service, if any, is [date/basis or none confirmed]. The engagement is [indefinite / fixed term ending on specified date and basis].",
+      to: "Employment starts on [Date]{=startDate}. Recognised earlier continuous service, if any, is [date/basis or none confirmed]{=earlierService}. The engagement is {?termType=open}indefinite{/?}{?termType=fixed}fixed term ending on [ ]{=endDate}{/?}{?termType=}[indefinite / fixed term ending on specified date and basis]{/?}.",
+      why: "The duration prints as the choice made, with a fixed term's end date; v1 asks no basis for a fixed term. It prints as the draft has it while the question is unanswered.",
+    },
+    {
+      from: "[Include only a separately validated, expressly agreed probation clause: The agreed initial review period is [period], with reviews on [basis/dates]. Support and assessment criteria are [ ]. The applicable pay, benefits and notice arrangements during this period are [validated terms]. Any proposed extension will be discussed and documented before implementation; no extension or termination is assumed merely because a review was not recorded.]",
+      to: "{?probation=yes}\nThe agreed initial review period is [period]{=probationTerms}. Any proposed extension will be discussed and documented before implementation; no extension or termination is assumed merely because a review was not recorded.\n{/?}\n\n{?probation=}\n[Include only a separately validated, expressly agreed probation clause: The agreed initial review period is [period], with reviews on [basis/dates]. Support and assessment criteria are [ ]. The applicable pay, benefits and notice arrangements during this period are [validated terms]. Any proposed extension will be discussed and documented before implementation; no extension or termination is assumed merely because a review was not recorded.]\n{/?}",
+      why: "The review period's clause prints only when one is expressly agreed, without the draft's direction around it, and the draft's paragraph prints while the question is unanswered. v1 asks the period's terms and dates in one answer, printed as the agreed initial review period, so the sentences for its reviews, its criteria and the pay, benefits and notice during it, each a placeholder of its own, go; that answer has to state them.",
+    },
+    {
+      from: "Gross basic pay is [Currency and amount] per [period], calculated as [fixed salary/hourly or other validated basis]. Separately identified allowances or variable pay are listed in Schedule A, with their calculation and eligibility rules. Payment is due [validated cycle/date arrangement] through [agreed lawful method]. The employer will provide a clear record of the amounts paid and any deductions.",
+      to: "Gross basic pay is [Currency and amount]{=grossPayKobo} per [period]{=payPeriod}, calculated as [fixed salary/hourly or other validated basis]{=payBasis}.\n\nSeparately identified allowances or variable pay are [ ]{=allowances}. The employer will provide a clear record of the amounts paid and any deductions.",
+      why: "v1 asks how the pay is calculated, its cycle and its method in one answer, printed as how it is calculated, so the sentence for the cycle and the method goes. The allowances print here, as a paragraph of their own, instead of in Schedule A, since the schedule's other pay terms print in this clause; the question asks for their calculation and eligibility rules.",
+    },
+    {
+      from: "The employee may raise a payroll query with [contact].",
+      to: "The employee may raise a payroll query with [contact]{=workContact}.",
+    },
+    {
+      from: "Normal working days and hours are [ ]. Rest intervals and weekly rest arrangements are [validated terms]. Overtime, additional work and any related payment or time-off arrangement are [validated terms and authorisation process]. Recording",
+      to: "Normal working days and hours are [ ]{=hours}. Recording",
+      why: "v1 asks the working hours, breaks and overtime in one answer, printed as the normal working days and hours, so the two sentences for rest and for overtime, each a placeholder of its own, go.",
+    },
+    {
+      from: "The employee should notify [contact] promptly when unable to attend, using [channel].",
+      to: "The employee should notify [contact]{=workContact} promptly when unable to attend.",
+      why: "The contact's answer says how to reach them, so the separate channel goes.",
+    },
+    {
+      from: "Pension and other applicable benefit arrangements are [validated scheme/coverage, contribution basis and accessible explanation].",
+      to: "Pension and other applicable benefit arrangements are [validated scheme/coverage, contribution basis and accessible explanation]{=benefits}.",
+    },
+    {
+      from: "Questions about leave or benefits may be raised with [contact],",
+      to: "Questions about leave or benefits may be raised with [contact]{=workContact},",
+    },
+    {
+      from: "promptly report loss or suspected misuse through [contact/channel].",
+      to: "promptly report loss or suspected misuse through [contact/channel]{=workContact}.",
+    },
+    {
+      from: "must be identified in [separately reviewed document, if any];",
+      to: "must be identified in [separately reviewed document, if any]{=confidentialityTerms};",
+    },
+    {
+      from: "The applicable grievance and disciplinary processes are [document titles/versions and accessible location].",
+      to: "The applicable grievance and disciplinary processes are [document titles/versions and accessible location]{=grievanceTerms}.",
+    },
+    {
+      from: "| Item | Agreed and validated term |\n|---|---|\n| Engagement place/date; start; recognised service | [ ] |\n| Role, work location and duration | [ ] |\n| Gross pay; allowances; calculation; payment cycle | [ ] |\n| Normal hours; rest; overtime arrangement | [ ] |\n| Annual leave quantity, unit, qualifying basis and pay | [ ] |\n| Sick leave/pay and appropriate evidence process | [ ] |\n| Maternity-related leave/pay, nursing arrangements and applicable protection | [ ] |\n| Other leave and contractual improvements | [ ] |\n| Pension/other benefits and applicable contribution basis | [ ] |\n| Employer notice; employee notice; payment-in-lieu basis | [ ] |\n| Special conditions individually agreed and separately checked | [ ] |",
+      to: "- Engagement place/date: [ ]{=engagement}\n\n- Annual leave quantity, unit, qualifying basis and pay; Sick leave/pay and appropriate evidence process; Maternity-related leave/pay, nursing arrangements and applicable protection; Other leave and contractual improvements: [ ]{=leaveTerms}\n\n- Employer notice; employee notice; payment-in-lieu basis: [ ]{=terminationTerms}\n\n- {?specialConditions}Special conditions individually agreed and separately checked: [ ]{=specialConditions}{/?}",
+      why: "The confirmed terms print one to a line, each a list of its own, since each answer can be longer than a table cell holds, so the table's headings go. The rows whose terms print in their clauses go, so that each answer prints once: the start and recognised service, the role, location and duration, the pay and allowances, the hours, and the pension and benefits. The engagement row keeps its place and date. v1 asks every kind of leave in one answer, printed against the four leave rows together. The special conditions are optional: their line prints once they are given.",
+    },
+    {
+      from: "| Document | Version/date | Where the employee can obtain it | Relationship to this agreement |\n|---|---|---|---|\n| Role description | [ ] | [ ] | [ ] |\n| Employee handbook | [ ] | [ ] | [ ] |\n| Leave policy | [ ] | [ ] | [ ] |\n| Disciplinary/grievance procedure | [ ] | [ ] | [ ] |\n| Relevant collective/sector terms, if applicable | [ ] | [ ] | [ ] |",
+      to: "[ ]{=policies}",
+      why: "v1 asks the policies and schedules incorporated, with their versions, in one answer, which prints as the schedule; the table, whose cells cannot hold an answer that long, goes.",
+    },
+    {
+      from: "Employer representative name and authority: [ ]  \nEmployee name: [ ]  \nActual agreement/signature record and dates, only when completed by the parties: [ ]  \nCopy provided to employee on: [actual date]",
+      to: "Employer representative name and authority: [ ]{=representativeAuthority}\nEmployee name: [ ]{=recipientName}\nActual agreement/signature record and dates, only when completed by the parties: [ ]{=signatureRecord}\nCopy provided to employee on: [actual date]{=copyProvided}",
+    },
+  ],
   "TPL-17": [
     {
       from: "[Employer legal name and address]  \n[Date] · Reference [ ]\n\nDear [Candidate name],",

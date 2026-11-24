@@ -65,7 +65,17 @@ function fromWords(part: string[], whole: string[]) {
 }
 
 test("every map turns its retained draft into form text that the v2 form fits exactly", async () => {
-  assert.deepEqual(mapped, ["TPL-01", "TPL-02", "TPL-03", "TPL-04", "TPL-05", "TPL-08", "TPL-12", "TPL-17"]);
+  assert.deepEqual(mapped, [
+    "TPL-01",
+    "TPL-02",
+    "TPL-03",
+    "TPL-04",
+    "TPL-05",
+    "TPL-08",
+    "TPL-12",
+    "TPL-16",
+    "TPL-17",
+  ]);
   for (const templateId of mapped) {
     const spec = GUIDED_SPECS_V2[templateId];
     assert.ok(spec, templateId);
@@ -755,6 +765,126 @@ test("an offer letter's answers fill its own wording: the employer and the candi
   assert.ok(empty.includes("Employment duration: [Indefinite / fixed term with stated end and basis]"));
   assert.ok(empty.includes("Notice and any initial review period: [Validated terms]; no default probation"));
   assert.ok(empty.includes("[ ]"));
+});
+
+test("an employment contract's answers fill its own clauses once each: Schedule A keeps the leave and notice, Schedule B the documents, and the agreement record is left for completion by hand", async () => {
+  const spec = GUIDED_SPECS_V2["TPL-16"]!;
+  const text = parseFormText((await proposedFormText("TPL-16"))!);
+  const data = emptyFormData(spec);
+  data.values = {
+    ...data.values,
+    issuerName: "Synthetic Employer Ltd",
+    issuerAddress: "12 Synthetic Way\nIkeja, Lagos",
+    recipientName: "Ada Synthetic",
+    recipientAddress: "4 Synthetic Close\nYaba, Lagos",
+    documentNumber: "SYN-EC-001",
+    contractVersion: "1",
+    engagementPlace: "Ikeja, Lagos State",
+    issueDate: "2026-11-24",
+    role: "Synthetic accounts officer",
+    reportsTo: "Synthetic finance manager",
+    duties: "Synthetic role description, version 1",
+    workplace: "Synthetic head office, Ikeja; no remote work",
+    startDate: "2027-01-04",
+    earlierService: "none confirmed",
+    termType: "open",
+    probation: "no",
+    grossPayKobo: "35000000",
+    payPeriod: "month",
+    payBasis: "a fixed monthly salary, paid by bank transfer on the last working day",
+    allowances: "a transport allowance, paid with the salary",
+    hours: "Monday to Friday, 8am to 5pm, with a one-hour break",
+    workContact: "the synthetic HR manager",
+    leaveTerms: "Synthetic leave schedule, version 1",
+    benefits: "the synthetic pension scheme",
+    confidentialityTerms: "Synthetic confidentiality and IP schedule, version 1",
+    grievanceTerms: "Synthetic disciplinary and grievance procedure, version 2",
+    terminationTerms: "One month's written notice by either party",
+    policies: "Synthetic employee handbook, version 2",
+    termsReviewed: "yes",
+  };
+  const compiled = (values: Record<string, string> = {}) =>
+    compileForm(spec, text, { ...data, values: { ...data.values, ...values } });
+  const out = compiled();
+  assert.equal(out.title, "EMPLOYMENT CONTRACT");
+  const shown = out.blocks.map((b) => b.text);
+  assert.deepEqual(shown.slice(0, 3), [
+    "Contract reference: SYN-EC-001 \u00b7 Version: 1 \u00b7 Date: 24 Nov 2026",
+    "This agreement is between Synthetic Employer Ltd, of 12 Synthetic Way, Ikeja, Lagos,",
+    "and Ada Synthetic, of 4 Synthetic Close, Yaba, Lagos. The employer appoints the employee on the terms below and the completed schedules identified in this agreement.",
+  ]);
+  const starting = (words: string) => shown.find((line) => line.startsWith(words));
+  assert.equal(
+    starting("Employment starts on"),
+    "Employment starts on 4 Jan 2027. Recognised earlier continuous service, if any, is none confirmed. The engagement is indefinite. Any renewal or change will be recorded separately; a blank renewal field is not a promise or automatic extension.",
+  );
+  assert.equal(
+    starting("Gross basic pay"),
+    "Gross basic pay is \u20a6350,000.00 per Month, calculated as a fixed monthly salary, paid by bank transfer on the last working day.",
+  );
+  assert.equal(
+    starting("Separately identified"),
+    "Separately identified allowances or variable pay are a transport allowance, paid with the salary. The employer will provide a clear record of the amounts paid and any deductions.",
+  );
+  assert.equal(
+    starting("Normal working days"),
+    "Normal working days and hours are Monday to Friday, 8am to 5pm, with a one-hour break. Recording or approving extra work must reflect what actually occurred. There is no agreement here to unlimited unpaid overtime.",
+  );
+  // One contact answers each question the draft gives a contact for.
+  assert.equal(shown.join("\n").split("the synthetic HR manager").length - 1, 4);
+  // Without a review period or qualifications, neither passage prints.
+  assert.ok(!shown.some((line) => /initial review period|Required qualifications/.test(line)));
+  assert.deepEqual(
+    out.blocks.filter((b) => b.type === "list").map((b) => b.text),
+    [
+      "Engagement place/date: Ikeja, Lagos State, 24 Nov 2026",
+      "Annual leave quantity, unit, qualifying basis and pay; Sick leave/pay and appropriate evidence process; Maternity-related leave/pay, nursing arrangements and applicable protection; Other leave and contractual improvements: Synthetic leave schedule, version 1",
+      "Employer notice; employee notice; payment-in-lieu basis: One month's written notice by either party",
+    ],
+  );
+  const scheduleB = shown.indexOf("Schedule B \u2014 associated documents");
+  assert.equal(shown[scheduleB + 1], "Synthetic employee handbook, version 2");
+  assert.deepEqual(shown.slice(-2), [
+    "Employer representative name and authority: [ ]\nEmployee name: Ada Synthetic\nActual agreement/signature record and dates, only when completed by the parties: [ ]\nCopy provided to employee on: [actual date]",
+    "No signature or agreement is created by generating this document.",
+  ]);
+  assert.deepEqual(out.selectedClauses, ["termType=open", "probation=no"]);
+  assert.deepEqual(out.unfilled, []);
+  // A fixed term, an agreed review period, qualifications and special conditions print when given.
+  const other = compiled({
+    termType: "fixed",
+    endDate: "2027-12-31",
+    probation: "yes",
+    probationTerms: "three months, reviewed monthly",
+    qualifications: "a synthetic accounting certificate, held",
+    specialConditions: "Synthetic condition",
+    contractVersion: "",
+  });
+  const otherShown = other.blocks.map((b) => b.text);
+  assert.equal(otherShown[0], "Contract reference: SYN-EC-001 \u00b7 Date: 24 Nov 2026");
+  assert.ok(otherShown.some((line) => line.includes("The engagement is fixed term ending on 31 Dec 2027.")));
+  assert.ok(
+    otherShown.includes(
+      "The agreed initial review period is three months, reviewed monthly. Any proposed extension will be discussed and documented before implementation; no extension or termination is assumed merely because a review was not recorded.",
+    ),
+  );
+  assert.ok(
+    otherShown.includes(
+      "Required qualifications or permissions for the role are a synthetic accounting certificate, held; no missing qualification is represented as held.",
+    ),
+  );
+  assert.equal(
+    other.blocks.filter((b) => b.type === "list").at(-1)!.text,
+    "Special conditions individually agreed and separately checked: Synthetic condition",
+  );
+  assert.deepEqual(other.unfilled, []);
+  // Unanswered, the review period prints the draft's own direction.
+  const empty = compileForm(spec, text, emptyFormData(spec)).blocks.map((b) => b.text);
+  assert.ok(
+    empty.some((line) =>
+      line.startsWith("[Include only a separately validated, expressly agreed probation clause:"),
+    ),
+  );
 });
 
 test("an invoice form document is saved as its answers make it, hashed as V2, and its file prints the template's wording with only its note among its fields", async () => {
