@@ -115,6 +115,45 @@ function summary(templateId: GuidedTemplateId, data: GuidedDataV2) {
   return { subtotal, total: subtotal - BigInt(discount) + BigInt(tax) };
 }
 
+/**
+ * The amounts an invoice-like form works out, each from its own answers: its currency, each item
+ * line's unit and amount, the subtotal, the discount as a deduction and the total. Every amount the
+ * form takes is in kobo, printed in naira (`formatKobo`).
+ */
+function pricedCalculations(templateId: GuidedTemplateId): NonNullable<GuidedSpecV2["calculated"]> {
+  return {
+    "calc.currency": () => "NGN",
+    "calc.unit": (_data, row) => (row ? unitOf(templateId, row) : null),
+    "calc.lineAmount": (_data, row) => {
+      const columns = GUIDED_SPECS_V1[templateId].tables.find((t) => t.id === "items")!.columns;
+      const quantity = valid(
+          columns.find((c) => c.id === "quantity"),
+          row?.quantity,
+        ),
+        price = valid(
+          columns.find((c) => c.id === "unitPriceKobo"),
+          row?.unitPriceKobo,
+        );
+      return quantity && price ? formatKobo(lineTotal(quantity, price)) : null;
+    },
+    "calc.subtotal": (data) => {
+      const amounts = summary(templateId, data);
+      return amounts ? formatKobo(amounts.subtotal) : null;
+    },
+    "calc.discount": (data) => {
+      const discount = valid(
+        GUIDED_SPECS_V1[templateId].fields.find((f) => f.id === "discountKobo"),
+        data.values.discountKobo,
+      );
+      return data.values.discountMode === "supplied" && discount ? `−${formatKobo(discount)}` : null;
+    },
+    "calc.total": (data) => {
+      const total = summary(templateId, data)?.total;
+      return total == null ? null : formatKobo(total);
+    },
+  };
+}
+
 const invoice = fromV1("TPL-01", {
   questions: [
     { v1: "issuerName", join: { tokens: ["issuerName"] } },
@@ -144,38 +183,7 @@ const invoice = fromV1("TPL-01", {
     { v1: "paymentInstructions", join: { tokens: ["paymentInstructions"] } },
     { v1: "notes", join: { tokens: ["notes"] } },
   ],
-  calculated: {
-    // Every amount the form takes is in kobo, printed in naira (`formatKobo`).
-    "calc.currency": () => "NGN",
-    "calc.unit": (_data, row) => (row ? unitOf("TPL-01", row) : null),
-    "calc.lineAmount": (_data, row) => {
-      const columns = GUIDED_SPECS_V1["TPL-01"].tables[0]!.columns;
-      const quantity = valid(
-          columns.find((c) => c.id === "quantity"),
-          row?.quantity,
-        ),
-        price = valid(
-          columns.find((c) => c.id === "unitPriceKobo"),
-          row?.unitPriceKobo,
-        );
-      return quantity && price ? formatKobo(lineTotal(quantity, price)) : null;
-    },
-    "calc.subtotal": (data) => {
-      const amounts = summary("TPL-01", data);
-      return amounts ? formatKobo(amounts.subtotal) : null;
-    },
-    "calc.discount": (data) => {
-      const discount = valid(
-        GUIDED_SPECS_V1["TPL-01"].fields.find((f) => f.id === "discountKobo"),
-        data.values.discountKobo,
-      );
-      return data.values.discountMode === "supplied" && discount ? `−${formatKobo(discount)}` : null;
-    },
-    "calc.total": (data) => {
-      const total = summary("TPL-01", data)?.total;
-      return total == null ? null : formatKobo(total);
-    },
-  },
+  calculated: pricedCalculations("TPL-01"),
   keepsNothing: [
     { question: "taxMode", option: "none" },
     { question: "discountMode", option: "none" },
