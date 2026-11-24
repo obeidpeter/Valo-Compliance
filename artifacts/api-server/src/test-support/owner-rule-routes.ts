@@ -13,8 +13,9 @@ type Call = (
 
 /**
  * The checker rule sign-off routes behind the staff gate (decision 0020): only the recently verified
- * development owner reaches them, and only from Valo's own pages. No rule is prepared in the
- * repository yet, so none can be signed through them here; the service's own test signs synthetic
+ * development owner reaches them, and only from Valo's own pages. The owner sees the rules prepared in
+ * the repository, each held here because this database holds no checked copy of their official
+ * sources, so none can be signed through the routes here; the service's own test signs synthetic
  * rules.
  */
 export async function exerciseOwnerRuleRoutes(call: Call, editor: string) {
@@ -56,7 +57,19 @@ export async function exerciseOwnerRuleRoutes(call: Call, editor: string) {
     const listed = await call(path, undefined, owner);
     assert.equal(listed.status, 200);
     assert.equal(listed.headers.get("cache-control"), "private, no-store");
-    assert.deepEqual(ListOwnerRulesResponse.parse(await listed.json()), { items: [] });
+    const { items } = ListOwnerRulesResponse.parse(await listed.json());
+    assert.deepEqual(items.map((item) => item.ruleId).sort(), [
+      "cac-business-name-814",
+      "ndpa-27-collection-information",
+    ]);
+    for (const item of items) {
+      // Nothing is released, nothing can be signed, and a calculated rule's customer words are in its
+      // scenarios rather than in a reason of its own.
+      assert.equal(item.live, null, item.ruleId);
+      assert.equal(item.version, 1, item.ruleId);
+      assert.ok(item.holds.length > 0, item.ruleId);
+      assert.equal(item.reason, null, item.ruleId);
+    }
 
     const decision = {
       action: "sign",
