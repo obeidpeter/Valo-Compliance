@@ -34,21 +34,38 @@ function subsequence(part: string[], whole: string[]) {
   }
   return true;
 }
-/** Every combination of answers to the form's choices and confirmations, each also unanswered. */
+/** Every combination of answers to the form's choices, confirmations and worked-out choices, each
+ * also unanswered. */
 function choiceCombinations(spec: GuidedSpecV2) {
+  const choices: [string, readonly string[]][] = [
+    ...spec.fields
+      .filter((f) => f.clause || f.type === "acknowledgement")
+      .map((f): [string, readonly string[]] => [
+        f.id,
+        f.clause ? (f.options ?? []).map((o) => o.value) : ["yes"],
+      ]),
+    ...Object.entries(spec.derived ?? {}).map(([id, d]): [string, readonly string[]] => [id, d.options]),
+  ];
   let combinations: Record<string, string>[] = [{}];
-  for (const choice of spec.fields.filter((f) => f.clause || f.type === "acknowledgement"))
+  for (const [id, options] of choices)
     combinations = combinations.flatMap((values) =>
-      ["", ...(choice.clause ? (choice.options ?? []).map((o) => o.value) : ["yes"])].map((option) => ({
-        ...values,
-        [choice.id]: option,
-      })),
+      ["", ...options].map((option) => ({ ...values, [id]: option })),
     );
   return combinations;
 }
+/** Whether `part` uses no word more often than `whole` has it. */
+function fromWords(part: string[], whole: string[]) {
+  const left = new Map<string, number>();
+  for (const word of whole) left.set(word, (left.get(word) ?? 0) + 1);
+  return part.every((word) => {
+    const n = left.get(word) ?? 0;
+    left.set(word, n - 1);
+    return n > 0;
+  });
+}
 
 test("every map turns its retained draft into form text that the v2 form fits exactly", async () => {
-  assert.deepEqual(mapped, ["TPL-01", "TPL-02", "TPL-03", "TPL-04"]);
+  assert.deepEqual(mapped, ["TPL-01", "TPL-02", "TPL-03", "TPL-04", "TPL-05", "TPL-08", "TPL-12"]);
   for (const templateId of mapped) {
     const spec = GUIDED_SPECS_V2[templateId];
     assert.ok(spec, templateId);
@@ -71,26 +88,40 @@ test("form text adds no words: with its slots left empty, every combination of c
     const { section } = await readTemplateIntake(templateId);
     const draft = words(section.body);
     const text = parseFormText((await proposedFormText(templateId))!);
-    // Calculations left empty too: they print their placeholders.
-    const empty: GuidedSpecV2 = {
+    // Calculations left empty too: they print their placeholders. A choice that also fills a slot,
+    // such as a delivery's status, is an answer there, so its slot is left empty like any other.
+    const empty = (choices: Record<string, string>): GuidedSpecV2 => ({
       ...spec,
+      fields: spec.fields.map((f) => (f.clause && f.tokens ? { ...f, tokens: [] } : f)),
       calculated: Object.fromEntries(Object.keys(spec.calculated ?? {}).map((name) => [name, () => null])),
-    };
+      // A worked-out choice takes each of its options in turn.
+      ...(spec.derived
+        ? {
+            derived: Object.fromEntries(
+              Object.entries(spec.derived).map(([id, d]) => [id, { ...d, of: () => choices[id] || null }]),
+            ),
+          }
+        : {}),
+    });
+    // A map that moves the draft's words, each move with its reason, keeps to them without keeping
+    // their order; every other map keeps their order too.
+    const moves = FORM_TEXT_MAPS[templateId]!.some((change) => change.moves);
     const combinations = choiceCombinations(spec);
     assert.ok(combinations.length > 1, templateId);
     for (const choices of combinations) {
       const data = emptyFormData(spec);
       data.values = { ...data.values, ...choices };
-      const out = compileForm(empty, text, data);
+      const out = compileForm(empty(choices), text, data);
+      const printed = [...words(out.title), ...printedWords(out.blocks)];
       assert.ok(
-        subsequence([...words(out.title), ...printedWords(out.blocks)], draft),
+        moves ? fromWords(printed, draft) : subsequence(printed, draft),
         `${templateId} ${JSON.stringify(choices)}`,
       );
     }
     // Each change that leaves words out, or keeps them only for an answer, says why.
     for (const change of FORM_TEXT_MAPS[templateId]!) {
       const leavesOut = !subsequence(words(change.from), words(change.to.replace(/\{[^}]*\}/g, "")));
-      if (leavesOut || change.to.includes("{?")) assert.ok(change.why, change.from);
+      if (leavesOut || change.to.includes("{?") || change.moves) assert.ok(change.why, change.from);
     }
   }
 });
@@ -106,7 +137,8 @@ test("a v2 form asks v1's questions unchanged, and lists each question it adds o
           changes.added.some((a) => a.id === field.id && a.why),
           field.id,
         );
-        assert.ok(field.tokens?.length, `${field.id} serves a slot`);
+        // A new question serves a slot, or is a choice whose options keep passages.
+        assert.ok(field.tokens?.length || field.clause, `${field.id} serves a slot or keeps passages`);
         continue;
       }
       const { tokens: _tokens, clause: _clause, example: _example, ...asked } = field;
@@ -117,7 +149,38 @@ test("a v2 form asks v1's questions unchanged, and lists each question it adds o
         spec.fields.some((f) => f.id === field.id) || changes.dropped.some((d) => d.id === field.id && d.why),
         field.id,
       );
-    assert.equal(spec.tables, v1.tables);
+    // v1's tables are asked as v1 asks them: each column kept unchanged or dropped with its reason, and
+    // fewer rows only where a reason is given.
+    for (const table of v1.tables) {
+      const asked = spec.tables.find((t) => t.id === table.id)!;
+      for (const column of table.columns) {
+        const kept = asked.columns.find((c) => c.id === column.id);
+        if (kept) assert.equal(kept, column, `${table.id}.${column.id}`);
+        else
+          assert.ok(
+            changes.dropped.some((d) => d.id === `${table.id}.${column.id}` && d.why),
+            `${table.id}.${column.id}`,
+          );
+      }
+      if (asked.maxRows !== table.maxRows)
+        assert.ok(
+          changes.rows.some((r) => r.table === table.id && r.maxRows === asked.maxRows && r.why),
+          table.id,
+        );
+    }
+    // A table the form does not change is v1's own, by reference.
+    const changed = new Set([
+      ...changes.dropped.filter((d) => d.id.includes(".")).map((d) => d.id.split(".")[0]!),
+      ...changes.rows.map((r) => r.table),
+    ]);
+    if (!changed.size) assert.equal(spec.tables, v1.tables);
+    for (const table of v1.tables)
+      if (!changed.has(table.id))
+        assert.equal(
+          spec.tables.find((t) => t.id === table.id),
+          table,
+          table.id,
+        );
     assert.equal(spec.dateOrder, v1.dateOrder);
   }
 });
@@ -352,6 +415,203 @@ test("a purchase order's answers fill its own wording: the buyer's contact, the 
   assert.ok(
     noContact.blocks.every((b) => !b.text.includes("Purchasing contact") && !b.text.includes("Contact ")),
   );
+});
+
+test("a delivery note's answers fill its own wording: its status keeps the dispatch or receipt line, one row for each item, and a part delivery's difference", async () => {
+  const spec = GUIDED_SPECS_V2["TPL-05"]!;
+  const text = parseFormText((await proposedFormText("TPL-05"))!);
+  const data = emptyFormData(spec);
+  data.values = {
+    ...data.values,
+    issuerName: "Synthetic Supplies Ltd",
+    issuerAddress: "1 Synthetic Road, Ikeja",
+    recipientName: "Synthetic Buyer Ltd",
+    destination: "Synthetic store, Yaba",
+    documentNumber: "SYN-DN-001",
+    issueDate: "2026-11-04",
+    deliveryStatus: "dispatched",
+    dispatchDate: "2026-11-05",
+    acknowledger: "Synthetic storekeeper",
+  };
+  data.tables.deliveryItems = [
+    { description: "Synthetic cartons", quantity: "10", unit: "each", otherUnit: "" },
+  ];
+  const shown = (values: Record<string, string>) =>
+    compileForm(spec, text, { ...data, values: { ...data.values, ...values } }).blocks.map((b) =>
+      b.type === "table" ? b.rows.map((r) => r.join(" | ")).join("\n") : b.text,
+    );
+  assert.deepEqual(shown({}), [
+    "From: Synthetic Supplies Ltd\n1 Synthetic Road, Ikeja",
+    "To: Synthetic Buyer Ltd\nDestination: Synthetic store, Yaba",
+    "Delivery note reference: SYN-DN-001\nPrepared on: 4 Nov 2026\nMovement status: Dispatched",
+    "Dispatch: 5 Nov 2026",
+    "Goods",
+    "Item and useful reference | Unit | Quantity sent or planned, accurately labelled\nSynthetic cartons | Each | 10",
+    "Condition and differences",
+    "Handover record",
+    "Received by: Synthetic storekeeper",
+    "This note reflects the movement and handover facts entered by the issuer. A prepared or dispatched note does not establish completed delivery. Any acknowledgement is limited to what is actually recorded; payment, product fitness and regulatory approval are not established by this document.",
+  ]);
+  assert.deepEqual(compileForm(spec, text, data).unfilled, []);
+  // A received delivery prints its receipt date instead; a part delivery its difference; a planned
+  // one neither line, since its status says so.
+  assert.ok(
+    shown({ deliveryStatus: "received", receivedDate: "2026-11-06" }).includes(
+      "Delivery or attempt: 6 Nov 2026",
+    ),
+  );
+  const partial = shown({ deliveryStatus: "partial", partialDetails: "Two cartons short" });
+  assert.ok(partial.includes("Difference or issue: Two cartons short"));
+  assert.ok(!partial.some((line) => line.startsWith("Dispatch") || line.startsWith("Delivery or attempt")));
+  assert.ok(!shown({ deliveryStatus: "planned" }).some((line) => line.startsWith("Dispatch")));
+  // The form asks no condition for each item: the column is not one of its table's.
+  assert.ok(!spec.tables[0]!.columns.some((c) => c.id === "condition"));
+  assert.deepEqual(
+    GUIDED_CHANGES_V2["TPL-05"]!.dropped.map((d) => d.id),
+    ["deliveryItems.condition"],
+  );
+});
+
+test("meeting minutes' answers fill their own wording: the attendees, a heading, discussion and outcome for each topic, the actions, and a confirmation only once recorded", async () => {
+  const spec = GUIDED_SPECS_V2["TPL-08"]!;
+  const text = parseFormText((await proposedFormText("TPL-08"))!);
+  const data = emptyFormData(spec);
+  data.values = {
+    ...data.values,
+    issuerName: "Synthetic Traders",
+    meetingTitle: "Synthetic monthly review",
+    issueDate: "2026-11-05",
+    location: "Synthetic office",
+    chair: "Synthetic chair",
+    minuteTaker: "Synthetic minute taker",
+    recordStatus: "draft",
+  };
+  data.tables.attendees = [
+    { name: "Synthetic chair", role: "Owner" },
+    { name: "Synthetic staff member", role: "" },
+  ];
+  data.tables.decisions = [
+    {
+      topic: "Synthetic stock",
+      discussion: "Synthetic stock levels reviewed",
+      outcome: "Synthetic reorder agreed",
+    },
+  ];
+  data.tables.actions = [{ action: "Synthetic reorder", owner: "Synthetic staff member", dueDate: "" }];
+  const shown = (values: Record<string, string>) =>
+    compileForm(spec, text, { ...data, values: { ...data.values, ...values } }).blocks.map((b) =>
+      b.type === "table" ? b.rows.map((r) => r.join(" | ")).join("\n") : b.text,
+    );
+  const draft = shown({});
+  assert.deepEqual(draft.slice(0, 11), [
+    "Business/team: Synthetic Traders\nMeeting: Synthetic monthly review",
+    "Date: 5 Nov 2026\nLocation or method: Synthetic office\nFacilitator: Synthetic chair\nNote-taker: Synthetic minute taker",
+    "Present\nSynthetic chair (Owner)\nSynthetic staff member",
+    "Record status: Draft notes",
+    "Topics and outcomes",
+    "Synthetic stock",
+    "Discussion summary: Synthetic stock levels reviewed",
+    "Outcome: Synthetic reorder agreed",
+    "Action list",
+    "Agreed next action | Owner or \u201cunassigned\u201d | Target date or \u201cnot agreed\u201d\nSynthetic reorder | Synthetic staff member | not agreed",
+    "Questions and follow-up",
+  ]);
+  // Draft minutes print no confirmation; confirmed ones print theirs.
+  assert.ok(!draft.some((line) => line.startsWith("Confirmed by/date")));
+  const confirmed = shown({
+    recordStatus: "confirmed",
+    confirmation: "Synthetic confirmation at the next meeting",
+  });
+  assert.ok(confirmed.includes("Confirmed by/date: Synthetic confirmation at the next meeting"));
+  assert.deepEqual(compileForm(spec, text, data).unfilled, []);
+  // Up to 20 topics, each with its heading, discussion and outcome.
+  assert.equal(spec.tables.find((t) => t.id === "decisions")!.maxRows, 20);
+});
+
+test("a payment reminder's answers fill its own letter: the balance by the draft's formula, the timing paragraph from its due date and its own date, and a dispute or arrangement only when chosen", async () => {
+  const spec = GUIDED_SPECS_V2["TPL-12"]!;
+  const text = parseFormText((await proposedFormText("TPL-12"))!);
+  const data = emptyFormData(spec);
+  data.values = {
+    ...data.values,
+    issuerName: "Synthetic Supplies Ltd",
+    issuerAddress: "accounts@synthetic.example",
+    issueDate: "2026-11-20",
+    recipientName: "Synthetic Buyer Ltd",
+    invoiceReference: "SYN-INV-001",
+    invoiceIssueDate: "2026-11-02",
+    billingBasis: "synthetic October supplies",
+    invoiceDueDate: "2026-11-16",
+    balanceDate: "2026-11-19",
+    invoiceAmountKobo: "265002",
+    paymentsKnown: "listed",
+    creditsKobo: "0",
+    disputeKind: "none",
+    replyContact: "accounts@synthetic.example",
+    senderName: "Synthetic accounts officer",
+  };
+  data.tables.payments = [{ reference: "SYN-TRF-1", amountKobo: "100000" }];
+  const shown = (
+    values: Record<string, string>,
+    payments: Record<string, string>[] = data.tables.payments ?? [],
+  ) =>
+    compileForm(spec, text, {
+      ...data,
+      values: { ...data.values, ...values },
+      tables: { payments },
+    }).blocks.map((b) => b.text);
+  const letter = shown({});
+  assert.ok(
+    letter.includes(
+      "As of 19 Nov 2026, our records show an original invoice amount of ₦2,650.02, payments of ₦1,000.00 and confirmed credits or reductions of ₦0.00.",
+    ),
+  );
+  assert.ok(letter.some((p) => p.endsWith("the remaining recorded balance is ₦1,650.02.")));
+  assert.ok(
+    letter.includes(
+      "The agreed payment date recorded for this invoice was 16 Nov 2026. Please let us know the expected payment date, or raise any issue that needs resolving.",
+    ),
+  );
+  assert.deepEqual(compileForm(spec, text, data).unfilled, []);
+  // The timing paragraph follows the dates: due on the letter's date, or still ahead.
+  assert.ok(
+    shown({ invoiceDueDate: "2026-11-20" }).some((p) =>
+      p.startsWith("The payment date recorded for this invoice is today, 20 Nov 2026."),
+    ),
+  );
+  assert.ok(
+    shown({ invoiceDueDate: "2026-11-30" }).includes(
+      "The payment date recorded for this invoice is 30 Nov 2026. This is a reminder ahead of that date.",
+    ),
+  );
+  // A dispute prints its paragraph, with the amount once given; an arrangement its own.
+  const disputed = shown({ disputeKind: "dispute", dispute: "the delivery date", disputedKobo: "50000" });
+  assert.ok(
+    disputed.includes(
+      "We understand that the delivery date is still being discussed. The amount currently identified as disputed is ₦500.00. This message does not treat that issue as settled.",
+    ),
+  );
+  assert.ok(
+    shown({ disputeKind: "arrangement", dispute: "two monthly payments" }).includes(
+      "Our recorded arrangement is two monthly payments. Please let us know if our understanding is incorrect or if you need to discuss it.",
+    ),
+  );
+  // No balance prints while payments are unresolved, when a payment is listed twice, or when nothing is
+  // owed: the letter is then not complete.
+  const unbalanced = (
+    values: Record<string, string>,
+    payments: Record<string, string>[] = data.tables.payments ?? [],
+  ) =>
+    compileForm(spec, text, { ...data, values: { ...data.values, ...values }, tables: { payments } })
+      .unfilled;
+  assert.ok(unbalanced({ paymentsKnown: "unknown" }).includes("calc.balance"));
+  assert.ok(
+    unbalanced({}, [
+      { reference: "SYN-TRF-1", amountKobo: "100000" },
+      { reference: "syn-trf-1", amountKobo: "100000" },
+    ]).includes("calc.balance"),
+  );
+  assert.ok(unbalanced({ creditsKobo: "165002" }).includes("calc.balance"));
 });
 
 test("an invoice form document is saved as its answers make it, hashed as V2, and its file prints the template's wording with only its note among its fields", async () => {

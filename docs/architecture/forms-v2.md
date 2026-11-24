@@ -66,6 +66,9 @@ and a **repeating group** of blocks, `{*topics}` and `{/*}`, for meeting minutes
 heading. An answer printed within a sentence keeps to one line, its line breaks printed as commas; a
 slot that is a line of its own keeps each answer on lines of its own.
 
+A map's change may place the draft's own words elsewhere, as a payment reminder's timing paragraph
+moves from the draft's list of choices into the letter; it says so, and why.
+
 Anything else in braces, and any HTML, link or image, is refused. The grammar is frozen with the v2
 spec; a change to either makes v3.
 
@@ -84,6 +87,12 @@ has v2's headings and header rows.) Following decision 1:
   option: the retained text is mutual only);
 - **blanks** are slots left for completion by hand, such as signatures, never filled or invented
   (EDT-005);
+- a **table change** drops a v1 column the wording has no place for, or takes fewer rows than v1
+  allows where each row prints blocks of its own, each with its reason (slice 5c: the delivery note's
+  per-item condition, and the meeting minutes' topics, up to 20);
+- a **worked-out choice** is an option the form works out from its answers, whose passages are kept as
+  a choice's are, with one for while it cannot be worked out (slice 5c: a payment reminder's timing
+  paragraph, from its due date and its own date);
 - an **example** is a hint under an input, never saved or printed.
 
 **The fit check** joins a form to an edition only when every token names a slot, every slot is filled

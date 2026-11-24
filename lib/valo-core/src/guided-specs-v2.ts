@@ -1,5 +1,5 @@
 import type { GuidedField, GuidedTemplateId } from "./guided";
-import { guidedFieldIssue } from "./guided-runtime-v1";
+import { guidedFieldIssue, printedCalendarDate } from "./guided-runtime-v1";
 import { GUIDED_SPECS_V1 } from "./guided-specs-v1";
 import type { GuidedDataV2, GuidedFieldV2, GuidedSpecV2 } from "./guided-v2";
 import { formatKobo, lineTotal } from "./money";
@@ -18,13 +18,28 @@ type Plan = {
   questions: readonly ({ v1: string; join?: Join } | { added: GuidedFieldV2; why: string })[];
   /** v1's questions the form does not ask, each with its reason. */
   dropped?: Readonly<Record<string, string>>;
+  /** Changes to v1's tables, each with its reason: columns the form does not ask, and fewer rows
+   * than v1 allows, where the template's wording prints a block or more for each row. */
+  tables?: Readonly<
+    Record<
+      string,
+      {
+        droppedColumns?: Readonly<Record<string, string>>;
+        maxRows?: { rows: number; why: string };
+      }
+    >
+  >;
   blanks?: readonly string[];
   calculated?: GuidedSpecV2["calculated"];
   keepsNothing?: GuidedSpecV2["keepsNothing"];
+  derived?: GuidedSpecV2["derived"];
 };
 export type GuidedChangesV2 = {
   added: { id: string; why: string }[];
+  /** v1's questions the form does not ask; a table's column is named `table.column`. */
   dropped: { id: string; why: string }[];
+  /** v1's tables that take fewer rows in the form. */
+  rows: { table: string; maxRows: number; why: string }[];
 };
 
 function fromV1(templateId: GuidedTemplateId, plan: Plan) {
@@ -34,7 +49,32 @@ function fromV1(templateId: GuidedTemplateId, plan: Plan) {
   const changes: GuidedChangesV2 = {
     added: [],
     dropped: Object.entries(plan.dropped ?? {}).map(([id, why]) => ({ id, why })),
+    rows: [],
   };
+  // A form that changes none of v1's tables asks them as v1 does, by reference.
+  const tables = !plan.tables
+    ? v1.tables
+    : v1.tables.map((table) => {
+        const change = plan.tables?.[table.id];
+        if (!change) return table;
+        for (const [column, why] of Object.entries(change.droppedColumns ?? {})) {
+          if (!table.columns.some((c) => c.id === column))
+            throw Error(`V2_COLUMN_UNKNOWN:${table.id}.${column}`);
+          changes.dropped.push({ id: `${table.id}.${column}`, why });
+        }
+        if (change.maxRows) {
+          if (change.maxRows.rows < table.minRows || change.maxRows.rows >= table.maxRows)
+            throw Error(`V2_ROWS_NOT_FEWER:${table.id}`);
+          changes.rows.push({ table: table.id, maxRows: change.maxRows.rows, why: change.maxRows.why });
+        }
+        return {
+          ...table,
+          columns: table.columns.filter((c) => !change.droppedColumns?.[c.id]),
+          maxRows: change.maxRows?.rows ?? table.maxRows,
+        };
+      });
+  for (const id of Object.keys(plan.tables ?? {}))
+    if (!v1.tables.some((t) => t.id === id)) throw Error(`V2_TABLE_UNKNOWN:${id}`);
   for (const question of plan.questions) {
     if ("added" in question) {
       if (byId.has(question.added.id)) throw Error(`V2_QUESTION_IS_V1:${question.added.id}`);
@@ -54,10 +94,11 @@ function fromV1(templateId: GuidedTemplateId, plan: Plan) {
     templateId,
     title: v1.title,
     fields,
-    tables: v1.tables,
+    tables,
     blanks: plan.blanks ?? [],
     ...(plan.calculated ? { calculated: plan.calculated } : {}),
     ...(plan.keepsNothing ? { keepsNothing: plan.keepsNothing } : {}),
+    ...(plan.derived ? { derived: plan.derived } : {}),
     ...(v1.dateOrder ? { dateOrder: v1.dateOrder } : {}),
   };
   return { spec, changes };
@@ -86,8 +127,8 @@ function itemLines(templateId: GuidedTemplateId, data: GuidedDataV2) {
   }
   return lines;
 }
-function unitOf(templateId: GuidedTemplateId, row: Readonly<Record<string, string>>) {
-  const columns = GUIDED_SPECS_V1[templateId].tables.find((t) => t.id === "items")!.columns;
+function unitOf(templateId: GuidedTemplateId, row: Readonly<Record<string, string>>, table = "items") {
+  const columns = GUIDED_SPECS_V1[templateId].tables.find((t) => t.id === table)!.columns;
   const unit = columns.find((c) => c.id === "unit")!;
   const chosen = valid(unit, row.unit);
   if (!chosen) return null;
@@ -348,12 +389,305 @@ const purchaseOrder = fromV1("TPL-04", {
   ],
 });
 
+const deliveryNote = fromV1("TPL-05", {
+  questions: [
+    { v1: "issuerName", join: { tokens: ["issuerName"] } },
+    { v1: "issuerAddress", join: { tokens: ["issuerAddress"] } },
+    { v1: "recipientName", join: { tokens: ["recipientName"] } },
+    { v1: "destination", join: { tokens: ["destination"] } },
+    { v1: "recipientAddress", join: { tokens: ["recipientAddress"] } },
+    { v1: "documentNumber", join: { tokens: ["documentNumber"] } },
+    { v1: "issueDate", join: { tokens: ["issueDate"] } },
+    lineQuestion(
+      "relatedOrder",
+      "Related order or invoice reference, if any",
+      "Related order/invoice: [If supplied]",
+      "text",
+    ),
+    { v1: "deliveryStatus", join: { tokens: ["deliveryStatus"], clause: true } },
+    { v1: "dispatchDate", join: { tokens: ["dispatchDate"] } },
+    { v1: "receivedDate", join: { tokens: ["receivedDate"] } },
+    { v1: "partialDetails", join: { tokens: ["partialDetails"] } },
+    lineQuestion(
+      "batchReferences",
+      "Batch or serial references, if any",
+      "Batch/serial references, if supplied: [ ]",
+      "text",
+    ),
+    lineQuestion("otherNotes", "Other delivery notes, if any", "Other delivery notes: [ ]"),
+    lineQuestion(
+      "handedOverBy",
+      "Name and role of the person who handed the goods over, if recorded",
+      "Handed over by: [Actual name/role, or not recorded]",
+      "text",
+    ),
+    { v1: "acknowledger", join: { tokens: ["acknowledger"] } },
+    { v1: "acknowledgement", join: { tokens: ["acknowledgement"] } },
+    lineQuestion(
+      "acknowledgementDate",
+      "Date of the acknowledgement, if recorded",
+      "Acknowledgement date/time: [If recorded]",
+      "date",
+    ),
+    lineQuestion("outstandingAction", "Outstanding action, if any", "Outstanding action: [ ]"),
+    lineQuestion(
+      "followUp",
+      "Person responsible and follow-up date, if agreed",
+      "Person responsible and user-chosen follow-up date, if agreed: [ ]",
+      "text",
+    ),
+  ],
+  tables: {
+    deliveryItems: {
+      droppedColumns: {
+        condition:
+          "The delivery note records condition and differences for the delivery as a whole, as the form asks of a part delivery, and has no place for each item's condition.",
+      },
+    },
+  },
+  calculated: {
+    "calc.itemUnit": (_data, row) => (row ? unitOf("TPL-05", row, "deliveryItems") : null),
+  },
+  keepsNothing: [
+    { question: "deliveryStatus", option: "planned" },
+    { question: "deliveryStatus", option: "unconfirmed" },
+  ],
+});
+
+/** A column of one of v1's tables, by id. */
+const columnOf = (templateId: GuidedTemplateId, table: string, column: string) =>
+  GUIDED_SPECS_V1[templateId].tables.find((t) => t.id === table)?.columns.find((c) => c.id === column);
+
+const minutes = fromV1("TPL-08", {
+  questions: [
+    { v1: "issuerName", join: { tokens: ["issuerName"] } },
+    { v1: "meetingTitle", join: { tokens: ["meetingTitle"] } },
+    lineQuestion("meetingReference", "Meeting reference, if any", "Meeting reference: [ ]", "text"),
+    { v1: "issueDate", join: { tokens: ["issueDate"] } },
+    lineQuestion("meetingTime", "Time and timezone, if recorded", "Time and timezone: [If recorded]", "text"),
+    { v1: "location", join: { tokens: ["location"] } },
+    { v1: "chair", join: { tokens: ["chair"] } },
+    { v1: "minuteTaker", join: { tokens: ["minuteTaker"] } },
+    lineQuestion(
+      "apologies",
+      "Apologies, or those invited but absent, if any",
+      "Apologies or invited but absent: [Separate supplied list, if any]",
+    ),
+    { v1: "recordStatus", join: { tokens: ["recordStatus"], clause: true } },
+    { v1: "confirmation", join: { tokens: ["confirmation"] } },
+    lineQuestion("unresolvedQuestions", "Unresolved questions, if any", "Unresolved questions: [ ]"),
+    { v1: "nextMeeting", join: { tokens: ["nextMeeting"] } },
+    lineQuestion(
+      "supportingRecords",
+      "Supporting-record references, if any",
+      "Supporting-record references: [ ]",
+      "text",
+    ),
+    lineQuestion(
+      "circulatedTo",
+      "When and to whom the minutes were circulated, if they were",
+      "Circulated on/to: [Only if actually circulated]",
+      "text",
+    ),
+    lineQuestion(
+      "corrections",
+      "Corrections requested or made, if any",
+      "Corrections requested or made: [ ]",
+    ),
+    lineQuestion("versionNote", "Version or change note, if any", "Version/change note: [ ]", "text"),
+  ],
+  dropped: {
+    meetingType:
+      "The minutes' wording does not print the kind of meeting: the template is for an ordinary business meeting, and its closing note says it does not certify statutory governance procedure, quorum or approval.",
+    boardAssumptions:
+      "The template is for an ordinary business meeting and has no place for board governance assumptions; its closing note says it does not certify statutory governance procedure, quorum or approval.",
+  },
+  tables: {
+    decisions: {
+      maxRows: {
+        rows: 20,
+        why: "Each topic prints a heading, its discussion and its outcome, so the form takes up to 20 topics, which keeps the longest minutes within what a document holds.",
+      },
+    },
+  },
+  calculated: {
+    "calc.attendee": (_data, row) => {
+      const name = valid(columnOf("TPL-08", "attendees", "name"), row?.name);
+      if (!name) return null;
+      const role = valid(columnOf("TPL-08", "attendees", "role"), row?.role);
+      return role ? `${name} (${role})` : name;
+    },
+    "calc.actionDate": (_data, row) => {
+      const date = valid(columnOf("TPL-08", "actions", "dueDate"), row?.dueDate);
+      // The draft's own words for an action with no date agreed.
+      return date ? printedCalendarDate(date) : "not agreed";
+    },
+  },
+  keepsNothing: [
+    { question: "recordStatus", option: "draft" },
+    { question: "recordStatus", option: "circulated" },
+    { question: "recordStatus", option: "corrected" },
+  ],
+});
+
+/** A payment reminder's answer to one of v1's questions, when given and valid. */
+const reminderAnswer = (field: string, data: GuidedDataV2) =>
+  valid(
+    GUIDED_SPECS_V1["TPL-12"].fields.find((f) => f.id === field),
+    data.values[field],
+  );
+/**
+ * A payment reminder's confirmed allocated payments: none, or every listed one when each is given and
+ * valid. Null while they are unresolved, or when a payment reference repeats: the draft counts the
+ * same transaction once.
+ */
+function reminderPayments(data: GuidedDataV2): bigint | null {
+  if (data.values.paymentsKnown === "none") return 0n;
+  if (data.values.paymentsKnown !== "listed") return null;
+  const rows = data.tables.payments ?? [];
+  const references = new Set<string>();
+  let total = 0n;
+  for (const row of rows) {
+    const reference = valid(columnOf("TPL-12", "payments", "reference"), row.reference);
+    const amount = valid(columnOf("TPL-12", "payments", "amountKobo"), row.amountKobo);
+    if (!reference || amount === null || references.has(reference.toLowerCase())) return null;
+    references.add(reference.toLowerCase());
+    total += BigInt(amount);
+  }
+  return rows.length ? total : null;
+}
+
+const reminder = fromV1("TPL-12", {
+  questions: [
+    { v1: "issuerName", join: { tokens: ["issuerName"] } },
+    { v1: "issuerAddress", join: { tokens: ["issuerAddress"] } },
+    { v1: "issueDate", join: { tokens: ["issueDate"] } },
+    { v1: "recipientName", join: { tokens: ["recipientName"] } },
+    { v1: "recipientAddress", join: { tokens: ["recipientAddress"] } },
+    {
+      added: {
+        id: "invoiceReference",
+        label: "Invoice reference",
+        type: "text",
+        required: true,
+        tokens: ["invoiceReference"],
+      },
+      why: 'The letter names the invoice it follows up, "invoice [invoice reference]", and v1 asks for the reference only within its description of the goods or work.',
+    },
+    { v1: "invoiceIssueDate", join: { tokens: ["invoiceIssueDate"] } },
+    { v1: "billingBasis", join: { tokens: ["billingBasis"] } },
+    { v1: "invoiceDueDate", join: { tokens: ["invoiceDueDate"] } },
+    { v1: "balanceDate", join: { tokens: ["balanceDate"] } },
+    { v1: "invoiceAmountKobo", join: { tokens: ["invoiceAmountKobo"] } },
+    { v1: "paymentsKnown" },
+    {
+      added: {
+        id: "creditsKobo",
+        label: "Confirmed credits or other agreed reductions in whole kobo, 0 when there are none",
+        type: "money_kobo",
+        required: true,
+        tokens: ["creditsKobo"],
+      },
+      why: 'The letter states "confirmed credits or reductions of [currency and amount]", and its balance counts them, as the draft\'s formula does; v1 asks nothing for them.',
+    },
+    {
+      added: {
+        id: "disputeKind",
+        label: "Is there a dispute or an existing payment arrangement to mention?",
+        type: "select",
+        required: true,
+        clause: true,
+        options: [
+          { value: "none", label: "Neither" },
+          { value: "dispute", label: "A dispute still being discussed" },
+          { value: "arrangement", label: "An existing payment arrangement" },
+        ],
+      },
+      why: "The draft gives a paragraph for a dispute and another for an existing arrangement, to be put in only where relevant; v1 asks for the facts of either in one answer but not which applies.",
+    },
+    { v1: "dispute", join: { tokens: ["dispute"] } },
+    {
+      added: {
+        id: "disputedKobo",
+        label: "Amount identified as disputed in whole kobo, if known",
+        type: "money_kobo",
+        required: false,
+        tokens: ["disputedKobo"],
+      },
+      why: 'The dispute paragraph states "The amount currently identified as disputed is [currency and amount, if known]" and v1 asks nothing for it.',
+    },
+    {
+      added: {
+        id: "disputeQuestion",
+        label: "What the customer is asked to help resolve, if anything",
+        type: "text",
+        required: false,
+        tokens: ["disputeQuestion"],
+      },
+      why: 'The dispute paragraph asks "Please help us resolve [specific question]" and v1 asks nothing for it.',
+    },
+    { v1: "replyContact", join: { tokens: ["replyContact"] } },
+    { v1: "paymentInstructions", join: { tokens: ["paymentInstructions"] } },
+    {
+      added: {
+        id: "senderName",
+        label: "Name of the person sending the letter",
+        type: "text",
+        required: true,
+        tokens: ["senderName"],
+      },
+      why: "The letter is signed with the sender's name, and v1 asks nothing for it.",
+    },
+    lineQuestion("senderRole", "The sender's role, if any", "[Role, if supplied]", "text"),
+  ],
+  dropped: {
+    documentNumber:
+      "The letter has no reference of its own: it names the invoice it follows up, which the form asks for.",
+  },
+  calculated: {
+    "calc.payments": (data) => {
+      const payments = reminderPayments(data);
+      return payments === null ? null : formatKobo(payments);
+    },
+    "calc.balance": (data) => {
+      const invoice = reminderAnswer("invoiceAmountKobo", data);
+      const payments = reminderPayments(data);
+      const credits = valid(
+        reminder.spec.fields.find((f) => f.id === "creditsKobo"),
+        data.values.creditsKobo,
+      );
+      if (invoice === null || payments === null || credits === null) return null;
+      const balance = BigInt(invoice) - payments - BigInt(credits);
+      // A reminder states an amount still owed. At zero or less the draft offers an account statement,
+      // or a possible excess payment to reconcile, instead: no balance prints, and the letter is not
+      // complete.
+      return balance > 0n ? formatKobo(balance) : null;
+    },
+  },
+  derived: {
+    // The draft compares the established due date with the letter's own date.
+    timing: {
+      options: ["passed", "today", "ahead"],
+      of: (data) => {
+        const due = reminderAnswer("invoiceDueDate", data),
+          letter = reminderAnswer("issueDate", data);
+        if (!due || !letter) return null;
+        return due < letter ? "passed" : due === letter ? "today" : "ahead";
+      },
+    },
+  },
+  keepsNothing: [{ question: "disputeKind", option: "none" }],
+});
+
 /** The v2 forms, by template. A template without one stays on its v1 form. */
 export const GUIDED_SPECS_V2: Readonly<Partial<Record<GuidedTemplateId, GuidedSpecV2>>> = {
   "TPL-01": invoice.spec,
   "TPL-02": quotation.spec,
   "TPL-03": receipt.spec,
   "TPL-04": purchaseOrder.spec,
+  "TPL-05": deliveryNote.spec,
+  "TPL-08": minutes.spec,
+  "TPL-12": reminder.spec,
 };
 /** What each v2 form adds to and leaves out of its v1 questions, with the reasons. */
 export const GUIDED_CHANGES_V2: Readonly<Partial<Record<GuidedTemplateId, GuidedChangesV2>>> = {
@@ -361,4 +695,7 @@ export const GUIDED_CHANGES_V2: Readonly<Partial<Record<GuidedTemplateId, Guided
   "TPL-02": quotation.changes,
   "TPL-03": receipt.changes,
   "TPL-04": purchaseOrder.changes,
+  "TPL-05": deliveryNote.changes,
+  "TPL-08": minutes.changes,
+  "TPL-12": reminder.changes,
 };

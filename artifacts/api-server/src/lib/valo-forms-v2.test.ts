@@ -705,3 +705,49 @@ test("a confirmation keeps the passage printed once it is given with the one pri
     problems("# T\n\n{?ack}Confirmed.{/?}\n").some((p) => p.includes('its passages name "yes" or nothing')),
   );
 });
+
+test("a choice the form works out keeps a passage for each of its options and one while it cannot be worked out", () => {
+  const spec: GuidedSpecV2 = {
+    schemaVersion: 2,
+    templateId: "TPL-12",
+    title: "Synthetic",
+    fields: [{ id: "due", label: "Due", type: "date", required: true }],
+    tables: [],
+    blanks: [],
+    derived: {
+      timing: {
+        options: ["early", "late"],
+        of: (data) => (data.values.due ? (data.values.due < "2026-11-20" ? "late" : "early") : null),
+      },
+    },
+  };
+  const all = parseFormText(
+    "# T\n\n{?timing=early}Early.{/?}{?timing=late}Late.{/?}{?timing=}Unknown.{/?}\n",
+  );
+  assert.deepEqual(formFit(spec, all), []);
+  const answered = (due: string) => ({
+    schemaVersion: 2 as const,
+    templateId: "TPL-12" as const,
+    values: { due },
+    tables: {},
+  });
+  assert.equal(compileForm(spec, all, answered("2026-11-01")).blocks[0]!.text, "Late.");
+  assert.equal(compileForm(spec, all, answered("2026-12-01")).blocks[0]!.text, "Early.");
+  assert.equal(compileForm(spec, all, answered("")).blocks[0]!.text, "Unknown.");
+  const problems = (source: string) => formFit(spec, parseFormText(source));
+  assert.ok(
+    problems("# T\n\n{?timing=early}E{/?}{?timing=}U{/?}\n").some((p) =>
+      p.includes('"timing=late" keeps no passage'),
+    ),
+  );
+  assert.ok(
+    problems("# T\n\n{?timing=early}E{/?}{?timing=late}L{/?}\n").some((p) =>
+      p.includes("prints nothing while it cannot be worked out"),
+    ),
+  );
+  assert.ok(
+    problems("# T\n\n{?timing=early}E{/?}{?timing=late}L{/?}{?timing=}U{/?}{?timing=soon}S{/?}\n").some((p) =>
+      p.includes("which the form does not work out"),
+    ),
+  );
+});

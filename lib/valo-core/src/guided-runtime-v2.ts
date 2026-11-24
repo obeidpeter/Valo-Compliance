@@ -134,6 +134,14 @@ export function formFit(spec: GuidedSpecV2, text: FormText): string[] {
         );
       continue;
     }
+    const derived = spec.derived?.[span.question];
+    if (derived) {
+      if (span.option !== "" && !derived.options.includes(span.option))
+        problems.push(
+          `a passage is kept for "${span.question}=${span.option}", which the form does not work out`,
+        );
+      continue;
+    }
     if (confirmations.has(span.question)) {
       if (span.option !== "yes" && span.option !== "")
         problems.push(
@@ -158,6 +166,18 @@ export function formFit(spec: GuidedSpecV2, text: FormText): string[] {
         problems.push(`"${choice.id}=${option.value}" keeps no passage and is not declared to keep none`);
     if (!spans.some((s) => s.question === choice.id && s.option === ""))
       problems.push(`the choice "${choice.id}" prints nothing while it is unanswered`);
+  }
+  for (const [name, derived] of Object.entries(spec.derived ?? {})) {
+    if (spec.fields.some((f) => f.id === name))
+      problems.push(`"${name}" is worked out, but is also a question`);
+    for (const option of derived.options)
+      if (
+        !spans.some((s) => s.question === name && s.option === option) &&
+        !spec.keepsNothing?.some((k) => k.question === name && k.option === option)
+      )
+        problems.push(`"${name}=${option}" keeps no passage and is not declared to keep none`);
+    if (!spans.some((s) => s.question === name && s.option === ""))
+      problems.push(`"${name}" prints nothing while it cannot be worked out`);
   }
   for (const confirmation of confirmations.values()) {
     const kept = spans.filter((s) => s.question === confirmation.id);
@@ -357,6 +377,11 @@ export function compileForm(spec: GuidedSpecV2, text: FormText, data: GuidedData
   const answerOf = (field: GuidedFieldV2) =>
     late.has(field.id) ? null : printed(field, data.values[field.id], data.values);
   const choice = (span: FormSpan) => {
+    const derived = spec.derived?.[span.question];
+    if (derived) {
+      const option = derived.of(data);
+      return span.option === "" ? option === null : option === span.option;
+    }
     const field = spec.fields.find((f) => f.id === span.question);
     if (span.option === null) return field ? answerOf(field) !== null : false;
     const answer = field && guidedVisible(field, data.values) ? (data.values[field.id] ?? "").trim() : "";
