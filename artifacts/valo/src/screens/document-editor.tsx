@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import {
   useGetDocument,
+  useGetDocumentForm,
+  getGetDocumentFormQueryKey,
   useListDocumentRevisions,
   useListDocuments,
   useSaveDocument,
@@ -58,6 +60,12 @@ import {
   guidedDataFromBlocks,
   compileGuidedContent,
 } from "@workspace/valo-core/guided-runtime";
+import type { GuidedData, GuidedTemplateId } from "@workspace/valo-core/guided";
+import { parseFormText } from "@workspace/valo-core/form-text";
+import { formDocumentContent } from "@workspace/valo-core/guided-runtime-v2";
+import { GUIDED_SPECS_V2 } from "@workspace/valo-core/guided-specs-v2";
+import { GUIDED_V2_PREFIX, type GuidedDataV2 } from "@workspace/valo-core/guided-v2";
+import { formViewV2, type FormValue } from "@/lib/form-view";
 
 type Snapshot = { title: string; content: CanonicalDocument };
 /** A question put to the customer before something they entered is discarded: what would be lost,
@@ -76,6 +84,25 @@ export default function DocumentEditor({ id }: { id: string }) {
   const otherDocs = useListDocuments({
     query: { enabled: !!id && doc.isSuccess, queryKey: getListDocumentsQueryKey() },
   });
+  // A form document (forms v2) fills the wording of the released edition it was started with,
+  // which never changes, so it is read once.
+  const formRecord = doc.data?.form ?? null;
+  const formWording = useGetDocumentForm(id, {
+    query: {
+      enabled: !!id && Boolean(formRecord),
+      queryKey: getGetDocumentFormQueryKey(id),
+      staleTime: Infinity,
+    },
+  });
+  const formText = useMemo(() => {
+    try {
+      return formWording.data ? parseFormText(formWording.data.formText) : null;
+    } catch {
+      // Released wording was read with the same grammar when it was saved; if it cannot be read
+      // here, the document says its wording could not be loaded.
+      return null;
+    }
+  }, [formWording.data]);
   const saveMut = useSaveDocument();
   const mutateRef = useRef(saveMut.mutate);
   mutateRef.current = saveMut.mutate;
@@ -538,7 +565,19 @@ export default function DocumentEditor({ id }: { id: string }) {
     guidedError =
       "This document's saved questions cannot be loaded safely. Restore an earlier version rather than removing its questions.";
   }
-  const manualBlocks = content.blocks.filter((b) => !b.id.startsWith(GUIDED_PREFIX));
+  const manualBlocks = content.blocks.filter(
+    (b) => !b.id.startsWith(GUIDED_PREFIX) && !b.id.startsWith(GUIDED_V2_PREFIX),
+  );
+  // A form document's wording is its released template's, filled from its answers: the answers
+  // change it, never the blocks themselves.
+  const formAnswers = content.formAnswers as GuidedDataV2 | undefined;
+  const formSpec = formAnswers ? GUIDED_SPECS_V2[formAnswers.templateId as GuidedTemplateId] : undefined;
+  const formView = formSpec ? formViewV2(formSpec) : undefined;
+  const fillForm = (next: GuidedDataV2) => {
+    if (!formSpec || !formText) return;
+    const { unfilled: _unfilled, ...made } = formDocumentContent(formSpec, formText, next, content);
+    update({ title, content: made as CanonicalDocument });
+  };
   const setFields = (k: keyof CanonicalDocument["fields"], v: string) =>
     update({ title, content: { ...content, fields: { ...content.fields, [k]: v } } });
   const setBlocks = (blocks: DocumentBlock[]) => update({ title, content: { ...content, blocks } });
@@ -560,12 +599,19 @@ export default function DocumentEditor({ id }: { id: string }) {
     ]);
   const saved = doc.data;
   const titleSuggestion = suggestedDocumentTitle(title, content);
-  const reusableSources = guided
+  // The answers this document's form holds, of either version; a form document's only once its
+  // wording is loaded, since they cannot change before.
+  const answering: FormValue | null = formAnswers ? (formView && formText ? formAnswers : null) : guided;
+  const fillAnswers = (data: FormValue) => {
+    if (data.schemaVersion === 2) fillForm(data as GuidedDataV2);
+    else update({ title, content: compileGuidedContent(data as GuidedData, content) as CanonicalDocument });
+  };
+  const reusableSources = answering
     ? (otherDocs.data ?? [])
         .filter((candidate) => candidate.id !== id)
         .map((candidate) => {
           const details = extractReusableIssuerDetails(candidate);
-          const applicable = applyIssuerDetailsToGuided(guided, details).appliedLabels;
+          const applicable = applyIssuerDetailsToGuided(answering, details).appliedLabels;
           return { doc: candidate, details, applicable };
         })
         .filter((entry) => entry.applicable.length > 0)
@@ -574,7 +620,7 @@ export default function DocumentEditor({ id }: { id: string }) {
     reusableSources.find((entry) => entry.doc.id === reuseDocId) ?? reusableSources[0] ?? null;
 
   const reusableCustomers = (() => {
-    if (!guided) return [];
+    if (!answering) return [];
     const seen = new Set<string>();
     const out: {
       key: string;
@@ -584,7 +630,7 @@ export default function DocumentEditor({ id }: { id: string }) {
     for (const candidate of otherDocs.data ?? []) {
       if (candidate.id === id) continue;
       const details = extractReusableCustomerDetails(candidate);
-      const applicable = applyCustomerDetailsToGuided(guided, details).appliedLabels;
+      const applicable = applyCustomerDetailsToGuided(answering, details).appliedLabels;
       const name = details.recipientName?.trim();
       if (!applicable.length || !name) continue;
       const key = `${name.toLowerCase()}|${(details.recipientAddress ?? "").trim().toLowerCase()}`;
@@ -604,20 +650,20 @@ export default function DocumentEditor({ id }: { id: string }) {
     reusableCustomers.find((entry) => entry.key === reuseCustomerKey) ?? reusableCustomers[0] ?? null;
 
   function applySelectedIssuerDetails() {
-    if (!guided || !content || !selectedSource) return;
-    const { data, appliedLabels } = applyIssuerDetailsToGuided(guided, selectedSource.details);
+    if (!answering || !content || !selectedSource) return;
+    const { data, appliedLabels } = applyIssuerDetailsToGuided(answering, selectedSource.details);
     if (!appliedLabels.length) return;
-    update({ title, content: compileGuidedContent(data, content) as CanonicalDocument });
+    fillAnswers(data);
     setReuseNotice(
       `Filled ${appliedLabels.join(", ")} from "${selectedSource.doc.title}". Review these details before downloading.`,
     );
   }
 
   function applySelectedCustomerDetails() {
-    if (!guided || !content || !selectedCustomer) return;
-    const { data, appliedLabels } = applyCustomerDetailsToGuided(guided, selectedCustomer.details);
+    if (!answering || !content || !selectedCustomer) return;
+    const { data, appliedLabels } = applyCustomerDetailsToGuided(answering, selectedCustomer.details);
     if (!appliedLabels.length) return;
-    update({ title, content: compileGuidedContent(data, content) as CanonicalDocument });
+    fillAnswers(data);
     setReuseNotice(
       `Filled ${appliedLabels.join(", ")} for "${selectedCustomer.details.recipientName}". Review before downloading.`,
     );
@@ -942,89 +988,106 @@ export default function DocumentEditor({ id }: { id: string }) {
                     {guidedError}
                   </p>
                 )}
-                {guided ? (
-                  <>
-                    {(reusableSources.length > 0 || reusableCustomers.length > 0) && !guidedError && (
-                      <div
-                        className="mb-6 grid gap-4 rounded-2xl border border-border bg-sidebar/40 p-4"
-                        data-testid="bar-reuse-issuer"
-                      >
-                        <div>
-                          <p className="text-sm font-medium">Reuse saved details</p>
-                          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                            Fill your sender details or a repeat customer from earlier documents without
-                            retyping. References, dates, and amounts stay untouched.
-                          </p>
-                        </div>
-                        {reusableSources.length > 0 && (
-                          <div className="flex flex-wrap items-center gap-2">
-                            <label className="sr-only" htmlFor="select-reuse-issuer">
-                              Choose a previous document for sender details
-                            </label>
-                            <select
-                              id="select-reuse-issuer"
-                              className="field min-w-[12rem] flex-1 !min-h-9 !py-1.5 text-sm"
-                              value={selectedSource?.doc.id ?? ""}
-                              onChange={(e) => setReuseDocId(e.target.value)}
-                              data-testid="select-reuse-issuer"
-                            >
-                              {reusableSources.map((entry) => (
-                                <option key={entry.doc.id} value={entry.doc.id}>
-                                  {entry.doc.title}
-                                </option>
-                              ))}
-                            </select>
-                            <button
-                              type="button"
-                              className="btn btn-ghost btn-sm"
-                              onClick={applySelectedIssuerDetails}
-                              data-testid="button-apply-reuse-issuer"
-                            >
-                              Fill sender details
-                            </button>
-                          </div>
-                        )}
-                        {reusableCustomers.length > 0 && (
-                          <div className="flex flex-wrap items-center gap-2" data-testid="bar-reuse-customer">
-                            <label className="sr-only" htmlFor="select-reuse-customer">
-                              Choose a repeat customer
-                            </label>
-                            <select
-                              id="select-reuse-customer"
-                              className="field min-w-[12rem] flex-1 !min-h-9 !py-1.5 text-sm"
-                              value={selectedCustomer?.key ?? ""}
-                              onChange={(e) => setReuseCustomerKey(e.target.value)}
-                              data-testid="select-reuse-customer"
-                            >
-                              {reusableCustomers.map((entry) => (
-                                <option key={entry.key} value={entry.key}>
-                                  {entry.label}
-                                </option>
-                              ))}
-                            </select>
-                            <button
-                              type="button"
-                              className="btn btn-ghost btn-sm"
-                              onClick={applySelectedCustomerDetails}
-                              data-testid="button-apply-reuse-customer"
-                            >
-                              Fill customer details
-                            </button>
-                          </div>
-                        )}
-                        {reuseNotice && (
-                          <p role="status" className="text-xs text-primary" data-testid="status-reuse-issuer">
-                            {reuseNotice}
-                          </p>
-                        )}
+                {(reusableSources.length > 0 || reusableCustomers.length > 0) && !guidedError && (
+                  <div
+                    className="mb-6 grid gap-4 rounded-2xl border border-border bg-sidebar/40 p-4"
+                    data-testid="bar-reuse-issuer"
+                  >
+                    <div>
+                      <p className="text-sm font-medium">Reuse saved details</p>
+                      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                        Fill your sender details or a repeat customer from earlier documents without retyping.
+                        References, dates, and amounts stay untouched.
+                      </p>
+                    </div>
+                    {reusableSources.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-2">
+                        <label className="sr-only" htmlFor="select-reuse-issuer">
+                          Choose a previous document for sender details
+                        </label>
+                        <select
+                          id="select-reuse-issuer"
+                          className="field min-w-[12rem] flex-1 !min-h-9 !py-1.5 text-sm"
+                          value={selectedSource?.doc.id ?? ""}
+                          onChange={(e) => setReuseDocId(e.target.value)}
+                          data-testid="select-reuse-issuer"
+                        >
+                          {reusableSources.map((entry) => (
+                            <option key={entry.doc.id} value={entry.doc.id}>
+                              {entry.doc.title}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm"
+                          onClick={applySelectedIssuerDetails}
+                          data-testid="button-apply-reuse-issuer"
+                        >
+                          Fill sender details
+                        </button>
                       </div>
                     )}
+                    {reusableCustomers.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-2" data-testid="bar-reuse-customer">
+                        <label className="sr-only" htmlFor="select-reuse-customer">
+                          Choose a repeat customer
+                        </label>
+                        <select
+                          id="select-reuse-customer"
+                          className="field min-w-[12rem] flex-1 !min-h-9 !py-1.5 text-sm"
+                          value={selectedCustomer?.key ?? ""}
+                          onChange={(e) => setReuseCustomerKey(e.target.value)}
+                          data-testid="select-reuse-customer"
+                        >
+                          {reusableCustomers.map((entry) => (
+                            <option key={entry.key} value={entry.key}>
+                              {entry.label}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm"
+                          onClick={applySelectedCustomerDetails}
+                          data-testid="button-apply-reuse-customer"
+                        >
+                          Fill customer details
+                        </button>
+                      </div>
+                    )}
+                    {reuseNotice && (
+                      <p role="status" className="text-xs text-primary" data-testid="status-reuse-issuer">
+                        {reuseNotice}
+                      </p>
+                    )}
+                  </div>
+                )}
+                {formAnswers ? (
+                  formView && formText ? (
+                    <GuidedFields spec={formView} value={formAnswers} onChange={fillAnswers} />
+                  ) : formWording.isError || (formWording.isSuccess && !formText) || !formView ? (
+                    <ErrorState
+                      error={formWording.error}
+                      onRetry={() => void formWording.refetch()}
+                      title="This document's wording could not be loaded"
+                    />
+                  ) : (
+                    <p role="status" className="text-sm text-muted-foreground">
+                      Loading this document&rsquo;s wording…
+                    </p>
+                  )
+                ) : guided ? (
+                  <>
                     <GuidedFields
                       spec={GUIDED_SPECS_V1[guided.templateId]}
                       value={guided}
                       disabled={!!guidedError}
                       onChange={(next) =>
-                        update({ title, content: compileGuidedContent(next, content) as CanonicalDocument })
+                        update({
+                          title,
+                          content: compileGuidedContent(next as GuidedData, content) as CanonicalDocument,
+                        })
                       }
                     />
                   </>
@@ -1143,52 +1206,61 @@ export default function DocumentEditor({ id }: { id: string }) {
                   </div>
                 )}
 
-                <p className="eyebrow mb-4 mt-10">Text and tables</p>
-                <ol className="grid gap-3">
-                  {manualBlocks.map((b, i) => (
-                    <BlockEditor
-                      key={b.id}
-                      block={b}
-                      index={i}
-                      count={manualBlocks.length}
-                      onChange={(nb) => setBlocks(content.blocks.map((x) => (x.id === b.id ? nb : x)))}
-                      onMove={(dir) => {
-                        const a = [...content.blocks];
-                        const from = a.findIndex((x) => x.id === b.id),
-                          j = a.findIndex((x) => x.id === manualBlocks[i + dir]?.id);
-                        if (from >= 0 && j >= 0) {
-                          [a[from], a[j]] = [a[j]!, a[from]!];
-                          setBlocks(a);
-                        }
-                      }}
-                      onDelete={() => removeBlock(b)}
-                    />
-                  ))}
-                </ol>
-                {content.blocks.length < 100 && (
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <button
-                      className="btn btn-ghost btn-sm"
-                      onClick={() => addBlock("paragraph")}
-                      data-testid="button-add-paragraph"
-                    >
-                      <Pilcrow className="h-4 w-4" aria-hidden="true" /> Add a paragraph
-                    </button>
-                    <button
-                      className="btn btn-ghost btn-sm"
-                      onClick={() => addBlock("list")}
-                      data-testid="button-add-list"
-                    >
-                      <List className="h-4 w-4" aria-hidden="true" /> Add a list
-                    </button>
-                    <button
-                      className="btn btn-ghost btn-sm"
-                      onClick={() => addBlock("table")}
-                      data-testid="button-add-table"
-                    >
-                      <Table2 className="h-4 w-4" aria-hidden="true" /> Add a table
-                    </button>
-                  </div>
+                {formAnswers ? (
+                  <p className="hint mt-10" data-testid="text-form-wording">
+                    This document&rsquo;s wording comes from its released template and is filled from the
+                    answers above. To write your own wording, start a blank document.
+                  </p>
+                ) : (
+                  <>
+                    <p className="eyebrow mb-4 mt-10">Text and tables</p>
+                    <ol className="grid gap-3">
+                      {manualBlocks.map((b, i) => (
+                        <BlockEditor
+                          key={b.id}
+                          block={b}
+                          index={i}
+                          count={manualBlocks.length}
+                          onChange={(nb) => setBlocks(content.blocks.map((x) => (x.id === b.id ? nb : x)))}
+                          onMove={(dir) => {
+                            const a = [...content.blocks];
+                            const from = a.findIndex((x) => x.id === b.id),
+                              j = a.findIndex((x) => x.id === manualBlocks[i + dir]?.id);
+                            if (from >= 0 && j >= 0) {
+                              [a[from], a[j]] = [a[j]!, a[from]!];
+                              setBlocks(a);
+                            }
+                          }}
+                          onDelete={() => removeBlock(b)}
+                        />
+                      ))}
+                    </ol>
+                    {content.blocks.length < 100 && (
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <button
+                          className="btn btn-ghost btn-sm"
+                          onClick={() => addBlock("paragraph")}
+                          data-testid="button-add-paragraph"
+                        >
+                          <Pilcrow className="h-4 w-4" aria-hidden="true" /> Add a paragraph
+                        </button>
+                        <button
+                          className="btn btn-ghost btn-sm"
+                          onClick={() => addBlock("list")}
+                          data-testid="button-add-list"
+                        >
+                          <List className="h-4 w-4" aria-hidden="true" /> Add a list
+                        </button>
+                        <button
+                          className="btn btn-ghost btn-sm"
+                          onClick={() => addBlock("table")}
+                          data-testid="button-add-table"
+                        >
+                          <Table2 className="h-4 w-4" aria-hidden="true" /> Add a table
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
 
                 <div className="mt-10">

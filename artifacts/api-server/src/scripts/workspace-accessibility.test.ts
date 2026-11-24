@@ -3,7 +3,12 @@ import assert from "node:assert/strict";
 import { setTimeout as delay } from "node:timers/promises";
 import { expect, type Page } from "@playwright/test";
 import * as api from "@workspace/api-zod";
+import { sha256 } from "@workspace/valo-core";
+import { parseFormText } from "@workspace/valo-core/form-text";
 import { GUIDED_TEMPLATE_IDS } from "@workspace/valo-core/guided";
+import { emptyFormData, formDocumentContent } from "@workspace/valo-core/guided-runtime-v2";
+import { GUIDED_SPECS_V2 } from "@workspace/valo-core/guided-specs-v2";
+import type { GuidedDataV2 } from "@workspace/valo-core/guided-v2";
 import {
   compileGuidedContent,
   emptyGuidedData,
@@ -19,6 +24,7 @@ import {
   wcagFailures,
   type Api,
 } from "../test-support/app-in-browser";
+import { proposedFormText } from "../modules/manual-library/form-text-maps";
 import { oldWordsIn } from "../test-support/old-words";
 import { answers as publicAnswers } from "../test-support/public-answers";
 
@@ -208,6 +214,8 @@ const answers: Record<string, unknown> = {
     documentCount: 1,
   }),
   [`GET /workspace/documents`]: api.ListDocumentsResponse.parse([document(3)]),
+  // No template's wording is released for its form: every document starts with its questions.
+  [`GET /workspace/form-templates`]: api.ListFormTemplatesResponse.parse({ templates: [] }),
   [`GET /workspace/documents/${DOCUMENT}`]: api.GetDocumentResponse.parse(document(3)),
   [`GET /workspace/documents/${DOCUMENT}/revisions`]: api.ListDocumentRevisionsResponse.parse([
     document(3),
@@ -1249,10 +1257,22 @@ test("a document starts in one place: the home and the documents screen each hav
     }
   }
 
-  // Each way to start saves a new document, named for what was chosen, and opens its editor.
+  // Each way to start saves a new document, named for what was chosen, and opens its editor. No
+  // template's wording is released for its form here, so none is asked for.
   const created: { title: string }[] = [];
+  const formStarts: unknown[] = [];
   const creating: Api = async (route, method, path, query) => {
-    if (method === "POST" && path === "/workspace/documents") {
+    if (method === "POST" && path === "/workspace/form-documents") {
+      formStarts.push(route.request().postDataJSON());
+      await route.fulfill({
+        status: 409,
+        contentType: "application/json",
+        body: JSON.stringify({
+          error:
+            "This template's wording is not released for its form yet. Start its questions-only form instead.",
+        }),
+      });
+    } else if (method === "POST" && path === "/workspace/documents") {
       created.push(route.request().postDataJSON() as { title: string });
       await route.fulfill({
         status: 201,
@@ -1278,6 +1298,8 @@ test("a document starts in one place: the home and the documents screen each hav
       await expect(page.locator("main h1")).toHaveText("New document");
     }
     assert.equal(created.length, GUIDED_TEMPLATE_IDS.length);
+    assert.deepEqual(formStarts, []);
+    await expect(page.getByRole("alert")).toHaveCount(0);
     await page.getByTestId("button-new-draft").click();
     await page.waitForURL(editor);
     assert.equal(created.length, GUIDED_TEMPLATE_IDS.length + 1);
@@ -1651,6 +1673,249 @@ test("a new form is not marked as wrong: each unanswered question is marked as s
     assert.ok(sent.length >= 1, "the answers were saved");
     assert.deepEqual(errors, []);
     assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
+
+/**
+ * The same document as an invoice started from its form (forms v2): the wording of a released
+ * edition of its template, filled from its answers. The edition is synthetic; its form text is the
+ * one proposed for the invoice.
+ */
+const EDITION = "00000000-0000-4000-8000-00000000b001";
+async function formInvoice(revision: number, given: Record<string, string> = {}) {
+  const spec = GUIDED_SPECS_V2["TPL-01"]!;
+  const formText = (await proposedFormText("TPL-01"))!;
+  const answers = emptyFormData(spec);
+  answers.values = { ...answers.values, issuerName: profile.businessName, ...given };
+  const { unfilled: _unfilled, ...content } = formDocumentContent(spec, parseFormText(formText), answers);
+  const started = {
+    ...document(revision),
+    title: spec.title,
+    content,
+    form: { version: 2, edition: EDITION, digest: sha256(formText) },
+  };
+  const stubs = except({
+    [`GET /workspace/documents/${DOCUMENT}`]: api.GetDocumentResponse.parse(started),
+    [`GET /workspace/documents/${DOCUMENT}/revisions`]: api.ListDocumentRevisionsResponse.parse([started]),
+    [`GET /workspace/documents/${DOCUMENT}/form`]: api.GetDocumentFormResponse.parse({
+      edition: EDITION,
+      editionVersion: 1,
+      title: "Invoice",
+      formText,
+    }),
+  });
+  return { spec, formText, answers, started, stubs };
+}
+
+// EDT-001: "Implement the 12 designated guided templates using typed field schemas, conditional
+// questions, examples and server validation." EDT-002: "Persist a structured document with
+// paragraphs, lists, tables, field values, selected clauses, formatting tokens and template version."
+test("an invoice started from its form asks its questions and fills its template's own wording as they are answered: the wording is not edited directly, what is still needed is listed by question, the preview shows the wording with its header rows, and a save sends the answers with exactly the wording they make", async () => {
+  const { spec, formText, started, stubs } = await formInvoice(3);
+  const sent: { title: string; content: { formAnswers?: GuidedDataV2; blocks: unknown[] } }[] = [];
+  const saving: Api = async (route, method, path, query) => {
+    if (method === "PATCH" && path === `/workspace/documents/${DOCUMENT}`) {
+      sent.push(route.request().postDataJSON() as (typeof sent)[number]);
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(
+          api.SaveDocumentResponse.parse({
+            ...started,
+            ...sent.at(-1),
+            revision: 3 + sent.length,
+            id: DOCUMENT,
+          }),
+        ),
+      });
+    } else await stubs(route, method, path, query);
+  };
+  const { page, errors, unknown, close } = await desktop(`/workspace/documents/${DOCUMENT}`, saving);
+  try {
+    await ready(page);
+    const questions = page.getByTestId("guided-fields");
+    await expect(questions.locator("header h2")).toHaveText(spec.title);
+    // The saved business name the document started with is its answer.
+    await expect(page.locator("#g-issuerName")).toHaveValue(profile.businessName);
+    // The wording is the released template's: no part of it is edited directly, and the page says
+    // where it comes from.
+    await expect(page.getByTestId("text-form-wording")).toBeVisible();
+    for (const id of ["button-add-paragraph", "button-add-list", "button-add-table", "input-block-0"])
+      await expect(page.getByTestId(id)).toHaveCount(0);
+    // What it still needs is listed by each question's own name, as for the questions-only form.
+    const needed = await page.getByTestId("card-missing").locator("li").allInnerTexts();
+    const table = spec.tables[0]!;
+    assert.deepEqual(
+      needed.map((line) => line.trim()),
+      [
+        ...spec.fields.filter((f) => f.required && !f.when && f.id !== "issuerName").map((f) => f.label),
+        ...table.columns
+          .filter((c) => c.required && !c.when)
+          .map((c) => `${table.label}, row 1: ${c.label.replace("whole kobo", "naira")}`),
+      ],
+    );
+    assert.deepEqual((await wcagFailures(page)).failures, []);
+
+    // An answer fills its place in the wording, which the preview shows with its header rows, and
+    // without the questions-only form's list of names and dates: they are in the wording.
+    await page.locator("#g-recipientName").fill("Synthetic Buyer Ltd");
+    await page.getByRole("tab", { name: "Preview", exact: true }).click();
+    const preview = page.getByTestId("preview-doc");
+    await expect(preview).toContainText("Bill to: Synthetic Buyer Ltd");
+    await expect(preview.locator("table").first().locator("thead th")).toHaveText([
+      "Invoice reference",
+      "Issue date",
+      "Currency",
+    ]);
+    await expect(preview.locator("dl")).toHaveCount(0);
+    assert.deepEqual(oldWordsIn(await preview.innerText()), []);
+    assert.deepEqual((await wcagFailures(page)).failures, []);
+
+    // The save sends the answers and exactly the wording they make from the edition, nothing more.
+    await expect(page.getByTestId("status-save")).toContainText("Saved", { timeout: 15_000 });
+    const last = sent.at(-1)!;
+    assert.equal(last.content.formAnswers?.values.recipientName, "Synthetic Buyer Ltd");
+    const made = formDocumentContent(
+      spec,
+      parseFormText(formText),
+      last.content.formAnswers!,
+      started.content,
+    );
+    assert.deepEqual(last.content.blocks, made.blocks);
+    assert.ok(!("unfilled" in last.content));
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
+
+test("'Make another like this' starts an invoice made from its form through its form, with every answer but its reference and its dates, and opens it", async () => {
+  const ANOTHER = "00000000-0000-4000-8000-00000000d003";
+  const { formText, answers, started, stubs } = await formInvoice(3, {
+    recipientName: "Synthetic Customer Enterprises",
+    documentNumber: "INV-0007",
+    issueDate: "2026-11-18",
+    dueDate: "2026-12-02",
+  });
+  const another = { ...started, id: ANOTHER, revision: 1 };
+  const starts: unknown[] = [];
+  const created: unknown[] = [];
+  const making: Api = async (route, method, path, query) => {
+    const json = (status: number, body: unknown) =>
+      route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) });
+    if (method === "POST" && path === "/workspace/form-documents") {
+      starts.push(route.request().postDataJSON());
+      return json(201, api.StartFormDocumentResponse.parse(another));
+    }
+    if (method === "POST" && path === "/workspace/documents") {
+      created.push(route.request().postDataJSON());
+      return json(500, {});
+    }
+    if (method === "GET" && path === `/workspace/documents/${ANOTHER}`)
+      return json(200, api.GetDocumentResponse.parse(another));
+    if (method === "GET" && path === `/workspace/documents/${ANOTHER}/revisions`)
+      return json(200, api.ListDocumentRevisionsResponse.parse([another]));
+    if (method === "GET" && path === `/workspace/documents/${ANOTHER}/form`)
+      return json(
+        200,
+        api.GetDocumentFormResponse.parse({
+          edition: EDITION,
+          editionVersion: 1,
+          title: "Invoice",
+          formText,
+        }),
+      );
+    if (method === "GET" && path === `/v1/documents/${ANOTHER}/exports`) return json(200, []);
+    return stubs(route, method, path, query);
+  };
+  const { page, errors, unknown, close } = await desktop(`/workspace/documents/${DOCUMENT}`, making);
+  try {
+    await ready(page);
+    await expect(page.getByTestId("guided-fields")).toBeVisible();
+    const button = page.getByTestId("button-make-another");
+    await expect(button).toBeEnabled();
+    await button.click();
+    await page.waitForURL(new RegExp(`/workspace/documents/${ANOTHER}$`));
+    // The new document starts from the form with the saved answers, its reference and its dates
+    // blank, and the saved title. It is not made as a document of its own.
+    assert.deepEqual(starts, [
+      {
+        templateId: "TPL-01",
+        title: started.title,
+        formAnswers: {
+          ...answers,
+          values: { ...answers.values, documentNumber: "", issueDate: "", dueDate: "" },
+        },
+      },
+    ]);
+    assert.deepEqual(created, []);
+    await expect(page.getByTestId("guided-fields")).toBeVisible();
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
+
+test("the New document page starts the invoice as its form once its template's wording is released, and opens it, and starts it with its questions should the wording be withdrawn meanwhile", async () => {
+  const { started } = await formInvoice(1);
+  const created: unknown[] = [];
+  let withdrawn = false;
+  const starting: Api = async (route, method, path, query) => {
+    if (method === "GET" && path === "/workspace/form-templates") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(
+          api.ListFormTemplatesResponse.parse({ templates: [{ templateId: "TPL-01", editionVersion: 1 }] }),
+        ),
+      });
+    } else if (method === "POST" && path === "/workspace/form-documents") {
+      assert.deepEqual(route.request().postDataJSON(), { templateId: "TPL-01" });
+      await route.fulfill(
+        withdrawn
+          ? {
+              status: 409,
+              contentType: "application/json",
+              body: JSON.stringify({
+                error:
+                  "This template's wording is not released for its form yet. Start its questions-only form instead.",
+              }),
+            }
+          : {
+              status: 201,
+              contentType: "application/json",
+              body: JSON.stringify(api.StartFormDocumentResponse.parse(started)),
+            },
+      );
+    } else if (method === "POST" && path === "/workspace/documents") {
+      created.push(route.request().postDataJSON());
+      await route.fulfill({
+        status: 201,
+        contentType: "application/json",
+        body: JSON.stringify(api.CreateDocumentResponse.parse(document(1))),
+      });
+    } else await answer(route, method, path, query);
+  };
+  const { page, errors, close } = await desktop("/workspace/documents/new", starting);
+  try {
+    await ready(page);
+    await page.getByTestId("button-start-TPL-01").click();
+    await page.waitForURL(new RegExp(`/workspace/documents/${DOCUMENT}$`));
+    // The form document is the only document started: the questions-only one is not.
+    assert.deepEqual(created, []);
+    // Withdrawn after the list was read: the server refuses the form, and the invoice starts with its
+    // questions, with no error shown.
+    withdrawn = true;
+    await page.goBack();
+    await expect(page.locator("main h1")).toHaveText("New document");
+    await page.getByTestId("button-start-TPL-01").click();
+    await page.waitForURL(new RegExp(`/workspace/documents/${DOCUMENT}$`));
+    assert.equal(created.length, 1);
+    assert.deepEqual(errors, []);
   } finally {
     await close();
   }

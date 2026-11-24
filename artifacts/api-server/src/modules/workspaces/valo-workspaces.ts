@@ -181,6 +181,26 @@ export async function resolveWorkspace(identityId: string): Promise<WorkspaceAct
     return workspaceActorFromMembership({ workspaceId: membership.workspaceId, identityId });
   });
 }
+/**
+ * The business name the workspace's current profile holds, read in the caller's transaction:
+ * trimmed, and empty before a profile is saved or when it has none.
+ */
+export async function savedBusinessName(tx: Tx, actor: WorkspaceActor): Promise<string> {
+  const { valoProfileVersions, valoWorkspaces } = await import("@workspace/db");
+  const [row] = await tx
+    .select({ profile: valoProfileVersions.profile })
+    .from(valoWorkspaces)
+    .innerJoin(
+      valoProfileVersions,
+      and(
+        eq(valoProfileVersions.workspaceId, valoWorkspaces.id),
+        eq(valoProfileVersions.revision, valoWorkspaces.profileRevision),
+      ),
+    )
+    .where(eq(valoWorkspaces.id, actor.workspaceId));
+  const name = row?.profile.businessName;
+  return typeof name === "string" ? name.trim() : "";
+}
 export async function getWorkspace(actor: WorkspaceActor) {
   const { db, valoDocuments, valoProfileVersions, valoWorkspaces } = await import("@workspace/db");
   const [workspace] = await db.select().from(valoWorkspaces).where(eq(valoWorkspaces.id, actor.workspaceId));

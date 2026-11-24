@@ -9,8 +9,10 @@ import {
   guidedDataFromBlocks,
 } from "@workspace/valo-core/guided-runtime";
 import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
+import { emptyFormData } from "@workspace/valo-core/guided-runtime-v2";
+import { GUIDED_SPECS_V2 } from "@workspace/valo-core/guided-specs-v2";
 import { blankContent } from "./api";
-import { anotherLike } from "./document-copy";
+import { anotherFormLike, anotherLike } from "./document-copy";
 
 /** A document of this kind with every question answered by a synthetic value of the right shape. */
 function answered(id: (typeof GUIDED_TEMPLATE_IDS)[number]) {
@@ -82,4 +84,38 @@ test("no copy is offered of a document whose saved questions cannot be read", ()
   const altered = structuredClone(content);
   altered.blocks = altered.blocks.filter((block) => !block.id.endsWith(":field:issuerName"));
   assert.equal(anotherLike(altered), null);
+});
+
+test("an invoice started from its form is made like another through its form: every answer is kept but its references and its dates, and nothing is invented", () => {
+  const answers = emptyFormData(GUIDED_SPECS_V2["TPL-01"]!);
+  answers.values = {
+    ...answers.values,
+    issuerName: "Synthetic Trading Ltd",
+    recipientName: "Synthetic Customer Enterprises",
+    documentNumber: "INV-0007",
+    relatedReference: "SYN-PO-12",
+    issueDate: "2026-11-18",
+    dueDate: "2026-12-02",
+    billingBasis: "Synthetic supplies",
+  };
+  answers.tables.items = [
+    { description: "Synthetic paper", quantity: "2", unit: "each", otherUnit: "", unitPriceKobo: "150000" },
+  ];
+  const content = { ...blankContent(), formAnswers: answers } as CanonicalDocument;
+  // Its content is not copied as a document of its own: the copy starts from its form.
+  assert.equal(anotherLike(content), null);
+  const copied = anotherFormLike(content)!;
+  assert.deepEqual(copied, {
+    ...answers,
+    values: { ...answers.values, documentNumber: "", relatedReference: "", issueDate: "", dueDate: "" },
+  });
+  // The copy is the new document's own: changing it leaves the saved answers as they were.
+  copied.tables.items![0]!.description = "Changed";
+  assert.equal(answers.tables.items[0]!.description, "Synthetic paper");
+  // A document not made from a v2 form, or from a form this site does not have, has no form copy.
+  assert.equal(anotherFormLike(blankContent()), null);
+  assert.equal(
+    anotherFormLike({ ...content, formAnswers: { ...answers, templateId: "TPL-99" } } as CanonicalDocument),
+    null,
+  );
 });

@@ -16,6 +16,7 @@ import {
   listDocuments,
   getDocument,
   getDocumentForm,
+  listFormTemplates,
   listRevisions,
   createDocument,
   saveDocument,
@@ -207,6 +208,9 @@ router.get("/workspace/documents/:id", async (req, res) => {
 });
 router.patch("/workspace/documents/:id", async (req, res) => {
   res.json(await saveDocument(res.locals.valoActor, z.string().uuid().parse(req.params.id), req.body));
+});
+router.get("/workspace/form-templates", async (_req, res) => {
+  res.json(await listFormTemplates(res.locals.valoActor));
 });
 router.post("/workspace/form-documents", async (req, res) => {
   res.status(201).json(await startFormDocument(res.locals.valoActor, req.body));

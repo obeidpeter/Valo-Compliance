@@ -232,7 +232,19 @@ test(
           assert.ok(
             started.content.blocks.filter((block) => block.type === "table").every((t) => t.headerRows === 1),
           );
-          assert.equal(started.content.blocks[0]!.text, "[Seller name]\n[Seller contact/address]");
+          // The workspace's saved business name is filled in as the issuing business, and nothing
+          // else; a workspace with no saved profile starts with the placeholder.
+          assert.deepEqual(
+            Object.entries(started.content.formAnswers?.values ?? {}).filter(([, value]) => value !== ""),
+            [["issuerName", "Synthetic development business"]],
+          );
+          assert.equal(
+            started.content.blocks[0]!.text,
+            "Synthetic development business\n[Seller contact/address]",
+          );
+          const unnamed = await typed(inB(() => startFormDocument(b, { templateId: "TPL-01" })));
+          assert.equal(unnamed.content.formAnswers?.values.issuerName, "");
+          assert.equal(unnamed.content.blocks[0]!.text, "[Seller name]\n[Seller contact/address]");
           // Its form text is the workspace's own to read, and no other's.
           assert.equal((await inA(() => getDocumentForm(a, started.id))).formText, formText);
           await assert.rejects(
@@ -329,6 +341,47 @@ test(
               saveDocument(a, started.id, { expectedRevision: 2, title: "Invoice", content: withoutAnswers }),
             ),
             { status: 422, message: /Save it with the form's answers/ },
+          );
+          // A document made like this one starts from the released edition with the answers it is
+          // given and a title of its own; another form's answers, or an answer the form does not
+          // take, are refused.
+          const copied: GuidedDataV2 = {
+            ...answers,
+            values: { ...answers.values, documentNumber: "", issueDate: "", dueDate: "" },
+          };
+          const another = await typed(
+            inA(() =>
+              startFormDocument(a, {
+                templateId: "TPL-01",
+                title: "Invoice for Synthetic Buyer Ltd",
+                formAnswers: copied,
+              }),
+            ),
+          );
+          assert.equal(another.title, "Invoice for Synthetic Buyer Ltd");
+          assert.deepEqual(another.form, started.form);
+          assert.deepEqual(another.content.formAnswers, copied);
+          {
+            const { unfilled: _unfilled, ...expected } = formDocumentContent(spec, text, copied);
+            assert.deepEqual(another.content.blocks, expected.blocks);
+          }
+          await assert.rejects(
+            inA(() =>
+              startFormDocument(a, {
+                templateId: "TPL-01",
+                formAnswers: { ...copied, templateId: "TPL-02" },
+              }),
+            ),
+            { status: 422, message: /belong to another form/ },
+          );
+          await assert.rejects(
+            inA(() =>
+              startFormDocument(a, {
+                templateId: "TPL-01",
+                formAnswers: { ...copied, values: { ...copied.values, unknownQuestion: "x" } },
+              }),
+            ),
+            { status: 422, message: /Some answers cannot be saved/ },
           );
           // A plain document holds no form document's parts.
           const heading = {

@@ -1,6 +1,7 @@
 import type { BusinessDocument, CanonicalDocument, Profile } from "@workspace/api-client-react";
 import type { GuidedData, GuidedTemplateId } from "@workspace/valo-core/guided";
 import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
+import { GUIDED_SPECS_V2 } from "@workspace/valo-core/guided-specs-v2";
 import {
   emptyGuidedData,
   guidedDataFromBlocks,
@@ -8,7 +9,26 @@ import {
   guidedRenderableBlocks,
 } from "@workspace/valo-core/guided-runtime";
 import { FIELD_LABELS } from "./api";
+import type { FormValue } from "./form-view";
 import { formatDay } from "./format";
+
+/** The questions of a document's form, of either version: a v2 form asks v1's questions, by reference. */
+function formFields(current: FormValue) {
+  return current.schemaVersion === 2
+    ? (GUIDED_SPECS_V2[current.templateId]?.fields ?? [])
+    : GUIDED_SPECS_V1[current.templateId].fields;
+}
+
+/** A saved document's answers, from a form of either version, or null for one typed by hand. */
+function savedAnswers(doc: Pick<BusinessDocument, "content">): Record<string, string> | null {
+  if (doc.content.formAnswers) return doc.content.formAnswers.values;
+  try {
+    return guidedDataFromBlocks(doc.content.blocks)?.values ?? null;
+  } catch {
+    // Unsupported block shapes are read as a document typed by hand: only its header is reused.
+    return null;
+  }
+}
 
 /**
  * Sender/issuer fields that a business owner may explicitly choose to copy from an earlier saved
@@ -75,16 +95,10 @@ export function prefillGuidedData(
 /** Extracts confirmed sender/issuer details from a previously saved document for opt-in reuse. */
 export function extractReusableIssuerDetails(doc: Pick<BusinessDocument, "content">): ReusableIssuerDetails {
   const details: ReusableIssuerDetails = {};
-  let guided: GuidedData | null = null;
-  try {
-    guided = guidedDataFromBlocks(doc.content.blocks);
-  } catch {
-    // Non-guided or unsupported block shapes fall back to the document header's issuerName.
-    guided = null;
-  }
-  if (guided) {
+  const answers = savedAnswers(doc);
+  if (answers) {
     for (const id of REUSABLE_ISSUER_FIELD_IDS) {
-      const value = guided.values[id]?.trim();
+      const value = answers[id]?.trim();
       if (value) details[id] = value;
     }
     return details;
@@ -98,18 +112,18 @@ export function extractReusableIssuerDetails(doc: Pick<BusinessDocument, "conten
  * Applies explicitly chosen sender/issuer details onto a guided document's answers, keeping only
  * fields defined on the target template that satisfy field validation.
  */
-export function applyIssuerDetailsToGuided(
-  current: GuidedData,
+export function applyIssuerDetailsToGuided<T extends FormValue>(
+  current: T,
   details: ReusableIssuerDetails,
-): { data: GuidedData; appliedLabels: string[] } {
-  const spec = GUIDED_SPECS_V1[current.templateId];
+): { data: T; appliedLabels: string[] } {
+  const fields = formFields(current);
   const values = { ...current.values };
   const appliedLabels: string[] = [];
 
   for (const id of REUSABLE_ISSUER_FIELD_IDS) {
     const candidate = details[id]?.trim();
     if (!candidate) continue;
-    const field = spec.fields.find((item) => item.id === id);
+    const field = fields.find((item) => item.id === id);
     if (!field || guidedFieldIssue(field, candidate)) continue;
     values[id] = candidate;
     appliedLabels.push(field.label);
@@ -123,16 +137,10 @@ export function extractReusableCustomerDetails(
   doc: Pick<BusinessDocument, "content">,
 ): ReusableCustomerDetails {
   const details: ReusableCustomerDetails = {};
-  let guided: GuidedData | null = null;
-  try {
-    guided = guidedDataFromBlocks(doc.content.blocks);
-  } catch {
-    // Non-guided documents fall back to header recipientName.
-    guided = null;
-  }
-  if (guided) {
+  const answers = savedAnswers(doc);
+  if (answers) {
     for (const id of REUSABLE_CUSTOMER_FIELD_IDS) {
-      const value = guided.values[id]?.trim();
+      const value = answers[id]?.trim();
       if (value) details[id] = value;
     }
     return details;
@@ -143,18 +151,18 @@ export function extractReusableCustomerDetails(
 }
 
 /** Applies explicitly selected customer/counterparty details onto a guided document's answers. */
-export function applyCustomerDetailsToGuided(
-  current: GuidedData,
+export function applyCustomerDetailsToGuided<T extends FormValue>(
+  current: T,
   details: ReusableCustomerDetails,
-): { data: GuidedData; appliedLabels: string[] } {
-  const spec = GUIDED_SPECS_V1[current.templateId];
+): { data: T; appliedLabels: string[] } {
+  const fields = formFields(current);
   const values = { ...current.values };
   const appliedLabels: string[] = [];
 
   for (const id of REUSABLE_CUSTOMER_FIELD_IDS) {
     const candidate = details[id]?.trim();
     if (!candidate) continue;
-    const field = spec.fields.find((item) => item.id === id);
+    const field = fields.find((item) => item.id === id);
     if (!field || guidedFieldIssue(field, candidate)) continue;
     values[id] = candidate;
     appliedLabels.push(field.label);

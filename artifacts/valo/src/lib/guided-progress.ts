@@ -1,4 +1,5 @@
-import type { GuidedData, GuidedField, GuidedSpec } from "@workspace/valo-core/guided";
+import type { GuidedField } from "@workspace/valo-core/guided";
+import type { FormValue, FormView } from "./form-view";
 import { guidedVisible } from "@workspace/valo-core/guided-runtime";
 
 export type GuidedNavItem = {
@@ -22,8 +23,8 @@ export type GuidedProgress = {
  * first visible missing or invalid required answer in a guided document.
  */
 export function computeGuidedProgress(
-  spec: GuidedSpec,
-  data: GuidedData,
+  spec: FormView,
+  data: FormValue,
   issues: Record<string, string>,
 ): GuidedProgress {
   const fieldById = new Map<string, GuidedField>(spec.fields.map((f) => [f.id, f]));

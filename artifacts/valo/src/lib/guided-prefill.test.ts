@@ -9,6 +9,9 @@ import {
   guidedDataFromBlocks,
   guidedDataIssues,
 } from "@workspace/valo-core/guided-runtime";
+import { emptyFormData } from "@workspace/valo-core/guided-runtime-v2";
+import { GUIDED_SPECS_V2 } from "@workspace/valo-core/guided-specs-v2";
+import type { CanonicalDocument } from "@workspace/api-client-react";
 import { blankContent } from "./api";
 import {
   applyCustomerDetailsToGuided,
@@ -135,4 +138,41 @@ test("extractReusableCustomerDetails, applyCustomerDetailsToGuided, and formatDo
     ]),
     ["Synthetic Customer Enterprises", "Beta Logistics Ltd"],
   );
+});
+
+test("an invoice started from its form gives its saved sender and customer details for reuse, and takes them as its own answers", () => {
+  const answers = emptyFormData(GUIDED_SPECS_V2["TPL-01"]!);
+  answers.values = {
+    ...answers.values,
+    issuerName: "Synthetic Trading Ltd",
+    issuerAddress: "14 Synthetic Way, Ikeja, Lagos",
+    paymentInstructions: "Bank transfer to Synthetic Bank, 0000000000",
+    recipientName: "Synthetic Customer Enterprises",
+    recipientAddress: "9 Sample Crescent, Yaba, Lagos",
+    documentNumber: "INV-999",
+  };
+  const source = { content: { ...blankContent(), formAnswers: answers } as CanonicalDocument };
+  const issuer = extractReusableIssuerDetails(source);
+  assert.deepEqual(issuer, {
+    issuerName: "Synthetic Trading Ltd",
+    issuerAddress: "14 Synthetic Way, Ikeja, Lagos",
+    paymentInstructions: "Bank transfer to Synthetic Bank, 0000000000",
+  });
+  const customer = extractReusableCustomerDetails(source);
+  assert.deepEqual(customer, {
+    recipientName: "Synthetic Customer Enterprises",
+    recipientAddress: "9 Sample Crescent, Yaba, Lagos",
+  });
+  // Another form document takes them as answers to its own questions, and stays a v2 form.
+  const target = emptyFormData(GUIDED_SPECS_V2["TPL-01"]!);
+  const filled = applyCustomerDetailsToGuided(applyIssuerDetailsToGuided(target, issuer).data, customer);
+  assert.equal(filled.data.schemaVersion, 2);
+  assert.equal(filled.data.values.issuerAddress, "14 Synthetic Way, Ikeja, Lagos");
+  assert.equal(filled.data.values.recipientName, "Synthetic Customer Enterprises");
+  assert.equal(filled.data.values.documentNumber, "");
+  assert.equal(filled.appliedLabels.length, 2);
+  // A questions-only document takes a form document's details just the same.
+  const v1 = applyIssuerDetailsToGuided(emptyGuidedData("TPL-01"), issuer);
+  assert.equal(v1.data.schemaVersion, 1);
+  assert.equal(v1.appliedLabels.length, 3);
 });

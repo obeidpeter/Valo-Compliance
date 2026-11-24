@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { BusinessDocument, CanonicalDocument } from "@workspace/api-client-react";
 import { compileGuidedContent, emptyGuidedData } from "@workspace/valo-core/guided-runtime";
+import { emptyFormData } from "@workspace/valo-core/guided-runtime-v2";
+import { GUIDED_SPECS_V2 } from "@workspace/valo-core/guided-specs-v2";
 import { blankContent } from "./api";
 import {
   documentContextSubtitle,
@@ -114,4 +116,18 @@ test("documentKindOptions and kind filtering group saved documents by type", () 
     filterDocuments(all, "", "all", new Set(), "Quotation").map((d) => d.id),
     ["quo"],
   );
+});
+
+test("an invoice started from its form is listed as an invoice, with its customer and its reference", () => {
+  const answers = emptyFormData(GUIDED_SPECS_V2["TPL-01"]!);
+  answers.values = { ...answers.values, recipientName: "Synthetic Buyer Ltd", documentNumber: "INV-0009" };
+  const content = {
+    ...blankContent(),
+    blocks: [{ id: "valo-guided-v2:TPL-01:block:0", type: "paragraph", text: "Synthetic", rows: [] }],
+    formAnswers: answers,
+  } as CanonicalDocument;
+  const saved = doc("d1", "Invoice", content);
+  assert.equal(documentKindLabel(saved), "Invoice");
+  assert.equal(documentContextSubtitle(saved), "Synthetic Buyer Ltd · INV-0009");
+  assert.equal(suggestedDocumentTitle("Invoice", content), "Invoice — Synthetic Buyer Ltd (INV-0009)");
 });

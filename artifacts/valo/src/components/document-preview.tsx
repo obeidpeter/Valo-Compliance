@@ -1,5 +1,6 @@
 import type { CanonicalDocument } from "@workspace/api-client-react";
 import { GUIDED_PREFIX, guidedRenderableBlocks } from "@workspace/valo-core/guided-runtime";
+import { GUIDED_V2_PREFIX } from "@workspace/valo-core/guided-v2";
 import { FIELD_LABELS } from "@/lib/api";
 import { formatDay } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -15,7 +16,11 @@ export function DocPreview({
 }) {
   const accent = content.formatting.accent === "forest" ? "hsl(var(--primary))" : "hsl(var(--foreground))";
   const f = content.fields;
-  const guidedLayout = content.blocks.some((b) => b.id.startsWith(GUIDED_PREFIX));
+  // A document made from a form, v1's questions or v2's filled wording, has the names and dates in
+  // its own text, as its file prints them.
+  const guidedLayout = content.blocks.some(
+    (b) => b.id.startsWith(GUIDED_PREFIX) || b.id.startsWith(GUIDED_V2_PREFIX),
+  );
   return (
     <article
       className={cn(
@@ -46,7 +51,19 @@ export function DocPreview({
       )}
       <div className="mt-8 grid gap-4 text-[1.05rem] leading-relaxed">
         {guidedRenderableBlocks(content).map((b, index) =>
-          b.type === "list" ? (
+          b.type === "heading" ? (
+            // The document's title is this page's second-level heading, so a form's own headings
+            // sit one level below it.
+            b.level === 3 ? (
+              <h4 key={b.id} className="mt-2 font-semibold">
+                {b.text}
+              </h4>
+            ) : (
+              <h3 key={b.id} className="mt-4 text-xl font-semibold leading-snug" style={{ color: accent }}>
+                {b.text}
+              </h3>
+            )
+          ) : b.type === "list" ? (
             <ul key={b.id} className="list-disc pl-6">
               {b.text
                 .split("\n")
@@ -64,8 +81,23 @@ export function DocPreview({
               tabIndex={0}
             >
               <table className="w-full min-w-[30rem] table-fixed border-collapse font-sans text-sm">
+                {b.headerRows && b.rows.length > 0 && (
+                  <thead>
+                    <tr>
+                      {b.rows[0]!.map((c, j) => (
+                        <th
+                          key={j}
+                          scope="col"
+                          className="border border-border bg-sidebar px-2.5 py-1.5 text-left font-semibold"
+                        >
+                          {c}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                )}
                 <tbody>
-                  {b.rows.map((r, i) => (
+                  {(b.headerRows ? b.rows.slice(1) : b.rows).map((r, i) => (
                     <tr key={i}>
                       {r.map((c, j) => (
                         <td key={j} className="border border-border px-2.5 py-1.5">

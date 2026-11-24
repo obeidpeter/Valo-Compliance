@@ -5,8 +5,9 @@ import type { db, valoDocumentRevisions, valoDocuments } from "@workspace/db";
 import { baselineTemplates, sha256 } from "@workspace/valo-core";
 import { documentInput, documentUpdate } from "../../lib/valo-validation";
 import { z } from "zod";
-import { guidedDataFromBlocks } from "@workspace/valo-core/guided-runtime";
+import { guidedDataFromBlocks, guidedFieldIssue } from "@workspace/valo-core/guided-runtime";
 import { emptyFormData, formDocumentContent } from "@workspace/valo-core/guided-runtime-v2";
+import { GUIDED_SPECS_V2 } from "@workspace/valo-core/guided-specs-v2";
 import { StartFormDocumentBody } from "@workspace/api-zod";
 import { ValoProblem } from "../../platform/valo-problem";
 import {
@@ -14,12 +15,15 @@ import {
   checkFormContent,
   documentFormText,
   freeFormEdition,
+  startingAnswers,
 } from "./valo-form-documents";
 import { singleRow } from "../../platform/rows";
 import {
+  authorizeWorkspaceRead,
   authorizeWorkspaceWrite,
   limitWorkspaceWrite,
   recordWorkspaceEvent,
+  savedBusinessName,
   type WorkspaceActor,
 } from "../workspaces";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -247,22 +251,29 @@ export async function saveDocument(actor: WorkspaceActor, id: string, raw: unkno
 }
 /**
  * Starts a document from a free template's form (forms v2): from the most recently released edition
- * of its wording, while the form fits it, with the answers empty. The document records the edition
- * and its text's SHA-256, which never change.
+ * of its wording, while the form fits it. Its answers start as given, as when it is made like another
+ * of the same form, or else empty apart from the saved business name. The document records the
+ * edition and its text's SHA-256, which never change.
  */
 export async function startFormDocument(actor: WorkspaceActor, raw: unknown) {
-  const { templateId } = StartFormDocumentBody.strict().parse(raw);
+  const { templateId, title, formAnswers } = StartFormDocumentBody.strict().parse(raw);
   const { db, valoDocuments } = await import("@workspace/db");
   const { document, revision } = await db.transaction(async (tx) => {
     await authorizeWorkspaceWrite(tx, actor);
     const form = await freeFormEdition(tx, templateId);
     await limitWorkspaceWrite(tx, actor, "document");
-    const { unfilled: _unfilled, ...content } = formDocumentContent(
-      form.spec,
-      form.text,
-      emptyFormData(form.spec),
-    );
-    const input = documentInput.parse({ title: form.spec.title, content });
+    let answers;
+    if (formAnswers) answers = startingAnswers(form.spec, formAnswers);
+    else {
+      // The saved business name is filled in as the issuing business, as the questions-only form's
+      // starter fills it in, and only when it is a valid answer. Nothing else is assumed.
+      answers = emptyFormData(form.spec);
+      const name = await savedBusinessName(tx, actor);
+      const issuer = form.spec.fields.find((field) => field.id === "issuerName");
+      if (name && issuer && !guidedFieldIssue(issuer, name)) answers.values.issuerName = name;
+    }
+    const { unfilled: _unfilled, ...content } = formDocumentContent(form.spec, form.text, answers);
+    const input = documentInput.parse({ title: title ?? form.spec.title, content });
     const id = randomUUID();
     const document = singleRow(
       await tx
@@ -281,6 +292,28 @@ export async function startFormDocument(actor: WorkspaceActor, raw: unknown) {
     return { document, revision };
   });
   return serialize(document, revision);
+}
+/**
+ * The templates whose form a workspace can start now: each free template with a v2 form and a released
+ * edition of its wording that the form fits, with that edition's version. The starter starts any
+ * other template with its questions only, so that no start is refused in the ordinary course.
+ */
+export async function listFormTemplates(actor: WorkspaceActor) {
+  const { db } = await import("@workspace/db");
+  return db.transaction(async (tx) => {
+    await authorizeWorkspaceRead(tx, actor);
+    const templates: { templateId: string; editionVersion: number }[] = [];
+    for (const templateId of Object.keys(GUIDED_SPECS_V2)) {
+      try {
+        const form = await freeFormEdition(tx, templateId);
+        templates.push({ templateId, editionVersion: form.editionVersion });
+      } catch (error) {
+        // No released edition, one the form does not fit, or a premium template: not startable.
+        if (!(error instanceof ValoProblem) || (error.status !== 404 && error.status !== 409)) throw error;
+      }
+    }
+    return { templates };
+  });
 }
 /** The form text of the edition a workspace's document was started with, for its editor to fill. */
 export async function getDocumentForm(actor: WorkspaceActor, id: string) {

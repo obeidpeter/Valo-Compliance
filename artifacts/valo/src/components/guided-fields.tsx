@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type FocusEvent, type ReactNode } from "react";
 import { ArrowDownRight, Check, Copy, Info, Plus, Trash2 } from "lucide-react";
-import type { GuidedData, GuidedField, GuidedSpec, GuidedTable } from "@workspace/valo-core/guided";
-import { guidedDataIssues, guidedFieldIssue, guidedVisible } from "@workspace/valo-core/guided-runtime";
+import type { GuidedField, GuidedTable } from "@workspace/valo-core/guided";
+import { guidedFieldIssue, guidedVisible } from "@workspace/valo-core/guided-runtime";
+import { formIssues, type FormValue, type FormView } from "@/lib/form-view";
 import { formatNaira, lagosToday } from "@/lib/format";
 import { DATE_QUICK_OFFSETS, addCalendarDays } from "@/lib/date-shortcuts";
 import { MONEY_HELP, askedAs, lineSubtotalKobo, saidAs, shownAmount, storedAmount } from "@/lib/guided-money";
@@ -31,14 +32,15 @@ export function isVisible(f: Pick<GuidedField, "when">, values: Record<string, s
 }
 
 /** Issues keyed by field id, or `table:rowIndex:columnId` for table cells. Hidden fields are skipped. */
-export function guidedIssues(spec: GuidedSpec, value: GuidedData): Record<string, string> {
-  return guidedDataIssues(spec, value);
+export function guidedIssues(spec: FormView, value: FormValue): Record<string, string> {
+  return formIssues(spec, value);
 }
 
+/** The questions of a v1 form, or of a v2 form that fills a released template's own wording. */
 type Props = {
-  spec: GuidedSpec;
-  value: GuidedData;
-  onChange: (next: GuidedData) => void;
+  spec: FormView;
+  value: FormValue;
+  onChange: (next: FormValue) => void;
   disabled?: boolean | undefined;
   onValidityChange?: (issues: Record<string, string>) => void;
 };
@@ -103,7 +105,7 @@ export function GuidedFields({ spec, value, onChange, disabled, onValidityChange
     firstInput?.focus({ preventScroll: true });
   }
 
-  const renderFields = (fs: GuidedField[]) => (
+  const renderFields = (fs: readonly GuidedField[]) => (
     <div className="grid gap-5 sm:grid-cols-2">
       {fs
         .filter((f) => isVisible(f, value.values))

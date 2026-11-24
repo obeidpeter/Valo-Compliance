@@ -135,6 +135,8 @@ export * from './formAnswersTables';
 export * from './formAnswersTablesItem';
 export * from './formAnswersValues';
 export * from './formDocumentStart';
+export * from './formTemplates';
+export * from './formTemplatesTemplatesItem';
 export * from './getCommerceReceipt200';
 export * from './getCorrectionNoticesParams';
 export * from './getCustomerSupportCaseParams';
