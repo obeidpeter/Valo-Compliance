@@ -87,7 +87,7 @@ test(
     const previousOrigin = process.env.VALO_TRUSTED_ORIGIN;
 
     /** What the server answered, for the checks below: method, path and status of each request. */
-    const answered: { method: string; path: string; status: number }[] = [];
+    const answered: { method: string; path: string; status: number; headers: Record<string, string> }[] = [];
     /** The files being made for the page, each settling to what went wrong, or to nothing. */
     const made: Promise<unknown>[] = [];
     let closing = false;
@@ -101,7 +101,7 @@ test(
           if (account) headers[identityHeader] = account;
           const search = query.toString();
           const reply = await route.fetch({ url: `${api}/api${path}${search ? `?${search}` : ""}`, headers });
-          answered.push({ method, path, status: reply.status() });
+          answered.push({ method, path, status: reply.status(), headers: reply.headers() });
           // In place of the queue's worker: a file the page asked for is made by the worker's own
           // function, after the page has its answer, so the page shows it waiting and then ready.
           if (
@@ -328,6 +328,24 @@ test(
           },
           { check: 1, started: 1, filesAsked: 2, filesFetched: 2, task: 1, report: 1 },
         );
+        // EDT-008: "browsers and shared caches do not retain private responses as public assets". Each
+        // file came from the application itself, as an attachment that no browser or cache may keep.
+        const downloads = answered.filter(
+          (each) => each.method === "GET" && /^\/v1\/exports\/[^/]+\/file$/.test(each.path),
+        );
+        for (const file of downloads) {
+          assert.equal(file.status, 200);
+          assert.match(file.headers["content-disposition"] ?? "", /^attachment; filename="[^"]+"$/);
+          assert.equal(file.headers["cache-control"], "private, no-store");
+          const vary = (file.headers.vary ?? "").split(",").map((each) => each.trim().toLowerCase());
+          assert.ok(vary.includes("cookie") && vary.includes("authorization"), file.headers.vary);
+          assert.equal(file.headers["x-content-type-options"], "nosniff");
+        }
+        // Without the account's session the same address gives no file, and the refusal is not kept.
+        const anonymous = await fetch(`${api}/api${downloads[0]!.path}`);
+        assert.equal(anonymous.status, 401);
+        assert.match(anonymous.headers.get("cache-control") ?? "", /\bno-store\b/);
+        assert.equal(anonymous.headers.get("content-disposition"), null);
         // The answers and then the correction were saved by the page itself, as it saves on its own.
         assert.ok(sent("PATCH", /^\/workspace\/documents\/[^/]+$/) >= 2);
         assert.deepEqual(errors, []);

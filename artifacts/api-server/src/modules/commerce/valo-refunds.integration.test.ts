@@ -51,6 +51,8 @@ test(
     };
     const role = randomUUID(),
       supportRole = randomUUID(),
+      contentRole = randomUUID(),
+      contentOnly = `synthetic-refund-content-${randomUUID()}`,
       priceId = randomUUID(),
       ids = [a.workspaceId, b.workspaceId];
     const held = await financeHeldFixture();
@@ -78,6 +80,14 @@ test(
       role: "support",
       grantedBy: "synthetic-fixture",
       reason: "Controlled support-only role must not authorize refunds.",
+    });
+    // ADM-001: content staff cannot change payments either.
+    await db.insert(valoStaffAssignments).values({
+      id: contentRole,
+      identityId: contentOnly,
+      role: "content",
+      grantedBy: "synthetic-fixture",
+      reason: "Controlled content-only role must not decide refunds.",
     });
     const draft = await createDocument(a, {
       ...syntheticDocument,
@@ -205,6 +215,7 @@ test(
           for (const actor of [
             { ...staff, identityId: a.identityId },
             { ...staff, identityId: b.identityId },
+            { ...staff, identityId: contentOnly },
             { ...staff, recentMfa: false },
             { ...staff, verifiedAt: Date.now() - 300001 },
             { ...staff, verifiedAt: NaN },
@@ -821,7 +832,7 @@ test(
       await db
         .update(valoStaffAssignments)
         .set({ active: false })
-        .where(inArray(valoStaffAssignments.id, [role, supportRole]));
+        .where(inArray(valoStaffAssignments.id, [role, supportRole, contentRole]));
       await db.delete(valoMemberships).where(inArray(valoMemberships.workspaceId, ids));
       await pool.end();
     }

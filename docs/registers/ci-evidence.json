@@ -727,7 +727,7 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/commerce/valo-refunds.integration.test.ts",
       "test": "refund lifecycle: actual development PostgreSQL and controlled provider, not a real refund",
-      "proves": "The finance refund queue does not contain the title of a customer's private draft, and neither the customer nor a support-only staff identity can approve a refund."
+      "proves": "The finance refund queue does not contain the title of a customer's private draft, and neither the customer nor a support-only or content-only staff identity can approve a refund."
     },
     {
       "requirement": "ADM-002",
@@ -2001,7 +2001,7 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/commerce/valo-commerce.integration.test.ts",
       "test": "controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication",
-      "proves": "Eight concurrent settlements of the same successful synthetic payment create exactly one entitlement, one receipt outbox row and one settlement event, and a settlement for a synthetic order whose line names a content version that does not exist fails and leaves the order unsettled with no receipt queued."
+      "proves": "Eight concurrent settlements of the same successful synthetic payment create exactly one entitlement, one receipt outbox row and one settlement event, and a settlement for a synthetic order whose line names a content version that does not exist fails and leaves the order unsettled with no receipt queued. With a test merchant configured and Paystack stood in for, the payment event worker stops retrying a charge it cannot check after five attempts and sends it to review, sends an unmatched reference to review at once, and two workers run at once settle a charge once."
     },
     {
       "requirement": "NFR-009",
@@ -2148,7 +2148,7 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/commerce/valo-commerce.integration.test.ts",
       "test": "controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication",
-      "proves": "A synthetic order given a pending, abandoned or failed payment result is left in that state with no entitlement, and a later successful result for the same order settles it; another workspace's refresh of the order is refused as not found, and without a configured merchant a refresh is refused as unavailable."
+      "proves": "A synthetic order given a pending, abandoned or failed payment result is left in that state with no entitlement, and a later successful result for the same order settles it; another workspace's refresh of the order is refused as not found, and without a configured merchant a refresh is refused as unavailable. A pending synthetic order whose payment succeeded while the customer was away is recovered by a status refresh that checks it with a stood-in Paystack on the server, and a checkout for it is then refused as already verified."
     },
     {
       "requirement": "PAY-007",
@@ -3059,6 +3059,111 @@
       "file": "artifacts/api-server/src/routes/valo-manual-library.integration.test.ts",
       "test": "manual publishing through staff HTTP routes and public readers",
       "proves": "A Content editor's withdrawal takes a released practical guide off the public site, whose page then answers 404, and the withdrawn version cannot be published again. The test does not show a recorded reason or the customers affected."
+    },
+    {
+      "requirement": "AI-001",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai.integration.test.ts",
+      "test": "development AI persistence, private ownership, atomic acceptance and quotas",
+      "proves": "Against PostgreSQL, a request to draft a non-disclosure agreement gets the status unsupported with no model called and none of its notes in the preview, a reply that sends the customer to a scoped published resource, an official authority or an independent adviser and offers no adviser, and a refused save; the sentence is the server's own and its wording is not reviewed."
+    },
+    {
+      "requirement": "PAY-004",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/commerce/valo-commerce.integration.test.ts",
+      "test": "controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication",
+      "proves": "With a test merchant configured and Paystack stood in for, a charge event recorded twice is kept once, and the payment event worker checks it with Paystack on the server, settles its order once with one grant, and does not ask again; a charge for a reference no order has goes to review without a check. No real Paystack call is made."
+    },
+    {
+      "requirement": "PAY-002",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-manual-library.integration.test.ts",
+      "test": "manual publishing through staff HTTP routes and public readers",
+      "proves": "Through the API, with Paystack stood in for, checkout for a released premium edition is created on the server, which sends Paystack the order's own reference and amount and the account's address and no card detail, and returns Paystack's hosted page; starting it again returns the same page without asking Paystack again, and nothing is granted until the server's own check. No real Paystack call is made."
+    },
+    {
+      "requirement": "PAY-006",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-manual-library.integration.test.ts",
+      "test": "manual publishing through staff HTTP routes and public readers",
+      "proves": "Through the API, with Paystack stood in for, a status refresh of a pending premium order checks the payment on the server and grants the edition once it is verified, and a further checkout is refused with \"This purchase is already verified. Do not pay again.\""
+    },
+    {
+      "requirement": "RUL-009",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/editorial/owner-rule-signoff.integration.test.ts",
+      "test": "the development owner watches a prepared rule's sources, signs the exact version shown, supersedes it and withdraws it",
+      "proves": "A synthetic task made from a saved result under version 1 of an owner-signed rule is flagged for review once version 2 supersedes it, keeps its due date, state and notes and is not deleted, has its two held reminders cancelled with the reason that its source is no longer eligible, and records one review event, which listing again does not repeat."
+    },
+    {
+      "requirement": "EDT-008",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/scripts/tester-tasks.integration.test.ts",
+      "test": "a business owner's first tasks work in a browser against the real API and database",
+      "proves": "Each of the two files the page downloads from the real API comes as an attachment with Cache-Control private, no-store, a Vary on Cookie and Authorization and nosniff, and the same address asked without a session gets 401 with no-store and no file; no shared cache or other browser is tested."
+    },
+    {
+      "requirement": "ADM-001",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/sources/valo-source-controls.integration.test.ts",
+      "test": "real PostgreSQL source correction, staff boundaries, abandoned jobs and final-dispatch ordering",
+      "proves": "A content staff identity with a fresh second factor is refused pausing and resuming checkout with 403, nothing is written to the safety audit for either attempt, and checkout keeps running."
+    },
+    {
+      "requirement": "ADM-001",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-disputes-http.integration.test.ts",
+      "test": "actual dispute HTTP routers enforce managed finance authority, tenant binding and same-origin writes",
+      "proves": "Over HTTP, a content staff identity with a fresh second factor is refused the payment concerns list and each finance write (a concern action, a dispute link, a hold and an execution) with 403, while the finance identity is still allowed."
+    },
+    {
+      "requirement": "EDT-004",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "when the document was saved somewhere else, the editor says so with the version now saved, stops saving, keeps what was typed, and saves it as the newest version only when asked",
+      "proves": "In Chromium against a stand-in server that refuses a save made from an older version with 409, the editor shows \"Changed somewhere else — now at version 5\", saves nothing more on its own, keeps the typed text, and on the customer's request saves it with expected revision 5 as version 6; no second tab or real server is used."
+    },
+    {
+      "requirement": "EDT-004",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "when the document was saved somewhere else, the customer can load the newest version instead: the editor asks first, keeping changes nothing, and going ahead shows the newest version without saving anything",
+      "proves": "In Chromium, after a refused save the customer can load the newest saved version: the editor asks first, keeping leaves the typed text, and going ahead shows version 5 with no further save sent."
+    },
+    {
+      "requirement": "EDT-004",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "offline, the editor says so; a save that cannot go out says it is not saved and keeps what was typed; and when the connection returns the editor saves what was typed on its own",
+      "proves": "In Chromium with the browser set offline, the editor shows its offline notice, a save that cannot go out shows \"Not saved\" and keeps the typed text, and when the connection returns it saves exactly that text from version 3 without a click."
+    },
+    {
+      "requirement": "NFR-009",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "offline, the editor says so; a save that cannot go out says it is not saved and keeps what was typed; and when the connection returns the editor saves what was typed on its own",
+      "proves": "In Chromium, text typed while the browser is offline is kept on the screen through a failed save and is saved, unchanged, once the connection returns; only the browser's own offline setting is used, not a real network loss."
+    },
+    {
+      "requirement": "EDT-004",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "a save the server could not take says what happened, keeps what was typed, and Retry sends exactly what is on the screen",
+      "proves": "In Chromium, after a stand-in server answers a save with 503, the editor shows the server's sentence with \"What you typed is still here.\" and a Retry button, and Retry sends exactly the typed title from version 3, which is saved as version 4."
+    },
+    {
+      "requirement": "EDT-003",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "undo and redo step back and forward through the editor's changes, with the buttons and with the keyboard outside a text box, and each step is saved as shown",
+      "proves": "In Chromium, Undo and Redo, by their buttons and by Ctrl+Z and Ctrl+Shift+Z with focus outside a text box, step the title back and forward through two changes to the saved original, and the autosave then saves the title the screen shows."
+    },
+    {
+      "requirement": "AI-001",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "a drafting request the assistant does not take says so, shows where to go instead, offers no adviser and no save, and leads to a new request",
+      "proves": "In Chromium, a draft preview whose status is unsupported shows \"This request cannot be drafted by Valo. Nothing was generated.\" and the server's sentence naming a scoped published resource, an official authority or an independent adviser, offers no save and no adviser, and links to a new request."
     }
   ]
 }

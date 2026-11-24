@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { test } from "node:test";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import {
   db,
+  valoEvents,
   valoRuleOwnerSignoffs,
   valoRuleReleases,
   valoStaffAssignments,
@@ -19,7 +20,9 @@ import {
 } from "@workspace/valo-core";
 import { ValoProblem } from "../../platform/valo-problem";
 import { guidancePolicy } from "../publication";
-import { currentAssessmentDate, releasedRegistry } from "../rules/valo-assessments";
+import { createAssessment, currentAssessmentDate, releasedRegistry } from "../rules/valo-assessments";
+import { createTask, listReminders, listTasks, saveReminderPreferences } from "../tasks/valo-tasks";
+import { resolveWorkspace } from "../workspaces";
 import {
   decideOwnerRule,
   listOwnerRules,
@@ -346,6 +349,48 @@ test(
       // The same version cannot be signed twice.
       await assert.rejects(decideOwnerRule(actor(owner), ruleId, sign(first), options), refused(409));
 
+      // RUL-009: "a rule change flags existing tasks for review rather than silently deleting or
+      // backdating them". A synthetic customer saves a result under version 1 and makes a dated task
+      // from it, with reminders on.
+      const customer = await resolveWorkspace("synthetic-rule-task-" + id);
+      await saveReminderPreferences(customer, { enabled: true, offsets: [1, 7], expectedRevision: 0 });
+      const saved = await createAssessment(customer, {
+        facts,
+        asOfDate: currentAssessmentDate(new Date()),
+        saveConsent: true,
+      });
+      assert.equal(saved.result.items.find((i) => i.ruleId === ruleId)?.ruleVersion, 1);
+      const due = new Date(Date.now() + 40 * 86_400_000).toISOString().slice(0, 10);
+      const made = await createTask(customer, {
+        title: "Synthetic task from a signed rule",
+        notes: "Synthetic notes",
+        dueDate: due,
+        dateConfirmed: true,
+        assessmentId: saved.id,
+        ruleId,
+      });
+      assert.equal(made.needsReview, false);
+      const remindersOf = async () =>
+        (await listReminders(customer)).filter((r) => r.taskId === made.id).map((r) => [r.status, r.reason]);
+      assert.deepEqual(await remindersOf(), [
+        ["held", "EMAIL_PROVIDER_NOT_CONFIGURED"],
+        ["held", "EMAIL_PROVIDER_NOT_CONFIGURED"],
+      ]);
+      const reviewEvents = async () =>
+        (
+          await db
+            .select()
+            .from(valoEvents)
+            .where(
+              and(
+                eq(valoEvents.workspaceId, customer.workspaceId),
+                eq(valoEvents.entityId, made.id),
+                eq(valoEvents.action, "task.source_review_required"),
+              ),
+            )
+        ).length;
+      assert.equal(await reviewEvents(), 0);
+
       // A second version supersedes the first, so the checker never holds two.
       [item] = await list();
       assert.equal(item!.version, 2);
@@ -362,6 +407,25 @@ test(
         label: "Likely relevant",
         notice: ownerRuleDisclosure,
       });
+      // The task made under version 1 is flagged for review. It keeps its date, state and notes and is
+      // not deleted; its reminders are called off with the reason, and the change is recorded once.
+      const flagged = (await listTasks(customer)).find((t) => t.id === made.id);
+      assert.deepEqual(
+        {
+          needsReview: flagged?.needsReview,
+          dueDate: flagged?.dueDate,
+          state: flagged?.state,
+          notes: flagged?.notes,
+        },
+        { needsReview: true, dueDate: due, state: "not_started", notes: "Synthetic notes" },
+      );
+      assert.deepEqual(await remindersOf(), [
+        ["cancelled", "SOURCE_NO_LONGER_ELIGIBLE"],
+        ["cancelled", "SOURCE_NO_LONGER_ELIGIBLE"],
+      ]);
+      assert.equal(await reviewEvents(), 1);
+      await listTasks(customer);
+      assert.equal(await reviewEvents(), 1);
 
       // Withdrawal takes the released version out of the checker at once; a superseded version and a
       // changed manifest are refused, and asking again changes nothing.
