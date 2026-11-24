@@ -78,6 +78,70 @@ export const FORM_TEXT_MAPS: Readonly<Partial<Record<GuidedTemplateId, readonly 
       to: "This invoice is prepared from information supplied by the issuer. It is not a receipt or independently verified evidence that payment has been received. No government tax-invoice status is claimed by this template.",
     },
   ],
+  "TPL-02": [
+    {
+      from: "**[Offering business name]**  \n[Contact/address]",
+      to: "[Offering business name]{=issuerName}\n[Contact/address]{=issuerAddress}",
+    },
+    {
+      from: "**Prepared for:** [Customer name]  \n[Customer contact/address, if supplied]",
+      to: "Prepared for: [Customer name]{=recipientName}\n{?recipientAddress}[Customer contact/address, if supplied]{=recipientAddress}{/?}",
+      why: "The customer's address is optional: it prints once it is given.",
+    },
+    {
+      from: "Quotation reference: [ ]  \nIssue date: [ ]  \nCurrency: [ ]  \nValid until: [Issuer-chosen date, if supplied]",
+      to: "Quotation reference: [ ]{=documentNumber}\nIssue date: [ ]{=issueDate}\nCurrency: [ ]{=calc.currency}\n{?validUntil}Valid until: [Issuer-chosen date, if supplied]{=validUntil}{/?}",
+      why: "The date the quotation is valid until is optional: its line prints once it is given.",
+    },
+    {
+      from: "[Description of the goods, work or project requested]",
+      to: "[Description of the goods, work or project requested]{=scope}",
+    },
+    {
+      from: "| [Included item] | [ ] | [ ] | [ ] | [Calculated] |\n| [Included item] | [ ] | [ ] | [ ] | [Calculated] |",
+      to: "| {*items} [Included item]{=items.description} | [ ]{=items.quantity} | [ ]{=calc.unit} | [ ]{=items.unitPriceKobo} | [Calculated]{=calc.lineAmount} |",
+      why: "One row prints for each item the form lists, so the draft's second sample row goes.",
+    },
+    { from: "| Subtotal | [Calculated] |", to: "| Subtotal | [Calculated]{=calc.subtotal} |" },
+    {
+      from: "| [Agreed/proposed discount, if any] | [Deduction] |",
+      to: "| {?discountMode=supplied}Agreed discount | [Deduction]{=calc.discount}{/?} |\n| {?discountMode=}[Agreed/proposed discount, if any] | [Deduction]{/?} |",
+      why: 'The discount row prints only when a discount is supplied, labelled "Agreed discount" from the draft\'s own words, since the form asks for no description; it prints as the draft has it while the question is unanswered.',
+    },
+    {
+      from: "| [Additional included charge, if any] | [ ] |\n",
+      to: "",
+      why: "The form asks for each charge as an item line of its own, as its items table says, so this row goes.",
+    },
+    {
+      from: "| [Validated user-supplied tax line, if any] | [ ] |",
+      to: "| {?taxMode=supplied}[Validated user-supplied tax line, if any]{=taxLabel} | [ ]{=taxAmountKobo}{/?} |\n| {?taxMode=}[Validated user-supplied tax line, if any] | [ ]{/?} |",
+      why: "The tax row prints only when a tax amount and label are supplied; it prints as the draft has it while the question is unanswered.",
+    },
+    {
+      from: "| **Quoted total** | **[Calculated]** |",
+      to: "| Quoted total | [Calculated]{=calc.total} |\n\n{?taxMode=supplied}[ ]{=taxBasis}{/?}",
+      why: "The basis of a supplied tax amount prints below the price summary, as a paragraph of its own.",
+    },
+    {
+      from: "## Optional extras \u2014 excluded from the quoted total\n\n| Optional item | Quantity and unit | Separate price |\n|---|---|---:|\n| [Optional extra, if supplied] | [ ] | [ ] |\n\n",
+      to: "",
+      why: 'The form asks for exclusions and optional extras in one answer, printed under "Not included", and asks no price for an extra, so this table goes.',
+    },
+    {
+      from: "- Included work or specification: [ ]\n- Not included: [Only supplied exclusions]\n- Proposed delivery or completion: [ ]\n- Information, material or approval needed from the customer: [ ]\n- Other stated assumptions or dependencies: [ ]\n- Proposed payment arrangement, if supplied: [ ]",
+      to: "- {?exclusions}Not included: [Only supplied exclusions]{=exclusions}{/?}\n\n- Proposed delivery or completion: [ ]{=acceptance}\n\n- {?customerInputs}Information, material or approval needed from the customer: [ ]{=customerInputs}{/?}\n\n- {?assumptions}Other stated assumptions or dependencies: [ ]{=assumptions}{/?}\n\n- {?paymentArrangement}Proposed payment arrangement, if supplied: [ ]{=paymentArrangement}{/?}",
+      why: 'The form asks for the request and what it includes in one answer, printed under "Your request", with the included items in the table, so the first line goes. Each other line prints once it is answered, the delivery arrangement always, since the form requires it; each is a list of its own, so that no list can grow past what a document block holds.',
+    },
+    {
+      from: "Please contact [Genuine contact] quoting [Quotation reference] to confirm",
+      to: "Please contact [Genuine contact]{=issuerName} quoting [Quotation reference]{=documentNumber} to confirm",
+    },
+    {
+      from: "*This quotation describes the issuer's proposed offer. It does not record payment, delivery or customer acceptance. Any later acceptance or agreement should be recorded accurately and linked to the version concerned.*",
+      to: "This quotation describes the issuer's proposed offer. It does not record payment, delivery or customer acceptance. Any later acceptance or agreement should be recorded accurately and linked to the version concerned.",
+    },
+  ],
 };
 
 /** Applies a map's changes to a draft, each to text that occurs exactly once. */

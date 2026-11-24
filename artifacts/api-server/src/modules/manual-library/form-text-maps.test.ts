@@ -5,6 +5,7 @@ import type { GuidedTemplateId } from "@workspace/valo-core/guided";
 import {
   compileForm,
   emptyFormData,
+  formAnswerIssues,
   formDocumentContent,
   formFit,
 } from "@workspace/valo-core/guided-runtime-v2";
@@ -47,7 +48,7 @@ function choiceCombinations(spec: GuidedSpecV2) {
 }
 
 test("every map turns its retained draft into form text that the v2 form fits exactly", async () => {
-  assert.deepEqual(mapped, ["TPL-01"]);
+  assert.deepEqual(mapped, ["TPL-01", "TPL-02"]);
   for (const templateId of mapped) {
     const spec = GUIDED_SPECS_V2[templateId];
     assert.ok(spec, templateId);
@@ -190,6 +191,71 @@ test("an invoice's answers fill its own wording: items, discount and tax rows, t
   assert.ok(over.unfilled.includes("calc.total"));
 });
 
+test("a quotation's answers fill its own wording: items, discount and tax rows, the tax basis, the quoted total and the arrangements given", async () => {
+  const spec = GUIDED_SPECS_V2["TPL-02"]!;
+  const text = parseFormText((await proposedFormText("TPL-02"))!);
+  const data = emptyFormData(spec);
+  data.values = {
+    ...data.values,
+    issuerName: "Synthetic Builders Ltd",
+    issuerAddress: "2 Synthetic Close\nYaba",
+    recipientName: "Synthetic Client Ltd",
+    documentNumber: "SYN-QUO-001",
+    issueDate: "2026-11-02",
+    validUntil: "2026-11-30",
+    scope: "Synthetic shop fit-out",
+    taxMode: "supplied",
+    taxLabel: "Synthetic levy",
+    taxAmountKobo: "1000",
+    taxBasis: "Synthetic basis",
+    discountMode: "supplied",
+    discountKobo: "50000",
+    acceptance: "Synthetic two-week delivery",
+    paymentArrangement: "Synthetic deposit then balance",
+  };
+  data.tables.items = [
+    {
+      description: "Synthetic shelving",
+      quantity: "2",
+      unit: "each",
+      otherUnit: "",
+      unitPriceKobo: "150000",
+    },
+  ];
+  const out = compileForm(spec, text, data);
+  const shown = out.blocks.map((b) =>
+    b.type === "table" ? b.rows.map((r) => r.join(" | ")).join("\n") : b.text,
+  );
+  assert.equal(out.title, "QUOTATION");
+  assert.deepEqual(shown, [
+    "Synthetic Builders Ltd\n2 Synthetic Close\nYaba",
+    "Prepared for: Synthetic Client Ltd",
+    "Quotation reference: SYN-QUO-001\nIssue date: 2 Nov 2026\nCurrency: NGN\nValid until: 30 Nov 2026",
+    "Your request",
+    "Synthetic shop fit-out",
+    "Included in this quotation",
+    "Description | Quantity | Unit | Unit price | Line amount\nSynthetic shelving | 2 | Each | ₦1,500.00 | ₦3,000.00",
+    "Price summary | Amount\nSubtotal | ₦3,000.00\nAgreed discount | −₦500.00\nSynthetic levy | ₦10.00\nQuoted total | ₦2,510.00",
+    "Synthetic basis",
+    "Scope and arrangements",
+    "Proposed delivery or completion: Synthetic two-week delivery",
+    "Proposed payment arrangement, if supplied: Synthetic deposit then balance",
+    "Next step",
+    "Please contact Synthetic Builders Ltd quoting SYN-QUO-001 to confirm your requirements or discuss changes. The price and scope above should be checked again if the requested work changes.",
+    "This quotation describes the issuer's proposed offer. It does not record payment, delivery or customer acceptance. Any later acceptance or agreement should be recorded accurately and linked to the version concerned.",
+  ]);
+  assert.deepEqual(out.unfilled, []);
+  assert.deepEqual(out.selectedClauses, ["taxMode=supplied", "discountMode=supplied"]);
+  // v1's date order holds: a quotation valid only until before its issue date is a draft answer,
+  // which fills no slot, so its optional line is left out until it is corrected.
+  const earlier = { ...data, values: { ...data.values, validUntil: "2026-11-01" } };
+  assert.match(formAnswerIssues(spec, earlier).drafts.validUntil!, /precedes the issue date/);
+  assert.ok(!compileForm(spec, text, earlier).blocks.some((b) => b.text.includes("Valid until")));
+  // The new questions are optional: without them, their lines are left out.
+  const plain = compileForm(spec, text, { ...data, values: { ...data.values, paymentArrangement: "" } });
+  assert.ok(!plain.blocks.some((b) => b.text.startsWith("Proposed payment arrangement")));
+});
+
 test("an invoice form document is saved as its answers make it, hashed as V2, and its file prints the template's wording with only its note among its fields", async () => {
   const spec = GUIDED_SPECS_V2["TPL-01"]!;
   const text = parseFormText((await proposedFormText("TPL-01"))!);
@@ -219,6 +285,12 @@ test("an invoice form document is saved as its answers make it, hashed as V2, an
   assert.deepEqual(content.formAnswers, data);
   assert.deepEqual(content.selectedClauses, ["taxMode=none", "discountMode=none"]);
   assert.ok(unfilled.includes("items.description"));
+  // Its wording leaves that payment date out too: a date before the date it must follow is a draft
+  // answer, which fills no slot, so the slot keeps its placeholder.
+  assert.ok(unfilled.includes("dueDate"));
+  assert.ok(
+    content.blocks.some((b) => b.text === "Payment date: [Confirmed date and accurate label, if supplied]"),
+  );
   const tables = content.blocks.filter((b) => b.type === "table");
   assert.ok(tables.length === 3 && tables.every((t) => t.headerRows === 1));
   // The contract and its checks take it, and it is hashed as V2, so no V1 hash changes.

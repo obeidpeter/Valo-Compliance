@@ -242,23 +242,7 @@ export function formAnswerIssues(spec: GuidedSpecV2, data: GuidedDataV2) {
     }
   }
   // v1's date order: a later date before an earlier one stays a draft answer of the later date.
-  for (const check of spec.dateOrder ?? []) {
-    const before = fields.get(check.before),
-      after = fields.get(check.after),
-      first = (data.values[check.before] ?? "").trim(),
-      second = (data.values[check.after] ?? "").trim();
-    if (
-      before &&
-      after &&
-      !drafts[check.after] &&
-      guidedVisible(before, data.values) &&
-      guidedVisible(after, data.values) &&
-      guidedCalendarDate(first) &&
-      guidedCalendarDate(second) &&
-      second < first
-    )
-      drafts[check.after] = check.message;
-  }
+  for (const [id, message] of datesOutOfOrder(spec, data)) if (!drafts[id]) drafts[id] = message;
   const tables = new Map(spec.tables.map((t) => [t.id, t]));
   for (const [id, rows] of Object.entries(data.tables)) {
     const table = tables.get(id);
@@ -292,6 +276,33 @@ export function formAnswerIssues(spec: GuidedSpecV2, data: GuidedDataV2) {
   return { refused, drafts };
 }
 
+/**
+ * v1's date order: each later date given before the earlier date it must follow, with the order's
+ * message. Such a date is a draft answer of the later date, so it fills no slot.
+ */
+function datesOutOfOrder(spec: GuidedSpecV2, data: GuidedDataV2) {
+  const fields = new Map(spec.fields.map((f) => [f.id, f]));
+  const late = new Map<string, string>();
+  for (const check of spec.dateOrder ?? []) {
+    const before = fields.get(check.before),
+      after = fields.get(check.after),
+      first = (data.values[check.before] ?? "").trim(),
+      second = (data.values[check.after] ?? "").trim();
+    if (
+      before &&
+      after &&
+      !late.has(check.after) &&
+      guidedVisible(before, data.values) &&
+      guidedVisible(after, data.values) &&
+      guidedCalendarDate(first) &&
+      guidedCalendarDate(second) &&
+      second < first
+    )
+      late.set(check.after, check.message);
+  }
+  return late;
+}
+
 /** An answer as the document prints it, or null while it is empty, hidden or not valid yet. */
 function printed(field: GuidedFieldV2, value: string | undefined, context: Record<string, string>) {
   const answer = (value ?? "").trim();
@@ -322,10 +333,13 @@ export function compileForm(spec: GuidedSpecV2, text: FormText, data: GuidedData
   const note = (name: string) => {
     if (!spec.blanks.includes(name) && !unfilled.includes(name)) unfilled.push(name);
   };
+  // A date before the date it must follow is a draft answer: it fills no slot and keeps no passage.
+  const late = datesOutOfOrder(spec, data);
+  const answerOf = (field: GuidedFieldV2) =>
+    late.has(field.id) ? null : printed(field, data.values[field.id], data.values);
   const choice = (span: FormSpan) => {
     const field = spec.fields.find((f) => f.id === span.question);
-    if (span.option === null)
-      return field ? printed(field, data.values[field.id], data.values) !== null : false;
+    if (span.option === null) return field ? answerOf(field) !== null : false;
     const answer = field && guidedVisible(field, data.values) ? (data.values[field.id] ?? "").trim() : "";
     return span.option === "" ? answer === "" : answer === span.option;
   };
@@ -355,9 +369,7 @@ export function compileForm(spec: GuidedSpecV2, text: FormText, data: GuidedData
           const column = row?.table.columns.find((c) => `${row.table.id}.${c.id}` === part.name);
           value = column ? printed(column, row!.values[column.id], { ...data.values, ...row!.values }) : null;
         } else {
-          const answers = (filling.get(part.name) ?? [])
-            .map((field) => printed(field, data.values[field.id], data.values))
-            .filter((a): a is string => a !== null);
+          const answers = (filling.get(part.name) ?? []).map(answerOf).filter((a): a is string => a !== null);
           value = answers.length ? (alone ? answers.join("\n") : answers.join(", ")) : null;
         }
         if (value === null) {

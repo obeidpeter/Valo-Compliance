@@ -190,11 +190,64 @@ const invoice = fromV1("TPL-01", {
   ],
 });
 
+/** An optional question for one line of a template's wording that v1 does not ask for. */
+const lineQuestion = (id: string, label: string, line: string) => ({
+  added: { id, label, type: "long_text" as const, required: false, tokens: [id] },
+  why: `The template prints "${line}" and v1 asks nothing for it.`,
+});
+
+const quotation = fromV1("TPL-02", {
+  questions: [
+    { v1: "issuerName", join: { tokens: ["issuerName"] } },
+    { v1: "issuerAddress", join: { tokens: ["issuerAddress"] } },
+    { v1: "recipientName", join: { tokens: ["recipientName"] } },
+    { v1: "recipientAddress", join: { tokens: ["recipientAddress"] } },
+    { v1: "documentNumber", join: { tokens: ["documentNumber"] } },
+    { v1: "issueDate", join: { tokens: ["issueDate"] } },
+    { v1: "validUntil", join: { tokens: ["validUntil"] } },
+    { v1: "scope", join: { tokens: ["scope"] } },
+    { v1: "exclusions", join: { tokens: ["exclusions"] } },
+    { v1: "taxMode", join: { clause: true } },
+    { v1: "taxAmountKobo", join: { tokens: ["taxAmountKobo"] } },
+    { v1: "taxLabel", join: { tokens: ["taxLabel"] } },
+    { v1: "taxBasis", join: { tokens: ["taxBasis"] } },
+    { v1: "discountMode", join: { clause: true } },
+    { v1: "discountKobo" },
+    { v1: "acceptance", join: { tokens: ["acceptance"] } },
+    lineQuestion(
+      "customerInputs",
+      "Information, material or approval needed from the customer, if any",
+      "Information, material or approval needed from the customer: [ ]",
+    ),
+    lineQuestion(
+      "assumptions",
+      "Other stated assumptions or dependencies, if any",
+      "Other stated assumptions or dependencies: [ ]",
+    ),
+    lineQuestion(
+      "paymentArrangement",
+      "Proposed payment arrangement, if any",
+      "Proposed payment arrangement, if supplied: [ ]",
+    ),
+  ],
+  dropped: {
+    notes:
+      "The quotation's wording has no place for further notes. A note the business wants on it goes in the document's own note, which prints with it.",
+  },
+  calculated: pricedCalculations("TPL-02"),
+  keepsNothing: [
+    { question: "taxMode", option: "none" },
+    { question: "discountMode", option: "none" },
+  ],
+});
+
 /** The v2 forms, by template. A template without one stays on its v1 form. */
 export const GUIDED_SPECS_V2: Readonly<Partial<Record<GuidedTemplateId, GuidedSpecV2>>> = {
   "TPL-01": invoice.spec,
+  "TPL-02": quotation.spec,
 };
 /** What each v2 form adds to and leaves out of its v1 questions, with the reasons. */
 export const GUIDED_CHANGES_V2: Readonly<Partial<Record<GuidedTemplateId, GuidedChangesV2>>> = {
   "TPL-01": invoice.changes,
+  "TPL-02": quotation.changes,
 };
