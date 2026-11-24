@@ -51,11 +51,13 @@ function sourceCheck(item: RetainedDraft) {
 export function RetainedDrafts() {
   const client = useQueryClient();
   const status = useListRetainedDrafts({ query: { retry: false } });
+  const formTextWaiting =
+    status.data?.items.filter((item) => item.formText === "proposed" && item.itemId !== null).length ?? 0;
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  async function fileAll() {
+  async function fileAll(load: "missing" | "form_text" = "missing") {
     setBusy(true);
     setError("");
     setMessage("");
@@ -63,7 +65,7 @@ export function RetainedDrafts() {
     try {
       // Each request files a few; ask again until none is left, or none more could be filed.
       for (let round = 0; round < 20; round++) {
-        const result = await loadRetainedDrafts({ load: "missing" });
+        const result = await loadRetainedDrafts({ load });
         filed += result.loaded.length;
         client.setQueryData(getListRetainedDraftsQueryKey(), result.status);
         setMessage(`Filed ${formatCount(filed)} so far…`);
@@ -71,7 +73,9 @@ export function RetainedDrafts() {
       }
       await client.invalidateQueries({ queryKey: ["listManualLibrary"] });
       setMessage(
-        `Filed ${formatCount(filed)} ${filed === 1 ? "draft" : "drafts"}. Each is private until it is published.`,
+        load === "form_text"
+          ? `Filed the form text of ${formatCount(filed)} ${filed === 1 ? "template" : "templates"} as a new draft version. Each is private until it is published.`
+          : `Filed ${formatCount(filed)} ${filed === 1 ? "draft" : "drafts"}. Each is private until it is published.`,
       );
     } catch (e) {
       setError(describeError(e).message);
@@ -119,6 +123,25 @@ export function RetainedDrafts() {
           ) : (
             <p className="mt-3 text-sm text-muted-foreground">Every draft is filed.</p>
           )}
+          {formTextWaiting > 0 && (
+            <div className="mt-3 grid gap-1">
+              <p className="text-sm">
+                {formatCount(formTextWaiting)}{" "}
+                {formTextWaiting === 1 ? "filed template has" : "filed templates have"} form text proposed for
+                {formTextWaiting === 1 ? " its" : " their"} fill-in form and not filed yet. Filing saves it
+                with a new draft version, keeping the text and file of the latest one.
+              </p>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm justify-self-start"
+                disabled={busy}
+                onClick={() => void fileAll("form_text")}
+                data-testid="button-file-form-text"
+              >
+                {busy ? "Filing…" : "File the proposed form text"}
+              </button>
+            </div>
+          )}
           <p className="mt-2 text-sm" role="status" aria-live="polite">
             {message}
           </p>
@@ -156,6 +179,13 @@ export function RetainedDrafts() {
                         </span>
                         {sourceCheck(item) && (
                           <span className="text-muted-foreground">{sourceCheck(item)}</span>
+                        )}
+                        {item.formText && (
+                          <span className="text-muted-foreground">
+                            {item.formText === "filed"
+                              ? "Form text for its fill-in form: filed with the latest version"
+                              : "Form text for its fill-in form: proposed, not filed yet"}
+                          </span>
                         )}
                       </li>
                     ))}

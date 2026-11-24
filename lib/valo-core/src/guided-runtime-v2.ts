@@ -1,5 +1,10 @@
 import { formatKobo } from "./money";
-import { guidedFieldIssue, guidedVisible, printedCalendarDate } from "./guided-runtime-v1";
+import {
+  guidedCalendarDate,
+  guidedFieldIssue,
+  guidedVisible,
+  printedCalendarDate,
+} from "./guided-runtime-v1";
 import {
   formTextSlots,
   formTextSpans,
@@ -234,6 +239,24 @@ export function formAnswerIssues(spec: GuidedSpecV2, data: GuidedDataV2) {
       const issue = guidedFieldIssue(field, value);
       if (issue) drafts[field.id] = issue;
     }
+  }
+  // v1's date order: a later date before an earlier one stays a draft answer of the later date.
+  for (const check of spec.dateOrder ?? []) {
+    const before = fields.get(check.before),
+      after = fields.get(check.after),
+      first = (data.values[check.before] ?? "").trim(),
+      second = (data.values[check.after] ?? "").trim();
+    if (
+      before &&
+      after &&
+      !drafts[check.after] &&
+      guidedVisible(before, data.values) &&
+      guidedVisible(after, data.values) &&
+      guidedCalendarDate(first) &&
+      guidedCalendarDate(second) &&
+      second < first
+    )
+      drafts[check.after] = check.message;
   }
   const tables = new Map(spec.tables.map((t) => [t.id, t]));
   for (const [id, rows] of Object.entries(data.tables)) {

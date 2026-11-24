@@ -89,6 +89,12 @@ export const valoManualLibrary = pgTable(
     closedBy: text("closed_by"),
     closedAt: timestamp("closed_at", { withTimezone: true }),
     regulatoryCheckId: uuid("regulatory_check_id"),
+    /**
+     * A template's wording with its placeholders named, for the fill-in forms (forms v2,
+     * docs/architecture/forms-v2.md). Released with the rest of the revision and unchanged afterwards.
+     * Only staff routes read it; customers reach it only through the forms (DOC-004).
+     */
+    formText: text("form_text"),
   },
   (t) => [
     foreignKey({
@@ -128,6 +134,10 @@ export const valoManualLibrary = pgTable(
       sql`(${t.fileBytes} IS NULL AND ${t.fileFormat} IS NULL AND ${t.kind} NOT IN ('template','premium_template')) OR (${t.fileBytes} IS NOT NULL AND ${t.kind} IN ('template','premium_template') AND ${t.fileFormat} IS NOT NULL AND ${t.fileFormat} IN ('pdf','docx') AND octet_length(${t.fileBytes}) BETWEEN 1 AND 2097152)`,
     ),
     check("valo_manual_premium_preview", sql`${t.kind} <> 'premium_template' OR length(${t.body}) <= 600`),
+    check(
+      "valo_manual_form_text",
+      sql`${t.formText} IS NULL OR (${t.kind} IN ('template','premium_template') AND length(${t.formText}) BETWEEN 1 AND 60000)`,
+    ),
     check(
       "valo_manual_actors",
       sql`(${t.state} = 'draft') = (${t.publishedBy} IS NULL) AND (${t.publishedBy} IS NULL) = (${t.publishedAt} IS NULL) AND (${t.state} IN ('replaced','withdrawn')) = (${t.closedBy} IS NOT NULL) AND (${t.closedBy} IS NULL) = (${t.closedAt} IS NULL)`,

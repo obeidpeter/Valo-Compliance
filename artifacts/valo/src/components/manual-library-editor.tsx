@@ -13,6 +13,7 @@ import {
 } from "@workspace/api-client-react";
 import { describeError } from "@/lib/describe-error";
 import { industryName } from "@/lib/library-filters";
+import { FormTextOutline } from "./form-text-outline";
 import { PlainText } from "./resource-parts";
 import { ErrorState } from "./states";
 
@@ -27,6 +28,20 @@ const kinds: Record<ManualLibraryDraft["kind"], string> = {
 /** An introduction and an industry pack each belong to one industry. */
 const industryRequired = (kind: ManualLibraryDraft["kind"]) =>
   kind === "industry_introduction" || kind === "industry_pack";
+const isTemplate = (kind: ManualLibraryDraft["kind"]) => kind === "template" || kind === "premium_template";
+/** How a saved version's form text fits its template's fill-in form, in plain words. */
+function fitSummary(fit: NonNullable<ManualLibraryRevision["formFit"]>) {
+  switch (fit.state) {
+    case "fits":
+      return "This form text fits the template's fill-in form: every question has its place, and every placeholder is filled by an answer or left for completing by hand.";
+    case "does_not_fit":
+      return "This form text does not fit the template's fill-in form yet. The form will not use this version until it does:";
+    case "no_form":
+      return "The fill-in form for this template does not use form text yet, so this text waits for it.";
+    case "no_template":
+      return "No registered template has this title, so no fill-in form uses this text.";
+  }
+}
 const inputStyle = "mt-1 block w-full rounded-lg border border-border bg-background p-2 text-base";
 const emptyForm = () => ({
   itemId: crypto.randomUUID() as string,
@@ -34,6 +49,7 @@ const emptyForm = () => ({
   kind: "practical_guide" as ManualLibraryDraft["kind"],
   industry: "",
   body: "",
+  formText: "",
   fileMode: "text" as ManualLibraryDraft["fileMode"],
 });
 async function encodeFile(file: File) {
@@ -95,6 +111,7 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
             kind: row.kind,
             industry: row.industry ?? "",
             body: row.body,
+            formText: row.formText ?? "",
             fileMode: row.fileFormat ? "keep" : "text",
           }
         : emptyForm(),
@@ -132,6 +149,7 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
       kind: form.kind,
       industry: form.industry || null,
       body: form.body,
+      formText: isTemplate(form.kind) && form.formText.trim() ? form.formText : null,
       fileMode: form.fileMode,
       ...(upload ? { upload } : {}),
     });
@@ -452,6 +470,24 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
                   purchase for this version.
                 </p>
               )}
+              {isTemplate(form.kind) && (
+                <label className="text-sm font-medium">
+                  Form text for the fill-in form (optional)
+                  <textarea
+                    className={inputStyle + " font-mono text-sm"}
+                    rows={7}
+                    maxLength={60000}
+                    value={form.formText}
+                    onChange={(e) => update({ formText: e.target.value })}
+                    aria-describedby="form-text-help"
+                  />
+                  <span id="form-text-help" className="mt-1 block font-normal text-muted-foreground">
+                    The template's wording with its placeholders named, which the fill-in form completes with
+                    a customer's answers. No reader sees it here: customers get only the documents their
+                    answers make. Leave it empty for a template without a form.
+                  </span>
+                </label>
+              )}
               {form.fileMode === "upload" && form.kind !== "premium_template" && (
                 <p className="text-sm text-muted-foreground">
                   Leave the text blank to use the words in your file. For a scanned PDF, paste the text you
@@ -489,6 +525,25 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
               </p>
               <h3 className="font-display mt-2 text-xl">{snapshot.title}</h3>
               <PlainText text={snapshot.body} className="mt-3 grid gap-3" />
+              {snapshot.formText !== null && snapshot.formFit && (
+                <section
+                  className="mt-5 grid gap-3 rounded-xl border border-border p-4"
+                  aria-label="Form text"
+                >
+                  <p className="eyebrow">Form text for the fill-in form</p>
+                  <p className="text-sm" data-testid="text-form-fit">
+                    {fitSummary(snapshot.formFit)}
+                  </p>
+                  {snapshot.formFit.problems.length > 0 && (
+                    <ul className="list-disc pl-6 text-sm">
+                      {snapshot.formFit.problems.map((problem) => (
+                        <li key={problem}>{problem}</li>
+                      ))}
+                    </ul>
+                  )}
+                  <FormTextOutline source={snapshot.formText} templateId={snapshot.formFit.templateId} />
+                </section>
+              )}
               {dirty && <p className="mt-3 text-sm">Save your edits to preview the new version.</p>}
               {snapshot.live && (
                 <p className="mt-3 text-sm">Readers can see version {snapshot.live.version}.</p>

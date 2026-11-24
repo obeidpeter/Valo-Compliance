@@ -422,6 +422,54 @@ test(
       "only the recently verified development owner reaches the checker rule sign-off routes, and only from Valo's own pages",
       () => exerciseOwnerRuleRoutes(call, editor),
     );
+    await t.test(
+      "a template's form text is saved with its version, previewed against its form, and never public",
+      async () => {
+        const formText =
+          "# Synthetic form text\n\nBetween [Party]{=party} and us.\n\nSigned: [ ]{=signature}";
+        const id = randomUUID(),
+          title = "Synthetic form text template";
+        // Only a template has form text, and only text the forms can read is saved.
+        assert.equal(
+          (await draft(id, { ...input("practical_guide", "Synthetic guide with marks"), formText })).status,
+          422,
+        );
+        const unreadable = await draft(id, {
+          ...input("template", title),
+          formText: "# T\n\nA {stray} brace.",
+        });
+        assert.equal(unreadable.status, 422);
+        assert.match(
+          ((await unreadable.json()) as { error: string }).error,
+          /line 3: braces are used only for slots and spans/,
+        );
+        const plain = await revision(await draft(id, { ...input("template", title), formText: "  " }));
+        assert.equal(plain.formText, null);
+        assert.equal(plain.formFit, null);
+        const filled = await revision(
+          await draft(id, { ...input("template", title), baseVersion: 1, fileMode: "keep", formText }),
+        );
+        assert.equal(filled.formText, formText);
+        assert.notEqual(filled.digest, plain.digest);
+        assert.deepEqual(filled.formFit, { templateId: null, state: "no_template", problems: [] });
+        // Published, the entry's public readers carry its text and file, never its form text (DOC-004).
+        await revision(await act(id, "publish", filled));
+        for (const path of [
+          "/public/templates/manual-" + id,
+          "/public/catalogue?type=template&access=free",
+          "/public/resources",
+          "/public/discovery",
+        ]) {
+          const r = await call(path);
+          const body = await r.text();
+          assert.equal(r.status, 200, path);
+          assert.ok(!body.includes("{=party}") && !body.includes("formText"), path);
+        }
+        const { releasedManualEntries } = await import("../modules/manual-library");
+        const [entry] = await releasedManualEntries("manual-" + id);
+        assert.ok(entry && !("formText" in entry));
+      },
+    );
     await t.test("Word and PDF previews, original template downloads and withdrawal", async () => {
       const text = "Synthetic delivery checklist";
       const large = unzipSync(wordFromText("Checklist", text).bytes);
@@ -684,6 +732,57 @@ test(
         const pack = after.items.find((item) => item.retainedId === "PACK-C01")!;
         assert.equal(pack.kind, "industry_pack");
         assert.equal(pack.industry, "retail-wholesale");
+        // A template with a fill-in form is filed with the form text proposed for it, which its v2 form
+        // fits. A version saved without it shows the proposal waiting, and filing it adds a draft version
+        // with the latest one's text and file.
+        const { proposedFormText } = await import("../modules/manual-library/form-text-maps");
+        const proposed = await proposedFormText("TPL-01");
+        assert.ok(
+          after.items.every((entry) => (entry.formText !== null) === (entry.retainedId === "TPL-01")),
+        );
+        const invoice = after.items.find((entry) => entry.retainedId === "TPL-01")!;
+        const latest = async () =>
+          GetManualLibraryRevisionResponse.parse(await ok(await call(item(invoice.itemId!))));
+        if (loaded.includes("TPL-01")) {
+          assert.equal(invoice.formText, "filed");
+          const r = await latest();
+          assert.equal(r.formText, proposed);
+          assert.deepEqual(r.formFit, { templateId: "TPL-01", state: "fits", problems: [] });
+        }
+        const base = await latest();
+        await revision(
+          await draft(invoice.itemId!, {
+            requestId: randomUUID(),
+            baseVersion: base.version,
+            title: base.title,
+            kind: base.kind,
+            industry: base.industry,
+            body: base.body,
+            fileMode: "keep",
+            formText: null,
+          }),
+        );
+        assert.equal(
+          (await status()).items.find((entry) => entry.retainedId === "TPL-01")!.formText,
+          "proposed",
+        );
+        const withForm = LoadRetainedDraftsResponse.parse(
+          await ok(await call(retained, { load: "form_text" })),
+        );
+        assert.deepEqual(withForm.loaded, ["TPL-01"]);
+        assert.equal(withForm.remaining, 0);
+        assert.equal(withForm.status.items.find((entry) => entry.retainedId === "TPL-01")!.formText, "filed");
+        const filedForm = await latest();
+        assert.equal(filedForm.version, base.version + 2);
+        assert.equal(filedForm.state, "draft");
+        assert.equal(filedForm.formText, proposed);
+        assert.equal(filedForm.body, base.body);
+        assert.equal(filedForm.fileFormat, base.fileFormat);
+        assert.deepEqual(
+          LoadRetainedDraftsResponse.parse(await ok(await call(retained, { load: "form_text" }))).loaded,
+          [],
+        );
+        assert.deepEqual(await publicLists(), shownBefore);
       },
     );
     assert.deepEqual(

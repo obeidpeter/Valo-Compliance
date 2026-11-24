@@ -25,4 +25,10 @@ export interface ManualLibraryDraft {
   body: string;
   fileMode: ManualLibraryDraftFileMode;
   upload?: ManualLibraryDraftUpload;
+  /**
+     * For a template only: its wording with its placeholders named, for its fill-in form. Omitted or null, the version has none.
+     * @maxLength 60000
+     * @nullable
+     */
+  formText?: string | null;
 }

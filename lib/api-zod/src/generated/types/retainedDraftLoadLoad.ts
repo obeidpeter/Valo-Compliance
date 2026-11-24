@@ -6,9 +6,13 @@
  * OpenAPI spec version: 0.1.0
  */
 
+/**
+ * missing files the drafts not in the library yet; form_text files a new draft version of each filed template whose latest version lacks the form text proposed for it
+ */
 export type RetainedDraftLoadLoad = typeof RetainedDraftLoadLoad[keyof typeof RetainedDraftLoadLoad];
 
 
 export const RetainedDraftLoadLoad = {
   missing: 'missing',
+  form_text: 'form_text',
 } as const;

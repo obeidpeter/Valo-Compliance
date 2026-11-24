@@ -365,6 +365,13 @@
       "when": 1795538181462,
       "tag": "20261124163621_form_template_purchases",
       "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1795540710914,
+      "tag": "20261124171830_manual_form_text",
+      "breakpoints": true
     }
   ]
 }
