@@ -184,14 +184,15 @@ test(
         async () => {
           const inA = <T>(work: () => Promise<T>) => runInWorkspaceScope(a.workspaceId, work);
           const inB = <T>(work: () => Promise<T>) => runInWorkspaceScope(b.workspaceId, work);
-          // Only a free template with a v2 form starts one.
+          // Only a template with a v2 form starts one, and a premium template's only once it is bought:
+          // workspace A has not bought the service agreement.
           await assert.rejects(
             inA(() => startFormDocument(a, { templateId: "TPL-06" })),
             { status: 404 },
           );
           await assert.rejects(
             inA(() => startFormDocument(a, { templateId: "TPL-13" })),
-            { status: 404 },
+            { status: 403, message: /comes with a template you buy/ },
           );
           // A Content editor releases the invoice's form text in the staff library.
           const formText = (await proposedFormText("TPL-01"))!;

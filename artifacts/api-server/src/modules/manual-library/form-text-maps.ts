@@ -418,6 +418,204 @@ export const FORM_TEXT_MAPS: Readonly<Partial<Record<GuidedTemplateId, readonly 
       why: "The timing and dispute paragraphs print in their places in the letter above, chosen from the answers; the rest is direction for the form and its checks, not wording of the letter.",
     },
   ],
+  "TPL-13": [
+    {
+      from: "### Agreement details and completion check\n\nThis agreement is between **[Customer legal name, entity type, registration reference if applicable, address]** (Customer) and **[Provider legal name, entity type, registration reference if applicable, address]** (Provider). Agreement reference: [ ]. Date of agreement: [ ]. Start date: [ ]. End date or completion event: [ ]. Each signatory's authority reference: [ ].",
+      to: "# Service agreement\n\n### Agreement details and completion check\n\n{?providerParty=second}\nThis agreement is between [Customer legal name, entity type, registration reference if applicable, address]{=firstParty} (Customer)\n\nand [Provider legal name, entity type, registration reference if applicable, address]{=secondParty} (Provider).\n{/?}\n\n{?providerParty=first}\nThis agreement is between [Customer legal name, entity type, registration reference if applicable, address]{=secondParty} (Customer)\n\nand [Provider legal name, entity type, registration reference if applicable, address]{=firstParty} (Provider).\n{/?}\n\n{?providerParty=}\nThis agreement is between [Customer legal name, entity type, registration reference if applicable, address] (Customer) and [Provider legal name, entity type, registration reference if applicable, address] (Provider).\n{/?}\n\nAgreement reference: [ ]{=documentNumber}. Date of agreement: [ ]{=issueDate}. Start date: [ ]{=startDate}. End date or completion event: [ ]{=endTerm}. Each signatory's authority reference: [ ]{=signatoryAuthority}.",
+      why: "The draft has no title line, so the form text takes the template's registered title, which the staff library shows and no document prints. The parties print as the choice of which party provides the services places them, each as a paragraph of its own, since both parties' details together can be longer than a document block holds; the sentence prints as the draft has it while the question is unanswered. The end date or completion event prints the duration chosen, with a fixed term's end date.",
+    },
+    { from: "Under **Licence**, on payment", to: "Under Licence, on payment" },
+    { from: "Under **Assignment**, on payment", to: "Under Assignment, on payment" },
+    {
+      from: "the Federal Republic of Nigeria and **[identified State/FCT and relevant state-law selection]**. The parties select the courts of competent jurisdiction in **[agreed location, subject to mandatory jurisdiction rules]**.",
+      to: "the Federal Republic of Nigeria and [identified State/FCT and relevant state-law selection]{=jurisdiction}. The parties select the courts of competent jurisdiction in [agreed location, subject to mandatory jurisdiction rules]{=jurisdiction}.",
+      why: "v1 asks the State/FCT and the Nigerian-law scope in one answer, which names the courts' location too.",
+    },
+    {
+      from: "| Field | Agreed entry |\n|---|---|\n| Services, deliverables and explicit exclusions | [ ] |\n| Intended purpose and users | [ ] |\n| Milestones and delivery format/location | [ ] |\n| Objective acceptance criteria for each deliverable | [ ] |\n| Review period and correction period | [ ] |\n| Customer inputs, access and dates | [ ] |\n| Provider dependencies and agreed assumptions | [ ] |\n| Customer and Provider contacts/decision authority | [ ] |\n| Approved subcontractors, systems and access | [ ] |",
+      to: "- Services, deliverables and explicit exclusions: [ ]{=scope}\n\n- Intended purpose and users: [ ]{=purposeUsers}\n\n|  | Milestones and delivery format/location | Objective acceptance criteria for each deliverable |\n|---|---|---|\n| {*deliverables} [ ]{=deliverables.description} | [ ]{=deliverables.timing} | [ ]{=deliverables.acceptance} |\n\n- Review period and correction period: [ ]{=reviewPeriods}\n\n- Customer inputs, access and dates: [ ]{=customerInputs}\n\n- Provider dependencies and agreed assumptions: [ ]{=providerAssumptions}\n\n- Customer and Provider contacts/decision authority: [ ]{=changeControl}\n\n- Approved subcontractors, systems and access: [ ]{=subcontractors}",
+      why: "The entries print one to a line, each a list of its own, since each answer can be longer than a table cell holds, so the table's headings go. The milestones and acceptance criteria print for each deliverable the form lists, as a table with one row for each, headed by the two entries' own words; v1 asks each deliverable's name, its acceptance criteria and its timing. v1 asks the change and acceptance process with the authorised contacts in one answer, printed as the contacts and their decision authority.",
+    },
+    {
+      from: "| Field | Agreed entry |\n|---|---|\n| Currency and fee calculation | [ ] |\n| Milestone/period charges and invoice due dates | [ ] |\n| Advance and how credited/refunded | [ ] |\n| Approved expense types, limits and evidence | [ ] |\n| Tax inclusion/exclusion and verified treatment | [ ] |\n| Any verified withholding basis and evidence | [ ] |",
+      to: "- Currency and fee calculation: [ ]{=feeKobo}\n\n- Milestone/period charges and invoice due dates: [ ]{=paymentTerms}\n\n- Advance and how credited/refunded: [ ]{=advance}\n\n- Approved expense types, limits and evidence: [ ]{=expensesTerms}\n\n- Tax inclusion/exclusion and verified treatment; Any verified withholding basis and evidence: [ ]{=taxTreatment}",
+      why: "The entries print one to a line, each a list of its own, since each answer can be longer than a table cell holds, so the table's headings go. The fee prints in naira. v1 asks the tax treatment and any withholding in one answer, printed against the two rows together. An advance is completed by hand: v1 asks nothing for it.",
+    },
+    {
+      from: "New deliverables covered: [ ]. Chosen arrangement, **Licence or Assignment, select one**: [ ]. Intended permitted use: [ ]. Background materials and necessary permissions: [ ]. Approved third-party materials, licence references and restrictions: [ ]. Any item requiring separate rights resolution: [resolve before signing].",
+      to: "- New deliverables covered: [ ]{=deliverablesCovered}\n\n- Chosen arrangement, Licence or Assignment, select one: [ ]{=rightsArrangement}\n\n- Intended permitted use: [ ]{=purposeUsers}\n\n- Background materials and necessary permissions: [ ]{=ipTerms}\n\n- Approved third-party materials, licence references and restrictions: [ ]{=thirdPartyMaterials}\n\n- Any item requiring separate rights resolution: [resolve before signing]{=rightsResolution}",
+      why: "The entries print one to a line, since together they can be longer than a document block holds. The arrangement prints as chosen, and the intended use as Schedule A's intended purpose. The deliverables covered, any third-party materials and any item for separate rights resolution are completed by hand: v1 asks nothing for them.",
+    },
+    {
+      from: "Convenience notice: [ ]. Breach remedy period: [ ]. Disruption exit period: [ ]. Approved non-cancellable commitments and termination calculation: [ ]. Confidentiality protection period: [ ]. Notice addresses and incident contacts: [ ]. Escalation period and decision-makers: [ ]. State/FCT, governing-law entry and court location completed: [ ].",
+      to: "- Convenience notice; Breach remedy period; Disruption exit period; Approved non-cancellable commitments and termination calculation: [ ]{=terminationTerms}\n\n- Confidentiality protection period: [ ]{=confidentialityTerms}\n\n- Notice addresses and incident contacts: [ ]{=noticeContacts}\n\n- Escalation period and decision-makers: [ ]{=disputeTerms}\n\n- State/FCT, governing-law entry and court location completed: [ ]{=jurisdiction}",
+      why: "The entries print one to a line, since together they can be longer than a document block holds. v1 asks the termination, notice and exit arrangements in one answer, printed against the four entries together, and the confidentiality terms in one answer, printed as the protection period. The notice addresses and incident contacts are completed by hand: v1 asks nothing for them.",
+    },
+    {
+      from: "For the Customer: legal name [ ]; signatory name [ ]; capacity and authority [ ]; signature [ ]; date [ ]. For the Provider: legal name [ ]; signatory name [ ]; capacity and authority [ ]; signature [ ]; date [ ].",
+      to: "{?providerParty=second}For the Customer: legal name [ ]{=issuerName}; signatory name [ ]{=customerSignatory}; capacity and authority [ ]{=customerCapacity}; signature [ ]{=customerSignature}; date [ ]{=customerDate}. For the Provider: legal name [ ]{=recipientName}; signatory name [ ]{=providerSignatory}; capacity and authority [ ]{=providerCapacity}; signature [ ]{=providerSignature}; date [ ]{=providerDate}.{/?}{?providerParty=first}For the Customer: legal name [ ]{=recipientName}; signatory name [ ]{=customerSignatory}; capacity and authority [ ]{=customerCapacity}; signature [ ]{=customerSignature}; date [ ]{=customerDate}. For the Provider: legal name [ ]{=issuerName}; signatory name [ ]{=providerSignatory}; capacity and authority [ ]{=providerCapacity}; signature [ ]{=providerSignature}; date [ ]{=providerDate}.{/?}{?providerParty=}For the Customer: legal name [ ]; signatory name [ ]{=customerSignatory}; capacity and authority [ ]{=customerCapacity}; signature [ ]{=customerSignature}; date [ ]{=customerDate}. For the Provider: legal name [ ]; signatory name [ ]{=providerSignatory}; capacity and authority [ ]{=providerCapacity}; signature [ ]{=providerSignature}; date [ ]{=providerDate}.{/?}",
+      why: "Each party's legal name prints under its role, as the choice of which party provides the services places it, and the names print as the draft's placeholders while the question is unanswered. The rest of each signature block is completed by hand.",
+    },
+  ],
+  "TPL-14": [
+    {
+      from: "### Parties and engagement record\n\n**[Client legal name, entity type, registration reference if applicable, address]** (Client) engages **[Consultant legal name, entity type, registration reference if applicable, address]** (Consultant). Agreement reference [ ]; date [ ]; start [ ]; completion/end [ ]. Client decision-maker [ ]; Consultant lead [ ].",
+      to: "# Consultancy agreement\n\n### Parties and engagement record\n\n{?consultantParty=second}\n[Client legal name, entity type, registration reference if applicable, address]{=firstParty} (Client)\n\nengages [Consultant legal name, entity type, registration reference if applicable, address]{=secondParty} (Consultant).\n{/?}\n\n{?consultantParty=first}\n[Client legal name, entity type, registration reference if applicable, address]{=secondParty} (Client)\n\nengages [Consultant legal name, entity type, registration reference if applicable, address]{=firstParty} (Consultant).\n{/?}\n\n{?consultantParty=}\n[Client legal name, entity type, registration reference if applicable, address] (Client) engages [Consultant legal name, entity type, registration reference if applicable, address] (Consultant).\n{/?}\n\nAgreement reference [ ]{=documentNumber}; date [ ]{=issueDate}; start [ ]{=startDate}; completion/end [ ]{=endTerm}. Client decision-maker [ ]{=clientDecisionMaker}; Consultant lead [ ]{=consultantLead}.",
+      why: "The draft has no title line, so the form text takes the template's registered title, which the staff library shows and no document prints. The parties print as the choice of which party is the consultant places them, each as a paragraph of its own, since both parties' details together can be longer than a document block holds; the sentence prints as the draft has it while the question is unanswered. The completion or end prints the duration chosen, with a fixed term's end date.",
+    },
+    {
+      from: "the applicable law of Nigeria and **[specified State/FCT and relevant state-law selection]**; the chosen courts are those of competent jurisdiction in **[location, subject to mandatory jurisdiction rules]**.",
+      to: "the applicable law of Nigeria and [specified State/FCT and relevant state-law selection]{=jurisdiction}; the chosen courts are those of competent jurisdiction in [location, subject to mandatory jurisdiction rules]{=jurisdiction}.",
+      why: "v1 asks the State/FCT and the Nigerian-law scope in one answer, which names the courts' location too.",
+    },
+    {
+      from: "| Field | Agreed entry |\n|---|---|\n| Business questions and purpose | [ ] |\n| Deliverables, intended users and permitted circulation | [ ] |\n| Work included and excluded | [ ] |\n| Method and evidential standard | [ ] |\n| Client inputs and dates | [ ] |\n| Assumptions to test; known limitations | [ ] |\n| Milestones, review period and correction period | [ ] |\n| Key people, approved subcontractors and tools | [ ] |\n| Conflicts disclosed and agreed response | [ ] |",
+      to: "- Business questions and purpose: [ ]{=questionsPurpose}\n\n- Deliverables, intended users and permitted circulation: [ ]{=usersCirculation}\n\n{*deliverables}\n- [ ]{=deliverables.description}: [ ]{=deliverables.timing}; [ ]{=deliverables.acceptance}\n{/*}\n\n- Work included and excluded; Method and evidential standard: [ ]{=scope}\n\n- Client inputs and dates: [ ]{=dependencies}\n\n- Assumptions to test; known limitations: [ ]{=assumptionsLimits}\n\n- Milestones, review period and correction period: [ ]{=reviewPeriods}\n\n- Key people, approved subcontractors and tools: [ ]{=keyPeople}\n\n- Conflicts disclosed and agreed response: [ ]{=conflicts}",
+      why: "The entries print one to a line, each a list of its own, since each answer can be longer than a table cell holds, so the table's headings go. Each output the form lists prints on a line of its own after the deliverables entry, with its timing and its review and acceptance criteria. v1 asks the scope with its method and exclusions in one answer, printed against the work and method entries together, and the client's information, access and dependencies as the client's inputs. The assumptions to test and the conflicts disclosed are completed by hand: v1 asks nothing for them.",
+    },
+    {
+      from: "Fee basis and currency [ ]; milestones/rates [ ]; invoice/payment dates [ ]; time-record method if relevant [ ]; advance and credit/refund basis [ ]; approved expenses/limit [ ]; verified tax and withholding treatment [ ]; final deliverables licensed [ ]; third-party material/permissions [ ]; any separately agreed rights variation [ ].",
+      to: "- Fee basis and currency [ ]{=feeKobo}; milestones/rates; invoice/payment dates [ ]{=paymentTerms}\n\n- time-record method if relevant [ ]{=timeRecord}; advance and credit/refund basis [ ]{=advance}\n\n- approved expenses/limit [ ]{=expensesTerms}\n\n- verified tax and withholding treatment [ ]{=taxTreatment}\n\n- final deliverables licensed [ ]{=deliverablesLicensed}; third-party material/permissions [ ]{=ipTerms}; any separately agreed rights variation [ ]{=rightsVariation}",
+      why: "The entries print in lists of their own, since together they can be longer than a document block holds. The fee prints in naira, and v1 asks the payment basis, milestones and due dates in one answer, printed against the milestones and payment dates together. The time-record method, an advance, the deliverables licensed and any rights variation are completed by hand: v1 asks nothing for them.",
+    },
+    {
+      from: "Convenience notice [ ]; breach remedy period [ ]; disruption exit period [ ]; pre-approved non-cancellable commitments [ ]; confidentiality protection period [ ]; incident contacts [ ]; notice addresses [ ]; escalation period and decision-makers [ ]; completed Nigeria/State/FCT and court location entry [ ].",
+      to: "- Convenience notice; breach remedy period; disruption exit period; pre-approved non-cancellable commitments [ ]{=terminationTerms}\n\n- confidentiality protection period [ ]{=confidentialityTerms}\n\n- incident contacts [ ]{=incidentContacts}; notice addresses [ ]{=noticeAddresses}\n\n- escalation period and decision-makers [ ]{=disputeTerms}\n\n- completed Nigeria/State/FCT and court location entry [ ]{=jurisdiction}",
+      why: "The entries print in lists of their own, since together they can be longer than a document block holds. v1 asks the termination, notice and exit arrangements in one answer, printed against the four entries together, and the confidentiality terms in one answer, printed as the protection period. The incident contacts and notice addresses are completed by hand: v1 asks nothing for them.",
+    },
+    {
+      from: "Client legal name [ ]; authorised signatory/name/capacity [ ]; authority reference [ ]; signature/date [ ]. Consultant legal name [ ]; authorised signatory/name/capacity [ ]; authority reference [ ]; signature/date [ ].",
+      to: "{?consultantParty=second}Client legal name [ ]{=issuerName}; authorised signatory/name/capacity [ ]{=clientSignatory}; authority reference [ ]{=clientAuthority}; signature/date [ ]{=clientSignature}. Consultant legal name [ ]{=recipientName}; authorised signatory/name/capacity [ ]{=consultantSignatory}; authority reference [ ]{=consultantAuthority}; signature/date [ ]{=consultantSignature}.{/?}{?consultantParty=first}Client legal name [ ]{=recipientName}; authorised signatory/name/capacity [ ]{=clientSignatory}; authority reference [ ]{=clientAuthority}; signature/date [ ]{=clientSignature}. Consultant legal name [ ]{=issuerName}; authorised signatory/name/capacity [ ]{=consultantSignatory}; authority reference [ ]{=consultantAuthority}; signature/date [ ]{=consultantSignature}.{/?}{?consultantParty=}Client legal name [ ]; authorised signatory/name/capacity [ ]{=clientSignatory}; authority reference [ ]{=clientAuthority}; signature/date [ ]{=clientSignature}. Consultant legal name [ ]; authorised signatory/name/capacity [ ]{=consultantSignatory}; authority reference [ ]{=consultantAuthority}; signature/date [ ]{=consultantSignature}.{/?}",
+      why: "Each party's legal name prints under its role, as the choice of which party is the consultant places it, and the names print as the draft's placeholders while the question is unanswered. The rest of each signature block is completed by hand.",
+    },
+  ],
+  "TPL-15": [
+    {
+      from: "### Parties, purpose and periods\n\nThis mutual agreement is between **[Party A legal name, entity type and address]** and **[Party B legal name, entity type and address]**. Agreement reference [ ]; date [ ].",
+      to: "# Non-disclosure agreement\n\n### Parties, purpose and periods\n\nThis mutual agreement is between [Party A legal name, entity type and address]{=partyA}\n\nand [Party B legal name, entity type and address]{=partyB}. Agreement reference [ ]{=documentNumber}; date [ ]{=issueDate}.",
+      why: "The draft has no title line, so the form text takes the template's registered title, which the staff library shows and no document prints. The two parties print as paragraphs of their own, since both addresses together can be longer than a document block holds.",
+    },
+    {
+      from: "Permitted purpose: **[describe the proposed discussion, project or evaluation narrowly]**. Disclosure period: [start] to [end]. Protection period for each disclosure: [agreed duration and start event]. Named contacts and permitted recipient categories: [ ]. Nigerian State/FCT and relevant governing-law choice: [ ]. Courts of competent jurisdiction/location: [ ].",
+      to: "Permitted purpose: [describe the proposed discussion, project or evaluation narrowly]{=purpose}.\n\nDisclosure period: [start]{=disclosureStart} to [end]{=disclosureEnd}. Protection period for each disclosure: [agreed duration and start event]{=duration}.\n\nNamed contacts and permitted recipient categories: [ ]{=permittedRecipients}.\n\nNigerian State/FCT and relevant governing-law choice: [ ]{=jurisdiction}. Courts of competent jurisdiction/location: [ ]{=jurisdiction}.",
+      why: "The entries print as paragraphs of their own, since together they can be longer than a document block holds. v1 asks the State/FCT and the Nigerian-law scope in one answer, which names the courts' location too.",
+    },
+    {
+      from: "Examples relevant to this exchange: [ ].",
+      to: "Examples relevant to this exchange: [ ]{=protectedInfo}.",
+    },
+    {
+      from: " Approved tools and storage locations, if any: [ ].",
+      to: "{?approvedTools} Approved tools and storage locations, if any: [ ]{=approvedTools}.{/?}",
+      why: "Approved tools and storage locations are optional: the sentence prints once they are given, and without them no tool or location is approved.",
+    },
+    {
+      from: "return or securely delete copies within [agreed period], confirming",
+      to: "return or securely delete copies within [agreed period]{=returnTerms}, confirming",
+    },
+    {
+      from: "escalate to [decision-makers] after [agreed period], without",
+      to: "escalate to [decision-makers]{=disputeTerms}, without",
+      why: "v1 asks the escalation arrangements in one answer, which names the decision-makers and the period, so the period's placeholder goes.",
+    },
+    {
+      from: "Notice addresses/email: Party A [ ]; Party B [ ]. Notices",
+      to: "Notice addresses/email: Party A [ ]{=issuerAddress};\n\nParty B [ ]{=recipientAddress}. Notices",
+      why: "Each party's address prints as its notice address, in a paragraph of its own, since both together can be longer than a document block holds.",
+    },
+    {
+      from: "| [ ] | [ ] | [ ] | [ ] |\n| [ ] | [ ] | [ ] | [ ] |",
+      to: "| [ ]{=registerReference} | [ ]{=registerInformation} | [ ]{=registerParties} | [ ]{=registerEnd} |\n| [ ]{=registerReference} | [ ]{=registerInformation} | [ ]{=registerParties} | [ ]{=registerEnd} |",
+    },
+    {
+      from: "Party A legal name [ ]; signatory/name/capacity [ ]; authority reference [ ]; signature/date [ ]. Party B legal name [ ]; signatory/name/capacity [ ]; authority reference [ ]; signature/date [ ].",
+      to: "Party A legal name [ ]{=issuerName}; signatory/name/capacity [ ]{=signatoryA}; authority reference [ ]{=authorityA}; signature/date [ ]{=signatureA}. Party B legal name [ ]{=recipientName}; signatory/name/capacity [ ]{=signatoryB}; authority reference [ ]{=authorityB}; signature/date [ ]{=signatureB}.",
+    },
+  ],
+  "TPL-16": [
+    {
+      from: "Contract reference: [ ] · Version: [ ] · Date: [ ]",
+      to: "Contract reference: [ ]{=documentNumber}{?contractVersion} · Version: [ ]{=contractVersion}{/?} · Date: [ ]{=issueDate}",
+      why: "The version is optional: it prints once it is given.",
+    },
+    {
+      from: "This agreement is between **[Employer legal name]**, of [Employer address], and **[Employee name]**, of [Employee address]. The employer appoints",
+      to: "This agreement is between [Employer legal name]{=issuerName}, of [Employer address]{=issuerAddress},\n\nand [Employee name]{=recipientName}, of [Employee address]{=recipientAddress}. The employer appoints",
+      why: "The two parties print as paragraphs of their own, since both addresses together can be longer than a document block holds.",
+    },
+    {
+      from: "The employee is appointed as **[Role]**, reporting to [Role/person]. The principal duties are [specific duties or attached role-description reference/version].",
+      to: "The employee is appointed as [Role]{=role}, reporting to [Role/person]{=reportsTo}. The principal duties are [specific duties or attached role-description reference/version]{=duties}.",
+    },
+    {
+      from: "The normal work location is [Location/remote arrangement]. Any agreed travel or additional-location arrangement is [specific arrangement or none]. Required qualifications or permissions for the role are [verified requirements and status]; no missing qualification is represented as held.",
+      to: "The normal work location is [Location/remote arrangement]{=workplace}.\n\n{?qualifications}Required qualifications or permissions for the role are [verified requirements and status]{=qualifications}; no missing qualification is represented as held.{/?}",
+      why: "v1 asks for the work location with its remote and travel arrangements in one answer, printed as the normal work location, so the sentence for travel goes. The required qualifications are optional: their sentence prints, as a paragraph of its own, once they are given.",
+    },
+    {
+      from: "Employment starts on [Date]. Recognised earlier continuous service, if any, is [date/basis or none confirmed]. The engagement is [indefinite / fixed term ending on specified date and basis].",
+      to: "Employment starts on [Date]{=startDate}. Recognised earlier continuous service, if any, is [date/basis or none confirmed]{=earlierService}. The engagement is {?termType=open}indefinite{/?}{?termType=fixed}fixed term ending on [ ]{=endDate}{/?}{?termType=}[indefinite / fixed term ending on specified date and basis]{/?}.",
+      why: "The duration prints as the choice made, with a fixed term's end date; v1 asks no basis for a fixed term. It prints as the draft has it while the question is unanswered.",
+    },
+    {
+      from: "[Include only a separately validated, expressly agreed probation clause: The agreed initial review period is [period], with reviews on [basis/dates]. Support and assessment criteria are [ ]. The applicable pay, benefits and notice arrangements during this period are [validated terms]. Any proposed extension will be discussed and documented before implementation; no extension or termination is assumed merely because a review was not recorded.]",
+      to: "{?probation=yes}\nThe agreed initial review period is [period]{=probationTerms}. Any proposed extension will be discussed and documented before implementation; no extension or termination is assumed merely because a review was not recorded.\n{/?}\n\n{?probation=}\n[Include only a separately validated, expressly agreed probation clause: The agreed initial review period is [period], with reviews on [basis/dates]. Support and assessment criteria are [ ]. The applicable pay, benefits and notice arrangements during this period are [validated terms]. Any proposed extension will be discussed and documented before implementation; no extension or termination is assumed merely because a review was not recorded.]\n{/?}",
+      why: "The review period's clause prints only when one is expressly agreed, without the draft's direction around it, and the draft's paragraph prints while the question is unanswered. v1 asks the period's terms and dates in one answer, printed as the agreed initial review period, so the sentences for its reviews, its criteria and the pay, benefits and notice during it, each a placeholder of its own, go; that answer has to state them.",
+    },
+    {
+      from: "Gross basic pay is [Currency and amount] per [period], calculated as [fixed salary/hourly or other validated basis]. Separately identified allowances or variable pay are listed in Schedule A, with their calculation and eligibility rules. Payment is due [validated cycle/date arrangement] through [agreed lawful method]. The employer will provide a clear record of the amounts paid and any deductions.",
+      to: "Gross basic pay is [Currency and amount]{=grossPayKobo} per [period]{=payPeriod}, calculated as [fixed salary/hourly or other validated basis]{=payBasis}.\n\nSeparately identified allowances or variable pay are [ ]{=allowances}. The employer will provide a clear record of the amounts paid and any deductions.",
+      why: "v1 asks how the pay is calculated, its cycle and its method in one answer, printed as how it is calculated, so the sentence for the cycle and the method goes. The allowances print here, as a paragraph of their own, instead of in Schedule A, since the schedule's other pay terms print in this clause; the question asks for their calculation and eligibility rules.",
+    },
+    {
+      from: "The employee may raise a payroll query with [contact].",
+      to: "The employee may raise a payroll query with [contact]{=workContact}.",
+    },
+    {
+      from: "Normal working days and hours are [ ]. Rest intervals and weekly rest arrangements are [validated terms]. Overtime, additional work and any related payment or time-off arrangement are [validated terms and authorisation process]. Recording",
+      to: "Normal working days and hours are [ ]{=hours}. Recording",
+      why: "v1 asks the working hours, breaks and overtime in one answer, printed as the normal working days and hours, so the two sentences for rest and for overtime, each a placeholder of its own, go.",
+    },
+    {
+      from: "The employee should notify [contact] promptly when unable to attend, using [channel].",
+      to: "The employee should notify [contact]{=workContact} promptly when unable to attend.",
+      why: "The contact's answer says how to reach them, so the separate channel goes.",
+    },
+    {
+      from: "Pension and other applicable benefit arrangements are [validated scheme/coverage, contribution basis and accessible explanation].",
+      to: "Pension and other applicable benefit arrangements are [validated scheme/coverage, contribution basis and accessible explanation]{=benefits}.",
+    },
+    {
+      from: "Questions about leave or benefits may be raised with [contact],",
+      to: "Questions about leave or benefits may be raised with [contact]{=workContact},",
+    },
+    {
+      from: "promptly report loss or suspected misuse through [contact/channel].",
+      to: "promptly report loss or suspected misuse through [contact/channel]{=workContact}.",
+    },
+    {
+      from: "must be identified in [separately reviewed document, if any];",
+      to: "must be identified in [separately reviewed document, if any]{=confidentialityTerms};",
+    },
+    {
+      from: "The applicable grievance and disciplinary processes are [document titles/versions and accessible location].",
+      to: "The applicable grievance and disciplinary processes are [document titles/versions and accessible location]{=grievanceTerms}.",
+    },
+    {
+      from: "| Item | Agreed and validated term |\n|---|---|\n| Engagement place/date; start; recognised service | [ ] |\n| Role, work location and duration | [ ] |\n| Gross pay; allowances; calculation; payment cycle | [ ] |\n| Normal hours; rest; overtime arrangement | [ ] |\n| Annual leave quantity, unit, qualifying basis and pay | [ ] |\n| Sick leave/pay and appropriate evidence process | [ ] |\n| Maternity-related leave/pay, nursing arrangements and applicable protection | [ ] |\n| Other leave and contractual improvements | [ ] |\n| Pension/other benefits and applicable contribution basis | [ ] |\n| Employer notice; employee notice; payment-in-lieu basis | [ ] |\n| Special conditions individually agreed and separately checked | [ ] |",
+      to: "- Engagement place/date: [ ]{=engagement}\n\n- Annual leave quantity, unit, qualifying basis and pay; Sick leave/pay and appropriate evidence process; Maternity-related leave/pay, nursing arrangements and applicable protection; Other leave and contractual improvements: [ ]{=leaveTerms}\n\n- Employer notice; employee notice; payment-in-lieu basis: [ ]{=terminationTerms}\n\n- {?specialConditions}Special conditions individually agreed and separately checked: [ ]{=specialConditions}{/?}",
+      why: "The confirmed terms print one to a line, each a list of its own, since each answer can be longer than a table cell holds, so the table's headings go. The rows whose terms print in their clauses go, so that each answer prints once: the start and recognised service, the role, location and duration, the pay and allowances, the hours, and the pension and benefits. The engagement row keeps its place and date. v1 asks every kind of leave in one answer, printed against the four leave rows together. The special conditions are optional: their line prints once they are given.",
+    },
+    {
+      from: "| Document | Version/date | Where the employee can obtain it | Relationship to this agreement |\n|---|---|---|---|\n| Role description | [ ] | [ ] | [ ] |\n| Employee handbook | [ ] | [ ] | [ ] |\n| Leave policy | [ ] | [ ] | [ ] |\n| Disciplinary/grievance procedure | [ ] | [ ] | [ ] |\n| Relevant collective/sector terms, if applicable | [ ] | [ ] | [ ] |",
+      to: "[ ]{=policies}",
+      why: "v1 asks the policies and schedules incorporated, with their versions, in one answer, which prints as the schedule; the table, whose cells cannot hold an answer that long, goes.",
+    },
+    {
+      from: "Employer representative name and authority: [ ]  \nEmployee name: [ ]  \nActual agreement/signature record and dates, only when completed by the parties: [ ]  \nCopy provided to employee on: [actual date]",
+      to: "Employer representative name and authority: [ ]{=representativeAuthority}\nEmployee name: [ ]{=recipientName}\nActual agreement/signature record and dates, only when completed by the parties: [ ]{=signatureRecord}\nCopy provided to employee on: [actual date]{=copyProvided}",
+    },
+  ],
   "TPL-17": [
     {
       from: "[Employer legal name and address]  \n[Date] · Reference [ ]\n\nDear [Candidate name],",

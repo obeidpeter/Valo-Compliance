@@ -756,6 +756,397 @@ const offerLetter = fromV1("TPL-17", {
   blanks: ["responseReference", "outstandingMatter", "startConfirmed"],
 });
 
+/**
+ * The employment contract (TPL-16), a premium form. Each answer prints once, in the clause that names
+ * it; Schedule A keeps the terms the clauses send to it (the leave and the notice), and Schedule B the
+ * documents incorporated. One contact answers the employee's pay, absence, leave and equipment
+ * questions, where the draft names a contact for each.
+ */
+const employmentContract = fromV1("TPL-16", {
+  questions: [
+    { v1: "issuerName", join: { tokens: ["issuerName"] } },
+    { v1: "issuerAddress", join: { tokens: ["issuerAddress"] } },
+    { v1: "recipientName", join: { tokens: ["recipientName"] } },
+    { v1: "recipientAddress", join: { tokens: ["recipientAddress"] } },
+    { v1: "documentNumber", join: { tokens: ["documentNumber"] } },
+    lineQuestion("contractVersion", "Contract version, if any", "Version: [ ]", "text"),
+    // The place before the date: Schedule A prints them in that order.
+    {
+      added: {
+        id: "engagementPlace",
+        label: "Place where the employment is engaged: town and State or FCT",
+        type: "text",
+        required: true,
+        tokens: ["engagement"],
+      },
+      why: 'Schedule A prints "Engagement place/date: [ ]", which the agreement says identifies its Nigerian employment context, and v1 asks for no place.',
+    },
+    { v1: "issueDate", join: { tokens: ["issueDate", "engagement"] } },
+    { v1: "role", join: { tokens: ["role"] } },
+    { v1: "reportsTo", join: { tokens: ["reportsTo"] } },
+    { v1: "duties", join: { tokens: ["duties"] } },
+    { v1: "workplace", join: { tokens: ["workplace"] } },
+    lineQuestion(
+      "qualifications",
+      "Required qualifications or permissions for the role, and their status, if any",
+      "Required qualifications or permissions for the role are [verified requirements and status]",
+    ),
+    { v1: "startDate", join: { tokens: ["startDate"] } },
+    {
+      added: {
+        id: "earlierService",
+        label: "Recognised earlier continuous service, or none confirmed",
+        type: "text",
+        required: true,
+        tokens: ["earlierService"],
+      },
+      why: 'The contract prints "Recognised earlier continuous service, if any, is [date/basis or none confirmed]" and v1 asks nothing for it.',
+    },
+    { v1: "termType", join: { clause: true } },
+    { v1: "endDate", join: { tokens: ["endDate"] } },
+    { v1: "probation", join: { clause: true } },
+    { v1: "probationTerms", join: { tokens: ["probationTerms"] } },
+    { v1: "grossPayKobo", join: { tokens: ["grossPayKobo"] } },
+    { v1: "payPeriod", join: { tokens: ["payPeriod"] } },
+    { v1: "payBasis", join: { tokens: ["payBasis"] } },
+    {
+      added: {
+        id: "allowances",
+        label: "Additional allowances or variable pay, or none offered",
+        type: "long_text",
+        required: true,
+        tokens: ["allowances"],
+      },
+      why: 'The contract prints "Separately identified allowances or variable pay are listed in Schedule A", Schedule A asks for them, and v1 asks nothing for them. The offer letter asks the same question.',
+    },
+    { v1: "hours", join: { tokens: ["hours"] } },
+    {
+      added: {
+        id: "workContact",
+        label: "Contact for the employee's pay, absence, leave and equipment questions",
+        type: "text",
+        required: true,
+        tokens: ["workContact"],
+      },
+      why: "The contract names a contact for payroll queries, for absence, for leave and benefit questions and for reporting a loss of equipment or information, and v1 asks for none.",
+    },
+    { v1: "leaveTerms", join: { tokens: ["leaveTerms"] } },
+    { v1: "benefits", join: { tokens: ["benefits"] } },
+    { v1: "confidentialityTerms", join: { tokens: ["confidentialityTerms"] } },
+    { v1: "grievanceTerms", join: { tokens: ["grievanceTerms"] } },
+    { v1: "terminationTerms", join: { tokens: ["terminationTerms"] } },
+    lineQuestion(
+      "specialConditions",
+      "Special conditions individually agreed and separately checked, if any",
+      "Special conditions individually agreed and separately checked: [ ]",
+    ),
+    { v1: "policies", join: { tokens: ["policies"] } },
+    { v1: "termsReviewed" },
+  ],
+  dropped: {
+    legalChecks:
+      "The contract has no place for the business's own check of the legal scope and of mandatory terms still unresolved. Its Nigerian employment context is the place of engagement in Schedule A, and the confirmation that no material term is knowingly left unresolved is still asked.",
+  },
+  // Completed by hand once the parties agree and sign, as the agreement record says.
+  blanks: ["representativeAuthority", "signatureRecord", "copyProvided"],
+  keepsNothing: [{ question: "probation", option: "no" }],
+});
+
+/**
+ * The non-disclosure agreement (TPL-15), a premium form. The retained text is a mutual agreement, so
+ * v1's one-way option has no wording (the design note's example). Each party's name, legal form,
+ * registration and address fill the one placeholder the draft gives that party, in that order.
+ */
+const nonDisclosure = fromV1("TPL-15", {
+  questions: [
+    { v1: "issuerName", join: { tokens: ["partyA", "issuerName"] } },
+    { v1: "issuerLegalForm", join: { tokens: ["partyA"] } },
+    { v1: "issuerRegistration", join: { tokens: ["partyA"] } },
+    { v1: "issuerAddress", join: { tokens: ["partyA", "issuerAddress"] } },
+    { v1: "recipientName", join: { tokens: ["partyB", "recipientName"] } },
+    { v1: "recipientLegalForm", join: { tokens: ["partyB"] } },
+    { v1: "recipientRegistration", join: { tokens: ["partyB"] } },
+    { v1: "recipientAddress", join: { tokens: ["partyB", "recipientAddress"] } },
+    { v1: "documentNumber", join: { tokens: ["documentNumber"] } },
+    { v1: "issueDate", join: { tokens: ["issueDate"] } },
+    { v1: "purpose", join: { tokens: ["purpose"] } },
+    { v1: "disclosureStart", join: { tokens: ["disclosureStart"] } },
+    { v1: "disclosureEnd", join: { tokens: ["disclosureEnd"] } },
+    { v1: "duration", join: { tokens: ["duration"] } },
+    { v1: "permittedRecipients", join: { tokens: ["permittedRecipients"] } },
+    { v1: "jurisdiction", join: { tokens: ["jurisdiction"] } },
+    { v1: "protectedInfo", join: { tokens: ["protectedInfo"] } },
+    lineQuestion(
+      "approvedTools",
+      "Approved tools and storage locations for the information, if any",
+      "Approved tools and storage locations, if any: [ ]",
+    ),
+    { v1: "returnTerms", join: { tokens: ["returnTerms"] } },
+    { v1: "disputeTerms", join: { tokens: ["disputeTerms"] } },
+  ],
+  dropped: {
+    direction:
+      "The retained text is a mutual agreement only: each party is a Discloser when it supplies information and a Recipient when it receives the other's. Wording for a one-way agreement is the owner's to decide (design note, owner's point 3).",
+    discloser: "It is asked only for a one-way agreement, which the retained text does not provide.",
+    exclusions:
+      "The agreement sets out what falls outside its definition itself, in clause 1, and has no place for further exclusions; an express exclusion needs wording of its own.",
+  },
+  // Completed by hand: the register as each disclosure occurs, as the draft says, and the signatures.
+  blanks: [
+    "registerReference",
+    "registerInformation",
+    "registerParties",
+    "registerEnd",
+    "signatoryA",
+    "authorityA",
+    "signatureA",
+    "signatoryB",
+    "authorityB",
+    "signatureB",
+  ],
+});
+
+/** v1's questions for one party of an agreement, filling the one placeholder the draft gives that
+ * party with its name, legal form, registration and address, in that order. */
+const party = (side: "issuer" | "recipient", slot: string): Plan["questions"][number][] => [
+  { v1: `${side}Name`, join: { tokens: [slot, `${side}Name`] } },
+  { v1: `${side}LegalForm`, join: { tokens: [slot] } },
+  { v1: `${side}Registration`, join: { tokens: [slot] } },
+  { v1: `${side}Address`, join: { tokens: [slot] } },
+];
+
+/**
+ * The service agreement (TPL-13), a premium form. The draft names its parties as the Customer and the
+ * Provider; v1 asks for a first and a second party, so a new choice says which party provides the
+ * services, and the parties' placeholders and signatures print accordingly.
+ */
+const serviceAgreement = fromV1("TPL-13", {
+  questions: [
+    ...party("issuer", "firstParty"),
+    ...party("recipient", "secondParty"),
+    {
+      added: {
+        id: "providerParty",
+        label: "Which party provides the services?",
+        type: "select",
+        required: true,
+        options: [
+          { value: "first", label: "First party" },
+          { value: "second", label: "Second party" },
+        ],
+        clause: true,
+      },
+      why: "The agreement names its parties as the Customer and the Provider, and v1 asks only for a first and a second party: the choice puts each party's details in its own place.",
+    },
+    { v1: "documentNumber", join: { tokens: ["documentNumber"] } },
+    { v1: "issueDate", join: { tokens: ["issueDate"] } },
+    { v1: "startDate", join: { tokens: ["startDate"] } },
+    { v1: "termType", join: { tokens: ["endTerm"] } },
+    { v1: "endDate", join: { tokens: ["endTerm"] } },
+    { v1: "jurisdiction", join: { tokens: ["jurisdiction"] } },
+    { v1: "scope", join: { tokens: ["scope"] } },
+    {
+      added: {
+        id: "purposeUsers",
+        label: "Intended purpose and users of the services and deliverables",
+        type: "text",
+        required: true,
+        tokens: ["purposeUsers"],
+      },
+      why: 'Schedule A prints "Intended purpose and users: [ ]" and Schedule C "Intended permitted use: [ ]", which the licence and the rights record rely on, and v1 asks nothing for them.',
+    },
+    {
+      added: {
+        id: "reviewPeriods",
+        label: "Review period and correction period for the deliverables",
+        type: "text",
+        required: true,
+        tokens: ["reviewPeriods"],
+      },
+      why: 'Schedule A prints "Review period and correction period: [ ]", which the review and correction clause relies on, and v1 asks nothing for it.',
+    },
+    {
+      added: {
+        id: "customerInputs",
+        label: "Information, access and decisions the customer will provide, with their dates, or none",
+        type: "long_text",
+        required: true,
+        tokens: ["customerInputs"],
+      },
+      why: 'Schedule A prints "Customer inputs, access and dates: [ ]", which the clause on responsibilities relies on, and v1 asks nothing for it.',
+    },
+    {
+      added: {
+        id: "providerAssumptions",
+        label: "Provider dependencies and agreed assumptions, or none",
+        type: "long_text",
+        required: true,
+        tokens: ["providerAssumptions"],
+      },
+      why: 'Schedule A prints "Provider dependencies and agreed assumptions: [ ]", which the clause on responsibilities relies on, and v1 asks nothing for it.',
+    },
+    { v1: "changeControl", join: { tokens: ["changeControl"] } },
+    {
+      added: {
+        id: "subcontractors",
+        label: "Approved subcontractors, systems and access, or none",
+        type: "long_text",
+        required: true,
+        tokens: ["subcontractors"],
+      },
+      why: 'Schedule A prints "Approved subcontractors, systems and access: [ ]", which the subcontracting clause relies on, and v1 asks nothing for it.',
+    },
+    { v1: "feeKobo", join: { tokens: ["feeKobo"] } },
+    { v1: "paymentTerms", join: { tokens: ["paymentTerms"] } },
+    { v1: "expensesTerms", join: { tokens: ["expensesTerms"] } },
+    { v1: "taxTreatment", join: { tokens: ["taxTreatment"] } },
+    {
+      added: {
+        id: "rightsArrangement",
+        label: "Rights arrangement for the new deliverables",
+        type: "select",
+        required: true,
+        options: [
+          { value: "licence", label: "Licence" },
+          { value: "assignment", label: "Assignment" },
+        ],
+        tokens: ["rightsArrangement"],
+      },
+      why: 'Schedule C prints "Chosen arrangement, Licence or Assignment, select one: [ ]", which the rights clause requires, and v1 asks nothing for it.',
+    },
+    { v1: "ipTerms", join: { tokens: ["ipTerms"] } },
+    { v1: "terminationTerms", join: { tokens: ["terminationTerms"] } },
+    { v1: "confidentialityTerms", join: { tokens: ["confidentialityTerms"] } },
+    { v1: "disputeTerms", join: { tokens: ["disputeTerms"] } },
+  ],
+  dropped: {
+    liabilityTerms:
+      "The agreement imposes no blanket exclusion, indemnity or liability cap and says any negotiated limitation needs its own explicit, reviewed wording, so it has no place for one.",
+  },
+  // Completed by hand: each signatory's authority, the entries the parties settle as they sign
+  // (an advance, the deliverables the rights record covers, third-party materials, any item for
+  // separate rights resolution, the notice addresses and incident contacts), and the signatures.
+  blanks: [
+    "signatoryAuthority",
+    "advance",
+    "deliverablesCovered",
+    "thirdPartyMaterials",
+    "rightsResolution",
+    "noticeContacts",
+    "customerSignatory",
+    "customerCapacity",
+    "customerSignature",
+    "customerDate",
+    "providerSignatory",
+    "providerCapacity",
+    "providerSignature",
+    "providerDate",
+  ],
+});
+
+/** A new required question for one line of an agreement's wording that v1 does not ask for. */
+const entryQuestion = (id: string, label: string, line: string, type: "text" | "long_text" = "text") => ({
+  added: { id, label, type, required: true, tokens: [id] },
+  why: `The agreement prints "${line}", which its clauses rely on, and v1 asks nothing for it.`,
+});
+
+/**
+ * The consultancy agreement (TPL-14), a premium form. As in the service agreement, a new choice says
+ * which party is the consultant, so each party's details and signature name print in its role.
+ */
+const consultancyAgreement = fromV1("TPL-14", {
+  questions: [
+    ...party("issuer", "firstParty"),
+    ...party("recipient", "secondParty"),
+    {
+      added: {
+        id: "consultantParty",
+        label: "Which party is the consultant?",
+        type: "select",
+        required: true,
+        options: [
+          { value: "first", label: "First party" },
+          { value: "second", label: "Second party" },
+        ],
+        clause: true,
+      },
+      why: "The agreement names its parties as the Client and the Consultant, and v1 asks only for a first and a second party: the choice puts each party's details in its own place.",
+    },
+    { v1: "documentNumber", join: { tokens: ["documentNumber"] } },
+    { v1: "issueDate", join: { tokens: ["issueDate"] } },
+    { v1: "startDate", join: { tokens: ["startDate"] } },
+    { v1: "termType", join: { tokens: ["endTerm"] } },
+    { v1: "endDate", join: { tokens: ["endTerm"] } },
+    entryQuestion("clientDecisionMaker", "Client decision-maker", "Client decision-maker [ ]"),
+    entryQuestion("consultantLead", "Consultant lead", "Consultant lead [ ]"),
+    { v1: "jurisdiction", join: { tokens: ["jurisdiction"] } },
+    entryQuestion(
+      "questionsPurpose",
+      "Business questions the consultancy addresses, and its purpose",
+      "Business questions and purpose: [ ]",
+      "long_text",
+    ),
+    entryQuestion(
+      "usersCirculation",
+      "Intended users of the deliverables and their permitted circulation",
+      "Deliverables, intended users and permitted circulation: [ ]",
+    ),
+    { v1: "scope", join: { tokens: ["scope"] } },
+    { v1: "dependencies", join: { tokens: ["dependencies"] } },
+    entryQuestion(
+      "reviewPeriods",
+      "Milestones, review period and correction period",
+      "Milestones, review period and correction period: [ ]",
+    ),
+    entryQuestion(
+      "keyPeople",
+      "Key people, approved subcontractors and tools, or none",
+      "Key people, approved subcontractors and tools: [ ]",
+      "long_text",
+    ),
+    { v1: "feeKobo", join: { tokens: ["feeKobo"] } },
+    { v1: "paymentTerms", join: { tokens: ["paymentTerms"] } },
+    { v1: "expensesTerms", join: { tokens: ["expensesTerms"] } },
+    { v1: "taxTreatment", join: { tokens: ["taxTreatment"] } },
+    { v1: "ipTerms", join: { tokens: ["ipTerms"] } },
+    { v1: "terminationTerms", join: { tokens: ["terminationTerms"] } },
+    { v1: "confidentialityTerms", join: { tokens: ["confidentialityTerms"] } },
+    { v1: "disputeTerms", join: { tokens: ["disputeTerms"] } },
+  ],
+  dropped: {
+    statusAssumptions:
+      "The agreement records that neither party is the other's agent and that its labels establish no employment classification, and has no place for the business's own notes on the working relationship.",
+    liabilityTerms:
+      "The agreement adds no indemnity, remedy waiver or liability cap and says any proposed limitation must be separately specified and reviewed, so it has no place for one.",
+  },
+  tables: {
+    deliverables: {
+      maxRows: {
+        rows: 20,
+        why: "Each output prints as a line of its own in Schedule A, and up to 20 keep the longest agreement within what a document holds.",
+      },
+    },
+  },
+  // Completed by hand: the schedule entries v1 asks nothing for, which the parties settle as they
+  // sign, and the signatures.
+  blanks: [
+    "assumptionsLimits",
+    "conflicts",
+    "timeRecord",
+    "advance",
+    "deliverablesLicensed",
+    "rightsVariation",
+    "incidentContacts",
+    "noticeAddresses",
+    "clientSignatory",
+    "clientAuthority",
+    "clientSignature",
+    "consultantSignatory",
+    "consultantAuthority",
+    "consultantSignature",
+  ],
+});
+
 /** The v2 forms, by template. A template without one stays on its v1 form. */
 export const GUIDED_SPECS_V2: Readonly<Partial<Record<GuidedTemplateId, GuidedSpecV2>>> = {
   "TPL-01": invoice.spec,
@@ -765,6 +1156,10 @@ export const GUIDED_SPECS_V2: Readonly<Partial<Record<GuidedTemplateId, GuidedSp
   "TPL-05": deliveryNote.spec,
   "TPL-08": minutes.spec,
   "TPL-12": reminder.spec,
+  "TPL-13": serviceAgreement.spec,
+  "TPL-14": consultancyAgreement.spec,
+  "TPL-15": nonDisclosure.spec,
+  "TPL-16": employmentContract.spec,
   "TPL-17": offerLetter.spec,
 };
 /** What each v2 form adds to and leaves out of its v1 questions, with the reasons. */
@@ -776,5 +1171,9 @@ export const GUIDED_CHANGES_V2: Readonly<Partial<Record<GuidedTemplateId, Guided
   "TPL-05": deliveryNote.changes,
   "TPL-08": minutes.changes,
   "TPL-12": reminder.changes,
+  "TPL-13": serviceAgreement.changes,
+  "TPL-14": consultancyAgreement.changes,
+  "TPL-15": nonDisclosure.changes,
+  "TPL-16": employmentContract.changes,
   "TPL-17": offerLetter.changes,
 };

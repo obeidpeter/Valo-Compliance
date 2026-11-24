@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { parseFormText } from "@workspace/valo-core/form-text";
+import { baselineTemplates } from "@workspace/valo-core";
+import { parseFormText, type FormInline, type FormNode } from "@workspace/valo-core/form-text";
 import type { GuidedTemplateId } from "@workspace/valo-core/guided";
 import {
   compileForm,
@@ -65,7 +66,20 @@ function fromWords(part: string[], whole: string[]) {
 }
 
 test("every map turns its retained draft into form text that the v2 form fits exactly", async () => {
-  assert.deepEqual(mapped, ["TPL-01", "TPL-02", "TPL-03", "TPL-04", "TPL-05", "TPL-08", "TPL-12", "TPL-17"]);
+  assert.deepEqual(mapped, [
+    "TPL-01",
+    "TPL-02",
+    "TPL-03",
+    "TPL-04",
+    "TPL-05",
+    "TPL-08",
+    "TPL-12",
+    "TPL-13",
+    "TPL-14",
+    "TPL-15",
+    "TPL-16",
+    "TPL-17",
+  ]);
   for (const templateId of mapped) {
     const spec = GUIDED_SPECS_V2[templateId];
     assert.ok(spec, templateId);
@@ -88,6 +102,12 @@ test("form text adds no words: with its slots left empty, every combination of c
     const { section } = await readTemplateIntake(templateId);
     const draft = words(section.body);
     const text = parseFormText((await proposedFormText(templateId))!);
+    // The form text's title shows only in the staff library's outline: a document is named by its own
+    // title. A draft without a title line may take the template's registered title; any other title,
+    // like every block, prints only the draft's words.
+    const ownTitle = /^# \S/.test(section.body.trim().split("\n")[0]!);
+    const registeredTitle =
+      !ownTitle && text.title === baselineTemplates.find((template) => template.id === templateId)!.title;
     // Calculations left empty too: they print their placeholders. A choice that also fills a slot,
     // such as a delivery's status, is an answer there, so its slot is left empty like any other.
     const empty = (choices: Record<string, string>): GuidedSpecV2 => ({
@@ -107,12 +127,16 @@ test("form text adds no words: with its slots left empty, every combination of c
     // their order; every other map keeps their order too.
     const moves = FORM_TEXT_MAPS[templateId]!.some((change) => change.moves);
     const combinations = choiceCombinations(spec);
-    assert.ok(combinations.length > 1, templateId);
+    // More than one combination exactly when the form has a choice: the non-disclosure agreement has
+    // none, only an optional sentence.
+    const hasChoice =
+      spec.fields.some((f) => f.clause || f.type === "acknowledgement") || Boolean(spec.derived);
+    assert.equal(combinations.length > 1, hasChoice, templateId);
     for (const choices of combinations) {
       const data = emptyFormData(spec);
       data.values = { ...data.values, ...choices };
       const out = compileForm(empty(choices), text, data);
-      const printed = [...words(out.title), ...printedWords(out.blocks)];
+      const printed = [...(registeredTitle ? [] : words(out.title)), ...printedWords(out.blocks)];
       assert.ok(
         moves ? fromWords(printed, draft) : subsequence(printed, draft),
         `${templateId} ${JSON.stringify(choices)}`,
@@ -123,6 +147,36 @@ test("form text adds no words: with its slots left empty, every combination of c
       const leavesOut = !subsequence(words(change.from), words(change.to.replace(/\{[^}]*\}/g, "")));
       if (leavesOut || change.to.includes("{?") || change.moves) assert.ok(change.why, change.from);
     }
+  }
+});
+
+test("no placeholder is left out silently: every bracketed placeholder of the text is a slot, unless it prints only while a choice is unanswered", async () => {
+  const literal = /\[[^\]]*\]/;
+  for (const templateId of mapped) {
+    const text = parseFormText((await proposedFormText(templateId))!);
+    const left: string[] = [];
+    const inline = (parts: FormInline[], unanswered: boolean) => {
+      for (const part of parts) {
+        if (part.kind === "text" && !unanswered && literal.test(part.text)) left.push(part.text);
+        if (part.kind === "span") inline(part.parts, unanswered || part.span.option === "");
+      }
+    };
+    const walk = (nodes: FormNode[], unanswered: boolean) => {
+      for (const node of nodes) {
+        if (node.kind === "heading") inline(node.parts, unanswered);
+        if (node.kind === "paragraph") for (const line of node.lines) inline(line, unanswered);
+        if (node.kind === "list") for (const item of node.items) inline(item, unanswered);
+        if (node.kind === "table") {
+          for (const cell of node.header) inline(cell, unanswered);
+          for (const row of node.rows)
+            for (const cell of row.cells) inline(cell, unanswered || row.span?.option === "");
+        }
+        if (node.kind === "span") walk(node.nodes, unanswered || node.span.option === "");
+        if (node.kind === "repeat") walk(node.nodes, unanswered);
+      }
+    };
+    walk(text.nodes, false);
+    assert.deepEqual(left, [], templateId);
   }
 });
 
@@ -725,6 +779,411 @@ test("an offer letter's answers fill its own wording: the employer and the candi
   assert.ok(empty.includes("Employment duration: [Indefinite / fixed term with stated end and basis]"));
   assert.ok(empty.includes("Notice and any initial review period: [Validated terms]; no default probation"));
   assert.ok(empty.includes("[ ]"));
+});
+
+test("an employment contract's answers fill its own clauses once each: Schedule A keeps the leave and notice, Schedule B the documents, and the agreement record is left for completion by hand", async () => {
+  const spec = GUIDED_SPECS_V2["TPL-16"]!;
+  const text = parseFormText((await proposedFormText("TPL-16"))!);
+  const data = emptyFormData(spec);
+  data.values = {
+    ...data.values,
+    issuerName: "Synthetic Employer Ltd",
+    issuerAddress: "12 Synthetic Way\nIkeja, Lagos",
+    recipientName: "Ada Synthetic",
+    recipientAddress: "4 Synthetic Close\nYaba, Lagos",
+    documentNumber: "SYN-EC-001",
+    contractVersion: "1",
+    engagementPlace: "Ikeja, Lagos State",
+    issueDate: "2026-11-24",
+    role: "Synthetic accounts officer",
+    reportsTo: "Synthetic finance manager",
+    duties: "Synthetic role description, version 1",
+    workplace: "Synthetic head office, Ikeja; no remote work",
+    startDate: "2027-01-04",
+    earlierService: "none confirmed",
+    termType: "open",
+    probation: "no",
+    grossPayKobo: "35000000",
+    payPeriod: "month",
+    payBasis: "a fixed monthly salary, paid by bank transfer on the last working day",
+    allowances: "a transport allowance, paid with the salary",
+    hours: "Monday to Friday, 8am to 5pm, with a one-hour break",
+    workContact: "the synthetic HR manager",
+    leaveTerms: "Synthetic leave schedule, version 1",
+    benefits: "the synthetic pension scheme",
+    confidentialityTerms: "Synthetic confidentiality and IP schedule, version 1",
+    grievanceTerms: "Synthetic disciplinary and grievance procedure, version 2",
+    terminationTerms: "One month's written notice by either party",
+    policies: "Synthetic employee handbook, version 2",
+    termsReviewed: "yes",
+  };
+  const compiled = (values: Record<string, string> = {}) =>
+    compileForm(spec, text, { ...data, values: { ...data.values, ...values } });
+  const out = compiled();
+  assert.equal(out.title, "EMPLOYMENT CONTRACT");
+  const shown = out.blocks.map((b) => b.text);
+  assert.deepEqual(shown.slice(0, 3), [
+    "Contract reference: SYN-EC-001 \u00b7 Version: 1 \u00b7 Date: 24 Nov 2026",
+    "This agreement is between Synthetic Employer Ltd, of 12 Synthetic Way, Ikeja, Lagos,",
+    "and Ada Synthetic, of 4 Synthetic Close, Yaba, Lagos. The employer appoints the employee on the terms below and the completed schedules identified in this agreement.",
+  ]);
+  const starting = (words: string) => shown.find((line) => line.startsWith(words));
+  assert.equal(
+    starting("Employment starts on"),
+    "Employment starts on 4 Jan 2027. Recognised earlier continuous service, if any, is none confirmed. The engagement is indefinite. Any renewal or change will be recorded separately; a blank renewal field is not a promise or automatic extension.",
+  );
+  assert.equal(
+    starting("Gross basic pay"),
+    "Gross basic pay is \u20a6350,000.00 per Month, calculated as a fixed monthly salary, paid by bank transfer on the last working day.",
+  );
+  assert.equal(
+    starting("Separately identified"),
+    "Separately identified allowances or variable pay are a transport allowance, paid with the salary. The employer will provide a clear record of the amounts paid and any deductions.",
+  );
+  assert.equal(
+    starting("Normal working days"),
+    "Normal working days and hours are Monday to Friday, 8am to 5pm, with a one-hour break. Recording or approving extra work must reflect what actually occurred. There is no agreement here to unlimited unpaid overtime.",
+  );
+  // One contact answers each question the draft gives a contact for.
+  assert.equal(shown.join("\n").split("the synthetic HR manager").length - 1, 4);
+  // Without a review period or qualifications, neither passage prints.
+  assert.ok(!shown.some((line) => /initial review period|Required qualifications/.test(line)));
+  assert.deepEqual(
+    out.blocks.filter((b) => b.type === "list").map((b) => b.text),
+    [
+      "Engagement place/date: Ikeja, Lagos State, 24 Nov 2026",
+      "Annual leave quantity, unit, qualifying basis and pay; Sick leave/pay and appropriate evidence process; Maternity-related leave/pay, nursing arrangements and applicable protection; Other leave and contractual improvements: Synthetic leave schedule, version 1",
+      "Employer notice; employee notice; payment-in-lieu basis: One month's written notice by either party",
+    ],
+  );
+  const scheduleB = shown.indexOf("Schedule B \u2014 associated documents");
+  assert.equal(shown[scheduleB + 1], "Synthetic employee handbook, version 2");
+  assert.deepEqual(shown.slice(-2), [
+    "Employer representative name and authority: [ ]\nEmployee name: Ada Synthetic\nActual agreement/signature record and dates, only when completed by the parties: [ ]\nCopy provided to employee on: [actual date]",
+    "No signature or agreement is created by generating this document.",
+  ]);
+  assert.deepEqual(out.selectedClauses, ["termType=open", "probation=no"]);
+  assert.deepEqual(out.unfilled, []);
+  // A fixed term, an agreed review period, qualifications and special conditions print when given.
+  const other = compiled({
+    termType: "fixed",
+    endDate: "2027-12-31",
+    probation: "yes",
+    probationTerms: "three months, reviewed monthly",
+    qualifications: "a synthetic accounting certificate, held",
+    specialConditions: "Synthetic condition",
+    contractVersion: "",
+  });
+  const otherShown = other.blocks.map((b) => b.text);
+  assert.equal(otherShown[0], "Contract reference: SYN-EC-001 \u00b7 Date: 24 Nov 2026");
+  assert.ok(otherShown.some((line) => line.includes("The engagement is fixed term ending on 31 Dec 2027.")));
+  assert.ok(
+    otherShown.includes(
+      "The agreed initial review period is three months, reviewed monthly. Any proposed extension will be discussed and documented before implementation; no extension or termination is assumed merely because a review was not recorded.",
+    ),
+  );
+  assert.ok(
+    otherShown.includes(
+      "Required qualifications or permissions for the role are a synthetic accounting certificate, held; no missing qualification is represented as held.",
+    ),
+  );
+  assert.equal(
+    other.blocks.filter((b) => b.type === "list").at(-1)!.text,
+    "Special conditions individually agreed and separately checked: Synthetic condition",
+  );
+  assert.deepEqual(other.unfilled, []);
+  // Unanswered, the review period prints the draft's own direction.
+  const empty = compileForm(spec, text, emptyFormData(spec)).blocks.map((b) => b.text);
+  assert.ok(
+    empty.some((line) =>
+      line.startsWith("[Include only a separately validated, expressly agreed probation clause:"),
+    ),
+  );
+});
+
+test("a non-disclosure agreement's answers fill its mutual wording: each party's identity, the purpose and periods, the governing law, and the register and signatures left for completion by hand", async () => {
+  const spec = GUIDED_SPECS_V2["TPL-15"]!;
+  const text = parseFormText((await proposedFormText("TPL-15"))!);
+  assert.equal(text.title, "Non-disclosure agreement");
+  const data = emptyFormData(spec);
+  data.values = {
+    ...data.values,
+    issuerName: "Synthetic Alpha Ltd",
+    issuerLegalForm: "private company limited by shares",
+    issuerRegistration: "RC 000001",
+    issuerAddress: "1 Synthetic Road\nIkeja, Lagos",
+    recipientName: "Synthetic Beta Ltd",
+    recipientLegalForm: "private company limited by shares",
+    recipientAddress: "2 Synthetic Street, Yaba, Lagos",
+    documentNumber: "SYN-NDA-001",
+    issueDate: "2026-11-24",
+    purpose: "evaluating a synthetic joint supply arrangement",
+    disclosureStart: "2026-12-01",
+    disclosureEnd: "2027-03-31",
+    duration: "two years from each disclosure",
+    permittedRecipients: "each party's directors and finance staff who need to know",
+    jurisdiction: "Lagos State",
+    protectedInfo: "price lists and supplier terms",
+    returnTerms: "14 days",
+    disputeTerms: "each party's managing director after 10 working days",
+  };
+  const compiled = (values: Record<string, string> = {}) =>
+    compileForm(spec, text, { ...data, values: { ...data.values, ...values } });
+  const out = compiled();
+  const shown = out.blocks.map((b) =>
+    b.type === "table" ? b.rows.map((r) => r.join(" | ")).join("\n") : b.text,
+  );
+  assert.deepEqual(shown.slice(0, 7), [
+    "Parties, purpose and periods",
+    "This mutual agreement is between Synthetic Alpha Ltd, private company limited by shares, RC 000001, 1 Synthetic Road, Ikeja, Lagos",
+    "and Synthetic Beta Ltd, private company limited by shares, 2 Synthetic Street, Yaba, Lagos. Agreement reference SYN-NDA-001; date 24 Nov 2026. Each is a Discloser when supplying its information and a Recipient when receiving the other's information.",
+    "Permitted purpose: evaluating a synthetic joint supply arrangement.",
+    "Disclosure period: 1 Dec 2026 to 31 Mar 2027. Protection period for each disclosure: two years from each disclosure.",
+    "Named contacts and permitted recipient categories: each party's directors and finance staff who need to know.",
+    "Nigerian State/FCT and relevant governing-law choice: Lagos State. Courts of competent jurisdiction/location: Lagos State. Complete these entries and the signature authority before signing. This is not a non-compete, employment restraint, data-processing agreement or permission to conceal misconduct.",
+  ]);
+  const containing = (words: string) => shown.find((line) => line.includes(words));
+  assert.match(
+    containing("Examples relevant")!,
+    /Examples relevant to this exchange: price lists and supplier terms\./,
+  );
+  // Without approved tools, their sentence does not print and none is approved.
+  assert.match(containing("unapproved AI system")!, /external service\. No password, payment credential/);
+  assert.match(
+    compiled({ approvedTools: "the synthetic shared drive" })
+      .blocks.map((b) => b.text)
+      .join("\n"),
+    /external service\. Approved tools and storage locations, if any: the synthetic shared drive\. No password/,
+  );
+  assert.match(containing("securely delete copies")!, /copies within 14 days, confirming/);
+  assert.match(
+    containing("escalate to")!,
+    /escalate to each party's managing director after 10 working days, without preventing/,
+  );
+  assert.ok(shown.includes("Notice addresses/email: Party A 1 Synthetic Road, Ikeja, Lagos;"));
+  assert.ok(
+    shown.some((line) => line.startsWith("Party B 2 Synthetic Street, Yaba, Lagos. Notices must identify")),
+  );
+  // The exchange register and the signatures are completed by hand.
+  assert.ok(
+    shown.includes(
+      "Disclosure reference/date | Information/category and purpose | Discloser/approved recipients | Protection end or agreed basis\n[ ] | [ ] | [ ] | [ ]\n[ ] | [ ] | [ ] | [ ]",
+    ),
+  );
+  assert.ok(
+    shown.some((line) =>
+      line.startsWith(
+        "Party A legal name Synthetic Alpha Ltd; signatory/name/capacity [ ]; authority reference [ ]; signature/date [ ]. Party B legal name Synthetic Beta Ltd; signatory/name/capacity [ ]",
+      ),
+    ),
+  );
+  assert.deepEqual(out.unfilled, []);
+  assert.deepEqual(out.selectedClauses, []);
+  // A disclosure end before its start is a draft answer and leaves its placeholder.
+  assert.match(
+    compiled({ disclosureEnd: "2026-11-01" })
+      .blocks.map((b) => b.text)
+      .join("\n"),
+    /Disclosure period: 1 Dec 2026 to \[end\]\./,
+  );
+});
+
+test("a service agreement's answers fill its wording with each party in the role chosen, the deliverables as rows of their own, the schedules one entry to a line, and the signatures left for completion by hand", async () => {
+  const spec = GUIDED_SPECS_V2["TPL-13"]!;
+  const text = parseFormText((await proposedFormText("TPL-13"))!);
+  assert.equal(text.title, "Service agreement");
+  const data = emptyFormData(spec);
+  data.values = {
+    ...data.values,
+    issuerName: "Synthetic Provider Ltd",
+    issuerLegalForm: "private company limited by shares",
+    issuerRegistration: "RC 000002",
+    issuerAddress: "3 Synthetic Avenue, Surulere, Lagos",
+    recipientName: "Synthetic Customer Ltd",
+    recipientLegalForm: "private company limited by shares",
+    recipientAddress: "4 Synthetic Close, Yaba, Lagos",
+    providerParty: "first",
+    documentNumber: "SYN-SA-001",
+    issueDate: "2026-11-24",
+    startDate: "2026-12-01",
+    termType: "fixed",
+    endDate: "2027-05-31",
+    jurisdiction: "Lagos State",
+    scope: "Monthly bookkeeping for two synthetic shops; payroll excluded",
+    purposeUsers: "the customer's management, for its own accounts",
+    reviewPeriods: "5 working days to review; 10 to correct",
+    customerInputs: "Bank statements by the 5th of each month",
+    providerAssumptions: "Statements arrive complete",
+    changeControl: "Changes agreed in writing by the two managing directors",
+    subcontractors: "None",
+    feeKobo: "15000000",
+    paymentTerms: "Monthly in arrears, due 14 days after invoice",
+    expensesTerms: "None without written approval",
+    taxTreatment: "Fees exclude any applicable tax",
+    rightsArrangement: "licence",
+    ipTerms: "The provider keeps its own templates and methods",
+    terminationTerms: "30 days' notice by either party",
+    confidentialityTerms: "Two years after the engagement ends",
+    disputeTerms: "The managing directors, after 15 days",
+  };
+  data.tables.deliverables = [
+    {
+      description: "Monthly management accounts",
+      acceptance: "Reconciled to bank statements",
+      timing: "By the 15th, by email",
+    },
+  ];
+  const compiled = (values: Record<string, string> = {}) =>
+    compileForm(spec, text, { ...data, values: { ...data.values, ...values } });
+  const shownOf = (out: ReturnType<typeof compiled>) =>
+    out.blocks.map((b) => (b.type === "table" ? b.rows.map((r) => r.join(" | ")).join("\n") : b.text));
+  const out = compiled();
+  const shown = shownOf(out);
+  // The first party provides the services here, so it prints as the Provider.
+  assert.deepEqual(shown.slice(1, 4), [
+    "This agreement is between Synthetic Customer Ltd, private company limited by shares, 4 Synthetic Close, Yaba, Lagos (Customer)",
+    "and Synthetic Provider Ltd, private company limited by shares, RC 000002, 3 Synthetic Avenue, Surulere, Lagos (Provider).",
+    "Agreement reference: SYN-SA-001. Date of agreement: 24 Nov 2026. Start date: 1 Dec 2026. End date or completion event: Fixed end date, 31 May 2027. Each signatory's authority reference: [ ].",
+  ]);
+  assert.ok(
+    shown.some((line) =>
+      line.includes(
+        "Republic of Nigeria and Lagos State. The parties select the courts of competent jurisdiction in Lagos State.",
+      ),
+    ),
+  );
+  assert.ok(
+    shown.includes(
+      " | Milestones and delivery format/location | Objective acceptance criteria for each deliverable\nMonthly management accounts | By the 15th, by email | Reconciled to bank statements",
+    ),
+  );
+  const lists = out.blocks.filter((b) => b.type === "list").map((b) => b.text);
+  for (const line of [
+    "Services, deliverables and explicit exclusions: Monthly bookkeeping for two synthetic shops; payroll excluded",
+    "Customer and Provider contacts/decision authority: Changes agreed in writing by the two managing directors",
+    "Currency and fee calculation: \u20a6150,000.00",
+    "Advance and how credited/refunded: [ ]",
+    "Tax inclusion/exclusion and verified treatment; Any verified withholding basis and evidence: Fees exclude any applicable tax",
+    "Chosen arrangement, Licence or Assignment, select one: Licence",
+    "Intended permitted use: the customer's management, for its own accounts",
+    "Convenience notice; Breach remedy period; Disruption exit period; Approved non-cancellable commitments and termination calculation: 30 days' notice by either party",
+    "Notice addresses and incident contacts: [ ]",
+    "State/FCT, governing-law entry and court location completed: Lagos State",
+  ])
+    assert.ok(lists.includes(line), line);
+  assert.ok(
+    shown
+      .at(-1)!
+      .startsWith(
+        "For the Customer: legal name Synthetic Customer Ltd; signatory name [ ]; capacity and authority [ ]; signature [ ]; date [ ]. For the Provider: legal name Synthetic Provider Ltd; signatory name [ ];",
+      ),
+  );
+  assert.deepEqual(out.selectedClauses, ["providerParty=first"]);
+  assert.deepEqual(out.unfilled, []);
+  // With the second party providing the services, the roles swap; unanswered, the draft's
+  // placeholders print.
+  const swapped = shownOf(compiled({ providerParty: "second", termType: "open" }));
+  assert.equal(
+    swapped[1],
+    "This agreement is between Synthetic Provider Ltd, private company limited by shares, RC 000002, 3 Synthetic Avenue, Surulere, Lagos (Customer)",
+  );
+  assert.ok(
+    swapped[3]!.includes("End date or completion event: Open-ended, with specified termination terms."),
+  );
+  assert.ok(swapped.at(-1)!.startsWith("For the Customer: legal name Synthetic Provider Ltd;"));
+  const unanswered = shownOf(compiled({ providerParty: "" }));
+  assert.equal(
+    unanswered[1],
+    "This agreement is between [Customer legal name, entity type, registration reference if applicable, address] (Customer) and [Provider legal name, entity type, registration reference if applicable, address] (Provider).",
+  );
+  assert.ok(unanswered.at(-1)!.startsWith("For the Customer: legal name [ ]; signatory name [ ];"));
+});
+
+test("a consultancy agreement's answers fill its wording with each party in the role chosen, each output on a line of its own, the schedules one entry to a line, and the signatures left for completion by hand", async () => {
+  const spec = GUIDED_SPECS_V2["TPL-14"]!;
+  const text = parseFormText((await proposedFormText("TPL-14"))!);
+  assert.equal(text.title, "Consultancy agreement");
+  assert.equal(spec.tables.find((t) => t.id === "deliverables")!.maxRows, 20);
+  const data = emptyFormData(spec);
+  data.values = {
+    ...data.values,
+    issuerName: "Synthetic Advisory Ltd",
+    issuerLegalForm: "private company limited by shares",
+    issuerAddress: "5 Synthetic Road, Ikoyi, Lagos",
+    recipientName: "Synthetic Retail Ltd",
+    recipientLegalForm: "private company limited by shares",
+    recipientAddress: "6 Synthetic Street, Ikeja, Lagos",
+    consultantParty: "first",
+    documentNumber: "SYN-CA-001",
+    issueDate: "2026-11-24",
+    startDate: "2026-12-01",
+    termType: "open",
+    clientDecisionMaker: "Synthetic managing director",
+    consultantLead: "Synthetic lead consultant",
+    jurisdiction: "Lagos State",
+    questionsPurpose: "Whether to open a second synthetic shop",
+    usersCirculation: "The client's board only",
+    scope: "Market research and a recommendation; no implementation",
+    dependencies: "Sales records for the last two years",
+    reviewPeriods: "Draft by 31 Jan 2027; 5 days to review; 5 to correct",
+    keyPeople: "Synthetic lead consultant; no subcontractors",
+    feeKobo: "50000000",
+    paymentTerms: "Half on signing, half on the final report",
+    expensesTerms: "None without approval",
+    taxTreatment: "Fees exclude any applicable tax",
+    ipTerms: "The consultant keeps its methods",
+    terminationTerms: "14 days' notice",
+    confidentialityTerms: "Three years after the end",
+    disputeTerms: "The leads, then the decision-makers after 10 days",
+  };
+  data.tables.deliverables = [
+    { description: "Market report", acceptance: "Answers the agreed questions", timing: "31 Jan 2027" },
+    { description: "Board briefing", acceptance: "Covers the report's findings", timing: "15 Feb 2027" },
+  ];
+  const compiled = (values: Record<string, string> = {}) =>
+    compileForm(spec, text, { ...data, values: { ...data.values, ...values } });
+  const out = compiled();
+  const shown = out.blocks.map((b) => b.text);
+  // The first party is the consultant here, so the second party prints as the Client.
+  assert.deepEqual(shown.slice(1, 4), [
+    "Synthetic Retail Ltd, private company limited by shares, 6 Synthetic Street, Ikeja, Lagos (Client)",
+    "engages Synthetic Advisory Ltd, private company limited by shares, 5 Synthetic Road, Ikoyi, Lagos (Consultant).",
+    "Agreement reference SYN-CA-001; date 24 Nov 2026; start 1 Dec 2026; completion/end Open-ended, with specified termination terms. Client decision-maker Synthetic managing director; Consultant lead Synthetic lead consultant.",
+  ]);
+  const lists = out.blocks.filter((b) => b.type === "list").map((b) => b.text);
+  assert.deepEqual(lists.slice(0, 5), [
+    "Business questions and purpose: Whether to open a second synthetic shop",
+    "Deliverables, intended users and permitted circulation: The client's board only",
+    "Market report: 31 Jan 2027; Answers the agreed questions",
+    "Board briefing: 15 Feb 2027; Covers the report's findings",
+    "Work included and excluded; Method and evidential standard: Market research and a recommendation; no implementation",
+  ]);
+  for (const line of [
+    "Assumptions to test; known limitations: [ ]",
+    "Fee basis and currency \u20a6500,000.00; milestones/rates; invoice/payment dates Half on signing, half on the final report",
+    "time-record method if relevant [ ]; advance and credit/refund basis [ ]",
+    "Convenience notice; breach remedy period; disruption exit period; pre-approved non-cancellable commitments 14 days' notice",
+    "completed Nigeria/State/FCT and court location entry Lagos State",
+  ])
+    assert.ok(lists.includes(line), line);
+  assert.ok(
+    shown
+      .at(-1)!
+      .startsWith(
+        "Client legal name Synthetic Retail Ltd; authorised signatory/name/capacity [ ]; authority reference [ ]; signature/date [ ]. Consultant legal name Synthetic Advisory Ltd;",
+      ),
+  );
+  assert.deepEqual(out.selectedClauses, ["consultantParty=first"]);
+  assert.deepEqual(out.unfilled, []);
+  // With the second party as the consultant, the roles swap; unanswered, the draft's placeholders print.
+  const swapped = compiled({ consultantParty: "second" }).blocks.map((b) => b.text);
+  assert.ok(swapped[1]!.startsWith("Synthetic Advisory Ltd, private company limited by shares"));
+  assert.ok(swapped.at(-1)!.startsWith("Client legal name Synthetic Advisory Ltd;"));
+  const unanswered = compiled({ consultantParty: "" }).blocks.map((b) => b.text);
+  assert.equal(
+    unanswered[1],
+    "[Client legal name, entity type, registration reference if applicable, address] (Client) engages [Consultant legal name, entity type, registration reference if applicable, address] (Consultant).",
+  );
 });
 
 test("an invoice form document is saved as its answers make it, hashed as V2, and its file prints the template's wording with only its note among its fields", async () => {

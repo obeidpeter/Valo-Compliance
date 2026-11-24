@@ -771,10 +771,23 @@ test(
           (await status()).items.find((entry) => entry.retainedId === "TPL-01")!.formText,
           "proposed",
         );
+        // Waiting for its form text now: the invoice, and each mapped template that was in the library
+        // before this test filed the drafts, under an item with no form text (an earlier test's
+        // synthetic service agreement, for one). Every template this test filed has its form text.
+        const waiting = (await status()).items
+          .filter((entry) => entry.formText === "proposed")
+          .map((entry) => entry.retainedId);
+        assert.ok(waiting.includes("TPL-01"));
+        assert.deepEqual(
+          waiting.filter((id) => id !== "TPL-01" && loaded.includes(id)),
+          [],
+          "every template filed here was filed with its form text",
+        );
+        // Filing form text files exactly those, once each.
         const withForm = LoadRetainedDraftsResponse.parse(
           await ok(await call(retained, { load: "form_text" })),
         );
-        assert.deepEqual(withForm.loaded, ["TPL-01"]);
+        assert.deepEqual(withForm.loaded, waiting);
         assert.equal(withForm.remaining, 0);
         assert.equal(withForm.status.items.find((entry) => entry.retainedId === "TPL-01")!.formText, "filed");
         const filedForm = await latest();
