@@ -35,7 +35,12 @@ export const readinessQueries = {
   roleChanges:
     "SELECT count(*)::int AS value FROM (SELECT 1 FROM valo_staff_role_changes WHERE created_at > now() - interval '1 hour' LIMIT 10001) bounded",
   bulkExports: atQuotaLimit(["export-create"]),
-  paymentActivity: atQuotaLimit(["checkout-create", "refund-create", "refund-create-day"]),
+  paymentActivity: atQuotaLimit([
+    "checkout-create",
+    "checkout-create-day",
+    "refund-create",
+    "refund-create-day",
+  ]),
   aiActivity: atQuotaLimit(["customer-ai"]),
 } as const;
 /** Each security reading and the subject its alerts are named after. */

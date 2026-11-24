@@ -18,7 +18,7 @@ import { z } from "zod";
 import { activeTemplatePrices, isFreeBaselineTemplate, liveOperationalVersions } from "../catalogue";
 import { authorizeWorkspaceRead, authorizeWorkspaceWrite, type WorkspaceActor } from "../workspaces";
 import { ValoProblem } from "../../platform/valo-problem";
-import { consumeQuota, quotaSubjectHash } from "../../lib/valo-quota";
+import { consumeQuota, quotaPolicy, quotaSubjectHash } from "../../lib/valo-quota";
 import {
   assertOrderMatch,
   paystack,
@@ -49,11 +49,14 @@ function audit(tx: Tx, workspaceId: string, actorId: string, action: string, id:
 }
 async function limit(tx: Tx, actor: WorkspaceActor) {
   const hash = quotaSubjectHash(setting("SESSION_SECRET"), "user", actor.identityId);
-  for (const [window, max] of [
-    ["minute", 10],
-    ["day", 100],
+  // SEC-005: ten a minute and an account limit of a hundred a day, each in a counter of its own. One
+  // counter for both would carry the day's count, which the alerts read against the minute's
+  // ceiling, and in each day's first minute both windows would share one row.
+  for (const [bucket, window] of [
+    ["checkout-create", "minute"],
+    ["checkout-create-day", "day"],
   ] as const) {
-    const q = await consumeQuota("checkout-create", hash, max, window, tx);
+    const q = await consumeQuota(bucket, hash, quotaPolicy[bucket], window, tx);
     if (!q.allowed)
       throw new ValoProblem(
         429,
