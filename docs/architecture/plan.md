@@ -9,6 +9,9 @@ share a commit.
 Status values: **done**, **in progress**, **not started**, **blocked** (needs an
 owner decision or spend).
 
+What is left to finish the platform as a whole, release R1 and then R2, is set out in the
+[finishing plan](finishing-plan.md) (proposed on 24 November 2026).
+
 ## Why
 
 Measured on the integration branch at `14c8f38`:
