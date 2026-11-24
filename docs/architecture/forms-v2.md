@@ -127,6 +127,13 @@ purchase of a live edition of that template, with the same evidence the purchase
 A document already made stays the customer's under decision 3: a later refund or withdrawal closes new
 starts and the bought file, not the drafts.
 
+A premium v2 form starts from an edition the workspace bought (slice 6): the most recently released one
+with form text that it holds such a purchase of. The document records the order it was bought under,
+with the edition and digest, and the database accepts that record only for a verified order of that
+exact edition by the same workspace. A workspace that holds a live edition without form text starts the
+questions-only form, as for a free template; one that holds none is told to buy the template first. A
+copy made like another premium form document is a new start, so it needs the purchase too.
+
 ### 5. Rendering and the contract
 
 The renderer gains heading blocks and header rows that repeat on each page, in HTML, PDF and Word.
@@ -150,7 +157,7 @@ fills only the business's own details: never a counterparty, an address, a date,
 | 3 | The renderer: headings and header rows that repeat on each page, v1's HTML pinned. The contract and the revision codec take them in slice 5, with the documents that use them. | EDT-002, EDT-006, EDT-009 |
 | 4 | The library's form text: its column and trigger, the staff save and preview of the fit, the action that files proposed form text as private drafts, and the first v2 form and annotation map, the invoice's (TPL-01). | EDT-001, EDT-002, DOC-004 |
 | 5 | Starting, editing, saving and exporting the free v2 forms, with the document's form record, and the maps and forms of the other six free templates (TPL-02, 03, 04, 05, 08, 12). In three pull requests: 5a, the server, the contract and the form record, with the invoice; 5b, the editor and the workspace around it (its questions filling the wording as they are answered, the preview, what is still needed, reused details, making another and converting, the documents list and the starter's form-first start); 5c, the other six maps, in two pull requests: the quotation, receipt and purchase order (TPL-02, 03 and 04), then the delivery note, the meeting minutes and the payment reminder letter (TPL-05, 08 and 12), whose drafts ask more of the v1 questions than the first three do. | EDT-001, EDT-002, EDT-005, EDT-006, DOC-005 |
-| 6 | The premium v2 forms (TPL-13 to TPL-17), with their maps: each agreement's schedules need more question-to-wording decisions than a free form's. | DOC-004, DOC-005, DOC-007, EDT-010 |
+| 6 | The premium v2 forms (TPL-13 to TPL-17), with their maps: each agreement's schedules need more question-to-wording decisions than a free form's. In three pull requests: 6a, starting a premium form from the edition the workspace bought, with the order it was bought under recorded on the document, and the offer letter (TPL-17), the shortest of the five; 6b, the employment contract (TPL-16); 6c, the service, consultancy and non-disclosure agreements (TPL-13, 14 and 15), whose retained drafts have no title line and name their parties' roles. | DOC-004, DOC-005, DOC-007, EDT-010 |
 | 7 | The starter, the template page, examples and the profile's details. | EDT-001, DOC-005, PRO-003 (in part) |
 
 Tests that pin v1 stay unchanged throughout, among them `valo-guided.test.ts`, `valo-render.test.ts`,
