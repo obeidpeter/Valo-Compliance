@@ -18,13 +18,27 @@ type Plan = {
   questions: readonly ({ v1: string; join?: Join } | { added: GuidedFieldV2; why: string })[];
   /** v1's questions the form does not ask, each with its reason. */
   dropped?: Readonly<Record<string, string>>;
+  /** Changes to v1's tables, each with its reason: columns the form does not ask, and fewer rows
+   * than v1 allows, where the template's wording prints a block or more for each row. */
+  tables?: Readonly<
+    Record<
+      string,
+      {
+        droppedColumns?: Readonly<Record<string, string>>;
+        maxRows?: { rows: number; why: string };
+      }
+    >
+  >;
   blanks?: readonly string[];
   calculated?: GuidedSpecV2["calculated"];
   keepsNothing?: GuidedSpecV2["keepsNothing"];
 };
 export type GuidedChangesV2 = {
   added: { id: string; why: string }[];
+  /** v1's questions the form does not ask; a table's column is named `table.column`. */
   dropped: { id: string; why: string }[];
+  /** v1's tables that take fewer rows in the form. */
+  rows: { table: string; maxRows: number; why: string }[];
 };
 
 function fromV1(templateId: GuidedTemplateId, plan: Plan) {
@@ -34,7 +48,32 @@ function fromV1(templateId: GuidedTemplateId, plan: Plan) {
   const changes: GuidedChangesV2 = {
     added: [],
     dropped: Object.entries(plan.dropped ?? {}).map(([id, why]) => ({ id, why })),
+    rows: [],
   };
+  // A form that changes none of v1's tables asks them as v1 does, by reference.
+  const tables = !plan.tables
+    ? v1.tables
+    : v1.tables.map((table) => {
+        const change = plan.tables?.[table.id];
+        if (!change) return table;
+        for (const [column, why] of Object.entries(change.droppedColumns ?? {})) {
+          if (!table.columns.some((c) => c.id === column))
+            throw Error(`V2_COLUMN_UNKNOWN:${table.id}.${column}`);
+          changes.dropped.push({ id: `${table.id}.${column}`, why });
+        }
+        if (change.maxRows) {
+          if (change.maxRows.rows < table.minRows || change.maxRows.rows >= table.maxRows)
+            throw Error(`V2_ROWS_NOT_FEWER:${table.id}`);
+          changes.rows.push({ table: table.id, maxRows: change.maxRows.rows, why: change.maxRows.why });
+        }
+        return {
+          ...table,
+          columns: table.columns.filter((c) => !change.droppedColumns?.[c.id]),
+          maxRows: change.maxRows?.rows ?? table.maxRows,
+        };
+      });
+  for (const id of Object.keys(plan.tables ?? {}))
+    if (!v1.tables.some((t) => t.id === id)) throw Error(`V2_TABLE_UNKNOWN:${id}`);
   for (const question of plan.questions) {
     if ("added" in question) {
       if (byId.has(question.added.id)) throw Error(`V2_QUESTION_IS_V1:${question.added.id}`);
@@ -54,7 +93,7 @@ function fromV1(templateId: GuidedTemplateId, plan: Plan) {
     templateId,
     title: v1.title,
     fields,
-    tables: v1.tables,
+    tables,
     blanks: plan.blanks ?? [],
     ...(plan.calculated ? { calculated: plan.calculated } : {}),
     ...(plan.keepsNothing ? { keepsNothing: plan.keepsNothing } : {}),
@@ -86,8 +125,8 @@ function itemLines(templateId: GuidedTemplateId, data: GuidedDataV2) {
   }
   return lines;
 }
-function unitOf(templateId: GuidedTemplateId, row: Readonly<Record<string, string>>) {
-  const columns = GUIDED_SPECS_V1[templateId].tables.find((t) => t.id === "items")!.columns;
+function unitOf(templateId: GuidedTemplateId, row: Readonly<Record<string, string>>, table = "items") {
+  const columns = GUIDED_SPECS_V1[templateId].tables.find((t) => t.id === table)!.columns;
   const unit = columns.find((c) => c.id === "unit")!;
   const chosen = valid(unit, row.unit);
   if (!chosen) return null;
@@ -348,12 +387,78 @@ const purchaseOrder = fromV1("TPL-04", {
   ],
 });
 
+const deliveryNote = fromV1("TPL-05", {
+  questions: [
+    { v1: "issuerName", join: { tokens: ["issuerName"] } },
+    { v1: "issuerAddress", join: { tokens: ["issuerAddress"] } },
+    { v1: "recipientName", join: { tokens: ["recipientName"] } },
+    { v1: "destination", join: { tokens: ["destination"] } },
+    { v1: "recipientAddress", join: { tokens: ["recipientAddress"] } },
+    { v1: "documentNumber", join: { tokens: ["documentNumber"] } },
+    { v1: "issueDate", join: { tokens: ["issueDate"] } },
+    lineQuestion(
+      "relatedOrder",
+      "Related order or invoice reference, if any",
+      "Related order/invoice: [If supplied]",
+      "text",
+    ),
+    { v1: "deliveryStatus", join: { tokens: ["deliveryStatus"], clause: true } },
+    { v1: "dispatchDate", join: { tokens: ["dispatchDate"] } },
+    { v1: "receivedDate", join: { tokens: ["receivedDate"] } },
+    { v1: "partialDetails", join: { tokens: ["partialDetails"] } },
+    lineQuestion(
+      "batchReferences",
+      "Batch or serial references, if any",
+      "Batch/serial references, if supplied: [ ]",
+      "text",
+    ),
+    lineQuestion("otherNotes", "Other delivery notes, if any", "Other delivery notes: [ ]"),
+    lineQuestion(
+      "handedOverBy",
+      "Name and role of the person who handed the goods over, if recorded",
+      "Handed over by: [Actual name/role, or not recorded]",
+      "text",
+    ),
+    { v1: "acknowledger", join: { tokens: ["acknowledger"] } },
+    { v1: "acknowledgement", join: { tokens: ["acknowledgement"] } },
+    lineQuestion(
+      "acknowledgementDate",
+      "Date of the acknowledgement, if recorded",
+      "Acknowledgement date/time: [If recorded]",
+      "date",
+    ),
+    lineQuestion("outstandingAction", "Outstanding action, if any", "Outstanding action: [ ]"),
+    lineQuestion(
+      "followUp",
+      "Person responsible and follow-up date, if agreed",
+      "Person responsible and user-chosen follow-up date, if agreed: [ ]",
+      "text",
+    ),
+  ],
+  tables: {
+    deliveryItems: {
+      droppedColumns: {
+        condition:
+          "The delivery note records condition and differences for the delivery as a whole, as the form asks of a part delivery, and has no place for each item's condition.",
+      },
+    },
+  },
+  calculated: {
+    "calc.itemUnit": (_data, row) => (row ? unitOf("TPL-05", row, "deliveryItems") : null),
+  },
+  keepsNothing: [
+    { question: "deliveryStatus", option: "planned" },
+    { question: "deliveryStatus", option: "unconfirmed" },
+  ],
+});
+
 /** The v2 forms, by template. A template without one stays on its v1 form. */
 export const GUIDED_SPECS_V2: Readonly<Partial<Record<GuidedTemplateId, GuidedSpecV2>>> = {
   "TPL-01": invoice.spec,
   "TPL-02": quotation.spec,
   "TPL-03": receipt.spec,
   "TPL-04": purchaseOrder.spec,
+  "TPL-05": deliveryNote.spec,
 };
 /** What each v2 form adds to and leaves out of its v1 questions, with the reasons. */
 export const GUIDED_CHANGES_V2: Readonly<Partial<Record<GuidedTemplateId, GuidedChangesV2>>> = {
@@ -361,4 +466,5 @@ export const GUIDED_CHANGES_V2: Readonly<Partial<Record<GuidedTemplateId, Guided
   "TPL-02": quotation.changes,
   "TPL-03": receipt.changes,
   "TPL-04": purchaseOrder.changes,
+  "TPL-05": deliveryNote.changes,
 };

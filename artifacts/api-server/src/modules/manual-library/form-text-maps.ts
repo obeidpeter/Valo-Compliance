@@ -252,6 +252,51 @@ export const FORM_TEXT_MAPS: Readonly<Partial<Record<GuidedTemplateId, readonly 
       to: "This document records the buyer's stated purchase instruction. Supplier acceptance, delivery and payment are separate events and are not inferred from its preparation.",
     },
   ],
+  "TPL-05": [
+    {
+      from: "**From:** [Sending business]  \n[Contact]",
+      to: "From: [Sending business]{=issuerName}\n[Contact]{=issuerAddress}",
+    },
+    {
+      from: "**To:** [Recipient/customer]  \nDestination: [ ]  \nReceiving contact, if supplied: [ ]",
+      to: "To: [Recipient/customer]{=recipientName}\nDestination: [ ]{=destination}\n\n{?recipientAddress}Receiving contact, if supplied: [ ]{=recipientAddress}{/?}",
+      why: "The receiving contact is optional: it prints once it is given, as a paragraph of its own so that no paragraph can grow past what a document block holds.",
+    },
+    {
+      from: "Delivery note reference: [ ]  \nPrepared on: [ ]  \nRelated order/invoice: [If supplied]  \nMovement status: **[Actual selected status]**",
+      to: "Delivery note reference: [ ]{=documentNumber}\nPrepared on: [ ]{=issueDate}\n{?relatedOrder}Related order/invoice: [If supplied]{=relatedOrder}{/?}\nMovement status: [Actual selected status]{=deliveryStatus}",
+      why: "The related order or invoice is optional: its line prints once it is given.",
+    },
+    {
+      from: "Dispatch: [Actual event date/time, or clearly labelled planned/not recorded]  \nDelivery or attempt: [Actual event date/time, or not recorded]",
+      to: "{?deliveryStatus=dispatched}Dispatch: [Actual event date/time, or clearly labelled planned/not recorded]{=dispatchDate}{/?}\n{?deliveryStatus=received}Delivery or attempt: [Actual event date/time, or not recorded]{=receivedDate}{/?}\n{?deliveryStatus=}Dispatch: [Actual event date/time, or clearly labelled planned/not recorded]{/?}\n{?deliveryStatus=}Delivery or attempt: [Actual event date/time, or not recorded]{/?}",
+      why: "The form asks the dispatch date of a dispatched delivery and the receipt date of a received one, so each line prints only for its status; a planned, unconfirmed or part delivery prints neither, since its status says so, and both print as the draft has them while the status is unanswered.",
+    },
+    {
+      from: "| Item and useful reference | Unit | Quantity sent or planned, accurately labelled | Quantity physically received, if recorded |\n|---|---|---:|---:|\n| [ ] | [ ] | [ ] | [Value or “not recorded”] |\n| [ ] | [ ] | [ ] | [Value or “not recorded”] |",
+      to: "| Item and useful reference | Unit | Quantity sent or planned, accurately labelled |\n|---|---|---:|\n| {*deliveryItems} [ ]{=deliveryItems.description} | [ ]{=calc.itemUnit} | [ ]{=deliveryItems.quantity} |",
+      why: "One row prints for each item the form lists, so the draft's second sample row goes. The form asks one quantity for each item, printed as the quantity sent or planned, and no quantity received, so that column goes; a part delivery's shortfall prints under condition and differences.",
+    },
+    {
+      from: "| Item reference | Accepted quantity, if recorded | Damaged/rejected quantity, if recorded | Difference or issue | Follow-up |\n|---|---:|---:|---|---|\n| [ ] | [ ] | [ ] | [ ] | [ ] |\n\nBatch/serial references, if supplied: [ ]  \nOther delivery notes: [ ]",
+      to: "{?deliveryStatus=partial}Difference or issue: [ ]{=partialDetails}{/?}\n\n{?batchReferences}Batch/serial references, if supplied: [ ]{=batchReferences}{/?}\n\n{?otherNotes}Other delivery notes: [ ]{=otherNotes}{/?}",
+      why: "The form asks for a part delivery's shortfall, damage and other differences in one answer, printed as its difference or issue, and asks no quantity by item, so the table goes. The batch or serial references and other notes are optional: each prints once it is given, as a paragraph of its own.",
+    },
+    {
+      from: "Handed over by: [Actual name/role, or not recorded]  \nReceived by: [Actual name/role, or not recorded]  \nAcknowledgement and its scope: [Actual acknowledgement, or “not recorded”]  \nAcknowledgement date/time: [If recorded]",
+      to: "{?handedOverBy}Handed over by: [Actual name/role, or not recorded]{=handedOverBy}{/?}\n{?acknowledger}Received by: [Actual name/role, or not recorded]{=acknowledger}{/?}\n\n{?acknowledgement}Acknowledgement and its scope: [Actual acknowledgement, or “not recorded”]{=acknowledgement}{/?}\n{?acknowledgementDate}Acknowledgement date/time: [If recorded]{=acknowledgementDate}{/?}",
+      why: "Each handover line is optional: it prints once it is given, so a fact not recorded is left out rather than filled. The acknowledgement prints as a paragraph of its own, so that no paragraph can grow past what a document block holds.",
+    },
+    {
+      from: "Outstanding action: [ ]  \nPerson responsible and user-chosen follow-up date, if agreed: [ ]",
+      to: "{?outstandingAction}Outstanding action: [ ]{=outstandingAction}{/?}\n{?followUp}Person responsible and user-chosen follow-up date, if agreed: [ ]{=followUp}{/?}",
+      why: "The outstanding action and its follow-up are optional: each line prints once it is given.",
+    },
+    {
+      from: "*This note reflects the movement and handover facts entered by the issuer. A prepared or dispatched note does not establish completed delivery. Any acknowledgement is limited to what is actually recorded; payment, product fitness and regulatory approval are not established by this document.*",
+      to: "This note reflects the movement and handover facts entered by the issuer. A prepared or dispatched note does not establish completed delivery. Any acknowledgement is limited to what is actually recorded; payment, product fitness and regulatory approval are not established by this document.",
+    },
+  ],
 };
 
 /** Applies a map's changes to a draft, each to text that occurs exactly once. */

@@ -48,7 +48,7 @@ function choiceCombinations(spec: GuidedSpecV2) {
 }
 
 test("every map turns its retained draft into form text that the v2 form fits exactly", async () => {
-  assert.deepEqual(mapped, ["TPL-01", "TPL-02", "TPL-03", "TPL-04"]);
+  assert.deepEqual(mapped, ["TPL-01", "TPL-02", "TPL-03", "TPL-04", "TPL-05"]);
   for (const templateId of mapped) {
     const spec = GUIDED_SPECS_V2[templateId];
     assert.ok(spec, templateId);
@@ -71,9 +71,11 @@ test("form text adds no words: with its slots left empty, every combination of c
     const { section } = await readTemplateIntake(templateId);
     const draft = words(section.body);
     const text = parseFormText((await proposedFormText(templateId))!);
-    // Calculations left empty too: they print their placeholders.
+    // Calculations left empty too: they print their placeholders. A choice that also fills a slot,
+    // such as a delivery's status, is an answer there, so its slot is left empty like any other.
     const empty: GuidedSpecV2 = {
       ...spec,
+      fields: spec.fields.map((f) => (f.clause && f.tokens ? { ...f, tokens: [] } : f)),
       calculated: Object.fromEntries(Object.keys(spec.calculated ?? {}).map((name) => [name, () => null])),
     };
     const combinations = choiceCombinations(spec);
@@ -117,7 +119,38 @@ test("a v2 form asks v1's questions unchanged, and lists each question it adds o
         spec.fields.some((f) => f.id === field.id) || changes.dropped.some((d) => d.id === field.id && d.why),
         field.id,
       );
-    assert.equal(spec.tables, v1.tables);
+    // v1's tables are asked as v1 asks them: each column kept unchanged or dropped with its reason, and
+    // fewer rows only where a reason is given.
+    for (const table of v1.tables) {
+      const asked = spec.tables.find((t) => t.id === table.id)!;
+      for (const column of table.columns) {
+        const kept = asked.columns.find((c) => c.id === column.id);
+        if (kept) assert.equal(kept, column, `${table.id}.${column.id}`);
+        else
+          assert.ok(
+            changes.dropped.some((d) => d.id === `${table.id}.${column.id}` && d.why),
+            `${table.id}.${column.id}`,
+          );
+      }
+      if (asked.maxRows !== table.maxRows)
+        assert.ok(
+          changes.rows.some((r) => r.table === table.id && r.maxRows === asked.maxRows && r.why),
+          table.id,
+        );
+    }
+    // A table the form does not change is v1's own, by reference.
+    const changed = new Set([
+      ...changes.dropped.filter((d) => d.id.includes(".")).map((d) => d.id.split(".")[0]!),
+      ...changes.rows.map((r) => r.table),
+    ]);
+    if (!changed.size) assert.equal(spec.tables, v1.tables);
+    for (const table of v1.tables)
+      if (!changed.has(table.id))
+        assert.equal(
+          spec.tables.find((t) => t.id === table.id),
+          table,
+          table.id,
+        );
     assert.equal(spec.dateOrder, v1.dateOrder);
   }
 });
@@ -351,6 +384,61 @@ test("a purchase order's answers fill its own wording: the buyer's contact, the 
   const noContact = compileForm(spec, text, { ...data, values: { ...data.values, purchasingContact: "" } });
   assert.ok(
     noContact.blocks.every((b) => !b.text.includes("Purchasing contact") && !b.text.includes("Contact ")),
+  );
+});
+
+test("a delivery note's answers fill its own wording: its status keeps the dispatch or receipt line, one row for each item, and a part delivery's difference", async () => {
+  const spec = GUIDED_SPECS_V2["TPL-05"]!;
+  const text = parseFormText((await proposedFormText("TPL-05"))!);
+  const data = emptyFormData(spec);
+  data.values = {
+    ...data.values,
+    issuerName: "Synthetic Supplies Ltd",
+    issuerAddress: "1 Synthetic Road, Ikeja",
+    recipientName: "Synthetic Buyer Ltd",
+    destination: "Synthetic store, Yaba",
+    documentNumber: "SYN-DN-001",
+    issueDate: "2026-11-04",
+    deliveryStatus: "dispatched",
+    dispatchDate: "2026-11-05",
+    acknowledger: "Synthetic storekeeper",
+  };
+  data.tables.deliveryItems = [
+    { description: "Synthetic cartons", quantity: "10", unit: "each", otherUnit: "" },
+  ];
+  const shown = (values: Record<string, string>) =>
+    compileForm(spec, text, { ...data, values: { ...data.values, ...values } }).blocks.map((b) =>
+      b.type === "table" ? b.rows.map((r) => r.join(" | ")).join("\n") : b.text,
+    );
+  assert.deepEqual(shown({}), [
+    "From: Synthetic Supplies Ltd\n1 Synthetic Road, Ikeja",
+    "To: Synthetic Buyer Ltd\nDestination: Synthetic store, Yaba",
+    "Delivery note reference: SYN-DN-001\nPrepared on: 4 Nov 2026\nMovement status: Dispatched",
+    "Dispatch: 5 Nov 2026",
+    "Goods",
+    "Item and useful reference | Unit | Quantity sent or planned, accurately labelled\nSynthetic cartons | Each | 10",
+    "Condition and differences",
+    "Handover record",
+    "Received by: Synthetic storekeeper",
+    "This note reflects the movement and handover facts entered by the issuer. A prepared or dispatched note does not establish completed delivery. Any acknowledgement is limited to what is actually recorded; payment, product fitness and regulatory approval are not established by this document.",
+  ]);
+  assert.deepEqual(compileForm(spec, text, data).unfilled, []);
+  // A received delivery prints its receipt date instead; a part delivery its difference; a planned
+  // one neither line, since its status says so.
+  assert.ok(
+    shown({ deliveryStatus: "received", receivedDate: "2026-11-06" }).includes(
+      "Delivery or attempt: 6 Nov 2026",
+    ),
+  );
+  const partial = shown({ deliveryStatus: "partial", partialDetails: "Two cartons short" });
+  assert.ok(partial.includes("Difference or issue: Two cartons short"));
+  assert.ok(!partial.some((line) => line.startsWith("Dispatch") || line.startsWith("Delivery or attempt")));
+  assert.ok(!shown({ deliveryStatus: "planned" }).some((line) => line.startsWith("Dispatch")));
+  // The form asks no condition for each item: the column is not one of its table's.
+  assert.ok(!spec.tables[0]!.columns.some((c) => c.id === "condition"));
+  assert.deepEqual(
+    GUIDED_CHANGES_V2["TPL-05"]!.dropped.map((d) => d.id),
+    ["deliveryItems.condition"],
   );
 });
 
