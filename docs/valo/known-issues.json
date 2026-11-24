@@ -13,7 +13,7 @@
     },
     {
       "id": "KI-003",
-      "summary": "Nothing has been published through the reviewed route (decision 0014): it needs two passing AI reviews under an owner-approved finite AI allocation, none is approved, and it cannot release a regulatory guide. In development, decision 0018 lets a Content editor publish guides, industry introductions and templates after a preview, with no AI review and none of decision 0014's enhanced checks. A regulatory guide is released only on the owner's sign-off, on a source check of its exact text under a day old; in development a requirements-check rule can be too (decision 0020); two await sign-off.",
+      "summary": "Nothing has been published through the reviewed route (decision 0014): it needs two passing AI reviews under an owner-approved finite AI allocation, none is approved, and it cannot release a regulatory guide. In development, decision 0018 lets a Content editor publish guides, industry introductions and templates after a preview, with no AI review and none of decision 0014's enhanced checks. A regulatory guide is released only on the owner's sign-off, on a source check of its exact text under a day old; in development a requirements-check rule can be too (decision 0020); three await sign-off.",
       "requirements": ["EDP-005"]
     },
     {
