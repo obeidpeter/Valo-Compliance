@@ -1,6 +1,7 @@
 import { baselineTemplates } from "@workspace/valo-core";
 import { isManualTemplate, type releasedManualEntries } from "../manual-library";
 import { templateCategory, type ReleasedLibraryItem } from "./valo-catalogue";
+import { templatePreview } from "./template-preview";
 
 type PublicRevision = Awaited<ReturnType<typeof releasedManualEntries>>[number];
 export const manualResourceKind = (row: PublicRevision) =>
@@ -88,7 +89,7 @@ export function manualTemplate(row: PublicRevision) {
     disclosure,
     scope: "Business template",
     limitations: "Everyday business use.",
-    preview: [row.body],
+    preview: [templatePreview(row.body)],
     developmentOnly: true,
     commercialLicenceAccepted: false,
     formats: [row.fileFormat!],

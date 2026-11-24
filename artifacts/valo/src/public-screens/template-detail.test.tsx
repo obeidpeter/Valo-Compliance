@@ -49,3 +49,17 @@ test("a premium template's page says a purchase opens its questions as well as i
     "Downloading this version requires an active purchase in your workspace.",
   );
 });
+
+// DOC-004: a free staff-library template's page previews the opening of its text, and says so.
+test("a free staff-library template's page says its preview is the opening of the template, all of which is in its file", () => {
+  const html = renderToStaticMarkup(
+    <QueryClientProvider client={new QueryClient()}>
+      <TemplateDetail slug={slug} initial={{ ...edition("Invoice"), access: "free" }} />
+    </QueryClientProvider>,
+  );
+  assert.match(
+    html,
+    /data-testid="text-preview-part">The opening of the template\. All of it is in the file you download\.</,
+  );
+  assert.equal(/text-purchase-needed/.test(html), false);
+});
