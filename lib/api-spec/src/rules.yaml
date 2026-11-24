@@ -1538,6 +1538,9 @@ schemas:
       assessedProposition: { type: string }
       factsNotice: { type: string }
       sourceReviewHold: { type: string }
+      releaseNotice:
+        type: string
+        description: How the rule behind this item was released (EDP-008). A result saved before the notice was recorded has none.
       sourceLinkedTaskEligible: { type: boolean }
       missingAnswerStates: { type: array, items: { $ref: "#/components/schemas/MissingAnswerState" } }
       missingFacts: { type: array, items: { type: string } }

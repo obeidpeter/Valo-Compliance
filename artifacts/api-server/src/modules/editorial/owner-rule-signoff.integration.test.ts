@@ -14,6 +14,7 @@ import {
   assess,
   checkerFactsSchema,
   ownerConfirmedChecks,
+  ownerRuleDisclosure,
   sha256,
 } from "@workspace/valo-core";
 import { ValoProblem } from "../../platform/valo-problem";
@@ -222,11 +223,14 @@ test(
     const checkerSays = async () => {
       const now = new Date();
       const registry = await releasedRegistry(db, now);
+      const item = assess(facts, registry.rules, currentAssessmentDate(now), now, {
+        trustedManifestHashes: registry.trusted,
+      }).items.find((i) => i.ruleId === ruleId);
+      // EDP-008: the result says how its rule was released.
       return {
         versions: registry.rules.filter((r) => r.id === ruleId).map((r) => r.version),
-        label: assess(facts, registry.rules, currentAssessmentDate(now), now, {
-          trustedManifestHashes: registry.trusted,
-        }).items.find((item) => item.ruleId === ruleId)?.label,
+        label: item?.label,
+        notice: item?.releaseNotice,
       };
     };
     try {
@@ -277,7 +281,7 @@ test(
         item!.scenarios.map((s) => [s.id, s.actualLabel, s.passed]),
         [["company", "Likely relevant", true]],
       );
-      assert.deepEqual(await checkerSays(), { versions: [], label: undefined });
+      assert.deepEqual(await checkerSays(), { versions: [], label: undefined, notice: undefined });
 
       // The owner signs exactly the version and manifest shown, with every check confirmed.
       const sign = (shown: NonNullable<typeof item>, change: Record<string, unknown> = {}) => ({
@@ -334,7 +338,11 @@ test(
         ).rows,
         [{ source_id: lead.id, snapshot_id: snapshotId }],
       );
-      assert.deepEqual(await checkerSays(), { versions: [1], label: "Likely relevant" });
+      assert.deepEqual(await checkerSays(), {
+        versions: [1],
+        label: "Likely relevant",
+        notice: ownerRuleDisclosure,
+      });
       // The same version cannot be signed twice.
       await assert.rejects(decideOwnerRule(actor(owner), ruleId, sign(first), options), refused(409));
 
@@ -349,7 +357,11 @@ test(
         state: "published",
         superseded: [1],
       });
-      assert.deepEqual(await checkerSays(), { versions: [2], label: "Likely relevant" });
+      assert.deepEqual(await checkerSays(), {
+        versions: [2],
+        label: "Likely relevant",
+        notice: ownerRuleDisclosure,
+      });
 
       // Withdrawal takes the released version out of the checker at once; a superseded version and a
       // changed manifest are refused, and asking again changes nothing.
@@ -381,7 +393,7 @@ test(
         await decideOwnerRule(actor(owner), ruleId, withdraw(2, second.manifestHash), options),
         withdrawn,
       );
-      assert.deepEqual(await checkerSays(), { versions: [], label: undefined });
+      assert.deepEqual(await checkerSays(), { versions: [], label: undefined, notice: undefined });
       [item] = await list();
       assert.equal(item!.version, 3);
       assert.equal(item!.live, null);

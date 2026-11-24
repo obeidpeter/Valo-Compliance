@@ -170,6 +170,15 @@ function Item({
             <p className="mt-1 text-xs text-muted-foreground">
               {place} · Rule {item.ruleId}, version {item.ruleVersion}
             </p>
+            {/* EDP-008: how the rule was released, as the server recorded it with the result. */}
+            {detail.releaseNotice && (
+              <p
+                className="mt-1 text-xs leading-relaxed text-muted-foreground"
+                data-testid={"release-notice-" + item.ruleId}
+              >
+                {detail.releaseNotice}
+              </p>
+            )}
           </div>
           {action}
         </div>

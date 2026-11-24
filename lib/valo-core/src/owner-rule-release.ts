@@ -1,6 +1,13 @@
 import { z } from "zod";
 import { checkerFactsSchema, ruleSchema, type ReleasedRule } from "./checker";
-import { canonical, digest, mandatoryEnhancedChecks, publicationSchema, sha256 } from "./publication";
+import {
+  canonical,
+  digest,
+  mandatoryEnhancedChecks,
+  ownerRuleDisclosure,
+  publicationSchema,
+  sha256,
+} from "./publication";
 
 /**
  * A requirements-checker rule released on the development owner's sign-off (decision 0020), in place
@@ -17,10 +24,6 @@ export type OwnerConfirmedCheck = (typeof ownerConfirmedChecks)[number];
 const hash = z.string().regex(/^[a-f0-9]{64}$/);
 const shape = publicationSchema.shape;
 
-/** What an owner-signed rule says about how it was made. The reviewed route's disclosure says the
- * content was AI drafted and reviewed, which is not true of these. */
-export const ownerRuleDisclosure =
-  "Released on the Valo development owner's sign-off after a check of its official sources; not reviewed by a Nigerian legal, tax or sector specialist" as const;
 const ownerRuleCandidateSchema = shape.candidate
   .extend({ disclosure: z.literal(ownerRuleDisclosure) })
   .strict();

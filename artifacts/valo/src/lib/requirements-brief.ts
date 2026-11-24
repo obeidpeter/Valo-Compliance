@@ -60,6 +60,7 @@ export function formatRequirementsBrief(input: {
                   .filter(Boolean)
                   .join(": ");
         lines.push(`- ${item.title} (${place}, Rule ${item.ruleId} v${item.ruleVersion})`);
+        if (item.releaseNotice) lines.push(`  About this rule: ${item.releaseNotice}`);
         lines.push(`  Why: ${item.reason}`);
         if (item.nextStep) lines.push(`  Next step: ${item.nextStep}`);
         if (item.sources.length > 0) {

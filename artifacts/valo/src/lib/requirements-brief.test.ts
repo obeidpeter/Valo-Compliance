@@ -58,3 +58,43 @@ test("formatRequirementsBrief builds a structured plain-text brief with disclaim
   assert.match(text, /WHAT VALO DOES NOT COVER YET/);
   assert.match(text, /https:\/\/example\.test\/registry/);
 });
+
+// EDP-008: the copied summary of a result, like the result itself, says how each rule was released.
+// A result saved before the notice was recorded has none, and the summary adds none.
+test("the summary carries each rule's release notice when the result has one, and invents none", () => {
+  const item = {
+    ruleId: "SYNTH-02",
+    ruleVersion: 1,
+    requirementVersionId: "req-2",
+    title: "Synthetic signed rule",
+    label: "Likely relevant" as const,
+    reason: "Synthetic reason.",
+    missingFacts: [],
+    matchedFacts: [],
+    nextStep: "Synthetic next step.",
+    jurisdiction: { level: "federal" as const },
+    sources: [],
+    relatedTemplateIds: [],
+  };
+  const result = (items: AssessmentResult["items"]): AssessmentResult => ({
+    schemaVersion: "checker-v2",
+    asOfDate: "2026-11-24",
+    rulesetVersion: "abcdef1234567890",
+    items,
+    unanswered: [],
+    gaps: [],
+    recommendedTemplateIds: [],
+    officialRoutes: [],
+    notice: "Not legal advice.",
+    sourceBackedRecommendations: 0,
+    resultHash: "1234567890abcdef".repeat(4),
+  });
+  const notice = "Synthetic release notice; not reviewed by a Nigerian legal, tax or sector specialist";
+  const signed = formatRequirementsBrief({ result: result([{ ...item, releaseNotice: notice }]), facts: {} });
+  assert.match(
+    signed,
+    new RegExp(`Synthetic signed rule \\(Federal, Rule SYNTH-02 v1\\)\\n  About this rule: ${notice}\\n`),
+  );
+  const older = formatRequirementsBrief({ result: result([item]), facts: {} });
+  assert.doesNotMatch(older, /About this rule/);
+});

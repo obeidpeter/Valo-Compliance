@@ -2,10 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   allSourceLeads,
+  assess,
   checkerFactsSchema,
   digest,
   evaluateOwnerRuleBundle,
   ownerConfirmedChecks,
+  ownerRuleDisclosure,
   ownerRuleMatchesBundle,
   planRuleRelease,
   sha256,
@@ -454,6 +456,16 @@ test("each rule prepared in the repository could be signed against copies of its
       assert.equal(s.passed, true, `${id}: ${s.id} gave ${s.actualLabel}`);
       assert.ok(s.critical && s.actualReason && s.actualNextStep, `${id}: ${s.id}`);
     }
+    // EDP-008: what the customer is shown says the rule was released on the owner's sign-off, and
+    // not that it was AI drafted and reviewed.
+    const shown = candidate.scenarios.find((s) => s.expectedLabel !== null)!;
+    assert.deepEqual(
+      assess(shown.facts, [prepared.rule], shown.asOfDate, now, {
+        trustedManifestHashes: new Set([prepared.rule.manifestHash]),
+      }).items.map((item) => item.releaseNotice),
+      [ownerRuleDisclosure],
+      id,
+    );
     // Each label a scenario expects is one the checker gives, and the rule's sources hold its quotes.
     assert.ok(new Set(candidate.scenarios.map((s) => s.expectedLabel)).size >= 3, id);
     for (const source of prepared.rule.sources) {
