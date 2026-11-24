@@ -157,8 +157,19 @@ is the finishing plan's "finished file" row.
 ### 6. The web app
 
 The documents starter and a template's page say, for each template, whether it starts its form, needs a
-purchase first, or has no released wording yet. Questions show their examples. The business profile
-fills only the business's own details: never a counterparty, an address, a date, an amount or a clause.
+purchase first, or has no released wording yet (slice 7). On the New document page, a template whose
+wording is released for its form says that it uses the template's own wording, and a premium template
+the workspace has not bought is a link to it in the library, where it can be bought, instead of a button
+the server would refuse; any other starts with its questions, as the page's introduction says. A
+template's page offers a signed-in reader who may use it to answer its questions, and says whether the
+document uses the template's own wording; a premium template's page says, before a press, that its
+purchase opens its questions as well as its file. Questions show their examples.
+
+The business profile fills only the business's own details: never a counterparty, an address, a date, an
+amount or a clause. Of what the profile holds, only the business name answers a question, so both forms
+fill that alone, at a start and only when it is a valid answer: the legal form question asks for the
+signing authority's assumptions as well, which the profile does not hold, and the profile holds no
+registration reference.
 
 ## Slices
 
@@ -170,7 +181,7 @@ fills only the business's own details: never a counterparty, an address, a date,
 | 4 | The library's form text: its column and trigger, the staff save and preview of the fit, the action that files proposed form text as private drafts, and the first v2 form and annotation map, the invoice's (TPL-01). | EDT-001, EDT-002, DOC-004 |
 | 5 | Starting, editing, saving and exporting the free v2 forms, with the document's form record, and the maps and forms of the other six free templates (TPL-02, 03, 04, 05, 08, 12). In three pull requests: 5a, the server, the contract and the form record, with the invoice; 5b, the editor and the workspace around it (its questions filling the wording as they are answered, the preview, what is still needed, reused details, making another and converting, the documents list and the starter's form-first start); 5c, the other six maps, in two pull requests: the quotation, receipt and purchase order (TPL-02, 03 and 04), then the delivery note, the meeting minutes and the payment reminder letter (TPL-05, 08 and 12), whose drafts ask more of the v1 questions than the first three do. | EDT-001, EDT-002, EDT-005, EDT-006, DOC-005 |
 | 6 | The premium v2 forms (TPL-13 to TPL-17), with their maps: each agreement's schedules need more question-to-wording decisions than a free form's. In two pull requests: 6a, starting a premium form from the edition the workspace bought, with the order it was bought under recorded on the document, and the offer letter (TPL-17), the shortest of the five; 6b, the employment contract and the service, consultancy and non-disclosure agreements (TPL-16, 13, 14 and 15), three of whose retained drafts have no title line and name their parties' roles. | DOC-004, DOC-005, DOC-007, EDT-010 |
-| 7 | The starter, the template page, examples and the profile's details. | EDT-001, DOC-005, PRO-003 (in part) |
+| 7 | The starter's and the template page's states, the questions' examples, and the profile's details, of which only the business name answers a question (section 6). PRO-003, which this row once named in part, stays with the finishing plan's own row: filling the name records nothing about a profile's versions. | EDT-001, DOC-005 |
 
 Tests that pin v1 stay unchanged throughout, among them `valo-guided.test.ts`, `valo-render.test.ts`,
 `valo-validation.test.ts`, `valo-revision-codec.test.ts` and `retained.test.ts`, and the web app's
