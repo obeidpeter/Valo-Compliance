@@ -16,7 +16,7 @@ import type { ArtifactRef } from "../modules/publication/publication-artifacts";
 import type { ManagedRequest, ManagedCompletionResult } from "../modules/ai/managed-inference";
 import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
 import { copyDatabaseFunctions, INFERENCE_LEDGER_FUNCTIONS } from "../test-support/database-functions";
-import { digest, evaluatePublication, mandatoryEnhancedChecks } from "@workspace/valo-core";
+import { digest } from "@workspace/valo-core";
 
 test(
   "actual managed callers with real PostgreSQL, source/candidate/case checks and zero-network SDK",
@@ -910,11 +910,13 @@ test(
           assert.equal((await state()).entries.length, 0);
         },
       );
-      // Decision 0017: a guide takes the same route. The policy is the one the owner approved. The
-      // approvals of AI spending are synthetic ones recorded in this schema, the captures are made
-      // from the passages kept in the repository, and the model is the stand-in above.
+      // Decision 0017: a guide is prepared on the same route, under the policy the owner approved, from
+      // captures made of the passages kept in the repository. Its pair of reviews is not sent: the
+      // publisher releases a guide only after the owner's source check (decision 0018), which this
+      // route does not have, so no package of guide reviews is approved or admitted (CMP-008,
+      // EDP-004). The approvals tried are synthetic ones in this schema.
       await t.test(
-        "an approved regulatory review pair can pass while its guide stays private pending the owner's source check",
+        "a guide's review pair is prepared and planned, and refused before any approval, admission or model call",
         async () => {
           await reset();
           const { prepareGuideCandidateRelease } = await import("../modules/editorial/guidance-preparation");
@@ -928,7 +930,6 @@ test(
             await import("../modules/publication/guidance-release.fixtures");
           const { liveReleasedVersions, releasedResources } =
             await import("../modules/catalogue/valo-released-content");
-          const { REVIEW_INPUT_CEILING } = await import("../modules/editorial/review-meter");
           const guide = "GUD-02",
             clockBefore = Date.now();
           // This subtest runs on the real clock, where the others run on a fixed one. The database
@@ -1050,122 +1051,23 @@ test(
               /PACKAGE_EXECUTABLE_PREPARER_UNAVAILABLE/,
             );
             await revokeFiniteAllocationPackage(scoped, templates.packageId, schema);
-            // An approval of guide reviews does.
-            const guides = await approve(guidePackage);
-            const admitted = await admit(guides.packageId, guides.expiresAt);
-            assert.equal(admitted.packageId, guides.packageId);
-            assert.match(admitted.batchId, /^finite-submanifest:[a-f0-9]{64}$/);
-            assert.equal(calls, callsBeforeAdmission, "approving and admitting call no model");
-            assert.equal((await state()).entries.length, 0, "and reserve nothing");
-            const id = admitted.batchId,
-              pair = manifest.works[0]!.pair!;
-
-            // The stand-in answers each request with a pass and the five enhanced checks, each
-            // quoting the first source the request itself carries. It is not a review.
-            answer = async (request) => {
-              const sent = JSON.parse((request.messages[1] as { content: string }).content) as {
-                sources: { text: string }[];
-              };
-              return response(
-                JSON.stringify({
-                  verdict: "pass",
-                  findings: [],
-                  missingEvidence: [],
-                  observations: ["Controlled fixture; not a genuine review"],
-                  enhancedChecks: mandatoryEnhancedChecks.map((name) => ({
-                    name,
-                    result: "pass",
-                    passage: sent.sources[0]!.text.slice(0, 200),
-                    note: "Controlled fixture; not a genuine check",
-                  })),
-                }),
-              );
-            };
-            const before = calls,
-              sentBefore = captured.length;
-            const reviews = await run(() =>
-              withApprovedInferencePair(id, pair, () =>
-                executeOperationalReviewPlan(plan, current.candidate, current.serverEvidence),
-              ),
-            );
-            const attempts = await scoped.query(
-              "SELECT role,outcome,error_code FROM valo_publication_ai_attempts WHERE candidate_hash=$1 ORDER BY role",
-              [current.candidate.hash],
-            );
-            assert.equal(reviews.length, 2, JSON.stringify(attempts.rows));
-            assert.equal(calls - before, 2, "one call to the stand-in for each review");
-            // Both were charged to the batch admitted under the guides' approval.
+            // And a guide package cannot be approved: the publisher releases a guide only after the
+            // owner's source check (decision 0018), so its reviews would release nothing.
+            await assert.rejects(approve(guidePackage), /GUIDE_REVIEWS_RELEASE_NOTHING/);
             assert.deepEqual(
-              (await state()).entries.map((e) => [e.runKey.startsWith(`${id}:`), e.lane, e.status]),
-              [
-                [true, "publication", "settled"],
-                [true, "publication", "settled"],
-              ],
+              (
+                await scoped.query("SELECT id FROM valo_inference_batches WHERE id=$1", [
+                  allocationPackageId(guidePackage),
+                ])
+              ).rows,
+              [],
+              "no approval is recorded",
             );
-            // What was sent is what was planned: a guide's request, larger than a template's may be.
-            const sent = captured.slice(sentBefore);
-            assert.deepEqual(
-              sent.map((request) => requestDigest(request)).sort(),
-              plan.entries.map((entry) => entry.meter.requestHash).sort(),
-            );
-            for (const entry of plan.entries) {
-              assert.ok(entry.meter.withinInputCeiling);
-              assert.ok(entry.meter.conservativeInputTokenBound > REVIEW_INPUT_CEILING);
-            }
-            assert.equal(
-              await savedVersion(prepared.id),
-              undefined,
-              "nothing is saved before the reviews are checked",
-            );
-
-            // Passing reviews cannot authorize a new regulatory release. The saved draft keeps both receipts.
-            const artifacts = reviews.map((r) => r.artifact);
-            const result = await publish(id, artifacts);
-            const reasons = ["REGULATORY_ARTICLE_AWAITING_OWNER_SOURCE_CHECK"];
-            assert.equal(result.eligibility?.decision, "hold");
-            assert.deepEqual(result.eligibility?.reasons, reasons);
-            assert.equal(result.status, "held");
-            const row = await savedVersion(prepared.id);
-            assert.equal(row.status, "held");
-            assert.equal(evaluatePublication(row.bundle).decision, "eligible");
-            assert.equal(row.bundle.candidate.id, guide);
-            assert.equal(row.bundle.candidate.contentClass, "sourced_guidance");
-            // The older policy and both reviews still stand as evidence for this retained version.
-            assert.equal(row.bundle.policy.ownerApproved, true);
-            assert.equal(row.bundle.policy.hash, (await realGuidancePolicy.guidancePolicy()).policy.hash);
-            assert.deepEqual(
-              row.bundle.enhancedChecks.map((c: { name: string; result: string }) => [c.name, c.result]),
-              mandatoryEnhancedChecks.map((name) => [name, "pass"]),
-            );
-            assert.deepEqual(
-              row.bundle.reviews.map((r: { role: string; verdict: string }) => [r.role, r.verdict]),
-              [
-                ["factual", "pass"],
-                ["challenge", "pass"],
-              ],
-            );
-            const bound = await scoped.query(
-              "SELECT bundle_source_id,snapshot_id,raw_hash FROM valo_source_release_bindings WHERE target_kind='content' AND target_id=$1",
-              [prepared.id],
-            );
-            assert.deepEqual(bound.rows, []);
-            const retry = await publish(id, artifacts);
-            assert.equal(retry.decision, "held");
-            assert.equal(retry.idempotent, true);
-            const audit = await scoped.query(
-              "SELECT action,reason FROM valo_publication_audit WHERE version_id=$1",
-              [prepared.id],
-            );
-            assert.deepEqual(audit.rows, [{ action: "held", reason: reasons[0] }]);
-            assert.equal(calls - before, 2, "publication and its retry make no additional model requests");
+            assert.equal(calls, callsBeforeAdmission, "refusing calls no model");
+            assert.equal((await state()).entries.length, 0, "and reserves nothing");
+            assert.equal(await savedVersion(prepared.id), undefined, "nothing is saved");
             assert.ok(!(await liveReleasedVersions()).some((version) => version.id === prepared.id));
             assert.ok(!(await releasedResources()).some((resource) => resource.id === prepared.id));
-            guideApproval.absent = true;
-            assert.ok(!(await liveReleasedVersions()).some((version) => version.id === prepared.id));
-            assert.deepEqual(
-              (await releasedResources()).filter((r) => r.id === prepared.id),
-              [],
-            );
           } finally {
             guideApproval.absent = false;
             t.mock.timers.enable({ apis: ["Date"], now: clockBefore });

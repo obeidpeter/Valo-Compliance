@@ -59,6 +59,13 @@ export const finitePackagePreparers = {
   reminderInventoryPairs: ["practical-reminder-inventory-pair-v1"],
 } as const;
 export type FinitePackagePreparers = (typeof finitePackagePreparers)[keyof typeof finitePackagePreparers];
+/**
+ * Why no package of guide reviews is approved or admitted. The publisher releases a guide only after
+ * the owner's source check (decision 0018), which this route does not have, so paid reviews of a
+ * guide would release nothing. The refusal goes once this route can carry that check.
+ */
+export const guideReviewsReleaseNothing =
+  "No guide's reviews are approved or admitted: the publisher releases a guide only after the owner's source check, which this route does not have, so the reviews would release nothing.";
 const preparerSet = (value: unknown) =>
   Object.values(finitePackagePreparers).find((set) => requestDigest(set) === requestDigest(value));
 function reviewLimits(articleIds: readonly string[]) {
@@ -168,6 +175,7 @@ export async function prepareFiniteAllocationPackage(
         : guidePairs
           ? [
               `Supported guide review pairs: ${mappedGuideIds.join(", ")}; each requires a prepared candidate bound to current captures of its official sources, under the guidance policy as the owner approved it.`,
+              guideReviewsReleaseNothing,
               "Template review pairs, editorial cases, customer cases and other content are outside this package.",
               "The allocation is a maximum additional spend, not a guarantee of completing every permitted attempt.",
             ]
@@ -314,6 +322,8 @@ export function assertWorkPackageMembership(
     !work.bindings.operationalPlan
   )
     throw Error("PACKAGE_EXECUTABLE_PREPARER_UNAVAILABLE");
+  // A guide's pair is complete here, and is still not admitted (guideReviewsReleaseNothing).
+  if (guidePairs) throw Error("GUIDE_REVIEWS_RELEASE_NOTHING");
 }
 async function packageRow(c: import("pg").PoolClient, schema: string, id: string, admitting: boolean) {
   const row = (await c.query(`SELECT * FROM "${schema}".valo_inference_batches WHERE id=$1 FOR SHARE`, [id]))
@@ -601,6 +611,9 @@ export async function approveFiniteAllocationPackage(
   validateAllocationPackage(pkg);
   const id = allocationPackageId(pkg);
   if (request.confirmPackageId !== id) throw Error("PACKAGE_APPROVAL_NOT_CONFIRMED");
+  // No spending is approved for guide reviews while they would release nothing.
+  if (requestDigest(pkg.supportedPreparers) === requestDigest(finitePackagePreparers.guidePairs))
+    throw Error("GUIDE_REVIEWS_RELEASE_NOTHING");
   if (
     !plainLabel(request.approvedBy, 3, 120) ||
     request.approvedBy === delegate ||

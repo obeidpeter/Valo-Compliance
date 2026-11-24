@@ -283,8 +283,13 @@ test(
     for (const work of manifest.works) await assertFiniteWorkBindings(work);
     const guidePackage = await prepareFiniteAllocationPackage(new Date(), finitePackagePreparers.guidePairs),
       templatePackage = await prepareFiniteAllocationPackage(new Date());
+    // The pair is complete, and no package admits it: the publisher releases a guide only after the
+    // owner's source check (decision 0018), so its reviews would release nothing.
     for (const work of manifest.works) {
-      assert.doesNotThrow(() => assertWorkPackageMembership(work, guidePackage, guide));
+      assert.throws(
+        () => assertWorkPackageMembership(work, guidePackage, guide),
+        /GUIDE_REVIEWS_RELEASE_NOTHING/,
+      );
       assert.throws(() => assertWorkPackageMembership(work, templatePackage, guide), /PREPARER_UNAVAILABLE/);
     }
 

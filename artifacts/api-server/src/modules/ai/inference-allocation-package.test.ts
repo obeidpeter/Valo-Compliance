@@ -7,6 +7,7 @@ import {
   validatePackageScope,
   assertWorkPackageMembership,
   finitePackagePreparers,
+  guideReviewsReleaseNothing,
 } from "./inference-allocation-package";
 import { additionalInferenceAllocation, requestDigest } from "./inference-budget";
 import type { FiniteWork } from "./inference-batch-dispatch";
@@ -198,7 +199,9 @@ test("an editorial-case package admits only editorial case pairs, and no other p
   assert.throws(() => assertWorkPackageMembership(customer, editorial, null), /WORK_OUTSIDE_PACKAGE/);
 });
 
-test("a guide package admits only the review pairs of guides with a claim map, and no other package admits a guide", async () => {
+// CMP-008 and EDP-004: a guide's two reviews would release nothing, since the publisher releases a
+// guide only after the owner's source check (decision 0018), so no package admits them.
+test("no package admits a guide's review pairs, and a guide package admits nothing else", async () => {
   const at = new Date();
   const templates = await prepareFiniteAllocationPackage(at),
     editorial = await prepareFiniteAllocationPackage(at, finitePackagePreparers.editorialCases),
@@ -215,14 +218,17 @@ test("a guide package admits only the review pairs of guides with a claim map, a
     /^Supported guide review pairs: GUD-01, .*GUD-10, .*GUD-15, GUD-19, .*GUD-26, GUD-27, .*GUD-30; /,
   );
   assert.match(guides.holds[0]!, /under the guidance policy as the owner approved it/);
+  assert.equal(guides.holds[1], guideReviewsReleaseNothing);
 
-  // A guide with a claim map is admitted under the guide package, with its review plan.
-  assert.doesNotThrow(() => assertWorkPackageMembership(work(), guides, "GUD-01"));
-  assert.doesNotThrow(() => assertWorkPackageMembership({ ...work(), role: "challenge" }, guides, "GUD-10"));
+  // A guide with a claim map and its review plan is a complete pair, and is still refused: its reviews
+  // would release nothing.
+  for (const guide of ["GUD-01", "GUD-15", "GUD-26", "GUD-30"])
+    assert.throws(() => assertWorkPackageMembership(work(), guides, guide), /GUIDE_REVIEWS_RELEASE_NOTHING/);
+  assert.throws(
+    () => assertWorkPackageMembership({ ...work(), role: "challenge" }, guides, "GUD-10"),
+    /GUIDE_REVIEWS_RELEASE_NOTHING/,
+  );
   // A guide without a claim map has no preparer, and an ID outside the inventory is outside the package.
-  assert.doesNotThrow(() => assertWorkPackageMembership(work(), guides, "GUD-15"));
-  assert.doesNotThrow(() => assertWorkPackageMembership(work(), guides, "GUD-26"));
-  assert.doesNotThrow(() => assertWorkPackageMembership(work(), guides, "GUD-30"));
   assert.throws(() => assertWorkPackageMembership(work(), guides, "GUD-16"), /PREPARER_UNAVAILABLE/);
   assert.throws(() => assertWorkPackageMembership(work(), guides, "GUD-31"), /WORK_OUTSIDE_PACKAGE/);
   const unplanned = work();
