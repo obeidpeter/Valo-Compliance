@@ -15,8 +15,10 @@ database yet.
 - Releases on the reviewed route are unchanged, and it reads and changes no existing row.
 
 **The application code depends on this migration only for owner-signed rules,** and none can be
-released before the sign-off screen exists. Until the migration is applied, an owner-signed release
-fails because its sign-off table is missing; the checker and the reviewed route work as before.
+released until a rule is prepared for the sign-off panel (Staff → System, "Requirements check: rule
+sign-off").
+Until the migration is applied, signing a rule fails because its sign-off table is missing; the
+checker, the panel's list and the reviewed route work as before.
 
 The Replit development database has no Drizzle ledger. Follow the existing procedure in
 [phase1-migration-plan.md](phase1-migration-plan.md):

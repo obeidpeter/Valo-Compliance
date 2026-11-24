@@ -98,6 +98,11 @@ import type {
   OwnerGuidancePage,
   OwnerGuidanceReceipt,
   OwnerGuidanceRevision,
+  OwnerRuleDecision,
+  OwnerRuleItem,
+  OwnerRulePage,
+  OwnerRuleReceipt,
+  OwnerRuleSourceWatch,
   PaymentConcern,
   PaymentConcernAction,
   PaymentConcernInput,
@@ -4647,6 +4652,294 @@ export function useGetEditorialRecord<TData = Awaited<ReturnType<typeof getEdito
 
 
 
+
+export const getListOwnerRulesUrl = () => {
+
+
+
+
+  return `/api/admin/owner-rules`
+}
+
+/**
+ * Each rule as the owner would sign it now: what it tells a customer, its sources and their checks, its scenarios, how many saved results it would change, and what holds it. Read-only.
+ * @summary Requirements-checker rules prepared for the development owner's sign-off (decision 0020)
+ */
+export const listOwnerRules = async ( options?: Parameters<typeof customFetch>[1]): Promise<OwnerRulePage> => {
+
+  return customFetch<OwnerRulePage>(getListOwnerRulesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListOwnerRulesQueryKey = () => {
+    return [
+    "listOwnerRules"
+    ] as const;
+    }
+
+
+export const getListOwnerRulesQueryOptions = <TData = Awaited<ReturnType<typeof listOwnerRules>>, TError = ErrorType<void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOwnerRules>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListOwnerRulesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listOwnerRules>>> = ({ signal }) => listOwnerRules({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listOwnerRules>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListOwnerRulesQueryResult = NonNullable<Awaited<ReturnType<typeof listOwnerRules>>>
+export type ListOwnerRulesQueryError = ErrorType<void>
+
+
+/**
+ * Each rule as the owner would sign it now: what it tells a customer, its sources and their checks, its scenarios, how many saved results it would change, and what holds it. Read-only.
+ * @summary Requirements-checker rules prepared for the development owner's sign-off (decision 0020)
+ */
+export function useListOwnerRules<TData = Awaited<ReturnType<typeof listOwnerRules>>, TError = ErrorType<void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOwnerRules>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listOwnerRules>>,
+          TError,
+          Awaited<ReturnType<typeof listOwnerRules>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Each rule as the owner would sign it now: what it tells a customer, its sources and their checks, its scenarios, how many saved results it would change, and what holds it. Read-only.
+ * @summary Requirements-checker rules prepared for the development owner's sign-off (decision 0020)
+ */
+export function useListOwnerRules<TData = Awaited<ReturnType<typeof listOwnerRules>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOwnerRules>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listOwnerRules>>,
+          TError,
+          Awaited<ReturnType<typeof listOwnerRules>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Each rule as the owner would sign it now: what it tells a customer, its sources and their checks, its scenarios, how many saved results it would change, and what holds it. Read-only.
+ * @summary Requirements-checker rules prepared for the development owner's sign-off (decision 0020)
+ */
+export function useListOwnerRules<TData = Awaited<ReturnType<typeof listOwnerRules>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOwnerRules>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Each rule as the owner would sign it now: what it tells a customer, its sources and their checks, its scenarios, how many saved results it would change, and what holds it. Read-only.
+ * @summary Requirements-checker rules prepared for the development owner's sign-off (decision 0020)
+ */
+export function useListOwnerRules<TData = Awaited<ReturnType<typeof listOwnerRules>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOwnerRules>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListOwnerRulesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getWatchOwnerRuleSourcesUrl = (ruleId: string,) => {
+
+
+
+
+  return `/api/admin/owner-rules/${encodeURIComponent(String(ruleId))}/source-watches`
+}
+
+/**
+ * @summary Have the daily source check watch a prepared rule's official sources
+ */
+export const watchOwnerRuleSources = async (ruleId: string,
+    ownerRuleSourceWatch: OwnerRuleSourceWatch, options?: Parameters<typeof customFetch>[1]): Promise<OwnerRuleItem> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<OwnerRuleItem>(getWatchOwnerRuleSourcesUrl(ruleId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ownerRuleSourceWatch)
+  }
+);}
+
+
+
+
+
+export const getWatchOwnerRuleSourcesMutationKey = () => ['watchOwnerRuleSources'] as const;
+
+export const getWatchOwnerRuleSourcesMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof watchOwnerRuleSources>>, TError,WatchOwnerRuleSourcesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof watchOwnerRuleSources>>, TError,WatchOwnerRuleSourcesMutationVariables, TContext> => {
+
+const mutationKey = getWatchOwnerRuleSourcesMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof watchOwnerRuleSources>>, WatchOwnerRuleSourcesMutationVariables> = (props) => {
+          const {ruleId,data} = props ?? {};
+
+          return  watchOwnerRuleSources(ruleId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WatchOwnerRuleSourcesMutationResult = NonNullable<Awaited<ReturnType<typeof watchOwnerRuleSources>>>
+    export type WatchOwnerRuleSourcesMutationBody = BodyType<OwnerRuleSourceWatch>
+    export type WatchOwnerRuleSourcesMutationError = ErrorType<void>
+    export type WatchOwnerRuleSourcesMutationVariables = {ruleId: string;data: BodyType<OwnerRuleSourceWatch>}
+
+    /** @summary Have the daily source check watch a prepared rule's official sources */
+export const useWatchOwnerRuleSources = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof watchOwnerRuleSources>>, TError,WatchOwnerRuleSourcesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof watchOwnerRuleSources>>,
+        TError,
+        WatchOwnerRuleSourcesMutationVariables,
+        TContext
+      > => {
+      return useMutation(getWatchOwnerRuleSourcesMutationOptions(options), queryClient);
+    }
+
+export const getDecideOwnerRuleUrl = (ruleId: string,) => {
+
+
+
+
+  return `/api/admin/owner-rules/${encodeURIComponent(String(ruleId))}/decisions`
+}
+
+/**
+ * @summary Sign and release a prepared rule's version, or withdraw a released one
+ */
+export const decideOwnerRule = async (ruleId: string,
+    ownerRuleDecision: OwnerRuleDecision, options?: Parameters<typeof customFetch>[1]): Promise<OwnerRuleReceipt> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<OwnerRuleReceipt>(getDecideOwnerRuleUrl(ruleId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ownerRuleDecision)
+  }
+);}
+
+
+
+
+
+export const getDecideOwnerRuleMutationKey = () => ['decideOwnerRule'] as const;
+
+export const getDecideOwnerRuleMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof decideOwnerRule>>, TError,DecideOwnerRuleMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof decideOwnerRule>>, TError,DecideOwnerRuleMutationVariables, TContext> => {
+
+const mutationKey = getDecideOwnerRuleMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof decideOwnerRule>>, DecideOwnerRuleMutationVariables> = (props) => {
+          const {ruleId,data} = props ?? {};
+
+          return  decideOwnerRule(ruleId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DecideOwnerRuleMutationResult = NonNullable<Awaited<ReturnType<typeof decideOwnerRule>>>
+    export type DecideOwnerRuleMutationBody = BodyType<OwnerRuleDecision>
+    export type DecideOwnerRuleMutationError = ErrorType<void>
+    export type DecideOwnerRuleMutationVariables = {ruleId: string;data: BodyType<OwnerRuleDecision>}
+
+    /** @summary Sign and release a prepared rule's version, or withdraw a released one */
+export const useDecideOwnerRule = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof decideOwnerRule>>, TError,DecideOwnerRuleMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof decideOwnerRule>>,
+        TError,
+        DecideOwnerRuleMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDecideOwnerRuleMutationOptions(options), queryClient);
+    }
 
 export const getGetCorrectionNoticesUrl = (params?: GetCorrectionNoticesParams,) => {
   const normalizedParams = new URLSearchParams();

@@ -1420,6 +1420,147 @@ export interface CorrectionNotices {
   notices: CorrectionNotice[];
 }
 
+export type OwnerRuleCheckId = typeof OwnerRuleCheckId[keyof typeof OwnerRuleCheckId];
+
+
+export const OwnerRuleCheckId = {
+  controlling_text: 'controlling_text',
+  amendments: 'amendments',
+  effective_dates: 'effective_dates',
+  exceptions: 'exceptions',
+  jurisdiction: 'jurisdiction',
+} as const;
+
+export interface OwnerRuleCheck {
+  id: OwnerRuleCheckId;
+  label: string;
+}
+
+export interface OwnerRuleAmendmentRecord {
+  /** @nullable */
+  searchedAt: string | null;
+  places: string[];
+  read: string[];
+  notRead: string[];
+  open: string[];
+  limits: string;
+}
+
+export interface OwnerRuleSource {
+  title: string;
+  /** @nullable */
+  url: string | null;
+  locator: string;
+  quote: string;
+  watched: boolean;
+  /** @nullable */
+  checkedAt: string | null;
+  /** @nullable */
+  failure: string | null;
+  current: boolean;
+  /** @nullable */
+  passage: string | null;
+  /** @nullable */
+  recordedLocator: string | null;
+  /** @nullable */
+  effectiveFrom: string | null;
+  amendments: OwnerRuleAmendmentRecord | null;
+}
+
+export interface OwnerRuleScenario {
+  id: string;
+  critical: boolean;
+  /** @nullable */
+  expectedLabel: string | null;
+  /** @nullable */
+  actualLabel: string | null;
+  passed: boolean;
+}
+
+export type OwnerRuleItemLive = {
+  version: number;
+  manifestHash: string;
+} | null;
+
+export interface OwnerRuleItem {
+  ruleId: string;
+  title: string;
+  reason: string;
+  nextStep: string;
+  appliesWhen: string;
+  jurisdiction: string;
+  validFrom: string;
+  /** @nullable */
+  validTo: string | null;
+  risk: string;
+  scope: string;
+  limitations: string;
+  assumptions: string[];
+  disclosure: string;
+  /** @minimum 1 */
+  version: number;
+  /** @pattern ^[a-f0-9]{64}$ */
+  manifestHash: string;
+  live: OwnerRuleItemLive;
+  holds: string[];
+  checks: OwnerRuleCheck[];
+  sources: OwnerRuleSource[];
+  scenarios: OwnerRuleScenario[];
+  /** @minimum 0 */
+  profilesRun: number;
+  /** @minimum 0 */
+  changedProfiles: number;
+}
+
+export interface OwnerRulePage {
+  items: OwnerRuleItem[];
+}
+
+export type OwnerRuleSourceWatchWatch = typeof OwnerRuleSourceWatchWatch[keyof typeof OwnerRuleSourceWatchWatch];
+
+
+export const OwnerRuleSourceWatchWatch = {
+  official_sources: 'official_sources',
+} as const;
+
+export interface OwnerRuleSourceWatch {
+  watch: OwnerRuleSourceWatchWatch;
+}
+
+export type OwnerRuleDecisionAction = typeof OwnerRuleDecisionAction[keyof typeof OwnerRuleDecisionAction];
+
+
+export const OwnerRuleDecisionAction = {
+  sign: 'sign',
+  withdraw: 'withdraw',
+} as const;
+
+export interface OwnerRuleDecision {
+  action: OwnerRuleDecisionAction;
+  /** @minimum 1 */
+  version: number;
+  /** @pattern ^[a-f0-9]{64}$ */
+  manifestHash: string;
+  /** @maxItems 5 */
+  confirmedChecks: OwnerRuleCheckId[];
+  confirmed: true;
+}
+
+export type OwnerRuleReceiptState = typeof OwnerRuleReceiptState[keyof typeof OwnerRuleReceiptState];
+
+
+export const OwnerRuleReceiptState = {
+  published: 'published',
+  withdrawn: 'withdrawn',
+} as const;
+
+export interface OwnerRuleReceipt {
+  ruleId: string;
+  version: number;
+  state: OwnerRuleReceiptState;
+  superseded: number[];
+}
+
 export type ExportInputFormat = typeof ExportInputFormat[keyof typeof ExportInputFormat];
 
 

@@ -5,5 +5,6 @@
  * tests may import the module's files directly.
  */
 export * from "./valo-staff-authority";
+export * from "./development-owner";
 export * from "./valo-staff-roles";
 export * from "./valo-staff-operations";
