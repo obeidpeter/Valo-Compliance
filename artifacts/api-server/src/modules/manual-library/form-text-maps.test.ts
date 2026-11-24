@@ -75,6 +75,7 @@ test("every map turns its retained draft into form text that the v2 form fits ex
     "TPL-08",
     "TPL-12",
     "TPL-13",
+    "TPL-14",
     "TPL-15",
     "TPL-16",
     "TPL-17",
@@ -1096,6 +1097,93 @@ test("a service agreement's answers fill its wording with each party in the role
     "This agreement is between [Customer legal name, entity type, registration reference if applicable, address] (Customer) and [Provider legal name, entity type, registration reference if applicable, address] (Provider).",
   );
   assert.ok(unanswered.at(-1)!.startsWith("For the Customer: legal name [ ]; signatory name [ ];"));
+});
+
+test("a consultancy agreement's answers fill its wording with each party in the role chosen, each output on a line of its own, the schedules one entry to a line, and the signatures left for completion by hand", async () => {
+  const spec = GUIDED_SPECS_V2["TPL-14"]!;
+  const text = parseFormText((await proposedFormText("TPL-14"))!);
+  assert.equal(text.title, "Consultancy agreement");
+  assert.equal(spec.tables.find((t) => t.id === "deliverables")!.maxRows, 20);
+  const data = emptyFormData(spec);
+  data.values = {
+    ...data.values,
+    issuerName: "Synthetic Advisory Ltd",
+    issuerLegalForm: "private company limited by shares",
+    issuerAddress: "5 Synthetic Road, Ikoyi, Lagos",
+    recipientName: "Synthetic Retail Ltd",
+    recipientLegalForm: "private company limited by shares",
+    recipientAddress: "6 Synthetic Street, Ikeja, Lagos",
+    consultantParty: "first",
+    documentNumber: "SYN-CA-001",
+    issueDate: "2026-11-24",
+    startDate: "2026-12-01",
+    termType: "open",
+    clientDecisionMaker: "Synthetic managing director",
+    consultantLead: "Synthetic lead consultant",
+    jurisdiction: "Lagos State",
+    questionsPurpose: "Whether to open a second synthetic shop",
+    usersCirculation: "The client's board only",
+    scope: "Market research and a recommendation; no implementation",
+    dependencies: "Sales records for the last two years",
+    reviewPeriods: "Draft by 31 Jan 2027; 5 days to review; 5 to correct",
+    keyPeople: "Synthetic lead consultant; no subcontractors",
+    feeKobo: "50000000",
+    paymentTerms: "Half on signing, half on the final report",
+    expensesTerms: "None without approval",
+    taxTreatment: "Fees exclude any applicable tax",
+    ipTerms: "The consultant keeps its methods",
+    terminationTerms: "14 days' notice",
+    confidentialityTerms: "Three years after the end",
+    disputeTerms: "The leads, then the decision-makers after 10 days",
+  };
+  data.tables.deliverables = [
+    { description: "Market report", acceptance: "Answers the agreed questions", timing: "31 Jan 2027" },
+    { description: "Board briefing", acceptance: "Covers the report's findings", timing: "15 Feb 2027" },
+  ];
+  const compiled = (values: Record<string, string> = {}) =>
+    compileForm(spec, text, { ...data, values: { ...data.values, ...values } });
+  const out = compiled();
+  const shown = out.blocks.map((b) => b.text);
+  // The first party is the consultant here, so the second party prints as the Client.
+  assert.deepEqual(shown.slice(1, 4), [
+    "Synthetic Retail Ltd, private company limited by shares, 6 Synthetic Street, Ikeja, Lagos (Client)",
+    "engages Synthetic Advisory Ltd, private company limited by shares, 5 Synthetic Road, Ikoyi, Lagos (Consultant).",
+    "Agreement reference SYN-CA-001; date 24 Nov 2026; start 1 Dec 2026; completion/end Open-ended, with specified termination terms. Client decision-maker Synthetic managing director; Consultant lead Synthetic lead consultant.",
+  ]);
+  const lists = out.blocks.filter((b) => b.type === "list").map((b) => b.text);
+  assert.deepEqual(lists.slice(0, 5), [
+    "Business questions and purpose: Whether to open a second synthetic shop",
+    "Deliverables, intended users and permitted circulation: The client's board only",
+    "Market report: 31 Jan 2027; Answers the agreed questions",
+    "Board briefing: 15 Feb 2027; Covers the report's findings",
+    "Work included and excluded; Method and evidential standard: Market research and a recommendation; no implementation",
+  ]);
+  for (const line of [
+    "Assumptions to test; known limitations: [ ]",
+    "Fee basis and currency \u20a6500,000.00; milestones/rates; invoice/payment dates Half on signing, half on the final report",
+    "time-record method if relevant [ ]; advance and credit/refund basis [ ]",
+    "Convenience notice; breach remedy period; disruption exit period; pre-approved non-cancellable commitments 14 days' notice",
+    "completed Nigeria/State/FCT and court location entry Lagos State",
+  ])
+    assert.ok(lists.includes(line), line);
+  assert.ok(
+    shown
+      .at(-1)!
+      .startsWith(
+        "Client legal name Synthetic Retail Ltd; authorised signatory/name/capacity [ ]; authority reference [ ]; signature/date [ ]. Consultant legal name Synthetic Advisory Ltd;",
+      ),
+  );
+  assert.deepEqual(out.selectedClauses, ["consultantParty=first"]);
+  assert.deepEqual(out.unfilled, []);
+  // With the second party as the consultant, the roles swap; unanswered, the draft's placeholders print.
+  const swapped = compiled({ consultantParty: "second" }).blocks.map((b) => b.text);
+  assert.ok(swapped[1]!.startsWith("Synthetic Advisory Ltd, private company limited by shares"));
+  assert.ok(swapped.at(-1)!.startsWith("Client legal name Synthetic Advisory Ltd;"));
+  const unanswered = compiled({ consultantParty: "" }).blocks.map((b) => b.text);
+  assert.equal(
+    unanswered[1],
+    "[Client legal name, entity type, registration reference if applicable, address] (Client) engages [Consultant legal name, entity type, registration reference if applicable, address] (Consultant).",
+  );
 });
 
 test("an invoice form document is saved as its answers make it, hashed as V2, and its file prints the template's wording with only its note among its fields", async () => {

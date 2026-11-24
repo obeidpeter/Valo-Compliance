@@ -1044,6 +1044,109 @@ const serviceAgreement = fromV1("TPL-13", {
   ],
 });
 
+/** A new required question for one line of an agreement's wording that v1 does not ask for. */
+const entryQuestion = (id: string, label: string, line: string, type: "text" | "long_text" = "text") => ({
+  added: { id, label, type, required: true, tokens: [id] },
+  why: `The agreement prints "${line}", which its clauses rely on, and v1 asks nothing for it.`,
+});
+
+/**
+ * The consultancy agreement (TPL-14), a premium form. As in the service agreement, a new choice says
+ * which party is the consultant, so each party's details and signature name print in its role.
+ */
+const consultancyAgreement = fromV1("TPL-14", {
+  questions: [
+    ...party("issuer", "firstParty"),
+    ...party("recipient", "secondParty"),
+    {
+      added: {
+        id: "consultantParty",
+        label: "Which party is the consultant?",
+        type: "select",
+        required: true,
+        options: [
+          { value: "first", label: "First party" },
+          { value: "second", label: "Second party" },
+        ],
+        clause: true,
+      },
+      why: "The agreement names its parties as the Client and the Consultant, and v1 asks only for a first and a second party: the choice puts each party's details in its own place.",
+    },
+    { v1: "documentNumber", join: { tokens: ["documentNumber"] } },
+    { v1: "issueDate", join: { tokens: ["issueDate"] } },
+    { v1: "startDate", join: { tokens: ["startDate"] } },
+    { v1: "termType", join: { tokens: ["endTerm"] } },
+    { v1: "endDate", join: { tokens: ["endTerm"] } },
+    entryQuestion("clientDecisionMaker", "Client decision-maker", "Client decision-maker [ ]"),
+    entryQuestion("consultantLead", "Consultant lead", "Consultant lead [ ]"),
+    { v1: "jurisdiction", join: { tokens: ["jurisdiction"] } },
+    entryQuestion(
+      "questionsPurpose",
+      "Business questions the consultancy addresses, and its purpose",
+      "Business questions and purpose: [ ]",
+      "long_text",
+    ),
+    entryQuestion(
+      "usersCirculation",
+      "Intended users of the deliverables and their permitted circulation",
+      "Deliverables, intended users and permitted circulation: [ ]",
+    ),
+    { v1: "scope", join: { tokens: ["scope"] } },
+    { v1: "dependencies", join: { tokens: ["dependencies"] } },
+    entryQuestion(
+      "reviewPeriods",
+      "Milestones, review period and correction period",
+      "Milestones, review period and correction period: [ ]",
+    ),
+    entryQuestion(
+      "keyPeople",
+      "Key people, approved subcontractors and tools, or none",
+      "Key people, approved subcontractors and tools: [ ]",
+      "long_text",
+    ),
+    { v1: "feeKobo", join: { tokens: ["feeKobo"] } },
+    { v1: "paymentTerms", join: { tokens: ["paymentTerms"] } },
+    { v1: "expensesTerms", join: { tokens: ["expensesTerms"] } },
+    { v1: "taxTreatment", join: { tokens: ["taxTreatment"] } },
+    { v1: "ipTerms", join: { tokens: ["ipTerms"] } },
+    { v1: "terminationTerms", join: { tokens: ["terminationTerms"] } },
+    { v1: "confidentialityTerms", join: { tokens: ["confidentialityTerms"] } },
+    { v1: "disputeTerms", join: { tokens: ["disputeTerms"] } },
+  ],
+  dropped: {
+    statusAssumptions:
+      "The agreement records that neither party is the other's agent and that its labels establish no employment classification, and has no place for the business's own notes on the working relationship.",
+    liabilityTerms:
+      "The agreement adds no indemnity, remedy waiver or liability cap and says any proposed limitation must be separately specified and reviewed, so it has no place for one.",
+  },
+  tables: {
+    deliverables: {
+      maxRows: {
+        rows: 20,
+        why: "Each output prints as a line of its own in Schedule A, and up to 20 keep the longest agreement within what a document holds.",
+      },
+    },
+  },
+  // Completed by hand: the schedule entries v1 asks nothing for, which the parties settle as they
+  // sign, and the signatures.
+  blanks: [
+    "assumptionsLimits",
+    "conflicts",
+    "timeRecord",
+    "advance",
+    "deliverablesLicensed",
+    "rightsVariation",
+    "incidentContacts",
+    "noticeAddresses",
+    "clientSignatory",
+    "clientAuthority",
+    "clientSignature",
+    "consultantSignatory",
+    "consultantAuthority",
+    "consultantSignature",
+  ],
+});
+
 /** The v2 forms, by template. A template without one stays on its v1 form. */
 export const GUIDED_SPECS_V2: Readonly<Partial<Record<GuidedTemplateId, GuidedSpecV2>>> = {
   "TPL-01": invoice.spec,
@@ -1054,6 +1157,7 @@ export const GUIDED_SPECS_V2: Readonly<Partial<Record<GuidedTemplateId, GuidedSp
   "TPL-08": minutes.spec,
   "TPL-12": reminder.spec,
   "TPL-13": serviceAgreement.spec,
+  "TPL-14": consultancyAgreement.spec,
   "TPL-15": nonDisclosure.spec,
   "TPL-16": employmentContract.spec,
   "TPL-17": offerLetter.spec,
@@ -1068,6 +1172,7 @@ export const GUIDED_CHANGES_V2: Readonly<Partial<Record<GuidedTemplateId, Guided
   "TPL-08": minutes.changes,
   "TPL-12": reminder.changes,
   "TPL-13": serviceAgreement.changes,
+  "TPL-14": consultancyAgreement.changes,
   "TPL-15": nonDisclosure.changes,
   "TPL-16": employmentContract.changes,
   "TPL-17": offerLetter.changes,
