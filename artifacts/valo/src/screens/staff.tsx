@@ -86,9 +86,14 @@ export default function StaffPage() {
     <div className="mx-auto max-w-7xl px-5 py-10 lg:px-8">
       <p className="eyebrow">Staff</p>
       <h1 className="font-display mt-2 text-4xl">Operations</h1>
-      <Link href="/staff/privacy" className="btn btn-ghost btn-sm mt-4">
-        Privacy request operations
-      </Link>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <Link href="/staff/privacy" className="btn btn-ghost btn-sm">
+          Privacy request operations
+        </Link>
+        <Link href="/staff/acceptance" className="btn btn-ghost btn-sm">
+          Acceptance cases
+        </Link>
+      </div>
       <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
         Support shows the full saved request. Finance actions are available only to authorised finance staff.
         Customer document bodies are not shown here.

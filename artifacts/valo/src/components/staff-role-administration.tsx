@@ -8,7 +8,7 @@ import {
 } from "@workspace/api-client-react";
 import { describeError } from "@/lib/api";
 import { formatDateTime } from "@/lib/format";
-const roles = ["content", "support", "finance", "system", "privacy"] as const;
+const roles = ["content", "support", "finance", "system", "privacy", "reviewer"] as const;
 export function StaffRoleAdministration() {
   const [identityId, setIdentityId] = useState(""),
     [role, setRole] = useState<StaffRoleAssignment["role"]>("support");

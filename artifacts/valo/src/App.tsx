@@ -33,6 +33,7 @@ const PrivacyPage = lazy(() => import("@/screens/account").then((m) => ({ defaul
 const PurchasesPage = lazy(() => import("@/screens/account").then((m) => ({ default: m.PurchasesPage })));
 const StaffPage = lazy(() => import("@/screens/staff"));
 const PrivacyOperations = lazy(() => import("@/screens/privacy-operations"));
+const AcceptanceReview = lazy(() => import("@/screens/acceptance-review"));
 const Support = lazy(() => import("@/screens/support"));
 const WorkspaceSupportPage = lazy(() =>
   import("@/screens/support").then((m) => ({ default: m.WorkspaceSupportPage })),
@@ -415,6 +416,13 @@ function ShellRoutes() {
           {() => (
             <RequireAuth title="Support requests">
               <WorkspaceSupportPage />
+            </RequireAuth>
+          )}
+        </Route>
+        <Route path="/staff/acceptance">
+          {() => (
+            <RequireAuth title="Acceptance cases">
+              <AcceptanceReview />
             </RequireAuth>
           )}
         </Route>
