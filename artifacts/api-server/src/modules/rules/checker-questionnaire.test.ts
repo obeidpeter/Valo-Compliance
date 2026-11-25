@@ -1,12 +1,25 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { PreviewAssessmentBody } from "@workspace/api-zod";
-import { checkerFactsSchema, factNames, missingQuestions } from "@workspace/valo-core";
+import {
+  checkerFactsSchema,
+  factNames,
+  missingQuestions,
+  richBusinessNameSchema,
+  richPrivacySchema,
+  richProductSchema,
+  richTaxSchema,
+} from "@workspace/valo-core";
 import {
   CHECKER_QUESTIONNAIRE,
   CHECKER_QUESTIONS,
+  NAMING_QUESTIONS,
   NOT_ANSWERED,
+  PARTNER_QUESTIONS,
+  RULE_FAMILIES,
+  RULE_QUESTIONS,
   STATES,
+  type RuleQuestion,
   answerAt,
   holds,
   isAsked,
@@ -143,6 +156,14 @@ test("a condition reads an answer, a list of answers, a rule's way of not answer
   );
   // A question the questionnaire does not name is asked.
   assert.equal(isAsked(answers, "rich.privacy.controllerRole"), true);
+  // "Has an answer": a value, not a way of not answering, an empty text or an empty list.
+  const answered = (value: unknown) => holds({ answer: "x", answered: true }, { x: value });
+  assert.equal(answered("Synthetic Ventures"), true);
+  assert.equal(answered(["Ade"]), true);
+  assert.equal(answered(false), true);
+  for (const missing of [undefined, null, "", "  ", [], "unknown", "unanswered", "not_applicable"])
+    assert.equal(answered(missing), false, JSON.stringify(missing));
+  assert.equal(answered({ status: "unknown", value: null }), false);
 });
 
 /** Every answer given, so that a test changes only what it names. */
@@ -252,4 +273,62 @@ test("over many sets of answers, the result lists exactly the questions the page
       );
     }
   }
+});
+
+/** Each answer a rule's question can give, as its rule's answers hold it. */
+function ruleAnswers(question: RuleQuestion): unknown[] {
+  const markers = NOT_ANSWERED.map((status) => ({ status, value: null }));
+  const values = (question.choices ?? []).map((choice) => choice.value);
+  switch (question.kind) {
+    case "flag":
+      return [true, false, ...markers];
+    case "choice":
+      return [...values, ...markers];
+    case "list":
+      return [values.length ? values : ["Synthetic entry"], ...markers];
+    case "date":
+      return ["2026-01-01", ...markers];
+    default:
+      return ["Synthetic answer", ...markers];
+  }
+}
+
+test("each rule's questions fill only answers its rule's schema takes, with every answer they offer", () => {
+  const schemas = {
+    businessName: richBusinessNameSchema,
+    privacy: richPrivacySchema,
+    tax: richTaxSchema,
+    product: richProductSchema,
+  };
+  const asked: string[] = [];
+  for (const family of RULE_FAMILIES)
+    for (const question of RULE_QUESTIONS[family]) {
+      assert.ok(
+        Object.hasOwn(schemas[family].shape, question.key),
+        `${family}.${question.key} is a ${family} answer`,
+      );
+      for (const value of ruleAnswers(question))
+        assert.ok(
+          schemas[family].safeParse({ [question.key]: value }).success,
+          `${family}.${question.key} takes ${JSON.stringify(value)}`,
+        );
+      asked.push(`${family}.${question.key}`);
+    }
+  for (const question of NAMING_QUESTIONS)
+    for (const value of ruleAnswers(question))
+      assert.ok(
+        richBusinessNameSchema.safeParse({ namingAssessment: { [question.key]: value } }).success,
+        `namingAssessment.${question.key} takes ${JSON.stringify(value)}`,
+      );
+  for (const question of PARTNER_QUESTIONS)
+    for (const value of ruleAnswers(question))
+      assert.ok(
+        richBusinessNameSchema.safeParse({ partners: [{ [question.key]: value }] }).success,
+        `partners.${question.key} takes ${JSON.stringify(value)}`,
+      );
+  assert.equal(new Set(asked).size, asked.length, "no rule's question is asked twice");
+  assert.deepEqual(
+    RULE_FAMILIES.map((family) => RULE_QUESTIONS[family].length),
+    [12, 8, 23, 15],
+  );
 });

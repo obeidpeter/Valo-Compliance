@@ -126,7 +126,8 @@ that one requirement needs these details, and the links to sign in that keep the
 
 **A rule's question is asked only when its answer can change what the rule says.** Its condition
 follows the rule's calculation. For the personal-data rule:
-- whether the business uses information about people who can be identified comes first;
+- whether the business uses information about people who can be identified comes first, with
+  whether a personal, household or legal-claim context is relevant;
 - the six ways the business can be connected to Nigeria follow only when it does, and each one only
   until one of them holds;
 - what the information is used for, and who decides how it is used, follow after that;
@@ -231,6 +232,33 @@ answered".
   place. Filled answers say where they came from. Skipped questions are not listed.
 - A result's "Still unanswered" links each question to its place, the nineteen included, as the
   optional panels' questions are linked today.
+
+## Settled while building it
+
+**Slice 2: what the proof found.** The first conditions written for the rules' questions failed
+the walk in three places. Each condition now follows what the calculation does:
+- **Two registration questions are asked in every state of their rule.** These are whether the
+  business holds a registration record for its exact name and operator, and which
+  product-registration record it holds. Each changes the next step the result gives, even when the
+  rule does not apply.
+- **The personal-data rule's context question is asked with its first question.** A personal or
+  household context, once claimed, makes the rule ask for the purpose and any commercial use,
+  whatever else is answered: the calculation never takes the context alone as settling anything. So
+  the purpose and the commercial-use questions are asked once that context is claimed, as well as
+  once the business is connected to Nigeria.
+
+Three of the panels' questions are read by no rule's calculation, so they are never asked:
+- whether the people concerned were already told about the use, for personal data;
+- whether the registration record names the exact product and manufacturer, for products;
+- whether the record's conditions changed, also for products.
+
+Answers saved to them before are kept.
+
+The walk itself is checked too:
+- It reaches every other question in at least 20 of the states it checks. Half the walks start from
+  the prepared scenarios, which reach deep into each rule.
+- Changing either of two conditions to a wrong one made it fail: the company-return rule's question
+  on incorporation in Nigeria, and the personal-data rule's question on how information is collected.
 
 ## What does not change
 

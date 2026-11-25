@@ -9,7 +9,7 @@
     "test:valo-manual-library-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --experimental-test-module-mocks --import tsx --test src/routes/valo-manual-library.integration.test.ts",
     "valo:industry-guide-reviews": "tsx src/scripts/industry-guide-reviews.ts",
     "test:valo-industry-guide-reviews": "node --import tsx --test src/scripts/industry-guide-reviews.test.ts",
-    "test:valo-rich-checker": "node --import tsx --test src/modules/rules/valo-checker-rich.test.ts src/modules/rules/checker-questionnaire.test.ts ../valo/src/lib/rich-checker.test.ts",
+    "test:valo-rich-checker": "node --import tsx --test src/modules/rules/valo-checker-rich.test.ts src/modules/rules/checker-questionnaire.test.ts src/modules/rules/rule-questions.test.ts ../valo/src/lib/rich-checker.test.ts",
     "test:valo-checker-browser-development": "NODE_ENV=development VALO_RUN_CHECKER_BROWSER=synthetic-development-only tsx src/scripts/checker-live-browser.ts",
     "test:valo-task-source-guard": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --experimental-test-module-mocks --import tsx --test src/modules/tasks/valo-task-source-guard.integration.test.ts",
     "test:valo-request-budget": "VALO_RUN_REQUEST_BUDGET_TESTS=synthetic-development-only REPLIT_DEV_DOMAIN=synthetic-request-budget.invalid NODE_ENV=development node --import tsx --test src/platform/request-complexity.test.ts",
