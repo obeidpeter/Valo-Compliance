@@ -96,6 +96,18 @@ A staff-library withdrawal now records a reason of 20 to 1,000 characters, as th
 withdrawal does, and the notice shows it. Sending notices by email waits for a sender and the owner's
 decision on messages (phase 4).
 
+Settled while building it:
+
+- The home lists the workspace's unread notices, newest first, up to 50. A notice marked read leaves
+  the list. The editor, the documents list and the purchases screen still show where each edition
+  stands.
+- Every staff-library withdrawal gives its reason, whatever the kind of entry. Only a template's
+  notices show it. The staff screen asks for it in place of the browser's confirmation.
+- An edition replaced or withdrawn before the migration is applied gets no notices.
+- A workspace's erasure does not remove its notices yet. They hold no text the customer wrote: a
+  released template's title, version numbers, a count of documents and its editor's reason. Phase 7's
+  processing inventory lists them, and the erasure then removes them.
+
 ### What does not change
 
 - The documents themselves, their saved versions and their files.

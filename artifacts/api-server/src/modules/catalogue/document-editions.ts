@@ -77,6 +77,8 @@ export async function listDocumentEditions(actor: WorkspaceActor) {
     latest_state: string;
     latest_published_at: Date | string | null;
     latest_closed_at: Date | string | null;
+    // Absent until the edition notices migration is applied (docs/valo/migration-edition-notices.md).
+    latest_reason?: string | null;
   }>(sql`select * from public.valo_workspace_document_editions()`);
   const items = library.flatMap((row) => {
     const latestIsRecorded = row.latest_version === row.version;
@@ -85,7 +87,7 @@ export async function listDocumentEditions(actor: WorkspaceActor) {
         version: row.version,
         withdrawn: latestIsRecorded && row.latest_state === "withdrawn",
         withdrawnAt: latestIsRecorded ? at(row.latest_closed_at) : null,
-        reason: null,
+        reason: latestIsRecorded ? (row.latest_reason ?? null) : null,
       },
       latestIsRecorded
         ? null
@@ -94,7 +96,7 @@ export async function listDocumentEditions(actor: WorkspaceActor) {
             withdrawn: row.latest_state === "withdrawn",
             releasedAt: at(row.latest_published_at),
             withdrawnAt: at(row.latest_closed_at),
-            reason: null,
+            reason: row.latest_reason ?? null,
             href: "/library/" + encodeURIComponent(row.latest_slug),
           },
     );

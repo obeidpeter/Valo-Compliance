@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { asc, eq } from "drizzle-orm";
 import { GetManualLibraryRevisionResponse, GetReleasedTemplateResponse } from "@workspace/api-zod";
 import { wordFromText } from "../modules/manual-library/files";
-import { templateDetails } from "./template-details";
+import { libraryAction, templateDetails } from "./template-details";
 
 type Call = (path: string, body?: unknown, actor?: string) => Promise<Response>;
 
@@ -60,7 +60,7 @@ export async function exercisePremiumPriceCommand(call: Call, editor: string) {
   await assert.rejects(record(terms()), /Only a published premium template/);
   await assert.rejects(record(terms({ edition: randomUUID() })), /Only a published premium template/);
   const act = (action: "publish" | "withdraw") =>
-    call(path + "/actions", { action, version: edition.version, digest: edition.digest }, editor);
+    call(path + "/actions", libraryAction(action, edition), editor);
   assert.equal((await act("publish")).status, 200);
   const listed = (await premiumPriceStatus()).find((entry) => entry.edition === edition.id);
   assert.equal(listed?.title, title);

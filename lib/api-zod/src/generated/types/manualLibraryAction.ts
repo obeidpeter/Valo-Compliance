@@ -13,4 +13,10 @@ export interface ManualLibraryAction {
   version: number;
   /** @pattern ^[0-9a-f]{64}$ */
   digest: string;
+  /**
+     * Why the version is withdrawn. A withdrawal needs it; the customers who bought or used the version see it (docs/architecture/editions.md).
+     * @minLength 20
+     * @maxLength 1000
+     */
+  reason?: string;
 }

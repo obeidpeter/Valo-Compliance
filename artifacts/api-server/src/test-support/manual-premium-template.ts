@@ -10,7 +10,7 @@ import {
   ListPublicCatalogueResponse,
 } from "@workspace/api-zod";
 import { wordFromText } from "../modules/manual-library/files";
-import { templateDetails } from "./template-details";
+import { libraryAction, templateDetails, withdrawalReason } from "./template-details";
 
 type Call = (path: string, body?: unknown, actor?: string) => Promise<Response>;
 
@@ -45,7 +45,7 @@ export async function exercisePremiumManualTemplate(call: Call, editor: string) 
     return GetManualLibraryRevisionResponse.parse(await response.json());
   };
   const act = (action: string, revision: { version: number; digest: string }) =>
-    call(path + "/actions", { action, version: revision.version, digest: revision.digest }, editor);
+    call(path + "/actions", libraryAction(action, revision), editor);
   assert.equal((await draft({ ...data, kind: "template" })).status, 422);
   assert.equal((await draft({ ...data, title: "Invoice" })).status, 422);
   assert.equal((await draft({ ...data, body: "" })).status, 422);
@@ -371,6 +371,40 @@ export async function exercisePremiumManualTemplate(call: Call, editor: string) 
   assert.equal(replacedCard.freeDownloadPath, undefined);
   // The template counts as the buyer's, in both editions.
   assert.deepEqual(await owned(other), [first.id, next.id].sort());
+  // The buyer is told once that the edition bought was replaced, and what the purchase carries to
+  // (docs/architecture/editions.md, slice 3). The reversed purchase holds nothing, and the reader made
+  // no document from the edition, so the reader is told nothing.
+  const { listEditionNotices } = await import("../modules/catalogue");
+  const written = async (edition: string) =>
+    (
+      await db.execute(
+        sql`select workspace_id, route, kind, title, version, replacement_version, reason, held, documents
+              from valo_edition_notices where edition = ${edition} order by kind`,
+      )
+    ).rows;
+  const heldNotice = {
+    workspace_id: secondBuyer.workspaceId,
+    route: "library",
+    kind: "replaced",
+    title: "Service agreement",
+    version: 1,
+    replacement_version: 2,
+    reason: null,
+    held: true,
+    documents: 0,
+  };
+  assert.deepEqual(await written(first.id), [heldNotice]);
+  const buyerNotices = await runInWorkspaceScope(secondBuyer.workspaceId, () =>
+    listEditionNotices(secondBuyer),
+  );
+  assert.deepEqual(
+    buyerNotices.items.map((n) => [n.title, n.version, n.kind, n.replacementVersion, n.held, n.documents]),
+    [["Service agreement", 1, "replaced", 2, true, 0]],
+  );
+  assert.deepEqual(
+    (await runInWorkspaceScope(account.workspaceId, () => listEditionNotices(account))).items,
+    [],
+  );
   assert.notEqual(replacedCard.id, first.id);
   assert.equal(await productVisible(), false);
   // The reversed purchase carries nothing, and the edition bought closes to new downloads; the new
@@ -382,8 +416,17 @@ export async function exercisePremiumManualTemplate(call: Call, editor: string) 
   assert.equal(carriedDownload.status, 200);
   assert.equal(carriedDownload.headers.get("cache-control"), "private, no-store");
   await readRevision(await act("withdraw", next));
-  // Withdrawn, the new edition closes too.
+  // Withdrawn, the new edition closes too, and its buyer is told why.
   assert.equal((await download(next.id, other)).status, 403);
+  assert.deepEqual(await written(next.id), [
+    {
+      ...heldNotice,
+      kind: "withdrawn",
+      version: 2,
+      replacement_version: null,
+      reason: withdrawalReason,
+    },
+  ]);
   assert.equal(await libraryCard(), undefined);
   assert.equal((await call("/public/templates/manual-" + itemId)).status, 404);
 }
@@ -616,11 +659,7 @@ export async function exercisePremiumFormDocument(call: Call, editor: string) {
   assert.equal(await recorded(), second.order.id);
   // Both editions are withdrawn again, so that no later check finds them.
   for (const { path, revision } of [plain, formed]) {
-    const withdrawn = await call(
-      path + "/actions",
-      { action: "withdraw", version: revision.version, digest: revision.digest },
-      editor,
-    );
+    const withdrawn = await call(path + "/actions", libraryAction("withdraw", revision), editor);
     assert.equal(withdrawn.status, 200);
   }
 }

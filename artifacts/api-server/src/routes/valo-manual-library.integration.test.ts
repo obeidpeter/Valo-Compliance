@@ -14,7 +14,7 @@ import {
   exercisePremiumManualTemplate,
 } from "../test-support/manual-premium-template";
 import { exercisePremiumPriceCommand } from "../test-support/premium-price-command";
-import { templateDetails } from "../test-support/template-details";
+import { libraryAction, templateDetails, withdrawalReason } from "../test-support/template-details";
 import { exerciseOwnerRuleRoutes } from "../test-support/owner-rule-routes";
 import {
   GetManualLibraryRevisionResponse,
@@ -29,6 +29,7 @@ import {
   LoadRetainedDraftsResponse,
   CreateTemplateDraftResponse,
   ListDocumentEditionsResponse,
+  ListEditionNoticesResponse,
 } from "@workspace/api-zod";
 import { registeredManualGuidance } from "../modules/manual-guidance/regulatory-evidence";
 
@@ -256,7 +257,7 @@ test(
         (i) => i.slug === slug,
       )!;
     const act = (id: string, action: string, r: { version: number; digest: string }) =>
-      call(item(id) + "/actions", { action, version: r.version, digest: r.digest });
+      call(item(id) + "/actions", libraryAction(action, r));
     const industry = coveragePlan().industries[0]!.slug;
     const billing = async () =>
       (
@@ -328,8 +329,42 @@ test(
       const discovery = GetPublicDiscoveryResponse.parse(await ok(await call("/public/discovery")));
       assert.ok(discovery.items.some((v: { path: string }) => v.path === "/resources/manual-" + id));
       assert.equal((await act(id, "withdraw", r1)).status, 409);
+      // A withdrawal says why, in 20 to 1,000 characters once trimmed, and is refused without one
+      // (docs/architecture/editions.md, slice 3). A refused withdrawal changes nothing.
+      const bare = { action: "withdraw", version: r2.version, digest: r2.digest };
+      for (const reason of [undefined, "  Too short a reason  ", "x".repeat(1001)])
+        assert.equal((await call(item(id) + "/actions", { ...bare, reason })).status, 422);
+      assert.equal((await publicResource(id)).body, r2.body);
       await revision(await act(id, "withdraw", r2));
       await revision(await act(id, "withdraw", r2));
+      // The reason is recorded once, with the withdrawal, and never changed.
+      const recorded = await db.execute<{ reason: string; recorded_by: string }>(
+        sql`select reason, recorded_by from valo_manual_withdrawals where edition = ${r2.id}`,
+      );
+      assert.deepEqual(recorded.rows, [{ reason: withdrawalReason, recorded_by: editor }]);
+      // The database's refusal is the query error's cause.
+      const keepsReason = (error: Error) =>
+        /A withdrawal keeps the reason it was given/.test(
+          String((error as { cause?: Error }).cause?.message ?? error.message),
+        );
+      await assert.rejects(
+        db.execute(
+          sql`update valo_manual_withdrawals set reason = ${"x".repeat(30)} where edition = ${r2.id}`,
+        ),
+        keepsReason,
+      );
+      await assert.rejects(
+        db.execute(sql`delete from valo_manual_withdrawals where edition = ${r2.id}`),
+        keepsReason,
+      );
+      assert.deepEqual(
+        (
+          await db.execute<{ reason: string; recorded_by: string }>(
+            sql`select reason, recorded_by from valo_manual_withdrawals where edition = ${r2.id}`,
+          )
+        ).rows,
+        [{ reason: withdrawalReason, recorded_by: editor }],
+      );
       assert.equal((await call("/public/resources/manual-" + id)).status, 404);
       assert.equal((await act(id, "publish", r2)).status, 409);
     });
@@ -741,8 +776,18 @@ test(
           await expect(publicPage.page.getByRole("region", { name: title })).toContainText(
             "Keep a dated delivery note.",
           );
-          page.once("dialog", (dialog) => dialog.accept());
+          // A withdrawal says why, for the customers who bought or used the version
+          // (docs/architecture/editions.md, slice 3); "Keep it" withdraws nothing.
           await page.getByRole("button", { name: "Withdraw live version" }).click();
+          await page.getByRole("button", { name: "Keep it" }).click();
+          await expect(preview).toContainText("Readers can see version 1.");
+          await page.getByRole("button", { name: "Withdraw live version" }).click();
+          const withdrawal = page.getByRole("form", { name: "Withdraw the live version" });
+          await expect(withdrawal.getByRole("button", { name: "Withdraw this version" })).toBeDisabled();
+          await withdrawal
+            .getByLabel("Why is it withdrawn?")
+            .fill("A synthetic reason for the browser withdrawal.");
+          await withdrawal.getByRole("button", { name: "Withdraw this version" }).click();
           await expect(preview).toContainText("withdrawn");
           await publicPage.page.reload();
           await expect(publicPage.page.getByTestId("link-industries")).toBeVisible();
@@ -1179,6 +1224,8 @@ test(
         assert.equal(withdrawn?.state, "withdrawn");
         assert.equal(withdrawn?.current, null);
         assert.ok(withdrawn?.since);
+        // With the reason its editor gave (slice 3).
+        assert.equal(withdrawn?.reason, withdrawalReason);
         const { valoDocuments } = await import("@workspace/db");
         assert.equal(
           (await db.select().from(valoDocuments).where(eq(valoDocuments.id, copy.id)))[0]?.libraryEdition,
@@ -1186,6 +1233,151 @@ test(
         );
         // Another workspace sees nothing of it.
         assert.deepEqual(await editions(stranger), []);
+      },
+    );
+    // docs/architecture/editions.md, slice 3: each workspace that made a document from an edition is
+    // told once when it is replaced or withdrawn, by the database in the transaction that makes the
+    // change. No other workspace is told, and a workspace may only mark its own notices read.
+    await t.test(
+      "each workspace that used an edition is told once when it is replaced or withdrawn, and no other workspace is",
+      async () => {
+        const { resolveWorkspace } = await import("../modules/workspaces");
+        const { createReleasedTemplateDraft, listEditionNotices, markEditionNoticeRead } =
+          await import("../modules/catalogue");
+        const { runInWorkspaceScope } = await import("@workspace/db");
+        const early = await resolveWorkspace("synthetic-notice-early-" + randomUUID()),
+          late = await resolveWorkspace("synthetic-notice-late-" + randomUUID()),
+          stranger = await resolveWorkspace("synthetic-notice-stranger-" + randomUUID());
+        const inScope = <T>(actor: typeof early, work: () => Promise<T>) =>
+          runInWorkspaceScope(actor.workspaceId, work);
+        const notices = async (actor: typeof early) =>
+          ListEditionNoticesResponse.parse(await inScope(actor, () => listEditionNotices(actor))).items;
+        // Every notice written of an edition, whichever workspace it went to.
+        const written = async (edition: string) =>
+          (
+            await db.execute(
+              sql`select workspace_id, route, kind, title, version, replacement_version, reason, held, documents
+                    from valo_edition_notices where edition = ${edition} order by kind`,
+            )
+          ).rows;
+        const title = "Synthetic noticed register";
+        const itemId = randomUUID();
+        const release = async (baseVersion: number) =>
+          revision(
+            await act(
+              itemId,
+              "publish",
+              await revision(await draft(itemId, { ...input("template", title), baseVersion })),
+            ),
+          );
+        const first = await release(0);
+        // Two copies of the first edition in one workspace make one notice, of two documents.
+        for (const _copy of [1, 2]) await inScope(early, () => createReleasedTemplateDraft(early, first.id));
+        assert.deepEqual(await written(first.id), []);
+        const second = await release(1);
+        const replacedFirst = {
+          workspace_id: early.workspaceId,
+          route: "library",
+          kind: "replaced",
+          title,
+          version: 1,
+          replacement_version: 2,
+          reason: null,
+          held: false,
+          documents: 2,
+        };
+        assert.deepEqual(await written(first.id), [replacedFirst]);
+        // Releasing it again changes nothing and tells nobody again.
+        await revision(await act(itemId, "publish", second));
+        assert.deepEqual(await written(first.id), [replacedFirst]);
+        // A copy of the second edition in another workspace; its withdrawal tells that workspace, with
+        // the reason, and not the workspace whose copies came from the first edition.
+        await inScope(late, () => createReleasedTemplateDraft(late, second.id));
+        await revision(await act(itemId, "withdraw", second));
+        const withdrawnSecond = {
+          workspace_id: late.workspaceId,
+          route: "library",
+          kind: "withdrawn",
+          title,
+          version: 2,
+          replacement_version: null,
+          reason: withdrawalReason,
+          held: false,
+          documents: 1,
+        };
+        assert.deepEqual(await written(second.id), [withdrawnSecond]);
+        // A new edition released after the withdrawn one tells its users that it was replaced too.
+        await release(2);
+        assert.deepEqual(await written(second.id), [
+          { ...withdrawnSecond, kind: "replaced", replacement_version: 3, reason: null },
+          withdrawnSecond,
+        ]);
+        assert.deepEqual(await written(first.id), [replacedFirst]);
+
+        // Each workspace reads its own notices in its own scope, newest first.
+        const [earlyNotice, ...earlyRest] = await notices(early);
+        assert.deepEqual(earlyRest, []);
+        assert.deepEqual(
+          { ...earlyNotice, id: undefined, createdAt: undefined },
+          {
+            id: undefined,
+            route: "library",
+            title,
+            version: 1,
+            kind: "replaced",
+            replacementVersion: 2,
+            reason: null,
+            held: false,
+            documents: 2,
+            createdAt: undefined,
+          },
+        );
+        assert.deepEqual(
+          (await notices(late)).map((n) => [n.kind, n.version, n.replacementVersion, n.reason]),
+          [
+            ["replaced", 2, 3, null],
+            ["withdrawn", 2, null, withdrawalReason],
+          ],
+        );
+        assert.deepEqual(await notices(stranger), []);
+        // Another workspace cannot mark it read, and is told only that it was not found.
+        await assert.rejects(
+          inScope(stranger, () => markEditionNoticeRead(stranger, earlyNotice!.id)),
+          (error: unknown) => error instanceof ValoProblem && error.status === 404,
+        );
+        assert.equal((await notices(early)).length, 1);
+        // Marked read, it leaves the list; marking it again changes nothing.
+        assert.deepEqual(await inScope(early, () => markEditionNoticeRead(early, earlyNotice!.id)), {
+          items: [],
+        });
+        const readAt = async () =>
+          (
+            await db.execute<{ read_at: Date | null }>(
+              sql`select read_at from valo_edition_notices where id = ${earlyNotice!.id}`,
+            )
+          ).rows[0]?.read_at;
+        const firstRead = await readAt();
+        assert.ok(firstRead);
+        await inScope(early, () => markEditionNoticeRead(early, earlyNotice!.id));
+        assert.deepEqual(await readAt(), firstRead);
+        assert.deepEqual(await written(first.id), [replacedFirst]);
+        // In the workspace's scope a notice can be read and marked read, and nothing else.
+        const refusal = (pattern: RegExp) => (error: Error) =>
+          pattern.test(String((error as { cause?: Error }).cause?.message ?? error.message));
+        await inScope(early, async () => {
+          for (const statement of [
+            sql`update valo_edition_notices set title = 'Changed' where id = ${earlyNotice!.id}`,
+            sql`delete from valo_edition_notices where id = ${earlyNotice!.id}`,
+            sql`insert into valo_edition_notices(workspace_id, route, edition, kind, title, version,
+                  replacement_version, held, documents)
+                values (${early.workspaceId}, 'library', ${first.id}, 'withdrawn', 'Forged', 1, null, true, 0)`,
+          ])
+            await assert.rejects(
+              db.execute(statement),
+              refusal(/permission denied for table valo_edition_notices/),
+            );
+        });
+        assert.deepEqual(await written(first.id), [replacedFirst]);
       },
     );
     // Last, so that the editions it releases are not found by title when the retained drafts are filed.

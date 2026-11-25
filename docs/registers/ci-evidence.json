@@ -3444,6 +3444,41 @@
       "file": "lib/db/scripts/phase1-migrations.test.mjs",
       "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
       "proves": "After the edition purchases migration, the database lets a verified purchase download its template's next released edition and start its form, for the buying workspace only and only while the purchase stands."
+    },
+    {
+      "requirement": "EDP-011",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-manual-library.integration.test.ts",
+      "test": "manual publishing through staff HTTP routes and public readers",
+      "proves": "Against PostgreSQL, when a staff-library template's edition is replaced or withdrawn, each workspace that bought it or made a document from it gets one notice, with the editor's reason for a withdrawal, no other workspace gets one, and a workspace can only read its own notices and mark them read."
+    },
+    {
+      "requirement": "EDP-011",
+      "job": "foundation",
+      "file": "lib/db/scripts/phase1-migrations.test.mjs",
+      "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
+      "proves": "After the edition notices migration, the database writes one notice to each workspace that holds or used an edition when it is replaced or withdrawn in the staff library, or replaced on the reviewed route, and none to another workspace."
+    },
+    {
+      "requirement": "EDP-011",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/edition-notices.test.tsx",
+      "test": "the workspace's home lists its unread notices, each with a way to mark it read, and nothing when there are none",
+      "proves": "The workspace's home lists its notices of replaced and withdrawn template versions, each with a button to mark it read and a link to Purchases where the purchase carries, and shows nothing when there are none."
+    },
+    {
+      "requirement": "EDT-010",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/edition-notices.test.tsx",
+      "test": "a notice names the template, its version and what happened, says what it means for the purchase and the documents, and that downloaded files are not affected",
+      "proves": "Every notice of a replaced or withdrawn template version ends by saying that files already downloaded are not affected, and says that documents made from a withdrawn version stay the customer's."
+    },
+    {
+      "requirement": "DOC-007",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/edition-notices.test.tsx",
+      "test": "a notice names the template, its version and what happened, says what it means for the purchase and the documents, and that downloaded files are not affected",
+      "proves": "A notice of a replaced version says the purchase carries to the new version at no further charge and that the documents made from it are unchanged; a notice of a withdrawn version gives the reason and the remedies: the replacement when one is released, or a refund under the refund policy."
     }
   ]
 }

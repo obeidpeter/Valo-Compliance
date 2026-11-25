@@ -63,6 +63,7 @@ import type {
   DocumentInput,
   DocumentUpdate,
   DownloadPrivacyCaseResult200,
+  EditionNotices,
   EditorialRecord,
   ExportInput,
   ExportJob,
@@ -4358,6 +4359,179 @@ export function useListDocumentEditions<TData = Awaited<ReturnType<typeof listDo
 
 
 
+
+export const getListEditionNoticesUrl = () => {
+
+
+
+
+  return `/api/workspace/edition-notices`
+}
+
+/**
+ * The workspace's unread notices that a template edition it bought or used was replaced by a later release or withdrawn, newest first, up to 50 (docs/architecture/editions.md). The database writes each one with the change.
+ */
+export const listEditionNotices = async ( options?: Parameters<typeof customFetch>[1]): Promise<EditionNotices> => {
+
+  return customFetch<EditionNotices>(getListEditionNoticesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListEditionNoticesQueryKey = () => {
+    return [
+    "listEditionNotices"
+    ] as const;
+    }
+
+
+export const getListEditionNoticesQueryOptions = <TData = Awaited<ReturnType<typeof listEditionNotices>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listEditionNotices>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListEditionNoticesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listEditionNotices>>> = ({ signal }) => listEditionNotices({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listEditionNotices>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListEditionNoticesQueryResult = NonNullable<Awaited<ReturnType<typeof listEditionNotices>>>
+export type ListEditionNoticesQueryError = ErrorType<AuthErrorResponse | QuotaErrorResponse>
+
+
+/** The workspace's unread notices that a template edition it bought or used was replaced by a later release or withdrawn, newest first, up to 50 (docs/architecture/editions.md). The database writes each one with the change. */
+export function useListEditionNotices<TData = Awaited<ReturnType<typeof listEditionNotices>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listEditionNotices>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listEditionNotices>>,
+          TError,
+          Awaited<ReturnType<typeof listEditionNotices>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** The workspace's unread notices that a template edition it bought or used was replaced by a later release or withdrawn, newest first, up to 50 (docs/architecture/editions.md). The database writes each one with the change. */
+export function useListEditionNotices<TData = Awaited<ReturnType<typeof listEditionNotices>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listEditionNotices>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listEditionNotices>>,
+          TError,
+          Awaited<ReturnType<typeof listEditionNotices>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** The workspace's unread notices that a template edition it bought or used was replaced by a later release or withdrawn, newest first, up to 50 (docs/architecture/editions.md). The database writes each one with the change. */
+export function useListEditionNotices<TData = Awaited<ReturnType<typeof listEditionNotices>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listEditionNotices>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** The workspace's unread notices that a template edition it bought or used was replaced by a later release or withdrawn, newest first, up to 50 (docs/architecture/editions.md). The database writes each one with the change. */
+export function useListEditionNotices<TData = Awaited<ReturnType<typeof listEditionNotices>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listEditionNotices>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListEditionNoticesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getMarkEditionNoticeReadUrl = (id: string,) => {
+
+
+
+
+  return `/api/workspace/edition-notices/${encodeURIComponent(String(id))}/read`
+}
+
+/**
+ * Marks one of the workspace's notices read, so that its home no longer lists it. Nothing else of it changes.
+ */
+export const markEditionNoticeRead = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<EditionNotices> => {
+
+  return customFetch<EditionNotices>(getMarkEditionNoticeReadUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getMarkEditionNoticeReadMutationKey = () => ['markEditionNoticeRead'] as const;
+
+export const getMarkEditionNoticeReadMutationOptions = <TError = ErrorType<AuthErrorResponse | WriteLimitResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markEditionNoticeRead>>, TError,MarkEditionNoticeReadMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof markEditionNoticeRead>>, TError,MarkEditionNoticeReadMutationVariables, TContext> => {
+
+const mutationKey = getMarkEditionNoticeReadMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof markEditionNoticeRead>>, MarkEditionNoticeReadMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  markEditionNoticeRead(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MarkEditionNoticeReadMutationResult = NonNullable<Awaited<ReturnType<typeof markEditionNoticeRead>>>
+
+    export type MarkEditionNoticeReadMutationError = ErrorType<AuthErrorResponse | WriteLimitResponse>
+    export type MarkEditionNoticeReadMutationVariables = {id: string}
+
+    /** Marks one of the workspace's notices read, so that its home no longer lists it. Nothing else of it changes. */
+export const useMarkEditionNoticeRead = <TError = ErrorType<AuthErrorResponse | WriteLimitResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markEditionNoticeRead>>, TError,MarkEditionNoticeReadMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof markEditionNoticeRead>>,
+        TError,
+        MarkEditionNoticeReadMutationVariables,
+        TContext
+      > => {
+      return useMutation(getMarkEditionNoticeReadMutationOptions(options), queryClient);
+    }
 
 export const getListFormTemplatesUrl = () => {
 

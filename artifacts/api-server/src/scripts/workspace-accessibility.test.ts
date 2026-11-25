@@ -471,6 +471,36 @@ const answers: Record<string, unknown> = {
       },
     ],
   }),
+  // A template the workspace bought was replaced, and another it used was withdrawn, so the home lists
+  // both notices (docs/architecture/editions.md, slice 3).
+  [`GET /workspace/edition-notices`]: api.ListEditionNoticesResponse.parse({
+    items: [
+      {
+        id: "00000000-0000-4000-8000-00000000a601",
+        route: "library",
+        title: "Synthetic service agreement",
+        version: 1,
+        kind: "replaced",
+        replacementVersion: 2,
+        reason: null,
+        held: true,
+        documents: 0,
+        createdAt: at(18),
+      },
+      {
+        id: "00000000-0000-4000-8000-00000000a602",
+        route: "library",
+        title: "Synthetic stock register",
+        version: 2,
+        kind: "withdrawn",
+        replacementVersion: null,
+        reason: "A synthetic reason the customers who used this version read.",
+        held: false,
+        documents: 2,
+        createdAt: at(19),
+      },
+    ],
+  }),
   [`GET /v1/exports`]: api.ListWorkspaceExportsResponse.parse([
     {
       id: "00000000-0000-4000-8000-00000000a601",
@@ -777,6 +807,7 @@ test("a signed-in list with nothing in it shows its empty state, with no automat
     "GET /workspace/documents": [],
     "GET /v1/exports": [],
     "GET /workspace/correction-notices": { page: 1, hasMore: false, notices: [] },
+    "GET /workspace/edition-notices": { items: [] },
   };
   const empty: [string, Record<string, unknown>][] = [
     ["/workspace", nothingSaved],
@@ -1262,6 +1293,7 @@ test("a document starts in one place: the home and the documents screen each hav
     "GET /workspace/documents": [],
     "GET /v1/exports": [],
     "GET /workspace/correction-notices": { page: 1, hasMore: false, notices: [] },
+    "GET /workspace/edition-notices": { items: [] },
   };
   for (const path of ["/workspace", "/workspace/documents"]) {
     const { page, errors, close } = await desktop(path, except(nothingSaved));

@@ -60,11 +60,12 @@ test("only listed everyday routes may use a cached check", () => {
     assert.equal(routeUsesCachedCheck(path), false, path);
 });
 
-test("five ordinary read routes reuse a passing check for their reads only, and payments, downloads, privacy, the account page and AI drafts stay live", () => {
+test("six ordinary read routes reuse a passing check for their reads only, and payments, downloads, privacy, the account page and AI drafts stay live", () => {
   for (const path of [
     "/api/v1/exports",
     "/api/workspace/correction-notices",
     "/api/workspace/document-editions",
+    "/api/workspace/edition-notices",
     "/api/workspace/support-cases",
     `/api/workspace/support-cases/${id}`,
   ]) {

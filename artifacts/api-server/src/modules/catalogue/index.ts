@@ -9,4 +9,5 @@ export * from "./valo-public-discovery";
 export * from "./valo-released-content";
 export * from "./valo-saved-templates";
 export { listDocumentEditions } from "./document-editions";
+export { listEditionNotices, markEditionNoticeRead } from "./edition-notices";
 export { activeTemplatePrices, isFreeBaselineTemplate } from "./template-prices";

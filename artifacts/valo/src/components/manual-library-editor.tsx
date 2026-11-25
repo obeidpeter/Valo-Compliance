@@ -156,6 +156,9 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  // A withdrawal says why, for the customers who bought or used the version (docs/architecture/editions.md).
+  const [withdrawing, setWithdrawing] = useState(false);
+  const [reason, setReason] = useState("");
   function mark(value: boolean) {
     setDirty(value);
     onDirtyChange(value);
@@ -190,6 +193,8 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
     setFile(null);
     setFileKey((n) => n + 1);
     setRequestId(crypto.randomUUID());
+    setWithdrawing(false);
+    setReason("");
     mark(false);
   }
   async function work(fn: () => Promise<void>) {
@@ -246,6 +251,7 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
       action,
       version: target.version,
       digest: target.digest,
+      ...(action === "withdraw" ? { reason: reason.trim() } : {}),
     });
     load(row);
     await list.refetch();
@@ -736,20 +742,65 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
                     Publish this version
                   </button>
                 )}
-                {snapshot.live && (
+                {snapshot.live && !withdrawing && (
                   <button
                     type="button"
                     className="btn btn-ghost btn-sm"
                     disabled={busy || dirty}
                     onClick={() => {
-                      if (window.confirm("Withdraw the version readers currently see?"))
-                        void work(() => act("withdraw"));
+                      setReason("");
+                      setWithdrawing(true);
                     }}
                   >
                     Withdraw live version
                   </button>
                 )}
               </div>
+              {snapshot.live && withdrawing && (
+                <form
+                  className="mt-4 grid gap-2"
+                  aria-label="Withdraw the live version"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    void work(() => act("withdraw"));
+                  }}
+                >
+                  <label className="text-sm font-medium" htmlFor="manual-withdraw-reason">
+                    Why is it withdrawn?
+                  </label>
+                  <p id="manual-withdraw-reason-help" className="text-sm text-muted-foreground">
+                    Readers can no longer open version {snapshot.live.version}. The customers who bought or
+                    used it are told, with this reason, so write it for them, in 20 to 1,000 characters.
+                  </p>
+                  <textarea
+                    id="manual-withdraw-reason"
+                    className="field min-h-24"
+                    aria-describedby="manual-withdraw-reason-help"
+                    minLength={20}
+                    maxLength={1000}
+                    required
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                  />
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      type="submit"
+                      className="btn btn-primary btn-sm"
+                      disabled={busy || reason.trim().length < 20}
+                    >
+                      Withdraw this version
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm"
+                      disabled={busy}
+                      onClick={() => setWithdrawing(false)}
+                    >
+                      Keep it
+                    </button>
+                  </div>
+                </form>
+              )}
             </section>
           )}
         </div>

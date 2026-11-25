@@ -25,7 +25,12 @@ import {
   startFormDocument,
 } from "./valo-documents";
 import { serializeRevision } from "./valo-revision-codec";
-import { runInWorkspaceScope, valoManualLibrary, valoStaffAssignments } from "@workspace/db";
+import {
+  runInWorkspaceScope,
+  valoEditionNotices,
+  valoManualLibrary,
+  valoStaffAssignments,
+} from "@workspace/db";
 import { sha256 } from "@workspace/valo-core";
 import { parseFormText } from "@workspace/valo-core/form-text";
 import { formDocumentContent } from "@workspace/valo-core/guided-runtime-v2";
@@ -423,6 +428,26 @@ test(
             .update(valoManualLibrary)
             .set({ state: "withdrawn", closedBy: editor, closedAt: new Date() })
             .where(eq(valoManualLibrary.id, edition));
+          // Each workspace whose form documents came from the edition is told, once, with how many
+          // (docs/architecture/editions.md, slice 3): A made two, B one. This withdrawal was written
+          // directly, so it gives no reason.
+          assert.deepEqual(
+            await db
+              .select({
+                workspaceId: valoEditionNotices.workspaceId,
+                kind: valoEditionNotices.kind,
+                reason: valoEditionNotices.reason,
+                held: valoEditionNotices.held,
+                documents: valoEditionNotices.documents,
+              })
+              .from(valoEditionNotices)
+              .where(eq(valoEditionNotices.edition, edition))
+              .orderBy(valoEditionNotices.documents),
+            [
+              { workspaceId: b.workspaceId, kind: "withdrawn", reason: null, held: false, documents: 1 },
+              { workspaceId: a.workspaceId, kind: "withdrawn", reason: null, held: false, documents: 2 },
+            ],
+          );
           await assert.rejects(
             inA(() => startFormDocument(a, { templateId: "TPL-01" })),
             { status: 409 },
@@ -456,6 +481,7 @@ test(
       // Only these UUID-scoped synthetic records are removed. No real data or backups.
       await db.transaction(async (tx) => {
         await tx.delete(valoEvents).where(inArray(valoEvents.workspaceId, workspaces));
+        await tx.delete(valoEditionNotices).where(inArray(valoEditionNotices.workspaceId, workspaces));
         await tx.delete(valoSupportTickets).where(inArray(valoSupportTickets.workspaceId, workspaces));
         await tx.delete(valoDocumentRevisions).where(inArray(valoDocumentRevisions.workspaceId, workspaces));
         await tx.delete(valoDocuments).where(inArray(valoDocuments.workspaceId, workspaces));

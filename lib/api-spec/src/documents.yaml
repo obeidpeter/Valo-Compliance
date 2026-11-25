@@ -81,6 +81,35 @@ paths:
         "401": { $ref: "#/components/responses/AuthError" }
         "403": { $ref: "#/components/responses/AuthError" }
         "429": { $ref: "#/components/responses/QuotaError" }
+  /workspace/edition-notices:
+    get:
+      operationId: listEditionNotices
+      description: "The workspace's unread notices that a template edition it bought or used was replaced by a later release or withdrawn, newest first, up to 50 (docs/architecture/editions.md). The database writes each one with the change."
+      responses:
+        "200":
+          description: The workspace's notices
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EditionNotices" }
+        "401": { $ref: "#/components/responses/AuthError" }
+        "403": { $ref: "#/components/responses/AuthError" }
+        "429": { $ref: "#/components/responses/QuotaError" }
+  /workspace/edition-notices/{id}/read:
+    parameters:
+      - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+    post:
+      operationId: markEditionNoticeRead
+      description: "Marks one of the workspace's notices read, so that its home no longer lists it. Nothing else of it changes."
+      responses:
+        "200":
+          description: The workspace's unread notices, without this one
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EditionNotices" }
+        "401": { $ref: "#/components/responses/AuthError" }
+        "403": { $ref: "#/components/responses/AuthError" }
+        "404": { $ref: "#/components/responses/AuthError" }
+        "429": { $ref: "#/components/responses/WriteLimit" }
   /workspace/form-templates:
     get:
       operationId: listFormTemplates
@@ -231,3 +260,24 @@ schemas:
               version: { type: integer }
               href: { type: string }
           - { type: "null" }
+  EditionNotices:
+    type: object
+    additionalProperties: false
+    required: [items]
+    properties:
+      items: { type: array, maxItems: 50, items: { $ref: "#/components/schemas/EditionNotice" } }
+  EditionNotice:
+    type: object
+    additionalProperties: false
+    required: [id, route, title, version, kind, replacementVersion, reason, held, documents, createdAt]
+    properties:
+      id: { type: string, format: uuid }
+      route: { type: string, enum: [library, reviewed] }
+      title: { type: string, description: "The template's title in the edition that changed." }
+      version: { type: integer, description: "The version of the edition that changed." }
+      kind: { type: string, enum: [replaced, withdrawn] }
+      replacementVersion: { type: [integer, "null"], description: "The version that replaced it, for a replaced edition." }
+      reason: { type: [string, "null"], description: "Why it was withdrawn, as its editor wrote it for customers." }
+      held: { type: boolean, description: "Whether the workspace holds the template through a purchase." }
+      documents: { type: integer, minimum: 0, description: "How many of the workspace's documents were made from the edition." }
+      createdAt: { type: string, format: date-time, description: "When the edition was replaced or withdrawn." }

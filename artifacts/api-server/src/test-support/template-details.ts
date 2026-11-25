@@ -16,3 +16,15 @@ export const templateDetailColumns = {
   limits: templateDetails.limits,
   aiDrafted: templateDetails.aiDrafted,
 } as const;
+/**
+ * A synthetic reason for a staff-library withdrawal (docs/architecture/editions.md, slice 3): every
+ * withdrawal gives one, of 20 to 1,000 characters, and the customers it concerns read it.
+ */
+export const withdrawalReason = "A synthetic reason for this withdrawal, as its customers read it.";
+/** A staff-library action's body, with the withdrawal's reason when it is a withdrawal. */
+export const libraryAction = (action: string, revision: { version: number; digest: string }) => ({
+  action,
+  version: revision.version,
+  digest: revision.digest,
+  ...(action === "withdraw" ? { reason: withdrawalReason } : {}),
+});
