@@ -104,6 +104,24 @@ Sending notices by email waits for a sender and the owner's decision on messages
 - Holds, their source impacts and their correction notices.
 - The check's results. A replaced or withdrawn version already leaves the check.
 
+## Settled while building it
+
+**Slice 1: the change record.**
+- **A record is written for a version that is published**, at the time of its own transaction, and
+  the database counts whom it affects as it is written: the workspaces, their saved results that list
+  the version, and their live tasks made from it. The counts and the time are the database's,
+  whatever the insert names.
+- **A replacement's record names a version of the same rule that is published by then.** So the new
+  version is released first, then the old one recorded and superseded, in one transaction.
+- **A reason is trimmed, and refused under 20 characters.** The first sign-off of a rule needs none.
+- **The reviewed route's release command records itself as the maker** (`operator:rule-release`). It
+  runs on the server with no signed-in identity.
+- **The owner's panel asks** "What changed in this version?" before signing a version that replaces a
+  released one, and "Why is this rule withdrawn?" once the owner says they want to withdraw one. Each
+  button waits until the reason has 20 characters.
+- **A deletion is not a change.** No code deletes a release. An owner-signed release cannot be
+  deleted (decision 0020); one on the reviewed route can, and needs no record.
+
 ## Slices
 
 | # | Slice | Requirements |
@@ -114,7 +132,8 @@ Sending notices by email waits for a sender and the owner's decision on messages
 
 ## The owner's points
 
-1. **The words:** the two questions, the notices and the marks.
+1. **The words:** the two questions ("What changed in this version?" and "Why is this rule
+   withdrawn?"), the notices and the marks.
 2. **Every change tells the businesses it affects.** CMP-005 and EDP-011 ask for a notice "when
    material". Every change gives a reason, few rules are released, and a rule says what a business
    may have to do. So every change is treated as material. The owner may prefer a change to be
