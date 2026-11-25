@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReleasedTemplate } from "@workspace/api-client-react";
-import { TemplateDetail } from "./template-detail";
+import { CustomerActions, TemplateDetail } from "./template-detail";
 
 const slug = "manual-00000000-0000-4000-8000-000000000001";
 /** A premium staff-library edition as the server reads it; a staff-library edition's template ID is
@@ -101,4 +101,26 @@ test("a staff-library template's page shows what it is for, what you need, its l
   const older = render({ ...edition("Synthetic older"), access: "free", limitations: "" });
   assert.equal(/text-summary|list-needs|text-limitations|list-related-guides/.test(older), false);
   assert.match(older, /data-testid="text-disclosure">/);
+});
+
+// DOC-009 and library entries slices 2 and 3: a signed-in reader may save a library template, and copy a
+// free one into a document. A premium one's text is in its file alone, which the page says.
+test("a library template's page offers saving to a signed-in reader, a copy of a free one, and says why a premium one has none", () => {
+  const actions = (template: ReleasedTemplate) =>
+    renderToStaticMarkup(
+      <QueryClientProvider client={new QueryClient()}>
+        <CustomerActions t={template} canUse />
+      </QueryClientProvider>,
+    );
+  const free = actions({ ...edition("Synthetic register"), access: "free" });
+  assert.match(free, /data-testid="button-save-template"/);
+  assert.match(free, /data-testid="button-create-draft"[^>]*>.*Make my own copy/);
+  assert.equal(/text-copy-unavailable/.test(free), false);
+  const premium = actions(edition("Synthetic premium register"));
+  assert.match(premium, /data-testid="button-save-template"/);
+  assert.equal(/button-create-draft/.test(premium), false);
+  assert.match(
+    premium,
+    /data-testid="text-copy-unavailable">This template&#x27;s text comes in its Word file, so it cannot be copied into a document here\.</,
+  );
 });

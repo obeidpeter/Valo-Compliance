@@ -358,6 +358,14 @@ export async function customFetch<T = unknown>(
   if (typeof init.body === "string" && !headers.has("content-type") && looksLikeJson(init.body)) {
     headers.set("content-type", "application/json");
   }
+  // The server takes a change only as JSON from Valo's own pages (`sameOriginMutation`), and it reads
+  // a request with no body as not JSON. So a change with nothing to send, such as saving a template,
+  // sends an empty JSON object. Without it, the server refuses the change as not sent the way Valo's
+  // pages send one.
+  if (init.body == null && !isRequest(input) && method !== "GET" && method !== "HEAD") {
+    init.body = "{}";
+    if (!headers.has("content-type")) headers.set("content-type", "application/json");
+  }
 
   if (responseType === "json" && !headers.has("accept")) {
     headers.set("accept", DEFAULT_JSON_ACCEPT);

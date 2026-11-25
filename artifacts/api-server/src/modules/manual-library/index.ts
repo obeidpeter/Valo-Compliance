@@ -505,6 +505,46 @@ export async function purchasedManualFile(actor: WorkspaceActor, id: string) {
     return attachment({ slug, version, fileFormat: format, fileBytes: bytes });
   });
 }
+/**
+ * The staff library's released templates, as a workspace saves them and is suggested them
+ * (docs/architecture/library-entries.md, slice 2). A customer request cannot read the editorial table,
+ * so this reads them through its owner's function: what the library lists of each, and no more.
+ */
+export async function liveLibraryTemplates(tx: Pick<Tx, "execute">) {
+  const { rows } = await tx.execute<{
+    id: string;
+    item_id: string;
+    slug: string;
+    kind: "template" | "premium_template";
+    title: string;
+    version: number;
+    industry: string | null;
+    purpose: string | null;
+    summary: string;
+    published_at: Date | string;
+  }>(sql`select * from public.valo_live_manual_templates()`);
+  return rows.map((row) => ({
+    id: row.id,
+    itemId: row.item_id,
+    slug: row.slug,
+    kind: row.kind,
+    title: row.title,
+    version: row.version,
+    industry: row.industry,
+    purpose: row.purpose,
+    body: row.summary,
+    publishedAt: new Date(row.published_at),
+    sourceCheckedAt: null,
+  }));
+}
+/** A released free template's text, for a workspace's copy of it (slice 3). A premium template has none
+ * here: its text is in its file alone. */
+export async function freeLibraryEdition(tx: Pick<Tx, "execute">, id: string) {
+  const { rows } = await tx.execute<{ edition: string; version: number; title: string; body: string }>(
+    sql`select edition, version, title, body from public.valo_free_library_edition(${id}::uuid)`,
+  );
+  return rows[0] ?? null;
+}
 /** Existing readers may still run against the schema preceding the additive migration. */
 export async function releasedManualEntries(
   slugOrOptions?: string | { slug?: string | undefined; summaryOnly?: boolean | undefined },

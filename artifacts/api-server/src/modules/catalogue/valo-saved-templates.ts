@@ -16,6 +16,8 @@ import {
   projectReleasedCatalogue,
 } from "./valo-released-content";
 import { recommendTemplates } from "./valo-catalogue";
+import { manualCatalogue } from "./manual-presentation";
+import { liveLibraryTemplates } from "../manual-library";
 import { developmentPublicationOnly } from "../publication";
 import { singleRow } from "../../platform/rows";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -42,12 +44,16 @@ async function owner(tx: Tx, actor: WorkspaceActor, lock = true) {
 }
 export async function savedTemplateList(actor: WorkspaceActor) {
   const { db, valoProfileVersions, valoSavedTemplates } = await import("@workspace/db");
-  const current = projectReleasedCatalogue(await liveReleasedVersions());
-  const currentByTemplate = new Map(
-    current.filter((i) => i.type === "template").map((i) => [i.templateId, i]),
-  );
+  const reviewed = projectReleasedCatalogue(await liveReleasedVersions());
   return db.transaction(async (tx) => {
     const w = await owner(tx, actor, false);
+    // The staff library's released templates too, read through its owner's function: each is saved
+    // under its address name, which stays the same from version to version
+    // (docs/architecture/library-entries.md, slice 2).
+    const current = [...reviewed, ...(await liveLibraryTemplates(tx)).map(manualCatalogue)];
+    const currentByTemplate = new Map(
+      current.filter((i) => i.type === "template").map((i) => [i.templateId, i]),
+    );
     const saved = await tx
       .select()
       .from(valoSavedTemplates)
@@ -85,53 +91,75 @@ export async function savedTemplateList(actor: WorkspaceActor) {
     };
   });
 }
+/** Saves a template for the workspace's owner once, by its identity, with the title and version it
+ * has now. Saving it again saves nothing. */
+async function keepSavedTemplate(
+  tx: Tx,
+  actor: WorkspaceActor,
+  saved: { templateId: string; title: string; version: number },
+) {
+  const { valoEvents, valoSavedTemplates } = await import("@workspace/db");
+  await owner(tx, actor);
+  const [old] = await tx
+    .select()
+    .from(valoSavedTemplates)
+    .where(
+      and(
+        eq(valoSavedTemplates.workspaceId, actor.workspaceId),
+        eq(valoSavedTemplates.templateId, saved.templateId),
+      ),
+    );
+  if (old) return;
+  const count = singleRow(
+    await tx
+      .select({ total: sql<number>`count(*)::int` })
+      .from(valoSavedTemplates)
+      .where(eq(valoSavedTemplates.workspaceId, actor.workspaceId)),
+  );
+  if (count.total >= 200)
+    throw new ValoProblem(
+      409,
+      "Your workspace has 200 saved templates, which is the most it can hold. Remove one before you save another.",
+    );
+  await limitWorkspaceWrite(tx, actor, "document");
+  const savedId = randomUUID();
+  await tx.insert(valoSavedTemplates).values({
+    id: savedId,
+    workspaceId: actor.workspaceId,
+    templateId: saved.templateId,
+    savedTitle: saved.title,
+    savedVersion: saved.version,
+  });
+  await tx.insert(valoEvents).values({
+    id: randomUUID(),
+    workspaceId: actor.workspaceId,
+    actorId: actor.identityId,
+    action: "template.saved",
+    entityId: savedId,
+    revision: saved.version,
+  });
+}
 export async function saveTemplate(actor: WorkspaceActor, releaseId: string) {
-  const { db, valoEvents, valoSavedTemplates } = await import("@workspace/db");
+  const { db } = await import("@workspace/db");
   developmentPublicationOnly();
+  // A staff-library template is saved by its release, under its address name.
+  const library = await db.transaction(async (tx) => {
+    const row = (await liveLibraryTemplates(tx)).find((entry) => entry.id === releaseId);
+    if (!row) return false;
+    await keepSavedTemplate(tx, actor, { templateId: row.slug, title: row.title, version: row.version });
+    return true;
+  });
+  if (library) return savedTemplateList(actor);
   const release = await checkReleaseEvidence(releaseId);
   await db.transaction(async (tx) => {
     const row = await lockedLiveVersion(tx, release);
     if (publicationSchema.parse(row.bundle).candidate.contentClass !== "general_template")
       throw new ValoProblem(422, "Only a published template can be saved.");
-    await owner(tx, actor);
-    const [old] = await tx
-      .select()
-      .from(valoSavedTemplates)
-      .where(
-        and(
-          eq(valoSavedTemplates.workspaceId, actor.workspaceId),
-          eq(valoSavedTemplates.templateId, row.templateId),
-        ),
-      );
-    if (old) return;
-    const count = singleRow(
-      await tx
-        .select({ total: sql<number>`count(*)::int` })
-        .from(valoSavedTemplates)
-        .where(eq(valoSavedTemplates.workspaceId, actor.workspaceId)),
-    );
-    if (count.total >= 200)
-      throw new ValoProblem(
-        409,
-        "Your workspace has 200 saved templates, which is the most it can hold. Remove one before you save another.",
-      );
-    await limitWorkspaceWrite(tx, actor, "document");
     const item = projectReleasedCatalogue([row])[0]!;
-    const savedId = randomUUID();
-    await tx.insert(valoSavedTemplates).values({
-      id: savedId,
-      workspaceId: actor.workspaceId,
+    await keepSavedTemplate(tx, actor, {
       templateId: row.templateId,
-      savedTitle: item.title,
-      savedVersion: row.version,
-    });
-    await tx.insert(valoEvents).values({
-      id: randomUUID(),
-      workspaceId: actor.workspaceId,
-      actorId: actor.identityId,
-      action: "template.saved",
-      entityId: savedId,
-      revision: row.version,
+      title: item.title,
+      version: row.version,
     });
   });
   return savedTemplateList(actor);

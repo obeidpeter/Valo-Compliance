@@ -50,7 +50,9 @@ export function LibraryExports() {
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {file.template
-                    ? `Made from template ${file.template.templateId}, version ${file.template.version}`
+                    ? file.template.title
+                      ? `Copied from the template “${file.template.title}”, version ${file.template.version}`
+                      : `Made from template ${file.template.templateId}, version ${file.template.version}`
                     : "Not made from a template"}
                 </p>
               </div>

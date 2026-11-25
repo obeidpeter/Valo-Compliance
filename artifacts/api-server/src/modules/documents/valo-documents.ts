@@ -138,6 +138,9 @@ async function createDocumentRecordInTransaction(
   actor: WorkspaceActor,
   raw: unknown,
   origin: "manual" | "customer_ai" = "manual",
+  /** The staff-library release a copy is made of, recorded once with the document
+   * (docs/architecture/library-entries.md, slice 3). */
+  libraryEdition?: string,
 ) {
   const { valoDocuments } = await import("@workspace/db");
   const input = documentInput.parse(raw);
@@ -151,7 +154,12 @@ async function createDocumentRecordInTransaction(
   const document = singleRow(
     await tx
       .insert(valoDocuments)
-      .values({ id, workspaceId: actor.workspaceId, currentRevision: 1 })
+      .values({
+        id,
+        workspaceId: actor.workspaceId,
+        currentRevision: 1,
+        ...(libraryEdition && { libraryEdition }),
+      })
       .returning(),
   );
   const revision = await appendRevision(tx, actor, id, 1, input, origin);
@@ -170,8 +178,9 @@ export async function createDocumentInTransaction(
   actor: WorkspaceActor,
   raw: unknown,
   origin: "manual" | "customer_ai" = "manual",
+  libraryEdition?: string,
 ) {
-  return (await createDocumentRecordInTransaction(tx, actor, raw, origin)).document.id;
+  return (await createDocumentRecordInTransaction(tx, actor, raw, origin, libraryEdition)).document.id;
 }
 export async function saveDocument(actor: WorkspaceActor, id: string, raw: unknown) {
   const { db, valoDocumentRevisions, valoDocuments } = await import("@workspace/db");

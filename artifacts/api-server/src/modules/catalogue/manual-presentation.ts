@@ -4,7 +4,13 @@ import { templateCategory, type ReleasedLibraryItem } from "./valo-catalogue";
 import { templatePreview } from "./template-preview";
 
 type PublicRevision = Awaited<ReturnType<typeof releasedManualEntries>>[number];
-export const manualResourceKind = (row: PublicRevision) =>
+/** What the library lists of an entry; a customer request reads only this of a template
+ * (`liveLibraryTemplates`). */
+export type CatalogueRow = Pick<
+  PublicRevision,
+  "id" | "slug" | "title" | "kind" | "industry" | "body" | "purpose" | "sourceCheckedAt" | "publishedAt"
+>;
+export const manualResourceKind = (row: Pick<PublicRevision, "kind">) =>
   row.kind === "regulatory_article"
     ? ("guidance" as const)
     : row.kind === "industry_introduction"
@@ -12,7 +18,7 @@ export const manualResourceKind = (row: PublicRevision) =>
       : row.kind === "industry_pack"
         ? ("industry_pack" as const)
         : ("guide" as const);
-const summary = (row: PublicRevision) => row.body.replace(/\s+/g, " ").slice(0, 260);
+const summary = (row: Pick<PublicRevision, "body">) => row.body.replace(/\s+/g, " ").slice(0, 260);
 const disclosure = "Published by the Valo editorial team.";
 function manualTemplateCategory(title: string) {
   const registered = baselineTemplates.find((entry) => entry.title.toLowerCase() === title.toLowerCase());
@@ -44,7 +50,7 @@ export function manualResource(row: PublicRevision) {
     sources: (row.regulatorySources ?? []).map(({ url, title, locator }) => ({ url, title, locator })),
   };
 }
-export function manualCatalogue(row: PublicRevision): ReleasedLibraryItem {
+export function manualCatalogue(row: CatalogueRow): ReleasedLibraryItem {
   const template = isManualTemplate(row.kind);
   return {
     id: row.id,

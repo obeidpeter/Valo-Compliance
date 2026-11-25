@@ -91,7 +91,8 @@ function LibraryTemplateNotices({ t }: { t: ReleasedTemplate }) {
   );
 }
 
-function CustomerActions({ t, canUse }: { t: ReleasedTemplate; canUse: boolean }) {
+/** What a signed-in reader can do with a template; exported for its render test. */
+export function CustomerActions({ t, canUse }: { t: ReleasedTemplate; canUse: boolean }) {
   // The new draft opens in the workspace, which is the browser app: a full load (decision 0011).
   const create = useCreateTemplateDraft({
     mutation: {
@@ -151,8 +152,10 @@ function CustomerActions({ t, canUse }: { t: ReleasedTemplate; canUse: boolean }
   return (
     <div className="grid gap-3 empty:hidden">
       {canUse && <StartTemplateDocument templateId={t.templateId} title={t.title} />}
-      {t.publicationMethod !== "manual" && <SaveTemplateButton releaseId={t.id} templateId={t.templateId} />}
-      {t.publicationMethod !== "manual" && canUse && (
+      <SaveTemplateButton releaseId={t.id} templateId={t.templateId} />
+      {/* A staff-library template is copied from its released text, which only a free one keeps here
+          (docs/architecture/library-entries.md, slice 3). */}
+      {canUse && (t.publicationMethod !== "manual" || t.access === "free") && (
         <>
           <button
             className="btn btn-primary w-full"
@@ -171,6 +174,11 @@ function CustomerActions({ t, canUse }: { t: ReleasedTemplate; canUse: boolean }
             </p>
           )}
         </>
+      )}
+      {canUse && t.publicationMethod === "manual" && t.access === "premium" && (
+        <p className="text-sm text-muted-foreground" data-testid="text-copy-unavailable">
+          This template&apos;s text comes in its Word file, so it cannot be copied into a document here.
+        </p>
       )}
       {t.access === "free" && t.formats.length > 0 && (
         <div className="flex flex-wrap gap-2">

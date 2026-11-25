@@ -94,7 +94,6 @@ test("manualCatalogue maps regulatory articles to guidance, uses sourceCheckedAt
     ...base,
     kind: "template",
     title: "Invoice",
-    fileFormat: "docx",
   });
   assert.equal(baselineTemplate.type, "template");
   assert.equal(baselineTemplate.category, "Finance and operations");
@@ -104,7 +103,6 @@ test("manualCatalogue maps regulatory articles to guidance, uses sourceCheckedAt
     ...base,
     kind: "premium_template",
     title: "Custom sector checklist",
-    fileFormat: "pdf",
   });
   assert.equal(customPremium.type, "template");
   assert.equal(customPremium.category, "Business templates");

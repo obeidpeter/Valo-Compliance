@@ -400,6 +400,13 @@
       "when": 1795562849091,
       "tag": "20261124232729_library_entry_details",
       "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1795564902085,
+      "tag": "20261125000142_library_saves_and_copies",
+      "breakpoints": true
     }
   ]
 }

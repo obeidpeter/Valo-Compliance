@@ -42,6 +42,12 @@ export const valoDocuments = pgTable(
      * started under (forms v2, slice 6). Written with the form record and never changed (DOC-007).
      */
     formOrder: uuid("form_order"),
+    /**
+     * The staff-library release a document was copied from (docs/architecture/library-entries.md,
+     * slice 3): a free template's released text, made into a document typed from it. Written once,
+     * when the copy is made, and never changed (DOC-005, DOC-007).
+     */
+    libraryEdition: uuid("library_edition").references(() => valoManualLibrary.id),
   },
   (t) => [
     index("valo_documents_workspace_idx").on(t.workspaceId),
@@ -56,6 +62,10 @@ export const valoDocuments = pgTable(
       foreignColumns: [valoOrders.workspaceId, valoOrders.id],
     }),
     check("valo_document_form_order", sql`${t.formOrder} IS NULL OR ${t.formEdition} IS NOT NULL`),
+    check(
+      "valo_document_library_edition",
+      sql`${t.libraryEdition} IS NULL OR (${t.formEdition} IS NULL AND ${t.templateVersionId} IS NULL)`,
+    ),
     workspaceRowPolicy(t.workspaceId),
   ],
 );

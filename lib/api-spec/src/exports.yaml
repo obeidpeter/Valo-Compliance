@@ -142,4 +142,5 @@ schemas:
     properties:
       versionId: { type: string, format: uuid }
       templateId: { type: string }
+      title: { type: string, description: "The title a staff-library template was released under, for a document copied from it." }
       version: { type: integer }

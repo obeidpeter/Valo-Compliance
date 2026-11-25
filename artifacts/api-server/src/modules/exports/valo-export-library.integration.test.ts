@@ -2,7 +2,15 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { and, eq } from "drizzle-orm";
-import { db, pool, valoDocuments, valoFileAssets } from "@workspace/db";
+import {
+  db,
+  pool,
+  runInWorkspaceScope,
+  valoDocuments,
+  valoFileAssets,
+  valoManualLibrary,
+  valoStaffAssignments,
+} from "@workspace/db";
 import { createDocument, saveDocument } from "../documents";
 import { resolveWorkspace } from "../workspaces";
 import {
@@ -14,6 +22,8 @@ import {
 } from "./valo-exports";
 import { financeHeldFixture } from "../commerce/valo-finance-test-fixture";
 import { syntheticDocument } from "../../lib/valo-test-fixtures";
+import { createReleasedTemplateDraft } from "../catalogue";
+import { templateDetailColumns } from "../../test-support/template-details";
 
 // DOC-005 accepts "successful exports appear in the business library and remain linked to the
 // template version used." The template version here is a held synthetic fixture that was never
@@ -122,6 +132,57 @@ test(
       assert.deepEqual(
         (await listWorkspaceExports(owner)).map((e) => e.id),
         [plain, docx],
+      );
+
+      // A document copied from a free staff-library template names that release beside its file,
+      // read in the workspace's scope as a customer request reads it
+      // (docs/architecture/library-entries.md, slice 3).
+      const editor = "synthetic-library-editor-" + randomUUID();
+      await db.insert(valoStaffAssignments).values({
+        id: randomUUID(),
+        identityId: editor,
+        role: "content",
+        grantedBy: "synthetic test",
+        reason: "Synthetic library copy",
+      });
+      const edition = randomUUID();
+      await db.insert(valoManualLibrary).values({
+        id: edition,
+        itemId: edition,
+        version: 1,
+        slug: "manual-" + edition,
+        kind: "template",
+        title: "Synthetic library copy",
+        body: "Synthetic copied paragraph.\n\nItem | Quantity\nSynthetic item | 2",
+        digest: "a".repeat(64),
+        fileFormat: "docx",
+        fileBytes: Buffer.from("synthetic"),
+        ...templateDetailColumns,
+        createdBy: editor,
+      });
+      await db
+        .update(valoManualLibrary)
+        .set({ state: "published", publishedBy: editor, publishedAt: new Date() })
+        .where(eq(valoManualLibrary.id, edition));
+      const inScope = <T>(work: () => Promise<T>) => runInWorkspaceScope(owner.workspaceId, work);
+      const copy = await inScope(() => createReleasedTemplateDraft(owner, edition));
+      assert.equal(copy.title, "Synthetic library copy");
+      const copied = await exportRevision(copy.id, copy.revisionId, "pdf");
+      const scoped = await inScope(() => listWorkspaceExports(owner));
+      assert.deepEqual(scoped.find((e) => e.id === copied)?.template, {
+        versionId: edition,
+        templateId: "manual-" + edition,
+        title: "Synthetic library copy",
+        version: 1,
+      });
+      // The release stays named once it is withdrawn: the copy remains its owner's.
+      await db
+        .update(valoManualLibrary)
+        .set({ state: "withdrawn", closedBy: editor, closedAt: new Date() })
+        .where(eq(valoManualLibrary.id, edition));
+      assert.equal(
+        (await inScope(() => listWorkspaceExports(owner))).find((e) => e.id === copied)?.template?.versionId,
+        edition,
       );
     } finally {
       await pool.end();
