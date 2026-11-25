@@ -4,7 +4,14 @@ import { resolve } from "node:path";
 import { test } from "node:test";
 import { assess } from "@workspace/valo-core";
 import { EMPTY_FACTS } from "./checker";
-import { KNOWN_HOLD_REASONS, resultGaps, resultNotice, shortRulesVersion } from "./result-words";
+import type { AssessmentItem } from "@workspace/api-client-react";
+import {
+  KNOWN_HOLD_REASONS,
+  requirementFigures,
+  resultGaps,
+  resultNotice,
+  shortRulesVersion,
+} from "./result-words";
 
 /** Words of the system's own, which a customer is not asked to know. */
 const SYSTEM_WORDS =
@@ -95,4 +102,48 @@ test("a result's rules version is printed by its first twelve characters, as its
   assert.equal(shortRulesVersion("synthetic-ruleset"), "synthetic-ruleset");
   // Not a code of the engine's: whole, whatever its length.
   assert.equal(shortRulesVersion("G".repeat(64)), "G".repeat(64));
+});
+
+// docs/architecture/results.md, slice 2. CMP-006: "Show a deadline, rate, threshold or fee only when
+// its scope and source are approved", accepted when "missing evidence shows 'Confirm with the
+// authority'; an assumed due date is never scheduled automatically".
+test("a requirement shows each figure its rule records with the passage it rests on, says 'Confirm with the authority' for the fees and deadlines it records none of, and shows nothing when these answers do not indicate it", () => {
+  const sources = [
+    {
+      id: "synthetic-source",
+      url: "https://example.test/source",
+      title: "Synthetic Act",
+      locator: "section 5",
+      quote: "Synthetic passage.",
+      snapshotHash: "a".repeat(64),
+    },
+  ];
+  const fee = { kind: "fee" as const, words: "Synthetic fee words.", sourceId: "synthetic-source" };
+  const deadline = {
+    kind: "deadline" as const,
+    words: "Synthetic deadline words.",
+    sourceId: "synthetic-source",
+  };
+  const rate = { kind: "rate" as const, words: "Synthetic rate words.", sourceId: "synthetic-source" };
+  const shown = (label: AssessmentItem["label"], figures?: AssessmentItem["figures"]) =>
+    requirementFigures({ label, sources, ...(figures ? { figures } : {}) });
+  // Nothing recorded: one line saying to confirm both with the authority.
+  assert.deepEqual(shown("Likely relevant"), [
+    { label: "Fees and deadlines", words: "Confirm with the authority." },
+  ]);
+  assert.deepEqual(shown("More information needed"), shown("Likely relevant"));
+  // Each recorded figure in its source's words, with where in the source it is; a government fee is
+  // named as one.
+  assert.deepEqual(shown("May apply", [fee, rate]), [
+    { label: "Government fee", words: "Synthetic fee words.", source: "Synthetic Act, section 5" },
+    { label: "Rate", words: "Synthetic rate words.", source: "Synthetic Act, section 5" },
+    { label: "Deadlines", words: "Confirm with the authority." },
+  ]);
+  assert.deepEqual(shown("Likely relevant", [deadline]), [
+    { label: "Deadline", words: "Synthetic deadline words.", source: "Synthetic Act, section 5" },
+    { label: "Fees", words: "Confirm with the authority." },
+  ]);
+  assert.deepEqual(shown("Likely relevant", [deadline, fee]).length, 2);
+  // A requirement these answers do not indicate shows no figure and nothing to confirm.
+  assert.deepEqual(shown("Not indicated by these answers", [fee]), []);
 });

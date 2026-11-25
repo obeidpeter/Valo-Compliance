@@ -1,7 +1,7 @@
 import type { AssessmentResult } from "@workspace/api-client-react";
 import { displayFact, factLabel, reviewFacts } from "./checker";
 import { formatDateTime, formatDay } from "./format";
-import { resultGaps, shortRulesVersion } from "./result-words";
+import { requirementFigures, requirementRoute, resultGaps, shortRulesVersion } from "./result-words";
 import { RESULT_LABELS } from "./rich-checker";
 
 /**
@@ -63,6 +63,10 @@ export function formatRequirementsBrief(input: {
         if (item.releaseNotice) lines.push(`  About this rule: ${item.releaseNotice}`);
         lines.push(`  Why: ${item.reason}`);
         if (item.nextStep) lines.push(`  Next step: ${item.nextStep}`);
+        const route = requirementRoute(item);
+        if (route) lines.push(`  Official page: ${route.authority} (${route.url})`);
+        for (const figure of requirementFigures(item))
+          lines.push(`  ${figure.label}: ${figure.words}${figure.source ? ` (${figure.source})` : ""}`);
         if (item.sources.length > 0) {
           lines.push(`  Sources: ${item.sources.map((s) => `${s.title} (${s.url})`).join("; ")}`);
         }

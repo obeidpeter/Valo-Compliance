@@ -7,7 +7,13 @@ import { factLabel } from "@/lib/checker";
 import { formatDay } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { MISSING_ANSWER_STATE_LABELS, RESULT_LABELS, RESULT_TONES } from "@/lib/rich-checker";
-import { resultGaps, resultNotice, shortRulesVersion } from "@/lib/result-words";
+import {
+  requirementFigures,
+  requirementRoute,
+  resultGaps,
+  resultNotice,
+  shortRulesVersion,
+} from "@/lib/result-words";
 import { documentsFor, resultTemplateNumbers } from "@/lib/result-documents";
 import {
   RecommendedDocuments,
@@ -191,6 +197,8 @@ function Item({
   const [open, setOpen] = useState(false);
   const detail = item;
   const missingStates = new Map(detail.missingAnswerStates?.map((answer) => [answer.field, answer.state]));
+  const figures = requirementFigures(item);
+  const route = requirementRoute(item);
   // CMP-003: federal, state and local requirements are told apart, each named for where it applies.
   const { level, state, lga } = item.jurisdiction;
   const place =
@@ -274,6 +282,32 @@ function Item({
             <span className="text-muted-foreground">Next step: </span>
             {item.nextStep}
           </p>
+        )}
+        {/* CMP-007: the authority's own page for this requirement, as its rule records it. */}
+        {route && (
+          <p className="mt-2 text-sm" data-testid={"route-" + item.ruleId}>
+            <span className="text-muted-foreground">Official page: </span>
+            <a
+              href={route.url}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="inline-flex items-center gap-1 font-medium text-primary underline underline-offset-2"
+            >
+              {route.authority}
+              <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+            </a>
+          </p>
+        )}
+        {figures.length > 0 && (
+          <ul className="mt-2 grid gap-1 text-sm" data-testid={"figures-" + item.ruleId}>
+            {figures.map((figure, index) => (
+              <li key={index}>
+                <span className="text-muted-foreground">{figure.label}: </span>
+                {figure.words}
+                {figure.source && <span className="text-muted-foreground"> ({figure.source})</span>}
+              </li>
+            ))}
+          </ul>
         )}
         <RequirementDocuments ruleId={item.ruleId} documents={documents} />
         {item.sources.length > 0 && (

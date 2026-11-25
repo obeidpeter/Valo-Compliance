@@ -1,3 +1,5 @@
+import type { AssessmentItem } from "@workspace/api-client-react";
+
 /**
  * What a result of the requirements check says about itself, in the site's words.
  *
@@ -78,3 +80,44 @@ export function resultGaps(sent: readonly string[], nothingShown: boolean): stri
     return [gap];
   });
 }
+
+type Figured = Pick<AssessmentItem, "label" | "sources" | "figures">;
+/** What a customer, and the owner signing a rule, read each kind of figure as. */
+export const FIGURE_LABELS = {
+  fee: "Government fee",
+  deadline: "Deadline",
+  rate: "Rate",
+  threshold: "Threshold",
+} as const;
+/** CMP-006: what a requirement may need confirmed when its rule records no figure of that kind. */
+const CONFIRM = "Confirm with the authority.";
+
+/**
+ * CMP-006: the fees, deadlines, rates and thresholds a requirement shows, each in its source's words
+ * with the passage it rests on, and "Confirm with the authority" for the fees and deadlines its rule
+ * records none of. A requirement these answers do not indicate shows none. Nothing here schedules a
+ * date.
+ */
+export function requirementFigures(item: Figured): { label: string; words: string; source?: string }[] {
+  if (item.label === "Not indicated by these answers") return [];
+  const figures = item.figures ?? [];
+  const shown: { label: string; words: string; source?: string }[] = figures.map((figure) => {
+    const source = item.sources.find((s) => s.id === figure.sourceId);
+    return {
+      label: FIGURE_LABELS[figure.kind],
+      words: figure.words,
+      ...(source && { source: `${source.title}, ${source.locator}` }),
+    };
+  });
+  const fee = figures.some((figure) => figure.kind === "fee"),
+    deadline = figures.some((figure) => figure.kind === "deadline");
+  if (!fee && !deadline) shown.push({ label: "Fees and deadlines", words: CONFIRM });
+  else if (!fee) shown.push({ label: "Fees", words: CONFIRM });
+  else if (!deadline) shown.push({ label: "Deadlines", words: CONFIRM });
+  return shown;
+}
+
+/** CMP-007: the authority's official page for a requirement, as its rule records it. One these answers do not
+ * indicate links no page, as it shows no figure. */
+export const requirementRoute = (item: Pick<AssessmentItem, "label" | "officialRoute">) =>
+  item.label === "Not indicated by these answers" ? undefined : item.officialRoute;

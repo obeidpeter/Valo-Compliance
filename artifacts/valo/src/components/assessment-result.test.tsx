@@ -335,3 +335,45 @@ test("when the related documents cannot be loaded, the result says its requireme
   for (const ruleId of ["SYN-PRIVACY", "SYN-INVOICE", "SYN-NONE"])
     assert.ok(page.includes(`data-testid="card-item-${ruleId}"`), ruleId);
 });
+
+// docs/architecture/results.md, slice 2. CMP-006: a figure is shown only from its rule's source, and
+// "Confirm with the authority" otherwise. CMP-007: each requirement names its authority's official page.
+test("a requirement links its authority's official page, shows each figure its rule records with the passage it rests on, and says 'Confirm with the authority' for the rest; one these answers do not indicate shows neither", () => {
+  const route = { authority: "Synthetic registry", url: "https://example.test/registry" };
+  const fee = { kind: "fee" as const, words: "Synthetic fee words.", sourceId: "synthetic-source" };
+  const page = renderWith(new QueryClient(), {
+    ...result,
+    items: [
+      item("SYN-ROUTED", "Likely relevant", { officialRoute: route, figures: [fee] }),
+      item("SYN-PLAIN", "May apply", {}),
+      item("SYN-NOT", "Not indicated by these answers", { officialRoute: route, figures: [fee] }),
+    ],
+    officialRoutes: [{ title: route.authority, url: route.url }],
+  });
+  const part = (testId: string) => {
+    const start = page.indexOf(`data-testid="${testId}"`);
+    return start < 0 ? "" : page.slice(start, page.indexOf("</ul>", start) + 5);
+  };
+  assert.match(
+    page,
+    /data-testid="route-SYN-ROUTED"><span class="text-muted-foreground">Official page: <\/span><a href="https:\/\/example\.test\/registry" target="_blank" rel="noreferrer noopener"[^>]*>Synthetic registry<svg/,
+  );
+  assert.ok(
+    part("figures-SYN-ROUTED").includes(
+      '<li><span class="text-muted-foreground">Government fee: </span>Synthetic fee words.<span class="text-muted-foreground"> (Synthetic source, section 1)</span></li><li><span class="text-muted-foreground">Deadlines: </span>Confirm with the authority.</li>',
+    ),
+    part("figures-SYN-ROUTED"),
+  );
+  // A rule that records neither: no place to act, and both to confirm with the authority.
+  assert.ok(!page.includes('data-testid="route-SYN-PLAIN"'));
+  assert.ok(
+    part("figures-SYN-PLAIN").includes(
+      '<li><span class="text-muted-foreground">Fees and deadlines: </span>Confirm with the authority.</li>',
+    ),
+  );
+  // Not indicated by these answers: neither a place to act nor a figure.
+  assert.ok(!page.includes('data-testid="route-SYN-NOT"'));
+  assert.ok(!page.includes('data-testid="figures-SYN-NOT"'));
+  // The result's official sources are the routes it was given.
+  assert.match(page, /<p class="eyebrow">Official sources<\/p>.*>Synthetic registry<svg/);
+});
