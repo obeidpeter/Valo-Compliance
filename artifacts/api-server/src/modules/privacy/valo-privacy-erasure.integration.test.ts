@@ -28,6 +28,7 @@ import {
   valoSavedTemplates,
 } from "@workspace/db";
 import { eq, inArray, sql } from "drizzle-orm";
+import { guardRefusal } from "../../platform/http-errors";
 import { createDocument } from "../documents";
 import { resolveWorkspace, saveProfile, authorizeWorkspaceWrite } from "../workspaces";
 import { syntheticProfile, syntheticDocument } from "../../lib/valo-test-fixtures";
@@ -609,23 +610,26 @@ test(
         // The case history refuses the change itself (ADM-009). A corrupt copy, such as a damaged restore
         // could hold, is made in one transaction with its guard off, which no other session sees, and the
         // replay must still refuse it.
-        await assert.rejects(
-          async () => {
-            await db
-              .update(valoPrivacyEvents)
-              .set({ reason: "controlled unsigned corruption" })
-              .where(eq(valoPrivacyEvents.id, receipt.id));
-          },
-          // Drizzle reports "Failed query: ..." with the database's own error as its cause.
-          (error: unknown) => {
-            for (let e: unknown = error, depth = 0; e && depth < 5; depth++) {
-              const item = e as { message?: unknown; cause?: unknown };
-              if (/Privacy case history is append-only/.test(String(item.message ?? ""))) return true;
-              e = item.cause;
-            }
-            return false;
-          },
-        );
+        const refusal = await db
+          .update(valoPrivacyEvents)
+          .set({ reason: "controlled unsigned corruption" })
+          .where(eq(valoPrivacyEvents.id, receipt.id))
+          .then(
+            () => null,
+            (error: unknown) => error,
+          );
+        // Drizzle reports "Failed query: ..." with the database's own error as its cause.
+        const refusedByGuard = (error: unknown) => {
+          for (let e: unknown = error, depth = 0; e && depth < 5; depth++) {
+            const item = e as { message?: unknown; cause?: unknown };
+            if (/Privacy case history is append-only/.test(String(item.message ?? ""))) return true;
+            e = item.cause;
+          }
+          return false;
+        };
+        assert.ok(refusedByGuard(refusal));
+        // The error handler reads the real refusal as a guard's, by the guard's name, and counts it.
+        assert.equal(guardRefusal(refusal), "valo_privacy_history_guard");
         const setReason = (reason: string) =>
           db.transaction(async (tx) => {
             await tx.execute(

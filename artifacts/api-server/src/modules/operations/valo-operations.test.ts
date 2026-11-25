@@ -69,8 +69,12 @@ test("internal probes measure failures independently and persist/deduplicate/rec
   worker.finish(worker.begin()!, true);
   try {
     await recordWorkerHeartbeat(worker.snapshot(), dir);
-    // The security readings are zero here; their alerts have their own test.
-    const security = new Set<string>(securityQueries);
+    // The security readings are zero here; their alerts have their own tests.
+    const security = new Set<string>([
+      ...securityQueries,
+      readinessQueries.guardRefusals,
+      readinessQueries.privilegedReading,
+    ]);
     const failures = await collectOperationalSample(async (sql) => {
       if (sql === readinessQueries.database) throw Error("SYNTHETIC_PRIVATE_DB_ERROR");
       return { rows: [{ value: security.has(sql) ? 0 : sql === readinessQueries.payments ? 2 : 101 }] };
@@ -270,6 +274,70 @@ test("security signals raise their own alerts, owned by the security and payment
       events: { state: string }[];
     };
     assert.equal(history.events.filter((e) => e.state === "resolved").length, 6);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { recursive: true, force: true });
+    if (old === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = old;
+  }
+});
+
+// ADM-009: "tampering and excessive privileged access generate alerts" (docs/architecture/audit-trail.md).
+test("a database guard's refusal and heavy privileged reading raise their own alerts, under the security runbook", async () => {
+  const old = process.env.NODE_ENV;
+  process.env.NODE_ENV = "development";
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => {
+    throw Error("EXTERNAL_MESSAGES_FORBIDDEN");
+  };
+  const dir = await mkdtemp(join(tmpdir(), "valo-ops-history-"));
+  const worker = new WorkerHealth();
+  worker.finish(worker.begin()!, true);
+  try {
+    await recordWorkerHeartbeat(worker.snapshot(), dir);
+    const sample = (readings: { guardRefusals?: number; privilegedReading?: number }) =>
+      collectOperationalSample(
+        async (sql) => ({
+          rows: [
+            {
+              value:
+                sql === readinessQueries.database
+                  ? 1
+                  : sql === readinessQueries.guardRefusals
+                    ? (readings.guardRefusals ?? 0)
+                    : sql === readinessQueries.privilegedReading
+                      ? (readings.privilegedReading ?? 0)
+                      : 0,
+            },
+          ],
+        }),
+        dir,
+      );
+    // A staff member reading a hundred distinct things in an hour is within the limit, and no guard
+    // refused anything.
+    assert.deepEqual(
+      (await recordOperationalAlerts(await sample({ privilegedReading: 100 }), dir)).active,
+      [],
+    );
+    // One refusal by a guard, and one more thing read, raise one alert each.
+    const raised = await recordOperationalAlerts(
+      await sample({ guardRefusals: 1, privilegedReading: 101 }),
+      dir,
+    );
+    assert.deepEqual(raised.owners, [
+      {
+        code: "GUARD_REFUSALS_DETECTED",
+        runbook: "Security/privacy incident",
+        accountable: "Incident lead + privacy owner",
+      },
+      {
+        code: "PRIVILEGED_READING_DETECTED",
+        runbook: "Security/privacy incident",
+        accountable: "Incident lead + privacy owner",
+      },
+    ]);
+    // They resolve when the readings return to normal.
+    assert.deepEqual((await recordOperationalAlerts(await sample({}), dir)).active, []);
   } finally {
     globalThis.fetch = originalFetch;
     await rm(dir, { recursive: true, force: true });

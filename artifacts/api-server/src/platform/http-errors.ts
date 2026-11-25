@@ -22,6 +22,24 @@ export function saysUnexpectedFailure(text: string) {
   return text.includes(UNEXPECTED_FAILURE_READING) || text.includes(UNEXPECTED_FAILURE_CHANGING);
 }
 
+/**
+ * The guard behind a database refusal: the name of the PL/pgSQL function that raised it, when the error,
+ * or any cause in its chain, is one a trigger function raised (ADM-009). Drizzle reports a failed query
+ * with the database's own error as its cause; PostgreSQL names the raising function in its context.
+ * A check constraint, a key or a timeout names no function, so it is not a guard's refusal.
+ */
+export function guardRefusal(error: unknown): string | null {
+  for (let e: unknown = error, depth = 0; e && typeof e === "object" && depth < 5; depth++) {
+    const item = e as { code?: unknown; where?: unknown; cause?: unknown };
+    if ((item.code === "P0001" || item.code === "23514") && typeof item.where === "string") {
+      const raised = /PL\/pgSQL function (?:public\.)?(valo_[a-z0-9_]+)\(\)/.exec(item.where);
+      if (raised) return raised[1]!;
+    }
+    e = item.cause;
+  }
+  return null;
+}
+
 /** Shared production handler. Importing it must not initialise a database or provider. */
 export const onError: ErrorRequestHandler = (error: unknown, req, res, _next) => {
   res.setHeader("Cache-Control", "private, no-store");
@@ -73,6 +91,14 @@ export const onError: ErrorRequestHandler = (error: unknown, req, res, _next) =>
       code: error.status === 429 ? "WRITE_LIMIT_REACHED" : undefined,
     });
     return;
+  }
+  // A database guard refused what the application sent. The application never sends such a change,
+  // so it is a fault or an attempt to change a history: it is counted as a security signal, which
+  // raises an alert (GUARD_REFUSALS). Only the guard's name is logged, never its message or the row.
+  const guard = guardRefusal(error);
+  if (guard) {
+    res.locals.valoSecuritySignal = "guard_refusal";
+    req.log.error({ event: "request.refused_by_guard", guard }, "request refused by a database guard");
   }
   req.log.error(
     {
