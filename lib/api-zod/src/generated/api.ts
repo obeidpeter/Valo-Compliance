@@ -3869,7 +3869,16 @@ export const ListOwnerRulesResponse = zod.object({
   "passed": zod.boolean()
 })),
   "profilesRun": zod.int().min(listOwnerRulesResponseItemsItemProfilesRunMin),
-  "changedProfiles": zod.int().min(listOwnerRulesResponseItemsItemChangedProfilesMin)
+  "changedProfiles": zod.int().min(listOwnerRulesResponseItemsItemChangedProfilesMin),
+  "officialRoute": zod.object({
+  "authority": zod.string(),
+  "url": zod.string()
+}).optional().describe('The authority\'s own official page for a requirement, as its rule records it. Absent when the rule records none, and in a result saved before routes were recorded.'),
+  "figures": zod.array(zod.object({
+  "kind": zod.enum(['fee', 'deadline', 'rate', 'threshold']),
+  "words": zod.string(),
+  "source": zod.string().describe('The source\'s title and where in it the words are.')
+})).optional().describe('Each fee, deadline, rate or threshold the rule records, with the passage it rests on, as a customer would see it. Absent when it records none.')
 }))
 })
 
@@ -3952,7 +3961,16 @@ export const WatchOwnerRuleSourcesResponse = zod.object({
   "passed": zod.boolean()
 })),
   "profilesRun": zod.int().min(watchOwnerRuleSourcesResponseProfilesRunMin),
-  "changedProfiles": zod.int().min(watchOwnerRuleSourcesResponseChangedProfilesMin)
+  "changedProfiles": zod.int().min(watchOwnerRuleSourcesResponseChangedProfilesMin),
+  "officialRoute": zod.object({
+  "authority": zod.string(),
+  "url": zod.string()
+}).optional().describe('The authority\'s own official page for a requirement, as its rule records it. Absent when the rule records none, and in a result saved before routes were recorded.'),
+  "figures": zod.array(zod.object({
+  "kind": zod.enum(['fee', 'deadline', 'rate', 'threshold']),
+  "words": zod.string(),
+  "source": zod.string().describe('The source\'s title and where in it the words are.')
+})).optional().describe('Each fee, deadline, rate or threshold the rule records, with the passage it rests on, as a customer would see it. Absent when it records none.')
 })
 
 
@@ -5585,7 +5603,16 @@ export const PreviewAssessmentResponse = zod.object({
   "quote": zod.string(),
   "snapshotHash": zod.string()
 })),
-  "relatedTemplateIds": zod.array(zod.string())
+  "relatedTemplateIds": zod.array(zod.string()),
+  "officialRoute": zod.object({
+  "authority": zod.string(),
+  "url": zod.string()
+}).optional().describe('The authority\'s own official page for a requirement, as its rule records it. Absent when the rule records none, and in a result saved before routes were recorded.'),
+  "figures": zod.array(zod.object({
+  "kind": zod.enum(['fee', 'deadline', 'rate', 'threshold']),
+  "words": zod.string().describe('In the words of the passage of the item\'s source it rests on.'),
+  "sourceId": zod.string().describe('The id of one of the item\'s sources.')
+})).optional().describe('Each fee, deadline, rate or threshold the item\'s rule records, with the source it rests on (CMP-006). Absent when the rule records none, and in a result saved before figures were recorded.')
 })),
   "unanswered": zod.array(zod.string()),
   "gaps": zod.array(zod.string()),
@@ -6046,7 +6073,16 @@ export const PreviewWorkspaceAssessmentResponse = zod.object({
   "quote": zod.string(),
   "snapshotHash": zod.string()
 })),
-  "relatedTemplateIds": zod.array(zod.string())
+  "relatedTemplateIds": zod.array(zod.string()),
+  "officialRoute": zod.object({
+  "authority": zod.string(),
+  "url": zod.string()
+}).optional().describe('The authority\'s own official page for a requirement, as its rule records it. Absent when the rule records none, and in a result saved before routes were recorded.'),
+  "figures": zod.array(zod.object({
+  "kind": zod.enum(['fee', 'deadline', 'rate', 'threshold']),
+  "words": zod.string().describe('In the words of the passage of the item\'s source it rests on.'),
+  "sourceId": zod.string().describe('The id of one of the item\'s sources.')
+})).optional().describe('Each fee, deadline, rate or threshold the item\'s rule records, with the source it rests on (CMP-006). Absent when the rule records none, and in a result saved before figures were recorded.')
 })),
   "unanswered": zod.array(zod.string()),
   "gaps": zod.array(zod.string()),
@@ -6491,7 +6527,16 @@ export const ListAssessmentsResponseItem = zod.object({
   "quote": zod.string(),
   "snapshotHash": zod.string()
 })),
-  "relatedTemplateIds": zod.array(zod.string())
+  "relatedTemplateIds": zod.array(zod.string()),
+  "officialRoute": zod.object({
+  "authority": zod.string(),
+  "url": zod.string()
+}).optional().describe('The authority\'s own official page for a requirement, as its rule records it. Absent when the rule records none, and in a result saved before routes were recorded.'),
+  "figures": zod.array(zod.object({
+  "kind": zod.enum(['fee', 'deadline', 'rate', 'threshold']),
+  "words": zod.string().describe('In the words of the passage of the item\'s source it rests on.'),
+  "sourceId": zod.string().describe('The id of one of the item\'s sources.')
+})).optional().describe('Each fee, deadline, rate or threshold the item\'s rule records, with the source it rests on (CMP-006). Absent when the rule records none, and in a result saved before figures were recorded.')
 })),
   "unanswered": zod.array(zod.string()),
   "gaps": zod.array(zod.string()),
@@ -7338,7 +7383,16 @@ export const CreateAssessmentResponse = zod.object({
   "quote": zod.string(),
   "snapshotHash": zod.string()
 })),
-  "relatedTemplateIds": zod.array(zod.string())
+  "relatedTemplateIds": zod.array(zod.string()),
+  "officialRoute": zod.object({
+  "authority": zod.string(),
+  "url": zod.string()
+}).optional().describe('The authority\'s own official page for a requirement, as its rule records it. Absent when the rule records none, and in a result saved before routes were recorded.'),
+  "figures": zod.array(zod.object({
+  "kind": zod.enum(['fee', 'deadline', 'rate', 'threshold']),
+  "words": zod.string().describe('In the words of the passage of the item\'s source it rests on.'),
+  "sourceId": zod.string().describe('The id of one of the item\'s sources.')
+})).optional().describe('Each fee, deadline, rate or threshold the item\'s rule records, with the source it rests on (CMP-006). Absent when the rule records none, and in a result saved before figures were recorded.')
 })),
   "unanswered": zod.array(zod.string()),
   "gaps": zod.array(zod.string()),
@@ -7789,7 +7843,16 @@ export const GetAssessmentResponse = zod.object({
   "quote": zod.string(),
   "snapshotHash": zod.string()
 })),
-  "relatedTemplateIds": zod.array(zod.string())
+  "relatedTemplateIds": zod.array(zod.string()),
+  "officialRoute": zod.object({
+  "authority": zod.string(),
+  "url": zod.string()
+}).optional().describe('The authority\'s own official page for a requirement, as its rule records it. Absent when the rule records none, and in a result saved before routes were recorded.'),
+  "figures": zod.array(zod.object({
+  "kind": zod.enum(['fee', 'deadline', 'rate', 'threshold']),
+  "words": zod.string().describe('In the words of the passage of the item\'s source it rests on.'),
+  "sourceId": zod.string().describe('The id of one of the item\'s sources.')
+})).optional().describe('Each fee, deadline, rate or threshold the item\'s rule records, with the source it rests on (CMP-006). Absent when the rule records none, and in a result saved before figures were recorded.')
 })),
   "unanswered": zod.array(zod.string()),
   "gaps": zod.array(zod.string()),

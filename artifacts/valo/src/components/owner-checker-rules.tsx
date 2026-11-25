@@ -9,6 +9,7 @@ import {
 } from "@workspace/api-client-react";
 import { formatCount, formatDateTime, formatDay } from "@/lib/format";
 import { describeError } from "@/lib/describe-error";
+import { FIGURE_LABELS } from "@/lib/result-words";
 import { ErrorState } from "./states";
 
 function sourceState(source: OwnerRuleSource) {
@@ -219,6 +220,40 @@ export function OwnerCheckerRules() {
                     </div>
                   </>
                 )}
+                {/* docs/architecture/results.md: where the customer is sent, and each figure, as signed. */}
+                <div>
+                  <dt className="font-semibold">Official page it links</dt>
+                  <dd>
+                    {item.officialRoute ? (
+                      <a
+                        href={item.officialRoute.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline"
+                      >
+                        {item.officialRoute.authority}
+                      </a>
+                    ) : (
+                      "None. The result links the Corporate Affairs Commission's service page."
+                    )}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="font-semibold">Fees, deadlines, rates and thresholds</dt>
+                  <dd>
+                    {item.figures?.length ? (
+                      <ul className="space-y-1">
+                        {item.figures.map((figure, index) => (
+                          <li key={index}>
+                            {FIGURE_LABELS[figure.kind]}: {figure.words} ({figure.source})
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      "None recorded. The customer is told to confirm them with the authority."
+                    )}
+                  </dd>
+                </div>
               </dl>
               <p className="text-sm text-muted-foreground">Shown with it: {item.disclosure}.</p>
               <section aria-label="Official sources">

@@ -186,3 +186,91 @@ test("a release notice alone is no change between two saved results, and a new r
     [["changed", 1, 2]],
   );
 });
+
+// docs/architecture/results.md, slice 2. CMP-006: a fee, deadline, rate or threshold is shown only from
+// the rule's own source. CMP-007 and EDP-012: a held rule still sends the business to its route.
+test("a rule's route and figures are carried to its requirement, and the result's official sources are the routes of the requirements that may apply and of the released rules held from it", () => {
+  const registry = { authority: "Synthetic registry", url: "https://example.test/registry" };
+  const taxOffice = { authority: "Synthetic tax office", url: "https://example.test/tax" };
+  const dataOffice = { authority: "Synthetic data office", url: "https://example.test/data" };
+  // In the words of the passage its source quotes: "Synthetic provision for a controlled test."
+  const fee = {
+    kind: "fee",
+    words: "Synthetic provision",
+    sourceId: "synthetic-source",
+  };
+  const routed = (base: ReleasedRule, officialRoute: object, figures?: object[]) =>
+    ruleSchema.parse({ ...base, officialRoute, ...(figures && { figures }) });
+  const rules = [
+    routed(rule("synthetic-company", "legalForm", "company"), registry, [fee]),
+    routed(rule("synthetic-premises", "premises", "yes"), taxOffice),
+    routed(rule("synthetic-manufacturing", "manufacturing", "yes"), dataOffice),
+  ];
+  const result = assess(facts, rules, asOfDate, now, { fixtureMode: true });
+  const item = (id: string) => result.items.find((i) => i.ruleId === id)!;
+  assert.equal(item("synthetic-company").label, "Likely relevant");
+  assert.deepEqual(item("synthetic-company").officialRoute, registry);
+  assert.deepEqual(item("synthetic-company").figures, [fee]);
+  assert.equal(item("synthetic-premises").label, "More information needed");
+  assert.deepEqual(item("synthetic-premises").officialRoute, taxOffice);
+  assert.equal(Object.hasOwn(item("synthetic-premises"), "figures"), false);
+  // The result lists the routes of the requirements that may apply, each once, and not the route of
+  // one these answers do not indicate.
+  assert.equal(item("synthetic-manufacturing").label, "Not indicated by these answers");
+  assert.deepEqual(result.officialRoutes, [
+    { title: registry.authority, url: registry.url },
+    { title: taxOffice.authority, url: taxOffice.url },
+  ]);
+  const twice = assess(
+    facts,
+    [rules[0]!, routed(rule("synthetic-other", "legalForm", "company"), registry)],
+    asOfDate,
+    now,
+    {
+      fixtureMode: true,
+    },
+  );
+  assert.deepEqual(twice.officialRoutes, [{ title: registry.authority, url: registry.url }]);
+
+  // A released rule held for stale evidence gives no result, but its route is listed.
+  const stale = routed(
+    { ...rule("synthetic-stale", "legalForm", "company"), reviewBy: "2026-11-10T00:00:00Z" },
+    dataOffice,
+  );
+  const held = assess(facts, [stale], asOfDate, now, { fixtureMode: true });
+  assert.deepEqual(held.items, []);
+  assert.deepEqual(held.officialRoutes, [{ title: dataOffice.authority, url: dataOffice.url }]);
+  // One that is withdrawn, or not yet in force, sends nobody to its route.
+  for (const notInForce of [
+    routed({ ...rule("synthetic-withdrawn", "legalForm", "company"), status: "withdrawn" }, dataOffice),
+    routed({ ...rule("synthetic-later", "legalForm", "company"), validFrom: "2027-01-01" }, dataOffice),
+  ])
+    assert.equal(
+      assess(facts, [notInForce], asOfDate, now, { fixtureMode: true }).officialRoutes[0]!.url,
+      "https://icrp.cac.gov.ng/",
+    );
+
+  // A result from rules that record no route keeps the Commission's service page, and its
+  // requirements carry nothing new, so its reference is what it was.
+  const plain = assess(facts, [rule("synthetic-company", "legalForm", "company")], asOfDate, now, {
+    fixtureMode: true,
+  });
+  assert.deepEqual(plain.officialRoutes, [
+    { title: "Corporate Affairs Commission service discovery", url: "https://icrp.cac.gov.ng/" },
+  ]);
+  assert.equal(Object.hasOwn(plain.items[0]!, "officialRoute"), false);
+  assert.equal(Object.hasOwn(plain.items[0]!, "figures"), false);
+
+  // A figure is in the words its own source quotes; a route is an https page; an empty list of figures
+  // is written as none.
+  const base = rule("synthetic-company", "legalForm", "company");
+  assert.throws(() => ruleSchema.parse({ ...base, figures: [{ ...fee, sourceId: "another-source" }] }));
+  assert.throws(() =>
+    ruleSchema.parse({ ...base, figures: [{ ...fee, words: "Synthetic fee of N10,000" }] }),
+  );
+  assert.throws(() => ruleSchema.parse({ ...base, figures: [{ ...fee, kind: "price" }] }));
+  assert.throws(() => ruleSchema.parse({ ...base, figures: [] }));
+  assert.throws(() =>
+    ruleSchema.parse({ ...base, officialRoute: { authority: "Synthetic", url: "http://example.test/" } }),
+  );
+});

@@ -6,9 +6,11 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { OwnerRuleCheck } from './ownerRuleCheck';
+import type { OwnerRuleFigure } from './ownerRuleFigure';
 import type { OwnerRuleItemLive } from './ownerRuleItemLive';
 import type { OwnerRuleScenario } from './ownerRuleScenario';
 import type { OwnerRuleSource } from './ownerRuleSource';
+import type { RequirementRoute } from './requirementRoute';
 
 export interface OwnerRuleItem {
   ruleId: string;
@@ -46,4 +48,7 @@ export interface OwnerRuleItem {
   profilesRun: number;
   /** @minimum 0 */
   changedProfiles: number;
+  officialRoute?: RequirementRoute;
+  /** Each fee, deadline, rate or threshold the rule records, with the passage it rests on, as a customer would see it. Absent when it records none. */
+  figures?: OwnerRuleFigure[];
 }

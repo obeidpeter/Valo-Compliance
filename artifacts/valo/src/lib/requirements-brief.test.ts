@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import type { AssessmentResult } from "@workspace/api-client-react";
+import type { AssessmentItem, AssessmentResult } from "@workspace/api-client-react";
 import { formatRequirementsBrief } from "./requirements-brief";
 
 test("formatRequirementsBrief builds a structured plain-text brief with disclaimer, grouped items, answers, and links", () => {
@@ -97,4 +97,80 @@ test("the summary carries each rule's release notice when the result has one, an
   );
   const older = formatRequirementsBrief({ result: result([item]), facts: {} });
   assert.doesNotMatch(older, /About this rule/);
+});
+
+// docs/architecture/results.md, slice 2: the summary names each official page and gives each figure, as the
+// result does, and "Confirm with the authority" for the rest.
+test("the summary names the official page of each requirement that may apply, with its figures and what to confirm with the authority", () => {
+  const source = {
+    id: "src-1",
+    url: "https://example.test/source",
+    title: "Synthetic Act",
+    locator: "Section 5",
+    quote: "Synthetic quote.",
+    snapshotHash: "a".repeat(64),
+  };
+  const requirement = (
+    ruleId: string,
+    label: AssessmentItem["label"],
+    extra: Partial<AssessmentItem> = {},
+  ) => ({
+    ruleId,
+    ruleVersion: 1,
+    requirementVersionId: `${ruleId}@1`,
+    title: `Synthetic requirement ${ruleId}`,
+    label,
+    reason: "Synthetic reason.",
+    missingFacts: [],
+    matchedFacts: [],
+    nextStep: "Synthetic next step.",
+    jurisdiction: { level: "federal" as const },
+    sources: [source],
+    relatedTemplateIds: [],
+    ...extra,
+  });
+  const text = formatRequirementsBrief({
+    result: {
+      schemaVersion: "checker-result-v1",
+      asOfDate: "2026-11-18",
+      rulesetVersion: "abcdef1234567890",
+      items: [
+        requirement("SYNTH-ROUTED", "Likely relevant", {
+          officialRoute: { authority: "Synthetic Registry", url: "https://example.test/registry" },
+          figures: [{ kind: "deadline", words: "Synthetic deadline words.", sourceId: "src-1" }],
+        }),
+        requirement("SYNTH-PLAIN", "May apply"),
+        requirement("SYNTH-NOT", "Not indicated by these answers", {
+          officialRoute: { authority: "Synthetic Registry", url: "https://example.test/registry" },
+        }),
+      ],
+      unanswered: [],
+      gaps: [],
+      recommendedTemplateIds: [],
+      officialRoutes: [{ title: "Synthetic Registry", url: "https://example.test/registry" }],
+      notice: "Not legal advice.",
+      sourceBackedRecommendations: 1,
+      resultHash: "1234567890abcdef".repeat(4),
+    },
+    facts: {},
+  });
+  const block = (ruleId: string) => {
+    const start = text.indexOf(`Synthetic requirement ${ruleId} `);
+    return text.slice(
+      start,
+      text.indexOf("\n- ", start + 1) < 0 ? undefined : text.indexOf("\n- ", start + 1),
+    );
+  };
+  assert.match(
+    block("SYNTH-ROUTED"),
+    /\n {2}Official page: Synthetic Registry \(https:\/\/example\.test\/registry\)\n/,
+  );
+  assert.match(
+    block("SYNTH-ROUTED"),
+    /\n {2}Deadline: Synthetic deadline words\. \(Synthetic Act, Section 5\)\n/,
+  );
+  assert.match(block("SYNTH-ROUTED"), /\n {2}Fees: Confirm with the authority\./);
+  assert.doesNotMatch(block("SYNTH-PLAIN"), /Official page/);
+  assert.match(block("SYNTH-PLAIN"), /\n {2}Fees and deadlines: Confirm with the authority\./);
+  assert.doesNotMatch(block("SYNTH-NOT"), /Official page|Confirm with the authority/);
 });

@@ -214,6 +214,19 @@ schemas:
       scenarios: { type: array, items: { $ref: "#/components/schemas/OwnerRuleScenario" } }
       profilesRun: { type: integer, minimum: 0 }
       changedProfiles: { type: integer, minimum: 0 }
+      officialRoute:
+        $ref: "#/components/schemas/RequirementRoute"
+      figures:
+        type: array
+        description: Each fee, deadline, rate or threshold the rule records, with the passage it rests on, as a customer would see it. Absent when it records none.
+        items: { $ref: "#/components/schemas/OwnerRuleFigure" }
+  OwnerRuleFigure:
+    type: object
+    required: [kind, words, source]
+    properties:
+      kind: { type: string, enum: [fee, deadline, rate, threshold] }
+      words: { type: string }
+      source: { type: string, description: "The source's title and where in it the words are." }
   OwnerRuleCheck:
     type: object
     required: [id, label]

@@ -1043,6 +1043,82 @@ test("under each requirement are the released documents its rule relates, and th
   }
 });
 
+// docs/architecture/results.md, slice 2. CMP-006: a figure is shown only from its rule's source, and
+// "Confirm with the authority" otherwise. CMP-007: each requirement names its authority's official page.
+test("a requirement names its authority's official page and shows each figure its rule records with the passage it rests on, says 'Confirm with the authority' for the rest, and the result's official sources are those pages", async () => {
+  const source = {
+    id: "synthetic-source",
+    url: "https://example.test/source",
+    title: "Synthetic Act",
+    locator: "section 5",
+    quote: "Synthetic fee of one naira for each synthetic filing.",
+    snapshotHash: "a".repeat(64),
+  };
+  const requirement = (ruleId: string, label: string, extra: object) => ({
+    ruleId,
+    ruleVersion: 1,
+    requirementVersionId: `${ruleId}@1`,
+    title: `Synthetic requirement ${ruleId}`,
+    label,
+    reason: "Synthetic test fixture: why this may apply.",
+    missingFacts: [],
+    matchedFacts: [],
+    nextStep: "Synthetic test fixture: what to do next.",
+    jurisdiction: { level: "federal" },
+    sources: [source],
+    relatedTemplateIds: [],
+    ...extra,
+  });
+  const route = { authority: "Synthetic authority", url: "https://example.test/authority" };
+  const routed = api.PreviewAssessmentResponse.parse({
+    ...noResult,
+    items: [
+      requirement("SYN-ROUTED", "Likely relevant", {
+        officialRoute: route,
+        figures: [{ kind: "fee", words: "Synthetic fee of one naira", sourceId: "synthetic-source" }],
+      }),
+      requirement("SYN-PLAIN", "May apply", {}),
+    ],
+    officialRoutes: [{ title: route.authority, url: route.url }],
+    sourceBackedRecommendations: 1,
+  });
+  const { respond } = checking();
+  const { page, unknown, errors, close } = await app.phone("/checker", async (route_, method, path, query) =>
+    method === "POST" && path === "/checker/preview"
+      ? route_.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(routed) })
+      : respond(route_, method, path, query),
+  );
+  try {
+    await ready(page);
+    await page.getByTestId("button-step-5").click();
+    await page.getByTestId("button-run").click();
+    await page.getByTestId("assessment-result").waitFor();
+    const link = page.getByTestId("route-SYN-ROUTED").getByRole("link", { name: "Synthetic authority" });
+    await expect(page.getByTestId("route-SYN-ROUTED")).toHaveText("Official page: Synthetic authority");
+    await expect(link).toHaveAttribute("href", route.url);
+    await expect(link).toHaveAttribute("target", "_blank");
+    await expect(page.getByTestId("figures-SYN-ROUTED").locator("li")).toHaveText([
+      "Government fee: Synthetic fee of one naira (Synthetic Act, section 5)",
+      "Deadlines: Confirm with the authority.",
+    ]);
+    await expect(page.getByTestId("route-SYN-PLAIN")).toHaveCount(0);
+    await expect(page.getByTestId("figures-SYN-PLAIN").locator("li")).toHaveText([
+      "Fees and deadlines: Confirm with the authority.",
+    ]);
+    // The result's official sources are the pages it was given.
+    await expect(
+      page.getByTestId("assessment-result").getByRole("link", { name: "Synthetic authority" }),
+    ).toHaveCount(2);
+    assert.deepEqual(oldWordsIn(await page.getByTestId("assessment-result").innerText()), []);
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "a requirement's official page and figures"), []);
+    assert.deepEqual(unknown, [], "every API call the page made has a test answer");
+    assert.deepEqual(errors, []);
+  } finally {
+    await close();
+  }
+});
+
 // The banner is on every page. The sign-in pages draw no site frame and have a line of their own.
 test("a visitor is told to use made-up details, on a page's banner and on the sign-in pages, and the sign-in service is named in the words the contact page uses", async () => {
   {

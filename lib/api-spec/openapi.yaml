@@ -1716,6 +1716,13 @@ components:
           schema:
             $ref: "#/components/schemas/ApiProblem"
   schemas:
+    RequirementRoute:
+      type: object
+      description: The authority's own official page for a requirement, as its rule records it. Absent when the rule records none, and in a result saved before routes were recorded.
+      required: [authority, url]
+      properties:
+        authority: { type: string }
+        url: { type: string }
     TemplateOffer:
       type: object
       required: [id, title, amountKobo, currency, licenceVersion, licenceText, taxTreatment]
@@ -2763,6 +2770,19 @@ components:
         scenarios: { type: array, items: { $ref: "#/components/schemas/OwnerRuleScenario" } }
         profilesRun: { type: integer, minimum: 0 }
         changedProfiles: { type: integer, minimum: 0 }
+        officialRoute:
+          $ref: "#/components/schemas/RequirementRoute"
+        figures:
+          type: array
+          description: Each fee, deadline, rate or threshold the rule records, with the passage it rests on, as a customer would see it. Absent when it records none.
+          items: { $ref: "#/components/schemas/OwnerRuleFigure" }
+    OwnerRuleFigure:
+      type: object
+      required: [kind, words, source]
+      properties:
+        kind: { type: string, enum: [fee, deadline, rate, threshold] }
+        words: { type: string }
+        source: { type: string, description: "The source's title and where in it the words are." }
     OwnerRuleCheck:
       type: object
       required: [id, label]
@@ -4664,6 +4684,19 @@ components:
         jurisdiction: { $ref: "#/components/schemas/RuleJurisdiction" }
         sources: { type: array, items: { $ref: "#/components/schemas/RuleSource" } }
         relatedTemplateIds: { type: array, items: { type: string } }
+        officialRoute:
+          $ref: "#/components/schemas/RequirementRoute"
+        figures:
+          type: array
+          description: Each fee, deadline, rate or threshold the item's rule records, with the source it rests on (CMP-006). Absent when the rule records none, and in a result saved before figures were recorded.
+          items: { $ref: "#/components/schemas/RequirementFigure" }
+    RequirementFigure:
+      type: object
+      required: [kind, words, sourceId]
+      properties:
+        kind: { type: string, enum: [fee, deadline, rate, threshold] }
+        words: { type: string, description: "In the words of the passage of the item's source it rests on." }
+        sourceId: { type: string, description: "The id of one of the item's sources." }
     CheckerRuleInUse:
       type: object
       required: [ruleId, ruleVersion, title, family]

@@ -20,6 +20,7 @@ import {
   checkerFactsSchema,
   digest,
   evaluateOwnerRuleBundle,
+  routeOnOfficialHost,
   evaluatePublication,
   factsFromProfile,
   ownerRuleBundleSchema,
@@ -150,6 +151,7 @@ function parseEligibleRuleRelease(
     r.manifestHash === row.manifestHash &&
     row.manifestHash === digest(b.manifest) &&
     evaluatePublication(b, now).decision === "eligible" &&
+    routeOnOfficialHost(r, b.policy.officialHosts) &&
     r.sources.every(
       (s) =>
         b.sources.some(

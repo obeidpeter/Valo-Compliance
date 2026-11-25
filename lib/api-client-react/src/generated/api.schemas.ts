@@ -5,6 +5,14 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+/**
+ * The authority's own official page for a requirement, as its rule records it. Absent when the rule records none, and in a result saved before routes were recorded.
+ */
+export interface RequirementRoute {
+  authority: string;
+  url: string;
+}
+
 export interface TemplateOffer {
   id: string;
   title: string;
@@ -1728,6 +1736,23 @@ export interface OwnerRuleScenario {
   passed: boolean;
 }
 
+export type OwnerRuleFigureKind = typeof OwnerRuleFigureKind[keyof typeof OwnerRuleFigureKind];
+
+
+export const OwnerRuleFigureKind = {
+  fee: 'fee',
+  deadline: 'deadline',
+  rate: 'rate',
+  threshold: 'threshold',
+} as const;
+
+export interface OwnerRuleFigure {
+  kind: OwnerRuleFigureKind;
+  words: string;
+  /** The source's title and where in it the words are. */
+  source: string;
+}
+
 export type OwnerRuleItemLive = {
   version: number;
   manifestHash: string;
@@ -1769,6 +1794,9 @@ export interface OwnerRuleItem {
   profilesRun: number;
   /** @minimum 0 */
   changedProfiles: number;
+  officialRoute?: RequirementRoute;
+  /** Each fee, deadline, rate or threshold the rule records, with the passage it rests on, as a customer would see it. Absent when it records none. */
+  figures?: OwnerRuleFigure[];
 }
 
 export interface OwnerRulePage {
@@ -3360,6 +3388,24 @@ export const AssessmentItemLabel = {
   Not_indicated_by_these_answers: 'Not indicated by these answers',
 } as const;
 
+export type RequirementFigureKind = typeof RequirementFigureKind[keyof typeof RequirementFigureKind];
+
+
+export const RequirementFigureKind = {
+  fee: 'fee',
+  deadline: 'deadline',
+  rate: 'rate',
+  threshold: 'threshold',
+} as const;
+
+export interface RequirementFigure {
+  kind: RequirementFigureKind;
+  /** In the words of the passage of the item's source it rests on. */
+  words: string;
+  /** The id of one of the item's sources. */
+  sourceId: string;
+}
+
 export interface AssessmentItem {
   ruleId: string;
   ruleVersion: number;
@@ -3380,6 +3426,9 @@ export interface AssessmentItem {
   jurisdiction: RuleJurisdiction;
   sources: RuleSource[];
   relatedTemplateIds: string[];
+  officialRoute?: RequirementRoute;
+  /** Each fee, deadline, rate or threshold the item's rule records, with the source it rests on (CMP-006). Absent when the rule records none, and in a result saved before figures were recorded. */
+  figures?: RequirementFigure[];
 }
 
 /**

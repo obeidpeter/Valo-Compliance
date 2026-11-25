@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { checkerFactsSchema, ruleSchema, type ReleasedRule } from "./checker";
+import { checkerFactsSchema, routeOnOfficialHost, ruleSchema, type ReleasedRule } from "./checker";
 import {
   canonical,
   digest,
@@ -148,6 +148,12 @@ export function evaluateOwnerRuleBundle(input: unknown, now = new Date()) {
       `source_not_current:${s.id}`,
     );
   }
+  // The rule's own route is an official page, as its sources are (CMP-007). A body that is not a rule
+  // is refused by the checks that match it to the rule.
+  const route = z
+    .object({ officialRoute: z.object({ url: z.string() }).optional() })
+    .safeParse(safeJson(c.body));
+  fail(route.success && !routeOnOfficialHost(route.data, b.policy.officialHosts), "route_not_allowlisted");
   for (const claim of c.claims) {
     const source = b.sources.find((s) => s.id === claim.sourceId);
     fail(!source || !source.text.includes(claim.quote), `unsupported_claim:${claim.locator}`);
@@ -212,4 +218,14 @@ export function releaseEvidence(raw: unknown) {
   if (reviewed.success) return { candidate: reviewed.data.candidate, sources: reviewed.data.sources };
   const owner = ownerRuleBundleSchema.safeParse(raw);
   return owner.success ? { candidate: owner.data.candidate, sources: owner.data.sources } : null;
+}
+
+/** A rule's body as JSON, or nothing when it is not JSON. */
+function safeJson(text: string): unknown {
+  try {
+    return JSON.parse(text);
+  } catch {
+    // Not JSON, so it holds no route to check; the checks that match it to the rule refuse it.
+    return undefined;
+  }
 }

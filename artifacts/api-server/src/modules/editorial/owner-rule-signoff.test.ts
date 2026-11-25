@@ -11,6 +11,7 @@ import {
   ownerRuleDisclosure,
   ownerRuleMatchesBundle,
   planRuleRelease,
+  routeOnOfficialHost,
   sha256,
 } from "@workspace/valo-core";
 
@@ -391,6 +392,67 @@ test("each rule prepared in the repository relates only templates the specificat
     "ntaa-11-company-return": [],
     "nafdac-f33-product-registration": [],
   });
+});
+
+// docs/architecture/results.md, slice 2 (CMP-007): a rule's official page is signed with it, and is
+// an official page as its sources are.
+test("a rule's official page is in the manifest the owner signs, and a page off the policy's official hosts holds the rule", () => {
+  const routed = (url: string) => {
+    const base = candidate();
+    const captures = [capture()];
+    return signoff.prepareOwnerRule(
+      { ...base, rule: { ...base.rule, officialRoute: { authority: "Synthetic authority", url } } },
+      {
+        version: 1,
+        captures,
+        passages: passagesIn(captures),
+        records: [record()],
+        policy,
+        confirmed: ownerConfirmedChecks,
+        now,
+      },
+    );
+  };
+  // On the policy's official host: signed with the rule, and the bundle can be signed.
+  const official = routed(lead.url);
+  assert.deepEqual(official.rule.officialRoute, { authority: "Synthetic authority", url: lead.url });
+  assert.deepEqual(evaluateOwnerRuleBundle(official.bundle, now), { decision: "eligible", reasons: [] });
+  assert.notEqual(official.rule.manifestHash, prepare().rule.manifestHash);
+  // Anywhere else: held, in the screen's words.
+  for (const url of ["https://example.invalid/route", "https://user@" + new URL(lead.url).hostname + "/"]) {
+    const off = routed(url);
+    assert.deepEqual(evaluateOwnerRuleBundle(off.bundle, now), {
+      decision: "hold",
+      reasons: ["route_not_allowlisted"],
+    });
+  }
+  assert.equal(
+    signoff.ownerRuleHold("route_not_allowlisted"),
+    "The rule's official page is not on one of the guidance policy's official sites.",
+  );
+});
+
+test("each rule prepared in the repository links its authority's own page, on a host the guidance policy lists, and records no figure", () => {
+  assert.deepEqual(
+    Object.fromEntries(signoff.ownerRuleCandidates.map((c) => [c.rule.id, c.rule.officialRoute])),
+    {
+      "cac-business-name-814": { authority: "Corporate Affairs Commission", url: "https://icrp.cac.gov.ng/" },
+      "ndpa-27-collection-information": {
+        authority: "Nigeria Data Protection Commission",
+        url: "https://ndpc.gov.ng/",
+      },
+      "ntaa-11-company-return": { authority: "Nigeria Revenue Service", url: "https://www.nrs.gov.ng/" },
+      "nafdac-f33-product-registration": {
+        authority: "NAFDAC",
+        url: "https://nafdac.gov.ng/our-services/msme/",
+      },
+    },
+  );
+  for (const c of signoff.ownerRuleCandidates) {
+    assert.ok(routeOnOfficialHost(c.rule, guidanceOfficialHosts), c.rule.id);
+    // CMP-006: none until the owner approves each one's words and passage.
+    assert.equal(c.rule.figures, undefined, c.rule.id);
+  }
 });
 
 test("each rule prepared in the repository could be signed against copies of its official texts that hold its passages: its evidence passes and every scenario gives the result it expects", async () => {
