@@ -127,12 +127,48 @@ export async function recordChange(
   const { valoManualChanges } = await import("@workspace/db");
   await tx.insert(valoManualChanges).values({ edition: edition.id, note, recordedBy });
 }
+/**
+ * Whom a withdrawal of a template's published edition would tell: the workspaces that bought the template
+ * and those that made documents from the edition, from the rows its notices are written from
+ * (docs/architecture/library-holds.md, slice 1). Null on a database the manual reach migration has not
+ * reached, where the screen shows no counts.
+ */
+async function editionReach(tx: Tx, edition: string) {
+  const [found] = (
+    await tx.execute<{ present: boolean }>(
+      sql`select to_regprocedure('public.valo_manual_edition_reach(uuid)') is not null as present`,
+    )
+  ).rows;
+  if (!found?.present) return null;
+  const [reach] = (
+    await tx.execute<{ workspaces: number; bought: number; documentWorkspaces: number; documents: number }>(
+      sql`select count(*)::int as workspaces, (count(*) filter (where r.held))::int as bought,
+                 (count(*) filter (where r.documents > 0))::int as "documentWorkspaces",
+                 coalesce(sum(r.documents), 0)::int as documents
+            from public.valo_manual_edition_reach(${edition}::uuid) r`,
+    )
+  ).rows;
+  return reach ?? null;
+}
+/** How many workspaces a template edition's withdrawal told: its notices, which are the record of it. */
+async function withdrawalTold(tx: Tx, edition: string) {
+  const { valoEditionNotices: n } = await import("@workspace/db");
+  const [told] = await tx
+    .select({ count: sql<number>`count(*)::int` })
+    .from(n)
+    .where(and(eq(n.route, "library"), eq(n.edition, edition), eq(n.kind, "withdrawn")));
+  return told?.count ?? 0;
+}
 async function detail(tx: Tx, row: RevisionMeta) {
   const { valoManualLibrary: t } = await import("@workspace/db");
   const [live] = await tx
-    .select({ version: t.version, digest: t.digest })
+    .select({ id: t.id, version: t.version, digest: t.digest })
     .from(t)
     .where(and(eq(t.itemId, row.itemId), eq(t.state, "published")));
+  const reach =
+    live && isManualTemplate(row.kind)
+      ? await editionReach(tx, live.id).then((counts) => counts && { version: live.version, ...counts })
+      : null;
   // The related guides by name, for the editor: each item's latest version, and whether a version of
   // it is live now.
   const related = row.relatedItems?.length
@@ -178,8 +214,10 @@ async function detail(tx: Tx, row: RevisionMeta) {
     createdAt: row.createdAt.toISOString(),
     publishedAt: row.publishedAt?.toISOString() ?? null,
     publishedBy: row.publishedBy,
-    live: live ?? null,
+    live: live ? { version: live.version, digest: live.digest } : null,
     previousRelease: await previousRelease(tx, row.itemId, row.version),
+    reach,
+    told: row.state === "withdrawn" && isManualTemplate(row.kind) ? await withdrawalTold(tx, row.id) : null,
   };
 }
 function pgError(error: unknown) {

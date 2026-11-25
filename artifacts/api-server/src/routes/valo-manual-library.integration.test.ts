@@ -15,6 +15,7 @@ import {
 } from "../test-support/manual-premium-template";
 import { exercisePremiumPriceCommand } from "../test-support/premium-price-command";
 import { exerciseOverduePremiumTemplate } from "../test-support/manual-overdue-premium";
+import { exerciseWithdrawalReach } from "../test-support/manual-withdrawal-reach";
 import {
   changeNote,
   libraryAction,
@@ -510,6 +511,11 @@ test(
     await t.test(
       "a premium template overdue for its review is neither offered, ordered nor priced, while its buyer keeps its file, and is offered again once reviewed",
       () => exerciseOverduePremiumTemplate(call, editor),
+    );
+    // Whom a withdrawal tells, shown before it (docs/architecture/library-holds.md, slice 1).
+    await t.test(
+      "a template's published edition shows staff whom its withdrawal will tell, its buyers and the workspaces that made documents from it, and its notices then reach exactly those",
+      () => exerciseWithdrawalReach(call, editor),
     );
     await t.test("one published introduction per industry and no implied regulatory evidence", async () => {
       const id = randomUUID(),
