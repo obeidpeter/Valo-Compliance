@@ -182,6 +182,7 @@ export function ListOr({
   skipped,
   onChange,
   placeholder,
+  markers = ["unknown", "unanswered"],
 }: {
   name: string;
   label: string;
@@ -190,6 +191,7 @@ export function ListOr({
   skipped: boolean;
   onChange: Change<never>;
   placeholder: string;
+  markers?: readonly Marker[];
 }) {
   const choose = onChange as Change<string[] | Marker>;
   const list = Array.isArray(value) && value.length ? value : [""];
@@ -235,7 +237,7 @@ export function ListOr({
           group={name + "-mode"}
           value={value}
           skipped={skipped}
-          markers={["unknown", "unanswered"]}
+          markers={markers}
           onChange={choose}
         />
       </div>

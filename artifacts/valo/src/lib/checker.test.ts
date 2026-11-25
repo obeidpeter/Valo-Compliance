@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import type { CheckerFacts } from "@workspace/api-client-react";
+import { CHECKER_QUESTIONS } from "@workspace/valo-core/checker-questionnaire";
 import {
   CHECKER_STEPS,
   EMPTY_FACTS,
@@ -11,6 +12,7 @@ import {
   finaliseFacts,
   stepDone,
   stepOf,
+  valueLabel,
 } from "./checker";
 
 const none: ReadonlySet<string> = new Set();
@@ -23,6 +25,12 @@ test("every answer the checker records is asked on exactly one step, and the las
   assert.deepEqual(CHECKER_STEPS.at(-1)!.questions, []);
   for (const [index, step] of CHECKER_STEPS.entries())
     for (const question of step.questions) assert.equal(stepOf(question), index, question);
+});
+
+test("each choice a question offers is named as the review and the results name that answer", () => {
+  for (const question of CHECKER_QUESTIONS)
+    for (const choice of question.choices ?? [])
+      assert.equal(choice.label, valueLabel(choice.value), `${question.answer}: ${choice.value}`);
 });
 
 // RUL-001: "irrelevant questions are skipped".
