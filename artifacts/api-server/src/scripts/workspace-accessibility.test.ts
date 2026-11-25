@@ -433,6 +433,60 @@ const answers: Record<string, unknown> = {
     jurisdictions: ["Nigeria", "Lagos", "FCT"],
     hosts: ["ndpc.gov.ng", "nafdac.gov.ng"],
   }),
+  // Review work with its owner (docs/architecture/source-register.md, slice 3): an open row with what was
+  // checked on it, and one closed by a later release; the owner's queue holds a rule the owner signed.
+  "GET /admin/source-review": api.ListSourceReviewResponse.parse({
+    open: [
+      {
+        id: "00000000-0000-4000-8000-00000000c001",
+        targetKind: "content",
+        targetKey: "TPL-16",
+        targetVersion: 2,
+        reason: "Synthetic: the official source bytes changed; claims require fresh review.",
+        sourceId: "S04",
+        openedBy: "system",
+        opener: "daily_check",
+        accountable: "content",
+        createdAt: at(10),
+        notes: [
+          {
+            note: "Synthetic: read the changed section against the template's clause.",
+            recordedBy: "synthetic-content-editor",
+            createdAt: at(11),
+          },
+        ],
+      },
+    ],
+    closed: [
+      {
+        id: "00000000-0000-4000-8000-00000000c002",
+        targetKind: "rule",
+        targetKey: "SYNTHETIC-RULE",
+        targetVersion: 1,
+        reason: "Synthetic: its review date passed.",
+        outcome: "superseded",
+        completedAt: at(12),
+      },
+    ],
+  }),
+  "GET /admin/owner-rules/review-work": api.ListOwnerReviewWorkResponse.parse({
+    open: [
+      {
+        id: "00000000-0000-4000-8000-00000000c003",
+        targetKind: "rule",
+        targetKey: "SYNTHETIC-RULE",
+        targetVersion: 2,
+        reason: "The official source was retired from the source register.",
+        sourceId: "REG-001",
+        openedBy: "synthetic-content-editor",
+        opener: "source_retired",
+        accountable: "owner",
+        createdAt: at(13),
+        notes: [],
+      },
+    ],
+    closed: [],
+  }),
   "GET /admin/manual-library/retained": api.ListRetainedDraftsResponse.parse({
     items: [
       {
@@ -4771,6 +4825,66 @@ test("the source register adds a source only with why, names the policy's hosts,
       },
     ]);
     await expect(register.getByTestId("register-entry-REG-002")).toContainText("Added by staff");
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
+
+// docs/architecture/source-register.md, slice 3 (ADM-008, CMP-007): review work reaches its owner, oldest
+// first, with what opened it and what was checked on it.
+test("the review queue says what each hold opened and who is accountable, and records what was checked only with words", async () => {
+  const listed = answers["GET /admin/source-review"] as { open: { notes: object[] }[]; closed: object[] };
+  const sent: { path: string; body: unknown }[] = [];
+  const noting: Api = async (route, method, path, query) => {
+    if (method === "POST" && path.startsWith("/admin/source-review/")) {
+      sent.push({ path, body: route.request().postDataJSON() });
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(api.NoteSourceReviewResponse.parse(listed)),
+      });
+    } else await answer(route, method, path, query);
+  };
+  const { page, unknown, errors, close } = await phone("/staff", noting);
+  try {
+    await ready(page);
+    await page.getByTestId("tab-staff-content").click();
+    const queue = page.getByRole("region", { name: "Review work" });
+    const work = queue.getByTestId("review-work-00000000-0000-4000-8000-00000000c001");
+    await expect(work).toContainText("Template or guide TPL-16, version 2 · held since");
+    await expect(work).toContainText("Opened by the daily check of S04");
+    await expect(work).toContainText("Accountable: a Content editor");
+    await expect(work).toContainText("synthetic-content-editor: Synthetic: read the changed section");
+    await expect(queue).toContainText("SYNTHETIC-RULE, version 1: closed, replaced by a later release");
+    await work.getByRole("button", { name: "Record what was checked" }).click();
+    const form = work.getByTestId("form-review-00000000-0000-4000-8000-00000000c001");
+    const save = form.getByRole("button", { name: "Save the note" });
+    await expect(save).toBeDisabled();
+    await form
+      .getByLabel("What you checked")
+      .fill("Synthetic: compared the new section with the clause; it still holds.");
+    await expect(save).toBeEnabled();
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "the review queue with a note"), []);
+    await save.click();
+    await expect(queue.getByRole("status")).toHaveText("Recorded what was checked on TPL-16, version 2.");
+    assert.deepEqual(sent, [
+      {
+        path: "/admin/source-review/00000000-0000-4000-8000-00000000c001/notes",
+        body: { note: "Synthetic: compared the new section with the clause; it still holds." },
+      },
+    ]);
+    // The development owner's queue, in the System area, holds the rules the owner signed.
+    await page.getByTestId("tab-staff-system").click();
+    const owner = page.getByRole("region", { name: "Review work on the rules you signed" });
+    const rule = owner.getByTestId("review-work-00000000-0000-4000-8000-00000000c003");
+    await expect(rule).toContainText("Rule SYNTHETIC-RULE, version 2");
+    await expect(rule).toContainText("Opened when REG-001 was retired from the register");
+    await expect(rule).toContainText("Accountable: the development owner");
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "the owner's review queue"), []);
     assert.deepEqual(errors, []);
     assert.deepEqual(unknown, []);
   } finally {

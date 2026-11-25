@@ -234,21 +234,6 @@ export function SourceSafetyControls({ area }: { area: "content" | "system" }) {
                   </li>
                 ))}
               </ul>
-              <h3 className="mt-7 font-medium">Correction review queue</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Most recent 50 review records. Paid reviews and external messages remain held.
-              </p>
-              <ul className="mt-3 grid gap-3">
-                {q.data.review.map((r) => (
-                  <li key={r.id} className="rounded-xl border p-3 text-sm">
-                    <strong>
-                      {r.targetKey}, version {r.targetVersion}
-                    </strong>
-                    <p className="mt-1">{r.reason}</p>
-                    <p className="mt-1 text-muted-foreground">{r.status.replaceAll("_", " ")}</p>
-                  </li>
-                ))}
-              </ul>
             </>
           )}
         </>

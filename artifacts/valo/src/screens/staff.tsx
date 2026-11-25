@@ -23,6 +23,7 @@ import { PreparedCandidates } from "@/components/prepared-candidates";
 import { ManualLibraryEditor } from "@/components/manual-library-editor";
 import { RetainedDrafts } from "@/components/retained-drafts";
 import { SourceRegister } from "@/components/source-register";
+import { ReviewQueue } from "@/components/source-review-queue";
 
 const AREAS: { v: Area; l: string }[] = [
   { v: GetStaffOperationsArea.content, l: "Content" },
@@ -176,9 +177,11 @@ export default function StaffPage() {
             {area === "content" && <RetainedDrafts />}
             {area === "content" && <ManualLibraryEditor onDirtyChange={setManualDirty} />}
             {(area === "content" || area === "system") && <SourceSafetyControls key={area} area={area} />}
+            {area === "content" && <ReviewQueue mode="content" />}
             {area === "content" && <SourceRegister />}
             {area === "system" && <OwnerRegulatoryGuidance />}
             {area === "system" && <OwnerCheckerRules />}
+            {area === "system" && <ReviewQueue mode="owner" />}
             {area === "content" && <ContentEscalations onDirtyChange={setContentDirty} />}
             {area === "content" && (
               <details className="mt-6">
