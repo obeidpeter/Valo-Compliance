@@ -144,6 +144,18 @@ Slice 2, its staff screen:
   version instead, as before.
 - An entry counts as overdue from the moment its review falls due, as the database holds it from then.
 
+Slice 3:
+- A version says what changed whenever it follows an earlier release of its entry, whether that release
+  is still published, was replaced or was withdrawn. A release after a withdrawal says what changed too, as
+  its holders' notice already counts it a replacement. A first release takes no note, and the route
+  refuses one.
+- The note is written in the release's own transaction. The database releases such a version only with
+  it, whoever releases it, and never changes it.
+- The entry's page says "Updated on 26 Nov 2026. What changed: …" above the text while that version is
+  published. A version released before change notes were kept says nothing of what changed.
+- The owner writes the note on their panel when signing a regulatory guide's later version.
+- The reviewed route keeps its own correction notices.
+
 ## What does not change
 
 - What holds a guide, and its 30-day amendment records.

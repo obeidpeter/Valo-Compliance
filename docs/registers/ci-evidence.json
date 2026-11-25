@@ -552,7 +552,7 @@
       "job": "foundation",
       "file": "lib/db/scripts/phase1-migrations.test.mjs",
       "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
-      "proves": "After the rule change notices migration, a released rule version's change writes one notice, with its reason and counts, to each workspace that saved a result or made a task under it, none to an erased workspace or any other, and each workspace reads only its own notices and may only mark them read."
+      "proves": "After the rule change notices migration, a released rule version's change writes one notice, with its reason and counts, to each workspace that saved a result or made a task under it, none to an erased workspace or any other, and each workspace reads only its own notices and may only mark them read; and after the manual changes migration, a staff-library version that follows an earlier release is released only with a note of what changed, which is kept as written and carried to the notice that the earlier edition was replaced."
     },
     {
       "requirement": "CMP-005",
@@ -581,6 +581,27 @@
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
       "test": "a saved result whose rule changed since says so above it and under that rule, with the date and the reason, and offers to check again",
       "proves": "In a browser, a saved result whose rule changed since it was saved says so above the result and under that rule, with the date and the reason, offers to check again, still shows the result as saved, and has no automated WCAG 2.2 AA failure."
+    },
+    {
+      "requirement": "CMP-005",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-manual-library.integration.test.ts",
+      "test": "manual publishing through staff HTTP routes and public readers",
+      "proves": "Against PostgreSQL, a staff-library version released after an earlier release, even a withdrawn one, is released only with a note of what changed of 20 to 1,000 characters once trimmed, which is kept as written and shown on the entry's page while that version is published, a first release takes none, the notice that a template's edition was replaced carries the note, and the owner signs a regulatory guide's later version only with its note."
+    },
+    {
+      "requirement": "CMP-005",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/library-change.test.ts",
+      "test": "a version released after an earlier one asks what changed, and its page says when it was updated and what changed",
+      "proves": "The staff library asks what changed in a version released after an earlier one, and the entry's page says on which day, on a Lagos clock, it was updated and what changed."
+    },
+    {
+      "requirement": "CMP-005",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/edition-notices.test.tsx",
+      "test": "a notice names the template, its version and what happened, says what it means for the purchase and the documents, and that downloaded files are not affected",
+      "proves": "A notice that a template's edition was replaced says what changed in the new version, as its editor wrote it."
     },
     {
       "requirement": "SEC-008",
