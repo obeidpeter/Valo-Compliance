@@ -232,6 +232,8 @@ transport, so disabled inference never loads it.
 `modules/ai-lanes` holds the work that runs through that dispatcher
 ([decision 0013](decisions/0013-move-the-ai-lanes.md)):
 - the customer AI lane, with its drafts, model contract, case bindings and evaluation cases;
+- [the drafting cases' rubric](drafting-rubric.md), which scores each of the 60 cases on the draft the
+  app kept for it;
 - the operational review lane;
 - the history loader;
 - the work-binding checks that the operator commands hand the dispatcher.

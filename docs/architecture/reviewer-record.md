@@ -35,8 +35,9 @@ The requirements, verbatim from the specification:
   71 and differs on 9; one of the 9, NDPA-009, is the check's own. The separate AI challenge stores each
   answer as `accepted: false`.
 - **Customer AI cases** (`customer-ai.json`): 60 cases, named by `caseID`, each with its expected checks
-  and critical failure conditions, kept "for independent assessment". One case has a coded rubric, and the
-  suite never passes provider quality.
+  and critical failure conditions, kept "for independent assessment". One case had a coded rubric, and the
+  suite never passes provider quality. Since then every case has one ([the drafting cases'
+  rubric](drafting-rubric.md)); it can fail a case but leaves each pass to the reviewer.
 
 Nothing keeps a suite's run where a reviewer could read it.
 - The editorial and customer AI suites are development commands that write their report to a file on

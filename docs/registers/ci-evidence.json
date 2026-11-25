@@ -1311,6 +1311,34 @@
       "proves": "The customer AI corpus's bar asks that at least 95% of the scored cases count, 57 of 60, with no critical failure."
     },
     {
+      "requirement": "AI-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/ai-lanes/customer-rubric.test.ts",
+      "test": "the rubric covers the 60 cases and each of their checks, in the corpus's order",
+      "proves": "For the corpus it was written for, the rubric gives each of the 60 customer drafting cases the suite's tests on each of its expected checks and critical failure conditions, in the corpus's order, and leaves the nine cases the corpus runs at an integration boundary to the controls' tests it names."
+    },
+    {
+      "requirement": "AI-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/ai-lanes/customer-rubric.test.ts",
+      "test": "a wrong amount, an invented line or a leak fails the case as critical; an accepted draft fails it",
+      "proves": "On drafts built as the app builds them, a wrong amount, a sentence the customer never gave or a payload other than the redacted notes fails the case as critical, and a draft accepted into a document fails it; no test passes a case."
+    },
+    {
+      "requirement": "AI-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/ai-lanes/customer-rubric.test.ts",
+      "test": "routine logs that hold the customer's words fail the privacy case; a run that did not read them leaves it unscored",
+      "proves": "The privacy case fails as critical when the run's routine logs hold the customer's words, and is left unscored when the run did not capture them."
+    },
+    {
+      "requirement": "AI-008",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/ai-lanes/customer-rubric.integration.test.ts",
+      "test": "each drafting case, scored on what the app kept for it: failures where the app falls short, the binding's gaps named, the rest left for the reviewer",
+      "proves": "Put through the app's own drafting service with a stand-in for the AI provider, the 51 cases the rubric scores give: two failures where the app falls short (INV-11 and QUO-12), none critical; eight cases waiting on facts the suite's binding does not give the app; and 41 with every amount, word, payload and log line checked, left for the reviewer. The stand-in's plan is no evidence of an AI's quality, and nothing is accepted."
+    },
+    {
       "requirement": "AI-009",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/ai-lanes/inference-customer-controls.integration.test.ts",
