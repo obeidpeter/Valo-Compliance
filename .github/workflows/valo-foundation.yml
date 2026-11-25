@@ -369,6 +369,8 @@ jobs:
           echo "VALO_NESTED_REPORT_DIR=$PWD/generated-artifacts/nested-connections" >> "$GITHUB_ENV"
       - name: Prove audited staff changes, last-admin concurrency and post-lock emergency expiry
         run: pnpm --filter @workspace/api-server test:valo-staff-roles
+      - name: Prove a reviewer's decisions are kept as written, bound to each case's hash, from someone who prepares no content
+        run: pnpm --filter @workspace/api-server test:valo-acceptance-review
       - name: Install reviewed durable queue before payload and erasure tests
         run: NODE_ENV=development VALO_DEV_QUEUE_MIGRATION=reviewed-synthetic-development pnpm --filter @workspace/api-server exec tsx src/scripts/queue-migration.ts apply-development
       - name: Prove real worker readiness, supervised crash restart, parent loss and drain

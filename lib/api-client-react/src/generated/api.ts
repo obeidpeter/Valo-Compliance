@@ -25,6 +25,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AcceptanceCases,
+  AcceptanceDecision,
   AccessSupportAck,
   AccessSupportInput,
   ApiProblem,
@@ -86,6 +88,7 @@ import type {
   GetStaffSupportCaseParams,
   HealthStatus,
   LibraryExport,
+  ListAcceptanceCasesParams,
   ListContentEscalationsParams,
   ListCustomerSupportCasesParams,
   ListManualLibraryParams,
@@ -210,6 +213,217 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getListAcceptanceCasesUrl = (params: ListAcceptanceCasesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/acceptance-cases?${stringifiedParams}` : `/api/admin/acceptance-cases`
+}
+
+/**
+ * For an active reviewer with recent MFA only. Each case gives its expected outcome, its critical failure conditions, its sources and the hash the suites bind it by. A decision holds only for the hash it names. Nothing here accepts a case or a requirement. Development only.
+ * @summary One corpus's acceptance cases, with the latest decision on each case's current hash
+ */
+export const listAcceptanceCases = async (params: ListAcceptanceCasesParams, options?: Parameters<typeof customFetch>[1]): Promise<AcceptanceCases> => {
+
+  return customFetch<AcceptanceCases>(getListAcceptanceCasesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAcceptanceCasesQueryKey = (params?: ListAcceptanceCasesParams,) => {
+    return [
+    "listAcceptanceCases", ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListAcceptanceCasesQueryOptions = <TData = Awaited<ReturnType<typeof listAcceptanceCases>>, TError = ErrorType<void>>(params: ListAcceptanceCasesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAcceptanceCases>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAcceptanceCasesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAcceptanceCases>>> = ({ signal }) => listAcceptanceCases(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAcceptanceCases>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListAcceptanceCasesQueryResult = NonNullable<Awaited<ReturnType<typeof listAcceptanceCases>>>
+export type ListAcceptanceCasesQueryError = ErrorType<void>
+
+
+/**
+ * For an active reviewer with recent MFA only. Each case gives its expected outcome, its critical failure conditions, its sources and the hash the suites bind it by. A decision holds only for the hash it names. Nothing here accepts a case or a requirement. Development only.
+ * @summary One corpus's acceptance cases, with the latest decision on each case's current hash
+ */
+export function useListAcceptanceCases<TData = Awaited<ReturnType<typeof listAcceptanceCases>>, TError = ErrorType<void>>(
+ params: ListAcceptanceCasesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAcceptanceCases>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAcceptanceCases>>,
+          TError,
+          Awaited<ReturnType<typeof listAcceptanceCases>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * For an active reviewer with recent MFA only. Each case gives its expected outcome, its critical failure conditions, its sources and the hash the suites bind it by. A decision holds only for the hash it names. Nothing here accepts a case or a requirement. Development only.
+ * @summary One corpus's acceptance cases, with the latest decision on each case's current hash
+ */
+export function useListAcceptanceCases<TData = Awaited<ReturnType<typeof listAcceptanceCases>>, TError = ErrorType<void>>(
+ params: ListAcceptanceCasesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAcceptanceCases>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAcceptanceCases>>,
+          TError,
+          Awaited<ReturnType<typeof listAcceptanceCases>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * For an active reviewer with recent MFA only. Each case gives its expected outcome, its critical failure conditions, its sources and the hash the suites bind it by. A decision holds only for the hash it names. Nothing here accepts a case or a requirement. Development only.
+ * @summary One corpus's acceptance cases, with the latest decision on each case's current hash
+ */
+export function useListAcceptanceCases<TData = Awaited<ReturnType<typeof listAcceptanceCases>>, TError = ErrorType<void>>(
+ params: ListAcceptanceCasesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAcceptanceCases>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * For an active reviewer with recent MFA only. Each case gives its expected outcome, its critical failure conditions, its sources and the hash the suites bind it by. A decision holds only for the hash it names. Nothing here accepts a case or a requirement. Development only.
+ * @summary One corpus's acceptance cases, with the latest decision on each case's current hash
+ */
+export function useListAcceptanceCases<TData = Awaited<ReturnType<typeof listAcceptanceCases>>, TError = ErrorType<void>>(
+ params: ListAcceptanceCasesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAcceptanceCases>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListAcceptanceCasesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getRecordAcceptanceDecisionUrl = () => {
+
+
+
+
+  return `/api/admin/acceptance-cases/decisions`
+}
+
+/**
+ * One decision, kept for good: a later decision is a new row, and the database never changes or removes one. A case that changed since the reviewer read it is refused.
+ * @summary Confirm or reject a case's expected outcome, for the case's hash as the reviewer read it
+ */
+export const recordAcceptanceDecision = async (acceptanceDecision: AcceptanceDecision, options?: Parameters<typeof customFetch>[1]): Promise<AcceptanceCases> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<AcceptanceCases>(getRecordAcceptanceDecisionUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(acceptanceDecision)
+  }
+);}
+
+
+
+
+
+export const getRecordAcceptanceDecisionMutationKey = () => ['recordAcceptanceDecision'] as const;
+
+export const getRecordAcceptanceDecisionMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordAcceptanceDecision>>, TError,RecordAcceptanceDecisionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof recordAcceptanceDecision>>, TError,RecordAcceptanceDecisionMutationVariables, TContext> => {
+
+const mutationKey = getRecordAcceptanceDecisionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recordAcceptanceDecision>>, RecordAcceptanceDecisionMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  recordAcceptanceDecision(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RecordAcceptanceDecisionMutationResult = NonNullable<Awaited<ReturnType<typeof recordAcceptanceDecision>>>
+    export type RecordAcceptanceDecisionMutationBody = BodyType<AcceptanceDecision>
+    export type RecordAcceptanceDecisionMutationError = ErrorType<void>
+    export type RecordAcceptanceDecisionMutationVariables = {data: BodyType<AcceptanceDecision>}
+
+    /**
+ * One decision, kept for good: a later decision is a new row, and the database never changes or removes one. A case that changed since the reviewer read it is refused.
+ * @summary Confirm or reject a case's expected outcome, for the case's hash as the reviewer read it
+ */
+export const useRecordAcceptanceDecision = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordAcceptanceDecision>>, TError,RecordAcceptanceDecisionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof recordAcceptanceDecision>>,
+        TError,
+        RecordAcceptanceDecisionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRecordAcceptanceDecisionMutationOptions(options), queryClient);
+    }
 
 export const getCreateCustomerAIDraftUrl = () => {
 

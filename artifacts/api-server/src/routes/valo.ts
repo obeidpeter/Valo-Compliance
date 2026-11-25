@@ -70,6 +70,7 @@ import { createSessionVerificationRouter } from "./valo-session-verification";
 import { makeStaffGate } from "../middlewares/valo-staff-gate";
 import { createManualLibraryRouter, premiumManualTemplateRouter } from "./valo-manual-library";
 import { sourceControlsRouter, correctionNoticesRouter } from "./valo-source-controls";
+import { acceptanceReviewRouter } from "./valo-acceptance-review";
 const router = Router();
 router.use(createSessionVerificationRouter());
 router.use(publicAccessRouter);
@@ -78,6 +79,7 @@ router.use("/admin", makeStaffGate());
 router.use(createManualLibraryRouter());
 router.use(staffOperationsRouter);
 router.use(sourceControlsRouter);
+router.use(acceptanceReviewRouter);
 router.use(supportOperationsRouter);
 router.get("/public/discovery", async (_req, res) => {
   res.set("Cache-Control", "no-store");

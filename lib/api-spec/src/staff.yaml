@@ -73,7 +73,7 @@ schemas:
     properties:
       id: { type: string, format: uuid }
       identityId: { type: string }
-      role: { type: string, enum: [content, support, finance, system, privacy] }
+      role: { type: string, enum: [content, support, finance, system, privacy, reviewer] }
       active: { type: boolean }
       grantMode: { type: string, enum: [permanent, break_glass] }
       expiresAt: { type: [string, "null"], format: date-time }
@@ -104,7 +104,7 @@ schemas:
     properties:
       requestKey: { type: string, format: uuid }
       identityId: { type: string, pattern: '^user_[A-Za-z0-9_-]+$', maxLength: 128 }
-      role: { type: string, enum: [content, support, finance, system, privacy] }
+      role: { type: string, enum: [content, support, finance, system, privacy, reviewer] }
       action: { type: string, enum: [grant, revoke] }
       expectedVersion: { type: integer, minimum: 0 }
       reason: { type: string, minLength: 20, maxLength: 1000 }
