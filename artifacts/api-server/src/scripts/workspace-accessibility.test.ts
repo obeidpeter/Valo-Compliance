@@ -455,6 +455,70 @@ const answers: Record<string, unknown> = {
             createdAt: at(11),
           },
         ],
+        // A premium template: no preparer runs from review work for it.
+        preparable: false,
+        preparation: null,
+      },
+      // Slice 4: rows a preparer serves, with nothing asked yet, a guide that was not ready, and a
+      // template prepared and waiting for its reviews.
+      {
+        id: "00000000-0000-4000-8000-00000000c004",
+        targetKind: "content",
+        targetKey: "TPL-10",
+        targetVersion: 1,
+        reason: "Synthetic: its review date passed.",
+        sourceId: null,
+        openedBy: "system",
+        opener: "review_due",
+        accountable: "content",
+        createdAt: at(10),
+        notes: [],
+        preparable: true,
+        preparation: null,
+      },
+      {
+        id: "00000000-0000-4000-8000-00000000c005",
+        targetKind: "content",
+        targetKey: "GUD-03",
+        targetVersion: 1,
+        reason: "Synthetic: the official source bytes changed; claims require fresh review.",
+        sourceId: "S07",
+        openedBy: "system",
+        opener: "daily_check",
+        accountable: "content",
+        createdAt: at(10),
+        notes: [],
+        preparable: true,
+        preparation: {
+          status: "not_ready",
+          requestedBy: "synthetic-content-editor",
+          requestedAt: at(11),
+          completedAt: at(12),
+          candidateVersion: 2,
+          reasons: ["missing_evidence:GUD-03-C2", "source_stale:S07"],
+        },
+      },
+      {
+        id: "00000000-0000-4000-8000-00000000c006",
+        targetKind: "content",
+        targetKey: "TPL-11",
+        targetVersion: 1,
+        reason: "Synthetic: a staff hold for the check.",
+        sourceId: null,
+        openedBy: "synthetic-content-editor",
+        opener: "staff",
+        accountable: "content",
+        createdAt: at(10),
+        notes: [],
+        preparable: true,
+        preparation: {
+          status: "prepared",
+          requestedBy: "synthetic-content-editor",
+          requestedAt: at(11),
+          completedAt: at(12),
+          candidateVersion: 2,
+          reasons: [],
+        },
       },
     ],
     closed: [
@@ -483,6 +547,8 @@ const answers: Record<string, unknown> = {
         accountable: "owner",
         createdAt: at(13),
         notes: [],
+        preparable: false,
+        preparation: null,
       },
     ],
     closed: [],
@@ -4887,6 +4953,84 @@ test("the review queue says what each hold opened and who is accountable, and re
     await expect(rule).toContainText("Accountable: the development owner");
     await settled(page);
     assert.deepEqual(await phoneProblems(page, "the owner's review queue"), []);
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
+
+test("review work on a held template asks for its next candidate, and says where each preparation stands and that its reviews wait for the owner's allocation", async () => {
+  const listed = answers["GET /admin/source-review"] as {
+    open: { id: string; preparation: object | null }[];
+  };
+  const sent: string[] = [];
+  const preparing: Api = async (route, method, path, query) => {
+    if (method === "POST" && path.endsWith("/prepare")) {
+      sent.push(path);
+      const queue = structuredClone(listed);
+      queue.open = queue.open.map((item) =>
+        item.id === "00000000-0000-4000-8000-00000000c004"
+          ? {
+              ...item,
+              preparation: {
+                status: "pending",
+                requestedBy: "synthetic-content-editor",
+                requestedAt: at(14),
+                completedAt: null,
+                candidateVersion: null,
+                reasons: [],
+              },
+            }
+          : item,
+      );
+      await route.fulfill({
+        status: 202,
+        contentType: "application/json",
+        body: JSON.stringify(api.PrepareSourceReviewResponse.parse(queue)),
+      });
+    } else await answer(route, method, path, query);
+  };
+  const { page, unknown, errors, close } = await phone("/staff", preparing);
+  try {
+    await ready(page);
+    await page.getByTestId("tab-staff-content").click();
+    const queue = page.getByRole("region", { name: "Review work" });
+    await expect(queue).toContainText("Its two reviews run only under an AI allocation the owner approves.");
+    const prepared = queue.getByTestId("preparation-00000000-0000-4000-8000-00000000c006");
+    await expect(prepared).toContainText("Version 2 was prepared on");
+    await expect(prepared).toContainText("It waits for its two reviews");
+    const notReady = queue.getByTestId("preparation-00000000-0000-4000-8000-00000000c005");
+    await expect(notReady).toContainText("Version 2 was not ready on");
+    await expect(notReady).toContainText(
+      "What the checks named: missing_evidence:GUD-03-C2, source_stale:S07.",
+    );
+    await expect(notReady.getByRole("button", { name: "Prepare again" })).toBeVisible();
+    // A premium template has no preparer, so its row offers none.
+    await expect(
+      queue
+        .getByTestId("review-work-00000000-0000-4000-8000-00000000c001")
+        .getByRole("button", { name: /Prepare/ }),
+    ).toHaveCount(0);
+    const ask = queue
+      .getByTestId("preparation-00000000-0000-4000-8000-00000000c004")
+      .getByRole("button", { name: "Prepare a new candidate" });
+    await expect(ask).toHaveAccessibleDescription(/Nothing is sent or published from here/);
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "the review queue with preparations"), []);
+    // The check ends on a 320-pixel screen; the phone is 360 pixels wide again for the rest.
+    await page.setViewportSize({ width: 360, height: 640 });
+    await ask.click();
+    await expect(queue.getByRole("status")).toHaveText(
+      "Asked for a new candidate of TPL-10, after version 1. The worker prepares it next.",
+    );
+    const waiting = queue.getByTestId("preparation-00000000-0000-4000-8000-00000000c004");
+    await expect(waiting).toContainText(
+      "A new candidate waits for the worker, asked by synthetic-content-editor on",
+    );
+    // While the worker has it, the row offers no second request.
+    await expect(waiting.getByRole("button")).toHaveCount(0);
+    assert.deepEqual(sent, ["/admin/source-review/00000000-0000-4000-8000-00000000c004/prepare"]);
     assert.deepEqual(errors, []);
     assert.deepEqual(unknown, []);
   } finally {
