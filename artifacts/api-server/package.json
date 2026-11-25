@@ -118,7 +118,7 @@
     "test:valo-editorial-lifecycle": "NODE_ENV=development node --import tsx --test src/modules/editorial/editorial-lifecycle-controls.test.ts src/modules/publication/publication-final-check.test.ts",
     "test:valo-editorial-lifecycle-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/modules/editorial/editorial-lifecycle.integration.test.ts",
     "test:valo-publication-guards-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/modules/publication/publication-guards.integration.test.ts",
-    "test:valo-guide-route-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --experimental-test-module-mocks --import tsx --test src/modules/editorial/guidance-route.integration.test.ts src/modules/editorial/practical-guides.integration.test.ts",
+    "test:valo-guide-route-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --experimental-test-module-mocks --import tsx --test --test-concurrency=1 src/modules/editorial/guidance-route.integration.test.ts src/modules/editorial/practical-guides.integration.test.ts src/modules/editorial/review-preparation.integration.test.ts",
     "test:valo-support-ui": "node --import tsx --test src/lib/valo-support-ui.test.ts",
     "test:valo-support-browser": "node src/scripts/support-case-browser.mjs",
     "test:valo-support-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/modules/support/valo-support-lifecycle.integration.test.ts",

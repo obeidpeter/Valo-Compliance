@@ -5802,6 +5802,82 @@ export const useNoteSourceReview = <TError = ErrorType<void>,
       return useMutation(getNoteSourceReviewMutationOptions(options), queryClient);
     }
 
+export const getPrepareSourceReviewUrl = (workId: string,) => {
+
+
+
+
+  return `/api/admin/source-review/${encodeURIComponent(String(workId))}/prepare`
+}
+
+/**
+ * A Content editor asks, from an open row on a held template or guide that has a preparer, for its next candidate (docs/architecture/source-register.md, slice 4). The worker takes a fresh copy of the AI provider's terms and runs the preparer the template's or guide's command runs, with its mechanical checks, and the row then says what came of it. A candidate that passes waits for its two reviews, which run only under an AI allocation the owner approves. Nothing is sent or published. Development only.
+ * @summary Ask for the next candidate of a held template or guide from its review work
+ */
+export const prepareSourceReview = async (workId: string, options?: Parameters<typeof customFetch>[1]): Promise<SourceReviewQueue> => {
+
+  return customFetch<SourceReviewQueue>(getPrepareSourceReviewUrl(workId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getPrepareSourceReviewMutationKey = () => ['prepareSourceReview'] as const;
+
+export const getPrepareSourceReviewMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof prepareSourceReview>>, TError,PrepareSourceReviewMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof prepareSourceReview>>, TError,PrepareSourceReviewMutationVariables, TContext> => {
+
+const mutationKey = getPrepareSourceReviewMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof prepareSourceReview>>, PrepareSourceReviewMutationVariables> = (props) => {
+          const {workId} = props ?? {};
+
+          return  prepareSourceReview(workId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PrepareSourceReviewMutationResult = NonNullable<Awaited<ReturnType<typeof prepareSourceReview>>>
+
+    export type PrepareSourceReviewMutationError = ErrorType<void>
+    export type PrepareSourceReviewMutationVariables = {workId: string}
+
+    /**
+ * A Content editor asks, from an open row on a held template or guide that has a preparer, for its next candidate (docs/architecture/source-register.md, slice 4). The worker takes a fresh copy of the AI provider's terms and runs the preparer the template's or guide's command runs, with its mechanical checks, and the row then says what came of it. A candidate that passes waits for its two reviews, which run only under an AI allocation the owner approves. Nothing is sent or published. Development only.
+ * @summary Ask for the next candidate of a held template or guide from its review work
+ */
+export const usePrepareSourceReview = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof prepareSourceReview>>, TError,PrepareSourceReviewMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof prepareSourceReview>>,
+        TError,
+        PrepareSourceReviewMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPrepareSourceReviewMutationOptions(options), queryClient);
+    }
+
 export const getListOwnerReviewWorkUrl = () => {
 
 

@@ -10,12 +10,14 @@ import {
   index,
   primaryKey,
   check,
+  foreignKey,
 } from "drizzle-orm/pg-core";
 import { workspaceRowPolicy } from "./valo-workspace-scope";
 import { sql } from "drizzle-orm";
 import { valoSourceSnapshots } from "./valo-source-snapshots";
 import { valoWorkspaces } from "./valo-workspaces";
 import { valoStaffAssignments } from "./valo-customer-access";
+import { valoContentVersions, valoPreparedCandidates } from "./valo-publication";
 export const valoSourceWatches = pgTable(
   "valo_source_watches",
   {
@@ -150,6 +152,84 @@ export const valoSourceReviewNotes = pgTable(
   (t) => [
     index("valo_source_review_notes_work").on(t.workId, t.createdAt),
     check("valo_source_review_notes_note", sql`length(${t.note}) BETWEEN 20 AND 1000`),
+  ],
+);
+/**
+ * A Content editor's request to prepare the next candidate of a held template or guide from its row of
+ * review work, and what came of it (docs/architecture/source-register.md, slice 4). The worker runs one
+ * request at a time, within a lease, at most three times. A request is never removed, and once
+ * finished it never changes.
+ *
+ * - prepared: the candidate is kept, awaiting its two reviews (its row in valo_prepared_candidates);
+ * - held: a template's candidate failed a check and was saved as a held version;
+ * - not_ready: a guide's candidate was not ready, for the reasons given, and nothing was kept;
+ * - failed: the preparation stopped, for the reason given, and nothing was kept;
+ * - closed: the review work closed before the request ran.
+ */
+export const valoSourceReviewPreparations = pgTable(
+  "valo_source_review_preparations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    workId: uuid("work_id").notNull(),
+    requestedBy: text("requested_by").notNull(),
+    requestedAt: timestamp("requested_at", { withTimezone: true }).notNull().defaultNow(),
+    status: text("status").notNull().default("pending"),
+    attempts: integer("attempts").notNull().default(0),
+    leaseUntil: timestamp("lease_until", { withTimezone: true }),
+    candidateArtifactId: uuid("candidate_artifact_id"),
+    heldVersionId: uuid("held_version_id"),
+    candidateVersion: integer("candidate_version"),
+    reasons: jsonb("reasons")
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+  },
+  (t) => [
+    // Named here: the names Drizzle would give are longer than PostgreSQL keeps.
+    foreignKey({
+      name: "valo_source_review_preparations_work_fk",
+      columns: [t.workId],
+      foreignColumns: [valoSourceReviewWork.id],
+    }),
+    foreignKey({
+      name: "valo_source_review_preparations_candidate_fk",
+      columns: [t.candidateArtifactId],
+      foreignColumns: [valoPreparedCandidates.artifactId],
+    }),
+    foreignKey({
+      name: "valo_source_review_preparations_held_version_fk",
+      columns: [t.heldVersionId],
+      foreignColumns: [valoContentVersions.id],
+    }),
+    // One request at a time waits or runs for a row of review work.
+    uniqueIndex("valo_source_review_preparations_open")
+      .on(t.workId)
+      .where(sql`${t.status} IN ('pending', 'running')`),
+    index("valo_source_review_preparations_due").on(t.status, t.requestedAt),
+    check(
+      "valo_source_review_preparations_status",
+      sql`${t.status} IN ('pending', 'running', 'prepared', 'held', 'not_ready', 'failed', 'closed')`,
+    ),
+    check("valo_source_review_preparations_attempts", sql`${t.attempts} BETWEEN 0 AND 3`),
+    check(
+      "valo_source_review_preparations_outcome",
+      sql`jsonb_typeof(${t.reasons}) = 'array' AND length(${t.reasons}::text) <= 4000
+        AND (${t.candidateVersion} IS NULL OR ${t.candidateVersion} > 0) AND CASE
+        WHEN ${t.status} IN ('pending', 'running') THEN ${t.completedAt} IS NULL
+          AND ${t.candidateArtifactId} IS NULL AND ${t.heldVersionId} IS NULL AND ${t.candidateVersion} IS NULL
+          AND ${t.reasons} = '[]'::jsonb
+        WHEN ${t.status} = 'prepared' THEN ${t.completedAt} IS NOT NULL
+          AND ${t.candidateArtifactId} IS NOT NULL AND ${t.heldVersionId} IS NULL AND ${t.candidateVersion} IS NOT NULL
+          AND ${t.reasons} = '[]'::jsonb
+        WHEN ${t.status} = 'held' THEN ${t.completedAt} IS NOT NULL
+          AND ${t.candidateArtifactId} IS NULL AND ${t.heldVersionId} IS NOT NULL AND ${t.candidateVersion} IS NOT NULL
+          AND ${t.reasons} <> '[]'::jsonb
+        WHEN ${t.status} IN ('not_ready', 'failed') THEN ${t.completedAt} IS NOT NULL
+          AND ${t.candidateArtifactId} IS NULL AND ${t.heldVersionId} IS NULL AND ${t.reasons} <> '[]'::jsonb
+        ELSE ${t.completedAt} IS NOT NULL AND ${t.candidateArtifactId} IS NULL AND ${t.heldVersionId} IS NULL
+          AND ${t.candidateVersion} IS NULL AND ${t.reasons} = '[]'::jsonb
+        END`,
+    ),
   ],
 );
 export const valoSourceDependencyJobs = pgTable(

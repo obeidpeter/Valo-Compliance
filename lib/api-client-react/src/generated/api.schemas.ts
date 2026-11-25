@@ -1613,6 +1613,38 @@ export type SourceReviewItemNotesItem = {
   createdAt: string;
 };
 
+/**
+ * pending and running: the worker has it. prepared: the candidate waits for its two reviews. held: a template's candidate failed a check and was saved as a held version. not_ready: a guide's candidate was not ready, and nothing was kept. failed: the preparation stopped, and nothing was kept. closed: the review work closed before the request ran.
+ */
+export type SourceReviewPreparationStatus = typeof SourceReviewPreparationStatus[keyof typeof SourceReviewPreparationStatus];
+
+
+export const SourceReviewPreparationStatus = {
+  pending: 'pending',
+  running: 'running',
+  prepared: 'prepared',
+  held: 'held',
+  not_ready: 'not_ready',
+  failed: 'failed',
+  closed: 'closed',
+} as const;
+
+export interface SourceReviewPreparation {
+  /** pending and running: the worker has it. prepared: the candidate waits for its two reviews. held: a template's candidate failed a check and was saved as a held version. not_ready: a guide's candidate was not ready, and nothing was kept. failed: the preparation stopped, and nothing was kept. closed: the review work closed before the request ran. */
+  status: SourceReviewPreparationStatus;
+  requestedBy: string;
+  requestedAt: string;
+  /** @nullable */
+  completedAt: string | null;
+  /**
+     * The version the candidate was prepared as.
+     * @nullable
+     */
+  candidateVersion: number | null;
+  /** What the checks named, or the code the preparation stopped with. */
+  reasons: string[];
+}
+
 export interface SourceReviewItem {
   id: string;
   targetKind: SourceReviewItemTargetKind;
@@ -1627,6 +1659,10 @@ export interface SourceReviewItem {
   accountable: SourceReviewItemAccountable;
   createdAt: string;
   notes: SourceReviewItemNotesItem[];
+  /** Whether a new candidate can be asked for from this row: a template or guide that has a preparer (slice 4). */
+  preparable: boolean;
+  /** The latest request to prepare a candidate from this row, or null. */
+  preparation: SourceReviewPreparation | null;
 }
 
 export type SourceReviewClosedTargetKind = typeof SourceReviewClosedTargetKind[keyof typeof SourceReviewClosedTargetKind];
