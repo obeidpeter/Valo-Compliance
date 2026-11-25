@@ -1,16 +1,23 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
+  addSourceRegisterEntry,
   fileSourceRegister,
   getListSourceRegisterQueryKey,
   reviseSourceRegisterEntry,
   useListSourceRegister,
+  type SourceRegister as RegisterData,
   type SourceRegisterEntry,
 } from "@workspace/api-client-react";
 import { describeError } from "@/lib/describe-error";
 import {
+  addButton,
+  addedByStaff,
+  addedMessage,
+  addHeading,
   entryLine,
   fileButton,
+  hostsHint,
   instrumentNames,
   notKnown,
   reasonHint,
@@ -23,6 +30,7 @@ import {
   retireWarning,
   versionLine,
   watchLine,
+  watchNowLabel,
 } from "@/lib/source-register";
 import { ErrorState } from "./states";
 
@@ -258,14 +266,124 @@ function EntryForm({
 }
 
 /**
- * The source register in the staff Content area (docs/architecture/source-register.md, slice 1): the
- * official sources Valo reads, as staff keep them, with each entry's earlier versions and its daily
- * check. Filing and correcting publish nothing and fetch nothing.
+ * The form for a source staff add (docs/architecture/source-register.md, slice 2): its title, its https
+ * address on a host the guidance policy lists, its fields and why, and whether its daily check starts.
+ */
+function AddSourceForm({
+  register,
+  onAdded,
+}: {
+  register: RegisterData;
+  onAdded: (message: string) => void;
+}) {
+  const client = useQueryClient();
+  const [title, setTitle] = useState("");
+  const [url, setUrl] = useState("");
+  const [fields, setFields] = useState<Fields>({
+    authority: "",
+    jurisdiction: "Nigeria",
+    instrument: "",
+    versionInForce: "",
+    effectiveFrom: "",
+  });
+  const [reason, setReason] = useState("");
+  const [watch, setWatch] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const prefix = "register-new";
+  const id = (field: string) => `${prefix}-${field}`;
+  async function add() {
+    setBusy(true);
+    setError("");
+    try {
+      const before = new Set(register.entries.map((entry) => entry.sourceId));
+      const next = await addSourceRegisterEntry({
+        title: title.trim(),
+        url: url.trim(),
+        ...sent(fields),
+        reason: reason.trim(),
+        watch,
+      });
+      client.setQueryData(getListSourceRegisterQueryKey(), next);
+      const added = next.entries.find((entry) => !before.has(entry.sourceId));
+      onAdded(added ? addedMessage(added.title, added.sourceId) : "Added the source to the register.");
+    } catch (e) {
+      setError(describeError(e).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <form
+      className="mt-3 grid gap-3 rounded-lg border border-border p-3"
+      onSubmit={(e) => {
+        e.preventDefault();
+        void add();
+      }}
+      data-testid="form-register-new"
+    >
+      <label className="text-sm font-medium" htmlFor={id("title")}>
+        Title
+        <input
+          id={id("title")}
+          className={inputStyle}
+          maxLength={300}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+      </label>
+      <label className="text-sm font-medium" htmlFor={id("url")}>
+        Address
+        <input
+          id={id("url")}
+          type="url"
+          className={inputStyle}
+          maxLength={2000}
+          aria-describedby={id("url-help")}
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+        />
+        <span id={id("url-help")} className="mt-1 block font-normal text-muted-foreground">
+          {hostsHint(register.hosts)}
+        </span>
+      </label>
+      <VersionFields
+        prefix={prefix}
+        value={fields}
+        onChange={setFields}
+        jurisdictions={register.jurisdictions}
+      />
+      <ReasonField prefix={prefix} value={reason} onChange={setReason} />
+      <label className="inline-flex items-center gap-2 text-sm font-medium">
+        <input type="checkbox" checked={watch} onChange={(e) => setWatch(e.target.checked)} />
+        {watchNowLabel}
+      </label>
+      <button
+        type="submit"
+        className="btn btn-primary btn-sm justify-self-start"
+        disabled={busy || !title.trim() || !url.trim() || reason.trim().length < 20}
+      >
+        {busy ? "Adding…" : addButton}
+      </button>
+      {error && (
+        <p className="text-sm text-destructive" role="alert">
+          {error}
+        </p>
+      )}
+    </form>
+  );
+}
+
+/**
+ * The source register in the staff Content area (docs/architecture/source-register.md): the official
+ * sources Valo reads, as staff keep them, with each entry's earlier versions and its daily check. Filing,
+ * adding and correcting publish nothing; an added source is fetched only by the daily check.
  */
 export function SourceRegister() {
   const client = useQueryClient();
   const register = useListSourceRegister({ query: { retry: false } });
   const [open, setOpen] = useState("");
+  const [adding, setAdding] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -317,6 +435,26 @@ export function SourceRegister() {
               {error}
             </p>
           )}
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm mt-2"
+            aria-expanded={adding}
+            onClick={() => {
+              setMessage("");
+              setAdding(!adding);
+            }}
+          >
+            {adding ? "Close" : addHeading}
+          </button>
+          {adding && (
+            <AddSourceForm
+              register={register.data}
+              onAdded={(added) => {
+                setAdding(false);
+                setMessage(added);
+              }}
+            />
+          )}
           <ul className="mt-4 grid gap-3">
             {register.data.entries.map((entry) => (
               <li
@@ -327,6 +465,9 @@ export function SourceRegister() {
                 <p className="font-medium">
                   {entry.title}{" "}
                   <span className="font-mono text-xs text-muted-foreground">{entry.sourceId}</span>
+                  {entry.origin === "staff" && (
+                    <span className="ml-2 text-xs text-muted-foreground">{addedByStaff}</span>
+                  )}
                 </p>
                 <p className="text-muted-foreground">
                   {entry.authority ?? `Who issues it: ${notKnown.toLowerCase()}`}

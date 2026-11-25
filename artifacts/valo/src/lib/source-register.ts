@@ -80,3 +80,16 @@ export function retireWarning(resting: number) {
     ? `Retiring it stops its daily check and holds the ${formatCount(resting)} ${resting === 1 ? "version that rests" : "versions that rest"} on it, until a new version of each passes the gates.`
     : "Retiring it stops its daily check. Nothing rests on it, so nothing is held.";
 }
+
+/** Adding a source staff name (docs/architecture/source-register.md, slice 2). */
+export const addHeading = "Add an official source";
+export const addButton = "Add it to the register";
+export const watchNowLabel = "Start its daily check now";
+export const addedByStaff = "Added by staff";
+/** Where a source may be added: the hosts the approved guidance policy lists. */
+export function hostsHint(hosts: readonly string[]) {
+  return `An https address on one of the hosts the guidance policy lists: ${hosts.join(", ")}.`;
+}
+export function addedMessage(title: string, sourceId: string) {
+  return `Added ${title} to the register as ${sourceId}.`;
+}

@@ -1,8 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  addedMessage,
   entryLine,
   fileButton,
+  hostsHint,
   registerSummary,
   restingLine,
   retireWarning,
@@ -84,5 +86,17 @@ test("the source register says what rests on a source, what retiring it holds, a
       stoppedAt: "2026-11-24T23:30:00Z",
     }),
     "The daily check stopped 25 Nov 2026, 00:30, when the source was retired",
+  );
+});
+
+// ADM-003 (docs/architecture/source-register.md, slice 2): adding a source on the policy's hosts.
+test("the source register names the hosts a source may be added on, and the id an added source gets", () => {
+  assert.equal(
+    hostsHint(["ndpc.gov.ng", "nafdac.gov.ng"]),
+    "An https address on one of the hosts the guidance policy lists: ndpc.gov.ng, nafdac.gov.ng.",
+  );
+  assert.equal(
+    addedMessage("Synthetic labelling guideline", "REG-001"),
+    "Added Synthetic labelling guideline to the register as REG-001.",
   );
 });

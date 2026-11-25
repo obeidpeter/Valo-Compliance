@@ -360,6 +360,7 @@ const answers: Record<string, unknown> = {
       {
         sourceId: "S04",
         url: "https://example.invalid/synthetic-act",
+        origin: "repository",
         version: 2,
         title: "Synthetic Data Protection Act",
         authority: "Synthetic Data Commission",
@@ -392,6 +393,7 @@ const answers: Record<string, unknown> = {
       {
         sourceId: "S06",
         url: "https://example.invalid/synthetic-page",
+        origin: "repository",
         version: 2,
         title: "Synthetic workshop page",
         authority: null,
@@ -407,9 +409,29 @@ const answers: Record<string, unknown> = {
         restingVersions: 0,
         watch: null,
       },
+      {
+        sourceId: "REG-001",
+        url: "https://nafdac.gov.ng/synthetic-guideline",
+        origin: "staff",
+        version: 1,
+        title: "Synthetic guideline staff added",
+        authority: null,
+        jurisdiction: "Lagos",
+        instrument: "official_page",
+        versionInForce: null,
+        effectiveFrom: null,
+        status: "active",
+        reason: "Synthetic: added from the agency's own page.",
+        createdBy: "synthetic-content-editor",
+        createdAt: at(20),
+        earlier: [],
+        restingVersions: 0,
+        watch: { checkedAt: null, failureCode: null, nextCheckAt: at(21), stoppedAt: null },
+      },
     ],
     unfiled: 26,
     jurisdictions: ["Nigeria", "Lagos", "FCT"],
+    hosts: ["ndpc.gov.ng", "nafdac.gov.ng"],
   }),
   "GET /admin/manual-library/retained": api.ListRetainedDraftsResponse.parse({
     items: [
@@ -4614,7 +4636,7 @@ test("the source register lists each source's fields and daily check, and record
     await page.getByTestId("tab-staff-content").click();
     const register = page.getByRole("region", { name: "Official sources" });
     await expect(register.getByTestId("text-register-summary")).toHaveText(
-      "2 sources in the register · 26 kept in the repository not filed yet",
+      "3 sources in the register · 26 kept in the repository not filed yet",
     );
     await expect(register.getByTestId("button-file-register")).toHaveText(
       "File the 26 sources kept in the repository",
@@ -4664,6 +4686,91 @@ test("the source register lists each source's fields and daily check, and record
         },
       },
     ]);
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
+
+// docs/architecture/source-register.md, slice 2 (ADM-003): a Content editor adds a source on a host the
+// guidance policy lists, with why, and the register marks the sources staff added.
+test("the source register adds a source only with why, names the policy's hosts, and marks the sources staff added", async () => {
+  const listed = answers["GET /admin/source-register"] as { entries: object[] };
+  const sent: unknown[] = [];
+  const adding: Api = async (route, method, path, query) => {
+    if (method === "POST" && path === "/admin/source-register") {
+      sent.push(route.request().postDataJSON());
+      const added = {
+        sourceId: "REG-002",
+        url: "https://nafdac.gov.ng/synthetic-labelling",
+        origin: "staff",
+        version: 1,
+        title: "Synthetic labelling guideline",
+        authority: "Synthetic agency",
+        jurisdiction: "Nigeria",
+        instrument: "regulatory_document",
+        versionInForce: null,
+        effectiveFrom: "2026-03-01",
+        status: "active",
+        reason: "Synthetic: added from the agency's own guideline page.",
+        createdBy: "synthetic-content-editor",
+        createdAt: new Date().toISOString(),
+        earlier: [],
+        restingVersions: 0,
+        watch: { checkedAt: null, failureCode: null, nextCheckAt: new Date().toISOString(), stoppedAt: null },
+      };
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(
+          api.AddSourceRegisterEntryResponse.parse({ ...listed, entries: [...listed.entries, added] }),
+        ),
+      });
+    } else await answer(route, method, path, query);
+  };
+  const { page, unknown, errors, close } = await phone("/staff", adding);
+  try {
+    await ready(page);
+    await page.getByTestId("tab-staff-content").click();
+    const register = page.getByRole("region", { name: "Official sources" });
+    await expect(register.getByTestId("register-entry-REG-001")).toContainText("Added by staff");
+    await expect(register.getByTestId("register-entry-S04")).not.toContainText("Added by staff");
+    await register.getByRole("button", { name: "Add an official source" }).click();
+    const form = register.getByTestId("form-register-new");
+    await expect(form).toContainText(
+      "An https address on one of the hosts the guidance policy lists: ndpc.gov.ng, nafdac.gov.ng.",
+    );
+    const add = form.getByRole("button", { name: "Add it to the register" });
+    await form.getByLabel("Title").fill("Synthetic labelling guideline");
+    await form.getByLabel("Address").fill("https://nafdac.gov.ng/synthetic-labelling");
+    await form.getByLabel("Who issues it").fill("Synthetic agency");
+    await form.getByLabel("Kind of text").selectOption("regulatory_document");
+    await form.getByLabel("In effect from").fill("2026-03-01");
+    await expect(add).toBeDisabled();
+    await form.getByLabel("Why").fill("Synthetic: added from the agency's own guideline page.");
+    await expect(add).toBeEnabled();
+    await expect(form.getByLabel("Start its daily check now")).toBeChecked();
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "the source register adding a source"), []);
+    await add.click();
+    await expect(register.getByRole("status")).toHaveText(
+      "Added Synthetic labelling guideline to the register as REG-002.",
+    );
+    assert.deepEqual(sent, [
+      {
+        title: "Synthetic labelling guideline",
+        url: "https://nafdac.gov.ng/synthetic-labelling",
+        authority: "Synthetic agency",
+        jurisdiction: "Nigeria",
+        instrument: "regulatory_document",
+        versionInForce: null,
+        effectiveFrom: "2026-03-01",
+        reason: "Synthetic: added from the agency's own guideline page.",
+        watch: true,
+      },
+    ]);
+    await expect(register.getByTestId("register-entry-REG-002")).toContainText("Added by staff");
     assert.deepEqual(errors, []);
     assert.deepEqual(unknown, []);
   } finally {
