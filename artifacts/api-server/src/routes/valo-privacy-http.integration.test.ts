@@ -407,6 +407,15 @@ test(
           headers: { "x-test-identity": roles[0] },
         });
         assert.equal(inspect.status, 200);
+        // The read is recorded with the case it read (ADM-009).
+        assert.ok(
+          (
+            await db
+              .select({ object: valoStaffAccessAudit.object })
+              .from(valoStaffAccessAudit)
+              .where(eq(valoStaffAccessAudit.actorId, roles[0]!))
+          ).some((row) => row.object === `privacy_case:${caseId}`),
+        );
         const current = GetPrivacyCaseResponse.parse(await inspect.json());
         assert.ok(current.availableActions?.includes("hold"));
         const snapshot = async () => ({

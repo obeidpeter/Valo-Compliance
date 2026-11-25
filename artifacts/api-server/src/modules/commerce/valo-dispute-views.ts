@@ -253,7 +253,12 @@ export async function financeDispute(actor: FinanceActor, id: string) {
   await assertFinanceActor(actor);
   return db.transaction(async (tx) => {
     const loaded = await readDispute(tx, id);
-    await requireFinance(tx, actor, "Inspect scoped dispute and customer-consented financial evidence.");
+    await requireFinance(
+      tx,
+      actor,
+      "Inspect scoped dispute and customer-consented financial evidence.",
+      `dispute:${id}`,
+    );
     return detail(tx, id, disputeTransport.configured(), loaded);
   });
 }

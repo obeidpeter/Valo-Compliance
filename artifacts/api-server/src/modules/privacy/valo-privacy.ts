@@ -438,6 +438,7 @@ export async function listStaffPrivacyCases(actor: PrivacyStaffActor, page: numb
       assignmentId: role.id,
       actorId: actor.identityId,
       area: "privacy",
+      object: "privacy_cases",
       reason: "Viewed the privacy request queue; no customer document body was returned.",
     });
     return { items: rows.map(privacyCaseRecord), page, total: total?.count ?? 0, pageSize };
@@ -545,6 +546,7 @@ export async function staffPrivacyDetail(actor: PrivacyStaffActor, id: string) {
       assignmentId: role.id,
       actorId: actor.identityId,
       area: "privacy",
+      object: `privacy_case:${id}`,
       reason:
         "Read privacy case history, processing scope and information messages without changing case state.",
     });

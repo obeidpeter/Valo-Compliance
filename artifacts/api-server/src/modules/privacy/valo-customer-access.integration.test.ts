@@ -345,10 +345,13 @@ test(
           ),
         );
         assert.match(r.notice, /Test-mode financial records/);
-        assert.equal(
-          (await db.select().from(valoStaffAccessAudit).where(eq(valoStaffAccessAudit.assignmentId, role)))
-            .length,
-          1,
+        // One access row, naming the overview it read (ADM-009).
+        assert.deepEqual(
+          await db
+            .select({ area: valoStaffAccessAudit.area, object: valoStaffAccessAudit.object })
+            .from(valoStaffAccessAudit)
+            .where(eq(valoStaffAccessAudit.assignmentId, role)),
+          [{ area: "finance", object: "staff_overview:finance" }],
         );
         await db.update(valoStaffAssignments).set({ active: false }).where(eq(valoStaffAssignments.id, role));
         await assert.rejects(() => staffOperations(staffActor(), "finance"), /no active permission/);

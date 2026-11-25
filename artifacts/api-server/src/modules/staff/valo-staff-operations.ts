@@ -66,6 +66,7 @@ export async function staffOperations(actor: StaffActor, area: StaffArea) {
       assignmentId: assignment.id,
       actorId: identityId,
       area,
+      object: `staff_overview:${area}`,
       reason: "Read-only operational access after active role and recent MFA checks",
     });
     let records: Record<string, unknown>[] = [];

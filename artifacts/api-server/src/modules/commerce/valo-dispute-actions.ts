@@ -48,7 +48,12 @@ export async function prepareDisputeAction(actor: FinanceActor, id: string, raw:
   await assertFinanceActor(actor);
   return db.transaction(async (tx) => {
     const { row, order } = await locked(tx, id);
-    await requireFinance(tx, actor, "Authorize prepared dispute intent; no provider request.");
+    await requireFinance(
+      tx,
+      actor,
+      "Authorize prepared dispute intent; no provider request.",
+      `dispute:${id}`,
+    );
     const existing = await tx.select().from(valoDisputeActions).where(eq(valoDisputeActions.disputeId, id));
     const payload: Record<string, string | number> = {
       message: input.message,
@@ -204,7 +209,7 @@ export async function controlDisputeAction(
   if (!a0) throw new ValoProblem(404, "Dispute intent not found.");
   const start = await db.transaction(async (tx) => {
     const { row, order } = await locked(tx, a0.disputeId);
-    await requireFinance(tx, actor, "Dispute intent " + operation + "; strict MFA.");
+    await requireFinance(tx, actor, "Dispute intent " + operation + "; strict MFA.", `dispute_action:${id}`);
     const a = singleRow(
       await tx.select().from(valoDisputeActions).where(eq(valoDisputeActions.id, id)).for("update"),
     );
@@ -297,6 +302,7 @@ export async function controlDisputeAction(
         tx,
         actor,
         "Recheck live finance, dispute hold and source after provider lookup, immediately before mutation.",
+        `dispute_action:${id}`,
       );
       assertRecoveryEffectsAllowed();
       if (!provider.configured())
@@ -390,7 +396,12 @@ export async function controlDisputeAction(
       const bytes = start.a.kind === "upload_receipt" ? await receipt(start.order) : null;
       await db.transaction(async (tx) => {
         const { order: currentOrder } = await locked(tx, start.row.id);
-        await requireFinance(tx, actor, "Recheck finance authority immediately before external dispatch.");
+        await requireFinance(
+          tx,
+          actor,
+          "Recheck finance authority immediately before external dispatch.",
+          `dispute_action:${id}`,
+        );
         if (currentOrder.status !== "verified_success")
           throw new ValoProblem(409, "The payment changed before dispatch.");
         const s = await source(tx, currentOrder, start.row.id, start.a.informationId);
@@ -417,6 +428,7 @@ export async function controlDisputeAction(
                 tx,
                 actor,
                 "Bind provider filename/checksum before receipt PUT; no signed URL retained.",
+                `dispute_action:${id}`,
               );
               const current = await source(tx, order, start.row.id, start.a.informationId);
               if (current.hash !== start.a.sourceHash)
@@ -504,7 +516,12 @@ export async function holdFinanceDispute(actor: FinanceActor, id: string, raw: u
   await assertFinanceActor(actor);
   return db.transaction(async (tx) => {
     const { row, order } = await locked(tx, id);
-    await requireFinance(tx, actor, "Dispute " + id + "; set hold=" + input.held + ": " + input.reason);
+    await requireFinance(
+      tx,
+      actor,
+      "Dispute " + id + "; set hold=" + input.held + ": " + input.reason,
+      `dispute:${id}`,
+    );
     if (row.controlVersion !== input.expectedVersion)
       throw new ValoProblem(409, "Dispute hold changed. Refresh first.");
     if (!input.held) await source(tx, order, id, null);
@@ -528,7 +545,12 @@ export async function linkFinanceDispute(
   const order = await db.transaction(async (tx) => {
     const [o] = await tx.select().from(valoOrders).where(eq(valoOrders.id, input.orderId)).for("update");
     if (!o) throw new ValoProblem(404, "Order not found.");
-    await requireFinance(tx, actor, "Fetch a canonical test dispute for the exact selected order.");
+    await requireFinance(
+      tx,
+      actor,
+      "Fetch a canonical test dispute for the exact selected order.",
+      `order:${input.orderId}`,
+    );
     if (o.status !== "verified_success" && o.status !== "reversed")
       throw new ValoProblem(409, "A verified transaction binding is required.");
     return o;

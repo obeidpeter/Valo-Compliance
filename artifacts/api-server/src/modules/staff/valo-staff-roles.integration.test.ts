@@ -263,7 +263,7 @@ test(
           );
           await assert.rejects(assertFinanceActor(actor(b)), { status: 403 });
           await assert.rejects(
-            db.transaction((tx) => requireFinance(tx, actor(b), "Owned expired role test")),
+            db.transaction((tx) => requireFinance(tx, actor(b), "Owned expired role test", "refunds")),
             { status: 403 },
           );
           await assert.rejects(
@@ -296,7 +296,9 @@ test(
             await hold;
           });
           await locked;
-          const waiting = db.transaction((tx) => requireFinance(tx, actor(b), "Expiry after role lock wait"));
+          const waiting = db.transaction((tx) =>
+            requireFinance(tx, actor(b), "Expiry after role lock wait", "refunds"),
+          );
           const result = waiting.then(
             () => null,
             (e) => e,

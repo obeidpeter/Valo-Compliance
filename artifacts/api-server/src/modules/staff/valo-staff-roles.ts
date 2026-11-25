@@ -119,6 +119,7 @@ export function makeStaffRoleService(verifyTarget: TargetVerifier = verifyManage
           assignmentId: access.id,
           actorId: actor.identityId,
           area: "system",
+          object: input.identityId ? `staff_assignments:${input.identityId}` : "staff_assignments",
           reason: "Read staff assignments and immutable role-change alerts",
         });
         const assignments = await tx

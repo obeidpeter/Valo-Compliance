@@ -33,7 +33,7 @@ export async function editorialRecord(
   return db.transaction(async (tx) => {
     const assignment = await requireSourceStaff(tx, actor, "content");
     await tx.execute(
-      sql`insert into valo_staff_access_audit(id,assignment_id,actor_id,area,reason) values(${randomUUID()}::uuid,${assignment}::uuid,${actor.identityId},'content',${`Read the publication record of ${kind} version ${id}`})`,
+      sql`insert into valo_staff_access_audit(id,assignment_id,actor_id,area,object,reason) values(${randomUUID()}::uuid,${assignment}::uuid,${actor.identityId},'content',${`${kind}_version:${id}`},${`Read the publication record of ${kind} version ${id}`})`,
     );
     const [row] = (
       kind === "content"

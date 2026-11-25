@@ -222,7 +222,7 @@ export async function actOnPaymentConcern(actor: FinanceActor, id: string, raw: 
     const [link] = await tx.select().from(valoPaymentConcerns).where(eq(valoPaymentConcerns.id, id));
     if (!link) throw new ValoProblem(404, "Concern not found.");
     const o = await orderLock(tx, link.orderId);
-    await requireFinance(tx, actor, "Respond to customer payment concern.");
+    await requireFinance(tx, actor, "Respond to customer payment concern.", `payment_concern:${id}`);
     await noErasure(tx, o.workspaceId);
     const c = singleRow(
       await tx.select().from(valoPaymentConcerns).where(eq(valoPaymentConcerns.id, id)).for("update"),
@@ -273,7 +273,12 @@ export async function getWorkspaceDisputes(actor: WorkspaceActor) {
 export async function getFinancePaymentConcerns(actor: FinanceActor) {
   await assertFinanceActor(actor);
   return db.transaction(async (tx) => {
-    await requireFinance(tx, actor, "Read customer payment concerns; no private document bodies.");
+    await requireFinance(
+      tx,
+      actor,
+      "Read customer payment concerns; no private document bodies.",
+      "payment_concerns",
+    );
     const rows = await tx
       .select()
       .from(valoPaymentConcerns)
