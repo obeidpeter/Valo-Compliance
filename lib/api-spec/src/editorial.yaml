@@ -79,7 +79,7 @@ paths:
         "403": { description: Recently verified development owner required }
         "404": { description: No rule is prepared under that name }
         "409": { description: "The rule, its sources or its release changed, or something holds it" }
-        "422": { description: A confirmation is missing }
+        "422": { description: A confirmation or the reason is missing }
   /workspace/correction-notices: {"get": {"operationId": "getCorrectionNotices", "tags": ["workspace"], "parameters": [{"name": "page", "in": "query", "schema": {"type": "integer", "minimum": 1, "maximum": 10000, "default": 1}}], "responses": {"200": {"description": "Current authorized result. No publication or spending approval is granted.", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/CorrectionNotices"}}}}, "401": {"description": "Sign-in required"}, "403": {"description": "Active area role and recent MFA required"}, "409": {"description": "Changed version or request-key conflict"}}}}
 schemas:
   SourceControlAction: {"oneOf": [{"type": "object", "required": ["requestKey", "reason", "action", "sourceId"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["watch_source"]}, "sourceId": {"type": "string", "minLength": 1, "maxLength": 100}}, "additionalProperties": false}, {"type": "object", "required": ["requestKey", "reason", "action", "kind", "id", "version"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["hold_version"]}, "kind": {"type": "string", "enum": ["content", "rule"]}, "id": {"type": "string", "format": "uuid"}, "version": {"type": "integer", "minimum": 1}}, "additionalProperties": false}, {"type": "object", "required": ["requestKey", "reason", "action", "kind", "id", "version"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["withdraw_version"]}, "kind": {"type": "string", "enum": ["content", "rule"]}, "id": {"type": "string", "format": "uuid"}, "version": {"type": "integer", "minimum": 1}}, "additionalProperties": false}, {"type": "object", "required": ["requestKey", "reason", "action", "service"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["pause_service"]}, "service": {"type": "string", "enum": ["ai", "checkout"]}}, "additionalProperties": false}, {"type": "object", "required": ["requestKey", "reason", "action", "service"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["resume_service"]}, "service": {"type": "string", "enum": ["ai", "checkout"]}}, "additionalProperties": false}]}
@@ -293,6 +293,11 @@ schemas:
       manifestHash: { type: string, pattern: "^[a-f0-9]{64}$" }
       confirmedChecks: { type: array, maxItems: 5, items: { $ref: "#/components/schemas/OwnerRuleCheckId" } }
       confirmed: { type: boolean, enum: [true] }
+      reason:
+        type: string
+        minLength: 20
+        maxLength: 1000
+        description: Why the released version is withdrawn, or what changed in the version signed to replace it. The businesses that saved a result or made a task under the old version are told it (docs/architecture/rule-changes.md). Required for a withdrawal, and for a sign-off while a version is released.
   OwnerRuleReceipt:
     type: object
     required: [ruleId, version, state, superseded]

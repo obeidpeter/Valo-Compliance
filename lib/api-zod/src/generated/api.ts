@@ -3988,6 +3988,9 @@ export const DecideOwnerRuleParams = zod.object({
 export const decideOwnerRuleBodyManifestHashRegExp = new RegExp('^[a-f0-9]{64}$');
 export const decideOwnerRuleBodyConfirmedChecksMax = 5;
 
+export const decideOwnerRuleBodyReasonMin = 20;
+export const decideOwnerRuleBodyReasonMax = 1000;
+
 
 
 export const DecideOwnerRuleBody = zod.object({
@@ -3995,7 +3998,8 @@ export const DecideOwnerRuleBody = zod.object({
   "version": zod.int().min(1),
   "manifestHash": zod.string().regex(decideOwnerRuleBodyManifestHashRegExp),
   "confirmedChecks": zod.array(zod.enum(['controlling_text', 'amendments', 'effective_dates', 'exceptions', 'jurisdiction'])).max(decideOwnerRuleBodyConfirmedChecksMax),
-  "confirmed": zod.literal(true)
+  "confirmed": zod.literal(true),
+  "reason": zod.string().min(decideOwnerRuleBodyReasonMin).max(decideOwnerRuleBodyReasonMax).optional().describe('Why the released version is withdrawn, or what changed in the version signed to replace it. The businesses that saved a result or made a task under the old version are told it (docs/architecture/rule-changes.md). Required for a withdrawal, and for a sign-off while a version is released.')
 })
 
 export const DecideOwnerRuleResponse = zod.object({

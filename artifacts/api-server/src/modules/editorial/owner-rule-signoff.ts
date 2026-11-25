@@ -38,7 +38,7 @@ import {
 } from "../publication";
 import { asDevelopmentOwner, type StaffActor } from "../staff";
 import { ValoProblem } from "../../platform/valo-problem";
-import { planStoredRuleRelease } from "./valo-rule-release";
+import { planStoredRuleRelease, recordRuleChanges, ruleChangeReason } from "./valo-rule-release";
 import { ownerRuleCandidates, type OwnerRuleCandidate } from "./owner-rule-candidates";
 
 /**
@@ -57,6 +57,8 @@ import { ownerRuleCandidates, type OwnerRuleCandidate } from "./owner-rule-candi
 export { ownerRuleCandidates, type OwnerRuleCandidate } from "./owner-rule-candidates";
 
 const refusal = "Only the designated development owner can sign requirements-checker rules.";
+const replacementReasonNeeded =
+  "Say what changed in this version, in 20 to 1,000 characters. It replaces the released one.";
 const day = 86_400_000;
 /** The guidance policy's point 7: no more than this many words in a row from a passage. */
 export const OWNER_RULE_QUOTE_WORDS = 20;
@@ -509,9 +511,14 @@ export async function decideOwnerRule(
 ) {
   const input = DecideOwnerRuleBody.strict().parse(body);
   if (!input.confirmed) throw new ValoProblem(422, "Confirm that you have read this rule and its sources.");
+  // docs/architecture/rule-changes.md: a withdrawal, and a version that replaces a released one, say
+  // why. The businesses that used the old version are told it.
+  const reason = ruleChangeReason(input.reason);
+  if (input.reason !== undefined && !reason)
+    throw new ValoProblem(422, "Write the reason in 20 to 1,000 characters.");
   return input.action === "withdraw"
-    ? withdrawOwnerRule(actor, ruleId, input)
-    : signOwnerRule(actor, ruleId, input, options);
+    ? withdrawOwnerRule(actor, ruleId, { ...input, reason })
+    : signOwnerRule(actor, ruleId, { ...input, reason }, options);
 }
 
 /**
@@ -522,7 +529,7 @@ export async function decideOwnerRule(
 async function signOwnerRule(
   actor: StaffActor,
   ruleId: string,
-  input: { version: number; manifestHash: string; confirmedChecks: string[] },
+  input: { version: number; manifestHash: string; confirmedChecks: string[]; reason: string | null },
   options: Options,
 ) {
   await asDevelopmentOwner(actor, async () => undefined, refusal);
@@ -533,7 +540,8 @@ async function signOwnerRule(
   const readText = options.readText ?? readSourceText;
   const { passagesFrom, records } = evidenceOf(options);
   const { db, valoRuleOwnerSignoffs, valoRuleReleases: r } = await import("@workspace/db");
-  const version = nextVersion(await storedVersions([ruleId]), ruleId);
+  const stored = await storedVersions([ruleId]);
+  const version = nextVersion(stored, ruleId);
   const { policy } = await guidancePolicy();
   const captures = await currentSourceCaptures(unique(candidate.sources.map((s) => s.leadId)), now, {
     readText,
@@ -551,6 +559,10 @@ async function signOwnerRule(
     throw new ValoProblem(409, "The rule or its sources changed. Reopen it before signing.");
   if (holds.length || evidence.decision !== "eligible" || plan.decision !== "ready")
     throw new ValoProblem(409, "This rule is held. " + holds.join(" "));
+  // Asked only once the version is the next one and nothing holds it, so a version already signed
+  // or a changed rule is refused as such, not for want of a reason.
+  if (!input.reason && stored.some((s) => s.ruleId === ruleId && s.status === "published"))
+    throw new ValoProblem(422, replacementReasonNeeded);
   const captured = await verifyReleasedSources(db, prepared.bundle, prepared.snapshotIds, now, readText);
   return asDevelopmentOwner(
     actor,
@@ -584,6 +596,23 @@ async function signOwnerRule(
         publishedAt: now,
       });
       await bindVerifiedSources(tx, "rule", id, prepared.bundle, captured, now);
+      const replaced = (
+        await tx
+          .select({ version: r.version })
+          .from(r)
+          .where(and(eq(r.ruleId, ruleId), eq(r.status, "published"), ne(r.id, id)))
+      ).map((row) => row.version);
+      if (replaced.length) {
+        if (!input.reason) throw new ValoProblem(422, replacementReasonNeeded);
+        await recordRuleChanges(tx, {
+          ruleId,
+          versions: replaced,
+          kind: "replaced",
+          replacementVersion: version,
+          reason: input.reason,
+          recordedBy: actor.identityId,
+        });
+      }
       const superseded = await tx
         .update(r)
         .set({ status: "superseded" })
@@ -600,16 +629,20 @@ async function signOwnerRule(
   );
 }
 
-/** Withdraws a released owner-signed version. It leaves the checker at once and is never published
- * again; releasing the rule again takes a new version and a new sign-off. */
+/** Withdraws a released owner-signed version, with the reason the businesses that used it are told.
+ * It leaves the checker at once and is never published again; releasing the rule again takes a new
+ * version and a new sign-off. */
 function withdrawOwnerRule(
   actor: StaffActor,
   ruleId: string,
-  input: { version: number; manifestHash: string },
+  input: { version: number; manifestHash: string; reason: string | null },
 ) {
+  const { reason } = input;
   return asDevelopmentOwner(
     actor,
     async (tx) => {
+      if (!reason)
+        throw new ValoProblem(422, "Say why this version is withdrawn, in 20 to 1,000 characters.");
       const { valoRuleReleases: r } = await import("@workspace/db");
       await lockSourceState(tx, true);
       const [row] = await tx
@@ -628,6 +661,13 @@ function withdrawOwnerRule(
       if (row.status !== "withdrawn") {
         if (row.status !== "published")
           throw new ValoProblem(409, "Only the released version can be withdrawn. Reopen the rule.");
+        await recordRuleChanges(tx, {
+          ruleId,
+          versions: [input.version],
+          kind: "withdrawn",
+          reason,
+          recordedBy: actor.identityId,
+        });
         await tx.update(r).set({ status: "withdrawn" }).where(eq(r.id, row.id));
       }
       return { ruleId, version: input.version, state: "withdrawn" as const, superseded: [] };

@@ -1831,6 +1831,12 @@ export interface OwnerRuleDecision {
   /** @maxItems 5 */
   confirmedChecks: OwnerRuleCheckId[];
   confirmed: true;
+  /**
+     * Why the released version is withdrawn, or what changed in the version signed to replace it. The businesses that saved a result or made a task under the old version are told it (docs/architecture/rule-changes.md). Required for a withdrawal, and for a sign-off while a version is released.
+     * @minLength 20
+     * @maxLength 1000
+     */
+  reason?: string;
 }
 
 export type OwnerRuleReceiptState = typeof OwnerRuleReceiptState[keyof typeof OwnerRuleReceiptState];

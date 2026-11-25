@@ -428,6 +428,13 @@
       "when": 1795569648555,
       "tag": "20261125012048_edition_notices",
       "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1795596197767,
+      "tag": "20261125084317_rule_changes",
+      "breakpoints": true
     }
   ]
 }

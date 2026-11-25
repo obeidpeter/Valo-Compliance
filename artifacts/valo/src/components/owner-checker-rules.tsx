@@ -96,6 +96,10 @@ export function OwnerCheckerRules() {
   const [selected, setSelected] = useState("");
   const [checks, setChecks] = useState<OwnerRuleCheckId[]>([]);
   const [approval, setApproval] = useState("");
+  // docs/architecture/rule-changes.md: why a released version is withdrawn, or what changed in the
+  // version that replaces it.
+  const [changeReason, setChangeReason] = useState("");
+  const [withdrawReason, setWithdrawReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
@@ -104,6 +108,8 @@ export function OwnerCheckerRules() {
   function reset() {
     setChecks([]);
     setApproval("");
+    setChangeReason("");
+    setWithdrawReason("");
     setNotice("");
     setError("");
   }
@@ -115,6 +121,8 @@ export function OwnerCheckerRules() {
       const done = await run();
       setChecks([]);
       setApproval("");
+      setChangeReason("");
+      setWithdrawReason("");
       await result.refetch();
       setNotice(done);
     } catch (e) {
@@ -136,6 +144,7 @@ export function OwnerCheckerRules() {
         manifestHash: rule.manifestHash,
         confirmedChecks: checks,
         confirmed: true,
+        ...(rule.live && { reason: changeReason.trim() }),
       });
       return `Version ${saved.version} is released. The requirements check uses it from now on.`;
     });
@@ -148,11 +157,13 @@ export function OwnerCheckerRules() {
         manifestHash: rule.live.manifestHash,
         confirmedChecks: [],
         confirmed: true,
+        reason: withdrawReason.trim(),
       });
       return `Version ${saved.version} is withdrawn. The requirements check no longer uses it.`;
     });
   const allChecked = item ? item.checks.every((c) => checks.includes(c.id)) : false;
   const signable = Boolean(item && !item.holds.length);
+  const reasoned = (text: string) => text.trim().length >= 20;
   return (
     <section className="surface mt-8 p-5 sm:p-7" aria-labelledby="owner-rules-heading">
       <h2 className="font-display text-2xl" id="owner-rules-heading">
@@ -343,6 +354,28 @@ export function OwnerCheckerRules() {
                 ))}
                 {signable && (
                   <>
+                    {item.live && (
+                      <div className="grid gap-1">
+                        <label className="text-sm font-medium" htmlFor="owner-rule-change-reason">
+                          What changed in this version?
+                        </label>
+                        <p id="owner-rule-change-reason-help" className="text-sm text-muted-foreground">
+                          Version {item.version} replaces released version {item.live.version}. Valo records
+                          what you write with the release, in 20 to 1,000 characters.
+                        </p>
+                        <textarea
+                          id="owner-rule-change-reason"
+                          className="field min-h-24"
+                          aria-describedby="owner-rule-change-reason-help"
+                          minLength={20}
+                          maxLength={1000}
+                          required
+                          disabled={busy}
+                          value={changeReason}
+                          onChange={(e) => setChangeReason(e.target.value)}
+                        />
+                      </div>
+                    )}
                     <label className="flex items-start gap-2">
                       <input
                         type="checkbox"
@@ -355,7 +388,12 @@ export function OwnerCheckerRules() {
                     </label>
                     <button
                       className="btn btn-primary"
-                      disabled={busy || !allChecked || approval !== key}
+                      disabled={
+                        busy ||
+                        !allChecked ||
+                        approval !== key ||
+                        (Boolean(item.live) && !reasoned(changeReason))
+                      }
                       onClick={() => void sign(item)}
                     >
                       Sign and release version {item.version}
@@ -375,9 +413,31 @@ export function OwnerCheckerRules() {
                     I want to withdraw released version {item.live.version}. Releasing the rule again takes a
                     new version and a new sign-off.
                   </label>
+                  {approval === "withdraw/" + key && (
+                    <div className="grid gap-1">
+                      <label className="text-sm font-medium" htmlFor="owner-rule-withdraw-reason">
+                        Why is this rule withdrawn?
+                      </label>
+                      <p id="owner-rule-withdraw-reason-help" className="text-sm text-muted-foreground">
+                        The requirements check stops using version {item.live.version} at once. Valo records
+                        what you write with the withdrawal, in 20 to 1,000 characters.
+                      </p>
+                      <textarea
+                        id="owner-rule-withdraw-reason"
+                        className="field min-h-24"
+                        aria-describedby="owner-rule-withdraw-reason-help"
+                        minLength={20}
+                        maxLength={1000}
+                        required
+                        disabled={busy}
+                        value={withdrawReason}
+                        onChange={(e) => setWithdrawReason(e.target.value)}
+                      />
+                    </div>
+                  )}
                   <button
                     className="btn btn-ghost"
-                    disabled={busy || approval !== "withdraw/" + key}
+                    disabled={busy || approval !== "withdraw/" + key || !reasoned(withdrawReason)}
                     onClick={() => void withdraw(item)}
                   >
                     Withdraw version {item.live.version}
