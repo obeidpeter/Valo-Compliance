@@ -1,4 +1,5 @@
 import type { AssessmentItem } from "@workspace/api-client-react";
+import { formatDay } from "./format";
 
 /**
  * What a result of the requirements check says about itself, in the site's words.
@@ -128,3 +129,22 @@ export function requirementFigures(item: Figured): { label: string; words: strin
  * indicate links no page, as it shows no figure. */
 export const requirementRoute = (item: Pick<AssessmentItem, "label" | "officialRoute">) =>
   item.label === "Not indicated by these answers" ? undefined : item.officialRoute;
+
+/**
+ * CMP-004: a requirement's dates, each with its own label: when its sources were checked, and how
+ * and when it was released. "Source checked" and "AI reviewed" are the specification's labels. An
+ * owner-signed rule is signed in the transaction that publishes it, so one date says both. A review on
+ * the reviewed route records no date of its own, so none is given for it. Nothing says a professional
+ * reviewed it, since no such review is recorded. A result saved before dates were recorded shows none.
+ */
+export function requirementDates(item: Pick<AssessmentItem, "sourceCheckedAt" | "publication">): string[] {
+  const dates: string[] = [];
+  if (item.sourceCheckedAt) dates.push(`Source checked on ${formatDay(item.sourceCheckedAt)}`);
+  if (item.publication)
+    dates.push(
+      item.publication.route === "owner_signoff"
+        ? `Signed off by the Valo development owner and published on ${formatDay(item.publication.publishedAt)}`
+        : `AI reviewed, and published on ${formatDay(item.publication.publishedAt)}`,
+    );
+  return dates;
+}

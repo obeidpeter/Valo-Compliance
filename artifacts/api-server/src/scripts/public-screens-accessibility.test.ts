@@ -1177,6 +1177,71 @@ test("a requirement names its authority's official page and shows each figure it
   }
 });
 
+// docs/architecture/results.md, slice 4. CMP-004: labels say "AI reviewed" or "Source checked";
+// "professionally reviewed" appears only if that review occurred and was recorded.
+test("each requirement's dates are shown under its rule, each with its own label, and no professional review is claimed", async () => {
+  const requirement = (ruleId: string, publication: object) => ({
+    ruleId,
+    ruleVersion: 1,
+    requirementVersionId: `${ruleId}@1`,
+    title: `Synthetic requirement ${ruleId}`,
+    label: "Likely relevant",
+    reason: "Synthetic test fixture: why this may apply.",
+    missingFacts: [],
+    matchedFacts: [],
+    nextStep: "Synthetic test fixture: what to do next.",
+    jurisdiction: { level: "federal" },
+    sources: [
+      {
+        id: "synthetic-source",
+        url: "https://example.test/source",
+        title: "Synthetic Act",
+        locator: "section 5",
+        quote: "Synthetic quoted passage.",
+        snapshotHash: "a".repeat(64),
+      },
+    ],
+    relatedTemplateIds: [],
+    sourceCheckedAt: "2026-11-01T09:00:00.000Z",
+    publication,
+  });
+  const dated = api.PreviewAssessmentResponse.parse({
+    ...noResult,
+    items: [
+      requirement("SYN-SIGNED", { route: "owner_signoff", publishedAt: "2026-11-12T10:00:00.000Z" }),
+      requirement("SYN-REVIEWED", { route: "editorial_release", publishedAt: "2026-11-13T10:00:00.000Z" }),
+    ],
+    sourceBackedRecommendations: 2,
+  });
+  const { respond } = checking();
+  const { page, unknown, errors, close } = await app.phone("/checker", async (route, method, path, query) =>
+    method === "POST" && path === "/checker/preview"
+      ? route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(dated) })
+      : respond(route, method, path, query),
+  );
+  try {
+    await ready(page);
+    await page.getByTestId("button-step-5").click();
+    await page.getByTestId("button-run").click();
+    const result = page.getByTestId("assessment-result");
+    await result.waitFor();
+    await expect(page.getByTestId("dates-SYN-SIGNED")).toHaveText(
+      "Source checked on 1 Nov 2026 · Signed off by the Valo development owner and published on 12 Nov 2026",
+    );
+    await expect(page.getByTestId("dates-SYN-REVIEWED")).toHaveText(
+      "Source checked on 1 Nov 2026 · AI reviewed, and published on 13 Nov 2026",
+    );
+    assert.doesNotMatch(await result.innerText(), /professional/i);
+    assert.deepEqual(oldWordsIn(await result.innerText()), []);
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "a requirement's dates"), []);
+    assert.deepEqual(unknown, [], "every API call the page made has a test answer");
+    assert.deepEqual(errors, []);
+  } finally {
+    await close();
+  }
+});
+
 // The banner is on every page. The sign-in pages draw no site frame and have a line of their own.
 test("a visitor is told to use made-up details, on a page's banner and on the sign-in pages, and the sign-in service is named in the words the contact page uses", async () => {
   {

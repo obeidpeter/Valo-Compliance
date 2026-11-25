@@ -8,6 +8,7 @@ import { formatDay } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { MISSING_ANSWER_STATE_LABELS, RESULT_LABELS, RESULT_TONES } from "@/lib/rich-checker";
 import {
+  requirementDates,
   requirementFigures,
   requirementRoute,
   resultGaps,
@@ -198,6 +199,7 @@ function Item({
   const detail = item;
   const missingStates = new Map(detail.missingAnswerStates?.map((answer) => [answer.field, answer.state]));
   const figures = requirementFigures(item);
+  const dates = requirementDates(item);
   const route = requirementRoute(item);
   // CMP-003: federal, state and local requirements are told apart, each named for where it applies.
   const { level, state, lga } = item.jurisdiction;
@@ -216,6 +218,12 @@ function Item({
             <p className="mt-1 text-xs text-muted-foreground">
               {place} · Rule {item.ruleId}, version {item.ruleVersion}
             </p>
+            {/* CMP-004: its dates, each with its own label. */}
+            {dates.length > 0 && (
+              <p className="mt-1 text-xs text-muted-foreground" data-testid={"dates-" + item.ruleId}>
+                {dates.join(" · ")}
+              </p>
+            )}
             {/* EDP-008: how the rule was released, as the server recorded it with the result. */}
             {detail.releaseNotice && (
               <p

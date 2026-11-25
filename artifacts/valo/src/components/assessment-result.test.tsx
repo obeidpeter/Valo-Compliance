@@ -377,3 +377,27 @@ test("a requirement links its authority's official page, shows each figure its r
   // The result's official sources are the routes it was given.
   assert.match(page, /<p class="eyebrow">Official sources<\/p>.*>Synthetic registry<svg/);
 });
+
+// docs/architecture/results.md, slice 4 (CMP-004).
+test("each requirement shows its dates under its rule, each with its own label, and a result saved before dates were recorded shows none", () => {
+  const page = renderWith(new QueryClient(), {
+    ...result,
+    items: [
+      item("SYN-DATED", "Likely relevant", {
+        sourceCheckedAt: "2026-11-01T09:00:00.000Z",
+        publication: { route: "owner_signoff", publishedAt: "2026-11-12T10:00:00.000Z" },
+      }),
+      item("SYN-SAVED", "Likely relevant", {}),
+    ],
+  });
+  assert.ok(
+    page.includes(
+      'data-testid="dates-SYN-DATED">Source checked on 1 Nov 2026 · Signed off by the Valo development owner and published on 12 Nov 2026</p>',
+    ),
+    page,
+  );
+  // The dates sit with the rule's name and version, above why it is shown.
+  assert.ok(page.indexOf("dates-SYN-DATED") < page.indexOf('data-testid="why-SYN-DATED"'));
+  assert.ok(!page.includes("dates-SYN-SAVED"));
+  assert.doesNotMatch(page, /professional/i);
+});
