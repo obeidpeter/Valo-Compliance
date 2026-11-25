@@ -23,6 +23,7 @@ import { ValoProblem } from "../../platform/valo-problem";
 import { documentInput } from "../../lib/valo-validation";
 import {
   paginateReleasedItems,
+  TEMPLATE_NUMBER,
   templateCategory,
   templateSummary,
   type CatalogueQuery,
@@ -254,6 +255,7 @@ export function projectReleasedCatalogue(
       type: "template",
       industry: c.coverage?.industrySlugs.join(",") || "All industries",
       templateId: r.templateId,
+      ...(TEMPLATE_NUMBER.test(r.templateId) && { templateNumber: r.templateId }),
       category: templateCategory(r.templateId),
       access: free ? ("free" as const) : ("premium" as const),
       ...(free ? { freeDownloadPath: file } : { premiumDownloadPath: file }),

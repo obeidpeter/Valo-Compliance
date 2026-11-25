@@ -21,4 +21,10 @@ export type ListPublicCatalogueParams = {
   sort?: ListPublicCatalogueSort;
   /** @minimum 1 */
   page?: number;
+  /**
+   * Only the released templates with these numbers, comma-separated, up to twenty.
+   * @maxLength 139
+   * @pattern ^TPL-[0-9]{2}(,TPL-[0-9]{2}){0,19}$
+   */
+  templateIds?: string;
 };

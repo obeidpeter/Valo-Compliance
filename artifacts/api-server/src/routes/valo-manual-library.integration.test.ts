@@ -1380,6 +1380,60 @@ test(
         assert.deepEqual(await written(first.id), [replacedFirst]);
       },
     );
+    // docs/architecture/results.md, slice 1: a result finds the documents its rules relate by their
+    // numbers. A library template filed as a registered one, by its title as the access check finds it, is
+    // listed by that template's number; any other entry has none. After the retained drafts are filed, so
+    // that the releases here are not found by title when they are.
+    await t.test(
+      "the released list names a library template by the number of the registered template it is filed as, finds it by that number alone, and stops finding it once it is withdrawn",
+      async () => {
+        const list = async (query: string) =>
+          ListPublicCatalogueResponse.parse(await ok(await call("/public/catalogue?" + query)));
+        const { bytes } = wordFromText("Synthetic numbered notice", "Only a buyer reads this sentence.");
+        const premium = (title: string) => ({
+          ...input("premium_template", title),
+          body: "A synthetic numbered entry's public description.",
+          fileMode: "upload",
+          upload: { format: "docx", base64: bytes.toString("base64") },
+        });
+        const numberedId = randomUUID(),
+          otherId = randomUUID();
+        const numbered = await revision(
+          await act(
+            numberedId,
+            "publish",
+            await revision(await draft(numberedId, premium("Privacy notice"))),
+          ),
+        );
+        await revision(
+          await act(
+            otherId,
+            "publish",
+            await revision(await draft(otherId, premium("Synthetic unnumbered checklist"))),
+          ),
+        );
+        // Found by its number alone, and named by it; every entry found has that number.
+        const found = await list("templateIds=TPL-29");
+        const entry = found.items.find((item) => item.id === numbered.id);
+        assert.equal(entry?.templateNumber, "TPL-29");
+        assert.equal(entry?.templateId, "manual-" + numberedId);
+        assert.equal(entry?.href, "/library/manual-" + numberedId);
+        assert.ok(found.items.every((item) => item.templateNumber === "TPL-29"));
+        // Another number does not find it, and an entry with no registered title has no number.
+        assert.ok(!(await list("templateIds=TPL-01,TPL-30")).items.some((item) => item.id === numbered.id));
+        const unnumbered = (await list("q=Synthetic%20unnumbered%20checklist")).items.find(
+          (item) => item.slug === "manual-" + otherId,
+        );
+        assert.ok(unnumbered);
+        assert.equal(unnumbered.templateNumber, undefined);
+        // The route takes numbers only as the list writes them.
+        for (const templateIds of ["TPL-1", "TPL-29;TPL-01", "privacy"])
+          assert.equal((await call("/public/catalogue?templateIds=" + templateIds)).status, 422, templateIds);
+        // Withdrawn, it is no longer found by its number.
+        await revision(await act(numberedId, "withdraw", numbered));
+        assert.ok(!(await list("templateIds=TPL-29")).items.some((item) => item.id === numbered.id));
+      },
+    );
     // Last, so that the editions it releases are not found by title when the retained drafts are filed.
     await t.test(
       "a premium form starts only from an edition the workspace bought with its wording, under its own verified order, which the document keeps",

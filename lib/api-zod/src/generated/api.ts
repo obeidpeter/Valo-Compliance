@@ -835,6 +835,10 @@ export const listPublicCatalogueQueryCategoryMax = 80;
 
 export const listPublicCatalogueQueryPageDefault = 1;
 
+export const listPublicCatalogueQueryTemplateIdsMax = 139;
+
+
+export const listPublicCatalogueQueryTemplateIdsRegExp = new RegExp('^TPL-[0-9]{2}(,TPL-[0-9]{2}){0,19}$');
 
 
 export const ListPublicCatalogueQueryParams = zod.object({
@@ -844,9 +848,11 @@ export const ListPublicCatalogueQueryParams = zod.object({
   "category": zod.coerce.string().max(listPublicCatalogueQueryCategoryMax).optional(),
   "access": zod.enum(['all', 'free', 'premium']).optional(),
   "sort": zod.enum(['relevance', 'name', 'recently_checked']).optional(),
-  "page": zod.coerce.number().int().min(1).default(listPublicCatalogueQueryPageDefault)
+  "page": zod.coerce.number().int().min(1).default(listPublicCatalogueQueryPageDefault),
+  "templateIds": zod.coerce.string().max(listPublicCatalogueQueryTemplateIdsMax).regex(listPublicCatalogueQueryTemplateIdsRegExp).optional().describe('Only the released templates with these numbers, comma-separated, up to twenty.')
 })
 
+export const listPublicCatalogueResponseItemsItemTemplateNumberRegExp = new RegExp('^TPL-[0-9]{2}$');
 
 
 
@@ -859,6 +865,7 @@ export const ListPublicCatalogueResponse = zod.object({
   "summary": zod.string(),
   "industry": zod.string(),
   "templateId": zod.string().optional(),
+  "templateNumber": zod.string().regex(listPublicCatalogueResponseItemsItemTemplateNumberRegExp).optional().describe('A released template\'s number in the specification\'s list: a reviewed release\'s, or, for a staff library template, that of the registered template whose title it has. Absent for any other entry.'),
   "category": zod.string().optional(),
   "access": zod.enum(['free', 'premium']).optional(),
   "amountKobo": zod.int().min(1).optional().describe('Current approved NGN price in kobo for a released premium template edition.'),
@@ -920,7 +927,9 @@ export const GetReleasedTemplateResponse = zod.object({
 })
 
 
+export const listSavedTemplatesResponseRecommendationsItemTemplateNumberRegExp = new RegExp('^TPL-[0-9]{2}$');
 
+export const listSavedTemplatesResponseItemsItemCurrentOneTemplateNumberRegExp = new RegExp('^TPL-[0-9]{2}$');
 
 export const listSavedTemplatesResponseItemsMax = 200;
 
@@ -936,6 +945,7 @@ export const ListSavedTemplatesResponse = zod.object({
   "summary": zod.string(),
   "industry": zod.string(),
   "templateId": zod.string().optional(),
+  "templateNumber": zod.string().regex(listSavedTemplatesResponseRecommendationsItemTemplateNumberRegExp).optional().describe('A released template\'s number in the specification\'s list: a reviewed release\'s, or, for a staff library template, that of the registered template whose title it has. Absent for any other entry.'),
   "category": zod.string().optional(),
   "access": zod.enum(['free', 'premium']).optional(),
   "amountKobo": zod.int().min(1).optional().describe('Current approved NGN price in kobo for a released premium template edition.'),
@@ -960,6 +970,7 @@ export const ListSavedTemplatesResponse = zod.object({
   "summary": zod.string(),
   "industry": zod.string(),
   "templateId": zod.string().optional(),
+  "templateNumber": zod.string().regex(listSavedTemplatesResponseItemsItemCurrentOneTemplateNumberRegExp).optional().describe('A released template\'s number in the specification\'s list: a reviewed release\'s, or, for a staff library template, that of the registered template whose title it has. Absent for any other entry.'),
   "category": zod.string().optional(),
   "access": zod.enum(['free', 'premium']).optional(),
   "amountKobo": zod.int().min(1).optional().describe('Current approved NGN price in kobo for a released premium template edition.'),
@@ -978,7 +989,9 @@ export const SaveReleasedTemplateParams = zod.object({
   "id": zod.uuid()
 })
 
+export const saveReleasedTemplateResponseRecommendationsItemTemplateNumberRegExp = new RegExp('^TPL-[0-9]{2}$');
 
+export const saveReleasedTemplateResponseItemsItemCurrentOneTemplateNumberRegExp = new RegExp('^TPL-[0-9]{2}$');
 
 export const saveReleasedTemplateResponseItemsMax = 200;
 
@@ -994,6 +1007,7 @@ export const SaveReleasedTemplateResponse = zod.object({
   "summary": zod.string(),
   "industry": zod.string(),
   "templateId": zod.string().optional(),
+  "templateNumber": zod.string().regex(saveReleasedTemplateResponseRecommendationsItemTemplateNumberRegExp).optional().describe('A released template\'s number in the specification\'s list: a reviewed release\'s, or, for a staff library template, that of the registered template whose title it has. Absent for any other entry.'),
   "category": zod.string().optional(),
   "access": zod.enum(['free', 'premium']).optional(),
   "amountKobo": zod.int().min(1).optional().describe('Current approved NGN price in kobo for a released premium template edition.'),
@@ -1018,6 +1032,7 @@ export const SaveReleasedTemplateResponse = zod.object({
   "summary": zod.string(),
   "industry": zod.string(),
   "templateId": zod.string().optional(),
+  "templateNumber": zod.string().regex(saveReleasedTemplateResponseItemsItemCurrentOneTemplateNumberRegExp).optional().describe('A released template\'s number in the specification\'s list: a reviewed release\'s, or, for a staff library template, that of the registered template whose title it has. Absent for any other entry.'),
   "category": zod.string().optional(),
   "access": zod.enum(['free', 'premium']).optional(),
   "amountKobo": zod.int().min(1).optional().describe('Current approved NGN price in kobo for a released premium template edition.'),
@@ -1042,7 +1057,9 @@ export const UnsaveTemplateParams = zod.object({
   "templateId": zod.coerce.string().max(unsaveTemplatePathTemplateIdMax).regex(unsaveTemplatePathTemplateIdRegExp)
 })
 
+export const unsaveTemplateResponseRecommendationsItemTemplateNumberRegExp = new RegExp('^TPL-[0-9]{2}$');
 
+export const unsaveTemplateResponseItemsItemCurrentOneTemplateNumberRegExp = new RegExp('^TPL-[0-9]{2}$');
 
 export const unsaveTemplateResponseItemsMax = 200;
 
@@ -1058,6 +1075,7 @@ export const UnsaveTemplateResponse = zod.object({
   "summary": zod.string(),
   "industry": zod.string(),
   "templateId": zod.string().optional(),
+  "templateNumber": zod.string().regex(unsaveTemplateResponseRecommendationsItemTemplateNumberRegExp).optional().describe('A released template\'s number in the specification\'s list: a reviewed release\'s, or, for a staff library template, that of the registered template whose title it has. Absent for any other entry.'),
   "category": zod.string().optional(),
   "access": zod.enum(['free', 'premium']).optional(),
   "amountKobo": zod.int().min(1).optional().describe('Current approved NGN price in kobo for a released premium template edition.'),
@@ -1082,6 +1100,7 @@ export const UnsaveTemplateResponse = zod.object({
   "summary": zod.string(),
   "industry": zod.string(),
   "templateId": zod.string().optional(),
+  "templateNumber": zod.string().regex(unsaveTemplateResponseItemsItemCurrentOneTemplateNumberRegExp).optional().describe('A released template\'s number in the specification\'s list: a reviewed release\'s, or, for a staff library template, that of the registered template whose title it has. Absent for any other entry.'),
   "category": zod.string().optional(),
   "access": zod.enum(['free', 'premium']).optional(),
   "amountKobo": zod.int().min(1).optional().describe('Current approved NGN price in kobo for a released premium template edition.'),
@@ -1096,6 +1115,7 @@ export const UnsaveTemplateResponse = zod.object({
 })
 
 
+export const listOperationalRecommendationsResponseItemsItemTemplateNumberRegExp = new RegExp('^TPL-[0-9]{2}$');
 
 
 
@@ -1108,6 +1128,7 @@ export const ListOperationalRecommendationsResponse = zod.object({
   "summary": zod.string(),
   "industry": zod.string(),
   "templateId": zod.string().optional(),
+  "templateNumber": zod.string().regex(listOperationalRecommendationsResponseItemsItemTemplateNumberRegExp).optional().describe('A released template\'s number in the specification\'s list: a reviewed release\'s, or, for a staff library template, that of the registered template whose title it has. Absent for any other entry.'),
   "category": zod.string().optional(),
   "access": zod.enum(['free', 'premium']).optional(),
   "amountKobo": zod.int().min(1).optional().describe('Current approved NGN price in kobo for a released premium template edition.'),

@@ -488,6 +488,11 @@ export interface PublicItem {
   summary: string;
   industry: string;
   templateId?: string;
+  /**
+     * A released template's number in the specification's list: a reviewed release's, or, for a staff library template, that of the registered template whose title it has. Absent for any other entry.
+     * @pattern ^TPL-[0-9]{2}$
+     */
+  templateNumber?: string;
   category?: string;
   access?: PublicItemAccess;
   /**
@@ -4362,6 +4367,12 @@ export type ListPublicCatalogueParams = {
   sort?: ListPublicCatalogueSort;
   /** @minimum 1 */
   page?: number;
+  /**
+   * Only the released templates with these numbers, comma-separated, up to twenty.
+   * @maxLength 139
+   * @pattern ^TPL-[0-9]{2}(,TPL-[0-9]{2}){0,19}$
+   */
+  templateIds?: string;
 };
 
 export type ListPublicCatalogueType = typeof ListPublicCatalogueType[keyof typeof ListPublicCatalogueType];

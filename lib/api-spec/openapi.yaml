@@ -129,6 +129,10 @@ paths:
         - { in: query, name: access, schema: { type: string, enum: [all, free, premium] } }
         - { in: query, name: sort, schema: { type: string, enum: [relevance, name, recently_checked] } }
         - { in: query, name: page, schema: { type: integer, minimum: 1, default: 1 } }
+        - in: query
+          name: templateIds
+          description: Only the released templates with these numbers, comma-separated, up to twenty.
+          schema: { type: string, maxLength: 139, pattern: "^TPL-[0-9]{2}(,TPL-[0-9]{2}){0,19}$" }
       responses:
         "200":
           description: Released public content only
@@ -2005,6 +2009,10 @@ components:
         summary: { type: string }
         industry: { type: string }
         templateId: { type: string }
+        templateNumber:
+          type: string
+          pattern: "^TPL-[0-9]{2}$"
+          description: "A released template's number in the specification's list: a reviewed release's, or, for a staff library template, that of the registered template whose title it has. Absent for any other entry."
         category: { type: string }
         access: { type: string, enum: [free, premium] }
         amountKobo: { type: integer, minimum: 1, description: Current approved NGN price in kobo for a released premium template edition. }
