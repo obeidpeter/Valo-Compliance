@@ -1814,6 +1814,8 @@ components:
         url: { type: string }
         title: { type: string }
         locator: { type: string }
+        issuingBody: { type: string, description: "The body that issued the text, as the source check a staff-library guide was released on recorded it (docs/architecture/guidance-record.md). Absent where it did not." }
+        effectiveFrom: { type: string, description: "For an Act or a regulator's document, the day its text took effect, as an ISO 8601 time, as that check recorded it. Absent for a web page, which says what it says when it is read, and where the check did not record it." }
     AccessSupportAck:
       type: object
       required: [reference, message, delivery]
@@ -2050,6 +2052,18 @@ components:
         limitations: { type: string }
         sources: { type: array, items: { $ref: "#/components/schemas/PublicSourceReference" } }
         change: { $ref: "#/components/schemas/ReleaseChange" }
+        appliesTo: { type: string, description: "For a staff-library regulatory guide released with its record: whom and when it applies to, as the owner signed it (docs/architecture/guidance-record.md, slice 2). Absent for a guide released before its record was kept." }
+        actionEvidence: { type: string, description: "For such a guide, where its record says it: what a business does, and the records it keeps to show it." }
+        relatedTemplates:
+          type: array
+          description: "For such a guide: the templates its record names that are released now, each linked to its page. Absent where none is."
+          items:
+            type: object
+            required: [number, title, href]
+            properties:
+              number: { type: string, pattern: "^TPL-[0-9]{2}$" }
+              title: { type: string }
+              href: { type: string }
     ReleaseChange:
       type: object
       description: "What changed in the published version of a staff-library entry that followed an earlier release, as its editor wrote it, and when that version was released (docs/architecture/guidance-currency.md, slice 3). Absent for a first release, or a version released before change notes were kept."

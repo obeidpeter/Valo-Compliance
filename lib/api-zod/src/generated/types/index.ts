@@ -297,6 +297,7 @@ export * from './releaseControl';
 export * from './releasedResource';
 export * from './releasedResourceKind';
 export * from './releasedResourcePublicationMethod';
+export * from './releasedResourceRelatedTemplatesItem';
 export * from './releasedTemplate';
 export * from './releasedTemplateAccess';
 export * from './releasedTemplateFormatsItem';

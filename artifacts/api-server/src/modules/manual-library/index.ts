@@ -1036,11 +1036,6 @@ async function releasedManualRows(
     regulatoryCheckId: _privateCheck,
     // Form text is read only by staff and, through the forms, by the customers it is for (DOC-004).
     formText: _formText,
-    // A regulatory article's record is read by staff and the owner only, until its page shows it
-    // (docs/architecture/guidance-record.md, slice 2), so a database without its columns reads as before.
-    appliesTo: _appliesTo,
-    actionEvidence: _actionEvidence,
-    relatedTemplates: _relatedTemplates,
     body: fullBody,
     ...restFields
   } = getTableColumns(t);
@@ -1048,28 +1043,38 @@ async function releasedManualRows(
     ...restFields,
     body: options.summaryOnly ? sql<string>`left(${fullBody}, 600)` : fullBody,
   };
+  // A regulatory guide's record, which its page shows (docs/architecture/guidance-record.md, slice 2). A
+  // database the guidance record migration has not reached has none of its columns, and reads the rest.
+  const {
+    appliesTo: _appliesTo,
+    actionEvidence: _actionEvidence,
+    relatedTemplates: _relatedTemplates,
+    ...withoutRecord
+  } = fields;
   const released = and(eq(t.state, "published"), options.slug ? eq(t.slug, options.slug) : undefined);
   try {
     // An entry other than a regulatory guide is shown while its review is not overdue: 90 days after it
     // was published or last reviewed (docs/architecture/guidance-currency.md, slice 2). No entry is shown
     // while staff hold it (docs/architecture/library-holds.md, slice 2). A database the reviews or holds
     // migration has not reached shows entries as before.
-    const current = (rules: InUse) =>
-      db
-        .select({ ...fields, regulatorySources: c.sources, sourceCheckedAt: c.checkedAt })
-        .from(t)
-        .leftJoin(c, eq(c.id, t.regulatoryCheckId))
-        .where(
-          and(
-            released,
-            notHeld(rules, t.id),
-            or(
-              and(ne(t.kind, "regulatory_article"), notOverdue(rules, t.id)),
-              // The newest check has the evidence the guide was signed on, with each source's bytes or with
-              // each web page's words in their place (docs/architecture/guidance-currency.md). The words are
-              // read through each row's JSON, so a database the words migration has not reached yet keeps
-              // comparing bytes alone.
-              sql`${regulatoryEnabled} and (
+    const current =
+      <Columns extends typeof withoutRecord>(columns: Columns) =>
+      (rules: InUse) =>
+        db
+          .select({ ...columns, regulatorySources: c.sources, sourceCheckedAt: c.checkedAt })
+          .from(t)
+          .leftJoin(c, eq(c.id, t.regulatoryCheckId))
+          .where(
+            and(
+              released,
+              notHeld(rules, t.id),
+              or(
+                and(ne(t.kind, "regulatory_article"), notOverdue(rules, t.id)),
+                // The newest check has the evidence the guide was signed on, with each source's bytes or with
+                // each web page's words in their place (docs/architecture/guidance-currency.md). The words are
+                // read through each row's JSON, so a database the words migration has not reached yet keeps
+                // comparing bytes alone.
+                sql`${regulatoryEnabled} and (
         select (newest.evidence_sha256 = ${c.evidenceSha256}
             or to_jsonb(newest)->>'words_sha256' = to_jsonb(${c})->>'words_sha256')
           and cardinality(newest.holds) = 0
@@ -1077,11 +1082,17 @@ async function releasedManualRows(
           and not exists (select from jsonb_array_elements(newest.sources) ref where coalesce((ref->>'validThrough')::timestamptz,'-infinity') <= clock_timestamp())
         from valo_manual_regulatory_checks newest where newest.candidate_id = ${c.candidateId}
         order by newest.checked_at desc, newest.id desc limit 1) is true`,
+              ),
             ),
-          ),
-        )
-        .orderBy(desc(t.publishedAt), t.itemId);
-    return await underRules(current);
+          )
+          .orderBy(desc(t.publishedAt), t.itemId);
+    try {
+      return await underRules(current(fields));
+    } catch (error) {
+      if (pgError(error).code !== "42703") throw error;
+      const rows = await underRules(current(withoutRecord));
+      return rows.map((row) => ({ ...row, appliesTo: null, actionEvidence: null, relatedTemplates: null }));
+    }
   } catch (error) {
     if (!["42P01", "42703"].includes(pgError(error).code ?? "")) throw error;
     try {
@@ -1094,7 +1105,7 @@ async function releasedManualRows(
         relatedItems: _related,
         aiDrafted: _aiDrafted,
         ...older
-      } = fields;
+      } = withoutRecord;
       const prior = await db
         .select(older)
         .from(t)
@@ -1107,6 +1118,9 @@ async function releasedManualRows(
         limits: null,
         relatedItems: null,
         aiDrafted: null,
+        appliesTo: null,
+        actionEvidence: null,
+        relatedTemplates: null,
         regulatorySources: null,
         sourceCheckedAt: null,
       }));

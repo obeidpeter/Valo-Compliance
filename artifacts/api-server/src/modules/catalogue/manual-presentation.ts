@@ -28,7 +28,47 @@ const registeredTemplate = (title: string) =>
  * (docs/architecture/guidance-currency.md, slice 3). */
 const change = (row: Pick<PublicRevision, "change" | "publishedAt">) =>
   row.change && row.publishedAt ? { change: { on: row.publishedAt.toISOString(), note: row.change } } : {};
-export function manualResource(row: PublicRevision) {
+/**
+ * A regulatory guide's record as its page shows it (docs/architecture/guidance-record.md, slice 2): whom
+ * it applies to and what to do and keep, as the owner signed them with its version, and the related
+ * templates it names that are released now, from `released`, each linked to its page. A guide released
+ * before its record was kept shows none.
+ */
+type GuidanceRecordView = {
+  appliesTo?: string;
+  actionEvidence?: string;
+  relatedTemplates?: { number: string; title: string; href: string }[];
+};
+function guidanceRecord(row: PublicRevision, released: readonly PublicRevision[]): GuidanceRecordView {
+  if (row.kind !== "regulatory_article" || !row.appliesTo) return {};
+  const relatedTemplates = (row.relatedTemplates ?? []).flatMap((number) => {
+    const template = released.find(
+      (entry) => isManualTemplate(entry.kind) && registeredTemplate(entry.title)?.id === number,
+    );
+    return template ? [{ number, title: template.title, href: "/library/" + template.slug }] : [];
+  });
+  return {
+    appliesTo: row.appliesTo,
+    ...(row.actionEvidence ? { actionEvidence: row.actionEvidence } : {}),
+    ...(relatedTemplates.length ? { relatedTemplates } : {}),
+  };
+}
+/** A source as a guide's page lists it, with the body that issued it and the day its text took effect
+ * where the source check it was released on kept them. */
+const publicSource = ({
+  url,
+  title,
+  locator,
+  issuingBody,
+  effectiveFrom,
+}: NonNullable<PublicRevision["regulatorySources"]>[number]) => ({
+  url,
+  title,
+  locator,
+  ...(issuingBody ? { issuingBody } : {}),
+  ...(effectiveFrom ? { effectiveFrom } : {}),
+});
+export function manualResource(row: PublicRevision, released: readonly PublicRevision[] = []) {
   const regulatory = row.kind === "regulatory_article";
   return {
     id: row.id,
@@ -51,8 +91,9 @@ export function manualResource(row: PublicRevision) {
     limitations: regulatory
       ? "General information. State and local requirements and individual facts may differ."
       : "Everyday business guidance.",
-    sources: (row.regulatorySources ?? []).map(({ url, title, locator }) => ({ url, title, locator })),
+    sources: (row.regulatorySources ?? []).map(publicSource),
     ...change(row),
+    ...guidanceRecord(row, released),
   };
 }
 export function manualCatalogue(row: CatalogueRow): ReleasedLibraryItem {

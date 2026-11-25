@@ -170,13 +170,16 @@ export async function releasedResources() {
     ...existing
       .filter((r) => publicationSchema.parse(r.bundle).candidate.contentClass !== "general_template")
       .map(projectReleasedResource),
-    ...manual.filter((row) => !isManualTemplate(row.kind)).map(manualResource),
+    ...manual.filter((row) => !isManualTemplate(row.kind)).map((row) => manualResource(row, manual)),
   ];
 }
 export async function releasedResource(slug: string) {
   if (slug.startsWith("manual-")) {
     const [row] = await releasedManualEntries(slug);
-    return row && !isManualTemplate(row.kind) ? manualResource(row) : null;
+    if (!row || isManualTemplate(row.kind)) return null;
+    // Its related templates are shown only while they are released (docs/architecture/guidance-record.md).
+    const released = row.relatedTemplates?.length ? await releasedManualEntries({ summaryOnly: true }) : [];
+    return manualResource(row, released);
   }
   const row = (await liveReleasedVersions()).find(
     (r) => r.slug === slug && publicationSchema.parse(r.bundle).candidate.contentClass !== "general_template",

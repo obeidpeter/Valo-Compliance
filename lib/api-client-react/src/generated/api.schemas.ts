@@ -51,6 +51,10 @@ export interface PublicSourceReference {
   url: string;
   title: string;
   locator: string;
+  /** The body that issued the text, as the source check a staff-library guide was released on recorded it (docs/architecture/guidance-record.md). Absent where it did not. */
+  issuingBody?: string;
+  /** For an Act or a regulator's document, the day its text took effect, as an ISO 8601 time, as that check recorded it. Absent for a web page, which says what it says when it is read, and where the check did not record it. */
+  effectiveFrom?: string;
 }
 
 export type AccessSupportAckDelivery = typeof AccessSupportAckDelivery[keyof typeof AccessSupportAckDelivery];
@@ -460,6 +464,13 @@ export const ReleasedResourcePublicationMethod = {
   manual: 'manual',
 } as const;
 
+export type ReleasedResourceRelatedTemplatesItem = {
+  /** @pattern ^TPL-[0-9]{2}$ */
+  number: string;
+  title: string;
+  href: string;
+};
+
 /**
  * What changed in the published version of a staff-library entry that followed an earlier release, as its editor wrote it, and when that version was released (docs/architecture/guidance-currency.md, slice 3). Absent for a first release, or a version released before change notes were kept.
  */
@@ -483,6 +494,12 @@ export interface ReleasedResource {
   limitations: string;
   sources: PublicSourceReference[];
   change?: ReleaseChange;
+  /** For a staff-library regulatory guide released with its record: whom and when it applies to, as the owner signed it (docs/architecture/guidance-record.md, slice 2). Absent for a guide released before its record was kept. */
+  appliesTo?: string;
+  /** For such a guide, where its record says it: what a business does, and the records it keeps to show it. */
+  actionEvidence?: string;
+  /** For such a guide: the templates its record names that are released now, each linked to its page. Absent where none is. */
+  relatedTemplates?: ReleasedResourceRelatedTemplatesItem[];
 }
 
 export interface IndustryCoverage {

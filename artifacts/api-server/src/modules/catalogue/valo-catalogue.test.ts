@@ -109,6 +109,9 @@ test("manualCatalogue maps regulatory articles to guidance, uses sourceCheckedAt
     limits: null as string | null,
     relatedItems: null as string[] | null,
     aiDrafted: null as boolean | null,
+    appliesTo: null as string | null,
+    actionEvidence: null as string | null,
+    relatedTemplates: null as string[] | null,
   };
   const regulatory = manualCatalogue({
     ...base,
@@ -242,6 +245,109 @@ test("a premium template's preview names only the sample fields its text marks, 
   ]);
 });
 
+// CMP-001 (docs/architecture/guidance-record.md, slice 2): a regulatory guide's page shows its record as
+// the owner signed it, links only its related templates that are released, and names each source's
+// issuing body and the day its text took effect where its source check kept them.
+test("a regulatory guide's page shows its record, its released related templates and its sources' issuers and dates", () => {
+  const publishedAt = new Date("2026-11-24T09:00:00Z");
+  const row = (itemId: string, kind: "template" | "regulatory_article", title: string) => ({
+    id: itemId.replace(/.$/, "9"),
+    itemId,
+    version: 1,
+    slug: "manual-" + itemId,
+    kind,
+    industry: null,
+    title,
+    body: "Synthetic text of the item.",
+    digest: "a".repeat(64),
+    fileFormat: kind === "template" ? ("docx" as const) : null,
+    state: "published" as const,
+    createdAt: publishedAt,
+    publishedAt,
+    closedAt: null,
+    regulatorySources: null as
+      | {
+          url: string;
+          title: string;
+          locator: string;
+          rawSha256: string;
+          validThrough: string;
+          retrievedAt: string;
+          retrieval: "official_url";
+          issuingBody?: string;
+          effectiveFrom?: string;
+        }[]
+      | null,
+    sourceCheckedAt: publishedAt as Date | null,
+    change: null as string | null,
+    purpose: null as string | null,
+    needs: null as string | null,
+    limits: null as string | null,
+    relatedItems: null as string[] | null,
+    aiDrafted: null as boolean | null,
+    appliesTo: null as string | null,
+    actionEvidence: null as string | null,
+    relatedTemplates: null as string[] | null,
+  });
+  const source = {
+    url: "https://example.test/act",
+    title: "Synthetic Act",
+    locator: "s. 2",
+    rawSha256: "b".repeat(64),
+    validThrough: "2026-12-24T00:00:00Z",
+    retrievedAt: "2026-11-24T00:00:00Z",
+    retrieval: "official_url" as const,
+  };
+  // A released template filed as TPL-29, and the guide that names it and an unreleased TPL-31.
+  const privacyNotice = row("00000000-0000-4000-8000-0000000000e1", "template", "Privacy notice");
+  const guide = {
+    ...row("00000000-0000-4000-8000-0000000000e2", "regulatory_article", "Synthetic recorded guide"),
+    appliesTo: "Synthetic businesses that collect personal data.",
+    actionEvidence: "Tell people what you collect, and keep what you told them.",
+    relatedTemplates: ["TPL-29", "TPL-31"],
+    regulatorySources: [
+      { ...source, issuingBody: "Synthetic Commission", effectiveFrom: "2023-06-12T00:00:00+01:00" },
+      {
+        ...source,
+        url: "https://example.test/page",
+        title: "Synthetic page",
+        issuingBody: "Synthetic Board",
+      },
+      source,
+    ],
+  };
+  const page = manualResource(guide, [privacyNotice, guide]);
+  assert.equal(page.appliesTo, guide.appliesTo);
+  assert.equal(page.actionEvidence, guide.actionEvidence);
+  assert.deepEqual(page.relatedTemplates, [
+    { number: "TPL-29", title: "Privacy notice", href: "/library/" + privacyNotice.slug },
+  ]);
+  assert.deepEqual(page.sources, [
+    {
+      url: source.url,
+      title: "Synthetic Act",
+      locator: "s. 2",
+      issuingBody: "Synthetic Commission",
+      effectiveFrom: "2023-06-12T00:00:00+01:00",
+    },
+    {
+      url: "https://example.test/page",
+      title: "Synthetic page",
+      locator: "s. 2",
+      issuingBody: "Synthetic Board",
+    },
+    { url: source.url, title: "Synthetic Act", locator: "s. 2" },
+  ]);
+  // With no released template among its related ones, it links none.
+  assert.equal(manualResource(guide).relatedTemplates, undefined);
+  // A guide released before its record was kept shows none of it, and keeps its fixed scope.
+  const older = manualResource({ ...guide, appliesTo: null, actionEvidence: null, relatedTemplates: null });
+  assert.equal(older.appliesTo, undefined);
+  assert.equal(older.actionEvidence, undefined);
+  assert.equal(older.relatedTemplates, undefined);
+  assert.equal(older.scope, "Nigerian national rules on this subject.");
+});
+
 // DOC-003, EDP-008: a staff-library template's page says what it is for, what a customer needs, its
 // limits, how it was written and checked, and links its related guides while they are released.
 test("a staff-library template's page shows its released details, its statement and only its released related guides", () => {
@@ -273,6 +379,9 @@ test("a staff-library template's page shows its released details, its statement 
     limits: null as string | null,
     relatedItems: null as string[] | null,
     aiDrafted: null as boolean | null,
+    appliesTo: null as string | null,
+    actionEvidence: null as string | null,
+    relatedTemplates: null as string[] | null,
   });
   const guide = row("00000000-0000-4000-8000-0000000000a1", "practical_guide", "Synthetic guide");
   const article = row("00000000-0000-4000-8000-0000000000a2", "regulatory_article", "Synthetic article");

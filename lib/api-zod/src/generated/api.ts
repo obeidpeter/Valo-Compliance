@@ -750,6 +750,9 @@ export const GetPublicDiscoveryResponse = zod.object({
 })
 
 
+export const listReleasedResourcesResponseRelatedTemplatesItemNumberRegExp = new RegExp('^TPL-[0-9]{2}$');
+
+
 export const ListReleasedResourcesResponseItem = zod.object({
   "id": zod.string(),
   "slug": zod.string(),
@@ -766,12 +769,21 @@ export const ListReleasedResourcesResponseItem = zod.object({
   "sources": zod.array(zod.object({
   "url": zod.string(),
   "title": zod.string(),
-  "locator": zod.string()
+  "locator": zod.string(),
+  "issuingBody": zod.string().optional().describe('The body that issued the text, as the source check a staff-library guide was released on recorded it (docs/architecture/guidance-record.md). Absent where it did not.'),
+  "effectiveFrom": zod.string().optional().describe('For an Act or a regulator\'s document, the day its text took effect, as an ISO 8601 time, as that check recorded it. Absent for a web page, which says what it says when it is read, and where the check did not record it.')
 })),
   "change": zod.object({
   "on": zod.coerce.date(),
   "note": zod.string()
-}).optional().describe('What changed in the published version of a staff-library entry that followed an earlier release, as its editor wrote it, and when that version was released (docs/architecture/guidance-currency.md, slice 3). Absent for a first release, or a version released before change notes were kept.')
+}).optional().describe('What changed in the published version of a staff-library entry that followed an earlier release, as its editor wrote it, and when that version was released (docs/architecture/guidance-currency.md, slice 3). Absent for a first release, or a version released before change notes were kept.'),
+  "appliesTo": zod.string().optional().describe('For a staff-library regulatory guide released with its record: whom and when it applies to, as the owner signed it (docs/architecture/guidance-record.md, slice 2). Absent for a guide released before its record was kept.'),
+  "actionEvidence": zod.string().optional().describe('For such a guide, where its record says it: what a business does, and the records it keeps to show it.'),
+  "relatedTemplates": zod.array(zod.object({
+  "number": zod.string().regex(listReleasedResourcesResponseRelatedTemplatesItemNumberRegExp),
+  "title": zod.string(),
+  "href": zod.string()
+})).optional().describe('For such a guide: the templates its record names that are released now, each linked to its page. Absent where none is.')
 })
 export const ListReleasedResourcesResponse = zod.array(ListReleasedResourcesResponseItem)
 
@@ -783,6 +795,9 @@ export const getReleasedResourcePathSlugMax = 100;
 export const GetReleasedResourceParams = zod.object({
   "slug": zod.coerce.string().max(getReleasedResourcePathSlugMax)
 })
+
+export const getReleasedResourceResponseRelatedTemplatesItemNumberRegExp = new RegExp('^TPL-[0-9]{2}$');
+
 
 export const GetReleasedResourceResponse = zod.object({
   "id": zod.string(),
@@ -800,12 +815,21 @@ export const GetReleasedResourceResponse = zod.object({
   "sources": zod.array(zod.object({
   "url": zod.string(),
   "title": zod.string(),
-  "locator": zod.string()
+  "locator": zod.string(),
+  "issuingBody": zod.string().optional().describe('The body that issued the text, as the source check a staff-library guide was released on recorded it (docs/architecture/guidance-record.md). Absent where it did not.'),
+  "effectiveFrom": zod.string().optional().describe('For an Act or a regulator\'s document, the day its text took effect, as an ISO 8601 time, as that check recorded it. Absent for a web page, which says what it says when it is read, and where the check did not record it.')
 })),
   "change": zod.object({
   "on": zod.coerce.date(),
   "note": zod.string()
-}).optional().describe('What changed in the published version of a staff-library entry that followed an earlier release, as its editor wrote it, and when that version was released (docs/architecture/guidance-currency.md, slice 3). Absent for a first release, or a version released before change notes were kept.')
+}).optional().describe('What changed in the published version of a staff-library entry that followed an earlier release, as its editor wrote it, and when that version was released (docs/architecture/guidance-currency.md, slice 3). Absent for a first release, or a version released before change notes were kept.'),
+  "appliesTo": zod.string().optional().describe('For a staff-library regulatory guide released with its record: whom and when it applies to, as the owner signed it (docs/architecture/guidance-record.md, slice 2). Absent for a guide released before its record was kept.'),
+  "actionEvidence": zod.string().optional().describe('For such a guide, where its record says it: what a business does, and the records it keeps to show it.'),
+  "relatedTemplates": zod.array(zod.object({
+  "number": zod.string().regex(getReleasedResourceResponseRelatedTemplatesItemNumberRegExp),
+  "title": zod.string(),
+  "href": zod.string()
+})).optional().describe('For such a guide: the templates its record names that are released now, each linked to its page. Absent where none is.')
 })
 
 
@@ -4217,7 +4241,9 @@ export const ListOwnerGuidanceResponse = zod.object({
   "sources": zod.array(zod.object({
   "url": zod.string(),
   "title": zod.string(),
-  "locator": zod.string()
+  "locator": zod.string(),
+  "issuingBody": zod.string().optional().describe('The body that issued the text, as the source check a staff-library guide was released on recorded it (docs/architecture/guidance-record.md). Absent where it did not.'),
+  "effectiveFrom": zod.string().optional().describe('For an Act or a regulator\'s document, the day its text took effect, as an ISO 8601 time, as that check recorded it. Absent for a web page, which says what it says when it is read, and where the check did not record it.')
 })),
   "live": zod.union([zod.object({
   "version": zod.int(),

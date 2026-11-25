@@ -10,4 +10,8 @@ export interface PublicSourceReference {
   url: string;
   title: string;
   locator: string;
+  /** The body that issued the text, as the source check a staff-library guide was released on recorded it (docs/architecture/guidance-record.md). Absent where it did not. */
+  issuingBody?: string;
+  /** For an Act or a regulator's document, the day its text took effect, as an ISO 8601 time, as that check recorded it. Absent for a web page, which says what it says when it is read, and where the check did not record it. */
+  effectiveFrom?: string;
 }
