@@ -105,6 +105,29 @@ Slice 2:
 - A database the migration has not reached holds nothing. The readers then apply the review rule alone,
   and before the reviews migration, neither.
 
+Slice 3:
+- Support staff find a library entry by words of its title, among published entries only, and the
+  referral points at the version published now, with its digest. A draft or replaced version is
+  refused. Only support staff may search, as only they refer. The screens call an entry a guide or
+  template, in the site's own words, as the staff library's screen does.
+- In the triage queue, "Hold this version from new use" places slice 2's hold, in the
+  transaction that records the triage, by the Content editor triaging it. Its reason names the support
+  request by its reference and copies none of its words, since the hold is read outside support. A
+  version already held keeps its hold, and the referral points at that one. A version no longer
+  published is not held, and the refusal says to refer the current version if the problem remains.
+  Resolving a referral keeps its hold, which a Content editor lifts, or the owner for a regulatory
+  guide, or a corrected release leaves behind.
+- The database keeps the version every referral points at, sets a library referral's hold once and only
+  to a hold on that edition, and keeps a library hold to a library referral and a source impact to the
+  others.
+- The owner's rule panel lists the referrals not yet resolved of every version of the rule the owner
+  signed, whether released, replaced or withdrawn, with the reason given and whether content staff held
+  that version through the source controls. A referral from an erased workspace is left out, as from
+  the triage queue. A regulatory guide's hold from triage reaches the owner's guidance panel as slice 2's
+  hold, which only the owner lifts.
+- A library referral has no AI reassessment (the owner's third point): a Content editor, or the owner
+  for a regulatory guide, reassesses the entry.
+
 ## What does not change
 
 - Who may release which entry (decision 0018), and the reviewed route's holds.
