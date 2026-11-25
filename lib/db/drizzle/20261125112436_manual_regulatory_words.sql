@@ -1,0 +1,2 @@
+ALTER TABLE "valo_manual_regulatory_checks" ADD COLUMN "words_sha256" text;--> statement-breakpoint
+ALTER TABLE "valo_manual_regulatory_checks" ADD CONSTRAINT "valo_manual_regulatory_words" CHECK ("valo_manual_regulatory_checks"."words_sha256" IS NULL OR "valo_manual_regulatory_checks"."words_sha256" ~ '^[a-f0-9]{64}$');

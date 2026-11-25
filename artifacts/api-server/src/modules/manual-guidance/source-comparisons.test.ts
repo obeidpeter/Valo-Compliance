@@ -38,6 +38,7 @@ test("the manual tax permission is confined to one issuer, passage and address",
     rawChecksum: "a".repeat(64),
     checkedAt: at.toISOString(),
     text: "Different tax instructions.",
+    mime: "text/html",
     retrieval: "official_url" as const,
   };
   assert.equal(manualCheckedPassages([altered])(page.id), undefined);
@@ -50,6 +51,7 @@ test("employment corroboration requires both editions and every cited passage", 
     rawChecksum: "ee8bf3aa6607d6322327b51cc882f139d3e9a3c5bff9243b360dc122daae3eb6",
     checkedAt: at.toISOString(),
     text: "Synthetic input",
+    mime: "application/pdf",
     retrieval: "official_url" as const,
   };
   const ministry = {

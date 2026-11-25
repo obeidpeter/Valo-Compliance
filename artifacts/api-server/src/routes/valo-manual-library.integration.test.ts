@@ -42,6 +42,7 @@ test("consumer Gazette checks bind the exact reviewed pages and expire when the 
     rawChecksum: "aa942cdef860387e8f984de52666e5683d12d6e2813cb47b10335e0bf82a07f5",
     checkedAt: "2026-11-22T17:00:00Z",
     text: "Unused OCR",
+    mime: "application/pdf",
     retrieval: "official_url" as const,
   };
   const reviewedAt = new Date(observed.checkedAt);
