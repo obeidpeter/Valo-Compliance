@@ -100,6 +100,22 @@ database that already has the worker's schedules gets the new one when the revie
   notice carries its reason.
 - For a regulatory guide, the owner writes the note when signing the new version.
 
+## Settled while building it
+
+Slice 1:
+- A page's words are the text the extractor read from it, the text the guide's claims are matched in.
+  Its evidence in words still holds the check's holds, so a check that held a guide never matches one
+  that did not.
+- The reader takes the newest check's evidence in words only where the migration has added it. On a
+  database it has not reached, guides are shown on their evidence in bytes, as before. Recording a
+  check needs the migration, so until it is applied the owner's button and the command fail, as the
+  runbook says.
+- The daily check can record a newer check while the owner has a guide open on their panel. The
+  database then refuses the signing, as it does today after any newer check, and the owner reopens
+  the guide and signs on the newest check.
+- A check that outlasts its four minutes fails the worker's run and is not started again by that
+  worker until it ends. It may still record its result.
+
 ## What does not change
 
 - What holds a guide, and its 30-day amendment records.

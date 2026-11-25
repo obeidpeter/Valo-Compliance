@@ -4095,6 +4095,34 @@
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
       "test": "an invoice started from its form asks its questions and fills its template's own wording as they are answered: the wording is not edited directly, what is still needed is listed by question, the preview shows the wording with its header rows, and a save sends the answers with exactly the wording they make",
       "proves": "In a browser, an invoice started from its form says under its questions that the template's wording stays as it was released, and its preview marks the customer's answer inside that wording and the notice as added by Valo, with no automated WCAG 2.2 AA failure."
+    },
+    {
+      "requirement": "CMP-007",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/manual-guidance/regulatory-evidence.test.ts",
+      "test": "a check's evidence compares a web page by its words and a file by its bytes, and its evidence in bytes is what it always was",
+      "proves": "A regulatory guide's source check gives the same evidence in words when an official web page returns other bytes with the same words, and different evidence when the page's words, a file's bytes, the check's holds or the guide's title change, while its evidence in bytes stays the digest earlier checks recorded."
+    },
+    {
+      "requirement": "EDP-011",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/manual-guidance/daily-check.test.ts",
+      "test": "the guidance task checks the guide due longest, one at a time, and a check that outlasts its bound fails the run",
+      "proves": "With its list of due guides and its check stood in, the worker's guidance task checks only the guide due longest, a check that outlasts its bound fails the run and no other starts in that process until it ends, and outside development it refuses before reading anything; it does not show a read of an official source."
+    },
+    {
+      "requirement": "EDP-011",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/manual-guidance/daily-check.integration.test.ts",
+      "test": "a published guide stays shown while its web page says the same words, is held when a source or its words change, and is due again a day after its newest check or an hour after a check that held it",
+      "proves": "In a database, a regulatory guide released on a synthetic owner's sign-off is due for its check a day after its newest check, or an hour after one that held it, the older first, while a guide never published or withdrawn is never due; it does not show a read of an official source."
+    },
+    {
+      "requirement": "CMP-007",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/manual-guidance/daily-check.integration.test.ts",
+      "test": "a published guide stays shown while its web page says the same words, is held when a source or its words change, and is due again a day after its newest check or an hour after a check that held it",
+      "proves": "In a database, a regulatory guide stays shown while a later check finds its web page's words the same, is held when the page's words or a file's bytes change or a source cannot be read, and is shown again on the evidence it was signed on."
     }
   ]
 }
