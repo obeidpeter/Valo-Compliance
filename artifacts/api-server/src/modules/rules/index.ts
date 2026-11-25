@@ -10,3 +10,11 @@
  */
 export * from "./valo-assessments";
 export { listRuleNotices, markRuleNoticeRead } from "./rule-notices";
+export {
+  CHECKER_CORPUS_PATH,
+  checkerChallengeManifest,
+  checkerChallengeTwin,
+  checkerChallengeVerdictSchema,
+  prepareCheckerChallengeManifest,
+  type CheckerChallengeVerdict,
+} from "./checker-challenge";
