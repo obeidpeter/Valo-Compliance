@@ -51,6 +51,10 @@ export interface PublicSourceReference {
   url: string;
   title: string;
   locator: string;
+  /** The body that issued the text, as the source check a staff-library guide was released on recorded it (docs/architecture/guidance-record.md). Absent where it did not. */
+  issuingBody?: string;
+  /** For an Act or a regulator's document, the day its text took effect, as an ISO 8601 time, as that check recorded it. Absent for a web page, which says what it says when it is read, and where the check did not record it. */
+  effectiveFrom?: string;
 }
 
 export type AccessSupportAckDelivery = typeof AccessSupportAckDelivery[keyof typeof AccessSupportAckDelivery];
@@ -460,6 +464,13 @@ export const ReleasedResourcePublicationMethod = {
   manual: 'manual',
 } as const;
 
+export type ReleasedResourceRelatedTemplatesItem = {
+  /** @pattern ^TPL-[0-9]{2}$ */
+  number: string;
+  title: string;
+  href: string;
+};
+
 /**
  * What changed in the published version of a staff-library entry that followed an earlier release, as its editor wrote it, and when that version was released (docs/architecture/guidance-currency.md, slice 3). Absent for a first release, or a version released before change notes were kept.
  */
@@ -483,6 +494,12 @@ export interface ReleasedResource {
   limitations: string;
   sources: PublicSourceReference[];
   change?: ReleaseChange;
+  /** For a staff-library regulatory guide released with its record: whom and when it applies to, as the owner signed it (docs/architecture/guidance-record.md, slice 2). Absent for a guide released before its record was kept. */
+  appliesTo?: string;
+  /** For such a guide, where its record says it: what a business does, and the records it keeps to show it. */
+  actionEvidence?: string;
+  /** For such a guide: the templates its record names that are released now, each linked to its page. Absent where none is. */
+  relatedTemplates?: ReleasedResourceRelatedTemplatesItem[];
 }
 
 export interface IndustryCoverage {
@@ -2048,6 +2065,13 @@ export type OwnerGuidanceItemLive = {
   digest: string;
 } | null;
 
+export type OwnerGuidanceItemRelatedTemplatesItem = {
+  /** @pattern ^TPL-[0-9]{2}$ */
+  number: string;
+  /** @nullable */
+  title: string | null;
+};
+
 export interface OwnerGuidanceItem {
   itemId: string;
   version: number;
@@ -2069,6 +2093,18 @@ export interface OwnerGuidanceItem {
   previousRelease: number | null;
   /** The hold a Content editor placed on the published version, while it is not lifted, or null. Only the owner lifts it (docs/architecture/library-holds.md, slice 2). */
   libraryHold: ManualLibraryHoldRecord | null;
+  /**
+     * Whom and when the article applies to. It is released only with it.
+     * @nullable
+     */
+  appliesTo: string | null;
+  /**
+     * What a business does, and the records it keeps to show it.
+     * @nullable
+     */
+  actionEvidence: string | null;
+  /** The registered templates the version names as related, each with its registered title. */
+  relatedTemplates: OwnerGuidanceItemRelatedTemplatesItem[];
 }
 
 export interface OwnerGuidancePage {
@@ -2128,7 +2164,7 @@ export interface OwnerGuidanceReceipt {
 }
 
 /**
- * missing files the drafts not in the library yet; form_text files a new draft version of each filed template whose latest version lacks the form text proposed for it; details files a new draft version of each filed template whose latest version lacks its entry details, with the details proposed for it
+ * missing files the drafts not in the library yet; form_text files a new draft version of each filed template whose latest version lacks the form text proposed for it; details files a new draft version of each filed template whose latest version lacks its entry details, with the details proposed for it; record files a new draft version of each filed regulatory guide whose latest version does not say whom it applies to, with the record its draft's editorial lines give (docs/architecture/guidance-record.md)
  */
 export type RetainedDraftLoadLoad = typeof RetainedDraftLoadLoad[keyof typeof RetainedDraftLoadLoad];
 
@@ -2137,10 +2173,11 @@ export const RetainedDraftLoadLoad = {
   missing: 'missing',
   form_text: 'form_text',
   details: 'details',
+  record: 'record',
 } as const;
 
 export interface RetainedDraftLoad {
-  /** missing files the drafts not in the library yet; form_text files a new draft version of each filed template whose latest version lacks the form text proposed for it; details files a new draft version of each filed template whose latest version lacks its entry details, with the details proposed for it */
+  /** missing files the drafts not in the library yet; form_text files a new draft version of each filed template whose latest version lacks the form text proposed for it; details files a new draft version of each filed template whose latest version lacks its entry details, with the details proposed for it; record files a new draft version of each filed regulatory guide whose latest version does not say whom it applies to, with the record its draft's editorial lines give (docs/architecture/guidance-record.md) */
   load: RetainedDraftLoadLoad;
 }
 
@@ -2199,6 +2236,19 @@ export const RetainedDraftDetails = {
   filed: 'filed',
 } as const;
 
+/**
+ * For a regulatory guide: whether the library's latest version says whom it applies to (filed); or not yet, while its draft's editorial lines say it, so that the record they give waits to be filed (proposed); or neither does, so that a Content editor writes it (unwritten) (docs/architecture/guidance-record.md). Null for every other draft.
+ * @nullable
+ */
+export type RetainedDraftRecord = typeof RetainedDraftRecord[keyof typeof RetainedDraftRecord] | null;
+
+
+export const RetainedDraftRecord = {
+  proposed: 'proposed',
+  filed: 'filed',
+  unwritten: 'unwritten',
+} as const;
+
 export interface RetainedDraft {
   retainedId: string;
   kind: RetainedDraftKind;
@@ -2223,6 +2273,11 @@ export interface RetainedDraft {
      * @nullable
      */
   details: RetainedDraftDetails;
+  /**
+     * For a regulatory guide: whether the library's latest version says whom it applies to (filed); or not yet, while its draft's editorial lines say it, so that the record they give waits to be filed (proposed); or neither does, so that a Content editor writes it (unwritten) (docs/architecture/guidance-record.md). Null for every other draft.
+     * @nullable
+     */
+  record: RetainedDraftRecord;
   sourceCheck: RetainedDraftSourceCheck | null;
 }
 
@@ -2466,6 +2521,24 @@ export interface ManualLibraryRevision {
   told: number | null;
   /** The hold on the entry's published version, while it is not lifted, or null. */
   hold: ManualLibraryHoldRecord | null;
+  /**
+     * For a regulatory article only: whom and when it applies to. A regulatory article is released only with it (docs/architecture/guidance-record.md, CMP-001).
+     * @maxLength 800
+     * @nullable
+     */
+  appliesTo: string | null;
+  /**
+     * For a regulatory article only: what a business does, and the records it keeps to show it.
+     * @maxLength 800
+     * @nullable
+     */
+  actionEvidence: string | null;
+  /**
+     * For a regulatory article only: the registered numbers of its related templates. Omitted or empty, it has none.
+     * @maxItems 6
+     * @items.pattern ^TPL-[0-9]{2}$
+     */
+  relatedTemplates: string[];
 }
 
 export type ManualLibraryDraftKind = typeof ManualLibraryDraftKind[keyof typeof ManualLibraryDraftKind];
@@ -2553,6 +2626,24 @@ export interface ManualLibraryDraft {
      * @nullable
      */
   aiDrafted?: boolean | null;
+  /**
+     * For a regulatory article only: whom and when it applies to. A regulatory article is released only with it (docs/architecture/guidance-record.md, CMP-001).
+     * @maxLength 800
+     * @nullable
+     */
+  appliesTo?: string | null;
+  /**
+     * For a regulatory article only: what a business does, and the records it keeps to show it.
+     * @maxLength 800
+     * @nullable
+     */
+  actionEvidence?: string | null;
+  /**
+     * For a regulatory article only: the registered numbers of its related templates. Omitted or empty, it has none.
+     * @maxItems 6
+     * @items.pattern ^TPL-[0-9]{2}$
+     */
+  relatedTemplates?: string[];
 }
 
 export type ManualLibraryActionAction = typeof ManualLibraryActionAction[keyof typeof ManualLibraryActionAction];

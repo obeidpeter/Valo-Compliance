@@ -141,6 +141,9 @@ export function compareManualEmployment(
         retrievedAt: ministry.checkedAt,
         retrieval: ministry.retrieval,
         validThrough,
+        // The Ministry's copy of the Act, which took effect on the day the registered copy prints.
+        issuingBody: "Federal Ministry of Labour and Employment",
+        effectiveFrom: base.commencement.effectiveFrom,
       },
     ],
   };

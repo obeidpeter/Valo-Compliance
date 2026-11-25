@@ -150,6 +150,12 @@ export async function checkManualRegulatorySources(ids: readonly string[]) {
             retrievedAt: capture.checkedAt,
             retrieval: capture.retrieval,
             validThrough: new Date(lastSearch + AMENDMENT_RECORD_DAYS * 86_400_000).toISOString(),
+            // Who issued the text and the day it took effect, from the claim map's instrument
+            // (docs/architecture/guidance-record.md). A page has no such day.
+            issuingBody: location.instrument.issuingBody,
+            ...(location.instrument.kind === "official_page"
+              ? {}
+              : { effectiveFrom: location.instrument.effectiveFrom }),
           });
         }
         if (proof.candidate.legalScopeStatus !== "verified" && !holds.length)

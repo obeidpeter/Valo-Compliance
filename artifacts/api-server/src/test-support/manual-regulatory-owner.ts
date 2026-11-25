@@ -29,6 +29,12 @@ export async function exerciseManualRegulatoryOwner(call: Call, editor: string) 
   const assignment = randomUUID(),
     title = "Synthetic source sign-off " + id,
     body = "An exact synthetic regulatory article.";
+  // The article's record, which the owner signs with its text (docs/architecture/guidance-record.md).
+  const record = {
+    appliesTo: "Synthetic businesses that keep the synthetic register.",
+    actionEvidence: "Keep the synthetic register and the receipts that show it.",
+    relatedTemplates: ["TPL-16", "TPL-10"],
+  };
   const draft = {
     kind: "regulatory_article",
     title,
@@ -37,6 +43,7 @@ export async function exerciseManualRegulatoryOwner(call: Call, editor: string) 
     fileMode: "text",
     baseVersion: 0,
     requestId: randomUUID(),
+    ...record,
   };
   const path = "/admin/owner-guidance",
     page = "/public/resources/manual-" + id;
@@ -91,6 +98,10 @@ export async function exerciseManualRegulatoryOwner(call: Call, editor: string) 
       retrievedAt: new Date().toISOString(),
       retrieval: "official_url" as const,
       validThrough: new Date(Date.now() + 86_400_000).toISOString(),
+      // Who issued the text and the day it took effect, as a check keeps them
+      // (docs/architecture/guidance-record.md).
+      issuingBody: "Synthetic Commission",
+      effectiveFrom: "2023-06-12T00:00:00+01:00",
     };
     const check = async (holds: string[], text = body, checkedAt = new Date(Date.now() + offset++)) => {
       const [row] = await db
@@ -127,6 +138,33 @@ export async function exerciseManualRegulatoryOwner(call: Call, editor: string) 
     assert.equal((await call(page)).status, 404);
     const pass = await check([]);
     assert.equal((await list()).checkId, pass);
+    // The owner's panel shows the version's record with its text, and a version that does not say whom
+    // it applies to is not signed, even on a passing check (CMP-001, docs/architecture/guidance-record.md).
+    const listed = await list();
+    assert.equal(listed.appliesTo, record.appliesTo);
+    assert.equal(listed.actionEvidence, record.actionEvidence);
+    assert.deepEqual(listed.relatedTemplates, [
+      { number: "TPL-16", title: "Employment contract" },
+      { number: "TPL-10", title: "Leave request form" },
+    ]);
+    const scopeless = randomUUID();
+    const unscoped = GetManualLibraryRevisionResponse.parse(
+      await (
+        await call(
+          "/admin/manual-library/" + scopeless + "/drafts",
+          { ...draft, appliesTo: null, actionEvidence: null, relatedTemplates: [], requestId: randomUUID() },
+          editor,
+        )
+      ).json(),
+    );
+    assert.equal(unscoped.appliesTo, null);
+    const refused = await call(
+      path + "/" + scopeless + "/decisions",
+      { ...decision(pass), digest: unscoped.digest },
+      owner,
+    );
+    assert.equal(refused.status, 409);
+    assert.match(((await refused.json()) as { error: string }).error, /does not say whom it applies to/);
     assert.equal((await decide({ ...decision(pass), confirmed: false })).status, 422);
     assert.equal((await decide(decision(pass), editor)).status, 403);
     assert.equal((await decide(decision(pass))).status, 200);
@@ -134,9 +172,73 @@ export async function exerciseManualRegulatoryOwner(call: Call, editor: string) 
     const publicArticle = GetReleasedResourceResponse.parse(await (await call(page)).json());
     assert.equal(publicArticle.kind, "guidance");
     assert.equal(publicArticle.body, body);
+    // The page shows the source with who issued it and when its text took effect, and the record the
+    // owner signed (docs/architecture/guidance-record.md, slice 2). Neither related template is released.
     assert.deepEqual(publicArticle.sources, [
-      { title: source.title, url: source.url, locator: source.locator },
+      {
+        title: source.title,
+        url: source.url,
+        locator: source.locator,
+        issuingBody: source.issuingBody,
+        effectiveFrom: source.effectiveFrom,
+      },
     ]);
+    assert.equal(publicArticle.appliesTo, record.appliesTo);
+    assert.equal(publicArticle.actionEvidence, record.actionEvidence);
+    assert.equal(publicArticle.relatedTemplates, undefined);
+    // Once a template filed as one of them is released, the page links it, and only it.
+    const leaveForm = randomUUID();
+    const leaveDraft = await call(
+      "/admin/manual-library/" + leaveForm + "/drafts",
+      {
+        kind: "template",
+        title: "Leave request form",
+        body: "A synthetic leave request form.",
+        industry: null,
+        fileMode: "text",
+        baseVersion: 0,
+        requestId: randomUUID(),
+        purpose: "Ask for leave in a synthetic test.",
+        limits: "A synthetic form only.",
+        aiDrafted: false,
+      },
+      editor,
+    );
+    assert.equal(leaveDraft.status, 200);
+    const leave = GetManualLibraryRevisionResponse.parse(await leaveDraft.json());
+    assert.equal(
+      (
+        await call(
+          "/admin/manual-library/" + leaveForm + "/actions",
+          { action: "publish", version: leave.version, digest: leave.digest },
+          editor,
+        )
+      ).status,
+      200,
+    );
+    assert.deepEqual(GetReleasedResourceResponse.parse(await (await call(page)).json()).relatedTemplates, [
+      { number: "TPL-10", title: "Leave request form", href: "/library/manual-" + leaveForm },
+    ]);
+    // The template is withdrawn again, so no other step finds it released.
+    assert.equal(
+      (
+        await call(
+          "/admin/manual-library/" + leaveForm + "/actions",
+          {
+            action: "withdraw",
+            version: leave.version,
+            digest: leave.digest,
+            reason: "Synthetic: the owner's step released this form only to see it linked.",
+          },
+          editor,
+        )
+      ).status,
+      200,
+    );
+    assert.equal(
+      GetReleasedResourceResponse.parse(await (await call(page)).json()).relatedTemplates,
+      undefined,
+    );
     assert.ok(!JSON.stringify(publicArticle).includes(owner));
     const otherId = randomUUID();
     const otherDraft = await call(

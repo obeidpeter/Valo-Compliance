@@ -9,6 +9,7 @@ import type { PublicSourceReference } from './publicSourceReference';
 import type { ReleaseChange } from './releaseChange';
 import type { ReleasedResourceKind } from './releasedResourceKind';
 import type { ReleasedResourcePublicationMethod } from './releasedResourcePublicationMethod';
+import type { ReleasedResourceRelatedTemplatesItem } from './releasedResourceRelatedTemplatesItem';
 
 export interface ReleasedResource {
   id: string;
@@ -25,4 +26,10 @@ export interface ReleasedResource {
   limitations: string;
   sources: PublicSourceReference[];
   change?: ReleaseChange;
+  /** For a staff-library regulatory guide released with its record: whom and when it applies to, as the owner signed it (docs/architecture/guidance-record.md, slice 2). Absent for a guide released before its record was kept. */
+  appliesTo?: string;
+  /** For such a guide, where its record says it: what a business does, and the records it keeps to show it. */
+  actionEvidence?: string;
+  /** For such a guide: the templates its record names that are released now, each linked to its page. Absent where none is. */
+  relatedTemplates?: ReleasedResourceRelatedTemplatesItem[];
 }

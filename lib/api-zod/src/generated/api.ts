@@ -750,6 +750,9 @@ export const GetPublicDiscoveryResponse = zod.object({
 })
 
 
+export const listReleasedResourcesResponseRelatedTemplatesItemNumberRegExp = new RegExp('^TPL-[0-9]{2}$');
+
+
 export const ListReleasedResourcesResponseItem = zod.object({
   "id": zod.string(),
   "slug": zod.string(),
@@ -766,12 +769,21 @@ export const ListReleasedResourcesResponseItem = zod.object({
   "sources": zod.array(zod.object({
   "url": zod.string(),
   "title": zod.string(),
-  "locator": zod.string()
+  "locator": zod.string(),
+  "issuingBody": zod.string().optional().describe('The body that issued the text, as the source check a staff-library guide was released on recorded it (docs/architecture/guidance-record.md). Absent where it did not.'),
+  "effectiveFrom": zod.string().optional().describe('For an Act or a regulator\'s document, the day its text took effect, as an ISO 8601 time, as that check recorded it. Absent for a web page, which says what it says when it is read, and where the check did not record it.')
 })),
   "change": zod.object({
   "on": zod.coerce.date(),
   "note": zod.string()
-}).optional().describe('What changed in the published version of a staff-library entry that followed an earlier release, as its editor wrote it, and when that version was released (docs/architecture/guidance-currency.md, slice 3). Absent for a first release, or a version released before change notes were kept.')
+}).optional().describe('What changed in the published version of a staff-library entry that followed an earlier release, as its editor wrote it, and when that version was released (docs/architecture/guidance-currency.md, slice 3). Absent for a first release, or a version released before change notes were kept.'),
+  "appliesTo": zod.string().optional().describe('For a staff-library regulatory guide released with its record: whom and when it applies to, as the owner signed it (docs/architecture/guidance-record.md, slice 2). Absent for a guide released before its record was kept.'),
+  "actionEvidence": zod.string().optional().describe('For such a guide, where its record says it: what a business does, and the records it keeps to show it.'),
+  "relatedTemplates": zod.array(zod.object({
+  "number": zod.string().regex(listReleasedResourcesResponseRelatedTemplatesItemNumberRegExp),
+  "title": zod.string(),
+  "href": zod.string()
+})).optional().describe('For such a guide: the templates its record names that are released now, each linked to its page. Absent where none is.')
 })
 export const ListReleasedResourcesResponse = zod.array(ListReleasedResourcesResponseItem)
 
@@ -783,6 +795,9 @@ export const getReleasedResourcePathSlugMax = 100;
 export const GetReleasedResourceParams = zod.object({
   "slug": zod.coerce.string().max(getReleasedResourcePathSlugMax)
 })
+
+export const getReleasedResourceResponseRelatedTemplatesItemNumberRegExp = new RegExp('^TPL-[0-9]{2}$');
+
 
 export const GetReleasedResourceResponse = zod.object({
   "id": zod.string(),
@@ -800,12 +815,21 @@ export const GetReleasedResourceResponse = zod.object({
   "sources": zod.array(zod.object({
   "url": zod.string(),
   "title": zod.string(),
-  "locator": zod.string()
+  "locator": zod.string(),
+  "issuingBody": zod.string().optional().describe('The body that issued the text, as the source check a staff-library guide was released on recorded it (docs/architecture/guidance-record.md). Absent where it did not.'),
+  "effectiveFrom": zod.string().optional().describe('For an Act or a regulator\'s document, the day its text took effect, as an ISO 8601 time, as that check recorded it. Absent for a web page, which says what it says when it is read, and where the check did not record it.')
 })),
   "change": zod.object({
   "on": zod.coerce.date(),
   "note": zod.string()
-}).optional().describe('What changed in the published version of a staff-library entry that followed an earlier release, as its editor wrote it, and when that version was released (docs/architecture/guidance-currency.md, slice 3). Absent for a first release, or a version released before change notes were kept.')
+}).optional().describe('What changed in the published version of a staff-library entry that followed an earlier release, as its editor wrote it, and when that version was released (docs/architecture/guidance-currency.md, slice 3). Absent for a first release, or a version released before change notes were kept.'),
+  "appliesTo": zod.string().optional().describe('For a staff-library regulatory guide released with its record: whom and when it applies to, as the owner signed it (docs/architecture/guidance-record.md, slice 2). Absent for a guide released before its record was kept.'),
+  "actionEvidence": zod.string().optional().describe('For such a guide, where its record says it: what a business does, and the records it keeps to show it.'),
+  "relatedTemplates": zod.array(zod.object({
+  "number": zod.string().regex(getReleasedResourceResponseRelatedTemplatesItemNumberRegExp),
+  "title": zod.string(),
+  "href": zod.string()
+})).optional().describe('For such a guide: the templates its record names that are released now, each linked to its page. Absent where none is.')
 })
 
 
@@ -4200,6 +4224,7 @@ export const ListOwnerGuidanceQueryParams = zod.object({
 
 export const listOwnerGuidanceResponseItemsItemLibraryHoldOneWorkspacesMin = 0;
 
+export const listOwnerGuidanceResponseItemsItemRelatedTemplatesItemNumberRegExp = new RegExp('^TPL-[0-9]{2}$');
 
 
 export const ListOwnerGuidanceResponse = zod.object({
@@ -4216,7 +4241,9 @@ export const ListOwnerGuidanceResponse = zod.object({
   "sources": zod.array(zod.object({
   "url": zod.string(),
   "title": zod.string(),
-  "locator": zod.string()
+  "locator": zod.string(),
+  "issuingBody": zod.string().optional().describe('The body that issued the text, as the source check a staff-library guide was released on recorded it (docs/architecture/guidance-record.md). Absent where it did not.'),
+  "effectiveFrom": zod.string().optional().describe('For an Act or a regulator\'s document, the day its text took effect, as an ISO 8601 time, as that check recorded it. Absent for a web page, which says what it says when it is read, and where the check did not record it.')
 })),
   "live": zod.union([zod.object({
   "version": zod.int(),
@@ -4228,7 +4255,13 @@ export const ListOwnerGuidanceResponse = zod.object({
   "placedBy": zod.string(),
   "placedAt": zod.string(),
   "workspaces": zod.int().min(listOwnerGuidanceResponseItemsItemLibraryHoldOneWorkspacesMin)
-}).describe('A hold on a published library version: why, who placed it, when, and how many workspaces its template reached then.'),zod.null()]).describe('The hold a Content editor placed on the published version, while it is not lifted, or null. Only the owner lifts it (docs/architecture/library-holds.md, slice 2).')
+}).describe('A hold on a published library version: why, who placed it, when, and how many workspaces its template reached then.'),zod.null()]).describe('The hold a Content editor placed on the published version, while it is not lifted, or null. Only the owner lifts it (docs/architecture/library-holds.md, slice 2).'),
+  "appliesTo": zod.string().nullable().describe('Whom and when the article applies to. It is released only with it.'),
+  "actionEvidence": zod.string().nullable().describe('What a business does, and the records it keeps to show it.'),
+  "relatedTemplates": zod.array(zod.object({
+  "number": zod.string().regex(listOwnerGuidanceResponseItemsItemRelatedTemplatesItemNumberRegExp),
+  "title": zod.string().nullable()
+})).describe('The registered templates the version names as related, each with its registered title.')
 })),
   "hasMore": zod.boolean()
 })
@@ -4375,6 +4408,7 @@ export const ListRetainedDraftsResponse = zod.object({
   "shown": zod.boolean(),
   "formText": zod.union([zod.literal('proposed'),zod.literal('filed'),zod.literal(null)]).nullable().describe('For a template with a fill-in form: whether the library\'s latest version carries the form text proposed for it (filed) or not yet (proposed). Null for every other draft.'),
   "details": zod.union([zod.literal('proposed'),zod.literal('filed'),zod.literal(null)]).nullable().describe('For a template: whether the library\'s latest version says what it is for, its limits and how it was written (filed), or not yet, so that its proposed details wait to be filed (proposed). Null for every other draft.'),
+  "record": zod.union([zod.literal('proposed'),zod.literal('filed'),zod.literal('unwritten'),zod.literal(null)]).nullable().describe('For a regulatory guide: whether the library\'s latest version says whom it applies to (filed); or not yet, while its draft\'s editorial lines say it, so that the record they give waits to be filed (proposed); or neither does, so that a Content editor writes it (unwritten) (docs/architecture/guidance-record.md). Null for every other draft.'),
   "sourceCheck": zod.union([zod.object({
   "checkedAt": zod.coerce.date(),
   "holds": zod.int().min(listRetainedDraftsResponseItemsItemSourceCheckOneHoldsMin),
@@ -4388,7 +4422,7 @@ export const ListRetainedDraftsResponse = zod.object({
 
 
 export const LoadRetainedDraftsBody = zod.object({
-  "load": zod.enum(['missing', 'form_text', 'details']).describe('missing files the drafts not in the library yet; form_text files a new draft version of each filed template whose latest version lacks the form text proposed for it; details files a new draft version of each filed template whose latest version lacks its entry details, with the details proposed for it')
+  "load": zod.enum(['missing', 'form_text', 'details', 'record']).describe('missing files the drafts not in the library yet; form_text files a new draft version of each filed template whose latest version lacks the form text proposed for it; details files a new draft version of each filed template whose latest version lacks its entry details, with the details proposed for it; record files a new draft version of each filed regulatory guide whose latest version does not say whom it applies to, with the record its draft\'s editorial lines give (docs/architecture/guidance-record.md)')
 })
 
 export const loadRetainedDraftsResponseRemainingMin = 0;
@@ -4419,6 +4453,7 @@ export const LoadRetainedDraftsResponse = zod.object({
   "shown": zod.boolean(),
   "formText": zod.union([zod.literal('proposed'),zod.literal('filed'),zod.literal(null)]).nullable().describe('For a template with a fill-in form: whether the library\'s latest version carries the form text proposed for it (filed) or not yet (proposed). Null for every other draft.'),
   "details": zod.union([zod.literal('proposed'),zod.literal('filed'),zod.literal(null)]).nullable().describe('For a template: whether the library\'s latest version says what it is for, its limits and how it was written (filed), or not yet, so that its proposed details wait to be filed (proposed). Null for every other draft.'),
+  "record": zod.union([zod.literal('proposed'),zod.literal('filed'),zod.literal('unwritten'),zod.literal(null)]).nullable().describe('For a regulatory guide: whether the library\'s latest version says whom it applies to (filed); or not yet, while its draft\'s editorial lines say it, so that the record they give waits to be filed (proposed); or neither does, so that a Content editor writes it (unwritten) (docs/architecture/guidance-record.md). Null for every other draft.'),
   "sourceCheck": zod.union([zod.object({
   "checkedAt": zod.coerce.date(),
   "holds": zod.int().min(loadRetainedDraftsResponseStatusItemsItemSourceCheckOneHoldsMin),
@@ -4453,6 +4488,13 @@ export const getManualLibraryRevisionResponseReachOneDocumentsMin = 0;
 export const getManualLibraryRevisionResponseToldMin = 0;
 
 export const getManualLibraryRevisionResponseHoldOneWorkspacesMin = 0;
+
+export const getManualLibraryRevisionResponseAppliesToMax = 800;
+
+export const getManualLibraryRevisionResponseActionEvidenceMax = 800;
+
+export const getManualLibraryRevisionResponseRelatedTemplatesItemRegExp = new RegExp('^TPL-[0-9]{2}$');
+export const getManualLibraryRevisionResponseRelatedTemplatesMax = 6;
 
 
 
@@ -4506,7 +4548,10 @@ export const GetManualLibraryRevisionResponse = zod.object({
   "placedBy": zod.string(),
   "placedAt": zod.string(),
   "workspaces": zod.int().min(getManualLibraryRevisionResponseHoldOneWorkspacesMin)
-}).describe('A hold on a published library version: why, who placed it, when, and how many workspaces its template reached then.'),zod.null()]).describe('The hold on the entry\'s published version, while it is not lifted, or null.')
+}).describe('A hold on a published library version: why, who placed it, when, and how many workspaces its template reached then.'),zod.null()]).describe('The hold on the entry\'s published version, while it is not lifted, or null.'),
+  "appliesTo": zod.string().max(getManualLibraryRevisionResponseAppliesToMax).nullable().describe('For a regulatory article only: whom and when it applies to. A regulatory article is released only with it (docs/architecture/guidance-record.md, CMP-001).'),
+  "actionEvidence": zod.string().max(getManualLibraryRevisionResponseActionEvidenceMax).nullable().describe('For a regulatory article only: what a business does, and the records it keeps to show it.'),
+  "relatedTemplates": zod.array(zod.string().regex(getManualLibraryRevisionResponseRelatedTemplatesItemRegExp)).max(getManualLibraryRevisionResponseRelatedTemplatesMax).describe('For a regulatory article only: the registered numbers of its related templates. Omitted or empty, it has none.')
 })
 
 
@@ -4532,6 +4577,13 @@ export const saveManualLibraryDraftBodyLimitsMax = 800;
 
 export const saveManualLibraryDraftBodyRelatedItemsMax = 6;
 
+export const saveManualLibraryDraftBodyAppliesToMax = 800;
+
+export const saveManualLibraryDraftBodyActionEvidenceMax = 800;
+
+export const saveManualLibraryDraftBodyRelatedTemplatesItemRegExp = new RegExp('^TPL-[0-9]{2}$');
+export const saveManualLibraryDraftBodyRelatedTemplatesMax = 6;
+
 
 
 export const SaveManualLibraryDraftBody = zod.object({
@@ -4551,7 +4603,10 @@ export const SaveManualLibraryDraftBody = zod.object({
   "needs": zod.string().max(saveManualLibraryDraftBodyNeedsMax).nullish().describe('For a template only: what a customer needs to complete it, one item to a line, up to 12 lines of up to 120 characters.'),
   "limits": zod.string().max(saveManualLibraryDraftBodyLimitsMax).nullish().describe('For a template only: what it does not do, shown as its limits.'),
   "relatedItems": zod.array(zod.uuid()).max(saveManualLibraryDraftBodyRelatedItemsMax).optional().describe('For a template only: the library items of its related guides. A guide is shown on the page only while it is released.'),
-  "aiDrafted": zod.boolean().nullish().describe('For a template only: whether AI drafted its text. The page\'s statement of how it was written follows it.')
+  "aiDrafted": zod.boolean().nullish().describe('For a template only: whether AI drafted its text. The page\'s statement of how it was written follows it.'),
+  "appliesTo": zod.string().max(saveManualLibraryDraftBodyAppliesToMax).nullish().describe('For a regulatory article only: whom and when it applies to. A regulatory article is released only with it (docs/architecture/guidance-record.md, CMP-001).'),
+  "actionEvidence": zod.string().max(saveManualLibraryDraftBodyActionEvidenceMax).nullish().describe('For a regulatory article only: what a business does, and the records it keeps to show it.'),
+  "relatedTemplates": zod.array(zod.string().regex(saveManualLibraryDraftBodyRelatedTemplatesItemRegExp)).max(saveManualLibraryDraftBodyRelatedTemplatesMax).optional().describe('For a regulatory article only: the registered numbers of its related templates. Omitted or empty, it has none.')
 })
 
 export const saveManualLibraryDraftResponseDigestRegExp = new RegExp('^[0-9a-f]{64}$');
@@ -4571,6 +4626,13 @@ export const saveManualLibraryDraftResponseReachOneDocumentsMin = 0;
 export const saveManualLibraryDraftResponseToldMin = 0;
 
 export const saveManualLibraryDraftResponseHoldOneWorkspacesMin = 0;
+
+export const saveManualLibraryDraftResponseAppliesToMax = 800;
+
+export const saveManualLibraryDraftResponseActionEvidenceMax = 800;
+
+export const saveManualLibraryDraftResponseRelatedTemplatesItemRegExp = new RegExp('^TPL-[0-9]{2}$');
+export const saveManualLibraryDraftResponseRelatedTemplatesMax = 6;
 
 
 
@@ -4624,7 +4686,10 @@ export const SaveManualLibraryDraftResponse = zod.object({
   "placedBy": zod.string(),
   "placedAt": zod.string(),
   "workspaces": zod.int().min(saveManualLibraryDraftResponseHoldOneWorkspacesMin)
-}).describe('A hold on a published library version: why, who placed it, when, and how many workspaces its template reached then.'),zod.null()]).describe('The hold on the entry\'s published version, while it is not lifted, or null.')
+}).describe('A hold on a published library version: why, who placed it, when, and how many workspaces its template reached then.'),zod.null()]).describe('The hold on the entry\'s published version, while it is not lifted, or null.'),
+  "appliesTo": zod.string().max(saveManualLibraryDraftResponseAppliesToMax).nullable().describe('For a regulatory article only: whom and when it applies to. A regulatory article is released only with it (docs/architecture/guidance-record.md, CMP-001).'),
+  "actionEvidence": zod.string().max(saveManualLibraryDraftResponseActionEvidenceMax).nullable().describe('For a regulatory article only: what a business does, and the records it keeps to show it.'),
+  "relatedTemplates": zod.array(zod.string().regex(saveManualLibraryDraftResponseRelatedTemplatesItemRegExp)).max(saveManualLibraryDraftResponseRelatedTemplatesMax).describe('For a regulatory article only: the registered numbers of its related templates. Omitted or empty, it has none.')
 })
 
 
@@ -4667,6 +4732,13 @@ export const actOnManualLibraryResponseReachOneDocumentsMin = 0;
 export const actOnManualLibraryResponseToldMin = 0;
 
 export const actOnManualLibraryResponseHoldOneWorkspacesMin = 0;
+
+export const actOnManualLibraryResponseAppliesToMax = 800;
+
+export const actOnManualLibraryResponseActionEvidenceMax = 800;
+
+export const actOnManualLibraryResponseRelatedTemplatesItemRegExp = new RegExp('^TPL-[0-9]{2}$');
+export const actOnManualLibraryResponseRelatedTemplatesMax = 6;
 
 
 
@@ -4720,7 +4792,10 @@ export const ActOnManualLibraryResponse = zod.object({
   "placedBy": zod.string(),
   "placedAt": zod.string(),
   "workspaces": zod.int().min(actOnManualLibraryResponseHoldOneWorkspacesMin)
-}).describe('A hold on a published library version: why, who placed it, when, and how many workspaces its template reached then.'),zod.null()]).describe('The hold on the entry\'s published version, while it is not lifted, or null.')
+}).describe('A hold on a published library version: why, who placed it, when, and how many workspaces its template reached then.'),zod.null()]).describe('The hold on the entry\'s published version, while it is not lifted, or null.'),
+  "appliesTo": zod.string().max(actOnManualLibraryResponseAppliesToMax).nullable().describe('For a regulatory article only: whom and when it applies to. A regulatory article is released only with it (docs/architecture/guidance-record.md, CMP-001).'),
+  "actionEvidence": zod.string().max(actOnManualLibraryResponseActionEvidenceMax).nullable().describe('For a regulatory article only: what a business does, and the records it keeps to show it.'),
+  "relatedTemplates": zod.array(zod.string().regex(actOnManualLibraryResponseRelatedTemplatesItemRegExp)).max(actOnManualLibraryResponseRelatedTemplatesMax).describe('For a regulatory article only: the registered numbers of its related templates. Omitted or empty, it has none.')
 })
 
 
@@ -4794,6 +4869,13 @@ export const holdManualLibraryEntryResponseToldMin = 0;
 
 export const holdManualLibraryEntryResponseHoldOneWorkspacesMin = 0;
 
+export const holdManualLibraryEntryResponseAppliesToMax = 800;
+
+export const holdManualLibraryEntryResponseActionEvidenceMax = 800;
+
+export const holdManualLibraryEntryResponseRelatedTemplatesItemRegExp = new RegExp('^TPL-[0-9]{2}$');
+export const holdManualLibraryEntryResponseRelatedTemplatesMax = 6;
+
 
 
 export const HoldManualLibraryEntryResponse = zod.object({
@@ -4846,7 +4928,10 @@ export const HoldManualLibraryEntryResponse = zod.object({
   "placedBy": zod.string(),
   "placedAt": zod.string(),
   "workspaces": zod.int().min(holdManualLibraryEntryResponseHoldOneWorkspacesMin)
-}).describe('A hold on a published library version: why, who placed it, when, and how many workspaces its template reached then.'),zod.null()]).describe('The hold on the entry\'s published version, while it is not lifted, or null.')
+}).describe('A hold on a published library version: why, who placed it, when, and how many workspaces its template reached then.'),zod.null()]).describe('The hold on the entry\'s published version, while it is not lifted, or null.'),
+  "appliesTo": zod.string().max(holdManualLibraryEntryResponseAppliesToMax).nullable().describe('For a regulatory article only: whom and when it applies to. A regulatory article is released only with it (docs/architecture/guidance-record.md, CMP-001).'),
+  "actionEvidence": zod.string().max(holdManualLibraryEntryResponseActionEvidenceMax).nullable().describe('For a regulatory article only: what a business does, and the records it keeps to show it.'),
+  "relatedTemplates": zod.array(zod.string().regex(holdManualLibraryEntryResponseRelatedTemplatesItemRegExp)).max(holdManualLibraryEntryResponseRelatedTemplatesMax).describe('For a regulatory article only: the registered numbers of its related templates. Omitted or empty, it has none.')
 })
 
 

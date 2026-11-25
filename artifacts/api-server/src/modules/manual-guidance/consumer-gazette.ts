@@ -120,6 +120,8 @@ export function checkConsumerGazette(
         validThrough,
         retrievedAt: capture.checkedAt,
         retrieval: capture.retrieval,
+        issuingBody: "Federal Republic of Nigeria",
+        effectiveFrom: gazette.commencement.effectiveFrom,
       },
     ],
     holds: [],

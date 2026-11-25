@@ -313,6 +313,9 @@ async function detail(tx: Tx, row: RevisionMeta) {
       };
     }),
     aiDrafted: row.aiDrafted,
+    appliesTo: row.appliesTo,
+    actionEvidence: row.actionEvidence,
+    relatedTemplates: row.relatedTemplates ?? [],
     createdBy: row.createdBy,
     createdAt: row.createdAt.toISOString(),
     publishedAt: row.publishedAt?.toISOString() ?? null,
@@ -652,6 +655,44 @@ export function entryDetails(input: {
     throw new ValoProblem(422, "Choose up to 6 related guides.");
   return details;
 }
+/** The registered template numbers, TPL-01 to TPL-40, that a regulatory article's record may name. */
+const registeredNumbers = new Set(baselineTemplates.map((entry) => entry.id));
+/**
+ * A regulatory article's record as a draft gives it (docs/architecture/guidance-record.md, CMP-001),
+ * checked and normalised: whom and when it applies to, what a business does and keeps to show it, and
+ * the registered numbers of its related templates. Each one left out is null. Only a regulatory article
+ * has them, and it is released only with whom it applies to.
+ */
+export function guidanceRecord(input: {
+  kind: Revision["kind"];
+  appliesTo?: string | null | undefined;
+  actionEvidence?: string | null | undefined;
+  relatedTemplates?: readonly string[] | undefined;
+}) {
+  const text = (value: string | null | undefined) => (value?.trim() ? normalize(value) : null);
+  const appliesTo = text(input.appliesTo),
+    actionEvidence = text(input.actionEvidence);
+  const relatedTemplates = input.relatedTemplates?.length
+    ? [...new Set(input.relatedTemplates.map((number) => number.trim()))]
+    : null;
+  const record = { appliesTo, actionEvidence, relatedTemplates };
+  if (Object.values(record).every((field) => field === null)) return record;
+  if (input.kind !== "regulatory_article")
+    throw new ValoProblem(
+      422,
+      "Only a regulatory article says whom it applies to, what to do and keep, and its related templates. Clear them to save this item.",
+    );
+  if (appliesTo !== null && (appliesTo.length > 800 || hasControlCharacters(appliesTo, true)))
+    throw new ValoProblem(422, "Say whom the article applies to in up to 800 characters.");
+  if (actionEvidence !== null && (actionEvidence.length > 800 || hasControlCharacters(actionEvidence, true)))
+    throw new ValoProblem(422, "Say what to do and keep in up to 800 characters.");
+  if (
+    relatedTemplates !== null &&
+    (relatedTemplates.length > 6 || relatedTemplates.some((number) => !registeredNumbers.has(number)))
+  )
+    throw new ValoProblem(422, "Name up to 6 related templates by their registered numbers, such as TPL-16.");
+  return record;
+}
 export async function saveManualDraft(actor: SourceStaffActor, itemId: string, value: unknown) {
   const { readEditorialUpload, wordFromText } = await import("./files");
   const input = SaveManualLibraryDraftBody.strict().parse(value);
@@ -679,6 +720,7 @@ export async function saveManualDraft(actor: SourceStaffActor, itemId: string, v
     }
   }
   const details = entryDetails(input);
+  const record = guidanceRecord(input);
   const premium = input.kind === "premium_template";
   if (premium && (input.fileMode === "text" || !input.body.trim() || input.body.trim().length > 600))
     throw new ValoProblem(
@@ -731,8 +773,10 @@ export async function saveManualDraft(actor: SourceStaffActor, itemId: string, v
         fileFormat: file?.format ?? null,
         fileHash: file ? sha256(file.bytes) : null,
         ...(formText === null ? {} : { formText }),
-        // So do the entry details, each one only when given (docs/architecture/library-entries.md).
+        // So do the entry details, each one only when given (docs/architecture/library-entries.md), and a
+        // regulatory article's record (docs/architecture/guidance-record.md).
         ...Object.fromEntries(Object.entries(details).filter(([, detail]) => detail !== null)),
+        ...Object.fromEntries(Object.entries(record).filter(([, field]) => field !== null)),
       });
       const [retry] = await tx.select(metadataColumns(t)).from(t).where(eq(t.id, input.requestId));
       if (retry) {
@@ -763,6 +807,7 @@ export async function saveManualDraft(actor: SourceStaffActor, itemId: string, v
           fileBytes: file?.bytes ?? null,
           formText,
           ...details,
+          ...record,
           createdBy: actor.identityId,
         })
         .returning(metadataColumns(t));
@@ -998,28 +1043,38 @@ async function releasedManualRows(
     ...restFields,
     body: options.summaryOnly ? sql<string>`left(${fullBody}, 600)` : fullBody,
   };
+  // A regulatory guide's record, which its page shows (docs/architecture/guidance-record.md, slice 2). A
+  // database the guidance record migration has not reached has none of its columns, and reads the rest.
+  const {
+    appliesTo: _appliesTo,
+    actionEvidence: _actionEvidence,
+    relatedTemplates: _relatedTemplates,
+    ...withoutRecord
+  } = fields;
   const released = and(eq(t.state, "published"), options.slug ? eq(t.slug, options.slug) : undefined);
   try {
     // An entry other than a regulatory guide is shown while its review is not overdue: 90 days after it
     // was published or last reviewed (docs/architecture/guidance-currency.md, slice 2). No entry is shown
     // while staff hold it (docs/architecture/library-holds.md, slice 2). A database the reviews or holds
     // migration has not reached shows entries as before.
-    const current = (rules: InUse) =>
-      db
-        .select({ ...fields, regulatorySources: c.sources, sourceCheckedAt: c.checkedAt })
-        .from(t)
-        .leftJoin(c, eq(c.id, t.regulatoryCheckId))
-        .where(
-          and(
-            released,
-            notHeld(rules, t.id),
-            or(
-              and(ne(t.kind, "regulatory_article"), notOverdue(rules, t.id)),
-              // The newest check has the evidence the guide was signed on, with each source's bytes or with
-              // each web page's words in their place (docs/architecture/guidance-currency.md). The words are
-              // read through each row's JSON, so a database the words migration has not reached yet keeps
-              // comparing bytes alone.
-              sql`${regulatoryEnabled} and (
+    const current =
+      <Columns extends typeof withoutRecord>(columns: Columns) =>
+      (rules: InUse) =>
+        db
+          .select({ ...columns, regulatorySources: c.sources, sourceCheckedAt: c.checkedAt })
+          .from(t)
+          .leftJoin(c, eq(c.id, t.regulatoryCheckId))
+          .where(
+            and(
+              released,
+              notHeld(rules, t.id),
+              or(
+                and(ne(t.kind, "regulatory_article"), notOverdue(rules, t.id)),
+                // The newest check has the evidence the guide was signed on, with each source's bytes or with
+                // each web page's words in their place (docs/architecture/guidance-currency.md). The words are
+                // read through each row's JSON, so a database the words migration has not reached yet keeps
+                // comparing bytes alone.
+                sql`${regulatoryEnabled} and (
         select (newest.evidence_sha256 = ${c.evidenceSha256}
             or to_jsonb(newest)->>'words_sha256' = to_jsonb(${c})->>'words_sha256')
           and cardinality(newest.holds) = 0
@@ -1027,11 +1082,17 @@ async function releasedManualRows(
           and not exists (select from jsonb_array_elements(newest.sources) ref where coalesce((ref->>'validThrough')::timestamptz,'-infinity') <= clock_timestamp())
         from valo_manual_regulatory_checks newest where newest.candidate_id = ${c.candidateId}
         order by newest.checked_at desc, newest.id desc limit 1) is true`,
+              ),
             ),
-          ),
-        )
-        .orderBy(desc(t.publishedAt), t.itemId);
-    return await underRules(current);
+          )
+          .orderBy(desc(t.publishedAt), t.itemId);
+    try {
+      return await underRules(current(fields));
+    } catch (error) {
+      if (pgError(error).code !== "42703") throw error;
+      const rows = await underRules(current(withoutRecord));
+      return rows.map((row) => ({ ...row, appliesTo: null, actionEvidence: null, relatedTemplates: null }));
+    }
   } catch (error) {
     if (!["42P01", "42703"].includes(pgError(error).code ?? "")) throw error;
     try {
@@ -1044,7 +1105,7 @@ async function releasedManualRows(
         relatedItems: _related,
         aiDrafted: _aiDrafted,
         ...older
-      } = fields;
+      } = withoutRecord;
       const prior = await db
         .select(older)
         .from(t)
@@ -1057,6 +1118,9 @@ async function releasedManualRows(
         limits: null,
         relatedItems: null,
         aiDrafted: null,
+        appliesTo: null,
+        actionEvidence: null,
+        relatedTemplates: null,
         regulatorySources: null,
         sourceCheckedAt: null,
       }));
@@ -1101,6 +1165,7 @@ export async function retainedDraftStatus(actor: SourceStaffActor) {
         state: t.state,
         formTextSha256: sql<string | null>`encode(sha256(convert_to(${t.formText}, 'UTF8')), 'hex')`,
         hasDetails: sql<boolean>`${t.purpose} IS NOT NULL`,
+        hasRecord: sql<boolean>`${t.appliesTo} IS NOT NULL`,
       })
       .from(t);
     const checks = await tx
@@ -1166,6 +1231,16 @@ export async function retainedDraftStatus(actor: SourceStaffActor) {
       // Whether the item's latest version says what it is for, its limits and how it was written.
       // A template without them waits for the details proposed for it.
       details: !draft.template ? null : found?.latest.hasDetails ? ("filed" as const) : ("proposed" as const),
+      // Whether a regulatory guide's latest version says whom it applies to, and if not, whether its
+      // draft does (docs/architecture/guidance-record.md). A Content editor writes it for the others.
+      record:
+        draft.kind !== "regulatory_article"
+          ? null
+          : found?.latest.hasRecord
+            ? ("filed" as const)
+            : draft.record?.appliesTo
+              ? ("proposed" as const)
+              : ("unwritten" as const),
       sourceCheck:
         draft.kind === "regulatory_article" && check
           ? {
@@ -1190,6 +1265,10 @@ const withoutFormText = (status: Awaited<ReturnType<typeof retainedDraftStatus>>
 /** The filed templates whose latest version lacks its entry details. */
 const withoutDetails = (status: Awaited<ReturnType<typeof retainedDraftStatus>>) =>
   status.items.filter((item) => item.details === "proposed" && item.itemId !== null);
+/** The filed regulatory guides whose latest version does not say whom it applies to, while their
+ * draft does. */
+const withoutRecord = (status: Awaited<ReturnType<typeof retainedDraftStatus>>) =>
+  status.items.filter((item) => item.record === "proposed" && item.itemId !== null);
 /** The entry details a template filed from its retained draft is given, as a draft gives them. */
 async function proposedDetails(retainedId: string) {
   const { RETAINED_ENTRY_DETAILS } = await import("./retained-entry-details");
@@ -1205,13 +1284,18 @@ async function proposedDetails(retainedId: string) {
     aiDrafted: true,
   };
 }
-/** A revision's entry details, as a new draft version of it carries them forward. */
+/** A revision's entry details and record, as a new draft version of it carries them forward. */
 const keptDetails = (latest: Awaited<ReturnType<typeof getManualRevision>>) => ({
   purpose: latest.purpose,
   needs: latest.needs,
   limits: latest.limits,
   relatedItems: latest.relatedItems,
   aiDrafted: latest.aiDrafted,
+});
+const keptRecord = (latest: Awaited<ReturnType<typeof getManualRevision>>) => ({
+  appliesTo: latest.appliesTo,
+  actionEvidence: latest.actionEvidence,
+  relatedTemplates: latest.relatedTemplates,
 });
 
 /**
@@ -1222,8 +1306,11 @@ const keptDetails = (latest: Awaited<ReturnType<typeof getManualRevision>>) => (
  * (`retained-entry-details.ts`). With `form_text`, files instead a new draft version of each filed
  * template whose latest version lacks its proposed form text, keeping that version's title, text, file
  * and entry details; with `details`, one of each filed template whose latest version lacks its entry
- * details, with the details proposed for it. Nothing is published: each draft waits for an editor to
- * preview and publish it, and a regulatory guide for the owner's source check.
+ * details, with the details proposed for it; with `record`, one of each filed regulatory guide whose
+ * latest version does not say whom it applies to, with the record its draft's editorial lines give
+ * (`retained-guidance-record.ts`). A guide is filed with that record too. Nothing is published: each
+ * draft waits for an editor to preview and publish it, and a regulatory guide for the owner's source
+ * check and sign-off.
  */
 export async function loadRetainedDrafts(actor: SourceStaffActor, value: unknown) {
   const { load } = LoadRetainedDraftsBody.strict().parse(value);
@@ -1231,13 +1318,15 @@ export async function loadRetainedDrafts(actor: SourceStaffActor, value: unknown
   const { proposedFormText } = await import("./form-text-maps");
   const before = await retainedDraftStatus(actor);
   const loaded: string[] = [];
-  if (load === "form_text" || load === "details") {
-    const waiting = load === "form_text" ? withoutFormText : withoutDetails;
+  const drafts = new Map((await retainedDrafts()).map((draft) => [draft.retainedId, draft]));
+  if (load === "form_text" || load === "details" || load === "record") {
+    const waiting =
+      load === "form_text" ? withoutFormText : load === "details" ? withoutDetails : withoutRecord;
     for (const item of waiting(before).slice(0, RETAINED_DRAFTS_PER_REQUEST)) {
       const latest = await getManualRevision(actor, item.itemId!);
       try {
-        // A new draft version keeps the latest one's title, text and file, and its form text and entry
-        // details unless they are what this request files.
+        // A new draft version keeps the latest one's title, text and file, and its form text, entry
+        // details and record unless they are what this request files.
         await saveManualDraft(actor, latest.itemId, {
           requestId: randomUUID(),
           baseVersion: latest.version,
@@ -1248,6 +1337,7 @@ export async function loadRetainedDrafts(actor: SourceStaffActor, value: unknown
           fileMode: latest.fileFormat ? "keep" : "text",
           formText: load === "form_text" ? await proposedFormText(item.retainedId) : latest.formText,
           ...(load === "details" ? await proposedDetails(item.retainedId) : keptDetails(latest)),
+          ...(load === "record" ? drafts.get(item.retainedId)!.record! : keptRecord(latest)),
         });
         loaded.push(item.retainedId);
       } catch (error) {
@@ -1258,7 +1348,6 @@ export async function loadRetainedDrafts(actor: SourceStaffActor, value: unknown
     const status = await retainedDraftStatus(actor);
     return { loaded, remaining: waiting(status).length, status };
   }
-  const drafts = new Map((await retainedDrafts()).map((draft) => [draft.retainedId, draft]));
   for (const item of before.items
     .filter((entry) => entry.state === "not_in_library")
     .slice(0, RETAINED_DRAFTS_PER_REQUEST)) {
@@ -1277,6 +1366,7 @@ export async function loadRetainedDrafts(actor: SourceStaffActor, value: unknown
         ...(file ? { upload: { format: "docx", base64: file.toString("base64") } } : {}),
         ...(formText === null ? {} : { formText }),
         ...(draft.template ? await proposedDetails(draft.retainedId) : {}),
+        ...draft.record,
       });
       loaded.push(draft.retainedId);
     } catch (error) {

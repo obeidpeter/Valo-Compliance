@@ -5,6 +5,7 @@ import { readFile, readdir } from "node:fs/promises";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { expect } from "@playwright/test";
+import { GetReleasedResourceResponse } from "@workspace/api-zod";
 import { paginateReleasedItems, type ReleasedLibraryItem } from "../modules/catalogue/valo-catalogue";
 import { menuProblems, phoneProblems, ready } from "../test-support/app-in-browser";
 import { oldWordsIn } from "../test-support/old-words";
@@ -46,6 +47,9 @@ let catalogueItems: ReleasedLibraryItem[] | null = null;
 let withdrawn = false;
 /** While a test sets it, the API lists no released guidance at all. */
 let noGuidance = false;
+/** While a test sets it, the API answers this staff-library guide's page, released with its record
+ * (docs/architecture/guidance-record.md, slice 2). */
+let recordedGuide: { slug: string } | null = null;
 /** While a test sets it, the web server's read of the catalogue is answered after this many
  * milliseconds, inside the web server's own time limit. */
 let slowCatalogue = 0;
@@ -71,6 +75,8 @@ function answerFor(method: string, url: URL, from: "server" | "browser") {
     return { status: 404, body: { error: "Not found" } };
   }
   if (noGuidance && url.pathname === "/api/public/resources") return { status: 200, body: [] };
+  if (recordedGuide && url.pathname === `/api/public/resources/${recordedGuide.slug}`)
+    return { status: 200, body: recordedGuide };
   if (withdrawn && url.pathname === "/api/public/resources")
     return { status: 200, body: resources.filter((resource) => resource.id !== goneGuidance.id) };
   const listed = catalogueItems ?? (withdrawn ? items.filter((item) => item.id !== gone.id) : null);
@@ -856,6 +862,89 @@ test("a template or guidance entry the API stops listing is gone from the next p
     }
   } finally {
     withdrawn = false;
+  }
+});
+
+// CMP-001 (docs/architecture/guidance-record.md, slice 2): a regulatory guide released with its record
+// says whom it is for and what to do and keep, links its released related templates, and names each
+// source's issuing body and the day its text took effect.
+test("a staff-library guide released with its record says whom it is for, what to do and keep, its related templates and each source's issuer and start date, in the server's HTML", async () => {
+  const slug = "manual-00000000-0000-4000-8000-0000000000d1";
+  recordedGuide = GetReleasedResourceResponse.parse({
+    ...resources[0]!,
+    id: "00000000-0000-4000-8000-0000000000d2",
+    slug,
+    title: "Synthetic guide with its record",
+    publicationMethod: "manual",
+    disclosure:
+      "The Valo development owner checked this version against the official sources shown. This article received no independent professional review.",
+    scope: "Nigerian national rules on this subject.",
+    limitations: "General information. State and local requirements and individual facts may differ.",
+    sources: [
+      {
+        url: "https://example.test/synthetic-act",
+        title: "Synthetic Act",
+        locator: "Section 2",
+        issuingBody: "Synthetic Data Commission",
+        effectiveFrom: "2023-06-12T00:00:00+01:00",
+      },
+      {
+        url: "https://example.test/synthetic-page",
+        title: "Synthetic page",
+        locator: "the page as captured",
+      },
+    ],
+    appliesTo: "Synthetic businesses that collect their customers' details.",
+    actionEvidence: "Tell each customer what you collect, and keep a copy of what you told them.",
+    relatedTemplates: [
+      {
+        number: "TPL-29",
+        title: "Privacy notice",
+        href: "/library/manual-00000000-0000-4000-8000-0000000000d3",
+      },
+    ],
+  });
+  try {
+    const html = await (await fetch(`${web.origin}/resources/${slug}`)).text();
+    const shown = text(html);
+    for (const words of [
+      "Who this is for",
+      "Synthetic businesses that collect their customers' details.",
+      "What to do and keep",
+      "Tell each customer what you collect, and keep a copy of what you told them.",
+      "Related templates",
+      "Privacy notice",
+      "Issued by Synthetic Data Commission, in effect from 12 Jun 2023",
+    ])
+      assert.ok(shown.includes(words), `the page says ${words}`);
+    // The record's "Who this is for" replaces the fixed "What it covers".
+    assert.ok(!shown.includes("What it covers"));
+    assert.match(html, /href="\/library\/manual-00000000-0000-4000-8000-0000000000d3"/);
+    // A web page has no start date, and a source without an issuer says none.
+    assert.match(html, /data-testid="text-resource-source-issuer-0"/);
+    assert.doesNotMatch(html, /data-testid="text-resource-source-issuer-1"/);
+    const { page, unknown, errors, messages, close } = await web.phone(`/resources/${slug}`);
+    try {
+      await ready(page);
+      await expect(page.getByTestId("text-resource-applies-to")).toHaveText(
+        "Synthetic businesses that collect their customers' details.",
+      );
+      await expect(page.getByTestId("list-resource-related-templates").getByRole("link")).toHaveAttribute(
+        "href",
+        "/library/manual-00000000-0000-4000-8000-0000000000d3",
+      );
+      assert.deepEqual(await phoneProblems(page, `/resources/${slug}`), []);
+      assert.deepEqual(
+        [...errors, ...messages].filter((m) => HYDRATION.test(m)),
+        [],
+      );
+      assert.deepEqual(errors, []);
+      assert.deepEqual(unknown, []);
+    } finally {
+      await close();
+    }
+  } finally {
+    recordedGuide = null;
   }
 });
 

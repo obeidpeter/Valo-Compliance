@@ -25,6 +25,7 @@ import { industryName } from "@/lib/library-filters";
 import { fromServer } from "@/lib/server-data";
 import { ANY_DOCUMENT, signUpFor } from "@/lib/start";
 import { updatedLine } from "@/lib/library-change";
+import { pageHeadings, relatedTemplatesHint, sourceLine } from "@/lib/guidance-record";
 
 /** The released resources, starting from what the server read; the browser reads them itself when
  * the server could not, and every 15 seconds after (decision 0011). */
@@ -295,16 +296,50 @@ export function ResourceDetail({
               />
               {(r.publicationMethod !== "manual" || r.kind === "guidance") && (
                 <section className="mt-10 grid gap-6 border-t border-border pt-8 text-sm leading-relaxed">
-                  <div>
-                    <h2 className="eyebrow">What it covers</h2>
-                    <p className="mt-2 whitespace-pre-line">{r.scope}</p>
-                  </div>
+                  {/* A guide released with its record says whom it is for, as its owner signed it
+                      (docs/architecture/guidance-record.md, slice 2). */}
+                  {r.appliesTo ? (
+                    <div>
+                      <h2 className="eyebrow">{pageHeadings.appliesTo}</h2>
+                      <p className="mt-2 whitespace-pre-line" data-testid="text-resource-applies-to">
+                        {r.appliesTo}
+                      </p>
+                    </div>
+                  ) : (
+                    <div>
+                      <h2 className="eyebrow">What it covers</h2>
+                      <p className="mt-2 whitespace-pre-line">{r.scope}</p>
+                    </div>
+                  )}
+                  {r.actionEvidence && (
+                    <div>
+                      <h2 className="eyebrow">{pageHeadings.actionEvidence}</h2>
+                      <p className="mt-2 whitespace-pre-line" data-testid="text-resource-action-evidence">
+                        {r.actionEvidence}
+                      </p>
+                    </div>
+                  )}
                   <div>
                     <h2 className="eyebrow">Limits you should know</h2>
                     <p className="mt-2 whitespace-pre-line" data-testid="text-resource-limitations">
                       {r.limitations}
                     </p>
                   </div>
+                  {r.relatedTemplates && r.relatedTemplates.length > 0 && (
+                    <div>
+                      <h2 className="eyebrow">{pageHeadings.relatedTemplates}</h2>
+                      <p className="mt-2 text-muted-foreground">{relatedTemplatesHint}</p>
+                      <ul className="mt-2 grid gap-1" data-testid="list-resource-related-templates">
+                        {r.relatedTemplates.map((template) => (
+                          <li key={template.number}>
+                            <Link href={template.href} className="underline">
+                              {template.title}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </section>
               )}
             </div>
@@ -328,6 +363,14 @@ export function ResourceDetail({
                                 {s.title}
                               </span>
                               <span className="block text-xs text-muted-foreground">{s.locator}</span>
+                              {sourceLine(s) && (
+                                <span
+                                  className="block text-xs text-muted-foreground"
+                                  data-testid={"text-resource-source-issuer-" + i}
+                                >
+                                  {sourceLine(s)}
+                                </span>
+                              )}
                             </span>
                             <ExternalLink
                               className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground"

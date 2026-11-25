@@ -38,6 +38,19 @@ import {
   liftedMessage,
   ownerLiftsWords,
 } from "@/lib/library-holds";
+import {
+  actionEvidenceHelp,
+  actionEvidenceLabel,
+  appliesToHelp,
+  appliesToLabel,
+  draftLinesNote,
+  editorMissingScope,
+  recordHint,
+  recordLegend,
+  relatedTemplatesHelp,
+  relatedTemplatesLabel,
+  templateNumbers,
+} from "@/lib/guidance-record";
 import { FormTextOutline } from "./form-text-outline";
 import { RelatedGuidesPicker } from "./related-guides-picker";
 import { PlainText } from "./resource-parts";
@@ -83,6 +96,11 @@ const emptyForm = () => ({
   limits: "",
   relatedItems: [] as string[],
   aiDrafted: "" as "" | "yes" | "no",
+  // A regulatory article's record (docs/architecture/guidance-record.md). The template numbers are
+  // typed as one line.
+  appliesTo: "",
+  actionEvidence: "",
+  relatedTemplates: "",
 });
 async function encodeFile(file: File) {
   const format = file.name.split(".").pop()?.toLowerCase();
@@ -100,6 +118,38 @@ async function encodeFile(file: File) {
  * A saved template version's entry details as readers will see them (docs/architecture/library-entries.md),
  * and what it still needs before it can be published.
  */
+/** A saved regulatory article's record, which the owner signs with its text
+ * (docs/architecture/guidance-record.md), and whether it says whom the article applies to yet. */
+function GuidanceRecordPreview({ revision }: { revision: ManualLibraryRevision }) {
+  return (
+    <section
+      className="mt-5 grid gap-2 rounded-xl border border-border p-4 text-sm"
+      aria-label={recordLegend}
+      data-testid="preview-guidance-record"
+    >
+      <p className="eyebrow">{recordLegend}</p>
+      <p className="font-medium">{appliesToLabel}</p>
+      <p>{revision.appliesTo ?? "Not given yet."}</p>
+      {revision.actionEvidence && (
+        <>
+          <p className="font-medium">{actionEvidenceLabel}</p>
+          <p>{revision.actionEvidence}</p>
+        </>
+      )}
+      {revision.relatedTemplates.length > 0 && (
+        <>
+          <p className="font-medium">{relatedTemplatesLabel}</p>
+          <p>{revision.relatedTemplates.join(", ")}</p>
+        </>
+      )}
+      {revision.appliesTo === null && (
+        <p role="note" data-testid="preview-record-missing">
+          {editorMissingScope}
+        </p>
+      )}
+    </section>
+  );
+}
 function EntryDetailsPreview({ revision }: { revision: ManualLibraryRevision }) {
   const missing = [
     revision.purpose === null && "what it is for",
@@ -226,6 +276,9 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
             limits: row.limits ?? "",
             relatedItems: row.relatedItems,
             aiDrafted: row.aiDrafted === null ? "" : row.aiDrafted ? "yes" : "no",
+            appliesTo: row.appliesTo ?? "",
+            actionEvidence: row.actionEvidence ?? "",
+            relatedTemplates: row.relatedTemplates.join(", "),
           }
         : emptyForm(),
     );
@@ -275,6 +328,13 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
             limits: form.limits.trim() || null,
             relatedItems: form.relatedItems,
             aiDrafted: form.aiDrafted === "" ? null : form.aiDrafted === "yes",
+          }
+        : {}),
+      ...(form.kind === "regulatory_article"
+        ? {
+            appliesTo: form.appliesTo.trim() || null,
+            actionEvidence: form.actionEvidence.trim() || null,
+            relatedTemplates: templateNumbers(form.relatedTemplates),
           }
         : {}),
       ...(upload ? { upload } : {}),
@@ -763,6 +823,62 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
                 </p>
               )}
               {form.kind === "regulatory_article" && (
+                <fieldset
+                  className="grid gap-3 rounded-lg border border-border p-3"
+                  data-testid="guidance-record"
+                >
+                  <legend className="px-1 text-sm font-medium">{recordLegend}</legend>
+                  <p className="text-sm text-muted-foreground">{recordHint}</p>
+                  <p className="text-sm text-muted-foreground">{draftLinesNote}</p>
+                  <label className="text-sm font-medium">
+                    {appliesToLabel}
+                    <textarea
+                      className={inputStyle}
+                      rows={3}
+                      maxLength={800}
+                      value={form.appliesTo}
+                      onChange={(e) => update({ appliesTo: e.target.value })}
+                      aria-describedby="applies-to-help"
+                      data-testid="input-applies-to"
+                    />
+                    <span id="applies-to-help" className="mt-1 block font-normal text-muted-foreground">
+                      {appliesToHelp}
+                    </span>
+                  </label>
+                  <label className="text-sm font-medium">
+                    {actionEvidenceLabel} (optional)
+                    <textarea
+                      className={inputStyle}
+                      rows={3}
+                      maxLength={800}
+                      value={form.actionEvidence}
+                      onChange={(e) => update({ actionEvidence: e.target.value })}
+                      aria-describedby="action-evidence-help"
+                      data-testid="input-action-evidence"
+                    />
+                    <span id="action-evidence-help" className="mt-1 block font-normal text-muted-foreground">
+                      {actionEvidenceHelp}
+                    </span>
+                  </label>
+                  <label className="text-sm font-medium">
+                    {relatedTemplatesLabel} (optional)
+                    <input
+                      className={inputStyle}
+                      value={form.relatedTemplates}
+                      onChange={(e) => update({ relatedTemplates: e.target.value })}
+                      aria-describedby="related-templates-help"
+                      data-testid="input-related-templates"
+                    />
+                    <span
+                      id="related-templates-help"
+                      className="mt-1 block font-normal text-muted-foreground"
+                    >
+                      {relatedTemplatesHelp}
+                    </span>
+                  </label>
+                </fieldset>
+              )}
+              {form.kind === "regulatory_article" && (
                 <p className="text-sm">
                   Regulatory articles stay private until the owner checks their sources.
                 </p>
@@ -794,6 +910,7 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
               <h3 className="font-display mt-2 text-xl">{snapshot.title}</h3>
               <PlainText text={snapshot.body} className="mt-3 grid gap-3" />
               {isTemplate(snapshot.kind) && <EntryDetailsPreview revision={snapshot} />}
+              {snapshot.kind === "regulatory_article" && <GuidanceRecordPreview revision={snapshot} />}
               {snapshot.formText !== null && snapshot.formFit && (
                 <section
                   className="mt-5 grid gap-3 rounded-xl border border-border p-4"

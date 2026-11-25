@@ -368,6 +368,7 @@ const answers: Record<string, unknown> = {
         sourceCheck: null,
         formText: "proposed",
         details: "proposed",
+        record: null,
       },
       {
         retainedId: "GUD-01",
@@ -382,6 +383,8 @@ const answers: Record<string, unknown> = {
         sourceCheck: { checkedAt: at(18), holds: 1, validThrough: null },
         formText: null,
         details: null,
+        // Filed without the record its draft gives (docs/architecture/guidance-record.md).
+        record: "proposed",
       },
     ],
     notInLibrary: 1,
@@ -637,6 +640,9 @@ const answers: Record<string, unknown> = {
         live: null,
         previousRelease: null,
         libraryHold: null,
+        appliesTo: "Synthetic businesses that keep a synthetic register.",
+        actionEvidence: "Keep the synthetic register and the receipts that show it.",
+        relatedTemplates: [{ number: "TPL-16", title: "Employment contract" }],
       },
     ],
     hasMore: false,
@@ -4165,6 +4171,58 @@ test("the owner's panel shows a Content editor's hold on a published guide and l
         reason: "Synthetic: the filing period was checked and is right.",
       },
     ]);
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
+
+// docs/architecture/guidance-record.md, slice 1 (CMP-001): the owner's panel shows a draft's record with
+// its text, and offers to sign it only once it says whom it applies to.
+test("the owner's panel shows a guide's record with its text, and offers no sign-off until it says whom it applies to", async () => {
+  const shown = (answers["GET /admin/owner-guidance"] as { items: Record<string, unknown>[] }).items[0]!;
+  const checked = { ...shown, holds: [], checkId: "00000000-0000-4000-8000-00000000a903", checkedAt: at(1) };
+  let listed = api.ListOwnerGuidanceResponse.parse({
+    items: [{ ...checked, appliesTo: null, actionEvidence: null, relatedTemplates: [] }],
+    hasMore: false,
+  });
+  const owner: Api = async (route, method, path, query) => {
+    if (method === "GET" && path === "/admin/owner-guidance")
+      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(listed) });
+    else await answer(route, method, path, query);
+  };
+  const { page, unknown, errors, close } = await phone("/staff", owner);
+  try {
+    await ready(page);
+    await page.getByTestId("tab-staff-system").click();
+    const panel = page.getByRole("region", { name: "Regulatory source sign-off" });
+    await panel.getByLabel("Regulatory draft").selectOption(String(shown.itemId));
+    const record = panel.getByTestId("owner-guidance-record");
+    await expect(record).toContainText("Who it applies toNot given yet.");
+    await expect(panel.getByTestId("text-owner-record-missing")).toHaveText(
+      "This version does not say whom it applies to. A Content editor saves a new version that says it before you can sign.",
+    );
+    await expect(panel.getByRole("button", { name: "Sign off and publish this version" })).toHaveCount(0);
+    await settled(page);
+    assert.deepEqual(
+      await phoneProblems(page, "the owner's panel with a guide that does not say whom it applies to"),
+      [],
+    );
+    await page.setViewportSize({ width: 360, height: 640 });
+    // A new version says it: the panel shows the record, and signing is offered.
+    listed = api.ListOwnerGuidanceResponse.parse({ items: [checked], hasMore: false });
+    await page.reload();
+    await ready(page);
+    await page.getByTestId("tab-staff-system").click();
+    await panel.getByLabel("Regulatory draft").selectOption(String(shown.itemId));
+    await expect(record).toContainText("Synthetic businesses that keep a synthetic register.");
+    await expect(record).toContainText("Keep the synthetic register and the receipts that show it.");
+    await expect(record.getByRole("listitem")).toHaveText(["TPL-16 Employment contract"]);
+    await expect(panel.getByTestId("text-owner-record-missing")).toHaveCount(0);
+    await expect(panel.getByRole("button", { name: "Sign off and publish this version" })).toBeVisible();
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "the owner's panel with a guide's record"), []);
     assert.deepEqual(errors, []);
     assert.deepEqual(unknown, []);
   } finally {

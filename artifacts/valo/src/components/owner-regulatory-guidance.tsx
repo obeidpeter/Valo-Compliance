@@ -9,6 +9,14 @@ import { formatDay } from "@/lib/format";
 import { describeError } from "@/lib/describe-error";
 import { changeLabel } from "@/lib/library-change";
 import { heldLine, liftHint, liftLabel, liftedMessage } from "@/lib/library-holds";
+import {
+  actionEvidenceLabel,
+  appliesToLabel,
+  ownerMissingScope,
+  recordLegend,
+  relatedTemplateLine,
+  relatedTemplatesLabel,
+} from "@/lib/guidance-record";
 import { PlainText } from "./resource-parts";
 import { ErrorState } from "./states";
 
@@ -28,6 +36,10 @@ export function OwnerRegulatoryGuidance() {
   const [liftReason, setLiftReason] = useState("");
   const item = result.data?.items.find((row) => row.itemId === selected);
   const needsChange = !!item && item.state === "draft" && item.previousRelease !== null;
+  // A draft is signed only once its sources are checked with nothing unresolved, and it says whom it
+  // applies to (docs/architecture/guidance-record.md).
+  const signable =
+    !!item && item.state === "draft" && !item.holds.length && !!item.checkId && item.appliesTo !== null;
   const key = item ? [item.itemId, item.digest, item.checkId].join("/") : "";
   function select(id: string) {
     setSelected(id);
@@ -162,6 +174,32 @@ export function OwnerRegulatoryGuidance() {
                 className="grid gap-3"
                 sourceUrls={item.sources.map((s) => s.url)}
               />
+              <section aria-label={recordLegend} className="grid gap-1" data-testid="owner-guidance-record">
+                <h4 className="font-semibold">{recordLegend}</h4>
+                <p className="font-medium">{appliesToLabel}</p>
+                <p>{item.appliesTo ?? "Not given yet."}</p>
+                {item.actionEvidence && (
+                  <>
+                    <p className="font-medium">{actionEvidenceLabel}</p>
+                    <p>{item.actionEvidence}</p>
+                  </>
+                )}
+                {item.relatedTemplates.length > 0 && (
+                  <>
+                    <p className="font-medium">{relatedTemplatesLabel}</p>
+                    <ul className="list-disc pl-5">
+                      {item.relatedTemplates.map((template) => (
+                        <li key={template.number}>{relatedTemplateLine(template)}</li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+                {item.state === "draft" && item.appliesTo === null && (
+                  <p role="note" data-testid="text-owner-record-missing">
+                    {ownerMissingScope}
+                  </p>
+                )}
+              </section>
               {item.sources.length > 0 && (
                 <section aria-label="Official sources">
                   <h4 className="font-semibold">Official sources</h4>
@@ -225,7 +263,7 @@ export function OwnerRegulatoryGuidance() {
                   </button>
                 </section>
               )}
-              {((item.state === "draft" && !item.holds.length && item.checkId) || item.live) && (
+              {(signable || item.live) && (
                 <>
                   <label className="flex items-start gap-2">
                     <input
@@ -237,7 +275,7 @@ export function OwnerRegulatoryGuidance() {
                     I have checked this article version and its official sources and authorise the selected
                     action.
                   </label>
-                  {needsChange && !item.holds.length && item.checkId && (
+                  {needsChange && signable && (
                     <div className="grid gap-1">
                       <label className="font-medium" htmlFor="owner-change-note">
                         {changeLabel}
@@ -259,7 +297,7 @@ export function OwnerRegulatoryGuidance() {
                     </div>
                   )}
                   <div className="flex flex-wrap gap-2">
-                    {item.state === "draft" && !item.holds.length && item.checkId && (
+                    {signable && (
                       <button
                         className="btn btn-primary"
                         disabled={busy || approval !== key || (needsChange && changeNote.trim().length < 20)}
