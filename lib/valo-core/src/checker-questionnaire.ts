@@ -15,12 +15,14 @@ export type AnswerValue = string | boolean;
 /**
  * When a question is asked: a condition on earlier answers. `is` holds when the answer is one of the
  * values, or when a list of answers holds one of them. `isNot` holds when it is none of them, so it
- * holds for a question not answered at all. An answer of a rule's question that says how it was not
- * answered (`{ status: "unknown", value: null }`) is read as that status.
+ * holds for a question not answered at all. `answered` holds when there is an answer that is not one
+ * of the three ways of not answering, an empty text or an empty list. An answer of a rule's question
+ * that says how it was not answered (`{ status: "unknown", value: null }`) is read as that status.
  */
 export type When =
   | { readonly answer: string; readonly is: readonly AnswerValue[] }
   | { readonly answer: string; readonly isNot: readonly AnswerValue[] }
+  | { readonly answer: string; readonly answered: true }
   | { readonly all: readonly When[] }
   | { readonly any: readonly When[] };
 
@@ -380,6 +382,16 @@ export function holds(when: When, answers: unknown): boolean {
   if ("all" in when) return when.all.every((part) => holds(part, answers));
   if ("any" in when) return when.any.some((part) => holds(part, answers));
   const value = answerAt(answers, when.answer);
+  if ("answered" in when)
+    return (
+      value !== undefined &&
+      value !== null &&
+      !(
+        typeof value === "string" &&
+        (value.trim() === "" || (NOT_ANSWERED as readonly string[]).includes(value))
+      ) &&
+      !(Array.isArray(value) && value.length === 0)
+    );
   const values: readonly unknown[] = Array.isArray(value) ? value : [value];
   const matches = (list: readonly AnswerValue[]) =>
     values.some((entry) => list.some((item) => item === entry));
@@ -414,7 +426,105 @@ export interface RuleQuestion {
   readonly hint?: string;
   /** A choice's answers, or the entries a list chooses from. */
   readonly choices?: readonly Choice[];
+  /**
+   * Asked only while this holds; asked always without it. A condition names answers by their full
+   * path (`rich.privacy.processesPersonalData`). Each follows the rule's own calculation, so that a
+   * question is asked whenever its answer can change what the rule says, and a test proves it against
+   * the calculation.
+   */
+  readonly askedWhen?: When;
 }
+
+/** A condition that never holds: the rule's calculation reads no such answer. */
+const NEVER: When = { any: [] };
+const businessName = (key: string) => `rich.businessName.${key}`;
+const tax = (key: string) => `rich.tax.${key}`;
+const privacy = (key: string) => `rich.privacy.${key}`;
+const product = (key: string) => `rich.product.${key}`;
+
+/** The business-name rule asks the rest only of an operator with a place of business in Nigeria that
+ * carries on business under the name: either "No" settles it. */
+const NAME_IN_USE: When = {
+  all: [
+    { answer: businessName("hasPlaceOfBusinessInNigeria"), is: [true] },
+    { answer: businessName("carryingOnBusiness"), is: [true] },
+  ],
+};
+const nameOperator = (...forms: string[]): When => ({
+  all: [NAME_IN_USE, { answer: businessName("legalForm"), is: forms }],
+});
+const APPOINTED: When = {
+  all: [NAME_IN_USE, { answer: businessName("operatorRole"), is: ["manager", "receiver"] }],
+};
+/** How the name is composed matters once there is a name to compare. */
+const NAME_GIVEN: When = {
+  all: [
+    nameOperator("individual", "firm", "company"),
+    { answer: businessName("businessName"), answered: true },
+  ],
+};
+
+const TAX_COMPANY: When = { answer: tax("legalForm"), is: ["company", "company_limited_by_guarantee"] };
+const TAX_FOREIGN: When = {
+  all: [
+    { answer: tax("legalForm"), is: ["foreign_company"] },
+    { answer: tax("incorporatedInNigeria"), isNot: [true] },
+  ],
+};
+const TAX_NIGERIAN_COMPANY: When = {
+  all: [TAX_COMPANY, { answer: tax("incorporatedInNigeria"), is: [true] }],
+};
+
+/** The personal-data rule asks the rest only of a business that uses information about identifiable
+ * people, and connected to Nigeria in one of six ways. */
+const PERSONAL_DATA_USED: When = { answer: privacy("processesPersonalData"), is: [true] };
+const CONNECTIONS = [
+  "operatesInNigeria",
+  "processingOccursInNigeria",
+  "dataSubjectsInNigeria",
+  "controllerDomiciledInNigeria",
+  "controllerResidentInNigeria",
+  "processorConnectionInNigeria",
+];
+/** Each connection is asked until one of those before it holds. */
+const connection = (index: number): When => ({
+  all: [
+    PERSONAL_DATA_USED,
+    ...CONNECTIONS.slice(0, index).map((key): When => ({ answer: privacy(key), isNot: [true] })),
+  ],
+});
+const CONNECTED: When = {
+  all: [PERSONAL_DATA_USED, { any: CONNECTIONS.map((key): When => ({ answer: privacy(key), is: [true] })) }],
+};
+/** A personal or household context, once claimed, needs the purpose and any commercial use whatever
+ * else is answered: the rule's calculation never takes the context alone as settling anything. */
+const HOUSEHOLD_CONTEXT: When = { answer: privacy("section3Exception"), is: ["personal_household"] };
+const HOUSEHOLD_OR_CONNECTED: When = { any: [CONNECTED, HOUSEHOLD_CONTEXT] };
+const HOUSEHOLD_CLAIMED: When = {
+  any: [
+    HOUSEHOLD_CONTEXT,
+    { all: [CONNECTED, { answer: privacy("processingPurpose"), is: ["solely_personal_household"] }] },
+  ],
+};
+const CONTROLLER: When = { all: [CONNECTED, { answer: privacy("controllerRole"), is: ["controller"] }] };
+const INDIRECT: When = { all: [CONTROLLER, { answer: privacy("collectionMethod"), is: ["indirect"] }] };
+
+/** The product rule asks the rest unless the business neither supplies regulated products nor
+ * manufactures in Nigeria: both "No" settle it. */
+const PRODUCT_IN_SCOPE: When = {
+  any: [
+    { answer: product("commercialSupplyOfRegulatedProducts"), isNot: [false] },
+    { answer: product("manufacturesInNigeria"), isNot: [false] },
+  ],
+};
+/** The categories section 1(1) of the Act names, which the rule reads as regulated. */
+const REGULATED = ["processed_food", "cosmetic", "water", "drug", "drug_product", "medical_device"];
+const SAMPLES: When = {
+  all: [
+    PRODUCT_IN_SCOPE,
+    { answer: product("activity"), is: ["sample_for_registration", "sample_for_registration_only"] },
+  ],
+};
 
 const businessNameQuestions: readonly RuleQuestion[] = [
   {
@@ -426,6 +536,7 @@ const businessNameQuestions: readonly RuleQuestion[] = [
       { value: "firm", label: "A partnership or firm" },
       { value: "company", label: "A company" },
     ],
+    askedWhen: NAME_IN_USE,
   },
   {
     key: "hasPlaceOfBusinessInNigeria",
@@ -441,26 +552,31 @@ const businessNameQuestions: readonly RuleQuestion[] = [
     key: "businessName",
     kind: "text",
     label: "Exact name used for this business",
+    askedWhen: nameOperator("individual", "firm", "company"),
   },
   {
     key: "trueSurname",
     kind: "text",
     label: "Individual operator’s true surname or patronymic",
+    askedWhen: nameOperator("individual"),
   },
   {
     key: "trueForenames",
     kind: "list",
     label: "Individual operator’s forenames",
+    askedWhen: nameOperator("individual"),
   },
   {
     key: "recognizedAbbreviations",
     kind: "list",
     label: "Recognised abbreviations of the individual’s names",
+    askedWhen: nameOperator("individual"),
   },
   {
     key: "corporateName",
     kind: "text",
     label: "Company’s exact registered corporate name",
+    askedWhen: nameOperator("company"),
   },
   {
     key: "operatorRole",
@@ -472,6 +588,7 @@ const businessNameQuestions: readonly RuleQuestion[] = [
       { value: "receiver", label: "Receiver" },
       { value: "other", label: "Another role" },
     ],
+    askedWhen: NAME_IN_USE,
   },
   {
     key: "appointmentAuthority",
@@ -482,11 +599,13 @@ const businessNameQuestions: readonly RuleQuestion[] = [
       { value: "private_contract", label: "By private agreement" },
       { value: "other", label: "Another route" },
     ],
+    askedWhen: APPOINTED,
   },
   {
     key: "appointmentConfirmed",
     kind: "flag",
     label: "Have you checked the appointment record?",
+    askedWhen: { all: [APPOINTED, { answer: businessName("appointmentAuthority"), is: ["court"] }] },
   },
   {
     key: "businessNameRegistered",
@@ -515,11 +634,24 @@ const taxQuestions: readonly RuleQuestion[] = [
     key: "incorporatedAsCompany",
     kind: "flag",
     label: "Was the entity incorporated as a company?",
+    askedWhen: {
+      answer: tax("legalForm"),
+      isNot: [
+        "company",
+        "company_limited_by_guarantee",
+        "foreign_company",
+        "ordinary_unincorporated_partnership",
+      ],
+    },
   },
   {
     key: "incorporatedInNigeria",
     kind: "flag",
     label: "Was the entity incorporated in Nigeria?",
+    askedWhen: {
+      answer: tax("legalForm"),
+      is: ["company", "company_limited_by_guarantee", "foreign_company"],
+    },
   },
   {
     key: "effectiveManagementCountry",
@@ -531,6 +663,7 @@ const taxQuestions: readonly RuleQuestion[] = [
       { value: "outside_Nigeria", label: "Outside Nigeria" },
       { value: "mixed", label: "In more than one country" },
     ],
+    askedWhen: TAX_FOREIGN,
   },
   {
     key: "managementStatusVerification",
@@ -540,6 +673,7 @@ const taxQuestions: readonly RuleQuestion[] = [
       { value: "not_verified", label: "Not checked" },
       { value: "records_available", label: "Supporting records available" },
     ],
+    askedWhen: { all: [TAX_FOREIGN, { answer: tax("effectiveManagementCountry"), is: ["Nigeria"] }] },
   },
   {
     key: "companyStatus",
@@ -550,16 +684,19 @@ const taxQuestions: readonly RuleQuestion[] = [
       { value: "dormant", label: "Dormant" },
       { value: "permanently_ceased", label: "Permanently ceased operations" },
     ],
+    askedWhen: TAX_NIGERIAN_COMPANY,
   },
   {
     key: "accountingPeriodStart",
     kind: "date",
     label: "Accounting period start",
+    askedWhen: TAX_NIGERIAN_COMPANY,
   },
   {
     key: "accountingPeriodEnd",
     kind: "date",
     label: "Accounting period end",
+    askedWhen: TAX_NIGERIAN_COMPANY,
   },
 ];
 
@@ -581,16 +718,19 @@ const privacyQuestions: readonly RuleQuestion[] = [
       { value: "bank_account", label: "Bank account details" },
       { value: "other", label: "Other information about identifiable people" },
     ],
+    askedWhen: { answer: privacy("processesPersonalData"), is: [false] },
   },
   {
     key: "automatedDecisionMaking",
     kind: "flag",
     label: "Are decisions about people made automatically?",
+    askedWhen: { answer: privacy("processesPersonalData"), is: [false] },
   },
   {
     key: "profiling",
     kind: "flag",
     label: "Is the information used to profile people?",
+    askedWhen: { answer: privacy("processesPersonalData"), is: [false] },
   },
   {
     key: "controllerRole",
@@ -601,16 +741,19 @@ const privacyQuestions: readonly RuleQuestion[] = [
       { value: "processor_only", label: "We act only on another organisation’s instructions" },
       { value: "mixed", label: "It varies by activity" },
     ],
+    askedWhen: CONNECTED,
   },
   {
     key: "determinesPurposesAndMeans",
     kind: "flag",
     label: "Do you decide the purposes and means of this particular use?",
+    askedWhen: { all: [CONNECTED, { answer: privacy("controllerRole"), is: ["processor_only"] }] },
   },
   {
     key: "ownPurposeReuse",
     kind: "flag",
     label: "Do you reuse the information for your own purposes?",
+    askedWhen: { all: [CONNECTED, { answer: privacy("controllerRole"), is: ["processor_only"] }] },
   },
   {
     key: "collectionMethod",
@@ -621,42 +764,52 @@ const privacyQuestions: readonly RuleQuestion[] = [
       { value: "indirect", label: "From someone or somewhere else" },
       { value: "mixed", label: "Both" },
     ],
+    askedWhen: CONTROLLER,
   },
   {
     key: "newCollectionEvent",
     kind: "flag",
     label: "Does this activity involve collecting information now?",
+    askedWhen: {
+      all: [CONNECTED, { answer: privacy("processingPurpose"), is: ["household_and_commercial_promotions"] }],
+    },
   },
   {
     key: "operatesInNigeria",
     kind: "flag",
     label: "Does the organisation operate in Nigeria?",
+    askedWhen: connection(0),
   },
   {
     key: "processingOccursInNigeria",
     kind: "flag",
     label: "Does any processing for this activity take place in Nigeria?",
+    askedWhen: connection(1),
   },
   {
     key: "dataSubjectsInNigeria",
     kind: "flag",
     label: "Are any of the people concerned located in Nigeria?",
+    askedWhen: connection(2),
   },
   {
     key: "controllerDomiciledInNigeria",
     kind: "flag",
     label: "Is the organisation deciding the use domiciled in Nigeria?",
+    askedWhen: connection(3),
   },
   {
     key: "controllerResidentInNigeria",
     kind: "flag",
     label: "Is that organisation resident in Nigeria?",
+    askedWhen: connection(4),
   },
   {
     key: "processorConnectionInNigeria",
     kind: "flag",
     label: "Does a processor involved have a Nigerian connection?",
     hint: "Consider its domicile, residence, operations, processing, and the people whose information it uses.",
+    askedWhen: connection(5),
   },
   {
     key: "processingPurpose",
@@ -669,16 +822,19 @@ const privacyQuestions: readonly RuleQuestion[] = [
       { value: "legal_claim", label: "A legal claim" },
       { value: "other", label: "Another purpose" },
     ],
+    askedWhen: HOUSEHOLD_OR_CONNECTED,
   },
   {
     key: "commercialUse",
     kind: "flag",
     label: "Is there any business or commercial use?",
+    askedWhen: HOUSEHOLD_CLAIMED,
   },
   {
     key: "privacyRightsViolationIndicated",
     kind: "flag",
     label: "Is there any reported or indicated privacy-rights concern?",
+    askedWhen: HOUSEHOLD_CLAIMED,
   },
   {
     key: "section3Exception",
@@ -696,6 +852,7 @@ const privacyQuestions: readonly RuleQuestion[] = [
     key: "dataSubjectAlreadyInformed",
     kind: "flag",
     label: "Has the person already been given information about this use?",
+    askedWhen: NEVER,
   },
   {
     key: "indirectNoticeException",
@@ -707,18 +864,23 @@ const privacyQuestions: readonly RuleQuestion[] = [
       { value: "disproportionate_effort_claim", label: "Concern about the effort of contacting people" },
       { value: "other", label: "Another concern" },
     ],
+    askedWhen: INDIRECT,
   },
   {
     key: "exceptionScopeConfirmed",
     kind: "flag",
     label: "Have the particular circumstances behind the stated context been checked?",
     hint: "This records a factual check, not approval of a legal exception.",
+    askedWhen: { all: [CONNECTED, { answer: privacy("section3Exception"), is: ["legal_claim"] }] },
   },
   {
     key: "exceptionSupportingFacts",
     kind: "text",
     label: "What factual circumstances support the stated context or contacting concern?",
     hint: "Describe circumstances only. Do not include names, contact details or other personal or sensitive information. This does not establish a legal exception.",
+    askedWhen: {
+      all: [INDIRECT, { answer: privacy("indirectNoticeException"), is: ["disproportionate_effort_claim"] }],
+    },
   },
 ];
 
@@ -737,6 +899,7 @@ const productQuestions: readonly RuleQuestion[] = [
       { value: "live_fish", label: "Live fish" },
       { value: "other", label: "Another product" },
     ],
+    askedWhen: PRODUCT_IN_SCOPE,
   },
   {
     key: "manufacturesInNigeria",
@@ -747,6 +910,7 @@ const productQuestions: readonly RuleQuestion[] = [
     key: "commercialSupplyInNigeria",
     kind: "flag",
     label: "Do you commercially supply this product in Nigeria?",
+    askedWhen: PRODUCT_IN_SCOPE,
   },
   {
     key: "commercialSupplyOfRegulatedProducts",
@@ -766,26 +930,31 @@ const productQuestions: readonly RuleQuestion[] = [
       { value: "service_use_only", label: "Use it only while providing a service" },
       { value: "other", label: "Another activity" },
     ],
+    askedWhen: PRODUCT_IN_SCOPE,
   },
   {
     key: "ownBrandOrRepackaging",
     kind: "flag",
     label: "Do you add your own brand or repackage the product?",
+    askedWhen: { all: [PRODUCT_IN_SCOPE, { answer: product("activity"), is: ["service_use_only"] }] },
   },
   {
     key: "processingOrPackaging",
     kind: "flag",
     label: "Do you process or package the product?",
+    askedWhen: { all: [PRODUCT_IN_SCOPE, { answer: product("productCategory"), isNot: REGULATED }] },
   },
   {
     key: "drugOrMedicalUse",
     kind: "flag",
     label: "Is it supplied for drug or medical use?",
+    askedWhen: { all: [PRODUCT_IN_SCOPE, { answer: product("productCategory"), isNot: REGULATED }] },
   },
   {
     key: "therapeuticClaims",
     kind: "flag",
     label: "Are treatment or therapeutic claims made about it?",
+    askedWhen: { all: [PRODUCT_IN_SCOPE, { answer: product("productCategory"), is: ["claimed_cosmetic"] }] },
   },
   {
     key: "productRegistration",
@@ -806,11 +975,13 @@ const productQuestions: readonly RuleQuestion[] = [
     kind: "flag",
     label: "Does the registration record identify this exact product and manufacturer?",
     hint: "Your answer is not independent verification of registration.",
+    askedWhen: NEVER,
   },
   {
     key: "registrationConditionsChanged",
     kind: "flag",
     label: "Have any recorded registration conditions changed?",
+    askedWhen: NEVER,
   },
   {
     key: "specialSamplePermit",
@@ -821,16 +992,19 @@ const productQuestions: readonly RuleQuestion[] = [
       { value: "permit_held", label: "I hold a sample permit" },
       { value: "none", label: "I do not hold a sample permit" },
     ],
+    askedWhen: SAMPLES,
   },
   {
     key: "permitScopeMatchesActivity",
     kind: "flag",
     label: "Does the sample permit describe this exact product and activity?",
+    askedWhen: SAMPLES,
   },
   {
     key: "permitConditionsSatisfied",
     kind: "flag",
     label: "Have you checked that the stated permit conditions are satisfied?",
+    askedWhen: SAMPLES,
   },
 ];
 
@@ -839,21 +1013,25 @@ export const NAMING_QUESTIONS: readonly RuleQuestion[] = [
     key: "onlyAddedWordsIndicateSuccession",
     kind: "flag",
     label: "Do the added words only describe succession to a previous business?",
+    askedWhen: NAME_GIVEN,
   },
   {
     key: "otherBrandAddition",
     kind: "flag",
     label: "Is there any other brand wording added to the names?",
+    askedWhen: NAME_GIVEN,
   },
   {
     key: "sameSurnameAllPartners",
     kind: "flag",
     label: "Do all the partners have the same surname?",
+    askedWhen: nameOperator("firm"),
   },
   {
     key: "onlyAdditionIsPluralS",
     kind: "flag",
     label: "Is the only addition a final “s” making a shared surname plural?",
+    askedWhen: NAME_GIVEN,
   },
 ];
 
@@ -866,26 +1044,31 @@ export const PARTNER_QUESTIONS: readonly RuleQuestion[] = [
       { value: "individual", label: "Individual" },
       { value: "corporation", label: "Corporation" },
     ],
+    askedWhen: nameOperator("firm"),
   },
   {
     key: "surname",
     kind: "text",
     label: "True surname or patronymic",
+    askedWhen: nameOperator("firm"),
   },
   {
     key: "forenames",
     kind: "list",
     label: "Forenames",
+    askedWhen: nameOperator("firm"),
   },
   {
     key: "recognizedAbbreviations",
     kind: "list",
     label: "Recognised name abbreviations",
+    askedWhen: nameOperator("firm"),
   },
   {
     key: "corporateName",
     kind: "text",
     label: "Corporate name, if this partner is a corporation",
+    askedWhen: nameOperator("firm"),
   },
 ];
 
