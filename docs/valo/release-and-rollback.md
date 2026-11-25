@@ -146,9 +146,10 @@ runs it by hand, never on a timer:
 1. Plan: run `restic snapshots --json` against the repository, then
    `backup_retention.py` on that listing, and save the plan as a private file.
 2. Review the plan, and take its SHA-256.
-3. Remove: `python3 scripts/ops/backup_removal.py <plan.json> <sha256>`, with the
-   repository's environment set as for the recovery archive
-   (`VALO_RECOVERY_ARCHIVE_MODE`, `RESTIC_REPOSITORY`, `RESTIC_PASSWORD_FILE`).
+3. Remove: `python3 scripts/ops/backup_removal.py <plan.json> <sha256> --operator <name> --reason "<why>"`,
+   with the repository's environment set as for the recovery archive
+   (`VALO_RECOVERY_ARCHIVE_MODE`, `RESTIC_REPOSITORY`, `RESTIC_PASSWORD_FILE`) and
+   `VALO_OPERATOR_JOURNAL` naming the operator's private journal directory.
 
 The command refuses a plan whose bytes do not match the hash, one made under
 another policy, and one more than a day old. It reads the snapshots again and
@@ -159,6 +160,26 @@ stopped. It then runs `restic forget` on exactly those snapshots and
 are gone and every kept one remains. Its tests run against a real restic
 repository in CI. It has not been run against a real backup repository: none is
 deployed.
+
+## The operator's journal
+
+The tools that remove or restore backups record who ran them and why (ADM-009,
+[the audit trail](../architecture/audit-trail.md)). `backup_removal.py` and
+`recovery_restore.py` refuse to run without `--operator` (a short handle, never an
+email address) and `--reason` (one line, 20 to 1000 characters), and without
+`VALO_OPERATOR_JOURNAL`: an absolute directory private to the account running
+them, apart from the plan's folder and from a restore's new directory.
+
+Each writes a `started` entry to `operator-journal.jsonl` there before it acts,
+and a `completed` or `failed` entry afterwards. Each entry holds the hash of the
+one before it. Check a journal with
+`python3 scripts/ops/operator_journal.py verify`. If the chain is broken the tools
+stop: keep the damaged file as evidence, start a new journal directory, and give
+the reason in the next run's `--reason`. Keep each run's printed receipt, which
+names the hashes of its entries.
+
+Unpack a pinned recovery archive with
+`python3 scripts/ops/recovery_restore.py <archive> <new directory> <sha256> --operator <name> --reason "<why>"`.
 
 ## Alerts
 
