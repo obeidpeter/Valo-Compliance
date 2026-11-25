@@ -124,6 +124,34 @@ result carries its own checksum, and is shown only while the checksum matches.
 - A saved result. One saved before this change shows what it was saved with: an absent field shows
   nothing, or "confirm with the authority" for a fee or a deadline.
 
+## Settled while building it
+
+**Slice 1: documents.**
+- **A template's number.** The released list names each template by its number in the
+  specification's list ("TPL-29"), apart from the address it already gives:
+  - a reviewed release, by the template it was released as;
+  - a staff library template, by the registered template whose title it has. The staff library
+    already finds the template an entry is filed as this way, for its access level, its fill-in form
+    and its category. All 40 retained template drafts have their registered titles, so each entry
+    filed from one has its number.
+
+  Any other entry has no number: a template with another title, a guide or an article.
+- **The filter** takes up to twenty numbers, comma-separated, written as the list writes them. Any
+  other value is refused. It finds released templates only, so a held one is never named.
+- **The page asks once for every twenty numbers a result relates.** It reads every page of the
+  answer, since one number can name a reviewed release and a library entry.
+- **Where the documents go:**
+  - "Documents for this requirement" is in the requirement's card, after its next step.
+  - "Recommended documents" comes after what is still unanswered and what Valo does not cover, and
+    before the official sources. It says: "These are the documents for the requirements above that
+    are likely relevant. Using one does not by itself meet a requirement."
+  - A premium document says "Premium".
+- **When the documents cannot be loaded**, the result says so in place of the recommended documents:
+  "The documents for these requirements could not be loaded. Your results above are not affected."
+  It offers "Try again". The requirements are still shown.
+- **The prepared personal-data rule relates the privacy notice (TPL-29).** The rule is not signed and
+  TPL-29 is held, so no result shows it yet.
+
 ## Slices
 
 1. **Documents.** The catalogue's `templateIds` filter, the documents under each requirement and
@@ -141,7 +169,10 @@ result carries its own checksum, and is shown only while the checksum matches.
    - each fee and deadline, with its passage, when one is recorded.
 2. **The words**, all of them proposals:
    - "Documents for this requirement";
-   - "Recommended documents";
+   - "Recommended documents", with its sentence "These are the documents for the requirements above
+     that are likely relevant. Using one does not by itself meet a requirement.";
+   - "The documents for these requirements could not be loaded. Your results above are not
+     affected.";
    - "Where to act";
    - "Fee: confirm with the authority" and "Deadline: confirm with the authority";
    - the sentences on what is not checked;
