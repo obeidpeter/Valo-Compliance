@@ -3395,6 +3395,55 @@
       "file": "artifacts/api-server/src/lib/valo-client-writes.test.ts",
       "test": "the web client's changes that send nothing still reach their routes through the same-origin check",
       "proves": "Saving a template, removing a saved one and making a copy, sent by the real browser client through the server's real same-origin check, each reach their route, while the same changes sent with no body are still refused."
+    },
+    {
+      "requirement": "DOC-007",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/catalogue/document-editions.test.ts",
+      "test": "a document's edition reads replaced while a later one is released, withdrawn once none is, and nothing while current",
+      "proves": "A document's template edition reads replaced while a later edition is released, withdrawn once it or the later edition is withdrawn with none released since, and nothing while it is still the template's release."
+    },
+    {
+      "requirement": "DOC-007",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/document-edition.test.tsx",
+      "test": "a document's notice says a newer version was released, or that the template was withdrawn, and that the document is unchanged",
+      "proves": "The editor tells the customer when a newer version of a document's template was released, and that the document is unchanged and keeps its version's wording, or when the template was withdrawn and why, and links to the newer version when there is one."
+    },
+    {
+      "requirement": "EDT-010",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/document-edition.test.tsx",
+      "test": "a document's notice says a newer version was released, or that the template was withdrawn, and that the document is unchanged",
+      "proves": "When a document's template is withdrawn, the editor says the document stays the customer's, who can still open, edit and download it."
+    },
+    {
+      "requirement": "PAY-009",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/purchase-order-card.test.tsx",
+      "test": "a purchase whose edition was replaced downloads the new edition and says it comes at no further charge",
+      "proves": "The purchases screen shows a purchase whose edition was replaced with the new edition's download, and says the new version is the buyer's at no further charge."
+    },
+    {
+      "requirement": "PAY-009",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/catalogue/valo-template-entitlement.integration.test.ts",
+      "test": "only the purchasing workspace's active entitlement releases a premium master",
+      "proves": "Against PostgreSQL, a verified purchase of one version of a reviewed premium template releases a later version of the same template to the buying workspace at no further charge, never to another workspace, and nothing once the purchase is suspended."
+    },
+    {
+      "requirement": "PAY-009",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-manual-library.integration.test.ts",
+      "test": "manual publishing through staff HTTP routes and public readers",
+      "proves": "Against PostgreSQL, once a premium staff-library template's edition is replaced, its verified buyer's purchases list the new edition's file under the edition bought and download it at no further charge, the edition bought closes to new downloads, and a reversed purchase carries nothing."
+    },
+    {
+      "requirement": "PAY-009",
+      "job": "foundation",
+      "file": "lib/db/scripts/phase1-migrations.test.mjs",
+      "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
+      "proves": "After the edition purchases migration, the database lets a verified purchase download its template's next released edition and start its form, for the buying workspace only and only while the purchase stands."
     }
   ]
 }
