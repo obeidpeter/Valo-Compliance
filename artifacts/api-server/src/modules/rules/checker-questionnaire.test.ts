@@ -156,6 +156,14 @@ test("a condition reads an answer, a list of answers, a rule's way of not answer
   );
   // A question the questionnaire does not name is asked.
   assert.equal(isAsked(answers, "rich.privacy.controllerRole"), true);
+  // "Has an answer": a value, not a way of not answering, an empty text or an empty list.
+  const answered = (value: unknown) => holds({ answer: "x", answered: true }, { x: value });
+  assert.equal(answered("Synthetic Ventures"), true);
+  assert.equal(answered(["Ade"]), true);
+  assert.equal(answered(false), true);
+  for (const missing of [undefined, null, "", "  ", [], "unknown", "unanswered", "not_applicable"])
+    assert.equal(answered(missing), false, JSON.stringify(missing));
+  assert.equal(answered({ status: "unknown", value: null }), false);
 });
 
 /** Every answer given, so that a test changes only what it names. */
