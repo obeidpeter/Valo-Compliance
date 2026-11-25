@@ -204,6 +204,8 @@ checks, which are not provisioned yet.
 | `BULK_EXPORTS_DETECTED` | Any caller used its whole export quota window | Internal operations sample (SEC-008) |
 | `PAYMENT_ACTIVITY_DETECTED` | Any caller used its whole checkout or refund quota window | Internal operations sample (SEC-008) |
 | `AI_ACTIVITY_DETECTED` | Any caller used its whole AI quota window | Internal operations sample (SEC-008) |
+| `GUARD_REFUSALS_DETECTED` | A database guard refused an application request in the last ten minutes: a fault, or an attempt to change a history | Internal operations sample (ADM-009) |
+| `PRIVILEGED_READING_DETECTED` | One staff member read more than 100 distinct records or lists in the last hour | Internal operations sample (ADM-009) |
 | `<NAME>_PROBE_UNAVAILABLE` | A probe query fails or times out (2 seconds) | Internal operations sample |
 
 Each internal alert names its runbook and accountable roles from

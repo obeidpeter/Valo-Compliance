@@ -57,9 +57,10 @@ broken.
    names a fixed service label today, and the route's own rebuild carries the operator and their reason
    into its publication record. The recovery controls run only on a disposable synthetic target.
 3. **Alerts**:
-   - an attempt to change a history, refused by its guard, becomes a security signal and an alert;
-   - a periodic integrity check finds a history row that is gone or changed, however that happened;
-   - privileged reading above a threshold raises an alert.
+   - an attempt to change a history, refused by its guard, becomes a security signal and an alert
+     (built);
+   - privileged reading above a threshold raises an alert (built);
+   - a periodic integrity check finds a history row that is gone or changed, however that happened.
 4. **A staff viewer** for the histories that have none.
 5. **Later, with Phase 8's migration login**: the histories owned by a role the application login cannot
    use, so that it can no longer disable their guards.
@@ -184,6 +185,45 @@ repository):
 The evidence register cites only the tests whose results the workflow keeps, and it keeps none for
 these Python tests, so they are named here rather than cited.
 
+## Slice 3: the alerts
+
+Two of the three alerts are built. Each is a reading in the worker's operations sample, raised above a
+development default, not a reviewed threshold, under the security/privacy incident runbook.
+
+- **A guard's refusal** (`GUARD_REFUSALS_DETECTED`, above zero in ten minutes).
+  - The error handler recognises a refusal a database guard raised. That is an error, or a cause in its
+    chain, whose code is `P0001` or `23514` and whose context names the PL/pgSQL function that raised
+    it. A check constraint, a key or a timeout names no function.
+  - The request is still answered with the same 503. It is counted as a `guard_refusal` security
+    signal, and only the guard's name is logged, never its message or the query.
+  - The application never sends a change a guard refuses, so each refusal is a fault or an attempt to
+    change a history, and either is worth an alert.
+  - A guard also refuses some changes that are not to a history, such as a release missing what it
+    needs. The alert counts those too. Such a refusal reaches the handler only when the application
+    failed to check first, which is a fault as well.
+- **Heavy privileged reading** (`PRIVILEGED_READING_DETECTED`).
+  - The reading is the most distinct objects one staff member read in the last hour, from the access
+    history.
+  - More than a hundred raise it. Reading one list again and again counts once, so a page that
+    refreshes does not raise it.
+  - An index on the access history's time keeps the reading cheap.
+- **Not built yet: a change outside the application.** Someone with the owning login can disable a
+  guard, or change rows in a session the application never sees. Finding that needs a fingerprint of
+  each history row, checked on a schedule. The check has to know which changes are allowed:
+  - an erasure's redactions and removals;
+  - a synthetic workspace's cleanup;
+  - the rows an erasure removes with a workspace.
+
+  It is the next part of this slice.
+
+**Tests.**
+- The two alerts are raised and resolved on stubbed readings.
+- The handler counts a guard's refusal, and not a check constraint's, a key's or a timeout's. It logs
+  only the guard's name.
+- The real refusal of a change to a privacy case's history is read as that guard's.
+- Both readings run on a real database.
+- The index migration has its upgrade check.
+
 ## What comes next
 
-Slice 3: the alerts.
+The rest of slice 3: the fingerprint check of every history row. Then slice 4, the staff viewer.
