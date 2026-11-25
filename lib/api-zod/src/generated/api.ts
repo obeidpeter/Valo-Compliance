@@ -204,7 +204,7 @@ export const CreateCustomerAIDraftResponse = zod.object({
   "text": zod.string().max(createCustomerAIDraftResponseContentBlocksItemTextMax),
   "rows": zod.array(zod.array(zod.string().max(createCustomerAIDraftResponseContentBlocksItemRowsItemItemMax)).max(createCustomerAIDraftResponseContentBlocksItemRowsItemMax)).max(createCustomerAIDraftResponseContentBlocksItemRowsMax),
   "level": zod.union([zod.literal(2),zod.literal(3)]).optional().describe('A heading\'s level. Only a form document (forms v2) has headings.'),
-  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its header, repeated on each page. Only a form document\'s tables have one.')
+  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its heading row, repeated at the top of each page. Only a table has one.')
 })).max(createCustomerAIDraftResponseContentBlocksMax),
   "selectedClauses": zod.array(zod.string().max(createCustomerAIDraftResponseContentSelectedClausesItemMax).regex(createCustomerAIDraftResponseContentSelectedClausesItemRegExp)).max(createCustomerAIDraftResponseContentSelectedClausesMax).describe('The passages a form document\'s answers keep, as question=option. Empty for every other document.'),
   "formAnswers": zod.object({
@@ -362,7 +362,7 @@ export const GetCustomerAIDraftResponse = zod.object({
   "text": zod.string().max(getCustomerAIDraftResponseContentBlocksItemTextMax),
   "rows": zod.array(zod.array(zod.string().max(getCustomerAIDraftResponseContentBlocksItemRowsItemItemMax)).max(getCustomerAIDraftResponseContentBlocksItemRowsItemMax)).max(getCustomerAIDraftResponseContentBlocksItemRowsMax),
   "level": zod.union([zod.literal(2),zod.literal(3)]).optional().describe('A heading\'s level. Only a form document (forms v2) has headings.'),
-  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its header, repeated on each page. Only a form document\'s tables have one.')
+  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its heading row, repeated at the top of each page. Only a table has one.')
 })).max(getCustomerAIDraftResponseContentBlocksMax),
   "selectedClauses": zod.array(zod.string().max(getCustomerAIDraftResponseContentSelectedClausesItemMax).regex(getCustomerAIDraftResponseContentSelectedClausesItemRegExp)).max(getCustomerAIDraftResponseContentSelectedClausesMax).describe('The passages a form document\'s answers keep, as question=option. Empty for every other document.'),
   "formAnswers": zod.object({
@@ -519,7 +519,7 @@ export const AcceptCustomerAIDraftBody = zod.object({
   "text": zod.string().max(acceptCustomerAIDraftBodyContentBlocksItemTextMax),
   "rows": zod.array(zod.array(zod.string().max(acceptCustomerAIDraftBodyContentBlocksItemRowsItemItemMax)).max(acceptCustomerAIDraftBodyContentBlocksItemRowsItemMax)).max(acceptCustomerAIDraftBodyContentBlocksItemRowsMax),
   "level": zod.union([zod.literal(2),zod.literal(3)]).optional().describe('A heading\'s level. Only a form document (forms v2) has headings.'),
-  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its header, repeated on each page. Only a form document\'s tables have one.')
+  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its heading row, repeated at the top of each page. Only a table has one.')
 })).max(acceptCustomerAIDraftBodyContentBlocksMax),
   "selectedClauses": zod.array(zod.string().max(acceptCustomerAIDraftBodyContentSelectedClausesItemMax).regex(acceptCustomerAIDraftBodyContentSelectedClausesItemRegExp)).max(acceptCustomerAIDraftBodyContentSelectedClausesMax).describe('The passages a form document\'s answers keep, as question=option. Empty for every other document.'),
   "formAnswers": zod.object({
@@ -667,7 +667,7 @@ export const AcceptCustomerAIDraftResponse = zod.object({
   "text": zod.string().max(acceptCustomerAIDraftResponseContentBlocksItemTextMax),
   "rows": zod.array(zod.array(zod.string().max(acceptCustomerAIDraftResponseContentBlocksItemRowsItemItemMax)).max(acceptCustomerAIDraftResponseContentBlocksItemRowsItemMax)).max(acceptCustomerAIDraftResponseContentBlocksItemRowsMax),
   "level": zod.union([zod.literal(2),zod.literal(3)]).optional().describe('A heading\'s level. Only a form document (forms v2) has headings.'),
-  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its header, repeated on each page. Only a form document\'s tables have one.')
+  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its heading row, repeated at the top of each page. Only a table has one.')
 })).max(acceptCustomerAIDraftResponseContentBlocksMax),
   "selectedClauses": zod.array(zod.string().max(acceptCustomerAIDraftResponseContentSelectedClausesItemMax).regex(acceptCustomerAIDraftResponseContentSelectedClausesItemRegExp)).max(acceptCustomerAIDraftResponseContentSelectedClausesMax).describe('The passages a form document\'s answers keep, as question=option. Empty for every other document.'),
   "formAnswers": zod.object({
@@ -1224,7 +1224,7 @@ export const CreateTemplateDraftResponse = zod.object({
   "text": zod.string().max(createTemplateDraftResponseContentBlocksItemTextMax),
   "rows": zod.array(zod.array(zod.string().max(createTemplateDraftResponseContentBlocksItemRowsItemItemMax)).max(createTemplateDraftResponseContentBlocksItemRowsItemMax)).max(createTemplateDraftResponseContentBlocksItemRowsMax),
   "level": zod.union([zod.literal(2),zod.literal(3)]).optional().describe('A heading\'s level. Only a form document (forms v2) has headings.'),
-  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its header, repeated on each page. Only a form document\'s tables have one.')
+  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its heading row, repeated at the top of each page. Only a table has one.')
 })).max(createTemplateDraftResponseContentBlocksMax),
   "selectedClauses": zod.array(zod.string().max(createTemplateDraftResponseContentSelectedClausesItemMax).regex(createTemplateDraftResponseContentSelectedClausesItemRegExp)).max(createTemplateDraftResponseContentSelectedClausesMax).describe('The passages a form document\'s answers keep, as question=option. Empty for every other document.'),
   "formAnswers": zod.object({
@@ -2307,7 +2307,7 @@ export const ListDocumentsResponseItem = zod.object({
   "text": zod.string().max(listDocumentsResponseContentBlocksItemTextMax),
   "rows": zod.array(zod.array(zod.string().max(listDocumentsResponseContentBlocksItemRowsItemItemMax)).max(listDocumentsResponseContentBlocksItemRowsItemMax)).max(listDocumentsResponseContentBlocksItemRowsMax),
   "level": zod.union([zod.literal(2),zod.literal(3)]).optional().describe('A heading\'s level. Only a form document (forms v2) has headings.'),
-  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its header, repeated on each page. Only a form document\'s tables have one.')
+  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its heading row, repeated at the top of each page. Only a table has one.')
 })).max(listDocumentsResponseContentBlocksMax),
   "selectedClauses": zod.array(zod.string().max(listDocumentsResponseContentSelectedClausesItemMax).regex(listDocumentsResponseContentSelectedClausesItemRegExp)).max(listDocumentsResponseContentSelectedClausesMax).describe('The passages a form document\'s answers keep, as question=option. Empty for every other document.'),
   "formAnswers": zod.object({
@@ -2464,7 +2464,7 @@ export const CreateDocumentBody = zod.object({
   "text": zod.string().max(createDocumentBodyContentBlocksItemTextMax),
   "rows": zod.array(zod.array(zod.string().max(createDocumentBodyContentBlocksItemRowsItemItemMax)).max(createDocumentBodyContentBlocksItemRowsItemMax)).max(createDocumentBodyContentBlocksItemRowsMax),
   "level": zod.union([zod.literal(2),zod.literal(3)]).optional().describe('A heading\'s level. Only a form document (forms v2) has headings.'),
-  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its header, repeated on each page. Only a form document\'s tables have one.')
+  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its heading row, repeated at the top of each page. Only a table has one.')
 })).max(createDocumentBodyContentBlocksMax),
   "selectedClauses": zod.array(zod.string().max(createDocumentBodyContentSelectedClausesItemMax).regex(createDocumentBodyContentSelectedClausesItemRegExp)).max(createDocumentBodyContentSelectedClausesMax).describe('The passages a form document\'s answers keep, as question=option. Empty for every other document.'),
   "formAnswers": zod.object({
@@ -2611,7 +2611,7 @@ export const CreateDocumentResponse = zod.object({
   "text": zod.string().max(createDocumentResponseContentBlocksItemTextMax),
   "rows": zod.array(zod.array(zod.string().max(createDocumentResponseContentBlocksItemRowsItemItemMax)).max(createDocumentResponseContentBlocksItemRowsItemMax)).max(createDocumentResponseContentBlocksItemRowsMax),
   "level": zod.union([zod.literal(2),zod.literal(3)]).optional().describe('A heading\'s level. Only a form document (forms v2) has headings.'),
-  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its header, repeated on each page. Only a form document\'s tables have one.')
+  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its heading row, repeated at the top of each page. Only a table has one.')
 })).max(createDocumentResponseContentBlocksMax),
   "selectedClauses": zod.array(zod.string().max(createDocumentResponseContentSelectedClausesItemMax).regex(createDocumentResponseContentSelectedClausesItemRegExp)).max(createDocumentResponseContentSelectedClausesMax).describe('The passages a form document\'s answers keep, as question=option. Empty for every other document.'),
   "formAnswers": zod.object({
@@ -2773,7 +2773,7 @@ export const GetDocumentResponse = zod.object({
   "text": zod.string().max(getDocumentResponseContentBlocksItemTextMax),
   "rows": zod.array(zod.array(zod.string().max(getDocumentResponseContentBlocksItemRowsItemItemMax)).max(getDocumentResponseContentBlocksItemRowsItemMax)).max(getDocumentResponseContentBlocksItemRowsMax),
   "level": zod.union([zod.literal(2),zod.literal(3)]).optional().describe('A heading\'s level. Only a form document (forms v2) has headings.'),
-  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its header, repeated on each page. Only a form document\'s tables have one.')
+  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its heading row, repeated at the top of each page. Only a table has one.')
 })).max(getDocumentResponseContentBlocksMax),
   "selectedClauses": zod.array(zod.string().max(getDocumentResponseContentSelectedClausesItemMax).regex(getDocumentResponseContentSelectedClausesItemRegExp)).max(getDocumentResponseContentSelectedClausesMax).describe('The passages a form document\'s answers keep, as question=option. Empty for every other document.'),
   "formAnswers": zod.object({
@@ -2935,7 +2935,7 @@ export const SaveDocumentBody = zod.object({
   "text": zod.string().max(saveDocumentBodyContentBlocksItemTextMax),
   "rows": zod.array(zod.array(zod.string().max(saveDocumentBodyContentBlocksItemRowsItemItemMax)).max(saveDocumentBodyContentBlocksItemRowsItemMax)).max(saveDocumentBodyContentBlocksItemRowsMax),
   "level": zod.union([zod.literal(2),zod.literal(3)]).optional().describe('A heading\'s level. Only a form document (forms v2) has headings.'),
-  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its header, repeated on each page. Only a form document\'s tables have one.')
+  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its heading row, repeated at the top of each page. Only a table has one.')
 })).max(saveDocumentBodyContentBlocksMax),
   "selectedClauses": zod.array(zod.string().max(saveDocumentBodyContentSelectedClausesItemMax).regex(saveDocumentBodyContentSelectedClausesItemRegExp)).max(saveDocumentBodyContentSelectedClausesMax).describe('The passages a form document\'s answers keep, as question=option. Empty for every other document.'),
   "formAnswers": zod.object({
@@ -3082,7 +3082,7 @@ export const SaveDocumentResponse = zod.object({
   "text": zod.string().max(saveDocumentResponseContentBlocksItemTextMax),
   "rows": zod.array(zod.array(zod.string().max(saveDocumentResponseContentBlocksItemRowsItemItemMax)).max(saveDocumentResponseContentBlocksItemRowsItemMax)).max(saveDocumentResponseContentBlocksItemRowsMax),
   "level": zod.union([zod.literal(2),zod.literal(3)]).optional().describe('A heading\'s level. Only a form document (forms v2) has headings.'),
-  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its header, repeated on each page. Only a form document\'s tables have one.')
+  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its heading row, repeated at the top of each page. Only a table has one.')
 })).max(saveDocumentResponseContentBlocksMax),
   "selectedClauses": zod.array(zod.string().max(saveDocumentResponseContentSelectedClausesItemMax).regex(saveDocumentResponseContentSelectedClausesItemRegExp)).max(saveDocumentResponseContentSelectedClausesMax).describe('The passages a form document\'s answers keep, as question=option. Empty for every other document.'),
   "formAnswers": zod.object({
@@ -3363,7 +3363,7 @@ export const StartFormDocumentResponse = zod.object({
   "text": zod.string().max(startFormDocumentResponseContentBlocksItemTextMax),
   "rows": zod.array(zod.array(zod.string().max(startFormDocumentResponseContentBlocksItemRowsItemItemMax)).max(startFormDocumentResponseContentBlocksItemRowsItemMax)).max(startFormDocumentResponseContentBlocksItemRowsMax),
   "level": zod.union([zod.literal(2),zod.literal(3)]).optional().describe('A heading\'s level. Only a form document (forms v2) has headings.'),
-  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its header, repeated on each page. Only a form document\'s tables have one.')
+  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its heading row, repeated at the top of each page. Only a table has one.')
 })).max(startFormDocumentResponseContentBlocksMax),
   "selectedClauses": zod.array(zod.string().max(startFormDocumentResponseContentSelectedClausesItemMax).regex(startFormDocumentResponseContentSelectedClausesItemRegExp)).max(startFormDocumentResponseContentSelectedClausesMax).describe('The passages a form document\'s answers keep, as question=option. Empty for every other document.'),
   "formAnswers": zod.object({
@@ -3537,7 +3537,7 @@ export const ListDocumentRevisionsResponseItem = zod.object({
   "text": zod.string().max(listDocumentRevisionsResponseContentBlocksItemTextMax),
   "rows": zod.array(zod.array(zod.string().max(listDocumentRevisionsResponseContentBlocksItemRowsItemItemMax)).max(listDocumentRevisionsResponseContentBlocksItemRowsItemMax)).max(listDocumentRevisionsResponseContentBlocksItemRowsMax),
   "level": zod.union([zod.literal(2),zod.literal(3)]).optional().describe('A heading\'s level. Only a form document (forms v2) has headings.'),
-  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its header, repeated on each page. Only a form document\'s tables have one.')
+  "headerRows": zod.literal(1).optional().describe('A table\'s first row is its heading row, repeated at the top of each page. Only a table has one.')
 })).max(listDocumentRevisionsResponseContentBlocksMax),
   "selectedClauses": zod.array(zod.string().max(listDocumentRevisionsResponseContentSelectedClausesItemMax).regex(listDocumentRevisionsResponseContentSelectedClausesItemRegExp)).max(listDocumentRevisionsResponseContentSelectedClausesMax).describe('The passages a form document\'s answers keep, as question=option. Empty for every other document.'),
   "formAnswers": zod.object({

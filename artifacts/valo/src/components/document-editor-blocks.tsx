@@ -67,6 +67,13 @@ export function SaveIndicator({
   );
 }
 
+/** A table with its first row marked as its heading row, which the files repeat at the top of each
+ * page, or with the mark taken off (docs/architecture/editor.md). */
+export function withHeadingRow(block: DocumentBlock, heading: boolean): DocumentBlock {
+  const { headerRows: _headerRows, ...rest } = block;
+  return heading ? { ...rest, headerRows: 1 } : rest;
+}
+
 export function BlockEditor({
   block,
   index,
@@ -139,7 +146,7 @@ export function BlockEditor({
           <table className="w-full border-collapse text-sm">
             <tbody>
               {block.rows.map((row, ri) => (
-                <tr key={ri}>
+                <tr key={ri} className={ri === 0 && block.headerRows === 1 ? "font-medium" : undefined}>
                   {row.map((cell, ci) => (
                     <td key={ci} className="border border-border p-0">
                       <input
@@ -182,6 +189,16 @@ export function BlockEditor({
               Add a column
             </button>
           </div>
+          <label className="mt-2 flex w-fit cursor-pointer items-center gap-2 text-xs text-muted-foreground">
+            <input
+              type="checkbox"
+              className="h-4 w-4 accent-[hsl(155_42%_21%)]"
+              checked={block.headerRows === 1}
+              onChange={(e) => onChange(withHeadingRow(block, e.target.checked))}
+              data-testid={"checkbox-heading-row-" + index}
+            />
+            First row is a heading
+          </label>
         </div>
       ) : (
         <textarea

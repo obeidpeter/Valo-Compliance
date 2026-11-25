@@ -147,6 +147,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y poppler-utils
+      - name: Install LibreOffice, a second program that opens the Word files
+        run: sudo apt-get install -y libreoffice-writer-nogui
       - name: Install the locked Playwright Chromium
         run: |
           pnpm --filter @workspace/api-server exec playwright install --with-deps chromium
@@ -156,6 +158,8 @@ jobs:
           # The guide export test keeps its sample Word and PDF files here; they are unreviewed drafts.
           VALO_GUIDANCE_SAMPLES: ${{ github.workspace }}/generated-artifacts/guidance-samples
         run: pnpm --filter @workspace/api-server test:valo
+      - name: Open every guided template's Word file in LibreOffice and compare its text with the page (EDT-006)
+        run: pnpm --filter @workspace/api-server test:valo-word-files
       - name: Retain the draft guides' sample Word and PDF files
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

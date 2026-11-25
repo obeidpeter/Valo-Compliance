@@ -1742,7 +1742,7 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/exports/valo-exports.integration.test.ts",
       "test": "real development PostgreSQL, private file storage and renderer integration",
-      "proves": "Through the export job, a synthetic document with a long title, a long issuer name and a 65-row table renders to a DOCX whose document part holds its naira amount and to an A4 PDF of at least two pages from which pdftotext reads the naira amount; opening in Word is not tested."
+      "proves": "Through the export job, a synthetic document with a long title, a long issuer name and a 65-row table renders to a DOCX whose document part holds its naira amount and to an A4 PDF of at least two pages from which pdftotext reads the naira amount; a Word file that fails the check of what Word refuses is not stored, and its job fails at once with WORD_FILE_CHECK_FAILED and leaves no file behind; opening in Word is not tested."
     },
     {
       "requirement": "EDT-007",
@@ -3500,6 +3500,62 @@
       "file": "artifacts/valo/src/components/document-preview.test.tsx",
       "test": "\"Copy text\" is the page as plain text: the notice, the title and its version, the details, then the document",
       "proves": "\"Copy text\" copies the same page as plain text, starting with its notice, and prints a form document's details from its text only."
+    },
+    {
+      "requirement": "EDT-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/printed-page-files.test.ts",
+      "test": "a table's heading row prints at the top of every page the table runs onto, and Word marks only that row to repeat, for each kind of table that has one",
+      "proves": "A 40-row table made from questions, an invoice's totals made from questions and typed by hand, a form's table and a customer's table marked so each print their first row at the top of every page the table runs onto in the PDF, and Word marks that row and no other to repeat; a customer's table without the mark prints its first row once."
+    },
+    {
+      "requirement": "EDT-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/printed-page-files.test.ts",
+      "test": "every guided template's Word file and PDF print its page word for word, made from its questions and from its v2 form",
+      "proves": "The Word file and the PDF, read with pdftotext, of each of the twelve guided templates, made from its questions and from its v2 form with every question answered, print the page's text word for word, long names and amounts in naira included."
+    },
+    {
+      "requirement": "EDT-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/printed-page-files.test.ts",
+      "test": "every guided template's Word file and PDF print its page word for word, made from its questions and from its v2 form",
+      "proves": "For every guided template, made from its questions and from its v2 form, the Word file and the PDF print the one description of the page that the editor's preview draws, word for word."
+    },
+    {
+      "requirement": "EDT-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/word-file-check.test.ts",
+      "test": "every guided template's Word file, from its questions and from its v2 form, and the typed document, the library copy and the long tables pass the check Word makes",
+      "proves": "The Word file of every guided template, from its questions and from its v2 form, and of the synthetic documents, as drafts and as finished files, has well-formed parts, every part and relationship target present with a content type, a Word main document, a paragraph in every table cell and a grid in every table."
+    },
+    {
+      "requirement": "EDT-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/word-file-check.test.ts",
+      "test": "the check refuses what makes Word refuse a file, and names the part",
+      "proves": "The Word check refuses a file that is not a package, a part cut short or holding a bare ampersand, a missing part a relationship points to, a part with no content type, a main document of another type, a table cell with no paragraph and a table with no grid, and names the part each time."
+    },
+    {
+      "requirement": "EDT-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/word-files-libreoffice.test.ts",
+      "test": "LibreOffice opens every guided template's Word file and prints the page's text word for word, with the notice on every page and a table's heading row on every page it runs onto",
+      "proves": "LibreOffice, a second program, opens the Word file of every guided template made from its questions and from its v2 form, and of the synthetic documents, and prints each page's text word for word, with the notice on every page and each table's heading row on every page the table runs onto."
+    },
+    {
+      "requirement": "EDT-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-render.test.ts",
+      "test": "two tables in a row stay two tables in Word, kept apart by an empty paragraph, and a table after a paragraph needs none",
+      "proves": "A Word file keeps two tables in a row apart with an empty paragraph, so that Word does not join them into one table whose heading row is the first table's."
+    },
+    {
+      "requirement": "EDT-002",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/document-preview.test.tsx",
+      "test": "the preview prints a table's heading row as its column headings, for each kind of table that has one, and a table without the mark as rows",
+      "proves": "The editor's preview prints the first row of a table made from questions, a totals table, a form's table and a customer's table marked so as column headings, as the files print it, and a table without the mark as rows."
     }
   ]
 }

@@ -7,7 +7,7 @@
  */
 
 /**
- * A table's first row is its header, repeated on each page. Only a form document's tables have one.
+ * A table's first row is its heading row, repeated at the top of each page. Only a table has one.
  */
 export type DocumentBlockHeaderRows = typeof DocumentBlockHeaderRows[keyof typeof DocumentBlockHeaderRows];
 

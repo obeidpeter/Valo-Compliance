@@ -470,6 +470,72 @@ test(
             .where(eq(valoStaffAssignments.identityId, editor));
         },
       );
+      await t.test(
+        "a typed document's table can print its first row as a heading row: the mark is saved, kept in a new version and taken off again, and a heading stays a form's",
+        async () => {
+          // EDT-006 (docs/architecture/editor.md, slice 2).
+          const table = {
+            id: "section-table",
+            type: "table" as const,
+            text: "",
+            headerRows: 1 as const,
+            rows: [
+              ["Item", "Amount"],
+              ["Synthetic chairs", "₦6,000.00"],
+            ],
+          };
+          const contentWith = (blocks: (typeof syntheticDocument.content.blocks)[number][]) => ({
+            ...syntheticDocument.content,
+            blocks,
+          });
+          // Responses as the contract types them.
+          const typed = async (made: Promise<unknown>) => GetDocumentResponse.parse(await made);
+          const document = await typed(
+            createDocument(a, { ...syntheticDocument, content: contentWith([table]) }),
+          );
+          assert.equal(document.content.blocks[0]?.headerRows, 1);
+          const longer = { ...table, rows: [...table.rows, ["Synthetic desk", "₦9,000.00"]] };
+          const saved = await typed(
+            saveDocument(a, document.id, {
+              expectedRevision: 1,
+              title: syntheticDocument.title,
+              content: contentWith([longer]),
+            }),
+          );
+          assert.equal(saved.revision, 2);
+          assert.deepEqual(saved.content.blocks[0], longer);
+          const { headerRows: _headerRows, ...unmarked } = longer;
+          const plain = await typed(
+            saveDocument(a, document.id, {
+              expectedRevision: 2,
+              title: syntheticDocument.title,
+              content: contentWith([unmarked]),
+            }),
+          );
+          assert.equal(plain.revision, 3);
+          assert.ok(!("headerRows" in plain.content.blocks[0]!));
+          // Only a table has a heading row, and a heading still belongs to a form document.
+          await assert.rejects(
+            createDocument(a, {
+              ...syntheticDocument,
+              content: contentWith([
+                { id: "p", type: "paragraph", text: "Synthetic", rows: [], headerRows: 1 },
+              ]),
+            }),
+            { status: 422, message: /belong to a document started from a form/ },
+          );
+          await assert.rejects(
+            createDocument(a, {
+              ...syntheticDocument,
+              content: contentWith([
+                table,
+                { id: "h", type: "heading", level: 2, text: "Synthetic heading", rows: [] },
+              ]),
+            }),
+            { status: 422, message: /belong to a document started from a form/ },
+          );
+        },
+      );
       await t.test("suspended membership is not automatically restored", async () => {
         await db
           .update(valoMemberships)

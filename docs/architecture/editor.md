@@ -99,15 +99,23 @@ heading row is at the top of every page. In the Word file, exactly the heading r
 
 - **Word's own rules.** A check reads a Word file the way Word does, and fails on what makes Word refuse
   a file: a part that is not well-formed XML; a part, or a relationship's target, missing from the
-  package or from its content types; a table cell with no paragraph; a table with no grid. The export
-  worker runs the check on each Word file before storing it. A file that fails it is not given to the
-  customer: the job fails, and says so.
+  package or from its content types; a main document whose type is not a Word document's; a table
+  cell with no paragraph; a table with no grid. The export worker runs the check on each Word file
+  before storing it. A file that fails it is not given to the customer: the job fails at once, since
+  the same version would make the same file again, and says so: "This Word file did not pass Valo's
+  check that Word can open it, so it was not kept. You can still make the PDF of the same version."
 - **A second program.** In CI, LibreOffice opens each Word file and prints it to PDF. The text it prints
   must be the description's text. The foundation job installs LibreOffice for this step, which costs
   nothing.
 - **What is checked:** every guided template's Word file and PDF, made from synthetic answers: the
-  twelve templates' forms made from questions and their twelve v2 forms. Also the typed document and the library
-  copy above. The PDFs are read by `pdftotext`, as the file tests already read them.
+  twelve templates' forms made from questions and their twelve v2 forms. Also the typed document, the
+  library copy and slice 2's long tables. The PDFs are read by `pdftotext`, as the file tests already
+  read them.
+
+Settled while building it: LibreOffice found a fault in the Word files. With nothing between them,
+Word and LibreOffice join two tables in a row into one, so an invoice's totals took the heading row of
+its items. A Word file now keeps two tables in a row apart with an empty paragraph, which prints no
+word.
 
 Neither check is Microsoft Word itself, which cannot run in CI. Opening one file of each kind in Word
 and in a standard PDF reader stays a manual check for the owner, with the five test sessions (redesign
@@ -150,7 +158,8 @@ There are three pull requests: the design and slice 1; slices 2 and 3; slice 4.
 
 ## The owner's points
 
-1. The words: "[Not supplied]" in the preview, "First row is a heading" in the block editor, the line
-   under a form's questions, "From your answers" and the notice's mark.
+1. The words: "[Not supplied]" in the preview, "First row is a heading" in the block editor, what a
+   job says when its Word file fails the check, the line under a form's questions, "From your answers"
+   and the notice's mark.
 2. The manual check: one file of each kind opened in Word and in a standard PDF reader, with the five
    test sessions. EDT-006 is not accepted without it.

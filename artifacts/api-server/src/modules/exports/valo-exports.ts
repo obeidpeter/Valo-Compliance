@@ -22,6 +22,7 @@ import { sha256 } from "@workspace/valo-core";
 import { authorizeWorkspaceWrite, type WorkspaceActor } from "../workspaces";
 import { ValoProblem } from "../../platform/valo-problem";
 import { RENDER_VERSION, renderDocument, exportMime } from "../../lib/valo-render";
+import { assertWordFileOpens } from "../../lib/word-file-check";
 import { readPrivateFile, writePrivateFile, deletePrivateFile } from "../../platform/valo-private-storage";
 import { documentInput } from "../../lib/valo-validation";
 import { EXPORT_HEARTBEAT_MS, EXPORT_LEASE_MS, recoverAbandonedExports } from "./valo-export-recovery";
@@ -409,7 +410,8 @@ export async function downloadExport(actor: WorkspaceActor, id: string) {
 /** Worker entry: load scoped immutable inputs afresh; never trust queue-supplied document bodies or paths. */
 export type ExportStage =
   "claiming" | "claimed" | "rendering" | "uploading" | "uploaded" | "completing" | "completed";
-/** Internal instrumentation used by the kill/restart harness; never supplied by API or queue data. */
+/** Internal instrumentation used by the kill/restart harness; never supplied by API or queue data. A
+ * test may also replace the renderer, to make a Word file that fails the check below. */
 export async function executeExport(
   id: string,
   workspaceId: string,
@@ -419,6 +421,7 @@ export async function executeExport(
     write: writePrivateFile,
     remove: deletePrivateFile,
   },
+  render: typeof renderDocument = renderDocument,
 ) {
   developmentExportsOnly();
   const job = await db.transaction(async (tx) => {
@@ -577,7 +580,7 @@ export async function executeExport(
       sha256(serializeRevision(savedInput!)) !== job.sourceHash
     )
       throw new Error("REVISION_INTEGRITY_FAILED");
-    const rendering = renderDocument(
+    const rendering = render(
       savedInput,
       job.format,
       job.revision,
@@ -588,6 +591,9 @@ export async function executeExport(
     await onStage?.("rendering");
     const bytes = await rendering;
     if (bytes.length > 10 * 1024 * 1024) throw new Error("EXPORT_SIZE_LIMIT");
+    // A Word file is read as Word reads it before it is stored: one Word would refuse is not given to
+    // the customer (docs/architecture/editor.md, slice 3).
+    if (job.format === "docx") assertWordFileOpens(bytes);
     const assetId = randomUUID();
     const objectKey = `valo/${runtimeEnvironment()}/${workspaceId}/${assetId}.${job.format}`;
     temporaryKey = objectKey;
@@ -673,6 +679,7 @@ export async function executeExport(
               "DOCUMENT_INCOMPLETE",
               "EXPORT_ACCESS_REVOKED",
               "EXPORT_SIZE_LIMIT",
+              "WORD_FILE_CHECK_FAILED",
               "PRIVATE_FILE_CHECKSUM_MISMATCH",
               "PRIVATE_FILE_BINDING_MISMATCH",
             ].includes(message)
@@ -681,9 +688,13 @@ export async function executeExport(
     await db.transaction(async (tx) => {
       const changed = await tx
         .update(valoExportJobs)
-        // An incomplete version stays incomplete: its finished file fails at once.
+        // An incomplete version stays incomplete, and a Word file that fails the check would be made
+        // the same way again: each fails at once.
         .set({
-          status: job.attempts < 3 && safe !== "DOCUMENT_INCOMPLETE" ? "retrying" : "failed",
+          status:
+            job.attempts < 3 && safe !== "DOCUMENT_INCOMPLETE" && safe !== "WORD_FILE_CHECK_FAILED"
+              ? "retrying"
+              : "failed",
           errorCode: safe,
           updatedAt: new Date(),
         })

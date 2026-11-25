@@ -110,7 +110,7 @@ schemas:
         maxItems: 100
         items: { type: array, maxItems: 10, items: { type: string, maxLength: 1000 } }
       level: { type: integer, enum: [2, 3], description: "A heading's level. Only a form document (forms v2) has headings." }
-      headerRows: { type: integer, enum: [1], description: "A table's first row is its header, repeated on each page. Only a form document's tables have one." }
+      headerRows: { type: integer, enum: [1], description: "A table's first row is its heading row, repeated at the top of each page. Only a table has one." }
   CanonicalDocument:
     type: object
     additionalProperties: false

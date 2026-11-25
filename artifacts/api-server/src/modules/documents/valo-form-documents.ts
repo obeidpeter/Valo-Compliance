@@ -59,12 +59,15 @@ export async function assertFormAvailable(tx: Tx, templateId: string) {
       "This form comes with a template you buy. Buy the template first, then start the document here. Your other documents are unchanged.",
     );
 }
-/** A document that was not started from a form holds none of a form document's parts. */
+/** A document that was not started from a form holds none of a form document's parts. Its tables may
+ * print their first row as a heading row, as a form's tables do (docs/architecture/editor.md). */
 export function assertPlainContent(content: Content) {
   if (
     content.formAnswers !== undefined ||
     content.selectedClauses.length > 0 ||
-    content.blocks.some((block) => block.type === "heading" || block.headerRows !== undefined)
+    content.blocks.some(
+      (block) => block.type === "heading" || (block.headerRows !== undefined && block.type !== "table"),
+    )
   )
     throw new ValoProblem(
       422,
