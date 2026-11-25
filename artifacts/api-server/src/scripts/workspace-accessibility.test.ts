@@ -504,6 +504,24 @@ const answers: Record<string, unknown> = {
       },
     ],
   }),
+  // A rule version the workspace saved results under and made a task from was replaced, so the home
+  // lists its notice (docs/architecture/rule-changes.md, slice 2).
+  [`GET /workspace/rule-notices`]: api.ListRuleNoticesResponse.parse({
+    items: [
+      {
+        id: "00000000-0000-4000-8000-00000000a603",
+        ruleId: "synthetic-owner-rule",
+        title: "Synthetic checker rule",
+        version: 1,
+        kind: "replaced",
+        replacementVersion: 2,
+        reason: "Synthetic change: the second version restates the synthetic provision.",
+        results: 2,
+        tasks: 1,
+        createdAt: at(19),
+      },
+    ],
+  }),
   [`GET /v1/exports`]: api.ListWorkspaceExportsResponse.parse([
     {
       id: "00000000-0000-4000-8000-00000000a601",
@@ -813,6 +831,7 @@ test("a signed-in list with nothing in it shows its empty state, with no automat
     "GET /v1/exports": [],
     "GET /workspace/correction-notices": { page: 1, hasMore: false, notices: [] },
     "GET /workspace/edition-notices": { items: [] },
+    "GET /workspace/rule-notices": { items: [] },
   };
   const empty: [string, Record<string, unknown>][] = [
     ["/workspace", nothingSaved],
@@ -1368,6 +1387,7 @@ test("a document starts in one place: the home and the documents screen each hav
     "GET /v1/exports": [],
     "GET /workspace/correction-notices": { page: 1, hasMore: false, notices: [] },
     "GET /workspace/edition-notices": { items: [] },
+    "GET /workspace/rule-notices": { items: [] },
   };
   for (const path of ["/workspace", "/workspace/documents"]) {
     const { page, errors, close } = await desktop(path, except(nothingSaved));
@@ -4155,6 +4175,56 @@ test("the owner's panel asks what changed before a version replaces a released o
         reason: "Synthetic withdrawal: the synthetic provision no longer applies.",
       },
     ]);
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
+
+// docs/architecture/rule-changes.md, slice 2 (EDP-011, RUL-009): the home tells the business that a rule
+// version it saved results under, or made a task from, changed, and the notice can be marked read.
+test("the home lists a changed rule's notice with its reason, links to checking again, and marks it read", async () => {
+  const listed = answers["GET /workspace/rule-notices"] as { items: { id: string }[] };
+  const notice = listed.items[0]!;
+  const read: string[] = [];
+  const marking: Api = async (route, method, path, query) => {
+    if (method === "POST" && path === `/workspace/rule-notices/${notice.id}/read`) {
+      read.push(path);
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(api.MarkRuleNoticeReadResponse.parse({ items: [] })),
+      });
+    } else await answer(route, method, path, query);
+  };
+  const { page, unknown, errors, close } = await phone("/workspace", marking);
+  try {
+    await ready(page);
+    const card = page.getByTestId("card-rule-notices");
+    await expect(card.getByRole("heading", { name: "Changes to requirements you checked" })).toBeVisible();
+    await expect(card).toContainText(
+      "“Synthetic checker rule” version 1 was replaced by version 2 on 19 Nov 2026",
+    );
+    await expect(card).toContainText(
+      "What changed: Synthetic change: the second version restates the synthetic provision.",
+    );
+    await expect(card).toContainText(
+      "Your 2 saved results that list it are kept as they were saved. Check again to see what applies now.",
+    );
+    await expect(card).toContainText(
+      "Your task made from it is marked for review, and its reminders have stopped.",
+    );
+    await expect(card.getByRole("link", { name: "Check again" })).toHaveAttribute(
+      "href",
+      "/workspace/checker",
+    );
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "the home with a rule notice"), []);
+    await page.setViewportSize({ width: 360, height: 640 });
+    await card.getByRole("button", { name: /^Mark as read: / }).click();
+    await expect(page.getByTestId("card-rule-notices")).toHaveCount(0);
+    assert.deepEqual(read, [`/workspace/rule-notices/${notice.id}/read`]);
     assert.deepEqual(errors, []);
     assert.deepEqual(unknown, []);
   } finally {

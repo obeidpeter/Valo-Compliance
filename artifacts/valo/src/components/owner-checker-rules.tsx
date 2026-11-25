@@ -360,8 +360,9 @@ export function OwnerCheckerRules() {
                           What changed in this version?
                         </label>
                         <p id="owner-rule-change-reason-help" className="text-sm text-muted-foreground">
-                          Version {item.version} replaces released version {item.live.version}. Valo records
-                          what you write with the release, in 20 to 1,000 characters.
+                          Version {item.version} replaces released version {item.live.version}. The businesses
+                          that saved a result or made a task under it are told what you write, so write it for
+                          them, in 20 to 1,000 characters.
                         </p>
                         <textarea
                           id="owner-rule-change-reason"
@@ -419,8 +420,9 @@ export function OwnerCheckerRules() {
                         Why is this rule withdrawn?
                       </label>
                       <p id="owner-rule-withdraw-reason-help" className="text-sm text-muted-foreground">
-                        The requirements check stops using version {item.live.version} at once. Valo records
-                        what you write with the withdrawal, in 20 to 1,000 characters.
+                        The requirements check stops using version {item.live.version} at once. The businesses
+                        that saved a result or made a task under it are told what you write, so write it for
+                        them, in 20 to 1,000 characters.
                       </p>
                       <textarea
                         id="owner-rule-withdraw-reason"
