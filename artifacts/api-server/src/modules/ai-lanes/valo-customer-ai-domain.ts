@@ -50,6 +50,9 @@ export const customerAIInput = CreateCustomerAIDraftBody.strict().superRefine((i
   }
 });
 export type CustomerAIInput = z.infer<typeof customerAIInput>;
+/** The notice a request outside the four tasks gets, in place of an AI draft. */
+export const unsupportedTaskNotice =
+  "This request exceeds the four bounded business tasks. Use a scoped published resource, official authority or independent adviser; no adviser availability is implied.";
 export const customerPlanSchema = z
   .object({
     opening: z.enum(["none", "please_review", "for_consideration", "outstanding_record"]),
