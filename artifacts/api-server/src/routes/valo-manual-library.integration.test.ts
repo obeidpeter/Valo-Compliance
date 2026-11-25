@@ -14,6 +14,7 @@ import {
   exercisePremiumManualTemplate,
 } from "../test-support/manual-premium-template";
 import { exercisePremiumPriceCommand } from "../test-support/premium-price-command";
+import { exerciseOverduePremiumTemplate } from "../test-support/manual-overdue-premium";
 import { libraryAction, templateDetails, withdrawalReason } from "../test-support/template-details";
 import { exerciseOwnerRuleRoutes } from "../test-support/owner-rule-routes";
 import {
@@ -433,6 +434,10 @@ test(
         assert.equal((await call("/public/templates/manual-" + overdue)).status, 200);
         assert.equal((await fetchFile()).status, 200);
       },
+    );
+    await t.test(
+      "a premium template overdue for its review is neither offered, ordered nor priced, while its buyer keeps its file, and is offered again once reviewed",
+      () => exerciseOverduePremiumTemplate(call, editor),
     );
     await t.test("one published introduction per industry and no implied regulatory evidence", async () => {
       const id = randomUUID(),

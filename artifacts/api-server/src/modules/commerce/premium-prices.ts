@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { and, asc, eq, gt, inArray, isNull, or, sql } from "drizzle-orm";
+import { premiumEditions, type PremiumEdition } from "./premium-editions";
 
 /**
  * A premium template's price, recorded for the product owner (step 5 of the content and speed plan
@@ -163,10 +164,8 @@ export async function recordPremiumPrice(
     await tx.execute(
       sql`select pg_advisory_xact_lock(hashtextextended(${"premium-price:" + terms.edition}, 0))`,
     );
-    const live = await tx.execute<{ edition: string }>(
-      sql`select edition from public.valo_live_manual_premium_versions(${terms.edition}::uuid)`,
-    );
-    if (!live.rows.length)
+    const { rows: live } = await tx.execute<PremiumEdition>(premiumEditions(terms.edition));
+    if (!live[0] || live[0].held)
       throw Error(
         "Only a published premium template from the staff library, not overdue for its review, can be priced. Check its edition ID and review date with status.",
       );

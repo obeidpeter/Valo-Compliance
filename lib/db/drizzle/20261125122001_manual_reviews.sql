@@ -42,7 +42,8 @@ LANGUAGE sql STABLE SET search_path = pg_catalog, pg_temp AS $$
 $$;--> statement-breakpoint
 REVOKE ALL ON FUNCTION public.valo_manual_review_due(uuid) FROM PUBLIC;--> statement-breakpoint
 -- An entry whose review is overdue is held from new use: it is not listed to save, copied into a new
--- document or offered for sale. What a customer already has, and their purchased files, are unchanged.
+-- document, started as a form or offered for sale. What a customer already has, and their purchased
+-- files, are unchanged.
 CREATE OR REPLACE FUNCTION public.valo_live_manual_templates()
 RETURNS TABLE(id uuid, item_id uuid, slug text, kind text, title text, version integer, industry text,
   purpose text, summary text, published_at timestamptz)
@@ -63,16 +64,33 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, pg_temp AS $$
     AND public.valo_manual_review_due(m.id) > clock_timestamp()
     AND (SELECT public.valo_scope_workspace()) IS NOT NULL
 $$;--> statement-breakpoint
-CREATE OR REPLACE FUNCTION public.valo_live_manual_premium_versions(wanted uuid) RETURNS TABLE(edition uuid)
+CREATE OR REPLACE FUNCTION public.valo_free_form_edition(wanted_title text)
+RETURNS TABLE(edition uuid, version integer, form_text text)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, pg_temp AS $$
+  SELECT m.id, m.version, m.form_text FROM public.valo_manual_library m
+  WHERE m.kind = 'template' AND m.state = 'published' AND m.form_text IS NOT NULL
+    AND lower(m.title) = lower(wanted_title)
+    AND public.valo_manual_review_due(m.id) > clock_timestamp()
+    AND (SELECT public.valo_scope_workspace()) IS NOT NULL
+  ORDER BY m.published_at DESC, m.id
+  LIMIT 1
+$$;--> statement-breakpoint
+-- A premium edition overdue for its review is neither offered nor ordered, while its buyers still
+-- download it and find it among their purchases. So each published edition is listed with whether it
+-- is held, and the offers, a new order and the price command leave out one that is.
+DROP FUNCTION public.valo_live_manual_premium_versions(uuid);--> statement-breakpoint
+CREATE FUNCTION public.valo_live_manual_premium_versions(wanted uuid) RETURNS TABLE(edition uuid, held boolean)
 LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,pg_temp AS $$
 BEGIN
   IF wanted IS NULL THEN
-    RETURN QUERY SELECT m.id FROM public.valo_manual_library m
-      WHERE m.kind='premium_template' AND m.state='published'
-        AND public.valo_manual_review_due(m.id) > clock_timestamp();
+    RETURN QUERY SELECT m.id, public.valo_manual_review_due(m.id) <= clock_timestamp()
+      FROM public.valo_manual_library m
+      WHERE m.kind='premium_template' AND m.state='published';
   ELSE
-    RETURN QUERY SELECT m.id FROM public.valo_manual_library m
-      WHERE m.id=wanted AND m.kind='premium_template' AND m.state='published'
-        AND public.valo_manual_review_due(m.id) > clock_timestamp() FOR SHARE OF m;
+    RETURN QUERY SELECT m.id, public.valo_manual_review_due(m.id) <= clock_timestamp()
+      FROM public.valo_manual_library m
+      WHERE m.id=wanted AND m.kind='premium_template' AND m.state='published' FOR SHARE OF m;
   END IF;
-END $$;
+END $$;--> statement-breakpoint
+REVOKE ALL ON FUNCTION public.valo_live_manual_premium_versions(uuid) FROM PUBLIC;--> statement-breakpoint
+GRANT EXECUTE ON FUNCTION public.valo_live_manual_premium_versions(uuid) TO valo_workspace_scope;
