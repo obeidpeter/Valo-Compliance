@@ -1568,6 +1568,16 @@ schemas:
         type: array
         description: Each fee, deadline, rate or threshold the item's rule records, with the source it rests on (CMP-006). Absent when the rule records none, and in a result saved before figures were recorded.
         items: { $ref: "#/components/schemas/RequirementFigure" }
+      sourceCheckedAt:
+        type: string
+        description: When the rule's sources were last checked (CMP-004). Absent in a result saved before dates were recorded.
+      publication:
+        type: object
+        description: How the rule was released and when, from its release record (CMP-004). Absent for a test rule, and in a result saved before dates were recorded.
+        required: [route, publishedAt]
+        properties:
+          route: { type: string, enum: [owner_signoff, editorial_release] }
+          publishedAt: { type: string }
   RequirementFigure:
     type: object
     required: [kind, words, sourceId]

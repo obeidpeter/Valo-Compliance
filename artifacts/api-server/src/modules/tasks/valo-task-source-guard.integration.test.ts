@@ -100,6 +100,7 @@ test(
     const registryFor = (rules: ReleasedRule[], trusted = rules.map((r) => r.manifestHash)): Registry => ({
       rules,
       trusted: new Set(trusted),
+      published: new Map(),
       excluded: 0,
       stateHash: digest(rules),
     });

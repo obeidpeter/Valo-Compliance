@@ -27,7 +27,14 @@ export type AssessmentChange = {
  * the rule's version, which is compared, and a result saved before notices were recorded has none
  * (EDP-008), so that alone is no change. */
 export function comparableItemDigest(item: object): string {
-  const { releaseNotice: _notice, ...rest } = item as { releaseNotice?: unknown };
+  // How a rule was released, and its dates, say nothing new about what it requires: a result saved
+  // before they were recorded is not a change (docs/architecture/results.md, slice 4).
+  const {
+    releaseNotice: _notice,
+    sourceCheckedAt: _checked,
+    publication: _published,
+    ...rest
+  } = item as { releaseNotice?: unknown; sourceCheckedAt?: unknown; publication?: unknown };
   return digest(rest);
 }
 

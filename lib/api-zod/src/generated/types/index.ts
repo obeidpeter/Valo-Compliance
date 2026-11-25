@@ -18,6 +18,8 @@ export * from './assessmentComparison';
 export * from './assessmentInput';
 export * from './assessmentItem';
 export * from './assessmentItemLabel';
+export * from './assessmentItemPublication';
+export * from './assessmentItemPublicationRoute';
 export * from './assessmentResult';
 export * from './authErrorResponse';
 export * from './buildStatus';

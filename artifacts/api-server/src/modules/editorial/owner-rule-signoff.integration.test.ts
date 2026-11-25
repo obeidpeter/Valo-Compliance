@@ -236,6 +236,17 @@ test(
         notice: item?.releaseNotice,
       };
     };
+    // CMP-004 (docs/architecture/results.md, slice 4): the result dates the rule's source check, and
+    // its release on the owner's sign-off, from its release record.
+    const datesSay = async () => {
+      const now = new Date();
+      const registry = await releasedRegistry(db, now);
+      const item = assess(facts, registry.rules, currentAssessmentDate(now), now, {
+        trustedManifestHashes: registry.trusted,
+        publishedAt: registry.published,
+      }).items.find((i) => i.ruleId === ruleId);
+      return { sourceCheckedAt: item?.sourceCheckedAt, publication: item?.publication };
+    };
     try {
       // Only the owner, recently verified, sees the prepared rules.
       await assert.rejects(listOwnerRules(actor(system), options), refused(403));
@@ -345,6 +356,18 @@ test(
         versions: [1],
         label: "Likely relevant",
         notice: ownerRuleDisclosure,
+      });
+      const [releaseRow] = (
+        await db.execute<{ published_at: Date | string; rule: { sourceCheckedAt: string } }>(
+          sql`select published_at, rule from valo_rule_releases where rule_id=${ruleId} and version=1`,
+        )
+      ).rows;
+      assert.deepEqual(await datesSay(), {
+        sourceCheckedAt: releaseRow!.rule.sourceCheckedAt,
+        publication: {
+          route: "owner_signoff",
+          publishedAt: new Date(releaseRow!.published_at).toISOString(),
+        },
       });
       // The same version cannot be signed twice.
       await assert.rejects(decideOwnerRule(actor(owner), ruleId, sign(first), options), refused(409));

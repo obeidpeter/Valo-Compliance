@@ -249,6 +249,10 @@ export type RuleItem = {
   relatedTemplateIds: string[];
   officialRoute?: NonNullable<ReleasedRule["officialRoute"]>;
   figures?: NonNullable<ReleasedRule["figures"]>;
+  /** CMP-004: when the rule's sources were last checked. */
+  sourceCheckedAt?: string;
+  /** CMP-004: how the rule was released and when, from its release record. */
+  publication?: { route: "owner_signoff" | "editorial_release"; publishedAt: string };
 };
 /** What a requirement carries of where to act and its figures: only what its rule records, so a
  * result from rules that record neither is exactly what it was. */
@@ -256,6 +260,18 @@ const routeAndFigures = (rule: ReleasedRule) => ({
   ...(rule.officialRoute && { officialRoute: rule.officialRoute }),
   ...(rule.figures && { figures: rule.figures }),
 });
+/** CMP-004: a requirement's dates, kept apart: its sources' check, and its release with the route it
+ * was released on, when the release record is known. */
+const releaseDates = (rule: ReleasedRule, published: ReadonlyMap<string, string> | undefined) => {
+  const publishedAt = published?.get(`${rule.id}@${rule.version}`);
+  return {
+    sourceCheckedAt: rule.sourceCheckedAt,
+    ...(publishedAt &&
+      (rule.provenance === "owner_signoff" || rule.provenance === "editorial_release") && {
+        publication: { route: rule.provenance, publishedAt },
+      }),
+  };
+};
 /** EDP-008: what a result says about how its rule was released. A rule released on the reviewed
  * route was AI drafted and reviewed, and its bundle says so; one released on the owner's sign-off
  * was not, and says what was done instead (decision 0020). A synthetic fixture is never shown as
@@ -441,7 +457,12 @@ export function assess(
   rules: ReleasedRule[],
   asOfDate: string,
   evaluatedAt: Date,
-  options: { fixtureMode?: boolean; trustedManifestHashes?: ReadonlySet<string> } = {},
+  options: {
+    fixtureMode?: boolean;
+    trustedManifestHashes?: ReadonlySet<string>;
+    /** When each released rule version was published, keyed `id@version`, from its release record. */
+    publishedAt?: ReadonlyMap<string, string>;
+  } = {},
 ) {
   const f = checkerFactsSchema.parse(facts);
   z.string().date().parse(asOfDate);
@@ -495,6 +516,7 @@ export function assess(
         sources: r.sources,
         relatedTemplateIds: r.relatedTemplateIds,
         ...routeAndFigures(r),
+        ...releaseDates(r, options.publishedAt),
       });
       continue;
     }
@@ -543,6 +565,7 @@ export function assess(
       sources: r.sources,
       relatedTemplateIds: r.relatedTemplateIds,
       ...routeAndFigures(r),
+      ...releaseDates(r, options.publishedAt),
     });
   }
   const rulesetVersion = digest({

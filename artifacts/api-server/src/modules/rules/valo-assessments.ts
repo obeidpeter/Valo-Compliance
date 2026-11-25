@@ -182,6 +182,8 @@ export async function releasedRegistry(tx: WorkspaceTx | typeof db, now: Date) {
     );
   const rules: z.infer<typeof ruleSchema>[] = [],
     trusted = new Set<string>(),
+    // CMP-004: when each admitted version was published, as its release record says.
+    published = new Map<string, string>(),
     states: unknown[] = [];
   let excluded = 0;
   // The policy file is read only when an owner-signed rule is stored.
@@ -194,6 +196,7 @@ export async function releasedRegistry(tx: WorkspaceTx | typeof db, now: Date) {
     if (eligible && parsed) {
       rules.push(parsed);
       trusted.add(parsed.manifestHash);
+      published.set(`${parsed.id}@${parsed.version}`, new Date(row.publishedAt).toISOString());
     }
     states.push({
       id: row.ruleId,
@@ -207,6 +210,7 @@ export async function releasedRegistry(tx: WorkspaceTx | typeof db, now: Date) {
   return {
     rules,
     trusted,
+    published,
     excluded,
     stateHash: digest(states.sort((a, b) => canonical(a).localeCompare(canonical(b)))),
   };
@@ -251,7 +255,10 @@ export async function runAssessment(
     throw new ValoProblem(422, "The turnover period cannot end before it starts.");
   z.string().date().parse(asOfDate);
   const registry = await releasedRegistry(tx, now);
-  const result = assess(facts, registry.rules, asOfDate, now, { trustedManifestHashes: registry.trusted });
+  const result = assess(facts, registry.rules, asOfDate, now, {
+    trustedManifestHashes: registry.trusted,
+    publishedAt: registry.published,
+  });
   const { resultHash: _, ...body } = result;
   body.rulesetVersion = digest({ engine: body.rulesetVersion, registry: registry.stateHash });
   if (registry.excluded)

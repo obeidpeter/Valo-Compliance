@@ -335,3 +335,45 @@ test("a result names the local government area and each of the specification's i
     );
   }
 });
+
+// docs/architecture/results.md, slice 4. CMP-004: "Separate sourceFetchedAt, aiReviewedAt and
+// publishedAt", accepted when "labels say 'AI reviewed' or 'Source checked'".
+test("each requirement carries when its rule's sources were checked and how and when the rule was released, and its dates alone never make two saved results differ", () => {
+  const published = "2026-11-12T10:00:00.000Z";
+  const base = rule("synthetic-company", "legalForm", "company");
+  const released = (provenance: "owner_signoff" | "editorial_release") => {
+    const r = ruleSchema.parse({ ...base, provenance });
+    return assess(facts, [r], asOfDate, now, {
+      trustedManifestHashes: new Set([r.manifestHash]),
+      publishedAt: new Map([["synthetic-company@1", published]]),
+    }).items[0]!;
+  };
+  const owner = released("owner_signoff");
+  assert.equal(owner.sourceCheckedAt, base.sourceCheckedAt);
+  assert.deepEqual(owner.publication, { route: "owner_signoff", publishedAt: published });
+  assert.deepEqual(released("editorial_release").publication, {
+    route: "editorial_release",
+    publishedAt: published,
+  });
+  // A test rule, or a rule whose release record is not given, says when its sources were checked and
+  // nothing of a release.
+  const fixture = assess(facts, [base], asOfDate, now, {
+    fixtureMode: true,
+    publishedAt: new Map([["synthetic-company@1", published]]),
+  }).items[0]!;
+  assert.equal(fixture.sourceCheckedAt, base.sourceCheckedAt);
+  assert.equal(Object.hasOwn(fixture, "publication"), false);
+  const unrecorded = assess(
+    facts,
+    [ruleSchema.parse({ ...base, provenance: "owner_signoff" })],
+    asOfDate,
+    now,
+    {
+      trustedManifestHashes: new Set([base.manifestHash]),
+    },
+  ).items[0]!;
+  assert.equal(Object.hasOwn(unrecorded, "publication"), false);
+  // A result saved before the dates were recorded is no different from one saved after.
+  const { sourceCheckedAt: _checked, publication: _published, ...saved } = owner;
+  assert.equal(comparableItemDigest(saved), comparableItemDigest(owner));
+});
