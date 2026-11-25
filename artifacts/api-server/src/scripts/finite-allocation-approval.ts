@@ -19,10 +19,11 @@ import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
  * `approve` authorizes spending up to the allocation's cap, so only the product owner runs it, or an
  * operator on their written instruction. Building or testing this command spends nothing.
  *
- *   tsx src/scripts/finite-allocation-approval.ts prepare <package.json> [--editorial-cases | --guide-pairs | --practical-guide-pairs | --reminder-inventory-pairs]
+ *   tsx src/scripts/finite-allocation-approval.ts prepare <package.json> [--editorial-cases | --checker-challenges | --guide-pairs | --practical-guide-pairs | --reminder-inventory-pairs]
  *     Writes the current package to <package.json> and prints its id and limits. Writes nothing else.
  *     The package admits the template review pairs, or with --editorial-cases only the case-bound
- *     editorial cases' review pairs (decision 0015), or with --guide-pairs only the review pairs of
+ *     editorial cases' review pairs (decision 0015), or with --checker-challenges only the challenges
+ *     of the requirements check's frozen scenarios (RUL-008), or with --guide-pairs only the review pairs of
  *     guides that say what the law requires (decision 0017): each approval covers one kind of work.
  *     A guide package is written for reading only: `approve` refuses it, since the publisher
  *     releases a guide only after the owner's source check (decision 0018) and its reviews would
@@ -39,7 +40,7 @@ import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
  * Every mode needs NODE_ENV=development and refuses a deployment.
  */
 const usage =
-  "usage: finite-allocation-approval.ts prepare <package.json> [--editorial-cases | --guide-pairs | --practical-guide-pairs | --reminder-inventory-pairs] | status | approve <package.json> --confirm <id> --approved-by <name> --reference <text> [--hours n] | revoke --confirm <id>";
+  "usage: finite-allocation-approval.ts prepare <package.json> [--editorial-cases | --checker-challenges | --guide-pairs | --practical-guide-pairs | --reminder-inventory-pairs] | status | approve <package.json> --confirm <id> --approved-by <name> --reference <text> [--hours n] | revoke --confirm <id>";
 const [mode, ...rest] = process.argv.slice(2);
 const option = (name: string) => {
   const index = rest.indexOf(name);
@@ -70,6 +71,7 @@ try {
       more.length ||
       (choice !== undefined &&
         choice !== "--editorial-cases" &&
+        choice !== "--checker-challenges" &&
         choice !== "--guide-pairs" &&
         choice !== "--practical-guide-pairs" &&
         choice !== "--reminder-inventory-pairs")
@@ -79,13 +81,15 @@ try {
       new Date(),
       choice === "--editorial-cases"
         ? finitePackagePreparers.editorialCases
-        : choice === "--guide-pairs"
-          ? finitePackagePreparers.guidePairs
-          : choice === "--reminder-inventory-pairs"
-            ? finitePackagePreparers.reminderInventoryPairs
-            : choice === "--practical-guide-pairs"
-              ? finitePackagePreparers.practicalPairs
-              : finitePackagePreparers.templatePairs,
+        : choice === "--checker-challenges"
+          ? finitePackagePreparers.checkerChallenges
+          : choice === "--guide-pairs"
+            ? finitePackagePreparers.guidePairs
+            : choice === "--reminder-inventory-pairs"
+              ? finitePackagePreparers.reminderInventoryPairs
+              : choice === "--practical-guide-pairs"
+                ? finitePackagePreparers.practicalPairs
+                : finitePackagePreparers.templatePairs,
     );
     validateAllocationPackage(pkg);
     // `wx` never overwrites: a package the owner may already have read stays as it was.

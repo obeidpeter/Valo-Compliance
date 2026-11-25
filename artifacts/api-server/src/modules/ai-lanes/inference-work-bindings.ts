@@ -8,14 +8,17 @@ import type { FiniteWork } from "../ai";
 const root = resolve(import.meta.dirname, "../../../../..");
 const hash = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
 /** Bindings are read from the approved durable allowlist, not from request
- * headers. Held source candidates may be challenged in isolation: this is NOT
- * a released-content manifest or customer-rule eligibility check. */
+ * headers. A checker challenge is rebuilt from the released rule version it
+ * names (RUL-008); a held source candidate may still be challenged in
+ * isolation. This is NOT a released-content manifest or customer-rule
+ * eligibility check. */
 export async function assertFiniteWorkBindings(work: FiniteWork) {
   assertFiniteWorkShape(work);
   const b = work.bindings;
   if (!b) throw Error("FINITE_WORK_BINDINGS_MISSING");
   const actualSources: string[] = [];
   let editorialCaseSources: string[] | null = null;
+  let checkerChallengeSources: string[] | null = null;
   for (const f of b.sourceFiles) {
     if (!/^docs\/[a-zA-Z0-9_./ -]+$/.test(f.path) || f.path.split("/").some((p) => p === ".." || p === "."))
       throw Error("SOURCE_BINDING_PATH_REJECTED");
@@ -50,6 +53,17 @@ export async function assertFiniteWorkBindings(work: FiniteWork) {
       );
       if (!twin || requestDigest(twin) !== requestDigest(work)) throw Error("EDITORIAL_CASE_WORK_CHANGED");
       editorialCaseSources = twin.sourceHashes.filter((h) => !b.sourceFiles.some((f) => f.sha256 === h));
+    }
+    if (work.lane === "checker_challenge") {
+      // A challenge of a corpus case is rebuilt from the owner-signed release it names, at the moment
+      // it was prepared, and the work must be exactly that rebuilt work (RUL-008). The release must
+      // still be published and its review not run out.
+      if (!b.historicalCutoff || !Number.isFinite(Date.parse(b.historicalCutoff)) || !b.candidateVersionId)
+        throw Error("CHECKER_CHALLENGE_BINDING_REQUIRED");
+      const { checkerChallengeTwin } = await import("../rules");
+      const twin = await checkerChallengeTwin(b.candidateVersionId, b.caseId, new Date(b.historicalCutoff));
+      if (!twin || requestDigest(twin) !== requestDigest(work)) throw Error("CHECKER_CHALLENGE_WORK_CHANGED");
+      checkerChallengeSources = twin.sourceHashes.filter((h) => !b.sourceFiles.some((f) => f.sha256 === h));
     }
   } else if (work.lane !== "publication") throw Error("EVALUATION_CASE_REQUIRED");
   // Customer works prepared from a saved evaluation plan also carry that plan; validate
@@ -128,6 +142,9 @@ export async function assertFiniteWorkBindings(work: FiniteWork) {
   } else if (editorialCaseSources) {
     // The case's candidate is rebuilt above, never read from a saved version.
     actualSources.push(...editorialCaseSources);
+  } else if (checkerChallengeSources) {
+    // The challenge is rebuilt above from its release, never read from a saved content version.
+    actualSources.push(...checkerChallengeSources);
   } else if (b.candidateVersionId) {
     // Held source candidates may be challenged in isolation; they are saved versions.
     const { db, valoContentVersions } = await import("@workspace/db");

@@ -2641,6 +2641,55 @@
       "proves": "In the tax candidate evaluator, an unincorporated partnership that claims it is confirmed not to be a company under the extended definition still gets “More information needed”, with no company-return obligation determined and no registration task."
     },
     {
+      "requirement": "RUL-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/checker-corpus.test.ts",
+      "test": "the frozen corpus is unchanged and holds RUL-008's 80 scenarios across six sectors, the three checked places, other states, unknowns and date boundaries",
+      "proves": "The frozen scenario corpus still has the checksum it was frozen with and holds 80 distinct scenarios across the six priority sectors, with 21 in Lagos, 21 in the FCT and 19 in Bayelsa, 17 naming a state no rule covers locally, 15 with an unknown or unanswered answer, four other dates and six that must stay held."
+    },
+    {
+      "requirement": "RUL-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/checker-corpus.test.ts",
+      "test": "each of the 80 scenarios is put to the live check as a business would answer it, and every result keeps the corpus's conditions: national only, no deadline or reminder, no certification, unknowns never an exemption, and holds kept",
+      "proves": "Each of the 80 scenarios, mapped to the check's own answers with every fact answered, reworded or listed as not asked, and put to the live check with the four rules prepared as the owner's sign-off would release them, gives the same result twice, stays national with the local coverage gap shown, sets no deadline, certifies nothing, never turns an unknown into an exemption, offers no task while held for source review, and the six that test a hold give no result from their rule or are refused."
+    },
+    {
+      "requirement": "RUL-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/checker-corpus.test.ts",
+      "test": "the live check gives the corpus's expected result for 71 of the 80, and for each of the other 9 exactly the result recorded with its reason",
+      "proves": "The live check gives the corpus's expected result for 71 of the 80 scenarios and, for each of the other nine, exactly the result recorded with whose result it is and why; it does not show that those nine pass."
+    },
+    {
+      "requirement": "RUL-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/checker-challenge.test.ts",
+      "test": "each of the 80 corpus cases gets one challenge request for the lane, bound to its case, its rule's release and sources, the corpus file and the moment it was prepared",
+      "proves": "Each of the 80 frozen scenarios gets exactly one request for the separate AI run that challenges its expected result, bound to the scenario's checksum, its rule's release and sources, the corpus file and the moment it was prepared; it does not show that the run was made."
+    },
+    {
+      "requirement": "RUL-008",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/rules/checker-challenge.integration.test.ts",
+      "test": "a challenge work binds only to the owner-signed release it names, at its own moment: a changed request, case, source set or release, a missing clock and a withdrawn release are refused",
+      "proves": "With the business-name rule released on a synthetic owner's sign-off, its 20 challenge requests pass the work binding check, while a changed request, case, source set, clock or release is refused, and once the release is withdrawn none binds and none can be prepared."
+    },
+    {
+      "requirement": "RUL-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/checker-challenge.test.ts",
+      "test": "a checker-challenge package admits exactly the challenges of the corpus's scenarios, and no other package admits them",
+      "proves": "A finite allocation package naming the checker-challenge preparer admits each of the 80 scenarios' challenge requests and refuses one with a changed case or bound to content, while an editorial-case or template package refuses them and a checker-challenge package refuses an editorial case's review."
+    },
+    {
+      "requirement": "RUL-008",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/rules/checker-challenge-run.integration.test.ts",
+      "test": "the challenges of a released rule's scenarios are admitted under a checker-challenge package, run one approved work at a time and kept as answers that accept nothing, and none runs once the release is withdrawn",
+      "proves": "Under a synthetic owner approval of a checker-challenge package in an isolated ledger, a released rule's 20 challenge requests are admitted, each sent once through the real dispatcher to a local stand-in destination and kept as an answer that accepts nothing; run again, nothing is sent and each answer is the one kept; once the release is withdrawn, each is refused at its binding check and nothing is sent; it does not show a run against the provider."
+    },
+    {
       "requirement": "RUL-009",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/sources/valo-source-controls.integration.test.ts",

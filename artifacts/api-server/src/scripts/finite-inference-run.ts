@@ -33,6 +33,7 @@ const finiteRunCommands = [
   "--prepare-selection",
   "--prepare-customer",
   "--prepare-editorial-case",
+  "--prepare-checker-challenge",
   "--prepare-template-candidate",
   "--prepare-practical-guide-candidate",
   "--prepare-guide-candidate",
@@ -214,6 +215,63 @@ async function main() {
           caseId: batchId,
           prerequisite,
           candidateVersionId: manifest.works[0]!.bindings.candidateVersionId,
+          packageId: allocationPackageId(pkg),
+          attemptCount: proposal.attemptCount,
+          worstCaseReservationNanoUsd: proposal.worstCaseReservationNanoUsd,
+          enabled: false,
+          ownerApproved: false,
+          providerCalls: 0,
+          approvalRowsWritten: 0,
+        }),
+      );
+      return;
+    }
+    if (mode === "--prepare-checker-challenge") {
+      // The challenges of one released rule's frozen scenarios (RUL-008), under a checker-challenge
+      // package: the rule is named by its id, as in --prepare-checker-challenge cac-business-name-814.
+      if (!batchId || !/^[a-z0-9][a-z0-9-]{2,79}$/.test(batchId)) throw Error("FINITE_RUN_ARGUMENTS_INVALID");
+      const options = parseFinitePreparationOptions(extra);
+      if (options.candidates.length || options.retry || options.guidePairs || options.practicalPairs)
+        throw Error("FINITE_RUN_ARGUMENTS_INVALID");
+      const { prepareCheckerChallengeManifest } = await import("../modules/rules");
+      const existing = options.packageId
+        ? await readApprovedFiniteAllocationPackage(pool, options.packageId)
+        : null;
+      const pkg =
+        existing?.pkg ??
+        (await prepareFiniteAllocationPackage(new Date(), finitePackagePreparers.checkerChallenges));
+      if (requestDigest(pkg.supportedPreparers) !== requestDigest(finitePackagePreparers.checkerChallenges))
+        throw Error("CHECKER_CHALLENGE_PACKAGE_REQUIRED");
+      const manifest = await prepareCheckerChallengeManifest(batchId, {
+        packageId: allocationPackageId(pkg),
+      });
+      for (const work of manifest.works) await assertFiniteWorkBindings(work);
+      const proposal = finiteManifestProposal(
+        manifest,
+        new Date(
+          Math.min(Date.now() + 3600000, existing ? Date.parse(existing.expiresAt) : Infinity),
+        ).toISOString(),
+      );
+      const artifact = await putPublicationArtifact(
+        Buffer.from(
+          JSON.stringify({
+            kind: "checker-challenge-finite-preparation-v1",
+            proposals: [proposal],
+            package: pkg,
+            ownerApproved: false,
+            providerCalls: 0,
+            approvalRowsWritten: 0,
+          }),
+        ),
+        "json",
+      );
+      console.log(
+        JSON.stringify({
+          proposal: artifact,
+          manifestHash: proposal.manifestHash,
+          ruleId: batchId,
+          releaseId: manifest.works[0]!.bindings.candidateVersionId,
+          cases: manifest.works.length,
           packageId: allocationPackageId(pkg),
           attemptCount: proposal.attemptCount,
           worstCaseReservationNanoUsd: proposal.worstCaseReservationNanoUsd,
@@ -665,6 +723,40 @@ async function main() {
           providerQualityAccepted: false,
         }),
       );
+      return;
+    }
+    if (
+      manifest.version === 2 &&
+      manifest.works.length > 0 &&
+      manifest.works.every((w) => w.lane === "checker_challenge")
+    ) {
+      const { executeCheckerChallenges, rebuildCheckerChallengeManifest } = await import("../modules/rules");
+      const releaseId = manifest.works[0]!.bindings.candidateVersionId;
+      if (!releaseId) throw Error("RUNNER_CHECKER_BINDING_INVALID");
+      // Rebuild at the original moment: the owner approved this exact roster, never fresh requests.
+      const expected = await rebuildCheckerChallengeManifest(
+        releaseId,
+        manifest.packageId ? { packageId: manifest.packageId } : {},
+        new Date(manifest.preparedAt),
+      );
+      if (requestDigest(expected) !== row.manifest_hash) throw Error("RUNNER_MANIFEST_CHANGED");
+      for (const work of manifest.works) await assertFiniteWorkBindings(work);
+      const answers = await executeCheckerChallenges(batchId!, manifest.works);
+      const report = {
+        kind: "checker-challenge-run-v1",
+        completedAt: new Date().toISOString(),
+        batchId,
+        manifestHash: row.manifest_hash,
+        releaseId,
+        answers,
+        expectedAnswers: manifest.works.length,
+        complete: answers.every((a) => a.outcome === "completed"),
+        // An AI challenge accepts no expected result; a person decides on each (decision 0016).
+        accepted: false,
+        reviewerDecision: null,
+      };
+      const resultArtifact = await putPublicationArtifact(Buffer.from(JSON.stringify(report)), "json");
+      console.log(JSON.stringify({ ...report, resultArtifact }));
       return;
     }
     if (

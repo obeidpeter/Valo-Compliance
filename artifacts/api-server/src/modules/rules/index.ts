@@ -10,3 +10,20 @@
  */
 export * from "./valo-assessments";
 export { listRuleNotices, markRuleNoticeRead } from "./rule-notices";
+export {
+  CHECKER_CORPUS_PATH,
+  checkerChallengeManifest,
+  checkerChallengeTwin,
+  checkerChallengeVerdictSchema,
+  prepareCheckerChallengeManifest,
+  rebuildCheckerChallengeManifest,
+  type CheckerChallengeVerdict,
+} from "./checker-challenge";
+/** Loads the challenge runner, and the managed inference it calls, only when challenges run: the
+ * customer path and its tests read this module without either. */
+export async function executeCheckerChallenges(
+  ...args: Parameters<typeof import("./checker-challenge-run").executeCheckerChallenges>
+) {
+  return (await import("./checker-challenge-run")).executeCheckerChallenges(...args);
+}
+export { corpusDifferences, runCorpusAgainstReleased } from "./checker-corpus";

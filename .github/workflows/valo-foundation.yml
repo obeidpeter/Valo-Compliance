@@ -157,6 +157,8 @@ jobs:
         env:
           # The guide export test keeps its sample Word and PDF files here; they are unreviewed drafts.
           VALO_GUIDANCE_SAMPLES: ${{ github.workspace }}/generated-artifacts/guidance-samples
+          # The run of the 80 frozen scenarios through the live check writes its report here (RUL-008).
+          VALO_CHECKER_CORPUS_RUN: ${{ github.workspace }}/generated-artifacts/checker-corpus/live-run.json
         run: pnpm --filter @workspace/api-server test:valo
       - name: Open every guided template's Word file in LibreOffice and compare its text with the page (EDT-006)
         run: pnpm --filter @workspace/api-server test:valo-word-files
@@ -166,6 +168,12 @@ jobs:
         with:
           name: guidance-draft-samples
           path: generated-artifacts/guidance-samples
+      - name: Retain the run of the 80 frozen scenarios through the live check
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: checker-corpus-live-run
+          path: generated-artifacts/checker-corpus
       - name: Prove template downloads read storage outside the source-state lock, and when a published guide is shown
         run: pnpm --filter @workspace/api-server test:valo-released-content
       - name: Prove saved-template journeys
