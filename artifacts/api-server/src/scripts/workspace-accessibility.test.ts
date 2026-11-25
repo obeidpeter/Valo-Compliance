@@ -337,6 +337,8 @@ const answers: Record<string, unknown> = {
     privacyRequests: [{ reference: "PRV-SYNTH-1", request: "export", status: "verified", createdAt: at(14) }],
   }),
   "GET /public/coverage": publicAnswers["GET /public/coverage"],
+  // The rules the requirements check uses, one of each kind, so that all their questions are drawn.
+  "GET /checker/questions": publicAnswers["GET /checker/questions"],
   "GET /admin/manual-library": api.ListManualLibraryResponse.parse({
     items: [
       {
@@ -1220,6 +1222,71 @@ test("the requirements check fills in from the business profile at once while th
     } finally {
       await close();
     }
+  }
+});
+
+// RUL-001: "irrelevant questions are skipped, progress is clear, and the user can return to previous answers."
+test("signed in, the requirements check asks the business-name requirement's questions by the operator's form: a firm's partners, how a name is composed once there is one, and a sole proprietor's operator answered from how the business is set up", async () => {
+  const sent: { facts: Record<string, unknown> }[] = [];
+  const checking: Api = async (route, method, path, query) => {
+    if (method !== "POST" || path !== "/workspace/checker/preview") return answer(route, method, path, query);
+    sent.push(route.request().postDataJSON() as { facts: Record<string, unknown> });
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(api.PreviewWorkspaceAssessmentResponse.parse(assessment.result)),
+    });
+  };
+  const { page, errors, unknown, close } = await phone("/workspace/checker", checking);
+  const choose = (id: string) => page.getByTestId(id).locator("xpath=..").click();
+  try {
+    await ready(page);
+    const names = page.getByTestId("rule-questions-businessName");
+    await expect(names.locator("h3")).toHaveText("Synthetic business-name requirement");
+    await expect(page.getByTestId("rule-questions-businessName-sign-in")).toHaveCount(0);
+    // Only an operator with a place of business in Nigeria that carries on business under the name
+    // is asked the rest.
+    await expect(names.getByTestId("radio-rich-businessName-legalForm-firm")).toHaveCount(0);
+    await choose("radio-rich-businessName-hasPlaceOfBusinessInNigeria-true");
+    await choose("radio-rich-businessName-carryingOnBusiness-true");
+    await choose("radio-rich-businessName-legalForm-firm");
+    // A firm is asked for its partners, and how the name is composed once there is a name.
+    await page.locator("#rich-partners-add").click();
+    await choose("radio-rich-partner-0-type-individual");
+    await page.getByTestId("input-rich-partner-0-surname").fill("Okafor");
+    await expect(page.getByTestId("radio-rich-naming-otherBrandAddition-true")).toHaveCount(0);
+    await page.getByTestId("input-rich-businessName-businessName").fill("Okafor Ventures");
+    await choose("radio-rich-naming-sameSurnameAllPartners-true");
+    const { failures } = await wcagFailures(page);
+    assert.deepEqual(failures, [], "the business-name questions have no automated WCAG 2.2 AA failure");
+    assert.deepEqual(await phoneProblems(page, "the business-name questions"), []);
+    await page.setViewportSize({ width: 360, height: 640 });
+    // A sole proprietor is one individual operating under the name: that is answered from how the
+    // business is set up, and the individual's names are asked in place of the partners.
+    await choose("radio-legalForm-sole_proprietor");
+    await expect(page.getByTestId("filled-rich-businessName-legalForm")).toContainText(
+      "One individual. From your answer to ‘How is the business set up?’.",
+    );
+    await expect(page.locator("#rich-partners-add")).toHaveCount(0);
+    await expect(page.getByTestId("input-rich-businessName-trueSurname")).toHaveCount(1);
+    await page.getByTestId("button-step-5").click();
+    await page.getByTestId("button-run").click();
+    await page.getByTestId("assessment-result").waitFor();
+    assert.equal(sent.length, 1);
+    // The partners and the partners' surname question went with the firm: neither is sent.
+    assert.deepEqual(sent[0]!.facts["rich"], {
+      businessName: {
+        hasPlaceOfBusinessInNigeria: true,
+        carryingOnBusiness: true,
+        legalForm: "individual",
+        businessName: "Okafor Ventures",
+      },
+      tax: { incorporatedAsCompany: false },
+    });
+    assert.deepEqual(unknown, [], "every API call the page made has a test answer");
+    assert.deepEqual(errors, []);
+  } finally {
+    await close();
   }
 });
 

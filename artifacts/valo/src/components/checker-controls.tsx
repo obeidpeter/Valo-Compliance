@@ -74,6 +74,7 @@ export function Choice({
   options,
   markers,
   onChange,
+  inputId,
 }: {
   name: string;
   label: string;
@@ -83,6 +84,8 @@ export function Choice({
   options: Opt[];
   markers: readonly Marker[];
   onChange: Change<never>;
+  /** The first answer's id, which a link to the question moves the focus to. */
+  inputId?: string;
 }) {
   const choose = onChange as Change<string>;
   return (
@@ -90,7 +93,7 @@ export function Choice({
       <legend className="label text-base">{label}</legend>
       {hint && <p className="hint !mt-0 mb-2">{hint}</p>}
       <div className="flex flex-wrap gap-2">
-        {options.map((o) => {
+        {options.map((o, index) => {
           const on = value === o.value;
           return (
             <label
@@ -108,6 +111,7 @@ export function Choice({
                 checked={on}
                 onChange={() => choose(o.value)}
                 data-testid={"radio-" + name + "-" + o.value}
+                {...(index === 0 && inputId ? { id: inputId } : {})}
               />
               {o.label}
             </label>
@@ -186,27 +190,31 @@ export function ListOr({
   onChange,
   placeholder,
   markers = ["unknown", "unanswered"],
+  inputId,
 }: {
   name: string;
   label: string;
-  hint: string;
+  hint?: string;
   value: string[] | Marker;
   skipped: boolean;
   onChange: Change<never>;
   placeholder: string;
   markers?: readonly Marker[];
+  /** The first entry's id, which a link to the question moves the focus to. */
+  inputId?: string;
 }) {
   const choose = onChange as Change<string[] | Marker>;
   const list = Array.isArray(value) && value.length ? value : [""];
   return (
     <fieldset>
       <legend className="label text-base">{label}</legend>
-      <p className="hint !mt-0 mb-2">{hint}</p>
+      {hint && <p className="hint !mt-0 mb-2">{hint}</p>}
       <div className="grid gap-2">
         {list.map((a, i) => (
           <div key={i} className="flex gap-2">
             <input
               aria-label={label + " " + (i + 1)}
+              {...(i === 0 && inputId ? { id: inputId } : {})}
               className="field"
               maxLength={120}
               value={a}
@@ -239,6 +247,82 @@ export function ListOr({
           name={name}
           group={name + "-mode"}
           value={value}
+          skipped={skipped}
+          markers={markers}
+          onChange={choose}
+        />
+      </div>
+    </fieldset>
+  );
+}
+
+/** A question answered by ticking any of a few answers, with the ways of not answering it after them.
+ * Ticking an answer takes the place of a chosen way of not answering; the ticked answers keep the
+ * order they are offered in. */
+export function ChecksOr({
+  name,
+  label,
+  hint,
+  value,
+  skipped,
+  options,
+  markers,
+  onChange,
+  inputId,
+}: {
+  name: string;
+  label: string;
+  hint?: string;
+  /** The ticked answers, or a way of not answering. */
+  value: readonly string[] | string;
+  skipped: boolean;
+  options: Opt[];
+  markers: readonly Marker[];
+  onChange: Change<never>;
+  /** The first answer's id, which a link to the question moves the focus to. */
+  inputId?: string;
+}) {
+  const choose = onChange as Change<string[] | string>;
+  const ticked = Array.isArray(value) ? value : [];
+  const toggle = (option: string) =>
+    choose(
+      options
+        .map((o) => o.value)
+        .filter((each) => (each === option ? !ticked.includes(each) : ticked.includes(each))),
+    );
+  return (
+    <fieldset>
+      <legend className="label text-base">{label}</legend>
+      {hint && <p className="hint !mt-0 mb-2">{hint}</p>}
+      <div className="flex flex-wrap gap-2">
+        {options.map((o, index) => {
+          const on = ticked.includes(o.value);
+          return (
+            <label
+              key={o.value}
+              className={cn(
+                "cursor-pointer rounded-full border px-3.5 py-2 text-sm transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring",
+                on ? "border-primary bg-primary text-primary-foreground" : "border-input hover:bg-secondary",
+              )}
+            >
+              <input
+                type="checkbox"
+                className="sr-only"
+                name={name}
+                value={o.value}
+                checked={on}
+                onChange={() => toggle(o.value)}
+                data-testid={"check-" + name + "-" + o.value}
+                {...(index === 0 && inputId ? { id: inputId } : {})}
+              />
+              {o.label}
+            </label>
+          );
+        })}
+        <Markers
+          name={name}
+          group={name + "-mode"}
+          value={Array.isArray(value) ? "" : value}
           skipped={skipped}
           markers={markers}
           onChange={choose}

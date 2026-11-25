@@ -3,7 +3,9 @@ import assert from "node:assert/strict";
 import {
   NAMING_QUESTIONS,
   PARTNER_QUESTIONS,
+  RULE_FAMILIES,
   RULE_QUESTIONS,
+  type RuleFamily,
 } from "@workspace/valo-core/checker-questionnaire";
 import { EMPTY_FACTS, displayFact, finaliseFacts, reviewFacts } from "./checker";
 import {
@@ -90,24 +92,77 @@ test("review and comparisons address nested partners and removed rich facts with
   assert.doesNotMatch(displayFact("rich", facts.rich), /\[object Object\]/);
 });
 
-test("submission removes unfinished blank name rows without inventing answers or clearing conditional details", () => {
+const ALL_RULES: ReadonlySet<RuleFamily> = new Set(RULE_FAMILIES);
+
+test("what is sent leaves out unfinished blank rows and the answers of questions not asked now, keeps them on the page, and invents no answer", () => {
   const facts: RichCheckerFacts = {
     ...EMPTY_FACTS,
     rich: {
       businessName: {
-        legalForm: "company",
+        hasPlaceOfBusinessInNigeria: true,
+        carryingOnBusiness: true,
+        legalForm: "individual",
         trueForenames: ["Ada", ""],
         partners: [{ surname: "", forenames: ["Bola", ""] }],
       },
       privacy: { processesPersonalData: false, ownPurposeReuse: { status: "unanswered", value: null } },
     },
   };
-  const sent = finaliseFacts(facts);
+  const sent = finaliseFacts(facts, ALL_RULES);
+  assert.equal(sent.factsVersion, "checker-facts-v2");
   assert.deepEqual(sent.rich?.businessName?.trueForenames, ["Ada"]);
-  assert.deepEqual(sent.rich?.businessName?.partners, [{ forenames: ["Bola"] }]);
-  assert.equal(sent.rich?.privacy?.processesPersonalData, false);
-  assert.deepEqual(sent.rich?.privacy?.ownPurposeReuse, { status: "unanswered", value: null });
+  // An individual is not asked about partners, and whether information is reused for one's own
+  // purposes is asked only of a processor: neither answer is sent.
+  assert.equal(Object.hasOwn(sent.rich!.businessName!, "partners"), false);
+  assert.deepEqual(sent.rich?.privacy, { processesPersonalData: false });
+  // The page keeps them, as typed, for when the choice that hid them changes back.
   assert.deepEqual(facts.rich?.businessName?.trueForenames, ["Ada", ""]);
+  assert.deepEqual(facts.rich?.businessName?.partners, [{ surname: "", forenames: ["Bola", ""] }]);
+  const firm = finaliseFacts(updateRichAnswer(facts, "businessName", "legalForm", "firm"), ALL_RULES);
+  assert.deepEqual(firm.rich?.businessName?.partners, [{ forenames: ["Bola"] }]);
+  assert.equal(Object.hasOwn(firm.rich!.businessName!, "trueForenames"), false);
+});
+
+test("only the rules in use are sent, and a check with no rule in use sends none of their answers", () => {
+  const facts: RichCheckerFacts = {
+    ...EMPTY_FACTS,
+    rich: {
+      privacy: { processesPersonalData: false },
+      product: { commercialSupplyOfRegulatedProducts: true },
+    },
+  };
+  const none = finaliseFacts(facts);
+  assert.equal(Object.hasOwn(none, "rich"), false);
+  assert.equal(Object.hasOwn(none, "factsVersion"), false);
+  assert.deepEqual(finaliseFacts(facts, new Set(["product"])).rich, {
+    product: { commercialSupplyOfRegulatedProducts: true },
+  });
+});
+
+test("the check's earlier answers fill a rule's answers while they settle them, and the visitor's own answer comes back when they no longer do", () => {
+  const facts: RichCheckerFacts = {
+    ...EMPTY_FACTS,
+    legalForm: "sole_proprietor",
+    state: "Lagos",
+    personalData: "yes",
+    rich: {
+      businessName: { hasPlaceOfBusinessInNigeria: true, carryingOnBusiness: true, legalForm: "firm" },
+    },
+  };
+  const sent = finaliseFacts(facts, ALL_RULES);
+  assert.equal(sent.rich?.businessName?.legalForm, "individual");
+  assert.deepEqual(sent.rich?.tax, { incorporatedAsCompany: false });
+  assert.deepEqual(sent.rich?.privacy, { processesPersonalData: true, operatesInNigeria: true });
+  // The filled answers are worked out each time, not stored: the page keeps the visitor's own.
+  assert.equal(facts.rich?.businessName?.legalForm, "firm");
+  const unsure = finaliseFacts({ ...facts, legalForm: "unknown", personalData: "no" }, ALL_RULES);
+  assert.equal(unsure.rich?.businessName?.legalForm, "firm");
+  assert.equal(Object.hasOwn(unsure.rich!, "tax"), false);
+  assert.equal(Object.hasOwn(unsure.rich!, "privacy"), false);
+  // A visitor who is not signed in is not asked the business-name questions, so nothing is filled
+  // for them either.
+  const anonymous = finaliseFacts(facts, new Set(["tax", "privacy", "product"]));
+  assert.equal(Object.hasOwn(anonymous.rich!, "businessName"), false);
 });
 
 test("all four result labels are represented and server task restrictions override likely relevance", () => {
