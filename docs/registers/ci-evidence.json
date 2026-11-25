@@ -1154,7 +1154,7 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/privacy/valo-privacy-erasure.integration.test.ts",
       "test": "resumable physical development erasure with retained exclusions and replay",
-      "proves": "On a disposable database the application's own connection cannot change a privacy case's history, and a corrupt copy made with the guard off, as a damaged restore could hold, is still refused by the erasure's replay before any deletion."
+      "proves": "On a disposable database the application's own connection cannot change a privacy case's history, the error handler reads that real refusal as the privacy history guard's, and a corrupt copy made with the guard off, as a damaged restore could hold, is still refused by the erasure's replay before any deletion."
     },
     {
       "requirement": "ADM-009",
@@ -1169,6 +1169,20 @@
       "file": "artifacts/api-server/src/modules/privacy/valo-customer-access.integration.test.ts",
       "test": "real development access intake, privacy isolation and staff boundaries",
       "proves": "A finance operator's read of the staff overview records exactly one access row, in the finance area, naming the overview it read."
+    },
+    {
+      "requirement": "ADM-009",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/operations/valo-operations.test.ts",
+      "test": "a database guard's refusal and heavy privileged reading raise their own alerts, under the security runbook",
+      "proves": "With stubbed readings, a staff member reading a hundred distinct things in an hour raises nothing, while one guard refusal and a hundred and one things read raise one alert each under the security/privacy incident runbook, and both resolve when the readings return to normal."
+    },
+    {
+      "requirement": "ADM-009",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/platform/http-logging.test.ts",
+      "test": "a database guard's refusal is answered as a failure, counted as a security signal and logged by the guard's name alone",
+      "proves": "Over real HTTP, a request a database guard refused is answered as an unexpected failure and counted as a guard_refusal security signal, a check constraint's refusal is not, and the log names only the guard, never its message or the query."
     },
     {
       "requirement": "AI-001",
