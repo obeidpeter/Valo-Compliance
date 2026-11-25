@@ -8,47 +8,82 @@ import {
   getListAssessmentsQueryKey,
 } from "@workspace/api-client-react";
 import { describeError } from "@/lib/api";
-import { displayFact, factLabel, isMarker, reviewFacts, stepOf } from "@/lib/checker";
+import { checkerQuestion, type AskedQuestion } from "@workspace/valo-core/checker-questionnaire";
+import { displayFact, factLabel, isMarker } from "@/lib/checker";
 import { lagosToday } from "@/lib/format";
-import { richStep, type RichCheckerFacts } from "@/lib/rich-checker";
+import { factAtPath, isRichMarker, type RichCheckerFacts } from "@/lib/rich-checker";
 import { cn } from "@/lib/utils";
 
+/** A rule's answer in the review's words: a chosen answer as its question names it. */
+function ruleAnswerText(question: AskedQuestion, value: unknown): string {
+  if (value === undefined) return "Not answered";
+  const named = (entry: unknown) =>
+    question.choices?.find((choice) => choice.value === entry)?.label ?? displayFact(question.path, entry);
+  if (typeof value === "string") return named(value);
+  if (Array.isArray(value) && value.every((entry) => typeof entry === "string"))
+    return value.length ? value.map(named).join("; ") : "None listed";
+  return displayFact(question.path, value);
+}
+
+/**
+ * Every question the check asks now, in the order the page shows them, each with its answer as it is
+ * sent and a link that moves to its place (RUL-001: "the user can return to previous answers"). A
+ * question the check skips is not listed. A filled answer says where it came from.
+ */
 export function Review({
-  facts,
+  sent,
+  asked,
   onEdit,
 }: {
-  facts: RichCheckerFacts;
-  onEdit: (n: number, field?: string) => void;
+  sent: RichCheckerFacts;
+  asked: readonly AskedQuestion[];
+  onEdit: (n: number, field: string) => void;
 }) {
   return (
     <dl className="grid gap-0 text-sm" data-testid="list-review">
-      {reviewFacts(facts).map(([k, value]) => (
-        <div
-          key={k}
-          className="grid grid-cols-[1fr_auto] items-baseline gap-x-4 border-t border-border py-2.5 sm:grid-cols-[14rem_1fr_auto]"
-        >
-          <dt className="text-muted-foreground">{factLabel(k)}</dt>
-          <dd
-            className={cn(
-              "col-start-1 row-start-2 break-words sm:col-start-2 sm:row-start-1",
-              isMarker(value) || value === null ? "italic text-muted-foreground" : "",
-            )}
+      {asked.map((question) => {
+        const value: unknown = question.family
+          ? factAtPath(sent, question.path)
+          : Reflect.get(sent, question.path);
+        const label = question.family ? question.label : factLabel(question.path);
+        const sources = question.filledBy?.from.map(
+          (answer) => `‘${checkerQuestion(answer)?.label ?? answer}’`,
+        );
+        return (
+          <div
+            key={question.path}
+            className="grid grid-cols-[1fr_auto] items-baseline gap-x-4 border-t border-border py-2.5 sm:grid-cols-[14rem_1fr_auto]"
           >
-            {displayFact(k, value)}
-          </dd>
-          {/* A list of terms holds only terms and their descriptions, so the button sits in one. */}
-          <dd className="col-start-2 row-span-2 row-start-1 sm:col-start-3 sm:row-span-1">
-            <button
-              type="button"
-              aria-label={"Edit " + factLabel(k)}
-              className="-my-1 px-1 py-1 text-xs font-medium text-primary underline-offset-2 hover:underline"
-              onClick={() => onEdit(k.startsWith("rich.") ? richStep(k) : stepOf(k), k)}
+            <dt className="text-muted-foreground">{label}</dt>
+            <dd
+              className={cn(
+                "col-start-1 row-start-2 break-words sm:col-start-2 sm:row-start-1",
+                value === undefined || value === null || isMarker(value) || isRichMarker(value)
+                  ? "italic text-muted-foreground"
+                  : "",
+              )}
             >
-              Edit
-            </button>
-          </dd>
-        </div>
-      ))}
+              {question.family ? ruleAnswerText(question, value) : displayFact(question.path, value)}
+              {sources && (
+                <span className="block text-xs text-muted-foreground">
+                  From your {sources.length > 1 ? "answers" : "answer"} to {sources.join(" and ")}.
+                </span>
+              )}
+            </dd>
+            {/* A list of terms holds only terms and their descriptions, so the button sits in one. */}
+            <dd className="col-start-2 row-span-2 row-start-1 sm:col-start-3 sm:row-span-1">
+              <button
+                type="button"
+                aria-label={"Change " + label}
+                className="-my-1 px-1 py-1 text-xs font-medium text-primary underline-offset-2 hover:underline"
+                onClick={() => onEdit(question.step, question.path)}
+              >
+                Change
+              </button>
+            </dd>
+          </div>
+        );
+      })}
     </dl>
   );
 }

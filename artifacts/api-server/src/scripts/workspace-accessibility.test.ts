@@ -1171,7 +1171,11 @@ test("the requirements check fills in from the business profile at once while th
     ["phone", phone],
     ["desktop", desktop],
   ] as const) {
-    const { page, errors, close } = await open("/workspace/checker");
+    // The check's own questions alone, which the profile answers: no rule asks more of these steps.
+    const { page, errors, close } = await open(
+      "/workspace/checker",
+      except({ "GET /checker/questions": { asOfDate: "2026-11-18", rules: [] } }),
+    );
     try {
       await ready(page);
       const fill = page.getByTestId("button-prefill");

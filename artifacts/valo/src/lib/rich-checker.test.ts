@@ -5,9 +5,10 @@ import {
   PARTNER_QUESTIONS,
   RULE_FAMILIES,
   RULE_QUESTIONS,
+  questionsAsked,
   type RuleFamily,
 } from "@workspace/valo-core/checker-questionnaire";
-import { EMPTY_FACTS, displayFact, finaliseFacts, reviewFacts } from "./checker";
+import { EMPTY_FACTS, displayFact, finaliseFacts, progressOf, reviewFacts, stepDone } from "./checker";
 import {
   ANSWER_STATES,
   MISSING_ANSWER_STATE_LABELS,
@@ -163,6 +164,73 @@ test("the check's earlier answers fill a rule's answers while they settle them, 
   // for them either.
   const anonymous = finaliseFacts(facts, new Set(["tax", "privacy", "product"]));
   assert.equal(Object.hasOwn(anonymous.rich!, "businessName"), false);
+});
+
+test("one kind of product the business makes, alone, answers the product rule's question about the particular product; more kinds, or the visitor's own words, answer nothing", () => {
+  const making = (productTypes: string[]): RichCheckerFacts => ({
+    ...EMPTY_FACTS,
+    manufacturing: "yes",
+    productTypes,
+    activities: ["packaged-food manufacturing", " Making cosmetics ", ""],
+  });
+  const one = finaliseFacts(making(["cosmetic", ""]), ALL_RULES);
+  assert.deepEqual(one.activities, ["packaged-food manufacturing", "Making cosmetics"]);
+  assert.deepEqual(one.productTypes, ["cosmetic"]);
+  assert.deepEqual(one.rich?.product, { productCategory: "cosmetic" });
+  for (const productTypes of [["cosmetic", "water"], ["cosmetic", "Hair oil"], ["Hair oil"]])
+    assert.equal(
+      Object.hasOwn(finaliseFacts(making(productTypes), ALL_RULES), "rich"),
+      false,
+      String(productTypes),
+    );
+  // A business that neither makes nor imports goods is not asked for its products: nothing is filled.
+  const neither = finaliseFacts({ ...making(["cosmetic"]), manufacturing: "no", importing: "no" }, ALL_RULES);
+  assert.equal(neither.productTypes, "not_applicable");
+  assert.equal(Object.hasOwn(neither, "rich"), false);
+});
+
+test("progress counts the questions asked now, a rule's filled answers and its chosen ways of not answering as dealt with, and a step is ticked only once every question it asks is", () => {
+  const TAX: ReadonlySet<RuleFamily> = new Set(["tax"]);
+  const facts: RichCheckerFacts = {
+    ...EMPTY_FACTS,
+    legalForm: "limited_company",
+    registrationStatus: "registered",
+  };
+  const at = (answers: RichCheckerFacts) => {
+    const sent = finaliseFacts(answers, TAX);
+    const asked = questionsAsked(sent, TAX);
+    return { asked, progress: progressOf(answers, new Set(), sent, asked) };
+  };
+  // The company is what its records describe, incorporated in Nigeria: both filled, so dealt with.
+  // Its status and accounting period are asked and not yet answered, so the first step is not done.
+  const before = at(facts);
+  assert.equal(before.progress.asked, before.asked.filter((question) => !question.optional).length);
+  assert.equal(
+    before.asked.some((question) => question.path === "turnoverAmountKobo" && question.optional),
+    true,
+    "the optional exact figure is asked, but not counted",
+  );
+  assert.equal(before.progress.answered, 4);
+  assert.equal(before.progress.stepsDone[0], false);
+  // Without the rule, the step asks only the check's own questions, as stepDone says.
+  assert.equal(stepDone(facts, new Set(), 0), true);
+  // An answer, "I do not know" and "Skip for now" each deal with a question.
+  const after = at({
+    ...facts,
+    rich: {
+      tax: {
+        companyStatus: "active",
+        accountingPeriodStart: { status: "unknown", value: null },
+        accountingPeriodEnd: { status: "unanswered", value: null },
+      },
+    },
+  });
+  assert.equal(after.progress.answered, 7);
+  assert.equal(after.progress.asked, before.progress.asked);
+  assert.equal(after.progress.stepsDone[0], true);
+  // An answer that opens questions changes what is counted.
+  const partnership = at({ ...facts, legalForm: "partnership" });
+  assert.notEqual(partnership.progress.asked, before.progress.asked);
 });
 
 test("all four result labels are represented and server task restrictions override likely relevance", () => {

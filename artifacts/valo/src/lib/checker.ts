@@ -1,6 +1,7 @@
 import type { CheckerFacts, Profile, Answer } from "@workspace/api-client-react";
 import {
   ANSWER_STATE_LABELS,
+  factAtPath,
   isRichMarker,
   normaliseRichAnswers,
   richFactLabel,
@@ -10,10 +11,11 @@ import {
 } from "./rich-checker";
 import {
   CHECKER_QUESTIONNAIRE,
-  checkerQuestion,
   isAsked,
+  questionsAsked,
   ruleAnswersToSend,
   stepOfQuestion,
+  type AskedQuestion,
   type RuleFamily,
 } from "@workspace/valo-core/checker-questionnaire";
 import { formatNaira } from "./format";
@@ -111,17 +113,53 @@ export function answered(f: CheckerFacts, skipped: ReadonlySet<string>, question
   return true;
 }
 
-/** Whether every question a step asks has been dealt with. The optional exact figure never holds a
- * step back, and the review step asks nothing. */
-export function stepDone(f: CheckerFacts, skipped: ReadonlySet<string>, step: number): boolean {
-  const questions = (CHECKER_STEPS[step]?.questions ?? []).filter(
-    (question) => !checkerQuestion(question)?.optional && asked(f, question),
-  );
-  return questions.length > 0 && questions.every((question) => answered(f, skipped, question));
-}
-
 /** No rule in use: a check asks only its own questions. */
 export const NO_RULES: ReadonlySet<RuleFamily> = new Set();
+
+/**
+ * Whether the visitor has dealt with a question the check asks now. One of the check's own, as
+ * `answered` says; a rule's, once what the check sends holds an answer for it, a filled one, "I do not
+ * know" and "Skip for now" included.
+ */
+export function dealtWith(
+  f: CheckerFacts,
+  skipped: ReadonlySet<string>,
+  sent: RichCheckerFacts,
+  question: AskedQuestion,
+): boolean {
+  return question.family
+    ? factAtPath(sent, question.path) !== undefined
+    : answered(f, skipped, question.path);
+}
+
+/**
+ * How far the visitor has got (RUL-001: "progress is clear"): of the questions the check asks now,
+ * how many are dealt with, and whether each step's are all dealt with. An answer that opens or skips
+ * questions changes what is counted. The optional exact figure is never counted, and the review step
+ * asks nothing.
+ */
+export function progressOf(
+  f: CheckerFacts,
+  skipped: ReadonlySet<string>,
+  sent: RichCheckerFacts,
+  asked: readonly AskedQuestion[],
+): { answered: number; asked: number; stepsDone: readonly boolean[] } {
+  const counted = asked.filter((question) => !question.optional);
+  const done = counted.filter((question) => dealtWith(f, skipped, sent, question));
+  return {
+    answered: done.length,
+    asked: counted.length,
+    stepsDone: CHECKER_STEPS.map((_, step) => {
+      const own = counted.filter((question) => question.step === step);
+      return own.length > 0 && own.every((question) => done.includes(question));
+    }),
+  };
+}
+
+/** Whether every question a step asks has been dealt with, when no rule is in use. */
+export function stepDone(f: CheckerFacts, skipped: ReadonlySet<string>, step: number): boolean {
+  return progressOf(f, skipped, f, questionsAsked(f, NO_RULES)).stepsDone[step] ?? false;
+}
 
 /**
  * Normalise before sending. A question the check skips sends no answer it was given before: the

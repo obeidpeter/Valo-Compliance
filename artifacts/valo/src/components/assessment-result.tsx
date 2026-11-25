@@ -13,10 +13,13 @@ export function AssessmentResultView({
   result,
   itemAction,
   questionAction,
+  onQuestion,
 }: {
   result: AssessmentResult;
   itemAction?: (item: AssessmentItem) => ReactNode;
   questionAction?: ((field: string) => ReactNode) | undefined;
+  /** Moves to one of the check's questions that the result lists as still unanswered. */
+  onQuestion?: ((field: string) => void) | undefined;
 }) {
   const labels = [
     ...RESULT_LABELS,
@@ -94,8 +97,19 @@ export function AssessmentResultView({
               <p className="eyebrow">Still unanswered</p>
               <ul className="mt-3 flex flex-wrap gap-1.5">
                 {result.unanswered.map((u) => (
-                  <li key={u} className="pill pill-ink">
-                    {factLabel(u)}
+                  <li key={u}>
+                    {onQuestion ? (
+                      <button
+                        type="button"
+                        className="pill pill-ink underline-offset-2 hover:underline"
+                        aria-label={`Answer ${factLabel(u)}`}
+                        onClick={() => onQuestion(u)}
+                      >
+                        {factLabel(u)}
+                      </button>
+                    ) : (
+                      <span className="pill pill-ink">{factLabel(u)}</span>
+                    )}
                   </li>
                 ))}
               </ul>

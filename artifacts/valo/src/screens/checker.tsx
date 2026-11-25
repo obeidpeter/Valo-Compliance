@@ -28,6 +28,8 @@ import {
   CHECKER_QUESTIONNAIRE,
   RULE_FAMILIES,
   RULE_STEPS,
+  checkerQuestion,
+  questionsAsked,
   withoutFilledAnswers,
   type RuleFamily,
 } from "@workspace/valo-core/checker-questionnaire";
@@ -57,7 +59,7 @@ import {
   nairaToKobo,
   koboToNaira,
   live,
-  stepDone,
+  progressOf,
   stepOf,
   factLabel,
 } from "@/lib/checker";
@@ -73,6 +75,8 @@ const REVIEW = STEPS.length - 1;
 const TURNOVER = stepOf("turnoverAmountKobo");
 /** The steps that ask rules' questions. */
 const RULE_STEP_NUMBERS: ReadonlySet<number> = new Set(Object.values(RULE_STEPS));
+/** The control a link to one of the check's own questions moves the focus to: its first answer. */
+const questionControl = (answer: string) => (checkerQuestion(answer)?.kind === "amount" ? "amount" : answer);
 
 export default function Checker() {
   const currentAccount = useAccountEpoch();
@@ -159,15 +163,17 @@ export default function Checker() {
     });
   };
   const final = useMemo(() => finaliseFacts(facts, families), [facts, families]);
+  /** The questions the check asks now, in order, and how many of them the visitor has dealt with. */
+  const askedNow = useMemo(() => questionsAsked(final, families), [final, families]);
+  const progress = useMemo(
+    () => progressOf(facts, skipped, final, askedNow),
+    [facts, skipped, final, askedNow],
+  );
   const sig = JSON.stringify(final);
   const stale = result && result.sig !== sig;
   /** Answers that only this page holds: starting over would lose them. */
   const mine = own || !!facts.rich;
   const untouched = !mine && !filledIn && !result && step === 0;
-  const answeredSteps = useMemo(
-    () => STEPS.slice(0, REVIEW).filter((_, index) => stepDone(facts, skipped, index)).length,
-    [facts, skipped],
-  );
   const navigation = useUnsavedNavigation(() => !leavingForAuth.current && mine && (!result || !!stale));
 
   function loadHandoff() {
@@ -279,17 +285,22 @@ export default function Checker() {
     });
   }
 
-  /** Shows a step and moves the focus to it, or to one of the rules' questions asked in it. */
+  /** Shows a step and moves the focus to it, or to one of its questions. */
   function show(n: number, field?: string) {
     const target = field ? richQuestionTarget(field) : undefined;
     setStep(target?.step ?? n);
-    focusFirst(target ? [target.id, target.fallbackId] : []);
+    focusFirst(
+      target
+        ? [target.id, target.fallbackId]
+        : field && checkerQuestion(field)
+          ? [questionControl(field)]
+          : [],
+    );
   }
 
   /** Shows one of the check's own questions, from a rule's answer that it fills. */
   function goToQuestion(answer: string) {
-    setStep(stepOf(answer));
-    focusFirst([answer]);
+    show(stepOf(answer), answer);
   }
 
   function go(n: number, field?: string) {
@@ -475,7 +486,7 @@ export default function Checker() {
       <div className="mt-8 grid gap-8 lg:grid-cols-[14rem_1fr]">
         <ol className="flex gap-1 overflow-x-auto lg:flex-col lg:overflow-visible" aria-label="Steps">
           {STEPS.map((s, i) => {
-            const done = stepDone(facts, skipped, i);
+            const done = progress.stepsDone[i] ?? false;
             return (
               <li key={s}>
                 <button
@@ -520,7 +531,7 @@ export default function Checker() {
                 Step {step + 1} of {STEPS.length}
               </p>
               <span className="text-xs text-muted-foreground" data-testid="status-checker-progress">
-                {answeredSteps} of {REVIEW} sections answered
+                {progress.answered} of {progress.asked} questions answered
               </span>
             </div>
             <h2 className="font-display mt-2 text-2xl sm:text-3xl">{STEPS[step]}</h2>
@@ -570,7 +581,7 @@ export default function Checker() {
                     You can change any answer, or leave it as it is. Where an answer is missing, your results
                     say what more is needed.
                   </p>
-                  <Review facts={final} onEdit={go} />
+                  <Review sent={final} asked={askedNow} onEdit={go} />
                 </>
               )}
             </div>
@@ -682,17 +693,25 @@ export default function Checker() {
                 // oxlint-disable-next-line react/no-unstable-nested-components -- a render function the result calls, not a component
                 questionAction={(field) => {
                   const target = richQuestionTarget(field);
-                  return target && families.has(target.section) ? (
+                  const step = target
+                    ? families.has(target.section)
+                      ? target.step
+                      : null
+                    : checkerQuestion(field)
+                      ? stepOf(field)
+                      : null;
+                  return step === null ? null : (
                     <button
                       type="button"
                       className="btn btn-ghost btn-sm"
                       aria-label={`Review ${factLabel(field)}`}
-                      onClick={() => go(target.step, field)}
+                      onClick={() => go(step, field)}
                     >
                       Review answer
                     </button>
-                  ) : null;
+                  );
                 }}
+                onQuestion={(field) => go(stepOf(field), field)}
               />
               {isSignedIn ? (
                 <SavePanel

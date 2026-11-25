@@ -5,7 +5,7 @@ import {
   type CheckerQuestion,
   type QuestionGroupId,
 } from "@workspace/valo-core/checker-questionnaire";
-import { AnswerOr, Choice, ListOr, type Change } from "@/components/checker-controls";
+import { AnswerOr, Choice, ListOr, PickOrList, type Change } from "@/components/checker-controls";
 import { koboToNaira, type Marker } from "@/lib/checker";
 import { cn } from "@/lib/utils";
 
@@ -137,7 +137,18 @@ function Question({ question, context }: { question: CheckerQuestion; context: Q
         />
       );
     case "list":
-      return (
+      return question.choices ? (
+        <PickOrList
+          {...common}
+          {...hint}
+          label={question.label}
+          value={Array.isArray(value) ? (value as string[]) : (text as Marker)}
+          options={[...question.choices]}
+          markers={markers}
+          placeholder={question.placeholder ?? ""}
+          inputId={name}
+        />
+      ) : (
         <ListOr
           {...common}
           label={question.label}
