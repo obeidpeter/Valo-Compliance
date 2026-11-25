@@ -368,8 +368,8 @@ export async function createOrder(actor: WorkspaceActor, raw: unknown) {
         "This product is not currently released with an approved price and licence. No order was created.",
       );
     if (offer.manual) {
-      // Checked again under the edition's lock: it may have been withdrawn, or fallen due for its
-      // review, since the offer was read.
+      // Checked again under the edition's lock: it may have been withdrawn, fallen due for its review
+      // or been held by staff since the offer was read.
       const { rows } = await tx.execute<PremiumEdition>(premiumEditions(price.contentVersionId));
       if (!rows[0] || rows[0].held)
         throw new ValoProblem(409, "This template version is no longer available for purchase.");

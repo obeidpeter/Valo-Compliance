@@ -4180,6 +4180,10 @@ export const ListOwnerGuidanceQueryParams = zod.object({
   "page": zod.coerce.number().int().min(1).default(listOwnerGuidanceQueryPageDefault)
 })
 
+export const listOwnerGuidanceResponseItemsItemLibraryHoldOneWorkspacesMin = 0;
+
+
+
 export const ListOwnerGuidanceResponse = zod.object({
   "items": zod.array(zod.object({
   "itemId": zod.uuid(),
@@ -4200,7 +4204,13 @@ export const ListOwnerGuidanceResponse = zod.object({
   "version": zod.int(),
   "digest": zod.string()
 }),zod.null()]),
-  "previousRelease": zod.int().nullable().describe('The latest earlier version of this article that was released, or null. Signing this version then needs a note of what changed.')
+  "previousRelease": zod.int().nullable().describe('The latest earlier version of this article that was released, or null. Signing this version then needs a note of what changed.'),
+  "libraryHold": zod.union([zod.object({
+  "reason": zod.string(),
+  "placedBy": zod.string(),
+  "placedAt": zod.string(),
+  "workspaces": zod.int().min(listOwnerGuidanceResponseItemsItemLibraryHoldOneWorkspacesMin)
+}).describe('A hold on a published library version: why, who placed it, when, and how many workspaces its template reached then.'),zod.null()]).describe('The hold a Content editor placed on the published version, while it is not lifted, or null. Only the owner lifts it (docs/architecture/library-holds.md, slice 2).')
 })),
   "hasMore": zod.boolean()
 })
@@ -4257,6 +4267,33 @@ export const DecideOwnerGuidanceResponse = zod.object({
 })
 
 
+/**
+ * The development owner lifts the hold a Content editor placed on a published regulatory guide, with why (docs/architecture/library-holds.md, slice 2). Only the owner lifts it, as only the owner releases one (decision 0018).
+ */
+export const LiftOwnerGuidanceHoldParams = zod.object({
+  "id": zod.uuid()
+})
+
+
+export const liftOwnerGuidanceHoldBodyDigestRegExp = new RegExp('^[a-f0-9]{64}$');
+export const liftOwnerGuidanceHoldBodyReasonMin = 20;
+export const liftOwnerGuidanceHoldBodyReasonMax = 1000;
+
+
+
+export const LiftOwnerGuidanceHoldBody = zod.object({
+  "version": zod.int().min(1),
+  "digest": zod.string().regex(liftOwnerGuidanceHoldBodyDigestRegExp),
+  "reason": zod.string().min(liftOwnerGuidanceHoldBodyReasonMin).max(liftOwnerGuidanceHoldBodyReasonMax).describe('Why the hold is lifted, in 20 to 1,000 characters.')
+})
+
+export const LiftOwnerGuidanceHoldResponse = zod.object({
+  "itemId": zod.uuid(),
+  "version": zod.int(),
+  "state": zod.enum(['published', 'withdrawn'])
+})
+
+
 export const listManualLibraryQueryPageDefault = 1;
 
 export const listManualLibraryQueryQMax = 140;
@@ -4290,7 +4327,8 @@ export const ListManualLibraryResponse = zod.object({
   "version": zod.int().min(1),
   "digest": zod.string().regex(listManualLibraryResponseItemsItemReviewDigestRegExp),
   "due": zod.string().describe('When the next review is due, as an ISO 8601 time. Once it passes, the entry is held from new use until it is reviewed.')
-}).optional().describe('The published version of an entry other than a regulatory guide, and when its next review is due: 90 days after it was published or last reviewed. Absent for a regulatory guide, an entry with no published version, and a database the reviews migration has not reached.')
+}).optional().describe('The published version of an entry other than a regulatory guide, and when its next review is due: 90 days after it was published or last reviewed. Absent for a regulatory guide, an entry with no published version, and a database the reviews migration has not reached.'),
+  "held": zod.boolean().describe('Whether the published version is held by a Content editor (docs/architecture/library-holds.md, slice 2). Held entries are listed first.')
 })),
   "hasMore": zod.boolean()
 })
@@ -4396,6 +4434,8 @@ export const getManualLibraryRevisionResponseReachOneDocumentsMin = 0;
 
 export const getManualLibraryRevisionResponseToldMin = 0;
 
+export const getManualLibraryRevisionResponseHoldOneWorkspacesMin = 0;
+
 
 
 export const GetManualLibraryRevisionResponse = zod.object({
@@ -4442,7 +4482,13 @@ export const GetManualLibraryRevisionResponse = zod.object({
   "documentWorkspaces": zod.int().min(getManualLibraryRevisionResponseReachOneDocumentWorkspacesMin),
   "documents": zod.int().min(getManualLibraryRevisionResponseReachOneDocumentsMin)
 }),zod.null()]).describe('For a template\'s published edition, whom its withdrawal would tell: the workspaces that bought the template (any of its editions, under a verified order) and those that made documents from this edition, each counted once in workspaces, as its notices count them (docs/architecture/library-holds.md, slice 1). Null for a guide, which has no buyers or documents, for an entry with no published edition, and on a database without the counts.'),
-  "told": zod.int().min(getManualLibraryRevisionResponseToldMin).nullable().describe('For a withdrawn template edition, how many workspaces its withdrawal told, from its notices. Null otherwise.')
+  "told": zod.int().min(getManualLibraryRevisionResponseToldMin).nullable().describe('For a withdrawn template edition, how many workspaces its withdrawal told, from its notices. Null otherwise.'),
+  "hold": zod.union([zod.object({
+  "reason": zod.string(),
+  "placedBy": zod.string(),
+  "placedAt": zod.string(),
+  "workspaces": zod.int().min(getManualLibraryRevisionResponseHoldOneWorkspacesMin)
+}).describe('A hold on a published library version: why, who placed it, when, and how many workspaces its template reached then.'),zod.null()]).describe('The hold on the entry\'s published version, while it is not lifted, or null.')
 })
 
 
@@ -4506,6 +4552,8 @@ export const saveManualLibraryDraftResponseReachOneDocumentsMin = 0;
 
 export const saveManualLibraryDraftResponseToldMin = 0;
 
+export const saveManualLibraryDraftResponseHoldOneWorkspacesMin = 0;
+
 
 
 export const SaveManualLibraryDraftResponse = zod.object({
@@ -4552,7 +4600,13 @@ export const SaveManualLibraryDraftResponse = zod.object({
   "documentWorkspaces": zod.int().min(saveManualLibraryDraftResponseReachOneDocumentWorkspacesMin),
   "documents": zod.int().min(saveManualLibraryDraftResponseReachOneDocumentsMin)
 }),zod.null()]).describe('For a template\'s published edition, whom its withdrawal would tell: the workspaces that bought the template (any of its editions, under a verified order) and those that made documents from this edition, each counted once in workspaces, as its notices count them (docs/architecture/library-holds.md, slice 1). Null for a guide, which has no buyers or documents, for an entry with no published edition, and on a database without the counts.'),
-  "told": zod.int().min(saveManualLibraryDraftResponseToldMin).nullable().describe('For a withdrawn template edition, how many workspaces its withdrawal told, from its notices. Null otherwise.')
+  "told": zod.int().min(saveManualLibraryDraftResponseToldMin).nullable().describe('For a withdrawn template edition, how many workspaces its withdrawal told, from its notices. Null otherwise.'),
+  "hold": zod.union([zod.object({
+  "reason": zod.string(),
+  "placedBy": zod.string(),
+  "placedAt": zod.string(),
+  "workspaces": zod.int().min(saveManualLibraryDraftResponseHoldOneWorkspacesMin)
+}).describe('A hold on a published library version: why, who placed it, when, and how many workspaces its template reached then.'),zod.null()]).describe('The hold on the entry\'s published version, while it is not lifted, or null.')
 })
 
 
@@ -4593,6 +4647,8 @@ export const actOnManualLibraryResponseReachOneDocumentWorkspacesMin = 0;
 export const actOnManualLibraryResponseReachOneDocumentsMin = 0;
 
 export const actOnManualLibraryResponseToldMin = 0;
+
+export const actOnManualLibraryResponseHoldOneWorkspacesMin = 0;
 
 
 
@@ -4640,7 +4696,13 @@ export const ActOnManualLibraryResponse = zod.object({
   "documentWorkspaces": zod.int().min(actOnManualLibraryResponseReachOneDocumentWorkspacesMin),
   "documents": zod.int().min(actOnManualLibraryResponseReachOneDocumentsMin)
 }),zod.null()]).describe('For a template\'s published edition, whom its withdrawal would tell: the workspaces that bought the template (any of its editions, under a verified order) and those that made documents from this edition, each counted once in workspaces, as its notices count them (docs/architecture/library-holds.md, slice 1). Null for a guide, which has no buyers or documents, for an entry with no published edition, and on a database without the counts.'),
-  "told": zod.int().min(actOnManualLibraryResponseToldMin).nullable().describe('For a withdrawn template edition, how many workspaces its withdrawal told, from its notices. Null otherwise.')
+  "told": zod.int().min(actOnManualLibraryResponseToldMin).nullable().describe('For a withdrawn template edition, how many workspaces its withdrawal told, from its notices. Null otherwise.'),
+  "hold": zod.union([zod.object({
+  "reason": zod.string(),
+  "placedBy": zod.string(),
+  "placedAt": zod.string(),
+  "workspaces": zod.int().min(actOnManualLibraryResponseHoldOneWorkspacesMin)
+}).describe('A hold on a published library version: why, who placed it, when, and how many workspaces its template reached then.'),zod.null()]).describe('The hold on the entry\'s published version, while it is not lifted, or null.')
 })
 
 
@@ -4673,6 +4735,101 @@ export const RecordManualLibraryReviewResponse = zod.object({
   "digest": zod.string().regex(recordManualLibraryReviewResponseDigestRegExp),
   "due": zod.string().describe('When the next review is due, as an ISO 8601 time. Once it passes, the entry is held from new use until it is reviewed.')
 }).describe('The published version of an entry other than a regulatory guide, and when its next review is due: 90 days after it was published or last reviewed. Absent for a regulatory guide, an entry with no published version, and a database the reviews migration has not reached.')
+
+
+/**
+ * A Content editor holds the published version of an entry short of a withdrawal, or lifts its hold, with why (docs/architecture/library-holds.md, slice 2). A held version leaves new use as an overdue one does, while what customers have stays. Only the owner lifts a regulatory guide's hold, from the owner's panel.
+ */
+export const HoldManualLibraryEntryParams = zod.object({
+  "id": zod.uuid()
+})
+
+
+export const holdManualLibraryEntryBodyDigestRegExp = new RegExp('^[0-9a-f]{64}$');
+export const holdManualLibraryEntryBodyReasonMin = 20;
+export const holdManualLibraryEntryBodyReasonMax = 1000;
+
+
+
+export const HoldManualLibraryEntryBody = zod.object({
+  "action": zod.enum(['hold', 'lift']),
+  "version": zod.int().min(1),
+  "digest": zod.string().regex(holdManualLibraryEntryBodyDigestRegExp),
+  "reason": zod.string().min(holdManualLibraryEntryBodyReasonMin).max(holdManualLibraryEntryBodyReasonMax).describe('Why the published version is held, or why its hold is lifted, in 20 to 1,000 characters. Staff see it; customers are not told of a hold.')
+})
+
+export const holdManualLibraryEntryResponseDigestRegExp = new RegExp('^[0-9a-f]{64}$');
+export const holdManualLibraryEntryResponseLiveOneDigestRegExp = new RegExp('^[0-9a-f]{64}$');
+export const holdManualLibraryEntryResponseFormFitOneProblemsItemMax = 400;
+
+export const holdManualLibraryEntryResponseFormFitOneProblemsMax = 200;
+
+export const holdManualLibraryEntryResponseReachOneWorkspacesMin = 0;
+
+export const holdManualLibraryEntryResponseReachOneBoughtMin = 0;
+
+export const holdManualLibraryEntryResponseReachOneDocumentWorkspacesMin = 0;
+
+export const holdManualLibraryEntryResponseReachOneDocumentsMin = 0;
+
+export const holdManualLibraryEntryResponseToldMin = 0;
+
+export const holdManualLibraryEntryResponseHoldOneWorkspacesMin = 0;
+
+
+
+export const HoldManualLibraryEntryResponse = zod.object({
+  "itemId": zod.uuid(),
+  "version": zod.int(),
+  "title": zod.string(),
+  "kind": zod.enum(['practical_guide', 'industry_introduction', 'industry_pack', 'template', 'premium_template', 'regulatory_article']),
+  "state": zod.enum(['draft', 'published', 'replaced', 'withdrawn']),
+  "industry": zod.string().nullable(),
+  "id": zod.uuid(),
+  "digest": zod.string().regex(holdManualLibraryEntryResponseDigestRegExp),
+  "body": zod.string(),
+  "fileFormat": zod.union([zod.literal('docx'),zod.literal('pdf'),zod.literal(null)]).nullable(),
+  "createdBy": zod.string(),
+  "createdAt": zod.string(),
+  "publishedAt": zod.string().nullable(),
+  "publishedBy": zod.string().nullable(),
+  "live": zod.union([zod.object({
+  "version": zod.int(),
+  "digest": zod.string().regex(holdManualLibraryEntryResponseLiveOneDigestRegExp)
+}),zod.null()]),
+  "formText": zod.string().nullable().describe('The template\'s wording with its placeholders named, for its fill-in form. Staff only.'),
+  "formFit": zod.union([zod.object({
+  "templateId": zod.string().nullable(),
+  "state": zod.enum(['no_template', 'no_form', 'fits', 'does_not_fit']),
+  "problems": zod.array(zod.string().max(holdManualLibraryEntryResponseFormFitOneProblemsItemMax)).max(holdManualLibraryEntryResponseFormFitOneProblemsMax)
+}).describe('How a revision\'s form text fits the fill-in form of the template it is filed as, found by its title.'),zod.null()]),
+  "purpose": zod.string().nullable(),
+  "needs": zod.string().nullable(),
+  "limits": zod.string().nullable(),
+  "relatedItems": zod.array(zod.uuid()),
+  "aiDrafted": zod.boolean().nullable().describe('A template\'s entry details (docs/architecture/library-entries.md), released with the version.'),
+  "relatedGuides": zod.array(zod.object({
+  "itemId": zod.uuid(),
+  "title": zod.string().nullable(),
+  "kind": zod.union([zod.literal('practical_guide'),zod.literal('industry_introduction'),zod.literal('industry_pack'),zod.literal('template'),zod.literal('premium_template'),zod.literal('regulatory_article'),zod.literal(null)]).nullable(),
+  "live": zod.boolean()
+})).describe('The related guides by their library items, as the editor sees them: the title and kind of each item\'s latest version, whether a version of it is released now, or nulls for an item not in the library yet.'),
+  "previousRelease": zod.int().nullable().describe('The latest earlier version of this entry that was released, or null. Releasing this version then needs a note of what changed (docs/architecture/guidance-currency.md, slice 3).'),
+  "reach": zod.union([zod.object({
+  "version": zod.int(),
+  "workspaces": zod.int().min(holdManualLibraryEntryResponseReachOneWorkspacesMin),
+  "bought": zod.int().min(holdManualLibraryEntryResponseReachOneBoughtMin),
+  "documentWorkspaces": zod.int().min(holdManualLibraryEntryResponseReachOneDocumentWorkspacesMin),
+  "documents": zod.int().min(holdManualLibraryEntryResponseReachOneDocumentsMin)
+}),zod.null()]).describe('For a template\'s published edition, whom its withdrawal would tell: the workspaces that bought the template (any of its editions, under a verified order) and those that made documents from this edition, each counted once in workspaces, as its notices count them (docs/architecture/library-holds.md, slice 1). Null for a guide, which has no buyers or documents, for an entry with no published edition, and on a database without the counts.'),
+  "told": zod.int().min(holdManualLibraryEntryResponseToldMin).nullable().describe('For a withdrawn template edition, how many workspaces its withdrawal told, from its notices. Null otherwise.'),
+  "hold": zod.union([zod.object({
+  "reason": zod.string(),
+  "placedBy": zod.string(),
+  "placedAt": zod.string(),
+  "workspaces": zod.int().min(holdManualLibraryEntryResponseHoldOneWorkspacesMin)
+}).describe('A hold on a published library version: why, who placed it, when, and how many workspaces its template reached then.'),zod.null()]).describe('The hold on the entry\'s published version, while it is not lifted, or null.')
+})
 
 
 export const PreviewManualLibraryFileParams = zod.object({

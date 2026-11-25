@@ -6,6 +6,8 @@ import {
   GetManualLibraryRevisionResponse,
   ListManualLibraryQueryParams,
   RecordManualLibraryReviewResponse,
+  HoldManualLibraryEntryResponse,
+  LiftOwnerGuidanceHoldResponse,
   ListManualLibraryResponse,
   ListOwnerGuidanceResponse,
   ListRetainedDraftsResponse,
@@ -16,7 +18,12 @@ import { mutationOriginFor, sameOriginMutation } from "../middlewares/valo-ident
 import { requestComplexityLimit } from "../platform/request-complexity";
 import { exportMime } from "../lib/valo-render";
 import type { SourceStaffActor } from "../modules/sources";
-import { listOwnerGuidance, decideOwnerGuidance, refreshOwnerSources } from "../modules/manual-guidance";
+import {
+  listOwnerGuidance,
+  decideOwnerGuidance,
+  liftOwnerGuidanceHold,
+  refreshOwnerSources,
+} from "../modules/manual-guidance";
 import {
   authorizeManualEditor,
   listManualLibrary,
@@ -24,6 +31,7 @@ import {
   saveManualDraft,
   actOnManualRevision,
   recordManualReview,
+  holdManualEntry,
   privateManualFile,
   releasedManualFile,
   purchasedManualFile,
@@ -76,6 +84,10 @@ export function createManualLibraryRouter(
     const result = await decideOwnerGuidance(res.locals.guidanceOwner, uuid.parse(req.params.id), req.body);
     res.json(DecideOwnerGuidanceResponse.parse(result));
   });
+  router.post("/admin/owner-guidance/:id/hold-lifts", sameOriginMutation, async (req, res) => {
+    const result = await liftOwnerGuidanceHold(res.locals.guidanceOwner, uuid.parse(req.params.id), req.body);
+    res.json(LiftOwnerGuidanceHoldResponse.parse(result));
+  });
   router.use("/admin/manual-library", async (req, res, next) => {
     res.set("Cache-Control", "private, no-store");
     res.locals.manualEditor = res.locals.verifiedStaff ?? (await authenticate(req));
@@ -126,6 +138,13 @@ export function createManualLibraryRouter(
     res.json(
       RecordManualLibraryReviewResponse.parse(
         await recordManualReview(res.locals.manualEditor, uuid.parse(req.params.id), req.body),
+      ),
+    );
+  });
+  router.post("/admin/manual-library/:id/holds", sameOriginMutation, async (req, res) => {
+    res.json(
+      HoldManualLibraryEntryResponse.parse(
+        await holdManualEntry(res.locals.manualEditor, uuid.parse(req.params.id), req.body),
       ),
     );
   });

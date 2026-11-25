@@ -16,6 +16,7 @@ import {
 import { exercisePremiumPriceCommand } from "../test-support/premium-price-command";
 import { exerciseOverduePremiumTemplate } from "../test-support/manual-overdue-premium";
 import { exerciseWithdrawalReach } from "../test-support/manual-withdrawal-reach";
+import { exerciseLibraryHolds } from "../test-support/manual-holds";
 import {
   changeNote,
   libraryAction,
@@ -516,6 +517,11 @@ test(
     await t.test(
       "a template's published edition shows staff whom its withdrawal will tell, its buyers and the workspaces that made documents from it, and its notices then reach exactly those",
       () => exerciseWithdrawalReach(call, editor),
+    );
+    // A hold short of a withdrawal (docs/architecture/library-holds.md, slice 2).
+    await t.test(
+      "a Content editor holds a published version short of a withdrawal, which then leaves new use while what customers have stays, and lifts it",
+      () => exerciseLibraryHolds(call, editor),
     );
     await t.test("one published introduction per industry and no implied regulatory evidence", async () => {
       const id = randomUUID(),

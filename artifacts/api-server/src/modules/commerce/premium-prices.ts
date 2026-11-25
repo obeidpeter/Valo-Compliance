@@ -167,7 +167,7 @@ export async function recordPremiumPrice(
     const { rows: live } = await tx.execute<PremiumEdition>(premiumEditions(terms.edition));
     if (!live[0] || live[0].held)
       throw Error(
-        "Only a published premium template from the staff library, not overdue for its review, can be priced. Check its edition ID and review date with status.",
+        "Only a published premium template from the staff library, not overdue for its review and not held by staff, can be priced. Check its edition ID and review date with status, and any hold in the staff library.",
       );
     const [entry] = await tx
       .select({ title: valoManualLibrary.title })

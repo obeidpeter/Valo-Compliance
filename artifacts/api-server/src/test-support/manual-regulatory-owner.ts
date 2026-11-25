@@ -193,6 +193,38 @@ export async function exerciseManualRegulatoryOwner(call: Call, editor: string) 
     const correctedArticle = GetReleasedResourceResponse.parse(await (await call(page)).json());
     assert.equal(correctedArticle.body, corrected);
     assert.equal(correctedArticle.change?.note, said);
+    // A Content editor holds the published guide short of a withdrawal (docs/architecture/library-holds.md,
+    // slice 2): its page goes, and only the owner lifts the hold, from the owner's panel.
+    const holdWhy = "Synthetic: held while a reader's report on the filing period is checked.",
+      liftWhy = "Synthetic: the filing period was checked against the Act and is right.";
+    const exact = { version: nextRevision.version, digest: nextRevision.digest };
+    const held = await call(
+      "/admin/manual-library/" + id + "/holds",
+      { action: "hold", ...exact, reason: holdWhy },
+      editor,
+    );
+    assert.equal(held.status, 200);
+    assert.equal(GetManualLibraryRevisionResponse.parse(await held.json()).hold?.reason, holdWhy);
+    assert.equal((await call(page)).status, 404);
+    assert.equal((await list()).libraryHold?.reason, holdWhy);
+    assert.equal(
+      (
+        await call(
+          "/admin/manual-library/" + id + "/holds",
+          { action: "lift", ...exact, reason: liftWhy },
+          editor,
+        )
+      ).status,
+      403,
+    );
+    const lift = (actor = owner, reason = liftWhy) =>
+      call(path + "/" + id + "/hold-lifts", { ...exact, reason }, actor);
+    assert.equal((await lift(editor)).status, 403);
+    assert.equal((await lift(owner, "Too short.")).status, 422);
+    assert.equal((await lift()).status, 200);
+    assert.equal((await lift()).status, 409);
+    assert.equal((await list()).libraryHold, null);
+    assert.equal(GetReleasedResourceResponse.parse(await (await call(page)).json()).body, corrected);
   } finally {
     for (const identity of [owner, system])
       await db.update(roles).set({ active: false }).where(eq(roles.identityId, identity));

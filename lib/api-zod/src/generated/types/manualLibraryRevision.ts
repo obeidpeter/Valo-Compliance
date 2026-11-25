@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { ManualFormFit } from './manualFormFit';
+import type { ManualLibraryHoldRecord } from './manualLibraryHoldRecord';
 import type { ManualLibraryRevisionFileFormat } from './manualLibraryRevisionFileFormat';
 import type { ManualLibraryRevisionKind } from './manualLibraryRevisionKind';
 import type { ManualLibraryRevisionLive } from './manualLibraryRevisionLive';
@@ -67,4 +68,6 @@ export interface ManualLibraryRevision {
      * @nullable
      */
   told: number | null;
+  /** The hold on the entry's published version, while it is not lifted, or null. */
+  hold: ManualLibraryHoldRecord | null;
 }

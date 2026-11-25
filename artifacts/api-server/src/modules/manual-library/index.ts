@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import {
+  type Column,
   and,
   desc,
   eq,
@@ -21,6 +22,7 @@ import type { GuidedTemplateId } from "@workspace/valo-core/guided";
 import {
   ActOnManualLibraryBody,
   LoadRetainedDraftsBody,
+  HoldManualLibraryEntryBody,
   RecordManualLibraryReviewBody,
   SaveManualLibraryDraftBody,
 } from "@workspace/api-zod";
@@ -150,6 +152,42 @@ async function editionReach(tx: Tx, edition: string) {
   ).rows;
   return reach ?? null;
 }
+/**
+ * Whether the holds migration has reached this database (docs/architecture/library-holds.md, slice 2).
+ * Until it has, nothing is held, the screens show no holds, and placing one is refused.
+ */
+export async function holdsReady(tx: Pick<Tx, "execute">) {
+  const [found] = (
+    await tx.execute<{ present: boolean }>(
+      sql`select to_regprocedure('public.valo_manual_edition_held(uuid)') is not null as present`,
+    )
+  ).rows;
+  return found?.present === true;
+}
+/** The hold on a library edition while it is not lifted. */
+export async function openHold(tx: Pick<Tx, "select">, edition: string) {
+  const { valoManualHolds: h, valoManualHoldLifts: l } = await import("@workspace/db");
+  const [hold] = await tx
+    .select({
+      id: h.id,
+      reason: h.reason,
+      placedBy: h.placedBy,
+      placedAt: h.placedAt,
+      workspaces: h.workspaces,
+    })
+    .from(h)
+    .where(and(eq(h.edition, edition), sql`not exists (select from ${l} where ${l.hold} = ${h.id})`))
+    .limit(1);
+  return hold ?? null;
+}
+/** A hold as the staff screens show it. */
+export const holdRecord = (hold: Awaited<ReturnType<typeof openHold>>) =>
+  hold && {
+    reason: hold.reason,
+    placedBy: hold.placedBy,
+    placedAt: hold.placedAt.toISOString(),
+    workspaces: hold.workspaces,
+  };
 /** How many workspaces a template edition's withdrawal told: its notices, which are the record of it. */
 async function withdrawalTold(tx: Tx, edition: string) {
   const { valoEditionNotices: n } = await import("@workspace/db");
@@ -218,12 +256,34 @@ async function detail(tx: Tx, row: RevisionMeta) {
     previousRelease: await previousRelease(tx, row.itemId, row.version),
     reach,
     told: row.state === "withdrawn" && isManualTemplate(row.kind) ? await withdrawalTold(tx, row.id) : null,
+    hold: live && (await holdsReady(tx)) ? holdRecord(await openHold(tx, live.id)) : null,
   };
 }
 function pgError(error: unknown) {
   const e = error as { cause?: { code?: string; constraint?: string }; code?: string; constraint?: string };
   return e.cause ?? e;
 }
+/**
+ * What keeps a published version from new use, as far as this database has the migrations for it: a hold
+ * placed by staff (docs/architecture/library-holds.md, slice 2) and an overdue review
+ * (docs/architecture/guidance-currency.md, slice 2); then the review alone; then neither. A read outside a
+ * transaction tries each in turn, falling back only when a rule's function is missing.
+ */
+type InUse = "held" | "reviewed" | "none";
+async function underRules<T>(read: (rules: InUse) => Promise<T>) {
+  for (const rules of ["held", "reviewed"] as const) {
+    try {
+      return await read(rules);
+    } catch (error) {
+      if (pgError(error).code !== "42883") throw error;
+    }
+  }
+  return read("none");
+}
+const notHeld = (rules: InUse, edition: Column) =>
+  rules === "held" ? sql`not public.valo_manual_edition_held(${edition})` : undefined;
+const notOverdue = (rules: InUse, edition: Column) =>
+  rules === "none" ? undefined : sql`public.valo_manual_review_due(${edition}) > clock_timestamp()`;
 async function withEditor<T>(actor: SourceStaffActor, work: (tx: Tx) => Promise<T>, itemId?: string) {
   assertDevelopmentRuntime();
   const [{ db }, { requireSourceStaff }] = await Promise.all([import("@workspace/db"), import("../sources")]);
@@ -327,11 +387,31 @@ export async function listManualLibrary(
             and public.valo_manual_review_due(released.id) <= clock_timestamp() + interval '14 days')`
         : undefined,
     ];
+    // A held entry is listed first (docs/architecture/library-holds.md, slice 2); a database the holds
+    // migration has not reached has none. The latest version's item is named in full: in a select list
+    // Drizzle names a subquery's column without its alias, which inside this nested query would mean the
+    // released row's own item, and every row would read as held.
+    const latestItem = sql`${sql.identifier("latest")}.${sql.identifier("item_id")}`;
+    const held = (await holdsReady(tx))
+      ? sql<boolean>`exists (select from valo_manual_library released
+          join valo_manual_holds h on h.edition = released.id
+          where released.item_id = ${latestItem} and released.state = 'published'
+            and not exists (select from valo_manual_hold_lifts l where l.hold = h.id))`
+      : sql<boolean>`false`;
     const items = await tx
-      .select()
+      .select({
+        itemId: latest.itemId,
+        version: latest.version,
+        title: latest.title,
+        kind: latest.kind,
+        state: latest.state,
+        industry: latest.industry,
+        createdAt: latest.createdAt,
+        held: held.mapWith(Boolean),
+      })
       .from(latest)
       .where(and(...conditions))
-      .orderBy(desc(latest.createdAt), latest.itemId)
+      .orderBy(desc(held), desc(latest.createdAt), latest.itemId)
       .offset((filters.page - 1) * 50)
       .limit(51);
     const page = items.slice(0, 50);
@@ -380,6 +460,56 @@ export async function recordManualReview(actor: SourceStaffActor, itemId: string
       const review = (await reviewDates(tx, [itemId])).get(itemId);
       if (!review) throw new ValoProblem(503, "Apply the reviews migration before recording a review.");
       return review;
+    },
+    itemId,
+  );
+}
+/**
+ * A Content editor holds the published version of an entry short of a withdrawal, or lifts its hold, with
+ * why (docs/architecture/library-holds.md, slice 2). A held version leaves new use as an overdue one does,
+ * while what customers have stays, and they are not told. The database refuses a hold of any other
+ * version, a second hold, and a hold or lifting from anyone but an active Content editor, and never
+ * changes either record. Only the development owner lifts a regulatory guide's hold, from the owner's
+ * panel.
+ */
+export async function holdManualEntry(actor: SourceStaffActor, itemId: string, value: unknown) {
+  const input = HoldManualLibraryEntryBody.strict().parse(value);
+  const reason = input.reason.trim();
+  if (reason.length < 20 || reason.length > 1000)
+    throw new ValoProblem(
+      422,
+      input.action === "hold"
+        ? "Say why this version is held, in 20 to 1,000 characters. Staff see it; customers are not told."
+        : "Say why the hold is lifted, in 20 to 1,000 characters.",
+    );
+  return withEditor(
+    actor,
+    async (tx) => {
+      if (!(await holdsReady(tx)))
+        throw new ValoProblem(503, "Apply the holds migration before holding a library entry.");
+      const { valoManualLibrary: t, valoManualHolds, valoManualHoldLifts } = await import("@workspace/db");
+      const [published] = await tx
+        .select({ id: t.id, version: t.version, digest: t.digest, kind: t.kind })
+        .from(t)
+        .where(and(eq(t.itemId, itemId), eq(t.state, "published")));
+      if (!published) throw new ValoProblem(404, "This entry has no published version to hold.");
+      if (published.version !== input.version || published.digest !== input.digest) throw conflict();
+      const hold = await openHold(tx, published.id);
+      if (input.action === "hold") {
+        if (hold) throw new ValoProblem(409, "This version is already held.");
+        await tx
+          .insert(valoManualHolds)
+          .values({ edition: published.id, reason, placedBy: actor.identityId });
+      } else {
+        if (!hold) throw new ValoProblem(409, "This version is not held.");
+        if (published.kind === "regulatory_article")
+          throw new ValoProblem(
+            403,
+            "Only the owner lifts a regulatory guide's hold, from the owner's panel.",
+          );
+        await tx.insert(valoManualHoldLifts).values({ hold: hold.id, reason, liftedBy: actor.identityId });
+      }
+      return detail(tx, (await latestRevision(tx, itemId))!);
     },
     itemId,
   );
@@ -671,9 +801,9 @@ export async function releasedManualFile(id: string, identityId: string) {
   const { assertAccountNotErasedOrSuspended } = await import("../workspaces");
   await assertAccountNotErasedOrSuspended(identityId);
   const { db, valoManualLibrary: t } = await import("@workspace/db");
-  // A free template overdue for its review is not downloaded anew (docs/architecture/guidance-currency.md,
-  // slice 2); a database the reviews migration has not reached has no review dates.
-  const read = (reviewed: boolean) =>
+  // A free template overdue for its review (docs/architecture/guidance-currency.md, slice 2), or held by
+  // staff (docs/architecture/library-holds.md, slice 2), is not downloaded anew.
+  const read = (rules: InUse) =>
     db
       .select({ slug: t.slug, version: t.version, fileBytes: t.fileBytes, fileFormat: t.fileFormat })
       .from(t)
@@ -682,17 +812,11 @@ export async function releasedManualFile(id: string, identityId: string) {
           eq(t.id, id),
           eq(t.kind, "template"),
           eq(t.state, "published"),
-          reviewed ? sql`public.valo_manual_review_due(${t.id}) > clock_timestamp()` : undefined,
+          notOverdue(rules, t.id),
+          notHeld(rules, t.id),
         ),
       );
-  let rows: Awaited<ReturnType<typeof read>>;
-  try {
-    rows = await read(true);
-  } catch (error) {
-    if (pgError(error).code !== "42883") throw error;
-    rows = await read(false);
-  }
-  return attachment(rows[0]);
+  return attachment((await underRules(read))[0]);
 }
 export async function purchasedManualFile(actor: WorkspaceActor, id: string) {
   assertDevelopmentRuntime();
@@ -812,9 +936,10 @@ async function releasedManualRows(
   const released = and(eq(t.state, "published"), options.slug ? eq(t.slug, options.slug) : undefined);
   try {
     // An entry other than a regulatory guide is shown while its review is not overdue: 90 days after it
-    // was published or last reviewed (docs/architecture/guidance-currency.md, slice 2). A database the
-    // reviews migration has not reached has no review dates, and shows such entries as before.
-    const current = (reviewed: boolean) =>
+    // was published or last reviewed (docs/architecture/guidance-currency.md, slice 2). No entry is shown
+    // while staff hold it (docs/architecture/library-holds.md, slice 2). A database the reviews or holds
+    // migration has not reached shows entries as before.
+    const current = (rules: InUse) =>
       db
         .select({ ...fields, regulatorySources: c.sources, sourceCheckedAt: c.checkedAt })
         .from(t)
@@ -822,13 +947,9 @@ async function releasedManualRows(
         .where(
           and(
             released,
+            notHeld(rules, t.id),
             or(
-              reviewed
-                ? and(
-                    ne(t.kind, "regulatory_article"),
-                    sql`public.valo_manual_review_due(${t.id}) > clock_timestamp()`,
-                  )
-                : ne(t.kind, "regulatory_article"),
+              and(ne(t.kind, "regulatory_article"), notOverdue(rules, t.id)),
               // The newest check has the evidence the guide was signed on, with each source's bytes or with
               // each web page's words in their place (docs/architecture/guidance-currency.md). The words are
               // read through each row's JSON, so a database the words migration has not reached yet keeps
@@ -845,12 +966,7 @@ async function releasedManualRows(
           ),
         )
         .orderBy(desc(t.publishedAt), t.itemId);
-    try {
-      return await current(true);
-    } catch (error) {
-      if (pgError(error).code !== "42883") throw error;
-      return await current(false);
-    }
+    return await underRules(current);
   } catch (error) {
     if (!["42P01", "42703"].includes(pgError(error).code ?? "")) throw error;
     try {
