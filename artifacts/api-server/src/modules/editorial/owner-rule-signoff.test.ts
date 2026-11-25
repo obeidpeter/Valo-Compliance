@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   allSourceLeads,
   assess,
+  baselineTemplates,
   checkerFactsSchema,
   digest,
   evaluateOwnerRuleBundle,
@@ -373,6 +374,23 @@ test("every rule prepared in the repository names registered sources and the gui
       }
     }
   }
+});
+
+test("each rule prepared in the repository relates only templates the specification lists: the personal-data rule the privacy notice, the others none", () => {
+  const listed = new Set(baselineTemplates.map((entry) => entry.id));
+  const related = Object.fromEntries(
+    signoff.ownerRuleCandidates.map((c) => [c.rule.id, c.rule.relatedTemplateIds]),
+  );
+  for (const [id, numbers] of Object.entries(related))
+    for (const number of numbers) assert.ok(listed.has(number), `${id}: ${number}`);
+  assert.equal(baselineTemplates.find((entry) => entry.id === "TPL-29")?.title, "Privacy notice");
+  // docs/architecture/results.md: the other three rules' actions are filed with the authority.
+  assert.deepEqual(related, {
+    "cac-business-name-814": [],
+    "ndpa-27-collection-information": ["TPL-29"],
+    "ntaa-11-company-return": [],
+    "nafdac-f33-product-registration": [],
+  });
 });
 
 test("each rule prepared in the repository could be signed against copies of its official texts that hold its passages: its evidence passes and every scenario gives the result it expects", async () => {

@@ -8,6 +8,7 @@ import {
   type ReleasedLibraryItem,
 } from "./valo-catalogue";
 import { baselineTemplates } from "../../../../../lib/valo-core/src/catalogue";
+import { ListPublicCatalogueQueryParams } from "@workspace/api-zod";
 
 // Controlled metadata benchmark only. These rows are not released documents,
 // and the product-owner relevance threshold has not been agreed or accepted.
@@ -118,4 +119,43 @@ test("recommendations use supplied activity/category and omit saved or absent re
   assert.ok(
     recommendTemplates(fixtures, [], ["unknown"]).every((i) => i.reason === "General business template"),
   );
+});
+test("a list of template numbers finds only the released templates with those numbers (docs/architecture/results.md)", () => {
+  // Every other template is released too; only the numbered ones are asked for, and an item with no
+  // number, such as a service page, is never found by number.
+  const numbered = fixtures.map((item) => ({ ...item, templateNumber: item.id }));
+  const service: ReleasedLibraryItem = {
+    id: "service:privacy",
+    slug: "privacy",
+    title: "Data protection and privacy",
+    type: "service",
+    industry: "All industries",
+    summary: "Enquiry category only.",
+  };
+  const found = paginateReleasedItems([...numbered, service], { templateIds: "TPL-29,TPL-01" });
+  assert.deepEqual(found.items.map((item) => item.id).sort(), ["TPL-01", "TPL-29"]);
+  assert.equal(found.total, 2);
+  // A number no released template has finds nothing, and neither does an item without a number.
+  assert.equal(paginateReleasedItems([...numbered, service], { templateIds: "TPL-99" }).total, 0);
+  assert.equal(paginateReleasedItems(fixtures, { templateIds: "TPL-29" }).total, 0);
+  // The other filters still apply.
+  assert.equal(paginateReleasedItems(numbered, { templateIds: "TPL-29", access: "free" }).total, 0);
+  // The route takes up to twenty numbers, written as the list writes them, and nothing else.
+  const twenty = Array.from({ length: 20 }, (_, i) => `TPL-${String(i + 1).padStart(2, "0")}`);
+  assert.equal(
+    ListPublicCatalogueQueryParams.parse({ templateIds: twenty.join(",") }).templateIds,
+    twenty.join(","),
+  );
+  for (const templateIds of [
+    "",
+    "TPL-1",
+    "TPL-290",
+    "tpl-29",
+    "TPL-29,",
+    ",TPL-29",
+    "TPL-29, TPL-01",
+    "TPL-29;TPL-01",
+    [...twenty, "TPL-21"].join(","),
+  ])
+    assert.equal(ListPublicCatalogueQueryParams.safeParse({ templateIds }).success, false, templateIds);
 });

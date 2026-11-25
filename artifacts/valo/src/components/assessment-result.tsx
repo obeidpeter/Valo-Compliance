@@ -1,13 +1,20 @@
 import { OperationalAids } from "./operational-aids";
 import { useState, type ReactNode } from "react";
 import { ChevronDown, ExternalLink, Quote } from "lucide-react";
-import type { AssessmentItem, AssessmentResult } from "@workspace/api-client-react";
+import type { AssessmentItem, AssessmentResult, PublicItem } from "@workspace/api-client-react";
 import { Notice } from "@/components/states";
 import { factLabel } from "@/lib/checker";
 import { formatDay } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { MISSING_ANSWER_STATE_LABELS, RESULT_LABELS, RESULT_TONES } from "@/lib/rich-checker";
 import { resultGaps, resultNotice, shortRulesVersion } from "@/lib/result-words";
+import { documentsFor, resultTemplateNumbers } from "@/lib/result-documents";
+import {
+  RecommendedDocuments,
+  RequirementDocuments,
+  ResultDocumentsUnavailable,
+  useResultDocuments,
+} from "./result-documents";
 
 export function AssessmentResultView({
   result,
@@ -34,6 +41,9 @@ export function AssessmentResultView({
     .filter((g) => g.items.length);
   // The box below says that nothing was found, so the list of what is not covered does not repeat it.
   const gaps = resultGaps(result.gaps, result.items.length === 0);
+  // RUL-006: the documents the requirements relate, by the titles and links the released list gives.
+  const documents = useResultDocuments(resultTemplateNumbers(result));
+  const recommended = documentsFor(result.recommendedTemplateIds, documents.released);
   return (
     <div className="grid min-w-0 gap-6" data-testid="assessment-result">
       <div
@@ -83,7 +93,13 @@ export function AssessmentResultView({
             </div>
             <ul className="grid gap-3">
               {g.items.map((it) => (
-                <Item key={it.ruleId} item={it} action={itemAction?.(it)} questionAction={questionAction} />
+                <Item
+                  key={it.ruleId}
+                  item={it}
+                  action={itemAction?.(it)}
+                  questionAction={questionAction}
+                  documents={documentsFor(it.relatedTemplateIds, documents.released)}
+                />
               ))}
             </ul>
           </section>
@@ -130,6 +146,12 @@ export function AssessmentResultView({
         </div>
       )}
 
+      {documents.failed ? (
+        <ResultDocumentsUnavailable retrying={documents.retrying} onRetry={documents.retry} />
+      ) : (
+        <RecommendedDocuments documents={recommended} />
+      )}
+
       {result.officialRoutes.length > 0 && (
         <div className="surface p-5">
           <p className="eyebrow">Official sources</p>
@@ -159,10 +181,12 @@ function Item({
   item,
   action,
   questionAction,
+  documents,
 }: {
   item: AssessmentItem;
   action?: ReactNode;
   questionAction?: ((field: string) => ReactNode) | undefined;
+  documents: PublicItem[];
 }) {
   const [open, setOpen] = useState(false);
   const detail = item;
@@ -251,6 +275,7 @@ function Item({
             {item.nextStep}
           </p>
         )}
+        <RequirementDocuments ruleId={item.ruleId} documents={documents} />
         {item.sources.length > 0 && (
           <button
             type="button"

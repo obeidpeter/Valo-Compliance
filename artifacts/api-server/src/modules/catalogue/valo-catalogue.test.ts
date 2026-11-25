@@ -55,6 +55,36 @@ test("rights applicability is evidence-dependent, not an unconditional developme
   assert.equal(verifiedRightsApplicability({ ...fixture, checkedAt: "2025-01-01T00:00:00Z" }, now), false);
 });
 
+// docs/architecture/results.md, slice 1: a result finds the documents its rules relate by number.
+test("a staff library template is listed by the number of the registered template whose title it has, and no other entry has a number", () => {
+  const publishedAt = new Date("2026-11-25T10:00:00Z");
+  const row = (
+    kind: "template" | "premium_template" | "practical_guide" | "regulatory_article",
+    title: string,
+  ) =>
+    manualCatalogue({
+      id: "00000000-0000-4000-8000-000000000011",
+      slug: "manual-00000000-0000-4000-8000-000000000012",
+      industry: null,
+      body: "Synthetic manual body text for testing.",
+      purpose: null,
+      sourceCheckedAt: null,
+      publishedAt,
+      kind,
+      title,
+    });
+  // Filed as a registered template by its title, as the staff library's access check finds it, in
+  // any letter case: listed by that template's number and in its category.
+  assert.equal(row("template", "Invoice").templateNumber, "TPL-01");
+  const notice = row("premium_template", "privacy NOTICE");
+  assert.equal(notice.templateNumber, "TPL-29");
+  assert.equal(notice.category, "Privacy and data");
+  // A template with any other title, and anything that is not a template, has none.
+  assert.equal(row("premium_template", "Synthetic privacy notice").templateNumber, undefined);
+  assert.equal(row("practical_guide", "Invoice").templateNumber, undefined);
+  assert.equal(row("regulatory_article", "Privacy notice").templateNumber, undefined);
+});
+
 test("manualCatalogue maps regulatory articles to guidance, uses sourceCheckedAt, and maps baseline template categories", () => {
   const publishedAt = new Date("2026-11-22T10:00:00Z");
   const sourceCheckedAt = new Date("2026-11-22T15:30:00Z");

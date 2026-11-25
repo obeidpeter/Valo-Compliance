@@ -15,6 +15,11 @@ export interface PublicItem {
   summary: string;
   industry: string;
   templateId?: string;
+  /**
+     * A released template's number in the specification's list: a reviewed release's, or, for a staff library template, that of the registered template whose title it has. Absent for any other entry.
+     * @pattern ^TPL-[0-9]{2}$
+     */
+  templateNumber?: string;
   category?: string;
   access?: PublicItemAccess;
   /**

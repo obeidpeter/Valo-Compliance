@@ -3103,6 +3103,69 @@
       "proves": "For a signed-out visitor whose check matches no rule, the result still lists what Valo does not cover, under that heading. The result is a synthetic one answered in the page."
     },
     {
+      "requirement": "RUL-006",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/assessment-result.test.tsx",
+      "test": "each requirement lists the released documents its rule relates, the likely relevant ones are listed together as recommended documents, and a document that is not released is not named",
+      "proves": "Rendered on the server from a synthetic result and a synthetic released list, each requirement lists the released documents its rule relates, linked to their library pages, the likely relevant requirements' documents are listed again together under “Recommended documents”, apart from the requirements and before the official sources, and a related document the released list does not have is named nowhere."
+    },
+    {
+      "requirement": "RUL-006",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/assessment-result.test.tsx",
+      "test": "when the related documents cannot be loaded, the result says its requirements are not affected and offers to try again, in place of the recommended documents",
+      "proves": "When the released list cannot be read, a result says in place of the recommended documents that they could not be loaded and that the results are not affected, offers to try again, and still shows every requirement."
+    },
+    {
+      "requirement": "RUL-006",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/result-documents.test.ts",
+      "test": "a requirement lists the released documents with its numbers, in their order and each once, and nothing for a number with none released",
+      "proves": "The page lists for a requirement only released documents carrying one of its template numbers, in the order of the numbers and each once, and nothing for a number no released document has."
+    },
+    {
+      "requirement": "RUL-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/catalogue/valo-catalogue-discovery.test.ts",
+      "test": "a list of template numbers finds only the released templates with those numbers (docs/architecture/results.md)",
+      "proves": "Given template numbers, the released list returns only the released templates with those numbers and nothing without one, keeps its other filters, and its route takes up to twenty numbers written as “TPL-29” and refuses any other value."
+    },
+    {
+      "requirement": "RUL-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/catalogue/valo-catalogue.test.ts",
+      "test": "a staff library template is listed by the number of the registered template whose title it has, and no other entry has a number",
+      "proves": "A staff library template whose title is a registered template's, in any letter case, is listed by that template's number and in its category, and a template with another title, a guide and a regulatory article have no number."
+    },
+    {
+      "requirement": "RUL-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/owner-rule-signoff.test.ts",
+      "test": "each rule prepared in the repository relates only templates the specification lists: the personal-data rule the privacy notice, the others none",
+      "proves": "Each requirements-check rule prepared for the owner's sign-off relates only templates in the specification's list: the personal-data rule relates the privacy notice (TPL-29), and the business-name, company-return and product-registration rules relate none."
+    },
+    {
+      "requirement": "RUL-006",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-screens-accessibility.test.ts",
+      "test": "under each requirement are the released documents its rule relates, and the likely relevant requirements' documents are listed together as recommended documents; a document that is not released is not named, and when the documents cannot be loaded the visitor is told the results are not affected and can try again",
+      "proves": "On an emulated phone, a signed-out visitor's synthetic result asks the released list for its documents by number, lists the released one under its requirement and again under “Recommended documents”, both linked to its library page, never names the related document that is not released, and when the list fails says the results are not affected and loads it on “Try again”, with no automated WCAG 2.2 AA failure."
+    },
+    {
+      "requirement": "RUL-006",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-manual-library.integration.test.ts",
+      "test": "manual publishing through staff HTTP routes and public readers",
+      "proves": "Over HTTP against a synthetic database, a synthetic staff library template released under the privacy notice's registered title is found by the released list's filter for TPL-29 and named by that number, another number does not find it, a template with another title has no number, a number written any other way is refused, and once withdrawn it is no longer found."
+    },
+    {
+      "requirement": "RUL-006",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/catalogue/valo-saved-templates.integration.test.ts",
+      "test": "actual PostgreSQL saved-template ownership, durable state and blocked-release boundaries",
+      "proves": "A template released on the reviewed route and saved by a workspace is listed with its template's number (TPL-01)."
+    },
+    {
       "requirement": "RUL-004",
       "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",

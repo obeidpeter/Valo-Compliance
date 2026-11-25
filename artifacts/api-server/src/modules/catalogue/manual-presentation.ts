@@ -20,10 +20,10 @@ export const manualResourceKind = (row: Pick<PublicRevision, "kind">) =>
         : ("guide" as const);
 const summary = (row: Pick<PublicRevision, "body">) => row.body.replace(/\s+/g, " ").slice(0, 260);
 const disclosure = "Published by the Valo editorial team.";
-function manualTemplateCategory(title: string) {
-  const registered = baselineTemplates.find((entry) => entry.title.toLowerCase() === title.toLowerCase());
-  return registered ? templateCategory(registered.id) : "Business templates";
-}
+/** The registered template an entry is filed as, by its title, as the staff library's access check
+ * finds it. */
+const registeredTemplate = (title: string) =>
+  baselineTemplates.find((entry) => entry.title.toLowerCase() === title.toLowerCase());
 export function manualResource(row: PublicRevision) {
   const regulatory = row.kind === "regulatory_article";
   return {
@@ -52,6 +52,9 @@ export function manualResource(row: PublicRevision) {
 }
 export function manualCatalogue(row: CatalogueRow): ReleasedLibraryItem {
   const template = isManualTemplate(row.kind);
+  // A template filed as a registered one is listed by that template's number and category
+  // (docs/architecture/results.md).
+  const registered = template ? registeredTemplate(row.title) : undefined;
   return {
     id: row.id,
     slug: row.slug,
@@ -61,8 +64,11 @@ export function manualCatalogue(row: CatalogueRow): ReleasedLibraryItem {
     // A template released with its entry details is listed by what it is for.
     summary: (template && row.purpose) || summary(row),
     ...(template ? { templateId: row.slug } : {}),
+    ...(registered && { templateNumber: registered.id }),
     category: template
-      ? manualTemplateCategory(row.title)
+      ? registered
+        ? templateCategory(registered.id)
+        : "Business templates"
       : row.kind === "industry_introduction"
         ? "Industry introductions"
         : row.kind === "industry_pack"

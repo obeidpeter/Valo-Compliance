@@ -88,6 +88,27 @@ three, is released only when the owner signs it.
 
 ### Phase 1: documents worth paying for
 
+**Done on 25 November 2026.** Every row below is built, tested and merged into the integration
+branch:
+- the forms that produce the document
+  ([#249](https://github.com/obeidpeter/Valo-Compliance/pull/249) to
+  [#258](https://github.com/obeidpeter/Valo-Compliance/pull/258));
+- the finished file ([#259](https://github.com/obeidpeter/Valo-Compliance/pull/259));
+- the previews ([#260](https://github.com/obeidpeter/Valo-Compliance/pull/260));
+- the library templates as full entries
+  ([#261](https://github.com/obeidpeter/Valo-Compliance/pull/261) and
+  [#262](https://github.com/obeidpeter/Valo-Compliance/pull/262));
+- the editions ([#263](https://github.com/obeidpeter/Valo-Compliance/pull/263) and
+  [#264](https://github.com/obeidpeter/Valo-Compliance/pull/264));
+- the editor ([#265](https://github.com/obeidpeter/Valo-Compliance/pull/265) to
+  [#267](https://github.com/obeidpeter/Valo-Compliance/pull/267)).
+
+What is left of them is the owner's, as each design's points for the owner say:
+- the new words;
+- the licence text that states [delegated decision 3](#decisions-made-under-the-owners-delegation);
+- one file of each kind opened in Microsoft Word and in a standard PDF reader, which CI cannot do.
+  Until then EDT-006 is not accepted.
+
 | What is left | Requirements | Size |
 | --- | --- | --- |
 | **Forms that produce the document.** A form's file prints each question with its answer. For an invoice that is close to the document; for the five agreements it is not an agreement. Join each form to its template: the answers fill the template's own wording and layout, with clause choices where the template has them. This needs a second version of the forms. The freeze of 21 November is released for it, on the terms of [delegated decision 1](#decisions-made-under-the-owners-delegation) (checked twice). The design, with its slices, is [forms-v2.md](forms-v2.md): a form fills only wording released in the staff library, never the retained drafts | EDT-001, EDT-002, EDT-006 | L |
@@ -100,10 +121,17 @@ three, is released only when the owner signs it.
 
 ### Phase 2: a requirements check people can complete
 
+**The questions were done on 25 November 2026**
+([#268](https://github.com/obeidpeter/Valo-Compliance/pull/268) to
+[#271](https://github.com/obeidpeter/Valo-Compliance/pull/271)), apart from one part that waits on
+the owner. The local government area stays free text until a usable official copy of its list can
+be read; the design's fifth point for the owner asks for one. The results are built in the four
+slices of [their design](results.md).
+
 | What is left | Requirements | Size |
 | --- | --- | --- |
 | **The questions** ([design](requirements-questions.md)). The check's steps and nineteen questions are fixed in the web app. The prepared rules read none of them: they read an "optional details" panel of up to 23 fields with no skipping, not filled from the earlier answers. Hold the questionnaire as data, ask each released rule's questions in the main flow with skipping, give sector, product type and local government fixed choices, and let the earlier answers feed the rules (checked twice) | RUL-001 | L |
-| **Results.** Show the documents a rule recommends, which the engine returns and no screen shows; record a fee and a deadline with "confirm with the authority"; link each authority's own official route; say what a place or activity is not covered for; show the source-check, review and publication dates separately (checked twice for the recommended documents) | RUL-006, CMP-001, CMP-003, CMP-004, CMP-006, CMP-007, EDP-012 | M |
+| **Results** ([design](results.md)). Show the documents a rule recommends, which the engine returns and no screen shows; record a fee and a deadline with "confirm with the authority"; link each authority's own official route; say what a place or activity is not covered for; show the source-check, review and publication dates separately (checked twice for the recommended documents) | RUL-006, CMP-001, CMP-003, CMP-004, CMP-006, CMP-007, EDP-012 | M |
 | **Rule changes.** A new version or a withdrawal records its reason and who it affects, flags saved results and tasks made under the old one, and tells those customers. The owner's panel withdraws a rule with no reason recorded today | CMP-005, EDP-011, ADM-007, RUL-009 | M |
 | **The 80 scenarios through the live check.** The runner executes the research notes' calculations in their own format, not the check with released rules. Map the scenarios to the check's answers and run them against signed rules. Build the preparer for the separate AI run that challenges the expected results; running it needs AI spend | RUL-008 | M |
 

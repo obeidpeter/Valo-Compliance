@@ -8,6 +8,8 @@ export type ReleasedLibraryItem = {
   industry: string;
   summary: string;
   templateId?: string;
+  /** The template's number in the specification's list, when it is known (`TPL-29`). */
+  templateNumber?: string;
   category?: string;
   access?: "free" | "premium";
   amountKobo?: number;
@@ -17,6 +19,8 @@ export type ReleasedLibraryItem = {
   reviewedAt?: string;
   href?: string;
 };
+/** A template's number in the specification's list. */
+export const TEMPLATE_NUMBER = /^TPL-\d{2}$/;
 export type CatalogueQuery = {
   q?: string | undefined;
   type?: string | undefined;
@@ -25,6 +29,8 @@ export type CatalogueQuery = {
   access?: string | undefined;
   sort?: string | undefined;
   page?: number | undefined;
+  /** Only the templates with these numbers, comma-separated, as the route validated them. */
+  templateIds?: string | undefined;
 };
 const normal = (s: string) =>
   s
@@ -64,6 +70,7 @@ export function relevance(item: ReleasedLibraryItem, q: string) {
 export function paginateReleasedItems(released: ReleasedLibraryItem[], query: CatalogueQuery = {}) {
   const page = Number.isSafeInteger(query.page) && query.page! > 0 ? query.page! : 1;
   const q = query.q?.trim().slice(0, 120) ?? "";
+  const numbers = query.templateIds ? new Set(query.templateIds.split(",")) : undefined;
   const ranked = released
     .map((item, index) => ({ item, index, score: q ? relevance(item, q) : 0 }))
     .filter(
@@ -74,7 +81,8 @@ export function paginateReleasedItems(released: ReleasedLibraryItem[], query: Ca
           item.industry === "All industries" ||
           item.industry.split(",").includes(query.industry)) &&
         (!query.category || item.category === query.category) &&
-        (!query.access || query.access === "all" || item.access === query.access),
+        (!query.access || query.access === "all" || item.access === query.access) &&
+        (!numbers || (item.templateNumber !== undefined && numbers.has(item.templateNumber))),
     );
   ranked.sort((a, b) => {
     if (query.sort === "name")

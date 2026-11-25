@@ -114,6 +114,8 @@ test(
       await t.test("concurrent tabs persist one save and one event; new reads see it", async () => {
         await Promise.all(Array.from({ length: 6 }, () => service.saveTemplate(a, held.id)));
         assert.equal((await service.savedTemplateList(a)).items.length, 1);
+        // A reviewed release is listed by its template's number (docs/architecture/results.md).
+        assert.equal((await service.savedTemplateList(a)).items[0]!.current?.templateNumber, "TPL-01");
         assert.equal(
           (
             await db
