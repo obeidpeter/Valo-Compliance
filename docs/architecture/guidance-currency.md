@@ -123,10 +123,14 @@ Slice 2, its database and routes:
 - A review records its own time, so it cannot be dated in the past. The route refuses a regulatory
   guide, whose review is its source check, and any version but the published one.
 - An entry overdue for its review is held from: the public library's pages and lists, a free template's
-  download, the templates a workspace can save, copying a free template into a new document, the
-  premium offers and starting an order. What a buyer already has stays: their purchased file, their
-  documents and starting a document from the edition they bought. The owner's price command refuses an
-  overdue template too, and says why.
+  download, the templates a workspace can save, copying a free template into a new document, starting
+  a free template's form from its wording, the premium offers and starting an order. What a buyer
+  already has stays: their purchased file, which their purchases still list, their documents and
+  starting a document from the edition they bought. A template a workspace saved stays saved, shown as
+  not available, as a withdrawn one is. The owner's price command refuses an overdue template too, and
+  says why.
+- A payment made while a premium template was offered, and verified after it fell due for its review,
+  still grants it.
 
 Slice 2, its staff screen:
 - Under each published entry other than a regulatory guide, the list says "Review due 23 Feb 2027" or
