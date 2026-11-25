@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { PreviewAssessmentBody } from "@workspace/api-zod";
 import {
   checkerFactsSchema,
+  coveragePlan,
   factNames,
   missingQuestions,
   richBusinessNameSchema,
@@ -13,9 +15,11 @@ import {
 import {
   CHECKER_QUESTIONNAIRE,
   CHECKER_QUESTIONS,
+  INDUSTRIES,
   NAMING_QUESTIONS,
   NOT_ANSWERED,
   PARTNER_QUESTIONS,
+  PRODUCT_KINDS,
   RULE_FAMILIES,
   RULE_FEEDS,
   RULE_QUESTIONS,
@@ -141,6 +145,13 @@ test("a condition reads an answer, a list of answers, a rule's way of not answer
   assert.equal(holds({ answer: "activities", is: ["retail/wholesale"] }, answers), true);
   assert.equal(holds({ answer: "activities", isNot: ["retail/wholesale"] }, answers), false);
   assert.equal(holds({ answer: "rich.privacy.operatesInNigeria", is: ["unknown"] }, answers), true);
+  // "Only": the answer is that one value, or a list of that one entry.
+  assert.equal(holds({ answer: "manufacturing", isOnly: "yes" }, answers), true);
+  assert.equal(holds({ answer: "activities", isOnly: "retail/wholesale" }, answers), false);
+  assert.equal(holds({ answer: "x", isOnly: "cosmetic" }, { x: ["cosmetic"] }), true);
+  assert.equal(holds({ answer: "x", isOnly: "cosmetic" }, { x: ["cosmetic", "water"] }), false);
+  assert.equal(holds({ answer: "x", isOnly: "cosmetic" }, { x: [] }), false);
+  assert.equal(holds({ answer: "importing", isOnly: "no" }, answers), false);
   // No answer is none of the values, and is not one of them.
   assert.equal(holds({ answer: "importing", isNot: ["no"] }, answers), true);
   assert.equal(holds({ answer: "importing", is: ["no"] }, answers), false);
@@ -250,7 +261,8 @@ test("over many sets of answers, the result lists exactly the questions the page
     };
     return [
       ...(given[answer] ?? []),
-      ...(question.choices ?? []).map((choice) => choice.value),
+      // A list's choice is given as a list of that one entry.
+      ...(question.choices ?? []).map((choice) => (question.kind === "list" ? [choice.value] : choice.value)),
       ...(answer === "turnoverAmountKobo" ? [] : NOT_ANSWERED),
     ];
   };
@@ -400,6 +412,13 @@ test("earlier answers fill a rule's answers exactly as the design's table lists,
   assert.deepEqual(filledBy({ personalData: "yes" }), { "rich.privacy.processesPersonalData": true });
   // "No" to the personal-data question fills nothing: it asks about customers and staff only.
   assert.deepEqual(filledBy({ personalData: "no" }), {});
+  // Exactly one of the Act's kinds of product, and nothing else, is the particular product.
+  for (const kind of PRODUCT_KINDS)
+    assert.deepEqual(filledBy({ productTypes: [kind.value] }), {
+      "rich.product.productCategory": kind.value,
+    });
+  for (const productTypes of [["cosmetic", "water"], ["cosmetic", "Hair oil"], ["Hair oil"], []])
+    assert.deepEqual(filledBy({ productTypes }), {}, JSON.stringify(productTypes));
   // Not knowing, skipping or not applying settles nothing, so it fills nothing.
   for (const marker of NOT_ANSWERED)
     assert.deepEqual(
@@ -540,4 +559,58 @@ test("a saved check's filled answers are read as filled when it is loaded again,
   );
   const plain = { legalForm: "partnership" };
   assert.equal(withoutFilledAnswers(plain), plain);
+});
+
+test("what the business does is chosen from the specification's twenty industries, and its products from the Act's six kinds, each held as its source writes it", () => {
+  // VALO-TRD-001, "Industry taxonomy and depth": the categories, verbatim and in order.
+  const trd = readFileSync(
+    new URL("../../../../../docs/specification/VALO-TRD-001-v1.1.txt", import.meta.url),
+    "utf8",
+  );
+  const line = trd.split("\n").find((each) => each.startsWith("Categories: "));
+  assert.ok(line, "the TRD lists the industry categories");
+  assert.deepEqual(
+    [...INDUSTRIES],
+    line
+      .replace(/^Categories: /, "")
+      .replace(/\.$/, "")
+      .split("; "),
+  );
+  // The site's industries are the same list, named on a page with a capital first letter.
+  assert.deepEqual(
+    coveragePlan().industries.map((industry) => industry.title),
+    [...INDUSTRIES],
+  );
+  const activities = CHECKER_QUESTIONS.find((question) => question.answer === "activities")!;
+  assert.deepEqual(
+    activities.choices,
+    INDUSTRIES.map((industry) => ({
+      value: industry,
+      label: industry.charAt(0).toUpperCase() + industry.slice(1),
+    })),
+  );
+  // Section 1(1) of the Act, in the copy its rule was prepared from, names the six kinds in order.
+  const act = readFileSync(
+    new URL("../../../../../docs/content-candidates/source-evidence/nafdac_cap_f33.txt", import.meta.url),
+    "utf8",
+  );
+  assert.match(act, /No processed food, drug, drug product, cosmetic, medical device or water/);
+  assert.deepEqual(
+    PRODUCT_KINDS.map((kind) => kind.label.toLowerCase()),
+    ["processed food", "drug", "drug product", "cosmetic", "medical device", "water"],
+  );
+  assert.deepEqual(
+    CHECKER_QUESTIONS.find((question) => question.answer === "productTypes")!.choices,
+    PRODUCT_KINDS,
+  );
+  // Each kind is held as the product rule's own value, which its question on the particular product
+  // offers.
+  const category = RULE_QUESTIONS.product.find((question) => question.key === "productCategory")!;
+  for (const kind of PRODUCT_KINDS) {
+    assert.ok(richProductSchema.safeParse({ productCategory: kind.value }).success, kind.value);
+    assert.ok(
+      category.choices?.some((choice) => choice.value === kind.value && choice.label === kind.label),
+      kind.value,
+    );
+  }
 });

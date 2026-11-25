@@ -15,13 +15,16 @@ export type AnswerValue = string | boolean;
 /**
  * When a question is asked: a condition on earlier answers. `is` holds when the answer is one of the
  * values, or when a list of answers holds one of them. `isNot` holds when it is none of them, so it
- * holds for a question not answered at all. `answered` holds when there is an answer that is not one
- * of the three ways of not answering, an empty text or an empty list. An answer of a rule's question
- * that says how it was not answered (`{ status: "unknown", value: null }`) is read as that status.
+ * holds for a question not answered at all. `isOnly` holds when the answer is that one value: the
+ * answer itself, or a list of that one entry. `answered` holds when there is an answer that is not
+ * one of the three ways of not answering, an empty text or an empty list. An answer of a rule's
+ * question that says how it was not answered (`{ status: "unknown", value: null }`) is read as that
+ * status.
  */
 export type When =
   | { readonly answer: string; readonly is: readonly AnswerValue[] }
   | { readonly answer: string; readonly isNot: readonly AnswerValue[] }
+  | { readonly answer: string; readonly isOnly: AnswerValue }
   | { readonly answer: string; readonly answered: true }
   | { readonly all: readonly When[] }
   | { readonly any: readonly When[] };
@@ -122,6 +125,49 @@ const yesNo: readonly Choice[] = [
   { value: "yes", label: "Yes" },
   { value: "no", label: "No" },
 ];
+
+/**
+ * The specification's twenty industries, as it writes them (VALO-TRD-001, "Industry taxonomy and
+ * depth"). An answer holds each as written, so that a rule can test for one by its exact name. The
+ * site names one as it is written, with a capital first letter.
+ */
+export const INDUSTRIES = [
+  "retail/wholesale",
+  "packaged-food manufacturing",
+  "restaurants/hospitality",
+  "agriculture",
+  "general manufacturing",
+  "logistics/transport",
+  "construction",
+  "real estate",
+  "technology/software",
+  "e-commerce",
+  "beauty/personal care",
+  "fashion/textiles",
+  "healthcare",
+  "education",
+  "professional services",
+  "media/creative",
+  "import/export",
+  "energy",
+  "financial services",
+  "other",
+] as const;
+
+/**
+ * The kinds of product section 1(1) of the product-registration Act names: "processed food, drug,
+ * drug product, cosmetic, medical device or water", in the copy its rule was prepared from
+ * (docs/content-candidates/source-evidence/nafdac_cap_f33.txt). An answer holds each as the rule's
+ * own value, so that one chosen kind fills the rule's answer.
+ */
+export const PRODUCT_KINDS: readonly Choice[] = [
+  { value: "processed_food", label: "Processed food" },
+  { value: "drug", label: "Drug" },
+  { value: "drug_product", label: "Drug product" },
+  { value: "cosmetic", label: "Cosmetic" },
+  { value: "medical_device", label: "Medical device" },
+  { value: "water", label: "Water" },
+];
 const KNOWN_OR_SKIPPED = ["unknown", "unanswered"] as const satisfies readonly NotAnswered[];
 const TURNOVER_APPLIES: When = { answer: "turnoverBand", isNot: ["not_applicable"] };
 
@@ -173,8 +219,12 @@ export const CHECKER_QUESTIONNAIRE: readonly CheckerStep[] = [
         answer: "activities",
         kind: "list",
         label: "What does the business do?",
-        hint: "In your own words. You can add up to 10.",
+        hint: "Choose any that fit, and add your own words if you like. Up to 10 in all.",
         placeholder: "e.g. Selling fabric wholesale",
+        choices: INDUSTRIES.map((industry) => ({
+          value: industry,
+          label: industry.charAt(0).toUpperCase() + industry.slice(1),
+        })),
         notAnswered: KNOWN_OR_SKIPPED,
       },
       {
@@ -195,8 +245,9 @@ export const CHECKER_QUESTIONNAIRE: readonly CheckerStep[] = [
         answer: "productTypes",
         kind: "list",
         label: "Which kinds of product?",
-        hint: "Asked because you make, process or import goods, or are not sure whether you do.",
+        hint: "Asked because you make, process or import goods, or are not sure whether you do. Choose any that fit, and add other products in your own words.",
         placeholder: "e.g. Packaged snacks",
+        choices: PRODUCT_KINDS,
         notAnswered: KNOWN_OR_SKIPPED,
         // Asked too of a business that does not know whether it makes or imports goods: the rules
         // that read the products need them unless it does neither.
@@ -393,6 +444,7 @@ export function holds(when: When, answers: unknown): boolean {
       !(Array.isArray(value) && value.length === 0)
     );
   const values: readonly unknown[] = Array.isArray(value) ? value : [value];
+  if ("isOnly" in when) return values.length === 1 && values[0] === when.isOnly;
   const matches = (list: readonly AnswerValue[]) =>
     values.some((entry) => list.some((item) => item === entry));
   return "is" in when ? matches(when.is) : !matches(when.isNot);
@@ -930,6 +982,7 @@ const productQuestions: readonly RuleQuestion[] = [
       { value: "claimed_cosmetic", label: "Described as cosmetic, with classification unresolved" },
       { value: "water", label: "Water" },
       { value: "drug", label: "Drug" },
+      { value: "drug_product", label: "Drug product" },
       { value: "medical_device", label: "Medical device" },
       { value: "live_fish", label: "Live fish" },
       { value: "other", label: "Another product" },
@@ -1150,6 +1203,13 @@ export const RULE_FEEDS: readonly Feed[] = [
     fills: privacy("processesPersonalData"),
     value: true,
   },
+  // One kind of product, and nothing else, is the particular product the rule asks about.
+  ...PRODUCT_KINDS.map((kind): Feed => ({
+    from: ["productTypes"],
+    when: { answer: "productTypes", isOnly: kind.value },
+    fills: product("productCategory"),
+    value: kind.value,
+  })),
 ];
 
 /** The feed that fills a rule's answer now, if any. */

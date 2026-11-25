@@ -220,7 +220,8 @@ export function RuleQuestions({
     onChange(updateRichAnswer(facts, family, key, value));
   const shown: ReactNode[] = RULE_QUESTIONS[family].filter(asked).map((question) => {
     const id = `rich-${family}-${question.key}`;
-    const feed = feedFor(facts, `rich.${family}.${question.key}`);
+    // An earlier answer fills it as it is sent: a question the check skips fills nothing.
+    const feed = feedFor(sent, `rich.${family}.${question.key}`);
     return feed ? (
       <FilledAnswer key={question.key} question={question} id={id} feed={feed} onGoTo={onGoTo} />
     ) : (
