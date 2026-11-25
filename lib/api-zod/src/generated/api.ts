@@ -114,6 +114,18 @@ export const listAcceptanceRunResponseRunOneMetMin = 0;
 
 export const listAcceptanceRunResponseRunOneNotMetMin = 0;
 
+export const listAcceptanceRunResponseRunOneScoreScoredMin = 0;
+
+export const listAcceptanceRunResponseRunOneScoreCountedMin = 0;
+
+export const listAcceptanceRunResponseRunOneScoreExcludedMin = 0;
+
+export const listAcceptanceRunResponseRunOneScoreNotCountedMin = 0;
+
+export const listAcceptanceRunResponseRunOneScoreRequiredMin = 0;
+
+export const listAcceptanceRunResponseRunOneScoreCriticalMin = 0;
+
 
 
 export const ListAcceptanceRunResponse = zod.object({
@@ -150,7 +162,17 @@ export const ListAcceptanceRunResponse = zod.object({
   "decisions": zod.int().min(listAcceptanceRunResponseRunOneLeftItemDecisionsMin)
 })).describe('The cases the run left for a reviewer.'),
   "met": zod.int().min(listAcceptanceRunResponseRunOneMetMin),
-  "notMet": zod.int().min(listAcceptanceRunResponseRunOneNotMetMin)
+  "notMet": zod.int().min(listAcceptanceRunResponseRunOneNotMetMin),
+  "score": zod.object({
+  "scored": zod.int().min(listAcceptanceRunResponseRunOneScoreScoredMin).describe('The cases left in the score.'),
+  "counted": zod.int().min(listAcceptanceRunResponseRunOneScoreCountedMin),
+  "excluded": zod.int().min(listAcceptanceRunResponseRunOneScoreExcludedMin).describe('The cases whose expected outcome was rejected.'),
+  "notCounted": zod.int().min(listAcceptanceRunResponseRunOneScoreNotCountedMin),
+  "required": zod.int().min(listAcceptanceRunResponseRunOneScoreRequiredMin).describe('How many scored cases the requirement asks to count.'),
+  "critical": zod.int().min(listAcceptanceRunResponseRunOneScoreCriticalMin).describe('The cases the suite marks a critical failure.'),
+  "meetsBar": zod.boolean().describe('Whether the counted cases reach the bar with no critical failure. Not acceptance.'),
+  "recordHash": zod.string().describe('The hash of every row of the record the score used.')
+}).describe('The run scored with the reviewer\'s record. A case counts only when its expected outcome is confirmed for its hash and, where the suite cannot score it, the run is recorded as met for the case as kept; a rejected expected outcome takes the case out of the score. Nothing here accepts a requirement.')
 }),zod.null()]).describe('The latest kept run, or null when none is kept.')
 })
 
@@ -185,6 +207,18 @@ export const recordAcceptanceRunDecisionResponseRunOneLeftItemDecisionsMin = 0;
 export const recordAcceptanceRunDecisionResponseRunOneMetMin = 0;
 
 export const recordAcceptanceRunDecisionResponseRunOneNotMetMin = 0;
+
+export const recordAcceptanceRunDecisionResponseRunOneScoreScoredMin = 0;
+
+export const recordAcceptanceRunDecisionResponseRunOneScoreCountedMin = 0;
+
+export const recordAcceptanceRunDecisionResponseRunOneScoreExcludedMin = 0;
+
+export const recordAcceptanceRunDecisionResponseRunOneScoreNotCountedMin = 0;
+
+export const recordAcceptanceRunDecisionResponseRunOneScoreRequiredMin = 0;
+
+export const recordAcceptanceRunDecisionResponseRunOneScoreCriticalMin = 0;
 
 
 
@@ -222,7 +256,17 @@ export const RecordAcceptanceRunDecisionResponse = zod.object({
   "decisions": zod.int().min(recordAcceptanceRunDecisionResponseRunOneLeftItemDecisionsMin)
 })).describe('The cases the run left for a reviewer.'),
   "met": zod.int().min(recordAcceptanceRunDecisionResponseRunOneMetMin),
-  "notMet": zod.int().min(recordAcceptanceRunDecisionResponseRunOneNotMetMin)
+  "notMet": zod.int().min(recordAcceptanceRunDecisionResponseRunOneNotMetMin),
+  "score": zod.object({
+  "scored": zod.int().min(recordAcceptanceRunDecisionResponseRunOneScoreScoredMin).describe('The cases left in the score.'),
+  "counted": zod.int().min(recordAcceptanceRunDecisionResponseRunOneScoreCountedMin),
+  "excluded": zod.int().min(recordAcceptanceRunDecisionResponseRunOneScoreExcludedMin).describe('The cases whose expected outcome was rejected.'),
+  "notCounted": zod.int().min(recordAcceptanceRunDecisionResponseRunOneScoreNotCountedMin),
+  "required": zod.int().min(recordAcceptanceRunDecisionResponseRunOneScoreRequiredMin).describe('How many scored cases the requirement asks to count.'),
+  "critical": zod.int().min(recordAcceptanceRunDecisionResponseRunOneScoreCriticalMin).describe('The cases the suite marks a critical failure.'),
+  "meetsBar": zod.boolean().describe('Whether the counted cases reach the bar with no critical failure. Not acceptance.'),
+  "recordHash": zod.string().describe('The hash of every row of the record the score used.')
+}).describe('The run scored with the reviewer\'s record. A case counts only when its expected outcome is confirmed for its hash and, where the suite cannot score it, the run is recorded as met for the case as kept; a rejected expected outcome takes the case out of the score. Nothing here accepts a requirement.')
 }),zod.null()]).describe('The latest kept run, or null when none is kept.')
 })
 

@@ -7,6 +7,7 @@ import type { StaffActor } from "../staff";
 import { corpusCases, corpusFileHash, type AcceptanceCorpus } from "./acceptance-cases";
 import { asReviewer, corpusOf, iso, type Tx } from "./acceptance-review";
 import { hashedKeptCase, type HashedKeptCase, type KeptCase } from "./kept-runs";
+import { scoreKeptRun, type RecordRow } from "./reviewed-score";
 
 /**
  * Runs kept for an independent reviewer (decision 0016, docs/architecture/reviewer-record.md, slice 2).
@@ -63,6 +64,74 @@ function migrated<T>(work: Promise<T>) {
   });
 }
 
+/** A kept run scored with the record: every expected outcome decided on the corpus, and the run's own decisions. */
+async function scoreOf(
+  tx: Pick<Tx, "execute">,
+  corpus: AcceptanceCorpus,
+  run: { id: string; resultsHash: string; cases: HashedKeptCase[] },
+) {
+  const rows = (
+    await tx.execute(sql`select id,judgment,case_id,case_hash,run_id,results_hash,answer,reason,reviewer,created_at
+      from valo_acceptance_reviews where corpus=${corpus} and (judgment='expected_outcome' or run_id=${run.id})`)
+  ).rows;
+  return scoreKeptRun(
+    corpus,
+    run,
+    rows.map((row): RecordRow => ({
+      id: String(row.id),
+      judgment: String(row.judgment) as RecordRow["judgment"],
+      caseId: String(row.case_id),
+      caseHash: String(row.case_hash),
+      runId: row.run_id === null ? null : String(row.run_id),
+      resultsHash: row.results_hash === null ? null : String(row.results_hash),
+      answer: String(row.answer) as RecordRow["answer"],
+      reason: String(row.reason),
+      reviewer: String(row.reviewer),
+      createdAt: iso(row.created_at),
+    })),
+  );
+}
+
+/**
+ * A kept run of a corpus scored with the reviewer's record (slice 3): the latest kept run, or the one
+ * named, read in one snapshot. Operator commands only, in development; it writes nothing.
+ */
+export async function acceptanceScore(corpus: AcceptanceCorpus, runId?: string) {
+  assertDevelopmentRuntime();
+  const { db } = await import("@workspace/db");
+  return migrated(
+    db.transaction(async (tx) => {
+      await tx.execute(sql`set transaction isolation level repeatable read, read only`);
+      const [run] = (
+        runId
+          ? await tx.execute(sql`select id,summary,cases,results_hash,kept_by,created_at from valo_acceptance_runs
+              where id::text=${runId} and corpus=${corpus}`)
+          : await tx.execute(sql`select id,summary,cases,results_hash,kept_by,created_at from valo_acceptance_runs
+              where corpus=${corpus} order by created_at desc,id desc limit 1`)
+      ).rows;
+      if (!run)
+        throw new Error(
+          runId ? "There is no such kept run of this corpus." : "No run of this corpus is kept.",
+        );
+      const kept = {
+        id: String(run.id),
+        resultsHash: String(run.results_hash),
+        cases: run.cases as HashedKeptCase[],
+      };
+      return {
+        run: {
+          id: kept.id,
+          keptBy: String(run.kept_by),
+          createdAt: iso(run.created_at),
+          resultsHash: kept.resultsHash,
+          summary: run.summary as string[],
+        },
+        score: await scoreOf(tx, corpus, kept),
+      };
+    }),
+  );
+}
+
 /** The latest kept run of a corpus, with the latest decision on each case it left for a reviewer. */
 async function latestRun(tx: Tx, corpus: AcceptanceCorpus) {
   const [run] = (
@@ -107,6 +176,7 @@ async function latestRun(tx: Tx, corpus: AcceptanceCorpus) {
         decisions: row ? Number(row.decisions) : 0,
       };
     });
+  const score = await scoreOf(tx, corpus, { id: runId, resultsHash: String(run.results_hash), cases });
   return {
     corpus,
     run: {
@@ -120,6 +190,17 @@ async function latestRun(tx: Tx, corpus: AcceptanceCorpus) {
       left,
       met: left.filter((item) => item.decision?.answer === "met").length,
       notMet: left.filter((item) => item.decision?.answer === "not_met").length,
+      // The run scored with the record (slice 3). Nothing here accepts a requirement.
+      score: {
+        scored: score.scored,
+        counted: score.counted,
+        excluded: score.excluded,
+        notCounted: score.notCounted,
+        required: score.required,
+        critical: score.critical,
+        meetsBar: score.meetsBar,
+        recordHash: score.recordHash,
+      },
     },
   };
 }

@@ -151,6 +151,28 @@ Slice 2:
 - The page shows the latest kept run of each corpus beside its expected outcomes. A newer run is shown
   in place of an older one, and decisions stay with the run they were made on.
 
+Slice 3:
+- A kept run is scored with the record by the command `valo:acceptance-score` (`--corpus`, and
+  optionally `--run` and `--export`), and the page shows each corpus's latest kept run with its score.
+- A case counts only when:
+  - the latest decision on its expected outcome, for the case's own hash, is a confirmation;
+  - and either the suite passed the case itself (editorial `control_pass` or `case_pass`, checker
+    `matches_expected`, customer AI `control_pass`), or the run left the case for a reviewer and the
+    latest decision on the case as kept in that run is "met".
+- A case whose latest expected-outcome decision is a rejection is out of the score. A decision on
+  another hash of a case, or on another run, is never read.
+- The bar for each requirement:
+  - EDP-010 and AI-008 ask that at least 95% of the scored cases count;
+  - RUL-008 asks that all critical results and exclusions pass, so every scored scenario must count.
+
+  A case the suite marks a critical failure fails the bar however many count: an editorial critical
+  false publication, or a scenario whose result breaks one of the corpus's conditions. A kept case
+  carries that mark only when it is true, so a case without it hashes as it did in slice 2.
+- The score names every row of the record it used, by id and by the hash of the row as read, with a
+  hash of them all. `--export` writes the run, the score and those rows to a new file, never over one.
+- The score accepts nothing. Whether it meets the bar is evidence for the owner, who alone accepts a
+  requirement.
+
 ## Decision 0016's points, under the owner's delegation
 
 The owner approved the finishing plan with "Implement all (make the best decisions for me)". This row

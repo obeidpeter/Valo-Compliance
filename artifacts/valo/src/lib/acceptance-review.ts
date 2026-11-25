@@ -120,3 +120,22 @@ export function runDecisionLine(
 export function recordedRunMessage(caseId: string, answer: "met" | "not_met") {
   return `Recorded: you decided the run ${answer === "met" ? "met" : "did not meet"} ${caseId}.`;
 }
+
+/** The kept run scored with the record (slice 3). It accepts nothing. */
+export function runScoreLine(score: {
+  scored: number;
+  counted: number;
+  excluded: number;
+  required: number;
+  critical: number;
+}) {
+  const out =
+    score.excluded > 0
+      ? ` ${formatCount(score.excluded)} ${score.excluded === 1 ? "case is" : "cases are"} out of the score, their expected outcome rejected.`
+      : "";
+  const critical =
+    score.critical > 0
+      ? ` ${formatCount(score.critical)} ${score.critical === 1 ? "case is a critical failure" : "cases are critical failures"}, so the bar is not met.`
+      : "";
+  return `With the record, ${formatCount(score.counted)} of ${formatCount(score.scored)} scored cases count, and ${formatCount(score.required)} must count.${out}${critical} This accepts no requirement.`;
+}

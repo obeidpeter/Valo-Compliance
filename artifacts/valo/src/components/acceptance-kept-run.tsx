@@ -23,6 +23,7 @@ import {
   runDecisionLine,
   runIntro,
   runReasonHint,
+  runScoreLine,
   runStatusesLine,
   runTallyLine,
   saveButton,
@@ -113,6 +114,9 @@ export function AcceptanceKeptRun({
           </div>
           <p className="mt-3 text-sm" data-testid="text-acceptance-run-tally">
             {runTallyLine(run.left.length, run.met, run.notMet)}
+          </p>
+          <p className="mt-1 text-sm" data-testid="text-acceptance-run-score">
+            {runScoreLine(run.score)}
           </p>
           <p ref={status} tabIndex={-1} className="mt-3 text-sm" role="status" aria-live="polite">
             {message}

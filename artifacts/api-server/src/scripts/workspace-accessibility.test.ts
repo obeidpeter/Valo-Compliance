@@ -288,6 +288,16 @@ function acceptanceRun(corpus: string) {
       left: [left("CHK-CAND-SYNTH-001", true), left("CHK-CAND-SYNTH-002", false)],
       met: 1,
       notMet: 0,
+      score: {
+        scored: 80,
+        counted: 1,
+        excluded: 0,
+        notCounted: 79,
+        required: 80,
+        critical: 0,
+        meetsBar: false,
+        recordHash: "b".repeat(64),
+      },
     },
   });
 }
@@ -5263,6 +5273,9 @@ test("an acceptance reviewer reads the latest kept run of a corpus, and records 
     await expect(run).toContainText("The suite's own results: 2 differs, 78 matches expected.");
     await expect(page.getByTestId("text-acceptance-run-tally")).toHaveText(
       "1 met, 0 not met and 1 without a decision, of 2 left for a reviewer.",
+    );
+    await expect(page.getByTestId("text-acceptance-run-score")).toHaveText(
+      "With the record, 1 of 80 scored cases count, and 80 must count. This accepts no requirement.",
     );
     await expect(page.getByTestId("run-decision-CHK-CAND-SYNTH-001")).toContainText(
       "Met, by user_synthetic_reviewer on",

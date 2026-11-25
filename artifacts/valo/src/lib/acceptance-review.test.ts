@@ -11,6 +11,7 @@ import {
   runCaseStatusLine,
   runDecisionLine,
   runIntro,
+  runScoreLine,
   runStatusesLine,
   runTallyLine,
   shownUnder,
@@ -123,5 +124,16 @@ test("the latest kept run says who kept it and when, the suite's own results, an
   assert.equal(
     recordedRunMessage("CHK-CAND-NDPA-009", "not_met"),
     "Recorded: you decided the run did not meet CHK-CAND-NDPA-009.",
+  );
+});
+
+test("the kept run's score says how many cases count of how many, what the bar asks, what is out of it, and that it accepts no requirement", () => {
+  assert.equal(
+    runScoreLine({ scored: 79, counted: 4, excluded: 1, required: 79, critical: 0 }),
+    "With the record, 4 of 79 scored cases count, and 79 must count. 1 case is out of the score, their expected outcome rejected. This accepts no requirement.",
+  );
+  assert.equal(
+    runScoreLine({ scored: 60, counted: 58, excluded: 0, required: 57, critical: 2 }),
+    "With the record, 58 of 60 scored cases count, and 57 must count. 2 cases are critical failures, so the bar is not met. This accepts no requirement.",
   );
 });

@@ -529,6 +529,40 @@ export interface AcceptanceRunStatus {
   count: number;
 }
 
+/**
+ * The run scored with the reviewer's record. A case counts only when its expected outcome is confirmed for its hash and, where the suite cannot score it, the run is recorded as met for the case as kept; a rejected expected outcome takes the case out of the score. Nothing here accepts a requirement.
+ */
+export interface AcceptanceRunScore {
+  /**
+     * The cases left in the score.
+     * @minimum 0
+     */
+  scored: number;
+  /** @minimum 0 */
+  counted: number;
+  /**
+     * The cases whose expected outcome was rejected.
+     * @minimum 0
+     */
+  excluded: number;
+  /** @minimum 0 */
+  notCounted: number;
+  /**
+     * How many scored cases the requirement asks to count.
+     * @minimum 0
+     */
+  required: number;
+  /**
+     * The cases the suite marks a critical failure.
+     * @minimum 0
+     */
+  critical: number;
+  /** Whether the counted cases reach the bar with no critical failure. Not acceptance. */
+  meetsBar: boolean;
+  /** The hash of every row of the record the score used. */
+  recordHash: string;
+}
+
 export interface AcceptanceRun {
   id: string;
   keptBy: string;
@@ -544,6 +578,7 @@ export interface AcceptanceRun {
   met: number;
   /** @minimum 0 */
   notMet: number;
+  score: AcceptanceRunScore;
 }
 
 export type AcceptanceRunViewCorpus = typeof AcceptanceRunViewCorpus[keyof typeof AcceptanceRunViewCorpus];
