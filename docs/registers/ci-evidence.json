@@ -3479,6 +3479,27 @@
       "file": "artifacts/valo/src/components/edition-notices.test.tsx",
       "test": "a notice names the template, its version and what happened, says what it means for the purchase and the documents, and that downloaded files are not affected",
       "proves": "A notice of a replaced version says the purchase carries to the new version at no further charge and that the documents made from it are unchanged; a notice of a withdrawn version gives the reason and the remedies: the replacement when one is released, or a refund under the refund policy."
+    },
+    {
+      "requirement": "EDT-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/printed-page-files.test.ts",
+      "test": "a document's Word file and PDF print its page word for word, for each kind of document, as a draft and as a finished file",
+      "proves": "The Word file and the PDF of a typed document, an invoice made from questions with 40 items, a document shaped as a v2 form and a library copy each print, word for word, the one description of the page that the editor's preview draws, as a draft and as a finished file, with the notice on every page."
+    },
+    {
+      "requirement": "EDT-002",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/document-preview.test.tsx",
+      "test": "the editor's preview prints the page its Word file and PDF print, word for word, for each kind of document",
+      "proves": "The editor's preview prints, word for word, the page the document's Word file and PDF print, for the same four kinds of document, with the notice its file would carry, \"[Not supplied]\" for an empty field and the file's line under the title."
+    },
+    {
+      "requirement": "EDT-002",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/document-preview.test.tsx",
+      "test": "\"Copy text\" is the page as plain text: the notice, the title and its version, the details, then the document",
+      "proves": "\"Copy text\" copies the same page as plain text, starting with its notice, and prints a form document's details from its text only."
     }
   ]
 }
