@@ -765,14 +765,25 @@ export interface CommerceOrder {
   disputeStatus: string | null;
 }
 
+/**
+ * Present when the edition bought was replaced: the download is the template's released edition, which the purchase carries to at no further charge (docs/architecture/editions.md).
+ */
+export type OwnedCheckoutDownloadCarried = {
+  boughtVersion: number;
+  version: number;
+};
+
 export interface OwnedCheckoutDownload {
   offerId: string;
-  edition: string;
   title: string;
-  /** Same-origin file path that rechecks the purchased edition on every download. */
+  /** The edition bought. */
+  edition: string;
+  /** Same-origin file path that rechecks the purchase on every download. */
   downloadPath: string;
   /** Optional same-origin PDF file path for multi-format reviewed editions. */
   pdfDownloadPath?: string;
+  /** Present when the edition bought was replaced: the download is the template's released edition, which the purchase carries to at no further charge (docs/architecture/editions.md). */
+  carried?: OwnedCheckoutDownloadCarried;
 }
 
 export interface CustomerPurchases {

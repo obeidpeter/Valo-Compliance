@@ -18,7 +18,8 @@ test(
   async () => {
     assert.equal(process.env.NODE_ENV, "development");
     assert.ok(!process.env.REPLIT_DEPLOYMENT);
-    const { db, pool, valoEntitlements, valoOrders, valoPrices } = await import("@workspace/db");
+    const { db, pool, valoContentVersions, valoEntitlements, valoOrders, valoPrices } =
+      await import("@workspace/db");
     const { resolveWorkspace } = await import("../workspaces");
     const { financeHeldFixture } = await import("../commerce/valo-finance-test-fixture");
     const { requirePurchaseForPricedMaster } = await import("./valo-released-content");
@@ -73,8 +74,34 @@ test(
 
       await release(purchaser);
       await assert.rejects(release(other), { status: 403 }, "another workspace's purchase grants nothing");
+      // A purchase of one version carries to a later version of the same template at no further
+      // charge, though the later one has no price of its own (docs/architecture/editions.md, slice 2).
+      const versions = await db
+        .select({ version: valoContentVersions.version })
+        .from(valoContentVersions)
+        .where(eq(valoContentVersions.templateId, held.templateId));
+      const next = Math.max(...versions.map((row) => row.version)) + 1;
+      const [later] = await db
+        .insert(valoContentVersions)
+        .values({
+          id: randomUUID(),
+          templateId: held.templateId,
+          version: next,
+          slug: held.slug + "-v" + next,
+          policyId: held.policyId,
+          candidateHash: held.candidateHash,
+          bundle: held.bundle,
+          attestations: held.attestations,
+          reviewBy: held.reviewBy,
+        })
+        .returning();
+      const releaseLater = (actor: typeof purchaser) =>
+        db.transaction((tx) => requirePurchaseForPricedMaster(tx, actor, later!));
+      await releaseLater(purchaser);
+      await assert.rejects(releaseLater(other), { status: 403 }, "a carried purchase stays its workspace's");
       await db.update(valoEntitlements).set({ status: "suspended" }).where(eq(valoEntitlements.id, grantId));
       await assert.rejects(release(purchaser), { status: 403 }, "a suspended purchase grants nothing");
+      await assert.rejects(releaseLater(purchaser), { status: 403 }, "a suspended purchase carries nothing");
     } finally {
       await pool.end();
     }

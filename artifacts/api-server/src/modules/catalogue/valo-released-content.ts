@@ -450,9 +450,26 @@ export async function requirePurchaseForPricedMaster(
   actor: WorkspaceActor,
   row: typeof valoContentVersions.$inferSelect,
 ) {
-  const { valoEntitlements, valoPrices } = await import("@workspace/db");
+  const { valoContentVersions, valoEntitlements, valoPrices } = await import("@workspace/db");
   // Baseline TPL-01..12 are always free; a price record cannot silently change that contract.
   if (isFreeBaselineTemplate(row.templateId)) return;
+  // A purchase of any version of the template carries to this one at no further charge
+  // (docs/architecture/editions.md, slice 2; delegated decision 3), so a later version needs no price
+  // of its own for its buyers.
+  const [grant] = await tx
+    .select({ id: valoEntitlements.id })
+    .from(valoEntitlements)
+    .innerJoin(valoContentVersions, eq(valoContentVersions.id, valoEntitlements.contentVersionId))
+    .where(
+      and(
+        eq(valoEntitlements.workspaceId, actor.workspaceId),
+        eq(valoContentVersions.templateId, row.templateId),
+        eq(valoEntitlements.status, "active"),
+      ),
+    )
+    .limit(1)
+    .for("share", { of: valoEntitlements });
+  if (grant) return;
   const [price] = await tx
     .select({ id: valoPrices.id })
     .from(valoPrices)
@@ -463,19 +480,7 @@ export async function requirePurchaseForPricedMaster(
       403,
       "An approved licence and server-verified purchase are required for this premium document.",
     );
-  const [grant] = await tx
-    .select()
-    .from(valoEntitlements)
-    .where(
-      and(
-        eq(valoEntitlements.workspaceId, actor.workspaceId),
-        eq(valoEntitlements.contentVersionId, row.id),
-        eq(valoEntitlements.status, "active"),
-      ),
-    )
-    .for("share");
-  if (!grant)
-    throw new ValoProblem(403, "This workspace does not have an active purchase for this template version.");
+  throw new ValoProblem(403, "This workspace does not have an active purchase for this template version.");
 }
 export async function createReleasedTemplateDraft(actor: WorkspaceActor, id: string) {
   const { db, valoDocuments } = await import("@workspace/db");

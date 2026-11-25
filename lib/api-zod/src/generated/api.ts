@@ -1350,10 +1350,14 @@ export const GetCustomerPurchasesResponse = zod.object({
 })),
   "ownedDownloads": zod.array(zod.object({
   "offerId": zod.uuid(),
-  "edition": zod.uuid(),
   "title": zod.string(),
-  "downloadPath": zod.string().describe('Same-origin file path that rechecks the purchased edition on every download.'),
-  "pdfDownloadPath": zod.string().optional().describe('Optional same-origin PDF file path for multi-format reviewed editions.')
+  "edition": zod.uuid().describe('The edition bought.'),
+  "downloadPath": zod.string().describe('Same-origin file path that rechecks the purchase on every download.'),
+  "pdfDownloadPath": zod.string().optional().describe('Optional same-origin PDF file path for multi-format reviewed editions.'),
+  "carried": zod.object({
+  "boughtVersion": zod.int(),
+  "version": zod.int()
+}).optional().describe('Present when the edition bought was replaced: the download is the template\'s released edition, which the purchase carries to at no further charge (docs/architecture/editions.md).')
 })).describe('Downloads for the signed-in workspace\'s currently released purchases, indexed by current or past approved offer.')
 })
 

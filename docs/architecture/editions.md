@@ -61,8 +61,10 @@ Following decision 3:
   purchase of any edition of the same item. The document still records the order it was bought
   under.
 - On the reviewed route, a priced version downloads for a workspace that bought any version of the
-  same template, and only while it is the template's live version. So a replaced version's file closes
-  there too.
+  same template. A replaced version still stays published beside the new one there, so its file stays
+  open by its address. Closing it waits for the reviewed route's release work in phase 3: that route
+  releases no template in development today, and the check needs a test of its own against a released
+  version.
 - The purchases screen shows, under a purchase whose edition was replaced, the template's released
   edition to download: "You bought version 1. Version 2 is yours at no further charge." The template
   page counts a purchase of any edition of the template.

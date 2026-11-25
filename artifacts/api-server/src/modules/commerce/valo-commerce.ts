@@ -3,6 +3,7 @@ import { syntheticReceiptBlockers } from "./valo-receipt-provenance";
 import { and, desc, eq, sql, inArray } from "drizzle-orm";
 import {
   db,
+  valoContentVersions,
   valoPrices,
   valoOrders,
   valoEntitlements,
@@ -144,20 +145,72 @@ async function commercialCatalogue(ownedPrices: OwnedPrice[] = []) {
   const offers = prices
     .filter(({ edition }) => reviewedIds.has(edition) || manualIds.has(edition))
     .map(({ edition, product }) => ({ manual: manualIds.has(edition), product }));
-  const ownedDownloads = ownedPrices
-    .filter(({ edition }) => reviewedIds.has(edition) || manualIds.has(edition))
-    .map((price) => {
-      const isManual = manualIds.has(price.edition);
-      return {
-        ...price,
-        downloadPath: isManual
-          ? "/api/workspace/manual-premium-templates/" + price.edition + "/download"
-          : "/api/workspace/templates/" + price.edition + "/files/docx",
-        ...(!isManual && {
-          pdfDownloadPath: "/api/workspace/templates/" + price.edition + "/files/pdf",
-        }),
-      };
-    });
+  // A purchase whose edition was replaced carries to its template's released edition at no further
+  // charge (docs/architecture/editions.md, slice 2): it downloads that edition instead.
+  const carried = new Map<
+    string,
+    { edition: string; version: number; boughtVersion: number; manual: boolean }
+  >();
+  const replaced = ownedPrices.filter(({ edition }) => !reviewedIds.has(edition) && !manualIds.has(edition));
+  if (replaced.length && isDevelopmentRuntime()) {
+    const { rows } = await db.execute<{
+      bought: string;
+      bought_version: number;
+      edition: string;
+      version: number;
+    }>(sql`select bought, bought_version, edition, version from public.valo_workspace_carried_editions()`);
+    for (const row of rows)
+      carried.set(row.bought, {
+        edition: row.edition,
+        version: row.version,
+        boughtVersion: row.bought_version,
+        manual: true,
+      });
+    const live = new Map(released.map((version) => [version.templateId, version]));
+    const bought = await db
+      .select({
+        id: valoContentVersions.id,
+        templateId: valoContentVersions.templateId,
+        version: valoContentVersions.version,
+      })
+      .from(valoContentVersions)
+      .where(
+        inArray(
+          valoContentVersions.id,
+          replaced.map(({ edition }) => edition),
+        ),
+      );
+    for (const row of bought) {
+      const now = live.get(row.templateId);
+      if (now && now.id !== row.id && reviewedIds.has(now.id))
+        carried.set(row.id, {
+          edition: now.id,
+          version: now.version,
+          boughtVersion: row.version,
+          manual: false,
+        });
+    }
+  }
+  const download = (edition: string, manual: boolean) => ({
+    downloadPath: manual
+      ? "/api/workspace/manual-premium-templates/" + edition + "/download"
+      : "/api/workspace/templates/" + edition + "/files/docx",
+    ...(!manual && { pdfDownloadPath: "/api/workspace/templates/" + edition + "/files/pdf" }),
+  });
+  const ownedDownloads = ownedPrices.flatMap((price) => {
+    if (reviewedIds.has(price.edition) || manualIds.has(price.edition))
+      return [{ ...price, ...download(price.edition, manualIds.has(price.edition)) }];
+    const next = carried.get(price.edition);
+    return next
+      ? [
+          {
+            ...price,
+            ...download(next.edition, next.manual),
+            carried: { boughtVersion: next.boughtVersion, version: next.version },
+          },
+        ]
+      : [];
+  });
   return { offers, ownedDownloads };
 }
 export async function commerceProducts() {
@@ -165,11 +218,30 @@ export async function commerceProducts() {
 }
 /** Ownership follows the edition and the terms originally purchased, even after its sale price changes. */
 export async function ownedTemplateEditions(actor: WorkspaceActor) {
-  return db.transaction(async (tx) => {
+  const { owned, reviewed } = await db.transaction(async (tx) => {
     await authorizeWorkspaceRead(tx, actor);
     const { rows } = await tx.execute<{ edition: string }>(sql`${verifiedEditions(actor)} order by edition`);
-    return rows.map((row) => row.edition);
+    // A purchase carries to its template's released edition (docs/architecture/editions.md, slice 2):
+    // the staff library's through its owner's function, the reviewed route's by its template.
+    const { rows: carried } = await tx.execute<{ edition: string }>(
+      sql`select edition from public.valo_workspace_carried_editions()`,
+    );
+    const editions = rows.map((row) => row.edition);
+    const reviewed = editions.length
+      ? await tx
+          .select({ templateId: valoContentVersions.templateId })
+          .from(valoContentVersions)
+          .where(inArray(valoContentVersions.id, editions))
+      : [];
+    return { owned: [...editions, ...carried.map((row) => row.edition)], reviewed };
   });
+  if (reviewed.length) {
+    // The released catalogue takes its own connections, so it is read after the transaction.
+    const templates = new Set(reviewed.map((row) => row.templateId));
+    for (const version of await liveOperationalVersions())
+      if (templates.has(version.templateId)) owned.push(version.id);
+  }
+  return [...new Set(owned)].sort();
 }
 export async function purchases(actor: WorkspaceActor) {
   const { ownedPrices, ...listing } = await db.transaction(async (tx) => {
