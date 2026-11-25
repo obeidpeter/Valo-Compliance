@@ -18,6 +18,7 @@ export * from "./source-capture";
 export * from "./source-current-captures";
 export * from "./source-fetch";
 export * from "./source-identity";
+export * from "./source-reference";
 export * from "./source-register";
 export * from "./source-release-bindings";
 export * from "./source-storage";

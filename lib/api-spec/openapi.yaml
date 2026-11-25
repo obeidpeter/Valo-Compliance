@@ -695,6 +695,25 @@ paths:
         '401': { description: Sign-in required }
         '403': { description: An active Content editor with recent MFA is required }
         '503': { description: The register migration has not been applied }
+    post:
+      operationId: addSourceRegisterEntry
+      tags: [staff]
+      summary: Add an official source to the register
+      description: >-
+        A source a Content editor names, at an https address on a host the approved guidance policy
+        lists, as its first version with why, and its daily check when asked
+        (docs/architecture/source-register.md, slice 2). Nothing is published; the daily check fetches
+        it with every check it makes of a source kept in the repository.
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/SourceRegisterAddition' } } }
+      responses:
+        '200': { description: 'The register with the source added.', content: { application/json: { schema: { $ref: '#/components/schemas/SourceRegister' } } } }
+        '401': { description: Sign-in required }
+        '403': { description: An active Content editor with recent MFA is required }
+        '409': { description: The register holds this address already }
+        '422': { description: 'The address is not on a policy host, is a source kept in the repository, a field is invalid, or why is missing' }
+        '503': { description: The register migration has not been applied }
   /admin/source-register/file:
     post:
       operationId: fileSourceRegister
@@ -2807,10 +2826,11 @@ components:
       allOf:
         - $ref: '#/components/schemas/SourceRegisterFields'
         - type: object
-          required: [sourceId, url, earlier, restingVersions, watch]
+          required: [sourceId, url, origin, earlier, restingVersions, watch]
           properties:
             sourceId: { type: string }
             url: { type: string }
+            origin: { type: string, enum: [repository, staff], description: 'Whether it is a source kept in the repository, or one staff added.' }
             earlier: { type: array, description: 'Its earlier versions, newest first.', items: { $ref: '#/components/schemas/SourceRegisterFields' } }
             restingVersions: { type: integer, minimum: 0, description: 'How many versions bound to it are not held yet: what retiring it holds.' }
             watch:
@@ -2826,11 +2846,26 @@ components:
                 - { type: 'null' }
     SourceRegister:
       type: object
-      required: [entries, unfiled, jurisdictions]
+      required: [entries, unfiled, jurisdictions, hosts]
       properties:
         entries: { type: array, items: { $ref: '#/components/schemas/SourceRegisterEntry' } }
         unfiled: { type: integer, minimum: 0, description: 'How many regulatory sources kept in the repository are not filed yet.' }
         jurisdictions: { type: array, items: { type: string } }
+        hosts: { type: array, description: 'The hosts the approved guidance policy lists, where staff may add a source.', items: { type: string } }
+    SourceRegisterAddition:
+      type: object
+      required: [title, url, authority, jurisdiction, instrument, versionInForce, effectiveFrom, reason, watch]
+      additionalProperties: false
+      properties:
+        title: { type: string, maxLength: 300 }
+        url: { type: string, maxLength: 2000 }
+        authority: { type: [string, 'null'], maxLength: 200 }
+        jurisdiction: { type: string, maxLength: 60 }
+        instrument: { type: [string, 'null'], enum: [act, regulatory_document, official_page, null] }
+        versionInForce: { type: [string, 'null'], maxLength: 200 }
+        effectiveFrom: { type: [string, 'null'], pattern: '^\d{4}-\d{2}-\d{2}$' }
+        reason: { type: string, maxLength: 1000, description: 'Why, in 20 to 1,000 characters.' }
+        watch: { type: boolean, description: 'Whether its daily check starts now.' }
     SourceRegisterRevision:
       type: object
       required: [baseVersion, authority, jurisdiction, instrument, versionInForce, effectiveFrom, status, reason]

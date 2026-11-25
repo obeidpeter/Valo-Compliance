@@ -2,7 +2,15 @@ import { randomUUID, createHash } from "node:crypto";
 import { readFile, lstat } from "node:fs/promises";
 import { isAbsolute, join } from "node:path";
 import { setting } from "../../platform/settings";
-import { fetchOfficialSource, referenceFor, sourceBodyLimit, SourceFailure } from "./source-fetch";
+import {
+  fetchOfficialSource,
+  fetchRegisteredSource,
+  referenceFor,
+  sourceBodyLimit,
+  SourceFailure,
+  type SourceTransport,
+} from "./source-fetch";
+import { sourceReference } from "./source-reference";
 import { extractSource, EXTRACTION_VERSION } from "./source-extract";
 import { storeSourceSnapshot } from "./source-storage";
 import { instrumentIdentity } from "./source-identity";
@@ -70,10 +78,15 @@ export async function readManualOfficialSource(leadId: string, pinnedSha256?: st
     mime: response.mime,
   };
 }
-export async function captureReference(id: string) {
+/**
+ * The daily check's capture of one watched source: a lead kept in the repository, or a source a Content
+ * editor added to the register (docs/architecture/source-register.md, slice 2), fetched at its address on
+ * a policy host. `send` is for tests of a registered source, so that nothing is sent.
+ */
+export async function captureReference(id: string, send?: SourceTransport) {
   const { db, valoSourceSnapshots } = await import("@workspace/db");
   assertDevelopmentRuntime();
-  const lead = referenceFor(id);
+  const lead = await sourceReference(db, id);
   let identity: ReturnType<typeof instrumentIdentity> = null;
   const row: typeof valoSourceSnapshots.$inferInsert = {
     id: randomUUID(),
@@ -97,7 +110,10 @@ export async function captureReference(id: string) {
     },
   };
   try {
-    const response = await fetchOfficialSource(id);
+    const response =
+      lead.origin === "repository"
+        ? await fetchOfficialSource(id)
+        : await fetchRegisteredSource(lead.url, send);
     Object.assign(row, {
       finalUrl: response.finalUrl,
       fetchedAt: response.fetchedAt,

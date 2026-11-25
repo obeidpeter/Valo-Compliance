@@ -384,3 +384,164 @@ test(
     }
   },
 );
+
+// docs/architecture/source-register.md, slice 2 (ADM-003): a Content editor adds a source at an address on
+// a host the approved guidance policy lists, and the daily check fetches it. The fetch goes through a
+// stand-in transport, so nothing is sent. Each source added here is retired before the test ends, so no
+// later step checks it.
+test(
+  "a Content editor adds a source only at an https address on a policy host, once, and the daily check fetches it there with every check",
+  {
+    skip: process.env.VALO_RUN_DB_TESTS !== "synthetic-development-only",
+    timeout: 60000,
+  },
+  async () => {
+    const { assertDevelopmentRuntime } = await import("../../platform/valo-development-runtime");
+    assertDevelopmentRuntime();
+    assert.ok(
+      process.env.DATABASE_URL &&
+        ["localhost", "127.0.0.1", "[::1]"].includes(new URL(process.env.DATABASE_URL).hostname),
+    );
+    const { db } = await import("@workspace/db");
+    const { sha256 } = await import("@workspace/valo-core");
+    const register = await import("./index");
+    const controls = await import("../sources/valo-source-controls"),
+      { captureReference } = await import("../sources/source-capture");
+    const prefix = `synthetic-add-${randomUUID()}`;
+    const staff = { identityId: `${prefix}-content`, recentMfa: true, verifiedAt: Date.now() };
+    const system = { identityId: `${prefix}-system`, recentMfa: true, verifiedAt: Date.now() };
+    const fresh = <T extends { verifiedAt: number }>(actor: T) => ({ ...actor, verifiedAt: Date.now() });
+    for (const [actor, area] of [
+      [staff, "content"],
+      [system, "system"],
+    ] as const)
+      await db.execute(
+        sql`insert into valo_staff_assignments(id,identity_id,role,active,granted_by,reason) values(${randomUUID()}::uuid,${actor.identityId},${area},true,'synthetic-ci','Controlled CI fixture only')`,
+      );
+    const address = `https://nafdac.gov.ng/${prefix}`;
+    const addition = {
+      title: "Synthetic labelling guideline",
+      url: address,
+      authority: "Synthetic agency",
+      jurisdiction: "Nigeria",
+      instrument: "regulatory_document" as const,
+      versionInForce: null,
+      effectiveFrom: "2026-03-01",
+      reason: "Synthetic: added to check that the register takes it.",
+      watch: true,
+    };
+    // Only an active Content editor adds a source.
+    await assert.rejects(async () => register.addSourceEntry(fresh(system), addition), /active role/);
+    // The address is https on a policy host, with no user name, password or port, and not a source kept
+    // in the repository; the fields are checked as a correction's are.
+    for (const [refused, why] of [
+      [{ url: `http://nafdac.gov.ng/${prefix}` }, /https address/],
+      [{ url: `https://user:secret@nafdac.gov.ng/${prefix}` }, /https address/],
+      [{ url: `https://nafdac.gov.ng:8443/${prefix}` }, /https address/],
+      [{ url: `https://example.invalid/${prefix}` }, /host the guidance policy lists/],
+      [{ url: allSourceLeads.find((lead) => lead.id === "S04")!.url }, /kept in the repository/],
+      [{ title: "   " }, /title/],
+      [{ reason: "Too short." }, /20 to 1,000/],
+      [{ jurisdiction: "Synthetic nowhere" }, /listed states/],
+      [{ effectiveFrom: "2026-02-30" }, /real date/],
+      [{ instrument: "official_page" as const }, /no day it took effect/],
+    ] as const)
+      await assert.rejects(
+        async () => register.addSourceEntry(fresh(staff), { ...addition, ...refused }),
+        why,
+      );
+    await assert.rejects(async () => register.addSourceEntry(fresh(staff), { ...addition, published: true }));
+    // Added, it is the register's next REG- source, a staff source with its first version, and watched.
+    const before = new Set((await register.listSourceRegister(fresh(staff))).entries.map((e) => e.sourceId));
+    const added = (await register.addSourceEntry(fresh(staff), addition)).entries.find(
+      (e) => !before.has(e.sourceId),
+    )!;
+    assert.match(added.sourceId, /^REG-\d{3,}$/);
+    assert.deepEqual(
+      {
+        url: added.url,
+        origin: added.origin,
+        version: added.version,
+        status: added.status,
+        authority: added.authority,
+        effectiveFrom: added.effectiveFrom,
+        createdBy: added.createdBy,
+        stopped: added.watch?.stoppedAt,
+      },
+      {
+        url: address,
+        origin: "staff",
+        version: 1,
+        status: "active",
+        authority: "Synthetic agency",
+        effectiveFrom: "2026-03-01",
+        createdBy: staff.identityId,
+        stopped: null,
+      },
+    );
+    // The register holds an address once.
+    await assert.rejects(
+      async () => register.addSourceEntry(fresh(staff), addition),
+      new RegExp(`in the register already, as ${added.sourceId}`),
+    );
+    // The daily check fetches it at its registered address, through every check a lead gets.
+    const asked: string[] = [];
+    const bytes = Buffer.from("<html><body><main>Synthetic official guideline text.</main></body></html>");
+    const capture = await captureReference(added.sourceId, async (url) => {
+      asked.push(url.href);
+      return { status: 200, mime: "text/html", location: undefined, bytes };
+    });
+    assert.deepEqual(asked, [address]);
+    const [snapshot] = (
+      await db.execute(
+        sql`select source_id,url,final_url,http_status,raw_checksum from valo_source_snapshots where id=${capture.id}::uuid`,
+      )
+    ).rows;
+    assert.deepEqual(snapshot, {
+      source_id: added.sourceId,
+      url: address,
+      final_url: address,
+      http_status: 200,
+      raw_checksum: sha256(bytes),
+    });
+    // A source added without its daily check is offered for one, and staff can start it.
+    const unwatched = (
+      await register.addSourceEntry(fresh(staff), {
+        ...addition,
+        title: "Synthetic second guideline",
+        url: `${address}-second`,
+        watch: false,
+      })
+    ).entries.find((e) => e.url === `${address}-second`)!;
+    assert.equal(unwatched.watch, null);
+    const choices = (await controls.sourceControls(fresh(staff), "content")).sourceChoices.map((c) => c.id);
+    assert.ok(choices.includes(added.sourceId) && choices.includes(unwatched.sourceId));
+    await controls.actOnSourceControls(fresh(staff), {
+      action: "watch_source",
+      sourceId: unwatched.sourceId,
+      requestKey: randomUUID(),
+      reason: "Synthetic request to watch a source staff added.",
+    });
+    // Retired, a source staff added is not fetched or offered, and neither is left watched.
+    for (const entry of [added, unwatched])
+      await register.reviseSourceEntry(fresh(staff), entry.sourceId, {
+        baseVersion: 1,
+        authority: entry.authority,
+        jurisdiction: entry.jurisdiction,
+        instrument: entry.instrument,
+        versionInForce: entry.versionInForce,
+        effectiveFrom: entry.effectiveFrom,
+        status: "retired",
+        reason: "Synthetic: retired so that no later step checks it.",
+      });
+    await assert.rejects(captureReference(added.sourceId), /SOURCE_RETIRED/);
+    const after = (await controls.sourceControls(fresh(staff), "content")).sourceChoices.map((c) => c.id);
+    assert.ok(!after.includes(added.sourceId) && !after.includes(unwatched.sourceId));
+    const stopped = (
+      await db.execute(
+        sql`select count(*)::int as n from valo_source_watches where source_id in (${added.sourceId},${unwatched.sourceId}) and stopped_at is not null`,
+      )
+    ).rows[0]!;
+    assert.equal(stopped.n, 2);
+  },
+);

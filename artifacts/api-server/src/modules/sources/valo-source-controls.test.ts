@@ -106,20 +106,21 @@ test("staff inputs cannot supply publication, source URL, reviewer verdict or a 
 });
 // docs/architecture/source-register.md, slice 2 (ADM-003): staff start watching only official sources the
 // register has not retired.
-test("staff may start watching the regulatory sources kept in the repository, except those the register retired", async () => {
+test("staff may start watching the regulatory sources kept in the repository and those they added, except those the register retired", async () => {
   process.env.DATABASE_URL ??= "postgresql://unused@localhost/unused";
   const { watchableSources } = await import("./valo-source-controls");
   const { allSourceLeads } = await import("@workspace/valo-core");
   const regulatory = allSourceLeads.filter((lead) => lead.category === "regulatory").map((lead) => lead.id);
   assert.deepEqual(
-    watchableSources(new Set()).map((lead) => lead.id),
+    watchableSources({ retired: new Set(), added: [] }).map((lead) => lead.id),
     regulatory,
   );
   // The provider's terms and the quality documents are not sources of law.
   for (const id of ["S10", "S18", "SV-003"]) assert.ok(!regulatory.includes(id));
-  const offered = watchableSources(new Set(["S04", "S10"])).map((lead) => lead.id);
-  assert.deepEqual(
-    offered,
-    regulatory.filter((id) => id !== "S04"),
-  );
+  // A source staff added is offered after the repository's, and a retired one is not.
+  const offered = watchableSources({
+    retired: new Set(["S04", "S10"]),
+    added: [{ id: "REG-001", title: "Synthetic source staff added" }],
+  }).map((lead) => lead.id);
+  assert.deepEqual(offered, [...regulatory.filter((id) => id !== "S04"), "REG-001"]);
 });

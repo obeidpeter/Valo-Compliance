@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { sql } from "drizzle-orm";
-import { referenceFor } from "./source-fetch";
+import { sourceReference } from "./source-reference";
 import { lockSourceState, sourceTime, type SourceTx } from "./valo-source-state";
 import {
   impactSourceDependants,
@@ -10,7 +10,9 @@ import {
 } from "./valo-source-corrections";
 import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
 export async function registerSourceWatch(tx: SourceTx, id: string) {
-  const source = referenceFor(id); // No request URL or newly discovered domain is fetched.
+  // A lead kept in the repository, or a source a Content editor added to the register at an address on
+  // a policy host. No request URL or newly discovered domain is fetched.
+  const source = await sourceReference(tx, id);
   // A source the register retired starts stopped (docs/architecture/source-register.md, slice 2).
   await tx.execute(
     sql`insert into valo_source_watches(source_id,url,risk,stopped_at) values(${source.id},${source.url},'high',

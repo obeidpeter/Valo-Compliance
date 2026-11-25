@@ -12,20 +12,34 @@ import type { WorkspaceActor } from "../../platform/workspace-context";
 export type SourceStaffActor = StaffActor;
 /**
  * The sources a Content editor may start watching (docs/architecture/source-register.md, slice 2):
- * the regulatory leads kept in the repository, except those the source register retired. The
- * provider's terms and the quality documents are not sources of law, so they are not offered.
- * `retired` holds the ids whose latest register version is retired.
+ * the regulatory leads kept in the repository, except those the source register retired, and the active
+ * sources staff added to the register. The provider's terms and the quality documents are not sources of
+ * law, so they are not offered.
  */
-export function watchableSources(retired: ReadonlySet<string>) {
-  return allSourceLeads.filter((lead) => lead.category === "regulatory" && !retired.has(lead.id));
+export function watchableSources(register: {
+  retired: ReadonlySet<string>;
+  added: readonly { id: string; title: string }[];
+}) {
+  return [
+    ...allSourceLeads
+      .filter((lead) => lead.category === "regulatory" && !register.retired.has(lead.id))
+      .map((lead) => ({ id: lead.id, title: lead.title })),
+    ...register.added,
+  ];
 }
-/** The ids the source register's latest versions retire. */
-async function retiredSourceIds(tx: SourceReader) {
+/** The ids the source register's latest versions retire, and the active sources staff added to it. */
+async function registerChoices(tx: SourceReader) {
   const rows = (
-    await tx.execute(sql`select distinct on (source_id) source_id,status from valo_source_register
+    await tx.execute(sql`select distinct on (source_id) source_id,title,status from valo_source_register
      order by source_id,version desc`)
   ).rows;
-  return new Set(rows.filter((row) => row.status === "retired").map((row) => String(row.source_id)));
+  const leads = new Set(allSourceLeads.map((lead) => lead.id));
+  return {
+    retired: new Set(rows.filter((row) => row.status === "retired").map((row) => String(row.source_id))),
+    added: rows
+      .filter((row) => row.status === "active" && !leads.has(String(row.source_id)))
+      .map((row) => ({ id: String(row.source_id), title: String(row.title) })),
+  };
 }
 const base = { requestKey: z.string().uuid(), reason: z.string().trim().min(20).max(1000) };
 export const sourceControlInput = z.discriminatedUnion("action", [
@@ -157,10 +171,7 @@ export async function sourceControls(actor: SourceStaffActor, area: "content" | 
         reason: String(v.reason),
         updatedAt: date(v.updated_at)!,
       })),
-      sourceChoices:
-        area === "content"
-          ? watchableSources(await retiredSourceIds(tx)).map((s) => ({ id: s.id, title: s.title }))
-          : [],
+      sourceChoices: area === "content" ? watchableSources(await registerChoices(tx)) : [],
       notice:
         "Safety holds apply immediately. A fetch never approves claims. Held versions need a new version through the existing editorial gates; reviews and external messages are not dispatched here.",
     };
@@ -227,7 +238,7 @@ export async function actOnSourceControls(actor: SourceStaffActor, raw: unknown)
       };
     } else if (input.action === "watch_source") {
       target = input.sourceId;
-      if (!watchableSources(await retiredSourceIds(tx)).some((s) => s.id === input.sourceId))
+      if (!watchableSources(await registerChoices(tx)).some((s) => s.id === input.sourceId))
         throw new ValoProblem(422, "Choose an official source the register has not retired.");
       await registerSourceWatch(tx, input.sourceId);
       current = { sourceId: input.sourceId, status: "registered_for_daily_check", publication: "unchanged" };
