@@ -51,6 +51,10 @@ export const readinessQueries = {
   privilegedReading: `SELECT COALESCE(max(objects), 0)::int AS value FROM (SELECT count(DISTINCT object) AS objects
     FROM valo_staff_access_audit WHERE created_at > now() - interval '1 hour' AND object <> 'unrecorded'
     GROUP BY actor_id) per_actor`,
+  // How many histories' digests the latest hourly count found no longer matching their rows
+  // (valo-history-digests.ts). With no count under two hours old the reading is unavailable.
+  historyIntegrity: `SELECT COALESCE((SELECT CASE WHEN checked_at > now() - interval '2 hours'
+    THEN cardinality(mismatched) ELSE -1 END FROM valo_history_checks ORDER BY checked_at DESC LIMIT 1), -1)::int AS value`,
 } as const;
 /** Each security reading and the subject its alerts are named after. */
 const SECURITY_METRICS = [
@@ -62,6 +66,7 @@ const SECURITY_METRICS = [
   ["aiActivity", "AI_ACTIVITY"],
   ["guardRefusals", "GUARD_REFUSALS"],
   ["privilegedReading", "PRIVILEGED_READING"],
+  ["historyIntegrity", "HISTORY_INTEGRITY"],
 ] as const;
 type Metric = { status: "ok" | "unavailable"; value: number | null; elapsedMs: number };
 export type OperationalSample = {
@@ -81,6 +86,7 @@ export type OperationalSample = {
   aiActivity: Metric;
   guardRefusals: Metric;
   privilegedReading: Metric;
+  historyIntegrity: Metric;
   worker: { status: "healthy" | "stale" | "unavailable"; ageMs: number | null };
   limits: {
     exports: number;
@@ -96,6 +102,7 @@ export type OperationalSample = {
     aiActivity: number;
     guardRefusals: number;
     privilegedReading: number;
+    historyIntegrity: number;
   };
 };
 async function atomicJson(file: string, value: unknown) {
@@ -189,6 +196,8 @@ export async function collectOperationalSample(
       // a hundred distinct records or lists in an hour, raise an alert.
       guardRefusals: 0,
       privilegedReading: 100,
+      // Any history whose digest no longer matches its rows.
+      historyIntegrity: 0,
     },
   } as OperationalSample;
 }
@@ -213,6 +222,7 @@ export const ALERT_RUNBOOKS = {
   AI_ACTIVITY: { runbook: "Security/privacy incident", accountable: "Incident lead + privacy owner" },
   GUARD_REFUSALS: { runbook: "Security/privacy incident", accountable: "Incident lead + privacy owner" },
   PRIVILEGED_READING: { runbook: "Security/privacy incident", accountable: "Incident lead + privacy owner" },
+  HISTORY_INTEGRITY: { runbook: "Security/privacy incident", accountable: "Incident lead + privacy owner" },
 } as const;
 export function alertRunbook(code: string) {
   const subject = code.replace(/_(BACKLOG|DETECTED|PROBE_UNAVAILABLE|UNAVAILABLE)$/, "");

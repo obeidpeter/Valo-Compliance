@@ -19,6 +19,8 @@ export const OPERATIONAL_DOMAINS = [
   "guidance",
   // A candidate a Content editor asked for from review work (docs/architecture/source-register.md, slice 4).
   "preparations",
+  // The hourly count of every history against its digest (docs/architecture/audit-trail.md, slice 3).
+  "historyIntegrity",
 ] as const;
 export type OperationalDomain = (typeof OPERATIONAL_DOMAINS)[number];
 /**

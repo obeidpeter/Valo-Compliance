@@ -6,3 +6,4 @@
  */
 export * from "./valo-operations";
 export * from "./valo-operations-queue";
+export * from "./valo-history-digests";

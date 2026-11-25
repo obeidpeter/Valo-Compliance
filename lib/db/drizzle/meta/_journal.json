@@ -554,6 +554,20 @@
       "when": 1795646870669,
       "tag": "20261125224750_staff_access_reading_index",
       "breakpoints": true
+    },
+    {
+      "idx": 79,
+      "version": "7",
+      "when": 1795647626477,
+      "tag": "20261125230026_history_digests",
+      "breakpoints": true
+    },
+    {
+      "idx": 80,
+      "version": "7",
+      "when": 1795647682773,
+      "tag": "20261125230122_history_digest_triggers",
+      "breakpoints": true
     }
   ]
 }
