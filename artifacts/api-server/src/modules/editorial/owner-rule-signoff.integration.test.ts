@@ -495,20 +495,17 @@ test(
       // Withdrawal takes the released version out of the checker at once, with its reason; a
       // superseded version and a changed manifest are refused, and asking again changes nothing.
       const withdrawnWhy = "Synthetic withdrawal: the synthetic provision no longer applies.";
-      const withdraw = (
-        version: number,
-        manifestHash: string,
-        reason: string | undefined = withdrawnWhy,
-      ) => ({
+      // null sends no reason: an undefined argument would take the default.
+      const withdraw = (version: number, manifestHash: string, reason: string | null = withdrawnWhy) => ({
         action: "withdraw",
         version,
         manifestHash,
         confirmedChecks: [],
         confirmed: true,
-        ...(reason !== undefined && { reason }),
+        ...(reason !== null && { reason }),
       });
       await assert.rejects(
-        decideOwnerRule(actor(owner), ruleId, withdraw(2, second.manifestHash, undefined), options),
+        decideOwnerRule(actor(owner), ruleId, withdraw(2, second.manifestHash, null), options),
         refused(422),
       );
       await assert.rejects(
