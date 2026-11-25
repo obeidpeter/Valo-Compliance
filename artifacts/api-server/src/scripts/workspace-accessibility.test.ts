@@ -4073,3 +4073,91 @@ test("undo and redo step back and forward through the editor's changes, with the
     await close();
   }
 });
+
+// docs/architecture/rule-changes.md, slice 1 (ADM-007, EDP-011): a version that replaces a released
+// one says what changed, and a withdrawal says why, and the reason goes with the owner's decision.
+test("the owner's panel asks what changed before a version replaces a released one, and why before a withdrawal, and sends each reason with the decision", async () => {
+  const shown = (answers["GET /admin/owner-rules"] as { items: Record<string, unknown>[] }).items[0]!;
+  const checks = (
+    ["controlling_text", "amendments", "effective_dates", "exceptions", "jurisdiction"] as const
+  ).map((id) => ({ id, label: `Synthetic check of ${id.replace("_", " ")}` }));
+  const listed = api.ListOwnerRulesResponse.parse({
+    items: [{ ...shown, version: 2, live: { version: 1, manifestHash: "b".repeat(64) }, holds: [], checks }],
+  });
+  const sent: unknown[] = [];
+  const deciding: Api = async (route, method, path, query) => {
+    if (method === "GET" && path === "/admin/owner-rules")
+      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(listed) });
+    else if (method === "POST" && path === "/admin/owner-rules/synthetic-owner-rule/decisions") {
+      const body = route.request().postDataJSON() as { action: string };
+      sent.push(body);
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(
+          api.DecideOwnerRuleResponse.parse(
+            body.action === "sign"
+              ? { ruleId: "synthetic-owner-rule", version: 2, state: "published", superseded: [1] }
+              : { ruleId: "synthetic-owner-rule", version: 1, state: "withdrawn", superseded: [] },
+          ),
+        ),
+      });
+    } else await answer(route, method, path, query);
+  };
+  const { page, unknown, errors, close } = await phone("/staff", deciding);
+  try {
+    await ready(page);
+    await page.getByTestId("tab-staff-system").click();
+    const panel = page.getByRole("region", { name: "Requirements check: rule sign-off" });
+    await panel.getByLabel("Prepared rule").selectOption("synthetic-owner-rule");
+    // Signing version 2 waits for what changed since released version 1, in 20 characters or more.
+    const changed = panel.getByLabel("What changed in this version?");
+    const sign = panel.getByRole("button", { name: "Sign and release version 2" });
+    for (const check of checks) await panel.getByLabel(check.label).check();
+    await panel.getByLabel(/I have read this rule version/).check();
+    await expect(sign).toBeDisabled();
+    await changed.fill("Too short.");
+    await expect(sign).toBeDisabled();
+    await changed.fill("  Synthetic change: version 2 restates the synthetic provision.  ");
+    await expect(sign).toBeEnabled();
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "the owner's panel asking what changed"), []);
+    // The check ends on a 320-pixel screen; the phone is 360 pixels wide again for the next.
+    await page.setViewportSize({ width: 360, height: 640 });
+    await sign.click();
+    await expect(panel.getByRole("status")).toHaveText(/Version 2 is released/);
+    // Withdrawing waits for why.
+    await panel.getByLabel(/I want to withdraw released version 1/).check();
+    const why = panel.getByLabel("Why is this rule withdrawn?");
+    const withdraw = panel.getByRole("button", { name: "Withdraw version 1" });
+    await expect(withdraw).toBeDisabled();
+    await why.fill("Synthetic withdrawal: the synthetic provision no longer applies.");
+    await expect(withdraw).toBeEnabled();
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "the owner's panel asking why it is withdrawn"), []);
+    await withdraw.click();
+    await expect(panel.getByRole("status")).toHaveText(/Version 1 is withdrawn/);
+    assert.deepEqual(sent, [
+      {
+        action: "sign",
+        version: 2,
+        manifestHash: "a".repeat(64),
+        confirmedChecks: checks.map((c) => c.id),
+        confirmed: true,
+        reason: "Synthetic change: version 2 restates the synthetic provision.",
+      },
+      {
+        action: "withdraw",
+        version: 1,
+        manifestHash: "b".repeat(64),
+        confirmedChecks: [],
+        confirmed: true,
+        reason: "Synthetic withdrawal: the synthetic provision no longer applies.",
+      },
+    ]);
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
