@@ -3772,7 +3772,7 @@
       "job": "foundation",
       "file": "lib/db/scripts/phase1-migrations.test.mjs",
       "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
-      "proves": "The library escalations migration keeps every referral, lets one point at a staff-library edition, sets its hold once and only to a hold on that edition, and keeps the version every referral points at."
+      "proves": "The library escalations migration keeps every referral, lets one point at a staff-library edition, sets its hold once and only to a hold on that edition, and keeps the version every referral points at. The source review owners migration closes review work a later release or a withdrawal already settled, keeps the rest open, and takes a note of what was checked only on open work, from an active Content editor or the development owner, never changed or removed."
     },
     {
       "requirement": "ADM-008",
@@ -3808,6 +3808,27 @@
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
       "test": "the owner's rule panel lists the reported problems with the versions the owner signed",
       "proves": "On a phone, the owner's rule panel lists each reported problem with a signed version, its reason and whether that version was held, with no automated WCAG 2.2 AA failure."
+    },
+    {
+      "requirement": "ADM-008",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/sources/valo-source-review-work.integration.test.ts",
+      "test": "review work names who is accountable, lists oldest first with what opened it and what was checked, and closes on a later release or a withdrawal",
+      "proves": "Against real PostgreSQL, each hold opens review work that the Content area lists oldest first with what opened it, naming a Content editor for a template and the development owner for a rule the owner signed, which alone the owner's queue holds; a note of what was checked is taken only in 20 to 1,000 characters, on open work, from an active Content editor, and is never changed or removed; and the work closes when a later release replaces the rule's version, naming the release, or when the template is withdrawn."
+    },
+    {
+      "requirement": "ADM-008",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/source-review.test.ts",
+      "test": "review work says what it holds since when, what opened it, who is accountable, what was checked and how it closed",
+      "proves": "The words for review work say the version held and since when on a Lagos clock, what opened it, who is accountable for it, each note of what was checked, and whether it closed by a later release or a withdrawal."
+    },
+    {
+      "requirement": "ADM-008",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "the review queue says what each hold opened and who is accountable, and records what was checked only with words",
+      "proves": "On a phone, the Content area's review queue shows each open row's version, what opened it, who is accountable and what was checked, and the rows closed lately, sends a note only once it is written, and the owner's queue in the System area holds the rules the owner signed, with no automated WCAG 2.2 AA failure."
     },
     {
       "requirement": "AI-001",
@@ -4382,6 +4403,13 @@
       "file": "lib/db/scripts/phase1-migrations.test.mjs",
       "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
       "proves": "The source watch stops migration keeps every existing row and rolls back cleanly, stops the check of a source the register retired before it, then stops a watch when its source is retired, restarts it, due at once, when the source comes back, and leaves a correction that keeps a source active alone."
+    },
+    {
+      "requirement": "CMP-007",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/sources/valo-source-review-work.integration.test.ts",
+      "test": "review work names who is accountable, lists oldest first with what opened it and what was checked, and closes on a later release or a withdrawal",
+      "proves": "Against real PostgreSQL, a hold on a version opens review work that stays open until a later release replaces the version or the version is withdrawn, takes notes of what was checked meanwhile, and releases nothing when it closes."
     },
     {
       "requirement": "EDP-011",
