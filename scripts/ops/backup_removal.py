@@ -15,6 +15,10 @@ operator reviews a plan, then passes it with its SHA-256, so only what they revi
 It never initializes a repository, schedules itself or reads application secrets. The repository and
 its credentials come from the same checked environment as the recovery archive
 (recovery_archive.configuration), with the plan's folder kept apart from both.
+
+The operator gives their name and their reason (ADM-009). The command writes them, with the plan it
+removes by and the snapshots it will remove, to the operator's journal (operator_journal.py) before it
+removes anything, and writes what came of it afterwards: the receipt, or the code of the refusal.
 """
 import datetime
 import hashlib
@@ -23,6 +27,7 @@ from pathlib import Path
 import re
 import sys
 from backup_retention import POLICY, plan
+from operator_journal import append, error_code, journal_directory, operator_record
 from recovery_archive import ArchiveError, configuration, private_regular, require, restic
 
 MAX_PLAN_AGE = datetime.timedelta(hours=24)
@@ -72,30 +77,50 @@ def removals(reviewed, current):
     return chosen
 
 
-def remove(plan_path, confirmed_sha256, env, now=None):
+def remove(plan_path, confirmed_sha256, env, now=None, operator=None, reason=None):
     now = now or datetime.datetime.now(datetime.timezone.utc)
+    who = operator_record(operator, reason)
+    journal = journal_directory(env)
     reviewed = reviewed_plan(plan_path, confirmed_sha256, now)
+    require(not journal.is_relative_to(plan_path.parent) and not plan_path.parent.is_relative_to(journal),
+            "OPERATOR_JOURNAL_SEPARATE_REQUIRED")
     mode, backend, child_env = configuration(env, plan_path.parent)
     current = plan(snapshots(child_env), now)
     chosen = removals(reviewed, current)
     kept = [i for group in current["groups"].values() for i in group["keep"]] + current["unknownSnapshots"]
-    if chosen:
-        restic(["forget", *chosen], child_env)
-        restic(["prune"], child_env)
-    remaining = {snapshot["id"] for snapshot in snapshots(child_env)}
-    require(not remaining & set(chosen), "SNAPSHOT_REMOVAL_UNVERIFIED")
-    require(set(kept) <= remaining, "KEPT_SNAPSHOT_MISSING")
-    return {"version": 1, "mode": mode, "backend": backend, "policy": dict(POLICY),
-            "plannedAt": reviewed["plannedAt"], "removedAt": now.isoformat(),
-            "planSha256": confirmed_sha256, "snapshotsRemoved": len(chosen), "removed": sorted(chosen),
-            "snapshotsKept": len(kept), "pruned": bool(chosen)}
+    target = f"backup_plan:{confirmed_sha256}"
+    # Nothing is removed until the journal holds who asked, why, and what will go.
+    started = append(journal, who, "backup_removal", target, "started",
+                     {"mode": mode, "backend": backend, "removing": sorted(chosen)})
+    try:
+        if chosen:
+            restic(["forget", *chosen], child_env)
+            restic(["prune"], child_env)
+        remaining = {snapshot["id"] for snapshot in snapshots(child_env)}
+        require(not remaining & set(chosen), "SNAPSHOT_REMOVAL_UNVERIFIED")
+        require(set(kept) <= remaining, "KEPT_SNAPSHOT_MISSING")
+    except Exception as error:
+        append(journal, who, "backup_removal", target, "failed",
+               {"error": error_code(error), "startedSha256": started["sha256"]})
+        raise
+    receipt = {"version": 1, "mode": mode, "backend": backend, "policy": dict(POLICY),
+               "plannedAt": reviewed["plannedAt"], "removedAt": now.isoformat(),
+               "planSha256": confirmed_sha256, "snapshotsRemoved": len(chosen), "removed": sorted(chosen),
+               "snapshotsKept": len(kept), "pruned": bool(chosen), "operator": who["operator"],
+               "reason": who["reason"], "startedSha256": started["sha256"]}
+    finished = append(journal, who, "backup_removal", target, "completed", receipt)
+    return {**receipt, "journalSha256": finished["sha256"]}
 
 
 if __name__ == "__main__":
     import os
     try:
-        require(len(sys.argv) == 3, "PLAN_PATH_AND_SHA256_REQUIRED")
-        print(json.dumps(remove(Path(sys.argv[1]).resolve(), sys.argv[2], dict(os.environ)), indent=2))
+        # backup_removal.py <plan.json> <sha256> --operator <name> --reason <why>
+        args = sys.argv[1:]
+        require(len(args) == 6 and args[2] == "--operator" and args[4] == "--reason",
+                "PLAN_PATH_SHA256_OPERATOR_AND_REASON_REQUIRED")
+        print(json.dumps(remove(Path(args[0]).resolve(), args[1], dict(os.environ), operator=args[3],
+                                reason=args[5]), indent=2))
     except (ArchiveError, ValueError, OSError, json.JSONDecodeError) as error:
         code = str(error) if re.fullmatch(r"[A-Z_]{3,60}", str(error)) else "BACKUP_REMOVAL_FAILED"
         print(code, file=sys.stderr)

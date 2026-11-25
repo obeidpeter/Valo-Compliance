@@ -52,12 +52,15 @@ broken.
 
 1. **Guards** (this change): the two unguarded histories, TRUNCATE on every history, and the object of each
    staff read.
-2. **Operator actions**: the restore and backup-removal tools, the reviewed publisher and the recovery
-   controls record who ran them, on what, and why.
+2. **Operator actions**: the restore and backup-removal tools record who ran them, on what, and why, in
+   the operator's journal. The reviewed publisher's operator is the reviewed route's row (Phase 3): it
+   names a fixed service label today, and the route's own rebuild carries the operator and their reason
+   into its publication record. The recovery controls run only on a disposable synthetic target.
 3. **Alerts**:
-   - an attempt to change a history, refused by its guard, becomes a security signal and an alert;
-   - a periodic integrity check finds a history row that is gone or changed, however that happened;
-   - privileged reading above a threshold raises an alert.
+   - an attempt to change a history, refused by its guard, becomes a security signal and an alert
+     (built);
+   - privileged reading above a threshold raises an alert (built);
+   - a periodic integrity check finds a history row that is gone or changed, however that happened.
 4. **A staff viewer** for the histories that have none.
 5. **Later, with Phase 8's migration login**: the histories owned by a role the application login cannot
    use, so that it can no longer disable their guards.
@@ -125,6 +128,102 @@ triggers. Erasure keeps working as it did, through the two exceptions above.
   refuses it.
 - **Two staff reads** record their object: a privacy case read over HTTP, and the finance overview.
 
+## Slice 2: the operator's journal
+
+The tools that restore or remove backups act outside the database, so their record is a file: the
+operator's journal (`scripts/ops/operator_journal.py`).
+
+- **Who and why.** `backup_removal.py` and `recovery_restore.py` refuse to run without `--operator`
+  and `--reason`:
+  - the operator is a short handle, such as a sign-in name, never an email address;
+  - the reason is one line of 20 to 1000 characters.
+- **Where.** The journal is one file, `operator-journal.jsonl`, in the directory `VALO_OPERATOR_JOURNAL`
+  names:
+  - the directory must be absolute and private to the account running the tool;
+  - it is kept apart from the backup plan's folder and from a restore's new directory.
+- **Before and after.**
+  - Once its inputs are checked, and before it changes anything, a tool appends a `started` entry: who,
+    why, what it acts on (`backup_plan:<sha256>`, `recovery_archive:<sha256>`), and what it is about to
+    do (the snapshots it will remove, the directory it will unpack into).
+  - It acts only once that entry is on disk.
+  - It then appends `completed`, with its receipt, or `failed`, with the code of the refusal.
+  - The receipt it prints names the operator, the reason and the hashes of both entries.
+  - A refusal before acting records nothing, since nothing was attempted.
+- **The chain.**
+  - Each entry holds the SHA-256 of the one before it and its own, in a canonical form.
+  - `verify` reads the whole journal before every write. An entry changed, reordered or removed
+    anywhere but at the end breaks the chain, and the tool stops before acting.
+  - Removing the last entries leaves a chain that still holds, but the receipt the operator kept names
+    the hash of its last entry.
+  - `python3 scripts/ops/operator_journal.py verify` checks a journal by hand.
+  - Two operators writing at once are serialised by a lock, so they never take the same place in the
+    chain.
+- **What it is not.** The journal lives on the host the tools run on. An account that can write it can
+  replace it whole; the chain then shows nothing. Keeping a copy off the host, beside the backups, is
+  part of the off-host recovery work that waits on the owner's provider approval
+  (`docs/valo/phase2-infrastructure-setup.md`).
+
+**Tests** (`scripts/ops/test_*.py`, run by the postgres job's recovery step, with a real restic
+repository):
+- the journal's own tests:
+  - an operator and a reason are required in its form;
+  - the directory must be private;
+  - each entry holds the one before it;
+  - a changed, removed or reformatted entry breaks the chain and stops every later write;
+  - two writers at once leave an intact chain;
+- backup removal:
+  - nothing is read or removed without who and why, a journal, or a journal apart from the plan;
+  - a refusal before acting records nothing;
+  - a removal that fails once started is recorded as failed;
+  - a broken journal stops the next removal before anything is removed;
+  - a real removal records who, why and what before and after, and its receipt names both entries;
+- the restore:
+  - nothing is unpacked without who, why and a journal;
+  - a refused archive records nothing;
+  - a restore records its archive, directory, operator and reason before and after.
+
+The evidence register cites only the tests whose results the workflow keeps, and it keeps none for
+these Python tests, so they are named here rather than cited.
+
+## Slice 3: the alerts
+
+Two of the three alerts are built. Each is a reading in the worker's operations sample, raised above a
+development default, not a reviewed threshold, under the security/privacy incident runbook.
+
+- **A guard's refusal** (`GUARD_REFUSALS_DETECTED`, above zero in ten minutes).
+  - The error handler recognises a refusal a database guard raised. That is an error, or a cause in its
+    chain, whose code is `P0001` or `23514` and whose context names the PL/pgSQL function that raised
+    it. A check constraint, a key or a timeout names no function.
+  - The request is still answered with the same 503. It is counted as a `guard_refusal` security
+    signal, and only the guard's name is logged, never its message or the query.
+  - The application never sends a change a guard refuses, so each refusal is a fault or an attempt to
+    change a history, and either is worth an alert.
+  - A guard also refuses some changes that are not to a history, such as a release missing what it
+    needs. The alert counts those too. Such a refusal reaches the handler only when the application
+    failed to check first, which is a fault as well.
+- **Heavy privileged reading** (`PRIVILEGED_READING_DETECTED`).
+  - The reading is the most distinct objects one staff member read in the last hour, from the access
+    history.
+  - More than a hundred raise it. Reading one list again and again counts once, so a page that
+    refreshes does not raise it.
+  - An index on the access history's time keeps the reading cheap.
+- **Not built yet: a change outside the application.** Someone with the owning login can disable a
+  guard, or change rows in a session the application never sees. Finding that needs a fingerprint of
+  each history row, checked on a schedule. The check has to know which changes are allowed:
+  - an erasure's redactions and removals;
+  - a synthetic workspace's cleanup;
+  - the rows an erasure removes with a workspace.
+
+  It is the next part of this slice.
+
+**Tests.**
+- The two alerts are raised and resolved on stubbed readings.
+- The handler counts a guard's refusal, and not a check constraint's, a key's or a timeout's. It logs
+  only the guard's name.
+- The real refusal of a change to a privacy case's history is read as that guard's.
+- Both readings run on a real database.
+- The index migration has its upgrade check.
+
 ## What comes next
 
-Slice 2: the operator tools record who ran them and why.
+The rest of slice 3: the fingerprint check of every history row. Then slice 4, the staff viewer.

@@ -2,16 +2,23 @@
 
 No database connection or application startup. Windows callers must supply an
 owner-only parent directory; the native operator verifies its ACL independently.
+
+The operator gives their name and their reason (ADM-009). Once the archive is verified, and before the
+directory is made, the command writes them, the archive's hash and the directory to the operator's
+journal (operator_journal.py); it writes what came of it afterwards.
 """
 import json
 import os
 from pathlib import Path
 import re
 import tarfile
+from operator_journal import append, error_code, journal_directory, operator_record
 from recovery_archive import require, digest, private_regular, inspect_bundle, verify_tar
 
 
-def unpack_verified_archive(archive_path, destination, expected_sha256):
+def unpack_verified_archive(archive_path, destination, expected_sha256, env=None, operator=None, reason=None):
+    who = operator_record(operator, reason)
+    journal = journal_directory(os.environ if env is None else env)
     require(re.fullmatch(r'[a-f0-9]{64}', expected_sha256), 'PINNED_ARCHIVE_HASH_REQUIRED')
     private_regular(archive_path)
     require(archive_path.stat().st_size <= 250_000_000, 'BOUNDED_ARCHIVE_REQUIRED')
@@ -46,25 +53,42 @@ def unpack_verified_archive(archive_path, destination, expected_sha256):
         require(sum(e.size for e in entries) <= 200_000_000, 'BOUNDED_ARCHIVE_REQUIRED')
         # Validate every member before creating a destination or writing any bytes.
         verify_tar(archive_path, manifest, files)
-        destination.mkdir(mode=0o700)
-        for entry in entries:
-            target = destination / entry.name
-            require(target.resolve().is_relative_to(destination), 'RESTORE_CONTAINMENT_FAILED')
-            target.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
-            descriptor = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-            with os.fdopen(descriptor, 'wb') as output, archive.extractfile(entry) as source:
-                while chunk := source.read(1024 * 1024):
-                    output.write(chunk)
-    verified, members = inspect_bundle(destination)
-    return {'status': 'verified', 'scope': verified['scope'], 'releaseSha': verified['releaseSha'],
-            'fileCount': len(members), 'databaseRestoreValidated': False, 'applicationAccessEnabled': False}
+        require(not destination.is_relative_to(journal), 'OPERATOR_JOURNAL_SEPARATE_REQUIRED')
+        target_name = f'recovery_archive:{expected_sha256}'
+        # Nothing is unpacked until the journal holds who asked, why, and into which directory.
+        started = append(journal, who, 'recovery_restore', target_name, 'started',
+                         {'destination': str(destination), 'scope': manifest['scope'],
+                          'releaseSha': manifest['releaseSha']})
+        try:
+            destination.mkdir(mode=0o700)
+            for entry in entries:
+                target = destination / entry.name
+                require(target.resolve().is_relative_to(destination), 'RESTORE_CONTAINMENT_FAILED')
+                target.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+                descriptor = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+                with os.fdopen(descriptor, 'wb') as output, archive.extractfile(entry) as source:
+                    while chunk := source.read(1024 * 1024):
+                        output.write(chunk)
+            verified, members = inspect_bundle(destination)
+        except Exception as error:
+            append(journal, who, 'recovery_restore', target_name, 'failed',
+                   {'error': error_code(error), 'startedSha256': started['sha256']})
+            raise
+    result = {'status': 'verified', 'scope': verified['scope'], 'releaseSha': verified['releaseSha'],
+              'fileCount': len(members), 'databaseRestoreValidated': False, 'applicationAccessEnabled': False,
+              'operator': who['operator'], 'reason': who['reason'], 'startedSha256': started['sha256']}
+    finished = append(journal, who, 'recovery_restore', target_name, 'completed', result)
+    return {**result, 'journalSha256': finished['sha256']}
 
 
 if __name__ == '__main__':
     import sys
     try:
-        require(len(sys.argv) == 4, 'RESTORE_ARGUMENTS_INVALID')
-        print(json.dumps(unpack_verified_archive(Path(sys.argv[1]), Path(sys.argv[2]), sys.argv[3])))
+        # recovery_restore.py <archive> <new directory> <sha256> --operator <name> --reason <why>
+        args = sys.argv[1:]
+        require(len(args) == 7 and args[3] == '--operator' and args[5] == '--reason', 'RESTORE_ARGUMENTS_INVALID')
+        print(json.dumps(unpack_verified_archive(Path(args[0]), Path(args[1]), args[2], operator=args[4],
+                                                 reason=args[6])))
     except Exception:
         print('ARCHIVE_RESTORE_FAILED', file=sys.stderr)
         sys.exit(1)

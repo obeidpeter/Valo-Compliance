@@ -4,7 +4,7 @@ import { currentWorkspaceScope, db } from "@workspace/db";
 import { logger } from "../platform/logger";
 
 /** SEC-008: the security events counted for the internal alerts (valo-operations.ts). */
-export const SECURITY_SIGNAL_KINDS = ["denied_access", "signature_failure"] as const;
+export const SECURITY_SIGNAL_KINDS = ["denied_access", "signature_failure", "guard_refusal"] as const;
 export type SecuritySignalKind = (typeof SECURITY_SIGNAL_KINDS)[number];
 
 /**

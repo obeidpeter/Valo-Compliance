@@ -42,6 +42,15 @@ export const readinessQueries = {
     "refund-create-day",
   ]),
   aiActivity: atQuotaLimit(["customer-ai"]),
+  // ADM-009 (docs/architecture/audit-trail.md). Application requests a database guard refused in ten
+  // minutes: the application never sends a change a guard refuses, so each is a fault or an attempt to
+  // change a history.
+  guardRefusals: `SELECT COALESCE(sum(count), 0)::int AS value FROM valo_security_signals
+    WHERE kind='guard_refusal' AND window_started_at > now() - interval '10 minutes'`,
+  // The most distinct things one staff member read in the last hour, by the access history.
+  privilegedReading: `SELECT COALESCE(max(objects), 0)::int AS value FROM (SELECT count(DISTINCT object) AS objects
+    FROM valo_staff_access_audit WHERE created_at > now() - interval '1 hour' AND object <> 'unrecorded'
+    GROUP BY actor_id) per_actor`,
 } as const;
 /** Each security reading and the subject its alerts are named after. */
 const SECURITY_METRICS = [
@@ -51,6 +60,8 @@ const SECURITY_METRICS = [
   ["bulkExports", "BULK_EXPORTS"],
   ["paymentActivity", "PAYMENT_ACTIVITY"],
   ["aiActivity", "AI_ACTIVITY"],
+  ["guardRefusals", "GUARD_REFUSALS"],
+  ["privilegedReading", "PRIVILEGED_READING"],
 ] as const;
 type Metric = { status: "ok" | "unavailable"; value: number | null; elapsedMs: number };
 export type OperationalSample = {
@@ -68,6 +79,8 @@ export type OperationalSample = {
   bulkExports: Metric;
   paymentActivity: Metric;
   aiActivity: Metric;
+  guardRefusals: Metric;
+  privilegedReading: Metric;
   worker: { status: "healthy" | "stale" | "unavailable"; ageMs: number | null };
   limits: {
     exports: number;
@@ -81,6 +94,8 @@ export type OperationalSample = {
     bulkExports: number;
     paymentActivity: number;
     aiActivity: number;
+    guardRefusals: number;
+    privilegedReading: number;
   };
 };
 async function atomicJson(file: string, value: unknown) {
@@ -170,6 +185,10 @@ export async function collectOperationalSample(
       bulkExports: 0,
       paymentActivity: 0,
       aiActivity: 0,
+      // Development defaults too: any refusal by a database guard, and a staff member reading more than
+      // a hundred distinct records or lists in an hour, raise an alert.
+      guardRefusals: 0,
+      privilegedReading: 100,
     },
   } as OperationalSample;
 }
@@ -192,6 +211,8 @@ export const ALERT_RUNBOOKS = {
   BULK_EXPORTS: { runbook: "Security/privacy incident", accountable: "Incident lead + privacy owner" },
   PAYMENT_ACTIVITY: { runbook: "Payment/entitlement failure", accountable: "Finance + engineering" },
   AI_ACTIVITY: { runbook: "Security/privacy incident", accountable: "Incident lead + privacy owner" },
+  GUARD_REFUSALS: { runbook: "Security/privacy incident", accountable: "Incident lead + privacy owner" },
+  PRIVILEGED_READING: { runbook: "Security/privacy incident", accountable: "Incident lead + privacy owner" },
 } as const;
 export function alertRunbook(code: string) {
   const subject = code.replace(/_(BACKLOG|DETECTED|PROBE_UNAVAILABLE|UNAVAILABLE)$/, "");

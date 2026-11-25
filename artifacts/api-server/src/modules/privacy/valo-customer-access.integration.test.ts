@@ -29,6 +29,7 @@ import {
   MAX_CONCURRENT_WORKSPACE_EXPORTS,
 } from "./valo-customer-access";
 import { staffOperations } from "../staff/valo-staff-operations";
+import { readinessQueries } from "../operations/valo-operations";
 import { createDocument } from "../documents";
 import { resolveWorkspace } from "../workspaces";
 import { ValoProblem } from "../../platform/valo-problem";
@@ -353,6 +354,11 @@ test(
             .where(eq(valoStaffAccessAudit.assignmentId, role)),
           [{ area: "finance", object: "staff_overview:finance" }],
         );
+        // The alerts' two readings over the access history and the signals run on the real database:
+        // whoever read most in the last hour read at least this one overview (ADM-009).
+        const reading = async (query: string) => Number((await pool.query(query)).rows[0]?.value);
+        assert.ok((await reading(readinessQueries.privilegedReading)) >= 1);
+        assert.ok(Number.isSafeInteger(await reading(readinessQueries.guardRefusals)));
         await db.update(valoStaffAssignments).set({ active: false }).where(eq(valoStaffAssignments.id, role));
         await assert.rejects(() => staffOperations(staffActor(), "finance"), /no active permission/);
       });

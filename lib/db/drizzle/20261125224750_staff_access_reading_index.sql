@@ -1,0 +1,1 @@
+CREATE INDEX "valo_staff_access_audit_created_idx" ON "valo_staff_access_audit" USING btree ("created_at");

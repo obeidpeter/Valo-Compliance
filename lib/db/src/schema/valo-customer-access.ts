@@ -89,5 +89,7 @@ export const valoStaffAccessAudit = pgTable(
   },
   (t) => [
     check("valo_staff_access_audit_object_check", sql`${t.object} ~ '^[a-z][a-z_]*(:[^[:space:]]{1,200})?$'`),
+    // The privileged-reading alert reads the last hour of access every minute (ADM-009).
+    index("valo_staff_access_audit_created_idx").on(t.createdAt),
   ],
 );
