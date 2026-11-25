@@ -20,3 +20,4 @@ export {
   type CheckerChallengeVerdict,
 } from "./checker-challenge";
 export { executeCheckerChallenges } from "./checker-challenge-run";
+export { corpusDifferences, runCorpusAgainstReleased } from "./checker-corpus";

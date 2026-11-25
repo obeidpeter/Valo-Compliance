@@ -61,6 +61,7 @@
     "test:valo-privacy-http-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/routes/valo-privacy-http.integration.test.ts",
     "test:valo-budget-inspection": "node --import tsx --test src/modules/ai/inference-budget-inspection.test.ts",
     "inference:inspect": "NODE_ENV=development tsx src/scripts/finite-inference-run.ts --inspect",
+    "valo:checker-corpus": "NODE_ENV=development tsx src/scripts/checker-corpus-run.ts",
     "inference:prepare-supported": "NODE_ENV=development tsx src/scripts/prepare-finite-operational-set.ts",
     "test:valo-http": "tsx --test src/lib/valo-http.test.ts",
     "perf:site": "tsx src/scripts/site-timings.ts",

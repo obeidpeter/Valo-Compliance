@@ -468,3 +468,20 @@ function noteLabel(c: CorpusCase, rule: ReleasedRule) {
         binding,
       ).label;
 }
+
+/**
+ * The corpus against the rule versions a registry releases: each case its rule's released version
+ * answers is run as above; a case whose rule has no released version is reported as such, not run.
+ */
+export function runCorpusAgainstReleased(
+  cases: readonly CorpusCase[],
+  rules: ReleasedRule[],
+  options: { now: Date; trusted: ReadonlySet<string> },
+) {
+  return cases.map((c) => {
+    const ruleId = corpusCandidates[c.sourceCandidateID as CandidateId]?.ruleId;
+    return rules.some((r) => r.id === ruleId)
+      ? runCorpusCase(c, rules, options)
+      : { caseId: c.caseID, ruleId: ruleId ?? null, notReleased: true as const };
+  });
+}

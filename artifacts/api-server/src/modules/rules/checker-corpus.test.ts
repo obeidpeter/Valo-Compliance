@@ -186,3 +186,22 @@ test("the run's report names, for each scenario, the live result, the research n
     writeFileSync(path, `${JSON.stringify(report, null, 2)}\n`);
   }
 });
+
+test("against the rule versions a registry releases, each case whose rule is released is run as before, and each other case is reported as not released", async () => {
+  const { runCorpusAgainstReleased } = await import("./checker-corpus");
+  const label = (r: (typeof runs)[number]) => (r.live.outcome === "result" ? r.live.label : r.live.outcome);
+  const all = runCorpusAgainstReleased(corpus.cases, rules, { now, trusted });
+  assert.deepEqual(
+    all.map((r) => ("notReleased" in r ? null : label(r))),
+    runs.map(label),
+  );
+  const businessName = rules.filter((r) => r.id === "cac-business-name-814");
+  const one = runCorpusAgainstReleased(corpus.cases, businessName, { now, trusted });
+  const ran = one.flatMap((r) => ("notReleased" in r ? [] : [r]));
+  assert.equal(ran.length, 20);
+  assert.deepEqual(ran.map(label), runs.filter((r) => r.ruleId === "cac-business-name-814").map(label));
+  assert.deepEqual(
+    new Set(one.flatMap((r) => ("notReleased" in r ? [r.ruleId] : []))),
+    new Set(["ndpa-27-collection-information", "ntaa-11-company-return", "nafdac-f33-product-registration"]),
+  );
+});
