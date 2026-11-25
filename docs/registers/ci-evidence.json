@@ -436,6 +436,48 @@
       "proves": "A publication record carrying a field the schema does not define, such as an owner override, is held."
     },
     {
+      "requirement": "CMP-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/manual-library/retained-guidance-record.test.ts",
+      "test": "each retained guide's record is its own pinned draft's words, and nothing a draft does not say",
+      "proves": "Each of the 30 retained regulatory guides is filed with a record taken word for word from its own pinned draft's editorial lines: whom it applies to for the 24 guides whose drafts say it, what to do and keep for GUD-01 to GUD-10, and the registered templates GUD-11 to GUD-18 and GUD-27 to GUD-30 name; nothing is written where a draft does not say it."
+    },
+    {
+      "requirement": "CMP-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/manual-library/retained-guidance-record.test.ts",
+      "test": "only a regulatory article has a record, within its limits",
+      "proves": "Only a regulatory article takes a record: whom it applies to and what to do and keep are refused over 800 characters, and its related templates must be up to six registered template numbers."
+    },
+    {
+      "requirement": "CMP-001",
+      "job": "foundation",
+      "file": "lib/db/scripts/phase1-migrations.test.mjs",
+      "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
+      "proves": "The guidance record migration keeps every revision and a guide released before it, which its owner can still withdraw; the database then refuses a regulatory guide's release without whom it applies to, keeps a record to regulatory articles within its limits, and never changes a saved record."
+    },
+    {
+      "requirement": "CMP-001",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-manual-library.integration.test.ts",
+      "test": "manual publishing through staff HTTP routes and public readers",
+      "proves": "A regulatory article saved without whom it applies to is refused release by the database, the owner's panel shows a version's record with its text and refuses to sign one that does not say it even on a passing source check, a saved record joins the version's digest and never changes, and the retained guides are filed with their drafts' records."
+    },
+    {
+      "requirement": "CMP-001",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/guidance-record.test.ts",
+      "test": "a regulatory guide's record is typed, listed and asked for in plain words",
+      "proves": "The staff and owner screens ask for whom a regulatory guide applies to before the owner can sign it, read its related templates as registered numbers, and say what filing the drafts' records does."
+    },
+    {
+      "requirement": "CMP-001",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "the owner's panel shows a guide's record with its text, and offers no sign-off until it says whom it applies to",
+      "proves": "On a phone, the owner's panel shows a draft's record with its text, offers no sign-off while the version does not say whom it applies to and offers it once it does, with no automated WCAG 2.2 AA failure."
+    },
+    {
       "requirement": "CMP-008",
       "job": "foundation",
       "file": "scripts/src/valo/publication.test.ts",

@@ -77,6 +77,33 @@ A released regulatory guide's page shows, from the version and the check it was 
 The record is read with the version and its check, so the page shows what the owner signed, even when
 the next day's check reads the same sources again.
 
+## Settled while building it
+
+Slice 1:
+- The record is three columns of the staff library's revision, which only a regulatory article may fill
+  (`valo_manual_guidance_record`): whom it applies to and what to do and keep in up to 800 characters
+  each, and up to six registered template numbers, TPL-01 to TPL-40. They join the version's digest only
+  when given, so every earlier version keeps its digest, and like the rest of a version they never change
+  once saved.
+- The database refuses the release of a regulatory article that does not say whom it applies to, before
+  it checks the owner and the source check as before. The owner's panel shows the record with the text,
+  offers no sign-off until the version says it, and the sign-off route refuses it with why (409).
+- The loader takes each field from the guide's own pinned draft, without Markdown's emphasis marks:
+  GUD-01 to GUD-10's "Applicability", and their "Action / evidence" up to "Related content", which names
+  guides; GUD-11 to GUD-18's metadata from its scope up to its related templates; the claim map's
+  "Applicability" or "Scope" sentence of GUD-20 and GUD-23; GUD-27 to GUD-30's "Audience condition"; and
+  the template numbers the related templates lines name. So 24 guides are filed with whom they apply to,
+  10 with what to do and keep, and 12 with related templates. GUD-19, GUD-21, GUD-22 and GUD-24 to GUD-26
+  get nothing, and the drafts panel says a Content editor writes it.
+- A guide already filed without its record gets it with "File the proposed records", as a new draft
+  version of the same text, which the owner then signs. Filing releases nothing.
+- Each source of a new source check keeps the body that issued it and, for an Act or a regulator's
+  document, the day its text took effect, from the claim map's instrument. A web page says what it says
+  when it is read, so it has no such day. Neither joins the check's evidence, so a guide signed before
+  keeps showing.
+- The public pages read none of this yet: slice 2 shows it. A database the migration has not reached
+  keeps its public pages as before, while the staff library and the owner's panel ask for the migration.
+
 ## What does not change
 
 - The text, its claim map and the owner's source check, and which guides can be released.
