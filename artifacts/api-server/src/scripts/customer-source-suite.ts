@@ -6,9 +6,17 @@ import { db, pool, valoAIDrafts } from "@workspace/db";
 import {
   bindCustomerCase,
   caseUUID,
+  customerRubric,
+  customerRubricCorpusHash,
   expectedSourceNumbers,
   explicitBoundaryFollowup,
+  rubricFollowup,
+  rubricSections,
+  scoreCustomerCase,
   type AuthoredCustomerCase,
+  type CustomerAIInput,
+  type CustomerRun,
+  type RubricCase,
 } from "../modules/ai-lanes";
 import {
   hashAI,
@@ -17,10 +25,12 @@ import {
   customerProviderPayload,
 } from "../modules/ai-lanes";
 import { organizeCustomerDraft, type CustomerTransport } from "../modules/ai-lanes";
-import { createCustomerAIDraft, customerAIUsage, getCustomerAIDraft } from "../modules/ai-lanes";
+import { customerAIUsage } from "../modules/ai-lanes";
+import type { WorkspaceActor } from "../modules/workspaces";
 import { sha256 } from "@workspace/valo-core";
 import { workspaceActorFromRecord } from "../platform/workspace-context";
 import { customerKeptCases, keepAcceptanceRun, type CustomerAnswer } from "../modules/acceptance-review";
+import { keptCustomerDraft, runCustomerRubricCase } from "./customer-rubric-run";
 type NativeRecord = {
   caseID: string;
   caseHash: string;
@@ -57,6 +67,7 @@ async function main() {
   const bytes = await readFile(resolve(root, "docs/evaluation-candidates/customer-ai.json")),
     corpus = JSON.parse(bytes.toString()) as { cases: AuthoredCustomerCase[] };
   assert.equal(corpus.cases.length, 60);
+  assert.equal(hashAI(corpus), customerRubricCorpusHash, "The rubric was written for another corpus");
   assert.equal(new Set(corpus.cases.map((c) => c.caseID)).size, 60);
   // With --keep-for-review=<operator>, the run is also kept for an independent reviewer
   // (docs/architecture/reviewer-record.md, slice 2), with each answer the provider wrote.
@@ -116,9 +127,87 @@ async function main() {
       );
     nativeReceiptHash = sha256(retained);
   }
+  // Every case outside the controls is scored with its rubric (docs/architecture/drafting-rubric.md) on
+  // what the app did with it. A stop costs nothing, so it runs whenever the evaluation identity is
+  // available; an ordinary case reaches the provider only when it is selected for this run.
+  const reusableDraft = async (scope: WorkspaceActor, input: CustomerAIInput) => {
+    const { idempotencyKey: _key, ...facts } = input;
+    const [old] = await db
+      .select()
+      .from(valoAIDrafts)
+      .where(
+        and(
+          eq(valoAIDrafts.workspaceId, scope.workspaceId),
+          eq(valoAIDrafts.inputHash, hashAI(facts)),
+          eq(valoAIDrafts.promptVersion, `${customerPromptVersion}/${customerNoticeVersion}`),
+        ),
+      )
+      .orderBy(asc(valoAIDrafts.createdAt))
+      .limit(1);
+    return old &&
+      old.status === "ready" &&
+      Date.now() - old.createdAt.getTime() < 86400000 &&
+      old.providerInputHash === hashAI(customerProviderPayload(input))
+      ? old.id
+      : null;
+  };
+  const scoredCase = async (c: RubricCase) => {
+    const entry = customerRubric[c.caseID]!,
+      followup = rubricFollowup(c),
+      bound = bindCustomerCase(c, followup);
+    const record: Record<string, unknown> = {
+      caseID: c.caseID,
+      category: c.category,
+      caseHash: hashAI(c),
+      run: entry.run,
+      followup: bound.followup,
+      mappedInputHash: bound.inputHash,
+      numericChecks: expectedSourceNumbers(c, bound),
+      providerQualityPassed: false,
+      actualProviderAttempts: 0,
+    };
+    let run: CustomerRun | null = null;
+    if (actor && (entry.run === "stop" || (live && selected.includes(c.caseID)))) {
+      const scope = workspaceActorFromRecord(actor);
+      const reusable = entry.run === "draft" && bound.input ? await reusableDraft(scope, bound.input) : null;
+      if (reusable) {
+        run = { followup, outcome: { kind: "stored", ...(await keptCustomerDraft(scope, reusable)) } };
+        record.reusedExactFreshResult = true;
+      } else if (entry.run === "draft" && process.env.VALO_SOURCE_AI_REUSE_ONLY === "true") {
+        record.held = "exact_fresh_reuse_unavailable_no_provider_call_allowed";
+      } else {
+        run = await runCustomerRubricCase(scope, c, {
+          idempotencyKey: caseUUID({
+            case: hashAI(c),
+            followup: bound.followup.hash,
+            prompt: customerPromptVersion,
+            notice: customerNoticeVersion,
+          }),
+          ...(entry.run === "draft" ? { organize: organizeCustomerDraft } : {}),
+        });
+        if (run.outcome.kind === "stored") record.actualProviderAttempts = run.outcome.draft.providerCalls;
+      }
+      if (run?.outcome.kind === "stored") {
+        record.previewId = run.outcome.draft.id;
+        record.previewStatus = run.outcome.draft.status;
+      }
+    }
+    const score = scoreCustomerCase(c, run);
+    return {
+      ...record,
+      status: score.status,
+      reason: score.reason,
+      rubric: { critical: score.critical, sections: rubricSections(score) },
+    };
+  };
+
   const results: Record<string, unknown>[] = [];
   for (const c of corpus.cases) {
     try {
+      if (customerRubric[c.caseID]!.run !== "control") {
+        results.push(await scoredCase(c as RubricCase));
+        continue;
+      }
       const original = bindCustomerCase(c),
         fault = faultKinds[c.category];
       const observed = native?.records.find((r) => r.caseID === c.caseID);
@@ -253,83 +342,8 @@ async function main() {
         };
         continue;
       }
-      if (!live || !selected.includes(c.caseID)) continue;
-      if (!actor) {
-        record.reason = "existing_evaluation_identity_unavailable";
-        continue;
-      }
-      input.idempotencyKey = caseUUID({
-        case: hashAI(c),
-        followup: adapted.followup.hash,
-        prompt: customerPromptVersion,
-        notice: customerNoticeVersion,
-      });
-      const { idempotencyKey: _key, ...facts } = input,
-        ih = hashAI(facts);
-      const [old] = await db
-        .select()
-        .from(valoAIDrafts)
-        .where(
-          and(
-            eq(valoAIDrafts.workspaceId, actor.workspaceId),
-            eq(valoAIDrafts.inputHash, ih),
-            eq(valoAIDrafts.promptVersion, `${customerPromptVersion}/${customerNoticeVersion}`),
-          ),
-        )
-        .orderBy(asc(valoAIDrafts.createdAt))
-        .limit(1);
-      const reusable =
-        old &&
-        old.status === "ready" &&
-        Date.now() - old.createdAt.getTime() < 86400000 &&
-        old.providerInputHash === hashAI(customerProviderPayload(input));
-      if (!reusable && process.env.VALO_SOURCE_AI_REUSE_ONLY === "true") {
-        record.reason = "exact_fresh_reuse_unavailable_no_provider_call_allowed";
-        continue;
-      }
-      const preview = reusable
-        ? await getCustomerAIDraft(workspaceActorFromRecord(actor), old.id)
-        : await createCustomerAIDraft(workspaceActorFromRecord(actor), input);
-      const [row] = await db
-        .select()
-        .from(valoAIDrafts)
-        .where(and(eq(valoAIDrafts.workspaceId, actor.workspaceId), eq(valoAIDrafts.id, preview.id)));
-      assert.ok(row);
-      const runs = row.providerRuns as {
-        outboundAttempted: boolean;
-        responseId: string | null;
-        usage: unknown;
-        model: string | null;
-      }[];
-      record.previewId = preview.id;
-      record.previewStatus = preview.status;
-      record.providerRuns = runs;
-      record.reusedExactFreshResult = Boolean(reusable);
-      record.actualProviderAttempts = reusable ? 0 : runs.filter((r) => r.outboundAttempted).length;
-      if (preview.status !== "ready") {
-        record.reason = "application_preflight_quota_or_provider_hold";
-        continue;
-      }
-      assert.deepEqual(preview.content.financialInput, input.financialInput);
-      assert.equal(preview.content.fields.issuerName, input.issuerName);
-      assert.equal(preview.content.fields.recipientName, input.recipientName);
-      assert.ok(runs.some((r) => r.outboundAttempted && r.responseId && r.model && r.usage));
-      if (c.caseID === "CAI-CAND-QUO-01") {
-        assert.equal(preview.content.fields.issueDate, followup.issueDate);
-        assert.equal(input.financialInput.taxAmountKobo, null);
-        assert.equal(input.financialInput.deliveryKobo, undefined);
-        assert.ok(input.contextLines.includes("Delivery date unconfirmed."));
-        const rows = preview.content.blocks.flatMap((b) => b.rows);
-        assert.ok(rows.some((r) => r[0] === "Subtotal" && r[1] === "₦27,000.00"));
-        record.status = "provider_generation_pass_with_declared_synthetic_followup";
-        record.providerQualityPassed = true;
-        record.reason = "unchanged_complete_scope_rubric_checked_after_explicit_followup";
-        record.routineLogPrivacyInspected = false;
-        continue;
-      }
-      // A real completion is retained, but omitted rubric/log checks cannot become a full acceptance pass.
-      record.status = "partial_provider_evidence";
-      record.reason = "provider_generation_and_numbers_observed_full_rubric_and_log_review_pending";
+      // The two controls the suite cannot run in-process run in their own CI tests.
+      record.reason = "run_by_the_controls_own_tests";
     } catch (e) {
       results.push({
         caseID: c.caseID,
@@ -347,7 +361,7 @@ async function main() {
   assert.equal(unique.length, 60);
   const report = {
     suite: "actual-authored-customer60",
-    version: "source-runner-v2",
+    version: "source-runner-v3-rubric",
     executedAt: new Date().toISOString(),
     corpusHash: hashAI(JSON.parse(bytes.toString())),
     cases: 60,
@@ -357,12 +371,9 @@ async function main() {
     quotasChanged: false,
     providerMode: live,
     actualBilling: null,
-    authoredAsWrittenGenerationPasses: unique.filter((r) => r.providerQualityPassed === true && !r.followup)
-      .length,
-    providerGenerationWithDeclaredFollowupPasses: unique.filter(
-      (r) => r.providerQualityPassed === true && r.followup,
-    ).length,
-    partialProviderEvidence: unique.filter((r) => r.status === "partial_provider_evidence").length,
+    awaitingReviewer: unique.filter((r) => r.status === "needs_evaluator_decision").length,
+    rubricFailed: unique.filter((r) => r.status === "rubric_failed").length,
+    criticalFailures: unique.filter((r) => (r.rubric as { critical?: boolean } | undefined)?.critical).length,
     controlledBoundaryPasses: unique.filter((r) => r.status === "control_pass").length,
     blocked: unique.filter((r) => r.status === "blocked").length,
     failed: unique.filter((r) => r.status === "fail").length,
@@ -376,9 +387,8 @@ async function main() {
       ...(unique.find((r) => r.caseID === c.caseID) as Record<string, unknown>),
       caseHash: hashAI(c),
     }));
-    const ids = ordered.flatMap((r) =>
-      typeof r.previewId === "string" && r.previewStatus === "ready" ? [r.previewId] : [],
-    );
+    // A stopped case's draft is kept as well: the rubric scores it.
+    const ids = ordered.flatMap((r) => (typeof r.previewId === "string" ? [r.previewId] : []));
     // Only the suite's evaluation identity's drafts are read: they are synthetic.
     const rows = ids.length
       ? await db
@@ -391,7 +401,7 @@ async function main() {
       operator: keepFor,
       summary: [
         `The customer AI suite's run, executed at ${report.executedAt}.`,
-        `${report.partialProviderEvidence} answers await a full rubric, ${report.controlledBoundaryPasses} controls passed, ${report.blocked} blocked and ${report.failed} failed.`,
+        `${report.awaitingReviewer} answers await the reviewer, ${report.rubricFailed} failed their rubric (${report.criticalFailures} critically), ${report.controlledBoundaryPasses} controls passed, ${report.blocked} blocked and ${report.failed} failed.`,
       ],
       cases: customerKeptCases(ordered, new Map(rows.map((row) => [row.id, row.preview as CustomerAnswer]))),
     });
@@ -401,11 +411,11 @@ async function main() {
     JSON.stringify({
       cases: 60,
       controls: report.controlledBoundaryPasses,
+      awaitingReviewer: report.awaitingReviewer,
+      rubricFailed: report.rubricFailed,
+      criticalFailures: report.criticalFailures,
       blocked: report.blocked,
       failed: report.failed,
-      authoredAsWrittenGenerationPasses: report.authoredAsWrittenGenerationPasses,
-      providerGenerationWithDeclaredFollowupPasses: report.providerGenerationWithDeclaredFollowupPasses,
-      partialProviderEvidence: report.partialProviderEvidence,
       formalAcceptance: false,
     }),
   );

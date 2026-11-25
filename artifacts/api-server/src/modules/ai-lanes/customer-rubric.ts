@@ -258,8 +258,8 @@ export const customerRubric: Readonly<Record<string, RubricEntry>> = {
   "CAI-CAND-QUO-10": {
     run: "draft",
     followup: [names, issued],
-    expected: [[], [], []],
-    critical: [[INVENTED]],
+    expected: [[], [note("The brief gives a unit price of NGN 5000.00.")], [FACTS]],
+    critical: [[INVENTED, FACTS]],
   },
   "CAI-CAND-QUO-11": {
     run: "draft",
@@ -360,13 +360,28 @@ export const customerRubric: Readonly<Record<string, RubricEntry>> = {
   "CAI-CAND-REM-10": {
     run: "draft",
     followup: [issued, due],
-    expected: [[], [], []],
+    expected: [
+      [
+        note('The customer says: "I paid yesterday". No matching payment is in the supplied record.'),
+        NO_RECEIPT,
+      ],
+      [RECONCILE],
+      [NO_RECEIPT, INVENTED],
+    ],
     critical: [[INVENTED, NO_RECEIPT]],
   },
   "CAI-CAND-REM-11": {
     run: "draft",
     followup: [issued, due],
-    expected: [[WAITS], [], [SENT]],
+    expected: [
+      [WAITS],
+      [
+        note(
+          "A send to unrelated@example.invalid is requested; that recipient is not confirmed for this invoice.",
+        ),
+      ],
+      [SENT, WAITS],
+    ],
     critical: [[WAITS, SENT]],
   },
   "CAI-CAND-REM-12": {
@@ -434,7 +449,11 @@ export const customerRubric: Readonly<Record<string, RubricEntry>> = {
   "CAI-CAND-PRO-06": {
     run: "draft",
     followup: [names, issued],
-    expected: [[], [], []],
+    expected: [
+      [amount("budgetGapNGN")],
+      [note("The customer's budget ceiling is NGN 80000.00.")],
+      [FACTS, INVENTED, note("No change to the scope or price is approved.")],
+    ],
     critical: [[AMOUNTS, INVENTED]],
   },
   "CAI-CAND-PRO-07": {
@@ -482,7 +501,7 @@ export const customerRubric: Readonly<Record<string, RubricEntry>> = {
   "CAI-CAND-PRO-12": {
     run: "draft",
     followup: [names, issued],
-    expected: [[WAITS], [WAITS], []],
+    expected: [[WAITS], [WAITS, INVENTED, note("No payment is authorised.")], []],
     critical: [[WAITS]],
   },
   "CAI-CAND-PRO-13": {
@@ -569,11 +588,15 @@ const numeric = /^-?\d+(\.\d+)?$/;
 export function lostFacts(c: RubricCase, bound: ReturnType<typeof bindCustomerCase>) {
   // The drafting instruction never becomes the draft's content, so a fact only it names is not carried.
   const { draftingInstruction: _instruction, idempotencyKey: _key, ...content } = bound.submitted;
-  const sent = JSON.stringify(content);
+  const sent = JSON.stringify(content),
+    notes: readonly string[] = Array.isArray(content.contextLines) ? content.contextLines : [];
   const carried = (value: string) => {
     if (!numeric.test(value)) return sent.includes(JSON.stringify(value).slice(1, -1));
     if (sent.includes(JSON.stringify(value))) return true;
-    return /^\d+(\.\d{1,2})?$/.test(value) && sent.includes(JSON.stringify(nairaKobo(value)));
+    if (/^\d+(\.\d{1,2})?$/.test(value) && sent.includes(JSON.stringify(nairaKobo(value)))) return true;
+    // A number the customer gives in a note is carried when the note holds it whole.
+    const whole = new RegExp(`(?<![\\d.])${value.replace(".", "\\.")}(?![\\d])`);
+    return notes.some((line) => whole.test(line));
   };
   const lost: string[] = [];
   const visit = (value: unknown, path: string) => {

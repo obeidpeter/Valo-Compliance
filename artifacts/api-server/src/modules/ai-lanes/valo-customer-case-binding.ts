@@ -19,13 +19,29 @@ export type AuthoredCustomerCase = {
   suppliedFacts: Record<string, unknown>;
   expectedNumeric?: Record<string, string>;
 };
-type Line = { description: string; quantity: string | null; unitPrice: string | null; currency?: string };
+type Line = {
+  description: string;
+  quantity: string | null;
+  unitPrice: string | null;
+  currency?: string;
+  unit?: string;
+};
 export function nairaKobo(value: string) {
   if (!/^\d+(?:\.\d{1,2})?$/.test(value)) throw Error("SOURCE_AMOUNT_NOT_DECIMAL_MONEY");
   const [w, f = ""] = value.split(".");
   return (BigInt(w!) * 100n + BigInt(f.padEnd(2, "0"))).toString();
 }
 export const customerFollowupVersion = "synthetic-customer-followup-v1";
+/**
+ * The facts of a case the app has no field for, given to it as a customer would give them
+ * (docs/architecture/drafting-rubric.md). The corpus's execution requirements ask for each such fixture
+ * change to be recorded: until v2 the binding left these out, or held the case on them.
+ */
+export const customerFixtureChanges = [
+  "A line's unit goes in its description, as `Demo fabric (per metre)`.",
+  "A brief's unit price, a customer's statement that they paid, a requested recipient, a customer's budget ceiling, a prospect's email address and a contingency percentage go in the customer's notes.",
+  "A scope with no approved change, and a payment that is not authorised, are said in the customer's notes.",
+] as const;
 /** Follow-ups are supplied explicitly by the evaluator, never inferred user facts.
  * The original input/hash and preflight remain independent evidence. */
 export function bindCustomerCase(c: AuthoredCustomerCase, followup: Record<string, string> = {}) {
@@ -78,6 +94,8 @@ export function bindCustomerCase(c: AuthoredCustomerCase, followup: Record<strin
       "price",
       "newDraftInputs",
       "briefUnitPrice",
+      "prospectEmail",
+      "paymentAuthorisation",
     ]);
   const excludedFacts: string[] = [];
   // Harness-selected workspace/revision identities are checked by the native
@@ -136,13 +154,11 @@ export function bindCustomerCase(c: AuthoredCustomerCase, followup: Record<strin
   if (f.paymentReconciled === false) {
     mapped.add("paymentReconciled");
     mapped.add("customerStatement");
-    issues.push("payment_reconciliation_required");
   }
   if (f.recipientConfirmedForInvoice === false) {
     mapped.add("recipientConfirmedForInvoice");
     mapped.add("invoiceCustomer");
     mapped.add("requestedRecipient");
-    issues.push("recipient_confirmation_required");
   }
   const money = (key: string) => (typeof f[key] === "string" ? nairaKobo(f[key] as string) : undefined);
   const convert = (l: Line, index: number) => {
@@ -151,7 +167,7 @@ export function bindCustomerCase(c: AuthoredCustomerCase, followup: Record<strin
       return null;
     }
     return {
-      description: l.description,
+      description: l.unit ? `${l.description} (per ${l.unit})` : l.description,
       quantity: l.quantity,
       unitPriceKobo: nairaKobo(l.unitPrice),
       ...(l.currency ? { currency: l.currency } : {}),
@@ -194,8 +210,6 @@ export function bindCustomerCase(c: AuthoredCustomerCase, followup: Record<strin
       .filter((x) => x !== null)
       .map((l) => ({ ...l, selected: f.optionalSelected === true }));
   if (typeof f.requestedTotal === "string") financial.requestedTotalKobo = nairaKobo(f.requestedTotal);
-  if (typeof f.briefUnitPrice === "string" && sourceLines.some((l) => l.unitPrice !== f.briefUnitPrice))
-    issues.push("conflicting_unit_prices");
   if (task === "payment_reminder" && typeof f.invoiceAmount === "string") {
     financial.paymentRecord = {
       invoiceAmountKobo: nairaKobo(f.invoiceAmount),
@@ -212,13 +226,6 @@ export function bindCustomerCase(c: AuthoredCustomerCase, followup: Record<strin
   }
   if (task === "business_proposal") {
     financial.amountDueKobo = money("baseBudget") ?? money("price") ?? money("packagePrice") ?? null;
-    if (
-      typeof f.packagePrice === "string" &&
-      typeof f.customerBudgetCeiling === "string" &&
-      BigInt(nairaKobo(f.packagePrice)) > BigInt(nairaKobo(f.customerBudgetCeiling)) &&
-      f.scopeChangesApproved !== true
-    )
-      issues.push("unapproved_budget_gap");
   }
   const contextLines: string[] = [...uncertaintyNotes];
   for (const key of ["purpose", "timeline", "customerNote", "prospectNote", "selectedDocumentMarker"]) {
@@ -235,6 +242,25 @@ export function bindCustomerCase(c: AuthoredCustomerCase, followup: Record<strin
     contextLines.push("Optional extras are not selected or included in the base total.");
   if (f.contingencyApprovedForSpending === false)
     contextLines.push("Optional contingency is a planning allowance, not approved expenditure.");
+  // The facts the app has no field for, in the customer's notes (customerFixtureChanges).
+  if (typeof f.contingencyPercent === "string")
+    contextLines.push(`An optional contingency of ${f.contingencyPercent}% of the base budget is proposed.`);
+  if (typeof f.briefUnitPrice === "string")
+    contextLines.push(`The brief gives a unit price of NGN ${f.briefUnitPrice}.`);
+  if (typeof f.customerStatement === "string" && f.paymentReconciled === false)
+    contextLines.push(
+      `The customer says: "${f.customerStatement}". No matching payment is in the supplied record.`,
+    );
+  if (typeof f.requestedRecipient === "string" && f.recipientConfirmedForInvoice === false)
+    contextLines.push(
+      `A send to ${f.requestedRecipient} is requested; that recipient is not confirmed for this invoice.`,
+    );
+  if (typeof f.customerBudgetCeiling === "string")
+    contextLines.push(`The customer's budget ceiling is NGN ${f.customerBudgetCeiling}.`);
+  if (f.scopeChangesApproved === false) contextLines.push("No change to the scope or price is approved.");
+  if (typeof f.prospectEmail === "string")
+    contextLines.push(`The prospect's email address is ${f.prospectEmail}.`);
+  if (f.paymentAuthorisation === false) contextLines.push("No payment is authorised.");
   const input = {
     task,
     tone: "neutral",
@@ -271,7 +297,7 @@ export function bindCustomerCase(c: AuthoredCustomerCase, followup: Record<strin
     issues.push("line_total_unavailable");
   }
   return {
-    version: "source-case-binding-v1",
+    version: "source-case-binding-v2",
     caseID: c.caseID,
     caseHash: hashAI(c),
     originalFactsHash: hashAI(f),

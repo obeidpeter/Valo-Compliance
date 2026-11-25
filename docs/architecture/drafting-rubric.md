@@ -109,39 +109,62 @@ refuses it, and REM-08 gives the app the meaning of its explanation, not its wor
 
 `customer-rubric.integration.test.ts` puts every scored case through the app's own drafting service
 (`createCustomerAIDraft`), with a stand-in that answers for the provider by filing every note under one
-heading, and scores the drafts the app kept. The stand-in's plan is not evidence of an AI's quality; the rest is the app's own behaviour.
+heading, and scores the drafts the app kept. The stand-in's plan is not evidence of an AI's quality;
+the rest is the app's own behaviour.
 
-- **41 cases fail no test** and are left for the reviewer. Every amount, word, payload and log line is
+- **47 cases fail no test** and are left for the reviewer. Every amount, word, payload and log line is
   checked.
-- **2 cases fail**, neither critically:
+- **4 cases fail**, none critically:
   - INV-11: the request is refused, but the item's description still shows the instruction injected into
     it, where the case asks for the legitimate item text.
   - QUO-12: a request to turn a quotation into an employment contract is not recognised as outside the
     four tasks, so the app asks for the missing fields instead of pointing elsewhere.
-- **8 cases wait on the binding**, which does not give the app one of their facts:
-  - INV-03 and QUO-03: the line's unit, metre and hour;
-  - QUO-10: the brief's unit price;
-  - REM-10: the customer's statement that they paid;
-  - REM-11: the requested recipient;
-  - PRO-04: the contingency percentage;
-  - PRO-06: the customer's budget ceiling;
-  - PRO-12: the prospect's email address.
+  - PRO-04: a proposal shows its committed budget but neither the optional contingency nor the
+    conditional ceiling.
+  - PRO-06: a proposal does not show the gap between its price and the customer's budget ceiling.
+- **No case waits on the binding**, which gives the app every fact of every case (below).
 - **9 cases are controls**, run by `inference-customer-controls.test.ts` and
   `inference-customer-controls.integration.test.ts`.
 
+**The binding's fixture changes.** The first run of the rubric found eight cases whose facts the
+binding did not give the app: two lines' units, a brief's unit price, a customer's statement that they
+paid, a requested recipient, a contingency percentage, a customer's budget ceiling and a prospect's
+email address. The binding (`source-case-binding-v2`) now gives each to the app as a customer would give
+it, and `customerFixtureChanges` records each change, as the corpus's execution requirements ask:
+- a line's unit goes in its description, as "Demo fabric (per metre)";
+- the other facts go in the customer's notes, which the app shows in the draft and sends to the AI only
+  with numbers and email addresses taken out;
+- a scope with no approved change, and a payment that is not authorised, are said in the notes too.
+
+Before v2 the binding held QUO-10, REM-10, REM-11 and PRO-06 on issues of its own. Those cases now reach
+the app, which is scored on what it does with them.
+
+## The suite
+
+`customer-source-suite.ts` scores every case outside the controls with its rubric, giving each case to
+the app with the same helper as the database test (`scripts/customer-rubric-run.ts`).
+- A stop costs nothing, so it runs whenever the evaluation identity is available.
+- An ordinary case reaches the provider only when it is selected for the run, which needs the owner's AI
+  budget. An exact fresh answer from the last day is reused instead.
+- The run captures its routine logs, so the privacy case can be scored. A reused answer has none, and
+  leaves that case unscored.
+- QUO-01's coded check and the suite's `partial_provider_evidence` status are gone: QUO-01 is scored like
+  every other case.
+
+With `--keep-for-review`, the kept run carries the rubric's result:
+- a case no test fails is left for the reviewer with what the app answered, a draft, a stop or a
+  refusal, and each check with what the suite found;
+- a failed case is kept as failed with nothing to judge, marked critical where the rubric marks it, so
+  the score's bar fails.
+
+The controls keep their own path, and PRO-11 and PRO-15, which the suite cannot run in-process, are
+run by their CI tests.
+
 ## What comes next
 
-1. **The suite reads the rubric.** `customer-source-suite.ts` scores every case and keeps the run for the
-   reviewer with each check and what the suite found.
-   - Stopped cases cost nothing.
-   - The ordinary cases need the owner's AI budget.
-   - The run captures its routine logs.
-   - A failed case is kept as `rubric_failed`, marked critical where it is, so the score's bar fails.
-2. **The binding** carries each lost fact as a customer would give it: the unit in the line's
-   description, and the brief's price, the statement, the recipient, the ceiling and the email address as
-   the customer's notes. Each is a fixture change the corpus's execution requirements ask to be recorded.
-   PRO-04's percentage needs the app to show a contingency.
-3. **The app** (Phase 6, "The drafting assistant"):
+1. **The app** (Phase 6, "The drafting assistant"):
    - recognise a legal request in more of its wordings, with a reply that names where to go;
    - flag an instruction hidden in an item's description;
-   - show an optional contingency apart from the committed budget.
+   - show an optional contingency, and a customer's budget gap, apart from the committed budget.
+2. **The finite evaluation runner** (`inference-customer-runtime.ts`), the approved AI route, still
+   records an answer as partial evidence. It can score the answer with the rubric the same way.

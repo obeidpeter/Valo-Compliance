@@ -231,12 +231,32 @@ export type CustomerAnswer = {
   limitations: string[];
 };
 type NumericCheck = { key: string; expected: string; actualKobo: string | null; pass: boolean };
+/** A case's score with its rubric, as the suite records it (docs/architecture/drafting-rubric.md). */
+type RubricRecord = { critical?: boolean; sections?: unknown };
+
+const answerSections = (answer: CustomerAnswer) => {
+  const fields = Object.entries(answer.content.fields).filter(([, value]) => value.trim());
+  return [
+    ...section("The answer", [
+      answer.title,
+      ...fields.map(([name, value]) => `${name}: ${value}`),
+      ...answer.content.blocks.flatMap((block) =>
+        block.type === "table" || block.type === "list"
+          ? block.rows.map((row) => row.join(" | "))
+          : [block.text],
+      ),
+    ]),
+    ...section("Its limitations", answer.limitations),
+  ];
+};
 
 /**
- * The customer AI suite's results: a case with an answer the provider wrote is left for a reviewer
- * with the answer as the customer saw it, its limitations, and the suite's own numeric checks, for the
- * reviewer to judge against the case's expected checks and rubric. The answers come only from the
- * suite's evaluation identity, whose drafts are synthetic.
+ * The customer AI suite's results. A case the rubric scores is kept with its rubric's result: one no
+ * test fails is left for a reviewer with what the app answered, a draft or its refusal, and each of the
+ * case's checks with what the suite found; one a test fails is kept as failed, marked critical where the
+ * rubric marks it, with nothing to judge. A result from before the rubric is left for a reviewer only
+ * with an answer the provider wrote, as the customer saw it, its limitations and the suite's numeric
+ * checks. The answers come only from the suite's evaluation identity, whose drafts are synthetic.
  */
 export function customerKeptCases(
   results: readonly Record<string, unknown>[],
@@ -251,20 +271,25 @@ export function customerKeptCases(
       review: null,
     };
     const answer = typeof result.previewId === "string" ? answers.get(result.previewId) : undefined;
+    const rubric = result.rubric as RubricRecord | undefined;
+    if (rubric) {
+      if (rubric.critical === true) kept.critical = true;
+      if (kept.status !== "needs_evaluator_decision") return kept;
+      kept.review = {
+        sections: [
+          ...(answer ? answerSections(answer) : []),
+          ...list(rubric.sections).flatMap((s) => {
+            const { heading, lines: values } = s as { heading?: unknown; lines?: unknown };
+            return section(String(heading), list(values));
+          }),
+        ],
+      };
+      return kept;
+    }
     if (!answer || result.previewStatus !== "ready") return kept;
-    const fields = Object.entries(answer.content.fields).filter(([, value]) => value.trim());
     kept.review = {
       sections: [
-        ...section("The answer", [
-          answer.title,
-          ...fields.map(([name, value]) => `${name}: ${value}`),
-          ...answer.content.blocks.flatMap((block) =>
-            block.type === "table" || block.type === "list"
-              ? block.rows.map((row) => row.join(" | "))
-              : [block.text],
-          ),
-        ]),
-        ...section("Its limitations", answer.limitations),
+        ...answerSections(answer),
         ...section(
           "The suite's numeric checks",
           (list(result.numericChecks) as NumericCheck[]).map(
