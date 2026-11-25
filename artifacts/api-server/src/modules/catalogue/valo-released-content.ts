@@ -32,6 +32,7 @@ import { setting } from "../../platform/settings";
 import { lockSourceState, sourceTargetAllowed } from "../sources";
 import { isManualTemplate, releasedManualEntries } from "../manual-library";
 import { manualCatalogue, manualResource, manualResourceKind, manualTemplate } from "./manual-presentation";
+import { releasedDocumentText, sampleFieldsPreview, templatePreview } from "./template-preview";
 import {
   approvedPricesForEditions,
   isFreeBaselineTemplate,
@@ -188,31 +189,7 @@ export async function publishedTemplateCount() {
   return existing.length + manual.filter((row) => isManualTemplate(row.kind)).length;
 }
 export function operationalPresentation(templateId: string) {
-  if (templateId === "TPL-07")
-    return {
-      summary: templateSummary(templateId),
-      preview: [
-        "SAMPLE FIELD: Business name [your information]",
-        "SAMPLE FIELDS: Item, unit and location [your information]",
-        "SAMPLE SECTIONS: Receipts, issues, adjustments and physical counts [your records]",
-      ],
-    };
-  if (templateId === "TPL-06")
-    return {
-      summary: templateSummary(templateId),
-      preview: [
-        "SAMPLE FIELD: Claimant [your information]",
-        "SAMPLE FIELDS: Expense date, description, amount and currency [your records]",
-        "SAMPLE FIELD: Internal review notes [your process]",
-      ],
-    };
-  return {
-    summary: templateSummary(templateId),
-    preview: [
-      "SAMPLE FIELD: Business name [your information]",
-      "SAMPLE FIELD: Document details [your information]",
-    ],
-  };
+  return { summary: templateSummary(templateId) };
 }
 export async function liveCoverage() {
   const [existing, manual] = await Promise.all([
@@ -376,7 +353,11 @@ export async function releasedTemplate(slug: string) {
     disclosure: bundle.candidate.disclosure,
     scope: bundle.candidate.scope,
     limitations: bundle.candidate.limitations,
-    preview: operationalPresentation(row.templateId).preview,
+    // A free template previews the opening of its own text; a premium one, only the sample fields its
+    // text marks, since its wording is the buyer's alone (DOC-004). All of it is in its files.
+    preview: free
+      ? [templatePreview(releasedDocumentText(document.content))]
+      : sampleFieldsPreview(releasedDocumentText(document.content)),
     developmentOnly: true,
     commercialLicenceAccepted: false,
     ...(free && { access: "free" as const }),

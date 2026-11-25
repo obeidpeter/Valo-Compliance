@@ -3290,6 +3290,13 @@
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
       "test": "a complete document's file panel offers the finished file, without the draft notice, and an incomplete or typed one says how its file is made instead",
       "proves": "The file panel of a complete invoice offers its finished file and asks for it without the draft acknowledgement, while an invoice with its questions unanswered and a document typed by hand are offered none and are told how their file is made."
+    },
+    {
+      "requirement": "DOC-004",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-server-pages.test.ts",
+      "test": "no file the web app's build serves holds a sentence of any premium template's text",
+      "proves": "No file of the web app's production build, its pages or its scripts, holds any plain sentence of the 28 premium templates' text, while a question label the scripts carry is found, so the scan reads them."
     }
   ]
 }

@@ -239,9 +239,14 @@ export function TemplateDetail({
                         </p>
                       ))}
                     </div>
-                    {t.publicationMethod !== "manual" && (
-                      <p className="mt-6 border-t border-dashed border-border pt-4 text-xs text-muted-foreground">
-                        Part of the template. All of it opens in your own copy.
+                    {(t.publicationMethod !== "manual" || t.access === "free") && (
+                      <p
+                        className="mt-6 border-t border-dashed border-border pt-4 text-xs text-muted-foreground"
+                        data-testid="text-preview-part"
+                      >
+                        {t.publicationMethod === "manual"
+                          ? "The opening of the template. All of it is in the file you download."
+                          : "Part of the template. All of it opens in your own copy."}
                       </p>
                     )}
                   </div>

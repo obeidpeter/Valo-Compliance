@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { paginateReleasedItems } from "./valo-catalogue";
 import { manualCatalogue, manualResource } from "./manual-presentation";
+import { releasedDocumentText, sampleFieldsPreview, templatePreview } from "./template-preview";
 import { escapeLikePattern } from "../manual-library";
 import { verifiedRightsApplicability } from "../publication/rights-applicability";
 test("synthetic already-eligible catalogue metadata produces nonzero counts, filters and pagination", () => {
@@ -154,4 +155,55 @@ test("manualCatalogue maps regulatory articles to guidance, uses sourceCheckedAt
 test("escapeLikePattern escapes SQL wildcards and backslashes literally", () => {
   assert.equal(escapeLikePattern("100% tax_check\\draft"), "100\\% tax\\_check\\\\draft");
   assert.equal(escapeLikePattern("Invoice template"), "Invoice template");
+});
+
+// DOC-004: a free library template's page shows a preview, not its whole text, which is in its file.
+test("a staff-library template's page previews the opening of its text in whole paragraphs, and not all of it", () => {
+  const description = "A blank synthetic agreement template to complete with your own details.";
+  assert.equal(templatePreview(description), description);
+  const paragraphs = Array.from(
+    { length: 6 },
+    (_, i) => `Synthetic paragraph ${i + 1}. ` + "Synthetic template words ".repeat(6).trim(),
+  );
+  const preview = templatePreview(paragraphs.join("\n\n"));
+  assert.ok(preview.startsWith(paragraphs[0]! + "\n\n" + paragraphs[1]!), preview);
+  assert.ok(!preview.includes(paragraphs[5]!), preview);
+  assert.ok(preview.endsWith(" …") && preview.length <= 702, preview);
+  // A first paragraph longer than the preview is cut at a word.
+  const cut = templatePreview("word ".repeat(300).trim());
+  assert.ok(cut.endsWith("word …") && cut.length <= 702, cut);
+});
+
+test("a reviewed template's page previews the opening of its own released text, a table's rows one to a line", () => {
+  const text = releasedDocumentText({
+    blocks: [
+      { text: "Synthetic stock register", rows: [] },
+      {
+        text: "",
+        rows: [
+          ["Item", "Unit"],
+          ["Synthetic item", "Box"],
+        ],
+      },
+      { text: "   ", rows: [] },
+      { text: "Synthetic closing line", rows: [] },
+    ],
+  });
+  assert.equal(
+    text,
+    "Synthetic stock register\n\nItem | Unit\nSynthetic item | Box\n\nSynthetic closing line",
+  );
+  assert.equal(templatePreview(text), text);
+});
+
+test("a premium template's preview names only the sample fields its text marks, never its wording", () => {
+  const text =
+    "This synthetic agreement binds [Customer name] and [Provider name]. The [Customer name] pays within [ ] days.";
+  assert.deepEqual(sampleFieldsPreview(text), [
+    "SAMPLE FIELDS: Customer name; Provider name [your information]",
+  ]);
+  assert.ok(!sampleFieldsPreview(text).join(" ").includes("binds"));
+  assert.deepEqual(sampleFieldsPreview("No fields at all."), [
+    "SAMPLE FIELD: Business name [your information]",
+  ]);
 });
