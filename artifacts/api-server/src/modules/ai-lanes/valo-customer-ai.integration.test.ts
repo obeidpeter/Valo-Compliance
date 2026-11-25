@@ -31,8 +31,8 @@ test(
   async (t) => {
     assert.equal(process.env.NODE_ENV, "development");
     assert.ok(!process.env.REPLIT_DEPLOYMENT);
-    const a = await resolveWorkspace(`valo-ai-db-negative-a-${randomUUID()}`);
-    const b = await resolveWorkspace(`valo-ai-db-negative-b-${randomUUID()}`);
+    const a = await resolveWorkspace(`synthetic-ai-db-negative-a-${randomUUID()}`);
+    const b = await resolveWorkspace(`synthetic-ai-db-negative-b-${randomUUID()}`);
     const ids = [a.workspaceId, b.workspaceId];
     const input = {
       ...structuredClone(customerAICases[0]!.input),

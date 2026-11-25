@@ -606,11 +606,42 @@ test(
           .where(eq(valoPrivacyEvents.caseId, id))
           .limit(1);
         assert.ok(receipt);
+        // The case history refuses the change itself (ADM-009). A corrupt copy, such as a damaged restore
+        // could hold, is made in one transaction with its guard off, which no other session sees, and the
+        // replay must still refuse it.
+        await assert.rejects(
+          async () => {
+            await db
+              .update(valoPrivacyEvents)
+              .set({ reason: "controlled unsigned corruption" })
+              .where(eq(valoPrivacyEvents.id, receipt.id));
+          },
+          // Drizzle reports "Failed query: ..." with the database's own error as its cause.
+          (error: unknown) => {
+            for (let e: unknown = error, depth = 0; e && depth < 5; depth++) {
+              const item = e as { message?: unknown; cause?: unknown };
+              if (/Privacy case history is append-only/.test(String(item.message ?? ""))) return true;
+              e = item.cause;
+            }
+            return false;
+          },
+        );
+        const setReason = (reason: string) =>
+          db.transaction(async (tx) => {
+            await tx.execute(
+              sql`ALTER TABLE valo_privacy_events DISABLE TRIGGER valo_privacy_events_append_only`,
+            );
+            const changed = await tx
+              .update(valoPrivacyEvents)
+              .set({ reason })
+              .where(eq(valoPrivacyEvents.id, receipt.id));
+            assert.equal(changed.rowCount, 1);
+            await tx.execute(
+              sql`ALTER TABLE valo_privacy_events ENABLE TRIGGER valo_privacy_events_append_only`,
+            );
+          });
         try {
-          await db
-            .update(valoPrivacyEvents)
-            .set({ reason: "controlled unsigned corruption" })
-            .where(eq(valoPrivacyEvents.id, receipt.id));
+          await setReason("controlled unsigned corruption");
           await assert.rejects(() =>
             replayErasureObjects(id, async (key) => {
               calls.push(key);
@@ -618,10 +649,7 @@ test(
           );
           assert.equal(calls.length, 0);
         } finally {
-          await db
-            .update(valoPrivacyEvents)
-            .set({ reason: receipt.reason })
-            .where(eq(valoPrivacyEvents.id, receipt.id));
+          await setReason(receipt.reason);
         }
         try {
           const absentReceipt = await db.transaction(async (tx) =>
