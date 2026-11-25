@@ -2834,7 +2834,7 @@
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/rules/checker-questionnaire.test.ts",
       "test": "earlier answers fill a rule's answers exactly as the design's table lists, each with an answer the rule's question offers",
-      "proves": "The check's earlier answers fill the rules' answers exactly as the design's table lists them, row by row; “No” to the personal-data question and “I do not know”, “Skip for now” or “Not applicable” to any of them fill nothing; and each filled answer is one its rule's question offers, from a question of the check asked in the same step or before it."
+      "proves": "The check's earlier answers fill the rules' answers exactly as the design's table lists them, row by row, and exactly one of the product-registration Act's kinds of product, alone, fills the particular product; “No” to the personal-data question and “I do not know”, “Skip for now” or “Not applicable” to any of them fill nothing; and each filled answer is one its rule's question offers, from a question of the check asked in the same step or before it."
     },
     {
       "requirement": "RUL-001",
@@ -2891,6 +2891,27 @@
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
       "test": "signed in, the requirements check asks the business-name requirement's questions by the operator's form: a firm's partners, how a name is composed once there is one, and a sole proprietor's operator answered from how the business is set up",
       "proves": "In a browser on an emulated phone, a signed-in customer is asked the business-name questions in the first step, by the operator's form: a firm's partners and, once there is a name, how it is composed; a sole proprietor's operator is shown answered from how the business is set up; the questions have no automated WCAG 2.2 AA failure; and what is sent leaves out the partners once they are no longer asked."
+    },
+    {
+      "requirement": "RUL-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/checker-questionnaire.test.ts",
+      "test": "what the business does is chosen from the specification's twenty industries, and its products from the Act's six kinds, each held as its source writes it",
+      "proves": "The check's question on what the business does offers the specification's twenty industries, read from VALO-TRD-001 verbatim and in order and the same as the site's, and its question on the kinds of product offers the six kinds section 1(1) of the product-registration Act names in the rule's source copy, each held as the rule's own value, which the rule's question on the particular product offers."
+    },
+    {
+      "requirement": "RUL-001",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/rich-checker.test.ts",
+      "test": "one kind of product the business makes, alone, answers the product rule's question about the particular product; more kinds, or the visitor's own words, answer nothing",
+      "proves": "The web app sends chosen industries and the visitor's own words in one list, sends the product rule's particular product as the one kind of product chosen, fills nothing for two kinds or for a kind with other products, and fills nothing for a business that neither makes nor imports goods, whose products are not asked."
+    },
+    {
+      "requirement": "RUL-001",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-screens-accessibility.test.ts",
+      "test": "what the business does and its kinds of product are chosen from fixed lists, with the visitor's own words beside them, up to ten in all, and one kind of product alone answers the product rule's question about the particular product",
+      "proves": "In a browser on an emulated phone, a visitor ticks any of the twenty industries, named as the site names them, beside their own words, up to ten entries in all; once the business imports goods, one of the Act's six kinds of product, alone, answers the product rule's question about the particular product, and a second kind brings that question back; and the review and what is sent hold the answers as given."
     },
     {
       "requirement": "RUL-002",

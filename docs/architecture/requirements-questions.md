@@ -283,6 +283,33 @@ The walk itself is checked too:
 - **The review** lists what is sent, filled answers included. Saying where each came from is
   slice 4's.
 
+**Slice 3: the fixed choices.**
+- **What the business does.** The twenty industries are ticked as boxes, each named as the site
+  names it ("Retail/wholesale"), with the visitor's own words beside them. Ten entries in all,
+  ticked and typed together; at ten, the other boxes and an empty box take no more.
+- **The kinds of product.** The Act's six kinds are ticked the same way, with other products in the
+  visitor's own words. Exactly one kind, and nothing else, fills the product rule's question about
+  the particular product. Two kinds, or a kind with other products, fill nothing, since the rule
+  asks about one product. That question gains the Act's "drug product", which its schema already
+  took, so that every kind can fill it.
+- **A filled answer is read on what is sent,** as the conditions are. A question the check skips,
+  such as the kinds of product of a business that neither makes nor imports goods, fills nothing,
+  whatever it held before.
+- **The local government area stays free text**, as this design allows when no official copy of
+  the list can be read:
+  - The one official copy that could be fetched is the National Library of Nigeria's scan of the
+    Constitution as printed in the Laws of the Federation
+    (`nigeriareposit.nln.gov.ng`, 172 pages, SHA-256 `351b4cb1…7441`, read on 25 November 2026).
+  - Its text was made by character recognition, which misreads many of the areas' names: for
+    example "Jkwuano" for Ikwuano, "G wcr East" for Gwer East and "Dulse" for Dutse. A list could be
+    taken from it only by reading each of the 774 names off the page images.
+  - The Federal Ministry of Justice's print, archived on Refworld, sits behind a browser check and
+    could not be fetched. The other copies found are editions by others, such as the Constitute
+    Project's, which the Library also holds.
+
+  The owner's fifth point now asks for a born-digital official copy, or for approval to read the
+  scan's pages.
+
 ## What does not change
 
 - The answers' fields and types, so saved checks, saved results and signed scenarios read as they did.
@@ -328,5 +355,8 @@ Each slice keeps every test that ran before it.
    it still says what it needs.
 4. **The local government area is asked of a business without premises.**
 5. **The lists.** The twenty industries are the specification's, verbatim. The kinds of product are
-   the product-registration Act's. The local government areas wait for an official copy of the
-   First Schedule; until one is read, the area stays free text.
+   the product-registration Act's, and the rule's question about the particular product gains its
+   "drug product". The local government areas wait for an official copy of the First Schedule; until
+   one is read, the area stays free text. The one official copy that could be fetched is a scan whose
+   recognised text misreads the names (see "Settled while building it"). Provide a born-digital
+   official copy, or approve reading the 774 names off the scan's pages.
