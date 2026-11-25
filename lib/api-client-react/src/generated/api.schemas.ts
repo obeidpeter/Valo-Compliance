@@ -2682,6 +2682,48 @@ export interface WorkspaceDataExport {
   data: WorkspaceDataExportData;
 }
 
+export type RuleNoticeKind = typeof RuleNoticeKind[keyof typeof RuleNoticeKind];
+
+
+export const RuleNoticeKind = {
+  replaced: 'replaced',
+  withdrawn: 'withdrawn',
+} as const;
+
+export interface RuleNotice {
+  id: string;
+  ruleId: string;
+  /** The rule's title in the version that changed. */
+  title: string;
+  /** The version that changed. */
+  version: number;
+  kind: RuleNoticeKind;
+  /**
+     * The version that replaced it, for a replaced version.
+     * @nullable
+     */
+  replacementVersion: number | null;
+  /** What changed, or why it was withdrawn, as the person who made the change wrote it. */
+  reason: string;
+  /**
+     * How many of the workspace's saved results list the version.
+     * @minimum 0
+     */
+  results: number;
+  /**
+     * How many of the workspace's tasks were made from the version.
+     * @minimum 0
+     */
+  tasks: number;
+  /** When the version was replaced or withdrawn. */
+  createdAt: string;
+}
+
+export interface RuleNotices {
+  /** @maxItems 50 */
+  items: RuleNotice[];
+}
+
 export type RichCheckerFactsBusinessNameLegalForm = 'individual' | 'firm' | 'company' | 'other' | {
   status: 'unknown' | 'unanswered' | 'not_applicable';
   /** @nullable */

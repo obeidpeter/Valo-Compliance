@@ -86,6 +86,7 @@ const CASE_KEYS = [
   "POST /workspace/privacy-cases/{id}/respond",
   "GET /workspace/privacy-cases/{id}/result",
   "POST /workspace/privacy-cases/{id}/verify",
+  "POST /workspace/rule-notices/{id}/read",
   "GET /workspace/support-cases/{id}",
   "POST /workspace/support-cases/{id}/reply",
   "PATCH /workspace/tasks/{id}",
@@ -294,6 +295,7 @@ const PRIVATE_TABLES: Record<string, { cases: readonly string[] } | { reason: st
     reason:
       "The workspace's own preferences (GET and PUT /workspace/reminder-preferences); never named by identifier.",
   },
+  valo_rule_notices: { cases: ["POST /workspace/rule-notices/{id}/read"] },
   valo_saved_templates: {
     reason:
       "Named by public template identifier within the caller's workspace; valo-saved-templates.integration.test.ts proves workspaces cannot see or change each other's.",
@@ -433,6 +435,7 @@ test(
       valoAIDrafts,
       valoEditionNotices,
       valoManualLibrary,
+      valoRuleNotices,
       valoOrders,
       valoPrices,
       valoStaffAssignments,
@@ -647,6 +650,21 @@ test(
         held: false,
         documents: 1,
       });
+      // The database writes a rule notice when a rule version the workspace used is replaced or withdrawn
+      // (docs/architecture/rule-changes.md, slice 2; the owner's sign-off test makes one). Here a synthetic
+      // notice stands in for one.
+      const ruleNoticeId = randomUUID();
+      await db.insert(valoRuleNotices).values({
+        id: ruleNoticeId,
+        workspaceId: ownerActor.workspaceId,
+        ruleId: "synthetic-rule",
+        version: 1,
+        kind: "withdrawn",
+        title: "Synthetic rule",
+        reason: "A synthetic reason the owner wrote for this withdrawal.",
+        results: 1,
+        tasks: 0,
+      });
 
       const content = syntheticDocument.content;
       const cases: Record<(typeof CASE_KEYS)[number], Case> = {
@@ -693,6 +711,11 @@ test(
         "GET /workspace/documents/{id}/form": { params: { id: formDocument.id }, ownerStatus: 200 },
         "POST /workspace/edition-notices/{id}/read": {
           params: { id: editionNoticeId },
+          body: {},
+          ownerStatus: 200,
+        },
+        "POST /workspace/rule-notices/{id}/read": {
+          params: { id: ruleNoticeId },
           body: {},
           ownerStatus: 200,
         },
@@ -1004,6 +1027,7 @@ test(
           aiDraftId,
           supportCase.id,
           editionNoticeId,
+          ruleNoticeId,
         ];
         const listings = listingOperations();
         assert.ok(listings.length >= 15, "listing operations were read from the contract");
@@ -1033,6 +1057,7 @@ test(
           "GET /workspace/privacy-cases": privacyCaseId,
           "GET /workspace/support-cases": supportCase.id,
           "GET /workspace/edition-notices": editionNoticeId,
+          "GET /workspace/rule-notices": ruleNoticeId,
         };
         for (const [key, id] of Object.entries(ownerSees)) {
           assert.ok(
@@ -1157,6 +1182,7 @@ test(
           "GET /workspace/disputes": {},
           "GET /workspace/document-editions": {},
           "GET /workspace/edition-notices": {},
+          "GET /workspace/rule-notices": {},
           "GET /workspace/documents": {},
           "POST /workspace/form-documents": { body: () => ({ templateId: "TPL-01" }) },
           "GET /workspace/form-templates": {},

@@ -9,3 +9,4 @@
  * into every reader of assessments.
  */
 export * from "./valo-assessments";
+export { listRuleNotices, markRuleNoticeRead } from "./rule-notices";

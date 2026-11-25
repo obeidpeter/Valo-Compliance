@@ -7923,6 +7923,64 @@ export const CompareAssessmentsResponse = zod.object({
 })
 
 
+/**
+ * The workspace's unread notices that a requirements-check rule version it saved a result under, or made a task from, was replaced or withdrawn, newest first, up to 50 (docs/architecture/rule-changes.md). The database writes each one with the change.
+ */
+export const listRuleNoticesResponseItemsItemResultsMin = 0;
+
+export const listRuleNoticesResponseItemsItemTasksMin = 0;
+
+export const listRuleNoticesResponseItemsMax = 50;
+
+
+
+export const ListRuleNoticesResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.uuid(),
+  "ruleId": zod.string(),
+  "title": zod.string().describe('The rule\'s title in the version that changed.'),
+  "version": zod.int().describe('The version that changed.'),
+  "kind": zod.enum(['replaced', 'withdrawn']),
+  "replacementVersion": zod.int().nullable().describe('The version that replaced it, for a replaced version.'),
+  "reason": zod.string().describe('What changed, or why it was withdrawn, as the person who made the change wrote it.'),
+  "results": zod.int().min(listRuleNoticesResponseItemsItemResultsMin).describe('How many of the workspace\'s saved results list the version.'),
+  "tasks": zod.int().min(listRuleNoticesResponseItemsItemTasksMin).describe('How many of the workspace\'s tasks were made from the version.'),
+  "createdAt": zod.coerce.date().describe('When the version was replaced or withdrawn.')
+})).max(listRuleNoticesResponseItemsMax)
+})
+
+
+/**
+ * Marks one of the workspace's rule notices read, so that its home no longer lists it. Nothing else of it changes.
+ */
+export const MarkRuleNoticeReadParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const markRuleNoticeReadResponseItemsItemResultsMin = 0;
+
+export const markRuleNoticeReadResponseItemsItemTasksMin = 0;
+
+export const markRuleNoticeReadResponseItemsMax = 50;
+
+
+
+export const MarkRuleNoticeReadResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.uuid(),
+  "ruleId": zod.string(),
+  "title": zod.string().describe('The rule\'s title in the version that changed.'),
+  "version": zod.int().describe('The version that changed.'),
+  "kind": zod.enum(['replaced', 'withdrawn']),
+  "replacementVersion": zod.int().nullable().describe('The version that replaced it, for a replaced version.'),
+  "reason": zod.string().describe('What changed, or why it was withdrawn, as the person who made the change wrote it.'),
+  "results": zod.int().min(markRuleNoticeReadResponseItemsItemResultsMin).describe('How many of the workspace\'s saved results list the version.'),
+  "tasks": zod.int().min(markRuleNoticeReadResponseItemsItemTasksMin).describe('How many of the workspace\'s tasks were made from the version.'),
+  "createdAt": zod.coerce.date().describe('When the version was replaced or withdrawn.')
+})).max(markRuleNoticeReadResponseItemsMax)
+})
+
+
 export const getStaffRoleAdministrationQueryIdentityIdMax = 128;
 
 

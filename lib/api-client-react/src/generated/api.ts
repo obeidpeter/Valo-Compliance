@@ -135,6 +135,7 @@ import type {
   RetainedDraftLoad,
   RetainedDraftLoadResult,
   RetainedDraftStatus,
+  RuleNotices,
   SavedAssessment,
   SavedAssessmentInput,
   SavedTemplates,
@@ -9719,6 +9720,179 @@ export function useCompareAssessments<TData = Awaited<ReturnType<typeof compareA
 
 
 
+
+export const getListRuleNoticesUrl = () => {
+
+
+
+
+  return `/api/workspace/rule-notices`
+}
+
+/**
+ * The workspace's unread notices that a requirements-check rule version it saved a result under, or made a task from, was replaced or withdrawn, newest first, up to 50 (docs/architecture/rule-changes.md). The database writes each one with the change.
+ */
+export const listRuleNotices = async ( options?: Parameters<typeof customFetch>[1]): Promise<RuleNotices> => {
+
+  return customFetch<RuleNotices>(getListRuleNoticesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListRuleNoticesQueryKey = () => {
+    return [
+    "listRuleNotices"
+    ] as const;
+    }
+
+
+export const getListRuleNoticesQueryOptions = <TData = Awaited<ReturnType<typeof listRuleNotices>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRuleNotices>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListRuleNoticesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listRuleNotices>>> = ({ signal }) => listRuleNotices({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listRuleNotices>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListRuleNoticesQueryResult = NonNullable<Awaited<ReturnType<typeof listRuleNotices>>>
+export type ListRuleNoticesQueryError = ErrorType<AuthErrorResponse | QuotaErrorResponse>
+
+
+/** The workspace's unread notices that a requirements-check rule version it saved a result under, or made a task from, was replaced or withdrawn, newest first, up to 50 (docs/architecture/rule-changes.md). The database writes each one with the change. */
+export function useListRuleNotices<TData = Awaited<ReturnType<typeof listRuleNotices>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRuleNotices>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listRuleNotices>>,
+          TError,
+          Awaited<ReturnType<typeof listRuleNotices>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** The workspace's unread notices that a requirements-check rule version it saved a result under, or made a task from, was replaced or withdrawn, newest first, up to 50 (docs/architecture/rule-changes.md). The database writes each one with the change. */
+export function useListRuleNotices<TData = Awaited<ReturnType<typeof listRuleNotices>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRuleNotices>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listRuleNotices>>,
+          TError,
+          Awaited<ReturnType<typeof listRuleNotices>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** The workspace's unread notices that a requirements-check rule version it saved a result under, or made a task from, was replaced or withdrawn, newest first, up to 50 (docs/architecture/rule-changes.md). The database writes each one with the change. */
+export function useListRuleNotices<TData = Awaited<ReturnType<typeof listRuleNotices>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRuleNotices>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** The workspace's unread notices that a requirements-check rule version it saved a result under, or made a task from, was replaced or withdrawn, newest first, up to 50 (docs/architecture/rule-changes.md). The database writes each one with the change. */
+export function useListRuleNotices<TData = Awaited<ReturnType<typeof listRuleNotices>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRuleNotices>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListRuleNoticesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getMarkRuleNoticeReadUrl = (id: string,) => {
+
+
+
+
+  return `/api/workspace/rule-notices/${encodeURIComponent(String(id))}/read`
+}
+
+/**
+ * Marks one of the workspace's rule notices read, so that its home no longer lists it. Nothing else of it changes.
+ */
+export const markRuleNoticeRead = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<RuleNotices> => {
+
+  return customFetch<RuleNotices>(getMarkRuleNoticeReadUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getMarkRuleNoticeReadMutationKey = () => ['markRuleNoticeRead'] as const;
+
+export const getMarkRuleNoticeReadMutationOptions = <TError = ErrorType<AuthErrorResponse | WriteLimitResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markRuleNoticeRead>>, TError,MarkRuleNoticeReadMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof markRuleNoticeRead>>, TError,MarkRuleNoticeReadMutationVariables, TContext> => {
+
+const mutationKey = getMarkRuleNoticeReadMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof markRuleNoticeRead>>, MarkRuleNoticeReadMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  markRuleNoticeRead(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MarkRuleNoticeReadMutationResult = NonNullable<Awaited<ReturnType<typeof markRuleNoticeRead>>>
+
+    export type MarkRuleNoticeReadMutationError = ErrorType<AuthErrorResponse | WriteLimitResponse>
+    export type MarkRuleNoticeReadMutationVariables = {id: string}
+
+    /** Marks one of the workspace's rule notices read, so that its home no longer lists it. Nothing else of it changes. */
+export const useMarkRuleNoticeRead = <TError = ErrorType<AuthErrorResponse | WriteLimitResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markRuleNoticeRead>>, TError,MarkRuleNoticeReadMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof markRuleNoticeRead>>,
+        TError,
+        MarkRuleNoticeReadMutationVariables,
+        TContext
+      > => {
+      return useMutation(getMarkRuleNoticeReadMutationOptions(options), queryClient);
+    }
 
 export const getGetStaffRoleAdministrationUrl = (params?: GetStaffRoleAdministrationParams,) => {
   const normalizedParams = new URLSearchParams();

@@ -56,8 +56,11 @@ import {
 import {
   ListDocumentEditionsResponse,
   ListEditionNoticesResponse,
+  ListRuleNoticesResponse,
   MarkEditionNoticeReadResponse,
+  MarkRuleNoticeReadResponse,
 } from "@workspace/api-zod";
+import { listRuleNotices, markRuleNoticeRead } from "../modules/rules";
 import { publicDiscovery } from "../modules/catalogue";
 import { setting } from "../platform/settings";
 import { supportCustomerRouter, supportOperationsRouter } from "./valo-support-lifecycle";
@@ -231,6 +234,20 @@ router.post("/workspace/edition-notices/:id/read", async (req, res) => {
   res.json(
     MarkEditionNoticeReadResponse.parse(
       await markEditionNoticeRead(res.locals.valoActor, z.string().uuid().parse(req.params.id)),
+    ),
+  );
+});
+// The workspace's notices that a requirements-check rule version it saved a result under, or made a
+// task from, was replaced or withdrawn (docs/architecture/rule-changes.md).
+router.get("/workspace/rule-notices", async (_req, res) => {
+  res.set("Cache-Control", "private, no-store");
+  res.json(ListRuleNoticesResponse.parse(await listRuleNotices(res.locals.valoActor)));
+});
+router.post("/workspace/rule-notices/:id/read", async (req, res) => {
+  res.set("Cache-Control", "private, no-store");
+  res.json(
+    MarkRuleNoticeReadResponse.parse(
+      await markRuleNoticeRead(res.locals.valoActor, z.string().uuid().parse(req.params.id)),
     ),
   );
 });
