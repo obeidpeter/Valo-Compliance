@@ -14,6 +14,7 @@ import {
   hashAI,
   missingCustomerFields,
   unsupportedCustomerInput,
+  unsupportedTaskNotice,
   type CustomerPreview,
 } from "./valo-customer-ai-domain";
 import { organizeCustomerDraft } from "./valo-customer-ai-model";
@@ -154,9 +155,7 @@ export async function createCustomerAIDraft(
           : "manual_fallback";
     const id = randomUUID();
     const extra = unsupported
-      ? [
-          "This request exceeds the four bounded business tasks. Use a scoped published resource, official authority or independent adviser; no adviser availability is implied.",
-        ]
+      ? [unsupportedTaskNotice]
       : !isEnabled
         ? ["AI is disabled. The independent manual editor remains available."]
         : b.userMinuteUsed >= 5
