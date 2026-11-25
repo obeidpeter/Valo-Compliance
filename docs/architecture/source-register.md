@@ -155,9 +155,11 @@ Slice 2, second part (adding sources):
   straight into the database at another host is never fetched. The fetch is the one a listed page gets:
   a public address, https on the same host across at most three redirects, and the page size cap. A
   retired source is not read.
-- The policy's host list moved into the sources module, unchanged, so the fetcher reads the same list
-  the guidance policy checks against its file. Adding a host is still a change to the policy, which only
-  the owner approves.
+- The policy's host list moved out of the publication module into `platform/`, unchanged, so the fetcher
+  reads the same list the guidance policy checks against its file, and reading it loads neither module.
+  (A first move into the sources module made the guidance policy load the whole sources module, which
+  loaded the real snapshot storage before a test's stand-in for it.) Adding a host is still a change to
+  the policy, which only the owner approves.
 - A source staff added is watched and its captures are kept, but no release rests on it: the release
   bindings, the guides' claim maps and the rules still read only the leads kept in the repository. A
   guide or rule can cite such a source only once it is added to those leads.

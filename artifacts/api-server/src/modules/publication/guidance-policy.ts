@@ -4,7 +4,7 @@ import { digest, sha256, type PublicationBundle } from "@workspace/valo-core";
 import { GUIDE_SHARED_WORDS_LIMIT } from "./guidance-copying";
 import { publicationWorkspaceRoot } from "./operational-policy";
 import { operationalRestrictionsSchema } from "./operational-restrictions";
-import { guidanceOfficialHosts } from "../sources";
+import { guidanceOfficialHosts } from "../../platform/guidance-hosts";
 
 /**
  * The publication policy for guides that say what the law requires (decision 0017, point 1).
@@ -34,7 +34,7 @@ export function guidancePolicyApprovedHash(): string | null {
   return "0dcd5221c7e075c8839df3f527fe639c2e2311d9e00f642dcfb8b0fee41a0a1b";
 }
 
-/** The hosts the policy file lists, kept in the sources module so that its fetcher can read them. */
+/** The hosts the policy file lists, kept in platform/ so that the sources module's fetcher reads them too. */
 export { guidanceOfficialHosts };
 
 /**

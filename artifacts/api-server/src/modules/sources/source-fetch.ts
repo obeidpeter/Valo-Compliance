@@ -2,7 +2,7 @@ import https from "node:https";
 import { lookup } from "node:dns/promises";
 import { BlockList } from "node:net";
 import { allSourceLeads } from "@workspace/valo-core";
-import { guidanceOfficialHosts } from "./official-hosts";
+import { guidanceOfficialHosts } from "../../platform/guidance-hosts";
 export const MAX_SOURCE_BYTES = 8 * 1024 * 1024;
 export const MAX_INSTRUMENT_BYTES = 32 * 1024 * 1024;
 /** Larger ingestion is confined to explicitly identified authoritative instruments. */

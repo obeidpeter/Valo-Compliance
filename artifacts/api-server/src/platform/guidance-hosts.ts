@@ -1,6 +1,7 @@
 /** The hosts the policy file lists. A guide's sources, its links and the places searched for later
  * amendments must be on one of them. The guidance policy checks that the file lists each
- * (modules/publication/guidance-policy.ts); it lives here so that the sources module can read it too. */
+ * (modules/publication/guidance-policy.ts). It lives here, outside both modules, so that the sources
+ * module's fetcher reads it too, and reading it loads neither module. */
 export const guidanceOfficialHosts = [
   "icrp.cac.gov.ng",
   "www.cac.gov.ng",

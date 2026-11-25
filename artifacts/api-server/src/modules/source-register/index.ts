@@ -12,11 +12,11 @@ import { STATES } from "@workspace/valo-core/checker-questionnaire";
 import { AddSourceRegisterEntryBody, ReviseSourceRegisterEntryBody } from "@workspace/api-zod";
 import type { db } from "@workspace/db";
 import { ValoProblem } from "../../platform/valo-problem";
+import { guidanceOfficialHosts } from "../../platform/guidance-hosts";
 import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
 import { repositorySourceFacts } from "../publication";
 import {
   assertOfficialAddress,
-  guidanceOfficialHosts,
   holdRetiredSourceDependants,
   lockSourceState,
   registerSourceWatch,
