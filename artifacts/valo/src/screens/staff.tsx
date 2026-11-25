@@ -22,6 +22,7 @@ import { ContentEscalations } from "@/components/content-escalations";
 import { PreparedCandidates } from "@/components/prepared-candidates";
 import { ManualLibraryEditor } from "@/components/manual-library-editor";
 import { RetainedDrafts } from "@/components/retained-drafts";
+import { SourceRegister } from "@/components/source-register";
 
 const AREAS: { v: Area; l: string }[] = [
   { v: GetStaffOperationsArea.content, l: "Content" },
@@ -175,6 +176,7 @@ export default function StaffPage() {
             {area === "content" && <RetainedDrafts />}
             {area === "content" && <ManualLibraryEditor onDirtyChange={setManualDirty} />}
             {(area === "content" || area === "system") && <SourceSafetyControls key={area} area={area} />}
+            {area === "content" && <SourceRegister />}
             {area === "system" && <OwnerRegulatoryGuidance />}
             {area === "system" && <OwnerCheckerRules />}
             {area === "content" && <ContentEscalations onDirtyChange={setContentDirty} />}

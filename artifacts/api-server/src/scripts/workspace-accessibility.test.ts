@@ -353,6 +353,62 @@ const answers: Record<string, unknown> = {
     ],
     hasMore: false,
   }),
+  // The source register (docs/architecture/source-register.md, slice 1): one entry filed from the
+  // repository with an earlier version, one retired, and sources kept in the repository not filed yet.
+  "GET /admin/source-register": api.ListSourceRegisterResponse.parse({
+    entries: [
+      {
+        sourceId: "S04",
+        url: "https://example.invalid/synthetic-act",
+        version: 2,
+        title: "Synthetic Data Protection Act",
+        authority: "Synthetic Data Commission",
+        jurisdiction: "Nigeria",
+        instrument: "act",
+        versionInForce: "As enacted",
+        effectiveFrom: "2023-06-12",
+        status: "active",
+        reason: "Synthetic: the edition in force was named from the Act's own copy.",
+        createdBy: "synthetic-content-editor",
+        createdAt: at(20),
+        earlier: [
+          {
+            version: 1,
+            title: "Synthetic Data Protection Act",
+            authority: "Synthetic Data Commission",
+            jurisdiction: "Nigeria",
+            instrument: "act",
+            versionInForce: null,
+            effectiveFrom: "2023-06-12",
+            status: "active",
+            reason: "Filed from the official sources kept in the repository.",
+            createdBy: "synthetic-content-editor",
+            createdAt: at(19),
+          },
+        ],
+        watch: { checkedAt: at(21), failureCode: null, nextCheckAt: at(22) },
+      },
+      {
+        sourceId: "S06",
+        url: "https://example.invalid/synthetic-page",
+        version: 2,
+        title: "Synthetic workshop page",
+        authority: null,
+        jurisdiction: "Nigeria",
+        instrument: "official_page",
+        versionInForce: null,
+        effectiveFrom: null,
+        status: "retired",
+        reason: "Synthetic: the page described a past event and states no rule.",
+        createdBy: "synthetic-content-editor",
+        createdAt: at(20),
+        earlier: [],
+        watch: null,
+      },
+    ],
+    unfiled: 26,
+    jurisdictions: ["Nigeria", "Lagos", "FCT"],
+  }),
   "GET /admin/manual-library/retained": api.ListRetainedDraftsResponse.parse({
     items: [
       {
@@ -4535,6 +4591,74 @@ test("support staff find a library entry by its title and refer a case to its pu
 
 // docs/architecture/library-holds.md, slice 3 (ADM-008): the Content triage queue names a library
 // referral's entry and holds that version in the staff library, with the triage reason.
+// docs/architecture/source-register.md, slice 1 (ADM-003): the register lists each official source with its
+// fields, daily check and earlier versions, files the sources kept in the repository, and records a
+// correction as a new version only with why.
+test("the source register lists each source's fields and daily check, and records a correction only with why", async () => {
+  const listed = answers["GET /admin/source-register"] as { entries: { sourceId: string }[] };
+  const sent: { path: string; body: unknown }[] = [];
+  const keeping: Api = async (route, method, path, query) => {
+    const json = (body: unknown) =>
+      route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
+    if (method === "POST" && path.startsWith("/admin/source-register/")) {
+      sent.push({ path, body: route.request().postDataJSON() });
+      await json(api.ReviseSourceRegisterEntryResponse.parse(listed));
+    } else await answer(route, method, path, query);
+  };
+  const { page, unknown, errors, close } = await phone("/staff", keeping);
+  try {
+    await ready(page);
+    await page.getByTestId("tab-staff-content").click();
+    const register = page.getByRole("region", { name: "Official sources" });
+    await expect(register.getByTestId("text-register-summary")).toHaveText(
+      "2 sources in the register · 26 kept in the repository not filed yet",
+    );
+    await expect(register.getByTestId("button-file-register")).toHaveText(
+      "File the 26 sources kept in the repository",
+    );
+    const act = register.getByTestId("register-entry-S04");
+    await expect(act).toContainText("Nigeria · Act · As enacted · in effect from 12 Jun 2023");
+    await expect(act).toContainText("Synthetic Data Commission");
+    await expect(act).toContainText(/Checked by the daily check .+ · next check /);
+    await expect(register.getByTestId("register-entry-S06")).toContainText(
+      "Retired. Its versions stay on the record; for now, a daily check that watches it carries on.",
+    );
+    await act.getByRole("button", { name: "Correct this entry" }).click();
+    const form = act.getByTestId("form-register-S04");
+    const save = form.getByRole("button", { name: "Save a new version" });
+    await form.getByLabel("Version in force").fill("As enacted, 2023");
+    await expect(save).toBeDisabled();
+    await form.getByLabel("Why").fill("Synthetic: the edition was named from the Act's own copy.");
+    await expect(save).toBeEnabled();
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "the source register with a correction"), []);
+    await page.setViewportSize({ width: 360, height: 640 });
+    await save.click();
+    await expect(register.getByRole("status")).toHaveText(
+      "Saved version 3 of Synthetic Data Protection Act.",
+    );
+    assert.deepEqual(sent, [
+      {
+        path: "/admin/source-register/S04/versions",
+        body: {
+          baseVersion: 2,
+          authority: "Synthetic Data Commission",
+          jurisdiction: "Nigeria",
+          instrument: "act",
+          versionInForce: "As enacted, 2023",
+          effectiveFrom: "2023-06-12",
+          status: "active",
+          reason: "Synthetic: the edition was named from the Act's own copy.",
+        },
+      },
+    ]);
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
+
 test("the triage queue names a library referral's entry and holds that exact version in the staff library", async () => {
   const referral = {
     id: "00000000-0000-4000-8000-00000000a7f1",
