@@ -25,6 +25,7 @@ export * from "./valo-workspaces";
 export * from "./valo-memberships";
 export * from "./valo-profiles";
 export * from "./valo-documents";
+export * from "./valo-edition-notices";
 export * from "./valo-document-revisions";
 export * from "./valo-support";
 export * from "./valo-events";

@@ -45,8 +45,19 @@ import {
   createPrivacyRequesterRouter,
 } from "./valo-customer-access";
 import { commerceRouter } from "./valo-commerce";
-import { listDocumentEditions, savedTemplateList, saveTemplate, unsaveTemplate } from "../modules/catalogue";
-import { ListDocumentEditionsResponse } from "@workspace/api-zod";
+import {
+  listDocumentEditions,
+  listEditionNotices,
+  markEditionNoticeRead,
+  savedTemplateList,
+  saveTemplate,
+  unsaveTemplate,
+} from "../modules/catalogue";
+import {
+  ListDocumentEditionsResponse,
+  ListEditionNoticesResponse,
+  MarkEditionNoticeReadResponse,
+} from "@workspace/api-zod";
 import { publicDiscovery } from "../modules/catalogue";
 import { setting } from "../platform/settings";
 import { supportCustomerRouter, supportOperationsRouter } from "./valo-support-lifecycle";
@@ -209,6 +220,19 @@ router.post("/workspace/documents", async (req, res) => {
 router.get("/workspace/document-editions", async (_req, res) => {
   res.set("Cache-Control", "private, no-store");
   res.json(ListDocumentEditionsResponse.parse(await listDocumentEditions(res.locals.valoActor)));
+});
+// The workspace's notices that a template edition it bought or used was replaced or withdrawn.
+router.get("/workspace/edition-notices", async (_req, res) => {
+  res.set("Cache-Control", "private, no-store");
+  res.json(ListEditionNoticesResponse.parse(await listEditionNotices(res.locals.valoActor)));
+});
+router.post("/workspace/edition-notices/:id/read", async (req, res) => {
+  res.set("Cache-Control", "private, no-store");
+  res.json(
+    MarkEditionNoticeReadResponse.parse(
+      await markEditionNoticeRead(res.locals.valoActor, z.string().uuid().parse(req.params.id)),
+    ),
+  );
 });
 router.get("/workspace/documents/:id", async (req, res) => {
   res.json(await getDocument(res.locals.valoActor, z.string().uuid().parse(req.params.id)));

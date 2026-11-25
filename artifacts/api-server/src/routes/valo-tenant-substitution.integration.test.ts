@@ -73,6 +73,7 @@ const CASE_KEYS = [
   "PATCH /workspace/documents/{id}",
   "GET /workspace/documents/{id}/revisions",
   "GET /workspace/documents/{id}/form",
+  "POST /workspace/edition-notices/{id}/read",
   "POST /workspace/orders/{id}/checkout",
   "GET /workspace/orders/{id}/dispute-information",
   "POST /workspace/orders/{id}/dispute-information",
@@ -221,6 +222,7 @@ const PRIVATE_TABLES: Record<string, { cases: readonly string[] } | { reason: st
       "POST /v1/documents/{id}/exports",
     ],
   },
+  valo_edition_notices: { cases: ["POST /workspace/edition-notices/{id}/read"] },
   valo_entitlements: {
     reason:
       "Looked up by public template identifier within the caller's workspace; valo-template-entitlement.integration.test.ts proves another workspace's purchase grants nothing.",
@@ -425,8 +427,16 @@ test(
       },
     });
     const { default: app } = await import("../app");
-    const { db, pool, valoAIDrafts, valoManualLibrary, valoOrders, valoPrices, valoStaffAssignments } =
-      await import("@workspace/db");
+    const {
+      db,
+      pool,
+      valoAIDrafts,
+      valoEditionNotices,
+      valoManualLibrary,
+      valoOrders,
+      valoPrices,
+      valoStaffAssignments,
+    } = await import("@workspace/db");
     const { eq } = await import("drizzle-orm");
     const { resolveWorkspace, saveProfile } = await import("../modules/workspaces");
     const { syntheticDocument, syntheticProfile } = await import("../lib/valo-test-fixtures");
@@ -621,6 +631,22 @@ test(
       });
       assert.equal(createdFormDocument.status, 201, createdFormDocument.text);
       const formDocument = json(createdFormDocument) as { id: string };
+      // The database writes a notice when an edition the workspace used is replaced or withdrawn
+      // (docs/architecture/editions.md, slice 3; the library's database test releases and withdraws
+      // editions for it). Here a synthetic notice of the form edition stands in for one.
+      const editionNoticeId = randomUUID();
+      await db.insert(valoEditionNotices).values({
+        id: editionNoticeId,
+        workspaceId: ownerActor.workspaceId,
+        route: "library",
+        edition: formEdition.id,
+        kind: "replaced",
+        title: "Invoice",
+        version: 1,
+        replacementVersion: 2,
+        held: false,
+        documents: 1,
+      });
 
       const content = syntheticDocument.content;
       const cases: Record<(typeof CASE_KEYS)[number], Case> = {
@@ -665,6 +691,11 @@ test(
         },
         "GET /workspace/documents/{id}/revisions": { params: { id: document.id }, ownerStatus: 200 },
         "GET /workspace/documents/{id}/form": { params: { id: formDocument.id }, ownerStatus: 200 },
+        "POST /workspace/edition-notices/{id}/read": {
+          params: { id: editionNoticeId },
+          body: {},
+          ownerStatus: 200,
+        },
         "POST /workspace/orders/{id}/checkout": { params: { id: orderId }, body: {} },
         "GET /workspace/orders/{id}/dispute-information": { params: { id: orderId } },
         "POST /workspace/orders/{id}/dispute-information": {
@@ -972,6 +1003,7 @@ test(
           concern.id,
           aiDraftId,
           supportCase.id,
+          editionNoticeId,
         ];
         const listings = listingOperations();
         assert.ok(listings.length >= 15, "listing operations were read from the contract");
@@ -1000,6 +1032,7 @@ test(
           "GET /workspace/data-exports": dataExport.id,
           "GET /workspace/privacy-cases": privacyCaseId,
           "GET /workspace/support-cases": supportCase.id,
+          "GET /workspace/edition-notices": editionNoticeId,
         };
         for (const [key, id] of Object.entries(ownerSees)) {
           assert.ok(
@@ -1123,6 +1156,7 @@ test(
           "GET /workspace/data-exports": {},
           "GET /workspace/disputes": {},
           "GET /workspace/document-editions": {},
+          "GET /workspace/edition-notices": {},
           "GET /workspace/documents": {},
           "POST /workspace/form-documents": { body: () => ({ templateId: "TPL-01" }) },
           "GET /workspace/form-templates": {},

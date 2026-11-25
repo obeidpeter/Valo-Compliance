@@ -53,7 +53,7 @@ test("losing access is never described as taking back a downloaded copy, and sav
   const files = customerText();
   assert.ok(files.length > 150, "the customer-facing source was read");
   const downloaded =
-    /\b(already |previously )?downloaded (files?|cop(y|ies)|documents?)\b|\blocal (files?|cop(y|ies))\b|\bcop(y|ies) (on|saved to) your (device|computer)\b/i;
+    /\b(already |previously )?downloaded (files?|cop(y|ies)|documents?)\b|\b(files?|cop(y|ies)) you (already |previously )?downloaded\b|\blocal (files?|cop(y|ies))\b|\bcop(y|ies) (on|saved to) your (device|computer)\b/i;
   const takenBack = /\b(retract|recall|delet|remov|wip|eras|revok|disabl|disappear|lock|expir)\w*/i;
   const mentions = sentences(files, downloaded, takenBack);
   assert.ok(mentions.length >= 4, "the sentences about downloaded copies were found");
@@ -76,6 +76,11 @@ test("losing access is never described as taking back a downloaded copy, and sav
     /Drafts you already created stay in your workspace\./,
   );
   says("artifacts/valo/src/components/workspace-export-jobs.tsx", /downloaded copies are not removed\./);
+  // The notice that a template edition was replaced or withdrawn (docs/architecture/editions.md).
+  says(
+    "artifacts/valo/src/components/edition-notices.tsx",
+    /Files you already downloaded are not affected\./,
+  );
 });
 
 // DOC-008: "Identify official forms by authority and official URL; do not rebrand preparation

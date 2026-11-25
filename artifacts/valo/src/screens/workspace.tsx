@@ -17,6 +17,7 @@ import {
 import { WorkspaceNav } from "@/components/workspace-nav";
 import { ErrorState, Skel } from "@/components/states";
 import { CorrectionNotices } from "@/components/correction-notices";
+import { EditionNotices } from "@/components/edition-notices";
 import { DocumentList } from "@/components/document-list";
 import { FILE_FORMAT_NAMES } from "@/lib/file-formats";
 import { formatCount, formatDay } from "@/lib/format";
@@ -102,6 +103,7 @@ export default function WorkspaceHome() {
         )}
       </header>
       {ws.isSuccess && <CorrectionNotices />}
+      {ws.isSuccess && <EditionNotices />}
 
       {attentionItems.length > 0 && (
         <section

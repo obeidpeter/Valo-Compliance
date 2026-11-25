@@ -61,6 +61,7 @@ const CACHED_READ_ROUTES = [
   /^\/v1\/exports\/?$/, // the list of a business's exports, not a file
   /^\/workspace\/correction-notices\/?$/,
   /^\/workspace\/document-editions\/?$/, // where each document's template edition stands
+  /^\/workspace\/edition-notices\/?$/, // the notices of replaced and withdrawn editions
   /^\/workspace\/support-cases(\/[^/]+)?\/?$/,
 ].map((route) => new RegExp(route.source, "i"));
 

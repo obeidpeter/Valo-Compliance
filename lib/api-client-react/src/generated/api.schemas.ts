@@ -1351,6 +1351,56 @@ export interface DocumentEditions {
   items: DocumentEdition[];
 }
 
+export type EditionNoticeRoute = typeof EditionNoticeRoute[keyof typeof EditionNoticeRoute];
+
+
+export const EditionNoticeRoute = {
+  library: 'library',
+  reviewed: 'reviewed',
+} as const;
+
+export type EditionNoticeKind = typeof EditionNoticeKind[keyof typeof EditionNoticeKind];
+
+
+export const EditionNoticeKind = {
+  replaced: 'replaced',
+  withdrawn: 'withdrawn',
+} as const;
+
+export interface EditionNotice {
+  id: string;
+  route: EditionNoticeRoute;
+  /** The template's title in the edition that changed. */
+  title: string;
+  /** The version of the edition that changed. */
+  version: number;
+  kind: EditionNoticeKind;
+  /**
+     * The version that replaced it, for a replaced edition.
+     * @nullable
+     */
+  replacementVersion: number | null;
+  /**
+     * Why it was withdrawn, as its editor wrote it for customers.
+     * @nullable
+     */
+  reason: string | null;
+  /** Whether the workspace holds the template through a purchase. */
+  held: boolean;
+  /**
+     * How many of the workspace's documents were made from the edition.
+     * @minimum 0
+     */
+  documents: number;
+  /** When the edition was replaced or withdrawn. */
+  createdAt: string;
+}
+
+export interface EditionNotices {
+  /** @maxItems 50 */
+  items: EditionNotice[];
+}
+
 export type SourceControlAction = {
   requestKey: string;
   /**
@@ -2330,6 +2380,12 @@ export interface ManualLibraryAction {
   version: number;
   /** @pattern ^[0-9a-f]{64}$ */
   digest: string;
+  /**
+     * Why the version is withdrawn. A withdrawal needs it; the customers who bought or used the version see it (docs/architecture/editions.md).
+     * @minLength 20
+     * @maxLength 1000
+     */
+  reason?: string;
 }
 
 export interface BuildStatus {

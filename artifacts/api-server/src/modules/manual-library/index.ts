@@ -443,6 +443,19 @@ export async function actOnManualRevision(actor: SourceStaffActor, itemId: strin
       } else {
         if (target.state === "withdrawn") return detail(tx, latest);
         if (target.state !== "published") throw conflict();
+        // A withdrawal records why, and the customers who bought or used the version are told it: the
+        // reason is written first, so that the notices the withdrawal writes carry it
+        // (docs/architecture/editions.md, slice 3).
+        const reason = input.reason?.trim() ?? "";
+        if (reason.length < 20)
+          throw new ValoProblem(
+            422,
+            "Say why this version is withdrawn, in 20 to 1,000 characters. The customers who bought or used it see this reason.",
+          );
+        const { valoManualWithdrawals } = await import("@workspace/db");
+        await tx
+          .insert(valoManualWithdrawals)
+          .values({ edition: target.id, reason, recordedBy: actor.identityId });
         await tx
           .update(t)
           .set({ ...closed, state: "withdrawn" })

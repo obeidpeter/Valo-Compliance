@@ -3168,6 +3168,60 @@ export const ListDocumentEditionsResponse = zod.object({
 
 
 /**
+ * The workspace's unread notices that a template edition it bought or used was replaced by a later release or withdrawn, newest first, up to 50 (docs/architecture/editions.md). The database writes each one with the change.
+ */
+export const listEditionNoticesResponseItemsItemDocumentsMin = 0;
+
+export const listEditionNoticesResponseItemsMax = 50;
+
+
+
+export const ListEditionNoticesResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.uuid(),
+  "route": zod.enum(['library', 'reviewed']),
+  "title": zod.string().describe('The template\'s title in the edition that changed.'),
+  "version": zod.int().describe('The version of the edition that changed.'),
+  "kind": zod.enum(['replaced', 'withdrawn']),
+  "replacementVersion": zod.int().nullable().describe('The version that replaced it, for a replaced edition.'),
+  "reason": zod.string().nullable().describe('Why it was withdrawn, as its editor wrote it for customers.'),
+  "held": zod.boolean().describe('Whether the workspace holds the template through a purchase.'),
+  "documents": zod.int().min(listEditionNoticesResponseItemsItemDocumentsMin).describe('How many of the workspace\'s documents were made from the edition.'),
+  "createdAt": zod.coerce.date().describe('When the edition was replaced or withdrawn.')
+})).max(listEditionNoticesResponseItemsMax)
+})
+
+
+/**
+ * Marks one of the workspace's notices read, so that its home no longer lists it. Nothing else of it changes.
+ */
+export const MarkEditionNoticeReadParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const markEditionNoticeReadResponseItemsItemDocumentsMin = 0;
+
+export const markEditionNoticeReadResponseItemsMax = 50;
+
+
+
+export const MarkEditionNoticeReadResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.uuid(),
+  "route": zod.enum(['library', 'reviewed']),
+  "title": zod.string().describe('The template\'s title in the edition that changed.'),
+  "version": zod.int().describe('The version of the edition that changed.'),
+  "kind": zod.enum(['replaced', 'withdrawn']),
+  "replacementVersion": zod.int().nullable().describe('The version that replaced it, for a replaced edition.'),
+  "reason": zod.string().nullable().describe('Why it was withdrawn, as its editor wrote it for customers.'),
+  "held": zod.boolean().describe('Whether the workspace holds the template through a purchase.'),
+  "documents": zod.int().min(markEditionNoticeReadResponseItemsItemDocumentsMin).describe('How many of the workspace\'s documents were made from the edition.'),
+  "createdAt": zod.coerce.date().describe('When the edition was replaced or withdrawn.')
+})).max(markEditionNoticeReadResponseItemsMax)
+})
+
+
+/**
  * The templates whose form (forms v2) a workspace can start now: each free template with a released edition of its wording that its form fits, and each premium template whose edition the workspace bought has such wording. A template not listed starts with its questions only, and a premium template the workspace holds no live edition of is listed as needing a purchase first.
  */
 export const listFormTemplatesResponseTemplatesItemTemplateIdRegExp = new RegExp('^TPL-[0-9]{2}$');
@@ -4400,12 +4454,16 @@ export const ActOnManualLibraryParams = zod.object({
 
 
 export const actOnManualLibraryBodyDigestRegExp = new RegExp('^[0-9a-f]{64}$');
+export const actOnManualLibraryBodyReasonMin = 20;
+export const actOnManualLibraryBodyReasonMax = 1000;
+
 
 
 export const ActOnManualLibraryBody = zod.object({
   "action": zod.enum(['publish', 'withdraw']),
   "version": zod.int().min(1),
-  "digest": zod.string().regex(actOnManualLibraryBodyDigestRegExp)
+  "digest": zod.string().regex(actOnManualLibraryBodyDigestRegExp),
+  "reason": zod.string().min(actOnManualLibraryBodyReasonMin).max(actOnManualLibraryBodyReasonMax).optional().describe('Why the version is withdrawn. A withdrawal needs it; the customers who bought or used the version see it (docs/architecture/editions.md).')
 })
 
 export const actOnManualLibraryResponseDigestRegExp = new RegExp('^[0-9a-f]{64}$');

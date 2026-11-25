@@ -160,3 +160,20 @@ export const valoManualLibrary = pgTable(
     ),
   ],
 );
+/**
+ * Why a staff-library edition was withdrawn, written by its editor with the withdrawal and shown to the
+ * customers who bought or used it (docs/architecture/editions.md, slice 3). Recorded once, before the
+ * edition's state changes in the same transaction, and never changed.
+ */
+export const valoManualWithdrawals = pgTable(
+  "valo_manual_withdrawals",
+  {
+    edition: uuid("edition")
+      .primaryKey()
+      .references(() => valoManualLibrary.id),
+    reason: text("reason").notNull(),
+    recordedBy: text("recorded_by").notNull(),
+    recordedAt: timestamp("recorded_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [check("valo_manual_withdrawal_reason", sql`char_length(${t.reason}) BETWEEN 20 AND 1000`)],
+);
