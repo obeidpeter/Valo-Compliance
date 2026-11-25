@@ -966,6 +966,12 @@ test(
           await page.getByRole("button", { name: "Withdraw live version" }).click();
           const withdrawal = page.getByRole("form", { name: "Withdraw the live version" });
           await expect(withdrawal.getByRole("button", { name: "Withdraw this version" })).toBeDisabled();
+          // A guide has no buyers or documents, so its form says nobody is told
+          // (docs/architecture/library-holds.md, slice 1), and the entry shows no counts.
+          await expect(withdrawal).toContainText(
+            "Readers can no longer open version 2. A guide has no buyers or documents, so no customer is told.",
+          );
+          await expect(preview.getByTestId("text-withdrawal-reach")).toHaveCount(0);
           await withdrawal
             .getByLabel("Why is it withdrawn?")
             .fill("A synthetic reason for the browser withdrawal.");
@@ -1024,6 +1030,37 @@ test(
           );
           await expect(details.getByTestId("preview-missing")).toHaveCount(0);
           await page.getByRole("button", { name: "Publish this version" }).click();
+          await expect(preview).toContainText("Readers can see version 2.");
+          // Whom its withdrawal would tell, before it is made (docs/architecture/library-holds.md, slice 1):
+          // nobody yet, then the workspace that makes a document from it, as the editor sees on opening it
+          // again and in the withdrawal form. "Keep it" withdraws nothing.
+          const reach = preview.getByTestId("text-withdrawal-reach");
+          await expect(reach).toHaveText(
+            "Withdrawing version 2 would tell no workspace: none bought this template or made a document from this version.",
+          );
+          const { runInWorkspaceScope } = await import("@workspace/db");
+          const { resolveWorkspace } = await import("../modules/workspaces");
+          const { createReleasedTemplateDraft } = await import("../modules/catalogue");
+          const listing = ListManualLibraryResponse.parse(
+            await ok(
+              await call("/admin/manual-library?q=" + encodeURIComponent("Synthetic browser template")),
+            ),
+          );
+          const browserTemplate = await revision(await call(item(listing.items[0]!.itemId)));
+          assert.equal(browserTemplate.title, "Synthetic browser template");
+          const user = await resolveWorkspace("synthetic-browser-reach-" + randomUUID());
+          await runInWorkspaceScope(user.workspaceId, () =>
+            createReleasedTemplateDraft(user, browserTemplate.id),
+          );
+          await page.getByRole("button").filter({ hasText: "Synthetic browser template" }).click();
+          await expect(reach).toHaveText(
+            "Withdrawing version 2 would tell 1 workspace: 1 made 1 document from this version.",
+          );
+          await page.getByRole("button", { name: "Withdraw live version" }).click();
+          await expect(page.getByRole("form", { name: "Withdraw the live version" })).toContainText(
+            "Readers can no longer open version 2. 1 workspace is told, with this reason: 1 made 1 document from this version.",
+          );
+          await page.getByRole("button", { name: "Keep it" }).click();
           await expect(preview).toContainText("Readers can see version 2.");
           assert.deepEqual(staff.errors, []);
           assert.deepEqual(publicPage.errors, []);
