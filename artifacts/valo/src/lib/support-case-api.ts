@@ -22,6 +22,8 @@ import {
 // component render both the customer and the staff shape of a case.
 export type SupportStatus = SupportCaseStatus;
 export type SupportAction = "assign" | "reply" | "resolve" | "reopen" | "escalate_content";
+/** What a referral points at: a reviewed content version, a rule release, or a staff-library edition. */
+export type SupportTargetKind = "content" | "rule" | "library";
 export interface SupportCase {
   id: string;
   reference: string;
@@ -47,7 +49,7 @@ export interface SupportCaseDetail {
   events?: { id: string; action: string; actorId: string; createdAt: string }[];
   escalations?: {
     id: string;
-    targetKind: "content" | "rule";
+    targetKind: SupportTargetKind;
     targetId: string;
     status: "queued" | "acknowledged" | "resolved";
     reason: string;
@@ -68,7 +70,7 @@ export interface SupportStaffInput {
   action: SupportAction;
   body?: string;
   assigneeId?: string;
-  targetKind?: "content" | "rule";
+  targetKind?: SupportTargetKind;
   targetId?: string;
 }
 export type SupportReplyInput = GeneratedSupportReplyInput;
@@ -149,11 +151,7 @@ export async function actOnContentEscalation(id: string, input: ContentEscalatio
     !Number.isSafeInteger(result.caseVersion) ||
     result.caseVersion <= input.expectedVersion ||
     !["queued", "acknowledged", "resolved"].includes(result.escalation.status) ||
-    (input.action === "hold_and_reassess" &&
-      (typeof result.escalation.sourceImpactId !== "string" ||
-        !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-          result.escalation.sourceImpactId,
-        )))
+    (input.action === "hold_and_reassess" && !heldRecord(result))
   ) {
     throw new Error(
       "The content triage result could not be verified. Retry the same operation with its existing reference.",
@@ -162,6 +160,18 @@ export async function actOnContentEscalation(id: string, input: ContentEscalatio
   return result;
 }
 
+/** The record a hold left: the staff-library hold of a library referral, or the source controls'
+ * reassessment of a reviewed version or rule release. */
+function heldRecord(result: ContentEscalationResult) {
+  const record =
+    result.escalation.targetKind === "library"
+      ? result.escalation.libraryHoldId
+      : result.escalation.sourceImpactId;
+  return (
+    typeof record === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(record)
+  );
+}
 /** Retain one key for the same submitted payload after an uncertain response. */
 export function supportAttempt<T extends object>(
   previous: { signature: string; input: T & { idempotencyKey: string } } | null,

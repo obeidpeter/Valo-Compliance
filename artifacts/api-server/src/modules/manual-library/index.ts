@@ -180,6 +180,71 @@ export async function openHold(tx: Pick<Tx, "select">, edition: string) {
     .limit(1);
   return hold ?? null;
 }
+/**
+ * The published library versions a support referral can point at, whose titles contain the words
+ * (docs/architecture/library-holds.md, slice 3): up to 20, by title, each with only its title, kind and
+ * version. Read in the caller's transaction, which has checked the support role.
+ */
+export async function referableLibraryEntries(tx: Pick<Tx, "select">, words: string) {
+  const { valoManualLibrary: t } = await import("@workspace/db");
+  const pattern = `%${words.trim().replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
+  return tx
+    .select({ editionId: t.id, title: t.title, kind: t.kind, version: t.version })
+    .from(t)
+    .where(and(eq(t.state, "published"), ilike(t.title, pattern)))
+    .orderBy(t.title, t.id)
+    .limit(20);
+}
+/** The library version a referral points at, kept from changing state until the caller's transaction
+ * ends, or undefined when there is none. */
+export async function referredLibraryEdition(tx: Pick<Tx, "select">, edition: string) {
+  const { valoManualLibrary: t } = await import("@workspace/db");
+  const [row] = await tx
+    .select({ title: t.title, state: t.state, digest: t.digest, version: t.version })
+    .from(t)
+    .where(eq(t.id, edition))
+    .for("share");
+  return row;
+}
+/**
+ * Holds the exact library version a support referral points at, in the caller's transaction, so that its
+ * editors reassess it (docs/architecture/library-holds.md, slice 3). It is slice 2's hold, placed by the
+ * Content editor who triages the referral, with a reason that names the support request and copies none
+ * of its text. A version already held keeps that hold, which the referral then points at. Refused when the
+ * version is not the one referred, or no longer published.
+ */
+export async function holdForReferral(
+  tx: Tx,
+  referral: { edition: string; digest: string; version: number; reason: string; placedBy: string },
+) {
+  assertDevelopmentRuntime();
+  if (!(await holdsReady(tx)))
+    throw new ValoProblem(503, "Apply the holds migration before holding a library entry.");
+  const { valoManualLibrary: t, valoManualHolds } = await import("@workspace/db");
+  const changed = () =>
+    new ValoProblem(409, "The exact referred version changed. Prepare a fresh escalation.");
+  const [entry] = await tx.select({ itemId: t.itemId }).from(t).where(eq(t.id, referral.edition));
+  if (!entry) throw changed();
+  // The entry's own lock, which its editors and its hold's guard take, before its state is read.
+  await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${entry.itemId}::text,811))`);
+  const [now] = await tx
+    .select({ state: t.state, digest: t.digest, version: t.version })
+    .from(t)
+    .where(eq(t.id, referral.edition));
+  if (!now || now.digest !== referral.digest || now.version !== referral.version) throw changed();
+  if (now.state !== "published")
+    throw new ValoProblem(
+      409,
+      "The referred library version is no longer published, so it cannot be held. Refer its current version if the problem remains.",
+    );
+  const open = await openHold(tx, referral.edition);
+  if (open) return { holdId: open.id, placed: false };
+  const [placed] = await tx
+    .insert(valoManualHolds)
+    .values({ edition: referral.edition, reason: referral.reason, placedBy: referral.placedBy })
+    .returning({ id: valoManualHolds.id });
+  return { holdId: placed!.id, placed: true };
+}
 /** A hold as the staff screens show it. */
 export const holdRecord = (hold: Awaited<ReturnType<typeof openHold>>) =>
   hold && {

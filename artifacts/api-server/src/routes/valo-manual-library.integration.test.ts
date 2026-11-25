@@ -17,6 +17,7 @@ import { exercisePremiumPriceCommand } from "../test-support/premium-price-comma
 import { exerciseOverduePremiumTemplate } from "../test-support/manual-overdue-premium";
 import { exerciseWithdrawalReach } from "../test-support/manual-withdrawal-reach";
 import { exerciseLibraryHolds } from "../test-support/manual-holds";
+import { exerciseLibraryReferrals } from "../test-support/manual-referrals";
 import {
   changeNote,
   libraryAction,
@@ -522,6 +523,11 @@ test(
     await t.test(
       "a Content editor holds a published version short of a withdrawal, which then leaves new use while what customers have stays, and lifts it",
       () => exerciseLibraryHolds(call, editor),
+    );
+    // A reported problem that points at a library entry (docs/architecture/library-holds.md, slice 3).
+    await t.test(
+      "support staff refer a reported problem to a published library entry found by its title, and triage holds that exact version at once, with the request's reference and none of its words",
+      () => exerciseLibraryReferrals(call, editor, other),
     );
     await t.test("one published introduction per industry and no implied regulatory evidence", async () => {
       const id = randomUUID(),

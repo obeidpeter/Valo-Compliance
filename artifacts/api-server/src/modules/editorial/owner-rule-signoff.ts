@@ -37,6 +37,7 @@ import {
   type GuidePassages,
 } from "../publication";
 import { asDevelopmentOwner, type StaffActor } from "../staff";
+import { ownerRuleReferrals } from "../support";
 import { ValoProblem } from "../../platform/valo-problem";
 import { planStoredRuleRelease, recordRuleChanges, ruleChangeReason } from "./valo-rule-release";
 import { ownerRuleCandidates, type OwnerRuleCandidate } from "./owner-rule-candidates";
@@ -394,6 +395,9 @@ async function present(candidates: readonly OwnerRuleCandidate[], now: Date, opt
     options.readText ? { readText: options.readText } : {},
   );
   const watches = await sourceWatchStates(leads);
+  // The support referrals of the versions the owner signed, which the triage queue lists too
+  // (docs/architecture/library-holds.md, slice 3).
+  const referrals = await ownerRuleReferrals(candidates.map((c) => c.rule.id));
   const passages = passagesFrom(captures);
   const items = [];
   for (const candidate of candidates) {
@@ -459,6 +463,9 @@ async function present(candidates: readonly OwnerRuleCandidate[], now: Date, opt
       scenarios: plan.scenarios,
       profilesRun: plan.affected.profiles,
       changedProfiles: plan.affected.changes.length,
+      referrals: referrals
+        .filter((r) => r.ruleId === candidate.rule.id)
+        .map(({ ruleId: _rule, ...referral }) => referral),
     });
   }
   return items;

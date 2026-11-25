@@ -36,6 +36,6 @@ export type SupportCaseAction = {
      * @maxLength 4000
      */
   body: string;
-  targetKind: 'content' | 'rule';
+  targetKind: 'content' | 'rule' | 'library';
   targetId: string;
 };

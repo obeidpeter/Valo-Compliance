@@ -669,6 +669,7 @@ const answers: Record<string, unknown> = {
         scenarios: [],
         profilesRun: 0,
         changedProfiles: 0,
+        referrals: [],
       },
     ],
   }),

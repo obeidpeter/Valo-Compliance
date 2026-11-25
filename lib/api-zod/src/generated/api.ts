@@ -3824,6 +3824,7 @@ export const listOwnerRulesResponseItemsItemChangedProfilesMin = 0;
 
 
 
+
 export const ListOwnerRulesResponse = zod.object({
   "items": zod.array(zod.object({
   "ruleId": zod.string(),
@@ -3882,6 +3883,14 @@ export const ListOwnerRulesResponse = zod.object({
 })),
   "profilesRun": zod.int().min(listOwnerRulesResponseItemsItemProfilesRunMin),
   "changedProfiles": zod.int().min(listOwnerRulesResponseItemsItemChangedProfilesMin),
+  "referrals": zod.array(zod.object({
+  "reference": zod.string(),
+  "version": zod.int().min(1),
+  "status": zod.enum(['queued', 'acknowledged']),
+  "reason": zod.string(),
+  "held": zod.boolean().describe('Whether content staff held that version through the source controls, which keeps it out of the requirements check.'),
+  "referredAt": zod.coerce.date()
+})).describe('Support referrals not yet resolved that point at a version of this rule the owner signed, newest first (docs/architecture/library-holds.md, slice 3).'),
   "officialRoute": zod.object({
   "authority": zod.string(),
   "url": zod.string()
@@ -3914,6 +3923,7 @@ export const watchOwnerRuleSourcesResponseManifestHashRegExp = new RegExp('^[a-f
 export const watchOwnerRuleSourcesResponseProfilesRunMin = 0;
 
 export const watchOwnerRuleSourcesResponseChangedProfilesMin = 0;
+
 
 
 
@@ -3974,6 +3984,14 @@ export const WatchOwnerRuleSourcesResponse = zod.object({
 })),
   "profilesRun": zod.int().min(watchOwnerRuleSourcesResponseProfilesRunMin),
   "changedProfiles": zod.int().min(watchOwnerRuleSourcesResponseChangedProfilesMin),
+  "referrals": zod.array(zod.object({
+  "reference": zod.string(),
+  "version": zod.int().min(1),
+  "status": zod.enum(['queued', 'acknowledged']),
+  "reason": zod.string(),
+  "held": zod.boolean().describe('Whether content staff held that version through the source controls, which keeps it out of the requirements check.'),
+  "referredAt": zod.coerce.date()
+})).describe('Support referrals not yet resolved that point at a version of this rule the owner signed, newest first (docs/architecture/library-holds.md, slice 3).'),
   "officialRoute": zod.object({
   "authority": zod.string(),
   "url": zod.string()
@@ -8698,13 +8716,14 @@ export const GetStaffSupportCaseResponse = zod.object({
   "escalations": zod.array(zod.object({
   "id": zod.uuid(),
   "caseId": zod.uuid(),
-  "targetKind": zod.enum(['content', 'rule']),
+  "targetKind": zod.enum(['content', 'rule', 'library']),
   "targetId": zod.uuid(),
   "targetHash": zod.string(),
   "targetVersion": zod.int().min(1),
   "reason": zod.string(),
   "status": zod.enum(['queued', 'acknowledged', 'resolved']),
   "sourceImpactId": zod.uuid().nullable(),
+  "libraryHoldId": zod.uuid().nullable(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })),
@@ -8749,7 +8768,7 @@ export const ActOnSupportCaseBody = zod.union([zod.object({
   "expectedVersion": zod.int().min(1),
   "action": zod.enum(['escalate_content']),
   "body": zod.string().min(actOnSupportCaseBodyThreeBodyMin).max(actOnSupportCaseBodyThreeBodyMax),
-  "targetKind": zod.enum(['content', 'rule']),
+  "targetKind": zod.enum(['content', 'rule', 'library']),
   "targetId": zod.uuid()
 })])
 
@@ -8794,13 +8813,14 @@ export const ActOnSupportCaseResponse = zod.object({
   "escalations": zod.array(zod.object({
   "id": zod.uuid(),
   "caseId": zod.uuid(),
-  "targetKind": zod.enum(['content', 'rule']),
+  "targetKind": zod.enum(['content', 'rule', 'library']),
   "targetId": zod.uuid(),
   "targetHash": zod.string(),
   "targetVersion": zod.int().min(1),
   "reason": zod.string(),
   "status": zod.enum(['queued', 'acknowledged', 'resolved']),
   "sourceImpactId": zod.uuid().nullable(),
+  "libraryHoldId": zod.uuid().nullable(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })),
@@ -8830,13 +8850,15 @@ export const ListContentEscalationsResponse = zod.object({
   "id": zod.uuid(),
   "caseId": zod.uuid(),
   "reference": zod.string(),
-  "targetKind": zod.enum(['content', 'rule']),
+  "targetKind": zod.enum(['content', 'rule', 'library']),
   "targetId": zod.uuid(),
   "targetVersion": zod.int().min(1),
   "targetHash": zod.string(),
+  "targetTitle": zod.string().nullable(),
   "status": zod.enum(['queued', 'acknowledged', 'resolved']),
   "reason": zod.string(),
   "sourceImpactId": zod.uuid().nullable(),
+  "libraryHoldId": zod.uuid().nullable(),
   "caseVersion": zod.int().min(1),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -8849,7 +8871,32 @@ export const ListContentEscalationsResponse = zod.object({
 
 
 /**
- * Closing a referral never approves publication or releases a hold. A hold uses the source control authority and queues reassessment; no AI call or message is sent.
+ * @summary Published staff-library entries a support referral can point at
+ */
+export const findSupportLibraryEntriesQueryQMin = 2;
+export const findSupportLibraryEntriesQueryQMax = 100;
+
+
+
+export const FindSupportLibraryEntriesQueryParams = zod.object({
+  "q": zod.coerce.string().min(findSupportLibraryEntriesQueryQMin).max(findSupportLibraryEntriesQueryQMax)
+})
+
+
+
+
+export const FindSupportLibraryEntriesResponse = zod.object({
+  "entries": zod.array(zod.object({
+  "editionId": zod.uuid(),
+  "title": zod.string(),
+  "kind": zod.enum(['practical_guide', 'industry_introduction', 'industry_pack', 'template', 'premium_template', 'regulatory_article']),
+  "version": zod.int().min(1)
+}))
+})
+
+
+/**
+ * Closing a referral never approves publication or releases a hold. A referred reviewed version or rule release is held through the source controls, which queue its reassessment. A referred staff-library version is held in the staff library, where a Content editor, or the owner for a regulatory guide, reassesses it. No AI call or message is sent.
  * @summary Acknowledge or close a content referral, or hold the referred version
  */
 export const ActOnContentEscalationParams = zod.object({
@@ -8877,13 +8924,14 @@ export const ActOnContentEscalationResponse = zod.object({
   "escalation": zod.object({
   "id": zod.uuid(),
   "caseId": zod.uuid(),
-  "targetKind": zod.enum(['content', 'rule']),
+  "targetKind": zod.enum(['content', 'rule', 'library']),
   "targetId": zod.uuid(),
   "targetHash": zod.string(),
   "targetVersion": zod.int().min(1),
   "reason": zod.string(),
   "status": zod.enum(['queued', 'acknowledged', 'resolved']),
   "sourceImpactId": zod.uuid().nullable(),
+  "libraryHoldId": zod.uuid().nullable(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 }),

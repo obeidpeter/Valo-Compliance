@@ -185,12 +185,28 @@ paths:
         "400": { $ref: "#/components/responses/AuthError" }
         "401": { $ref: "#/components/responses/AuthError" }
         "403": { $ref: "#/components/responses/AuthError" }
+  /admin/support-library-entries:
+    get:
+      operationId: findSupportLibraryEntries
+      tags: [staff]
+      summary: Published staff-library entries a support referral can point at
+      parameters:
+        - { name: q, in: query, required: true, schema: { type: string, minLength: 2, maxLength: 100 } }
+      responses:
+        "200":
+          description: Up to 20 published entries whose title contains the words, by title. Requires an active support role and recent MFA.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SupportLibraryEntryList" }
+        "400": { $ref: "#/components/responses/AuthError" }
+        "401": { $ref: "#/components/responses/AuthError" }
+        "403": { $ref: "#/components/responses/AuthError" }
   /admin/support-escalations/{id}/action:
     post:
       operationId: actOnContentEscalation
       tags: [staff]
       summary: Acknowledge or close a content referral, or hold the referred version
-      description: Closing a referral never approves publication or releases a hold. A hold uses the source control authority and queues reassessment; no AI call or message is sent.
+      description: Closing a referral never approves publication or releases a hold. A referred reviewed version or rule release is held through the source controls, which queue its reassessment. A referred staff-library version is held in the staff library, where a Content editor, or the owner for a regulatory guide, reassesses it. No AI call or message is sent.
       parameters:
         - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
       requestBody:
@@ -318,17 +334,20 @@ schemas:
       createdAt: { type: string, format: date-time }
   SupportCaseEscalation:
     type: object
-    required: [id, caseId, targetKind, targetId, targetHash, targetVersion, reason, status, sourceImpactId, createdAt, updatedAt]
+    required: [id, caseId, targetKind, targetId, targetHash, targetVersion, reason, status, sourceImpactId, libraryHoldId, createdAt, updatedAt]
     properties:
       id: { type: string, format: uuid }
       caseId: { type: string, format: uuid }
-      targetKind: { type: string, enum: [content, rule] }
+      # A reviewed content version, a rule release, or a staff-library edition.
+      targetKind: { type: string, enum: [content, rule, library] }
       targetId: { type: string, format: uuid }
       targetHash: { type: string }
       targetVersion: { type: integer, minimum: 1 }
       reason: { type: string }
       status: { type: string, enum: [queued, acknowledged, resolved] }
       sourceImpactId: { type: [string, "null"], format: uuid }
+      # The staff-library hold a library referral placed, or found already placed.
+      libraryHoldId: { type: [string, "null"], format: uuid }
       createdAt: { type: string, format: date-time }
       updatedAt: { type: string, format: date-time }
   CustomerSupportCaseDetail:
@@ -400,25 +419,42 @@ schemas:
           expectedVersion: { type: integer, minimum: 1 }
           action: { type: string, enum: [escalate_content] }
           body: { type: string, minLength: 8, maxLength: 4000 }
-          targetKind: { type: string, enum: [content, rule] }
+          targetKind: { type: string, enum: [content, rule, library] }
+          # For a library entry, the published edition's id, as the entry search gives it.
           targetId: { type: string, format: uuid }
   ContentEscalation:
     type: object
-    required: [id, caseId, reference, targetKind, targetId, targetVersion, targetHash, status, reason, sourceImpactId, caseVersion, createdAt, updatedAt]
+    required: [id, caseId, reference, targetKind, targetId, targetVersion, targetHash, targetTitle, status, reason, sourceImpactId, libraryHoldId, caseVersion, createdAt, updatedAt]
     properties:
       id: { type: string, format: uuid }
       caseId: { type: string, format: uuid }
       reference: { type: string }
-      targetKind: { type: string, enum: [content, rule] }
+      targetKind: { type: string, enum: [content, rule, library] }
       targetId: { type: string, format: uuid }
       targetVersion: { type: integer, minimum: 1 }
       targetHash: { type: string }
+      # A library entry's title, or null for a reviewed version or a rule release.
+      targetTitle: { type: [string, "null"] }
       status: { type: string, enum: [queued, acknowledged, resolved] }
       reason: { type: string }
       sourceImpactId: { type: [string, "null"], format: uuid }
+      libraryHoldId: { type: [string, "null"], format: uuid }
       caseVersion: { type: integer, minimum: 1 }
       createdAt: { type: string, format: date-time }
       updatedAt: { type: string, format: date-time }
+  SupportLibraryEntry:
+    type: object
+    required: [editionId, title, kind, version]
+    properties:
+      editionId: { type: string, format: uuid }
+      title: { type: string }
+      kind: { type: string, enum: [practical_guide, industry_introduction, industry_pack, template, premium_template, regulatory_article] }
+      version: { type: integer, minimum: 1 }
+  SupportLibraryEntryList:
+    type: object
+    required: [entries]
+    properties:
+      entries: { type: array, items: { $ref: "#/components/schemas/SupportLibraryEntry" } }
   ContentEscalationList:
     type: object
     required: [escalations, page, pageSize, hasMore, notice]

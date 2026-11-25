@@ -12,4 +12,5 @@ export type ContentEscalationTargetKind = typeof ContentEscalationTargetKind[key
 export const ContentEscalationTargetKind = {
   content: 'content',
   rule: 'rule',
+  library: 'library',
 } as const;

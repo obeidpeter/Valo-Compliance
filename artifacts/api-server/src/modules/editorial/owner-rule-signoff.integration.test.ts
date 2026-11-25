@@ -29,6 +29,12 @@ import {
   getAssessment,
   releasedRegistry,
 } from "../rules/valo-assessments";
+import {
+  actOnContentSupportEscalation,
+  actOnSupportCase,
+  createTicket,
+  customerSupportCases,
+} from "../support";
 import { createTask, listReminders, listTasks, saveReminderPreferences } from "../tasks/valo-tasks";
 import { resolveWorkspace } from "../workspaces";
 import {
@@ -209,6 +215,20 @@ test(
         role: "system" as const,
         grantedBy: "synthetic operator",
         reason: "Synthetic rule sign-off test",
+      })),
+    );
+    // Support and content staff, who refer a reported problem with the rule and triage it.
+    const support = "synthetic-rule-support-" + id,
+      content = "synthetic-rule-content-" + id;
+    await db.insert(valoStaffAssignments).values(
+      [
+        { identityId: support, role: "support" as const },
+        { identityId: content, role: "content" as const },
+      ].map((row) => ({
+        ...row,
+        id: randomUUID(),
+        grantedBy: "synthetic operator",
+        reason: "Synthetic rule referral test",
       })),
     );
     await db.insert(valoStaffRoleChanges).values({
@@ -610,8 +630,60 @@ test(
       [item] = await list();
       assert.deepEqual(item!.holds, [noCopy]);
       await assert.rejects(decideOwnerRule(actor(owner), ruleId, sign(item!), options), refused(409));
+
+      // docs/architecture/library-holds.md, slice 3 (ADM-008): a support referral of a version the owner
+      // signed, here the one since withdrawn, reaches the owner's panel as well as the triage queue. Held
+      // through the source controls, it says so; resolved, it leaves the panel.
+      assert.deepEqual(item!.referrals, []);
+      const reporter = await resolveWorkspace("synthetic-rule-referral-" + id);
+      const { reference } = await createTicket(reporter, {
+        category: "support",
+        scope: "Synthetic report that a signed rule's next step reads wrongly.",
+        contactEmail: `synthetic-rule-referral-${id}@example.invalid`,
+        sharingConsent: true,
+      });
+      const caseId = (await customerSupportCases(reporter)).cases.find((c) => c.reference === reference)!.id;
+      const [withdrawnRelease] = await db
+        .select({ id: valoRuleReleases.id })
+        .from(valoRuleReleases)
+        .where(and(eq(valoRuleReleases.ruleId, ruleId), eq(valoRuleReleases.version, 2)));
+      const why = "Synthetic referral: the customer says the signed rule's next step reads wrongly.";
+      const referred = await actOnSupportCase(actor(support), caseId, {
+        idempotencyKey: randomUUID(),
+        expectedVersion: 1,
+        action: "escalate_content",
+        body: why,
+        targetKind: "rule",
+        targetId: withdrawnRelease!.id,
+      });
+      [item] = await list();
+      assert.deepEqual(
+        item!.referrals.map(({ referredAt: _at, ...referral }) => referral),
+        [{ reference, version: 2, status: "queued", reason: why, held: false }],
+      );
+      const referral = referred.escalations![0]!;
+      const held = await actOnContentSupportEscalation(actor(content), referral.id, {
+        idempotencyKey: randomUUID(),
+        expectedVersion: referred.case.version,
+        action: "hold_and_reassess",
+        body: "Synthetic triage: hold the signed version for the owner to check.",
+      });
+      assert.ok(held.escalation.sourceImpactId);
+      [item] = await list();
+      assert.deepEqual(
+        item!.referrals.map((r) => [r.status, r.held]),
+        [["acknowledged", true]],
+      );
+      await actOnContentSupportEscalation(actor(content), referral.id, {
+        idempotencyKey: randomUUID(),
+        expectedVersion: held.caseVersion,
+        action: "resolve",
+        body: "Synthetic triage: the owner withdrew the version, so this is resolved.",
+      });
+      [item] = await list();
+      assert.deepEqual(item!.referrals, []);
     } finally {
-      for (const identity of [owner, system])
+      for (const identity of [owner, system, support, content])
         await db
           .update(valoStaffAssignments)
           .set({ active: false })

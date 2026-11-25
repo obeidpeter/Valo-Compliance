@@ -12,4 +12,5 @@ export type SupportCaseEscalationTargetKind = typeof SupportCaseEscalationTarget
 export const SupportCaseEscalationTargetKind = {
   content: 'content',
   rule: 'rule',
+  library: 'library',
 } as const;

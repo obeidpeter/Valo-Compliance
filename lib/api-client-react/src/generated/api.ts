@@ -73,6 +73,7 @@ import type {
   FinanceDisputeLink,
   FinancePaymentConcerns,
   FinanceRefunds,
+  FindSupportLibraryEntriesParams,
   FormDocumentStart,
   FormTemplates,
   GetCommerceReceipt200,
@@ -157,6 +158,7 @@ import type {
   StartCommerceCheckout200,
   SupportAssignees,
   SupportCaseAction,
+  SupportLibraryEntryList,
   SupportReplyInput,
   TaskArchiveInput,
   TaskInput,
@@ -11528,6 +11530,114 @@ export function useListContentEscalations<TData = Awaited<ReturnType<typeof list
 
 
 
+export const getFindSupportLibraryEntriesUrl = (params: FindSupportLibraryEntriesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/support-library-entries?${stringifiedParams}` : `/api/admin/support-library-entries`
+}
+
+/**
+ * @summary Published staff-library entries a support referral can point at
+ */
+export const findSupportLibraryEntries = async (params: FindSupportLibraryEntriesParams, options?: Parameters<typeof customFetch>[1]): Promise<SupportLibraryEntryList> => {
+
+  return customFetch<SupportLibraryEntryList>(getFindSupportLibraryEntriesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getFindSupportLibraryEntriesQueryKey = (params?: FindSupportLibraryEntriesParams,) => {
+    return [
+    "findSupportLibraryEntries", ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getFindSupportLibraryEntriesQueryOptions = <TData = Awaited<ReturnType<typeof findSupportLibraryEntries>>, TError = ErrorType<AuthErrorResponse>>(params: FindSupportLibraryEntriesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof findSupportLibraryEntries>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getFindSupportLibraryEntriesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof findSupportLibraryEntries>>> = ({ signal }) => findSupportLibraryEntries(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof findSupportLibraryEntries>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type FindSupportLibraryEntriesQueryResult = NonNullable<Awaited<ReturnType<typeof findSupportLibraryEntries>>>
+export type FindSupportLibraryEntriesQueryError = ErrorType<AuthErrorResponse>
+
+
+/** @summary Published staff-library entries a support referral can point at */
+export function useFindSupportLibraryEntries<TData = Awaited<ReturnType<typeof findSupportLibraryEntries>>, TError = ErrorType<AuthErrorResponse>>(
+ params: FindSupportLibraryEntriesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof findSupportLibraryEntries>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof findSupportLibraryEntries>>,
+          TError,
+          Awaited<ReturnType<typeof findSupportLibraryEntries>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Published staff-library entries a support referral can point at */
+export function useFindSupportLibraryEntries<TData = Awaited<ReturnType<typeof findSupportLibraryEntries>>, TError = ErrorType<AuthErrorResponse>>(
+ params: FindSupportLibraryEntriesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof findSupportLibraryEntries>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof findSupportLibraryEntries>>,
+          TError,
+          Awaited<ReturnType<typeof findSupportLibraryEntries>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Published staff-library entries a support referral can point at */
+export function useFindSupportLibraryEntries<TData = Awaited<ReturnType<typeof findSupportLibraryEntries>>, TError = ErrorType<AuthErrorResponse>>(
+ params: FindSupportLibraryEntriesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof findSupportLibraryEntries>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Published staff-library entries a support referral can point at */
+export function useFindSupportLibraryEntries<TData = Awaited<ReturnType<typeof findSupportLibraryEntries>>, TError = ErrorType<AuthErrorResponse>>(
+ params: FindSupportLibraryEntriesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof findSupportLibraryEntries>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getFindSupportLibraryEntriesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export const getActOnContentEscalationUrl = (id: string,) => {
 
 
@@ -11537,7 +11647,7 @@ export const getActOnContentEscalationUrl = (id: string,) => {
 }
 
 /**
- * Closing a referral never approves publication or releases a hold. A hold uses the source control authority and queues reassessment; no AI call or message is sent.
+ * Closing a referral never approves publication or releases a hold. A referred reviewed version or rule release is held through the source controls, which queue its reassessment. A referred staff-library version is held in the staff library, where a Content editor, or the owner for a regulatory guide, reassesses it. No AI call or message is sent.
  * @summary Acknowledge or close a content referral, or hold the referred version
  */
 export const actOnContentEscalation = async (id: string,
@@ -11605,7 +11715,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ActOnContentEscalationMutationVariables = {id: string;data: BodyType<ContentEscalationActionInput>}
 
     /**
- * Closing a referral never approves publication or releases a hold. A hold uses the source control authority and queues reassessment; no AI call or message is sent.
+ * Closing a referral never approves publication or releases a hold. A referred reviewed version or rule release is held through the source controls, which queue its reassessment. A referred staff-library version is held in the staff library, where a Content editor, or the owner for a regulatory guide, reassesses it. No AI call or message is sent.
  * @summary Acknowledge or close a content referral, or hold the referred version
  */
 export const useActOnContentEscalation = <TError = ErrorType<AuthErrorResponse | ConflictErrorResponse>,

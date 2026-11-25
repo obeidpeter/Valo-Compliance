@@ -1770,6 +1770,25 @@ export interface OwnerRuleScenario {
   passed: boolean;
 }
 
+export type OwnerRuleReferralStatus = typeof OwnerRuleReferralStatus[keyof typeof OwnerRuleReferralStatus];
+
+
+export const OwnerRuleReferralStatus = {
+  queued: 'queued',
+  acknowledged: 'acknowledged',
+} as const;
+
+export interface OwnerRuleReferral {
+  reference: string;
+  /** @minimum 1 */
+  version: number;
+  status: OwnerRuleReferralStatus;
+  reason: string;
+  /** Whether content staff held that version through the source controls, which keeps it out of the requirements check. */
+  held: boolean;
+  referredAt: string;
+}
+
 export type OwnerRuleFigureKind = typeof OwnerRuleFigureKind[keyof typeof OwnerRuleFigureKind];
 
 
@@ -1828,6 +1847,8 @@ export interface OwnerRuleItem {
   profilesRun: number;
   /** @minimum 0 */
   changedProfiles: number;
+  /** Support referrals not yet resolved that point at a version of this rule the owner signed, newest first (docs/architecture/library-holds.md, slice 3). */
+  referrals: OwnerRuleReferral[];
   officialRoute?: RequirementRoute;
   /** Each fee, deadline, rate or threshold the rule records, with the passage it rests on, as a customer would see it. Absent when it records none. */
   figures?: OwnerRuleFigure[];
@@ -4132,6 +4153,7 @@ export type SupportCaseEscalationTargetKind = typeof SupportCaseEscalationTarget
 export const SupportCaseEscalationTargetKind = {
   content: 'content',
   rule: 'rule',
+  library: 'library',
 } as const;
 
 export type SupportCaseEscalationStatus = typeof SupportCaseEscalationStatus[keyof typeof SupportCaseEscalationStatus];
@@ -4155,6 +4177,8 @@ export interface SupportCaseEscalation {
   status: SupportCaseEscalationStatus;
   /** @nullable */
   sourceImpactId: string | null;
+  /** @nullable */
+  libraryHoldId: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -4230,7 +4254,7 @@ export type SupportCaseAction = {
      * @maxLength 4000
      */
   body: string;
-  targetKind: 'content' | 'rule';
+  targetKind: 'content' | 'rule' | 'library';
   targetId: string;
 };
 
@@ -4240,6 +4264,7 @@ export type ContentEscalationTargetKind = typeof ContentEscalationTargetKind[key
 export const ContentEscalationTargetKind = {
   content: 'content',
   rule: 'rule',
+  library: 'library',
 } as const;
 
 export type ContentEscalationStatus = typeof ContentEscalationStatus[keyof typeof ContentEscalationStatus];
@@ -4260,14 +4285,42 @@ export interface ContentEscalation {
   /** @minimum 1 */
   targetVersion: number;
   targetHash: string;
+  /** @nullable */
+  targetTitle: string | null;
   status: ContentEscalationStatus;
   reason: string;
   /** @nullable */
   sourceImpactId: string | null;
+  /** @nullable */
+  libraryHoldId: string | null;
   /** @minimum 1 */
   caseVersion: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export type SupportLibraryEntryKind = typeof SupportLibraryEntryKind[keyof typeof SupportLibraryEntryKind];
+
+
+export const SupportLibraryEntryKind = {
+  practical_guide: 'practical_guide',
+  industry_introduction: 'industry_introduction',
+  industry_pack: 'industry_pack',
+  template: 'template',
+  premium_template: 'premium_template',
+  regulatory_article: 'regulatory_article',
+} as const;
+
+export interface SupportLibraryEntry {
+  editionId: string;
+  title: string;
+  kind: SupportLibraryEntryKind;
+  /** @minimum 1 */
+  version: number;
+}
+
+export interface SupportLibraryEntryList {
+  entries: SupportLibraryEntry[];
 }
 
 export interface ContentEscalationList {
@@ -4868,6 +4921,14 @@ export type ListContentEscalationsParams = {
    * @maximum 10000
    */
   page?: number;
+};
+
+export type FindSupportLibraryEntriesParams = {
+  /**
+   * @minLength 2
+   * @maxLength 100
+   */
+  q: string;
 };
 
 export type ListTasksPageParams = {

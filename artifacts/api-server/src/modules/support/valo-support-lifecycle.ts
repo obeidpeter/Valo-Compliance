@@ -25,6 +25,7 @@ import {
   limitWorkspaceWrite,
   type WorkspaceActor,
 } from "../workspaces";
+import { referableLibraryEntries, referredLibraryEdition } from "../manual-library";
 import { consumeQuota, quotaSubjectHash } from "../../lib/valo-quota";
 import { setting } from "../../platform/settings";
 import {
@@ -55,7 +56,7 @@ export const supportActionSchema = z.discriminatedUnion("action", [
       ...base,
       action: z.literal("escalate_content"),
       body,
-      targetKind: z.enum(["content", "rule"]),
+      targetKind: z.enum(["content", "rule", "library"]),
       targetId: z.string().uuid(),
     })
     .strict(),
@@ -521,22 +522,35 @@ export async function actOnSupportCase(actor: SupportStaffActor, id: string, raw
             422,
             "Use an authenticated workspace request for internal content triage. Account-access intake does not establish ownership.",
           );
-        const target =
-          input.targetKind === "content"
-            ? (
-                await tx
-                  .select({ hash: valoContentVersions.candidateHash, version: valoContentVersions.version })
-                  .from(valoContentVersions)
-                  .where(eq(valoContentVersions.id, input.targetId))
-                  .for("share")
-              )[0]
-            : (
-                await tx
-                  .select({ hash: valoRuleReleases.manifestHash, version: valoRuleReleases.version })
-                  .from(valoRuleReleases)
-                  .where(eq(valoRuleReleases.id, input.targetId))
-                  .for("share")
-              )[0];
+        let target: { hash: string; version: number } | undefined;
+        if (input.targetKind === "library") {
+          // A staff-library entry is referred by its published version, as the entry search gives it
+          // (docs/architecture/library-holds.md, slice 3).
+          const edition = await referredLibraryEdition(tx, input.targetId);
+          if (!edition) throw new ValoProblem(404, "The exact content or rule version is unavailable.");
+          if (edition.state !== "published")
+            throw new ValoProblem(
+              409,
+              "This library version is no longer published. Find the entry by its title again.",
+            );
+          target = { hash: edition.digest, version: edition.version };
+        } else
+          target =
+            input.targetKind === "content"
+              ? (
+                  await tx
+                    .select({ hash: valoContentVersions.candidateHash, version: valoContentVersions.version })
+                    .from(valoContentVersions)
+                    .where(eq(valoContentVersions.id, input.targetId))
+                    .for("share")
+                )[0]
+              : (
+                  await tx
+                    .select({ hash: valoRuleReleases.manifestHash, version: valoRuleReleases.version })
+                    .from(valoRuleReleases)
+                    .where(eq(valoRuleReleases.id, input.targetId))
+                    .for("share")
+                )[0];
         if (!target) throw new ValoProblem(404, "The exact content or rule version is unavailable.");
         await currentSupportStaff(tx, actor, "support");
         await tx.insert(valoSupportEscalations).values({
@@ -580,6 +594,19 @@ const triageDeps = {
   replay,
   change,
 };
+const libraryWords = z.string().trim().min(2).max(100);
+/**
+ * The published staff-library entries whose titles contain the words, for support staff choosing what a
+ * referral points at (docs/architecture/library-holds.md, slice 3). Needs an active support role and a
+ * recently verified session, as the cases do.
+ */
+export async function supportLibraryEntries(actor: SupportStaffActor, words: unknown) {
+  const q = libraryWords.parse(words);
+  return db.transaction(async (tx) => {
+    await requireSupportStaff(tx, actor, "support");
+    return { entries: await referableLibraryEntries(tx, q) };
+  });
+}
 export async function contentSupportEscalations(actor: SupportStaffActor, rawPage?: unknown) {
   return listContentSupportEscalations(triageDeps, actor, rawPage);
 }
