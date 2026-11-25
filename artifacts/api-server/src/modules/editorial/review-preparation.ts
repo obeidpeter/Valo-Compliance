@@ -165,7 +165,8 @@ async function prepare(templateId: string, readPage: Parameters<typeof capturePr
 let running: Promise<boolean> | null = null;
 /**
  * The worker's `preparations` task: one request per run, the one waiting longest. Its run holds a
- * lease of 15 minutes, and a request is tried at most three times. Returns whether it settled one.
+ * lease of 15 minutes and stops after 10, and a request is tried at most three times. Returns
+ * whether it settled one.
  * `readPage` is for tests; the worker reads the provider's pages through the listed-page fetcher.
  */
 export async function prepareRequestedCandidates(
@@ -185,13 +186,25 @@ export async function prepareRequestedCandidates(
     }
     if (claimed === null) return false;
     if (claimed === "settled") return true;
-    let outcome: Outcome;
+    let outcome: Outcome, timer: ReturnType<typeof setTimeout> | undefined;
+    const work = prepare(claimed.templateId, options.readPage);
+    // The race below records the outcome. A preparation that fails after its time ran out has
+    // nothing left to record: the request already says it stopped.
+    work.catch(() => {});
     try {
-      outcome = await prepare(claimed.templateId, options.readPage);
+      // Within the lease, so a run that hangs neither holds this worker nor lets another claim it.
+      outcome = await Promise.race([
+        work,
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(() => reject(Error("PREPARATION_TIMEOUT")), 600_000);
+        }),
+      ]);
     } catch (error) {
       outcome = { status: "failed", reasons: [failureCode(error)] };
       // The code only: a preparation's error carries nothing private, but its text is not repeated.
       logger.warn({ event: "review_preparation.failed", code: outcome.reasons[0] });
+    } finally {
+      if (timer) clearTimeout(timer);
     }
     const { db } = await import("@workspace/db");
     const { id, attempt } = claimed;

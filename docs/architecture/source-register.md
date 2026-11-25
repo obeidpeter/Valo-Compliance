@@ -209,7 +209,8 @@ Slice 4:
   which row or when, never changes a finished request, and never removes one.
 - The worker runs the requests, one a minute, as its own scheduled task (`preparations`), because the
   preparer renders the candidate's Word and PDF files and the worker is where the renderer runs. A run
-  takes a lease of 15 minutes, and a request is tried at most three times.
+  takes a lease of 15 minutes and stops after 10 (`PREPARATION_TIMEOUT`), so a run that hangs neither
+  holds the worker nor lets another run claim the request, and a request is tried at most three times.
 - Each run takes a fresh copy of the AI provider's terms, as the `capture-provider-terms` command does:
   the five pages the permission record reads, through the listed-page fetcher, refused when a page no
   longer holds the sentence the record looks for. The preparers check the copy as they check the
