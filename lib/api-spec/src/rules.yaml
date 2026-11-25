@@ -1562,6 +1562,19 @@ schemas:
       jurisdiction: { $ref: "#/components/schemas/RuleJurisdiction" }
       sources: { type: array, items: { $ref: "#/components/schemas/RuleSource" } }
       relatedTemplateIds: { type: array, items: { type: string } }
+      officialRoute:
+        $ref: "#/components/schemas/RequirementRoute"
+      figures:
+        type: array
+        description: Each fee, deadline, rate or threshold the item's rule records, with the source it rests on (CMP-006). Absent when the rule records none, and in a result saved before figures were recorded.
+        items: { $ref: "#/components/schemas/RequirementFigure" }
+  RequirementFigure:
+    type: object
+    required: [kind, words, sourceId]
+    properties:
+      kind: { type: string, enum: [fee, deadline, rate, threshold] }
+      words: { type: string, description: "In the words of the passage of the item's source it rests on." }
+      sourceId: { type: string, description: "The id of one of the item's sources." }
   CheckerRuleInUse:
     type: object
     required: [ruleId, ruleVersion, title, family]

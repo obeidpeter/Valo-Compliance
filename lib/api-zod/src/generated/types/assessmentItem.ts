@@ -7,6 +7,8 @@
  */
 import type { AssessmentItemLabel } from './assessmentItemLabel';
 import type { MissingAnswerState } from './missingAnswerState';
+import type { RequirementFigure } from './requirementFigure';
+import type { RequirementRoute } from './requirementRoute';
 import type { RuleJurisdiction } from './ruleJurisdiction';
 import type { RuleSource } from './ruleSource';
 
@@ -30,4 +32,7 @@ export interface AssessmentItem {
   jurisdiction: RuleJurisdiction;
   sources: RuleSource[];
   relatedTemplateIds: string[];
+  officialRoute?: RequirementRoute;
+  /** Each fee, deadline, rate or threshold the item's rule records, with the source it rests on (CMP-006). Absent when the rule records none, and in a result saved before figures were recorded. */
+  figures?: RequirementFigure[];
 }

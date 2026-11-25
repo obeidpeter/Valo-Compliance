@@ -160,9 +160,43 @@ export const ruleSchema = z
     reason: z.string().min(1).max(1000),
     nextStep: z.string().min(1).max(1000),
     relatedTemplateIds: z.array(z.string()).max(20),
+    /** Where the business acts on the requirement: the authority, and its own page for it
+     * (docs/architecture/results.md). A rule that records none leaves the result's own route. */
+    officialRoute: z
+      .object({
+        authority: z.string().min(1).max(120),
+        url: z.string().url().startsWith("https://"),
+      })
+      .strict()
+      .optional(),
+    /** CMP-006: each fee, deadline, rate or threshold the rule shows, in the words of the passage of
+     * one of its sources. A fee is the government's; a Valo or provider charge is never recorded. */
+    figures: z
+      .array(
+        z
+          .object({
+            kind: z.enum(["fee", "deadline", "rate", "threshold"]),
+            words: z.string().min(1).max(300),
+            sourceId: z.string().min(1),
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(8)
+      .optional(),
   })
   .strict()
   .superRefine((rule, ctx) => {
+    // A figure is in the words of the passage its source quotes, which the release checks against the
+    // official text, so nothing is shown that the source does not say.
+    for (const figure of rule.figures ?? [])
+      if (
+        !rule.sources.some((source) => source.id === figure.sourceId && source.quote.includes(figure.words))
+      )
+        ctx.addIssue({
+          code: "custom",
+          message: `A ${figure.kind} must be in the words its source quotes`,
+        });
     if (Boolean(rule.condition) === Boolean(rule.evaluator))
       ctx.addIssue({
         code: "custom",
@@ -175,6 +209,23 @@ export const ruleSchema = z
       });
   });
 export type ReleasedRule = z.infer<typeof ruleSchema>;
+/** CMP-007: whether a rule's own route is a page on one of its policy's official hosts, as its sources
+ * must be. A rule that records no route passes. */
+export function routeOnOfficialHost(
+  rule: { officialRoute?: { url: string } | undefined },
+  officialHosts: readonly string[],
+) {
+  if (!rule.officialRoute) return true;
+  const url = URL.canParse(rule.officialRoute.url) ? new URL(rule.officialRoute.url) : null;
+  return (
+    url !== null &&
+    url.protocol === "https:" &&
+    url.username === "" &&
+    url.password === "" &&
+    (url.port === "" || url.port === "443") &&
+    officialHosts.includes(url.hostname)
+  );
+}
 type Truth = "true" | "false" | "unknown";
 export type RuleItem = {
   ruleId: string;
@@ -196,7 +247,15 @@ export type RuleItem = {
   jurisdiction: ReleasedRule["jurisdiction"];
   sources: ReleasedRule["sources"];
   relatedTemplateIds: string[];
+  officialRoute?: NonNullable<ReleasedRule["officialRoute"]>;
+  figures?: NonNullable<ReleasedRule["figures"]>;
 };
+/** What a requirement carries of where to act and its figures: only what its rule records, so a
+ * result from rules that record neither is exactly what it was. */
+const routeAndFigures = (rule: ReleasedRule) => ({
+  ...(rule.officialRoute && { officialRoute: rule.officialRoute }),
+  ...(rule.figures && { figures: rule.figures }),
+});
 /** EDP-008: what a result says about how its rule was released. A rule released on the reviewed
  * route was AI drafted and reviewed, and its bundle says so; one released on the owner's sign-off
  * was not, and says what was done instead (decision 0020). A synthetic fixture is never shown as
@@ -435,6 +494,7 @@ export function assess(
         jurisdiction: r.jurisdiction,
         sources: r.sources,
         relatedTemplateIds: r.relatedTemplateIds,
+        ...routeAndFigures(r),
       });
       continue;
     }
@@ -482,6 +542,7 @@ export function assess(
       jurisdiction: r.jurisdiction,
       sources: r.sources,
       relatedTemplateIds: r.relatedTemplateIds,
+      ...routeAndFigures(r),
     });
   }
   const rulesetVersion = digest({
@@ -514,9 +575,21 @@ export function assess(
         .filter((i) => i.label === "Likely relevant" && i.sourceLinkedTaskEligible !== false)
         .flatMap((i) => i.relatedTemplateIds),
     ),
-    officialRoutes: [
-      { title: "Corporate Affairs Commission service discovery", url: "https://icrp.cac.gov.ng/" },
-    ],
+    // A released rule in force but held, for stale evidence, a conflict or a changed calculation,
+    // gives no result, yet still sends the business to its route (CMP-007, EDP-012).
+    officialRoutes: officialRoutes(
+      items,
+      parsedRules.filter(
+        (r) =>
+          holds.get(`${r.id}@${r.version}`) &&
+          r.status === "published" &&
+          r.validFrom <= asOfDate &&
+          (r.validTo === null || r.validTo > asOfDate) &&
+          (r.provenance === "synthetic_fixture"
+            ? options.fixtureMode === true
+            : options.trustedManifestHashes?.has(r.manifestHash) === true),
+      ),
+    ),
     notice:
       "Conditional source-governed guidance, not legal certification. Unknown answers never establish exemption.",
     sourceBackedRecommendations: items.filter((i) => i.label === "Likely relevant").length,
@@ -524,6 +597,24 @@ export function assess(
   return { ...result, resultHash: digest(result) };
 }
 export type AssessmentResult = ReturnType<typeof assess>;
+/**
+ * Where a result sends the business (CMP-007, EDP-012): the routes of its requirements that may
+ * apply, and of the rules held from it, each once. A result with none keeps the Corporate Affairs
+ * Commission's service page, so a result from rules that record no route is what it was.
+ */
+function officialRoutes(items: RuleItem[], held: ReleasedRule[]) {
+  const routes = new Map<string, string>();
+  for (const route of [
+    ...items
+      .filter((item) => item.label !== "Not indicated by these answers")
+      .map((item) => item.officialRoute),
+    ...held.map((rule) => rule.officialRoute),
+  ])
+    if (route && !routes.has(route.url)) routes.set(route.url, route.authority);
+  return routes.size
+    ? [...routes].map(([url, title]) => ({ title, url }))
+    : [{ title: "Corporate Affairs Commission service discovery", url: "https://icrp.cac.gov.ng/" }];
+}
 export function factsFromProfile(raw: Record<string, unknown>): CheckerFacts {
   return checkerFactsSchema.parse(
     Object.fromEntries(
