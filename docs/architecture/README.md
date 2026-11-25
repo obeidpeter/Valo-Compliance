@@ -283,8 +283,8 @@ the claim maps and amendment records say of a source from `modules/publication`.
 and neither imports it.
 
 `modules/acceptance-review` holds [the reviewer's record](reviewer-record.md) (decision 0016): the three
-frozen acceptance corpora as a reviewer reads them, each case with the hash the suites bind it by, and
-the decisions an active reviewer records on them. It reads the staff checks from `modules/staff` and the
+frozen acceptance corpora as a reviewer reads them, each case with the hash the suites bind it by, the
+suites' runs kept for a reviewer, and the decisions an active reviewer records on them. It reads the staff checks from `modules/staff` and the
 repository's root from `modules/publication`, and no module imports it.
 
 `modules/catalogue` holds the public catalogue, its search and discovery, the released content

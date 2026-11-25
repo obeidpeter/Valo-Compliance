@@ -272,7 +272,7 @@
       "job": "foundation",
       "file": "lib/db/scripts/phase1-migrations.test.mjs",
       "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
-      "proves": "The acceptance reviews migration keeps every existing row and rolls back cleanly, adds the reviewer role, refuses the reviewer and content roles to one person whichever comes first, takes a decision only from an active reviewer with exactly the fields of its kind, dates it itself, and never changes, removes or truncates a decision."
+      "proves": "The acceptance reviews migration keeps every existing row and rolls back cleanly, adds the reviewer role, refuses the reviewer and content roles to one person whichever comes first, takes a decision only from an active reviewer with exactly the fields of its kind, dates it itself, and never changes, removes or truncates a decision. The acceptance runs migration keeps every existing row and rolls back cleanly, keeps a run only when each case names itself, its hash, its status, its review and the hash of the case as kept, once, dates a run itself and never changes, removes or truncates one, and takes a run decision only on a case a kept run left for a reviewer, with those hashes."
     },
     {
       "requirement": "EDP-010",
@@ -287,6 +287,27 @@
       "file": "artifacts/valo/src/lib/acceptance-review.test.ts",
       "test": "a decision says who made it, when, and how many came before it",
       "proves": "The acceptance cases page says on a Lagos clock who made a case's latest decision, when, and how many came before it, counts cases by their latest decision on their current words, and says that nothing on it accepts a case or a requirement."
+    },
+    {
+      "requirement": "EDP-010",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/acceptance-review/acceptance-runs.integration.test.ts",
+      "test": "runs kept for a reviewer: every case as it stands, decisions bound to the case as kept, and nothing changed after",
+      "proves": "Against real PostgreSQL, with a kept run of the rule scenarios, the record that keeps each suite's run for a reviewer works as follows: a suite's command keeps a run only of every case of the corpus as it stands, in order; an active reviewer with recent MFA reads the latest kept run with the cases it left for a reviewer, and other staff cannot; a decision that the run met a case or did not says why and is refused for another run, another case or another hash of the case as kept; a later decision is added rather than written over, and a newer run is shown while the decisions stay with the run they were made on; and the database never changes, removes or truncates a kept run and takes a run decision only on a case a kept run left for a reviewer, as it was kept."
+    },
+    {
+      "requirement": "EDP-010",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/acceptance-review/kept-runs.test.ts",
+      "test": "the editorial suite leaves a held template with why and its two reviews, and a case-bound pair with its two reviews; a case with nothing kept leaves nothing to judge",
+      "proves": "A kept editorial run leaves each case the suite marks needs_evaluator_decision for a reviewer with what the run kept: a held template's version, why it was held and its two reviews, or a case-bound pair's two reviews and the case it follows; a case with nothing kept to read, such as C041, is listed with its reason and left with nothing to judge."
+    },
+    {
+      "requirement": "EDP-010",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/acceptance-review.test.ts",
+      "test": "the latest kept run says who kept it and when, the suite's own results, and where each case left for a reviewer stands",
+      "proves": "The acceptance cases page's kept run says on a Lagos clock who kept it and when, the suite's own results by status, where the cases left for a reviewer stand, and who made each case's latest decision on the case as kept, when and how many came before it."
     },
     {
       "requirement": "EDP-011",
@@ -1225,6 +1246,20 @@
       "file": "artifacts/api-server/src/modules/acceptance-review/acceptance-cases.test.ts",
       "test": "each case carries the hash the disabled allocation package binds it by, in the corpus's order",
       "proves": "Each of the customer AI corpus's 60 cases is read for the reviewer with the SHA-256 hash the disabled allocation package lists for it, in the corpus's order, so a decision names the hash a suite binds the case by."
+    },
+    {
+      "requirement": "AI-008",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/acceptance-review/acceptance-runs.integration.test.ts",
+      "test": "runs kept for a reviewer: every case as it stands, decisions bound to the case as kept, and nothing changed after",
+      "proves": "Against real PostgreSQL, with a kept run of the rule scenarios, the record that keeps each suite's run for a reviewer works as follows: a suite's command keeps a run only of every case of the corpus as it stands, in order; an active reviewer with recent MFA reads the latest kept run with the cases it left for a reviewer, and other staff cannot; a decision that the run met a case or did not says why and is refused for another run, another case or another hash of the case as kept; a later decision is added rather than written over, and a newer run is shown while the decisions stay with the run they were made on; and the database never changes, removes or truncates a kept run and takes a run decision only on a case a kept run left for a reviewer, as it was kept."
+    },
+    {
+      "requirement": "AI-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/acceptance-review/kept-runs.test.ts",
+      "test": "the customer AI suite leaves each answer the provider wrote, as the customer saw it, with its limitations and the suite's numeric checks",
+      "proves": "A kept customer AI run leaves each case whose draft is ready for a reviewer with the answer as the customer saw it (its title, fields and blocks), its limitations and the suite's own numeric checks; a draft that is not ready, and a case with no draft, is left with nothing to judge."
     },
     {
       "requirement": "AI-009",
@@ -2954,6 +2989,27 @@
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
       "test": "an acceptance reviewer reads a corpus's cases with what a confirmation claims, and records a decision with why, bound to the case's words",
       "proves": "On a phone with no automated WCAG 2.2 AA failure, a reviewer opens the rule scenarios on the acceptance cases page, rejects a scenario's expected result with why, and the decision is sent with the scenario's hash as read and then shown with who made it."
+    },
+    {
+      "requirement": "RUL-008",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/acceptance-review/acceptance-runs.integration.test.ts",
+      "test": "runs kept for a reviewer: every case as it stands, decisions bound to the case as kept, and nothing changed after",
+      "proves": "Against real PostgreSQL, with a kept run of the 80 rule scenarios: a suite's command keeps a run only of every case of the corpus as it stands, in order; an active reviewer with recent MFA reads the latest kept run with the cases it left for a reviewer, and other staff cannot; a decision that the run met a case or did not says why and is refused for another run, another case or another hash of the case as kept; a later decision is added rather than written over, and a newer run is shown while the decisions stay with the run they were made on; and the database never changes, removes or truncates a kept run and takes a run decision only on a case a kept run left for a reviewer, as it was kept."
+    },
+    {
+      "requirement": "RUL-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/acceptance-review/kept-runs.test.ts",
+      "test": "the live check leaves each scenario whose result differs for a reviewer, with both results, why they differ and how the answers were put",
+      "proves": "Put through the real live check with the four rules as the owner's sign-off would release them, a kept run lists all 80 scenarios with their corpus hashes and leaves exactly the 9 whose result differs for a reviewer, each with the expected result, the live result and its reason, and the difference as recorded with whose result it is and why; a scenario with no released rule is left with nothing to judge."
+    },
+    {
+      "requirement": "RUL-008",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "an acceptance reviewer reads the latest kept run of a corpus, and records whether it met a case with why, bound to the case as kept",
+      "proves": "On a phone with no automated WCAG 2.2 AA failure, a reviewer opens the rule scenarios' latest kept run, reads who kept it, the suite's own results and what each scenario left for a reviewer, and records that the run did not meet one with why; the decision is sent with the run's id and the hash of the case as kept, and the other corpora and views wait while it is started."
     },
     {
       "requirement": "RUL-009",

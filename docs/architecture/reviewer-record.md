@@ -38,7 +38,12 @@ The requirements, verbatim from the specification:
   and critical failure conditions, kept "for independent assessment". One case has a coded rubric, and the
   suite never passes provider quality.
 
-The run reports leave `reviewerDecision` and `evaluatorDecision` empty.
+Nothing keeps a suite's run where a reviewer could read it.
+- The editorial and customer AI suites are development commands that write their report to a file on
+  the machine that ran them.
+- The live check keeps its result in memory, and CI uploads it as a run artifact.
+- The AI runner's own reports, kept in private storage, leave `reviewerDecision` and
+  `evaluatorDecision` empty.
 
 **Five staff roles:** content, support, finance, system and privacy. A system administrator grants and
 revokes them, never their own, and each change is audited. One identity may hold several.
@@ -115,6 +120,36 @@ Slice 1:
   page holds the other cases and corpora, and asks before leaving.
 - Slice 1 records expected outcomes only. The kind of judgment for a run outcome is in the record already,
   for slice 2.
+
+Slice 2:
+- A run is read where it is kept. Each suite's command keeps its run when it is given
+  `--keep-for-review=<operator>`: the editorial suite, the live check on the rules the database
+  releases, and the customer AI suite. A kept run is one row of `valo_acceptance_runs` (migration
+  `20261125201543_acceptance_runs`). It holds every case of the corpus as it stands, in order, each with:
+  - the suite's own status and reason;
+  - what the run left for a reviewer, as headed lines of plain text, or nothing;
+  - the hash of the case as kept.
+- A run is not read again from the suite's sources, because none of them can be read safely in a staff
+  request:
+  - the editorial suite clones a database and renders files;
+  - the customer AI suite calls the provider, and a draft can change after it is read or be erased;
+  - the live check's result depends on the clock and on what is released.
+- What each suite leaves for a reviewer:
+  - **editorial:** each case it marks `needs_evaluator_decision`. For a held template, the held version,
+    why it was held and its two reviews; for a case-bound pair, the pair's two reviews. A case with
+    nothing kept to read, such as C041, whose controlled failure runs in CI and keeps only whether its
+    test passed, is listed with its reason and nothing to judge.
+  - **checker:** each scenario whose live result is not the expected one, or which breaks one of the
+    corpus's conditions. It shows both results with their reasons, the research note's label, the
+    difference as recorded with why, and how the answers were put.
+  - **customer AI:** each answer the provider wrote, as the customer saw it, with its limitations and the
+    suite's numeric checks. Only the evaluation identity's drafts, which are synthetic, are read.
+- A kept run never changes. A reviewer records met or not met, with why, bound to the run and the hash
+  of the case as kept. The database takes such a decision only on a case a kept run of the same corpus
+  left for a reviewer, with those hashes; a row without the fields its kind needs is left to the record's
+  check, by name.
+- The page shows the latest kept run of each corpus beside its expected outcomes. A newer run is shown
+  in place of an older one, and decisions stay with the run they were made on.
 
 ## Decision 0016's points, under the owner's delegation
 
