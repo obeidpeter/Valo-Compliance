@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  boolean,
   check,
   customType,
   foreignKey,
@@ -95,6 +96,17 @@ export const valoManualLibrary = pgTable(
      * Only staff routes read it; customers reach it only through the forms (DOC-004).
      */
     formText: text("form_text"),
+    /**
+     * A template's entry details (docs/architecture/library-entries.md): what it is for, what a
+     * customer needs to complete it (one item to a line), its limits, the library items of its
+     * related guides, and whether AI drafted it. Released with the rest of the revision and unchanged
+     * afterwards. A template is released only with its purpose, its limits and how it was written.
+     */
+    purpose: text("purpose"),
+    needs: text("needs"),
+    limits: text("limits"),
+    relatedItems: uuid("related_items").array(),
+    aiDrafted: boolean("ai_drafted"),
   },
   (t) => [
     foreignKey({
@@ -137,6 +149,10 @@ export const valoManualLibrary = pgTable(
     check(
       "valo_manual_form_text",
       sql`${t.formText} IS NULL OR (${t.kind} IN ('template','premium_template') AND length(${t.formText}) BETWEEN 1 AND 60000)`,
+    ),
+    check(
+      "valo_manual_entry_details",
+      sql`(${t.purpose} IS NULL AND ${t.needs} IS NULL AND ${t.limits} IS NULL AND ${t.relatedItems} IS NULL AND ${t.aiDrafted} IS NULL) OR (${t.kind} IN ('template','premium_template') AND (${t.purpose} IS NULL OR length(${t.purpose}) BETWEEN 1 AND 400) AND (${t.needs} IS NULL OR length(${t.needs}) BETWEEN 1 AND 1600) AND (${t.limits} IS NULL OR length(${t.limits}) BETWEEN 1 AND 800) AND (${t.relatedItems} IS NULL OR cardinality(${t.relatedItems}) BETWEEN 1 AND 6))`,
     ),
     check(
       "valo_manual_actors",

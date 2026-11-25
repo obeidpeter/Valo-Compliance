@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { asc, eq } from "drizzle-orm";
 import { GetManualLibraryRevisionResponse, GetReleasedTemplateResponse } from "@workspace/api-zod";
 import { wordFromText } from "../modules/manual-library/files";
+import { templateDetails } from "./template-details";
 
 type Call = (path: string, body?: unknown, actor?: string) => Promise<Response>;
 
@@ -30,6 +31,7 @@ export async function exercisePremiumPriceCommand(call: Call, editor: string) {
       baseVersion: 0,
       fileMode: "upload",
       upload: { format: "docx", base64: bytes.toString("base64") },
+      ...templateDetails,
     },
     editor,
   );

@@ -20,6 +20,7 @@ import { fromServer } from "@/lib/server-data";
 import { EmptyState, ErrorState, Notice, Skel } from "@/components/states";
 import { SaveTemplateButton } from "@/components/saved-templates";
 import { ReleaseNotices } from "@/components/release-notices";
+import { KIND_LABEL } from "@/components/resource-parts";
 import { useIdentity } from "@/islands/identity-store";
 
 function Unavailable() {
@@ -36,6 +37,57 @@ function Unavailable() {
       It may have been withdrawn, its sources may need checking again, or the link may be wrong. Valo checks
       again before a copy or a download. Drafts you already created stay in your workspace.
     </EmptyState>
+  );
+}
+
+/**
+ * What a staff-library template's release says about it (docs/architecture/library-entries.md): what
+ * a customer needs to complete it, its limits, its related guidance that is released now, and how it
+ * was written and checked. A version released before these details existed shows only the last.
+ */
+function LibraryTemplateNotices({ t }: { t: ReleasedTemplate }) {
+  return (
+    <section className="grid gap-6 border-t border-border pt-6 text-sm leading-relaxed">
+      {!!t.needs?.length && (
+        <div>
+          <h2 className="eyebrow">What you need</h2>
+          <ul className="mt-2 list-disc space-y-1 pl-5" data-testid="list-needs">
+            {t.needs.map((need) => (
+              <li key={need}>{need}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {t.limitations && (
+        <div>
+          <h2 className="eyebrow">Limits you should know</h2>
+          <p className="mt-2 whitespace-pre-line" data-testid="text-limitations">
+            {t.limitations}
+          </p>
+        </div>
+      )}
+      {!!t.relatedGuides?.length && (
+        <div>
+          <h2 className="eyebrow">Related guidance</h2>
+          <ul className="mt-2 space-y-1" data-testid="list-related-guides">
+            {t.relatedGuides.map((guide) => (
+              <li key={guide.href}>
+                <Link href={guide.href} className="underline underline-offset-4">
+                  {guide.title}
+                </Link>{" "}
+                <span className="text-muted-foreground">· {KIND_LABEL[guide.kind]}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <div>
+        <h2 className="eyebrow">How it was written and checked</h2>
+        <p className="mt-2" data-testid="text-disclosure">
+          {t.disclosure} Released {formatDay(t.reviewedAt)}.
+        </p>
+      </div>
+    </section>
   );
 }
 
@@ -219,8 +271,14 @@ export function TemplateDetail({
               <h1 className="font-display mt-4 text-4xl leading-tight sm:text-5xl" data-testid="text-title">
                 {t.title}
               </h1>
-              {t.publicationMethod !== "manual" && (
-                <p className="mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">{t.summary}</p>
+              {/* A staff-library template says what it is for once its release records it. */}
+              {(t.publicationMethod !== "manual" || t.purpose) && (
+                <p
+                  className="mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground"
+                  data-testid="text-summary"
+                >
+                  {t.purpose ?? t.summary}
+                </p>
               )}
 
               <section className="mt-10" aria-labelledby="preview-heading">
@@ -318,9 +376,7 @@ export function TemplateDetail({
                 </section>
               )}
               {t.publicationMethod === "manual" ? (
-                <p className="text-sm text-muted-foreground">
-                  {t.disclosure} Published {formatDay(t.reviewedAt)}.
-                </p>
+                <LibraryTemplateNotices t={t} />
               ) : (
                 t.reviewBy && (
                   <ReleaseNotices

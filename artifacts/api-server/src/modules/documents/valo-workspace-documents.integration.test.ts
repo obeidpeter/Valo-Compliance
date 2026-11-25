@@ -35,6 +35,7 @@ import { proposedFormText } from "../manual-library/form-text-maps";
 import { GetDocumentResponse } from "@workspace/api-zod";
 import { resolveWorkspace, getWorkspace, saveProfile } from "../workspaces";
 import { syntheticDocument, syntheticProfile } from "../../lib/valo-test-fixtures";
+import { templateDetailColumns } from "../../test-support/template-details";
 
 test(
   "development PostgreSQL tenant, concurrency, history and durable-ticket proof",
@@ -217,6 +218,7 @@ test(
             fileFormat: "docx",
             fileBytes: Buffer.from("synthetic"),
             formText,
+            ...templateDetailColumns,
             createdBy: editor,
           });
           await db

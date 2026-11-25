@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { and, desc, eq, getTableColumns, ilike, isNull, ne, or, sql } from "drizzle-orm";
+import { and, desc, eq, getTableColumns, ilike, inArray, isNull, ne, or, sql } from "drizzle-orm";
 import { baselineTemplates, coveragePlan, digest, sha256 } from "@workspace/valo-core";
 import { FormTextError, parseFormText } from "@workspace/valo-core/form-text";
 import { formFit } from "@workspace/valo-core/guided-runtime-v2";
@@ -76,6 +76,25 @@ async function detail(tx: Tx, row: RevisionMeta) {
     .select({ version: t.version, digest: t.digest })
     .from(t)
     .where(and(eq(t.itemId, row.itemId), eq(t.state, "published")));
+  // The related guides by name, for the editor: each item's latest version, and whether a version of
+  // it is live now.
+  const related = row.relatedItems?.length
+    ? await tx
+        .selectDistinctOn([t.itemId], { itemId: t.itemId, title: t.title, kind: t.kind })
+        .from(t)
+        .where(inArray(t.itemId, row.relatedItems))
+        .orderBy(t.itemId, desc(t.version))
+    : [];
+  const liveRelated = new Set(
+    row.relatedItems?.length
+      ? (
+          await tx
+            .select({ itemId: t.itemId })
+            .from(t)
+            .where(and(inArray(t.itemId, row.relatedItems), eq(t.state, "published")))
+        ).map((entry) => entry.itemId)
+      : [],
+  );
   return {
     ...summary(row),
     id: row.id,
@@ -84,6 +103,20 @@ async function detail(tx: Tx, row: RevisionMeta) {
     fileFormat: row.fileFormat,
     formText: row.formText,
     formFit: formTextFit(row),
+    purpose: row.purpose,
+    needs: row.needs,
+    limits: row.limits,
+    relatedItems: row.relatedItems ?? [],
+    relatedGuides: (row.relatedItems ?? []).map((itemId) => {
+      const found = related.find((entry) => entry.itemId === itemId);
+      return {
+        itemId,
+        title: found?.title ?? null,
+        kind: found?.kind ?? null,
+        live: liveRelated.has(itemId),
+      };
+    }),
+    aiDrafted: row.aiDrafted,
     createdBy: row.createdBy,
     createdAt: row.createdAt.toISOString(),
     publishedAt: row.publishedAt?.toISOString() ?? null,
@@ -199,6 +232,55 @@ function hasControlCharacters(value: string, multiline = false) {
       return true;
   return false;
 }
+/** The most items a template's needs list holds, and the longest each may be. */
+const NEEDS_LINES = 12,
+  NEEDS_LINE_LENGTH = 120;
+/**
+ * A template's entry details as a draft gives them (docs/architecture/library-entries.md), checked and
+ * normalised: what it is for, what a customer needs (one item to a line), its limits, its related
+ * guides' library items and whether AI drafted it. Each one left out is null. Only a template has them.
+ */
+export function entryDetails(input: {
+  kind: Revision["kind"];
+  purpose?: string | null | undefined;
+  needs?: string | null | undefined;
+  limits?: string | null | undefined;
+  relatedItems?: readonly string[] | undefined;
+  aiDrafted?: boolean | null | undefined;
+}) {
+  const text = (value: string | null | undefined) => (value?.trim() ? normalize(value) : null);
+  const purpose = text(input.purpose),
+    limits = text(input.limits);
+  const lines = (input.needs ?? "")
+    .replace(/\r\n?/g, "\n")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const relatedItems = input.relatedItems?.length ? [...new Set(input.relatedItems)] : null;
+  const aiDrafted = input.aiDrafted ?? null;
+  const details = { purpose, needs: lines.length ? lines.join("\n") : null, limits, relatedItems, aiDrafted };
+  if (Object.values(details).every((detail) => detail === null)) return details;
+  if (!isManualTemplate(input.kind))
+    throw new ValoProblem(
+      422,
+      "Only a template says what it is for, what you need, its limits, its related guides and how it was written. Clear them to save this item.",
+    );
+  if (purpose !== null && (purpose.length > 400 || hasControlCharacters(purpose, true)))
+    throw new ValoProblem(422, "Say what the template is for in up to 400 characters.");
+  if (limits !== null && (limits.length > 800 || hasControlCharacters(limits, true)))
+    throw new ValoProblem(422, "Give the template's limits in up to 800 characters.");
+  if (
+    lines.length > NEEDS_LINES ||
+    lines.some((line) => line.length > NEEDS_LINE_LENGTH || hasControlCharacters(line))
+  )
+    throw new ValoProblem(
+      422,
+      `List what a customer needs in up to ${NEEDS_LINES} lines of up to ${NEEDS_LINE_LENGTH} characters each, one item to a line.`,
+    );
+  if (relatedItems !== null && relatedItems.length > 6)
+    throw new ValoProblem(422, "Choose up to 6 related guides.");
+  return details;
+}
 export async function saveManualDraft(actor: SourceStaffActor, itemId: string, value: unknown) {
   const { readEditorialUpload, wordFromText } = await import("./files");
   const input = SaveManualLibraryDraftBody.strict().parse(value);
@@ -225,6 +307,7 @@ export async function saveManualDraft(actor: SourceStaffActor, itemId: string, v
       );
     }
   }
+  const details = entryDetails(input);
   const premium = input.kind === "premium_template";
   if (premium && (input.fileMode === "text" || !input.body.trim() || input.body.trim().length > 600))
     throw new ValoProblem(
@@ -277,6 +360,8 @@ export async function saveManualDraft(actor: SourceStaffActor, itemId: string, v
         fileFormat: file?.format ?? null,
         fileHash: file ? sha256(file.bytes) : null,
         ...(formText === null ? {} : { formText }),
+        // So do the entry details, each one only when given (docs/architecture/library-entries.md).
+        ...Object.fromEntries(Object.entries(details).filter(([, detail]) => detail !== null)),
       });
       const [retry] = await tx.select(metadataColumns(t)).from(t).where(eq(t.id, input.requestId));
       if (retry) {
@@ -306,6 +391,7 @@ export async function saveManualDraft(actor: SourceStaffActor, itemId: string, v
           fileFormat: file?.format ?? null,
           fileBytes: file?.bytes ?? null,
           formText,
+          ...details,
           createdBy: actor.identityId,
         })
         .returning(metadataColumns(t));
@@ -337,6 +423,15 @@ export async function actOnManualRevision(actor: SourceStaffActor, itemId: strin
         if (target.id !== latest.id) throw conflict();
         if (target.state === "published") return detail(tx, latest);
         if (target.state !== "draft") throw conflict();
+        // The database releases a template only with these details; say so before it refuses.
+        if (
+          isManualTemplate(target.kind) &&
+          (target.purpose === null || target.limits === null || target.aiDrafted === null)
+        )
+          throw new ValoProblem(
+            422,
+            "Say what this template is for, give its limits and say whether AI drafted it, then save it again before you publish it.",
+          );
         await tx
           .update(t)
           .set({ ...closed, state: "replaced" })
@@ -462,12 +557,31 @@ export async function releasedManualEntries(
   } catch (error) {
     if (!["42P01", "42703"].includes(pgError(error).code ?? "")) throw error;
     try {
+      // Before the entry-details migration (docs/architecture/library-entries.md) the table has none of
+      // their columns; read the rest, and no details.
+      const {
+        purpose: _purpose,
+        needs: _needs,
+        limits: _limits,
+        relatedItems: _related,
+        aiDrafted: _aiDrafted,
+        ...older
+      } = fields;
       const prior = await db
-        .select(fields)
+        .select(older)
         .from(t)
         .where(and(released, ne(t.kind, "regulatory_article")))
         .orderBy(desc(t.publishedAt), t.itemId);
-      return prior.map((row) => ({ ...row, regulatorySources: null, sourceCheckedAt: null }));
+      return prior.map((row) => ({
+        ...row,
+        purpose: null,
+        needs: null,
+        limits: null,
+        relatedItems: null,
+        aiDrafted: null,
+        regulatorySources: null,
+        sourceCheckedAt: null,
+      }));
     } catch (priorError) {
       if (pgError(priorError).code === "42P01") return [];
       throw priorError;
@@ -508,6 +622,7 @@ export async function retainedDraftStatus(actor: SourceStaffActor) {
         industry: t.industry,
         state: t.state,
         formTextSha256: sql<string | null>`encode(sha256(convert_to(${t.formText}, 'UTF8')), 'hex')`,
+        hasDetails: sql<boolean>`${t.purpose} IS NOT NULL`,
       })
       .from(t);
     const checks = await tx
@@ -570,6 +685,9 @@ export async function retainedDraftStatus(actor: SourceStaffActor) {
         : found?.latest.formTextSha256 === proposal
           ? ("filed" as const)
           : ("proposed" as const),
+      // Whether the item's latest version says what it is for, its limits and how it was written.
+      // A template without them waits for the details proposed for it.
+      details: !draft.template ? null : found?.latest.hasDetails ? ("filed" as const) : ("proposed" as const),
       sourceCheck:
         draft.kind === "regulatory_article" && check
           ? {
@@ -591,15 +709,43 @@ export async function retainedDraftStatus(actor: SourceStaffActor) {
 /** The filed templates whose latest version lacks the form text proposed for them. */
 const withoutFormText = (status: Awaited<ReturnType<typeof retainedDraftStatus>>) =>
   status.items.filter((item) => item.formText === "proposed" && item.itemId !== null);
+/** The filed templates whose latest version lacks its entry details. */
+const withoutDetails = (status: Awaited<ReturnType<typeof retainedDraftStatus>>) =>
+  status.items.filter((item) => item.details === "proposed" && item.itemId !== null);
+/** The entry details a template filed from its retained draft is given, as a draft gives them. */
+async function proposedDetails(retainedId: string) {
+  const { RETAINED_ENTRY_DETAILS } = await import("./retained-entry-details");
+  const { retainedItemId } = await import("./retained");
+  const proposal = RETAINED_ENTRY_DETAILS[retainedId];
+  if (!proposal) return {};
+  return {
+    purpose: proposal.purpose,
+    needs: proposal.needs.join("\n"),
+    limits: proposal.limits,
+    relatedItems: proposal.guides.map(retainedItemId),
+    // The intake manifest records that the retained drafts were written in a ChatGPT conversation.
+    aiDrafted: true,
+  };
+}
+/** A revision's entry details, as a new draft version of it carries them forward. */
+const keptDetails = (latest: Awaited<ReturnType<typeof getManualRevision>>) => ({
+  purpose: latest.purpose,
+  needs: latest.needs,
+  limits: latest.limits,
+  relatedItems: latest.relatedItems,
+  aiDrafted: latest.aiDrafted,
+});
 
 /**
  * Files the next retained drafts that are not in the library as private drafts, through the same
  * draft check as an editor's own (`saveManualDraft`), under the editor who asked. A template gets the
  * reviewed route's blank Word master, made from the same section, and the form text proposed for its
- * fill-in form, if a map is written for it. With `form_text`, files instead a new draft version of each
- * filed template whose latest version lacks its proposed form text, keeping that version's title, text
- * and file. Nothing is published: each draft waits for an editor to preview and publish it, and a
- * regulatory guide for the owner's source check.
+ * fill-in form, if a map is written for it, and the entry details proposed for it
+ * (`retained-entry-details.ts`). With `form_text`, files instead a new draft version of each filed
+ * template whose latest version lacks its proposed form text, keeping that version's title, text, file
+ * and entry details; with `details`, one of each filed template whose latest version lacks its entry
+ * details, with the details proposed for it. Nothing is published: each draft waits for an editor to
+ * preview and publish it, and a regulatory guide for the owner's source check.
  */
 export async function loadRetainedDrafts(actor: SourceStaffActor, value: unknown) {
   const { load } = LoadRetainedDraftsBody.strict().parse(value);
@@ -607,10 +753,13 @@ export async function loadRetainedDrafts(actor: SourceStaffActor, value: unknown
   const { proposedFormText } = await import("./form-text-maps");
   const before = await retainedDraftStatus(actor);
   const loaded: string[] = [];
-  if (load === "form_text") {
-    for (const item of withoutFormText(before).slice(0, RETAINED_DRAFTS_PER_REQUEST)) {
+  if (load === "form_text" || load === "details") {
+    const waiting = load === "form_text" ? withoutFormText : withoutDetails;
+    for (const item of waiting(before).slice(0, RETAINED_DRAFTS_PER_REQUEST)) {
       const latest = await getManualRevision(actor, item.itemId!);
       try {
+        // A new draft version keeps the latest one's title, text and file, and its form text and entry
+        // details unless they are what this request files.
         await saveManualDraft(actor, latest.itemId, {
           requestId: randomUUID(),
           baseVersion: latest.version,
@@ -619,7 +768,8 @@ export async function loadRetainedDrafts(actor: SourceStaffActor, value: unknown
           industry: latest.industry,
           body: latest.body,
           fileMode: latest.fileFormat ? "keep" : "text",
-          formText: await proposedFormText(item.retainedId),
+          formText: load === "form_text" ? await proposedFormText(item.retainedId) : latest.formText,
+          ...(load === "details" ? await proposedDetails(item.retainedId) : keptDetails(latest)),
         });
         loaded.push(item.retainedId);
       } catch (error) {
@@ -628,7 +778,7 @@ export async function loadRetainedDrafts(actor: SourceStaffActor, value: unknown
       }
     }
     const status = await retainedDraftStatus(actor);
-    return { loaded, remaining: withoutFormText(status).length, status };
+    return { loaded, remaining: waiting(status).length, status };
   }
   const drafts = new Map((await retainedDrafts()).map((draft) => [draft.retainedId, draft]));
   for (const item of before.items
@@ -648,6 +798,7 @@ export async function loadRetainedDrafts(actor: SourceStaffActor, value: unknown
         fileMode: file ? "upload" : "text",
         ...(file ? { upload: { format: "docx", base64: file.toString("base64") } } : {}),
         ...(formText === null ? {} : { formText }),
+        ...(draft.template ? await proposedDetails(draft.retainedId) : {}),
       });
       loaded.push(draft.retainedId);
     } catch (error) {

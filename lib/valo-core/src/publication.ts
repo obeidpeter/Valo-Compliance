@@ -8,6 +8,7 @@ export const disclosure =
  * not true of these. */
 export const ownerRuleDisclosure =
   "Released on the Valo development owner's sign-off after a check of its official sources; not reviewed by a Nigerian legal, tax or sector specialist" as const;
+export { libraryTemplateStatement } from "./library-statement";
 export const sha256 = (text: string | Uint8Array): string => createHash("sha256").update(text).digest("hex");
 export const invoiceQuotationGuideIds = ["GUIDE-C01", "GUIDE-C02"] as const;
 export const reminderInventoryGuideIds = ["GUIDE-C03", "GUIDE-C04"] as const;

@@ -7,7 +7,7 @@
  */
 
 /**
- * missing files the drafts not in the library yet; form_text files a new draft version of each filed template whose latest version lacks the form text proposed for it
+ * missing files the drafts not in the library yet; form_text files a new draft version of each filed template whose latest version lacks the form text proposed for it; details files a new draft version of each filed template whose latest version lacks its entry details, with the details proposed for it
  */
 export type RetainedDraftLoadLoad = typeof RetainedDraftLoadLoad[keyof typeof RetainedDraftLoadLoad];
 
@@ -15,4 +15,5 @@ export type RetainedDraftLoadLoad = typeof RetainedDraftLoadLoad[keyof typeof Re
 export const RetainedDraftLoadLoad = {
   missing: 'missing',
   form_text: 'form_text',
+  details: 'details',
 } as const;

@@ -269,6 +269,19 @@ schemas:
       commercialLicenceAccepted: { type: boolean }
       offer: { $ref: "#/components/schemas/TemplateOffer" }
       formats: { type: array, items: { type: string, enum: [docx, pdf] } }
+      purpose: { type: string, description: "A staff-library template's purpose, released with its version. Absent when the version has none." }
+      needs: { type: array, items: { type: string }, description: "What a customer needs to complete a staff-library template, one item each." }
+      relatedGuides:
+        type: array
+        description: A staff-library template's related guides that are released now.
+        items: { $ref: "#/components/schemas/RelatedGuide" }
+  RelatedGuide:
+    type: object
+    required: [title, href, kind]
+    properties:
+      title: { type: string }
+      href: { type: string }
+      kind: { type: string, enum: [guide, guidance, industry_introduction, industry_pack] }
   CataloguePage:
     type: object
     required: [items, total, page, heldTemplates]
