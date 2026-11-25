@@ -241,6 +241,57 @@ function acceptanceCases(corpus: string) {
   });
 }
 
+/** The latest kept run of a corpus as the reviewer's page reads it (decision 0016, slice 2). */
+function acceptanceRun(corpus: string) {
+  if (corpus !== "checker") return api.ListAcceptanceRunResponse.parse({ corpus, run: null });
+  const left = (id: string, decided: boolean) => ({
+    caseId: id,
+    caseHash: (decided ? "c" : "d").repeat(64),
+    title: `Synthetic scenario ${id}`,
+    status: "differs",
+    reason: "The research note's own result, which the check repeats.",
+    sections: [
+      {
+        heading: "Expected",
+        lines: ["applicability: not applicable", "result: Not indicated by these answers"],
+      },
+      {
+        heading: "The live check",
+        lines: ["result: Likely relevant", "reason: Section 1(1) names importation."],
+      },
+    ],
+    resultHash: (decided ? "e" : "f").repeat(64),
+    current: true,
+    decision: decided
+      ? {
+          answer: "met",
+          reason: "The live result follows from the section the scenario cites.",
+          reviewer: "user_synthetic_reviewer",
+          createdAt: at(12),
+        }
+      : null,
+    decisions: decided ? 1 : 0,
+  });
+  return api.ListAcceptanceRunResponse.parse({
+    corpus,
+    run: {
+      id: "00000000-0000-4000-8000-0000000aa001",
+      keptBy: "operator:synthetic-operator",
+      createdAt: at(11),
+      resultsHash: "a".repeat(64),
+      summary: ["The live check on the rules this database releases."],
+      cases: 80,
+      statuses: [
+        { status: "differs", count: 2 },
+        { status: "matches_expected", count: 78 },
+      ],
+      left: [left("CHK-CAND-SYNTH-001", true), left("CHK-CAND-SYNTH-002", false)],
+      met: 1,
+      notMet: 0,
+    },
+  });
+}
+
 const answers: Record<string, unknown> = {
   // The workspace's support requests page (WRK-001) lists the customer's own requests.
   "GET /workspace/support-cases": api.ListCustomerSupportCasesResponse.parse({
@@ -948,6 +999,7 @@ const answers: Record<string, unknown> = {
   // The reviewer's record (decision 0016, docs/architecture/reviewer-record.md, slice 1): each corpus
   // with a case confirmed after an earlier decision, and one without a decision.
   "GET /admin/acceptance-cases": (query: URLSearchParams) => acceptanceCases(query.get("corpus") ?? ""),
+  "GET /admin/acceptance-runs": (query: URLSearchParams) => acceptanceRun(query.get("corpus") ?? ""),
 };
 
 const answer: Api = async (route, method, path, query) => {
@@ -5165,6 +5217,95 @@ test("an acceptance reviewer reads a corpus's cases with what a confirmation cla
       },
     ]);
     await expect(page.getByTestId("tab-acceptance-editorial")).toBeEnabled();
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
+
+test("an acceptance reviewer reads the latest kept run of a corpus, and records whether it met a case with why, bound to the case as kept", async () => {
+  const sent: unknown[] = [];
+  const deciding: Api = async (route, method, path, query) => {
+    if (method === "POST" && path === "/admin/acceptance-runs/decisions") {
+      const body = route.request().postDataJSON() as { reason: string };
+      sent.push(body);
+      const view = acceptanceRun("checker");
+      view.run!.left[1] = {
+        ...view.run!.left[1]!,
+        decision: {
+          answer: "not_met",
+          reason: body.reason,
+          reviewer: "user_synthetic_reviewer",
+          createdAt: at(14),
+        },
+        decisions: 1,
+      };
+      await route.fulfill({
+        status: 201,
+        contentType: "application/json",
+        body: JSON.stringify(
+          api.RecordAcceptanceRunDecisionResponse.parse({ ...view, run: { ...view.run!, notMet: 1 } }),
+        ),
+      });
+    } else await answer(route, method, path, query);
+  };
+  const { page, unknown, errors, close } = await phone("/staff/acceptance", deciding);
+  try {
+    await ready(page);
+    await page.getByTestId("tab-acceptance-view-run").click();
+    await expect(page.getByTestId("text-acceptance-no-run")).toHaveText(
+      "No run of this suite is kept for review yet. Its command keeps one when it is run with --keep-for-review.",
+    );
+    await page.getByTestId("tab-acceptance-checker").click();
+    const run = page.getByTestId("acceptance-kept-run");
+    await expect(run).toContainText("Kept by synthetic-operator on");
+    await expect(run).toContainText("The suite's own results: 2 differs, 78 matches expected.");
+    await expect(page.getByTestId("text-acceptance-run-tally")).toHaveText(
+      "1 met, 0 not met and 1 without a decision, of 2 left for a reviewer.",
+    );
+    await expect(page.getByTestId("run-decision-CHK-CAND-SYNTH-001")).toContainText(
+      "Met, by user_synthetic_reviewer on",
+    );
+    const open = page.getByTestId("run-case-CHK-CAND-SYNTH-002");
+    await expect(open).toContainText("result: Likely relevant");
+    await expect(open).toContainText("The suite's result: differs. The research note's own result");
+    await open.getByRole("button", { name: "Record a decision" }).click();
+    const form = page.getByTestId("form-run-CHK-CAND-SYNTH-002");
+    const save = form.getByRole("button", { name: "Save the decision" });
+    await expect(save).toBeDisabled();
+    await form.getByRole("radio", { name: /^Not met/ }).check();
+    const why = form.getByRole("textbox", { name: "Why" });
+    await expect(why).toHaveAccessibleDescription(
+      /what in the run's result meets the case, or what it misses/,
+    );
+    await why.fill("The live result names importation, which the scenario's answers rule out.");
+    // While a decision is started, the other corpora and the other view wait.
+    await expect(page.getByTestId("tab-acceptance-editorial")).toBeDisabled();
+    await expect(page.getByTestId("tab-acceptance-view-expected")).toBeDisabled();
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "the latest kept run with a decision started"), []);
+    // The check ends on a 320-pixel screen; the phone is 360 pixels wide again for the rest.
+    await page.setViewportSize({ width: 360, height: 640 });
+    await save.click();
+    const saved = page.getByRole("status").filter({ hasText: "Recorded" });
+    await expect(saved).toHaveText("Recorded: you decided the run did not meet CHK-CAND-SYNTH-002.");
+    await expect(saved).toBeFocused();
+    await expect(page.getByTestId("run-decision-CHK-CAND-SYNTH-002")).toContainText(
+      "Not met, by user_synthetic_reviewer on",
+    );
+    assert.deepEqual(sent, [
+      {
+        corpus: "checker",
+        runId: "00000000-0000-4000-8000-0000000aa001",
+        caseId: "CHK-CAND-SYNTH-002",
+        caseHash: "d".repeat(64),
+        resultHash: "f".repeat(64),
+        answer: "not_met",
+        reason: "The live result names importation, which the scenario's answers rule out.",
+      },
+    ]);
+    await expect(page.getByTestId("tab-acceptance-view-expected")).toBeEnabled();
     assert.deepEqual(errors, []);
     assert.deepEqual(unknown, []);
   } finally {

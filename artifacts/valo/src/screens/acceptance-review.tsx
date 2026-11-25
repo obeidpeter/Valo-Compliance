@@ -10,6 +10,7 @@ import {
 } from "@workspace/api-client-react";
 import { EmptyState, ErrorState, Skel } from "@/components/states";
 import { MfaVerification } from "@/components/mfa-verification";
+import { AcceptanceKeptRun } from "@/components/acceptance-kept-run";
 import { UnsavedNavigationDialog } from "@/components/unsaved-navigation-dialog";
 import { describeError } from "@/lib/describe-error";
 import { useUnsavedNavigation } from "@/lib/use-unsaved-navigation";
@@ -37,7 +38,9 @@ import {
   shownUnder,
   sourcesHeading,
   tallyLine,
+  viewNames,
   type AcceptanceCorpusName,
+  type AcceptanceView,
   type CaseFilter,
 } from "@/lib/acceptance-review";
 
@@ -122,6 +125,8 @@ export default function AcceptanceReview() {
   const client = useQueryClient();
   const [corpus, setCorpus] = useState<AcceptanceCorpusName>("editorial");
   const [filter, setFilter] = useState<CaseFilter>("all");
+  const [view, setView] = useState<AcceptanceView>("expected");
+  const [runDirty, setRunDirty] = useState(false);
   const [opened, setOpened] = useState("");
   const [answer, setAnswer] = useState<Answer | "">("");
   const [reason, setReason] = useState("");
@@ -130,7 +135,8 @@ export default function AcceptanceReview() {
   const [message, setMessage] = useState("");
   const status = useRef<HTMLParagraphElement>(null);
   const dirty = opened !== "" && (answer !== "" || reason.trim() !== "");
-  const navigation = useUnsavedNavigation(() => dirty || busy);
+  const navigation = useUnsavedNavigation(() => dirty || busy || runDirty);
+  const held = dirty || runDirty;
   const params = { corpus };
   const q = useListAcceptanceCases(params, {
     query: { queryKey: getListAcceptanceCasesQueryKey(params), retry: false, refetchOnWindowFocus: !dirty },
@@ -184,7 +190,7 @@ export default function AcceptanceReview() {
             key={item.value}
             type="button"
             aria-pressed={corpus === item.value}
-            disabled={dirty && corpus !== item.value}
+            disabled={held && corpus !== item.value}
             onClick={() => {
               close();
               setMessage("");
@@ -197,12 +203,31 @@ export default function AcceptanceReview() {
           </button>
         ))}
       </div>
-      {dirty && (
+      <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="What to review">
+        {viewNames.map((item) => (
+          <button
+            key={item.value}
+            type="button"
+            aria-pressed={view === item.value}
+            disabled={held && view !== item.value}
+            onClick={() => {
+              close();
+              setMessage("");
+              setView(item.value);
+            }}
+            className={toggle(view === item.value)}
+            data-testid={"tab-acceptance-view-" + item.value}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+      {held && (
         <p
           role="status"
           className="mt-3 rounded-xl border border-[hsl(var(--ochre-border))] bg-[hsl(var(--ochre-soft))] px-4 py-2.5 text-sm text-[hsl(var(--ochre-foreground))]"
         >
-          Save or discard the decision you started on {opened} before reading other cases.
+          Save or discard the decision you started{dirty ? ` on ${opened}` : ""} before reading other cases.
         </p>
       )}
       <div className="mt-8">
@@ -248,121 +273,127 @@ export default function AcceptanceReview() {
             <h2 className="font-display text-2xl" id="acceptance-cases-heading">
               {corpusNames.find((item) => item.value === corpus)?.label}
             </h2>
-            <div className="mt-3 rounded-2xl border border-border bg-sidebar p-4 text-sm">
-              <p className="font-medium">{claimHeading}</p>
-              <p className="mt-1" data-testid="text-acceptance-claim">
-                {q.data.claim}
-              </p>
-            </div>
-            <p className="mt-3 text-sm" data-testid="text-acceptance-tally">
-              {tallyLine(q.data.cases.length, q.data.confirmed, q.data.rejected)}
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Show cases">
-              {caseFilters.map((item) => (
-                <button
-                  key={item.value}
-                  type="button"
-                  aria-pressed={filter === item.value}
-                  disabled={dirty}
-                  onClick={() => setFilter(item.value)}
-                  className={toggle(filter === item.value)}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-            <p ref={status} tabIndex={-1} className="mt-3 text-sm" role="status" aria-live="polite">
-              {message}
-            </p>
-            {shown.length === 0 ? (
-              <p className="mt-4 text-sm">No case matches this choice.</p>
+            {view === "run" ? (
+              <AcceptanceKeptRun key={corpus} corpus={corpus} onDirty={setRunDirty} />
             ) : (
-              <ul className="mt-4 grid gap-3">
-                {shown.map((item) => (
-                  <CaseItem
-                    key={item.id}
-                    item={item}
-                    opened={opened === item.id}
-                    locked={dirty || busy}
-                    onOpen={() => {
-                      close();
-                      setMessage("");
-                      setOpened(item.id);
-                    }}
-                  >
-                    {opened === item.id && (
-                      <form
-                        className="mt-3 grid gap-3 rounded-lg border border-border p-3"
-                        onSubmit={(e) => {
-                          e.preventDefault();
-                          void save(item);
+              <>
+                <div className="mt-3 rounded-2xl border border-border bg-sidebar p-4 text-sm">
+                  <p className="font-medium">{claimHeading}</p>
+                  <p className="mt-1" data-testid="text-acceptance-claim">
+                    {q.data.claim}
+                  </p>
+                </div>
+                <p className="mt-3 text-sm" data-testid="text-acceptance-tally">
+                  {tallyLine(q.data.cases.length, q.data.confirmed, q.data.rejected)}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Show cases">
+                  {caseFilters.map((item) => (
+                    <button
+                      key={item.value}
+                      type="button"
+                      aria-pressed={filter === item.value}
+                      disabled={dirty}
+                      onClick={() => setFilter(item.value)}
+                      className={toggle(filter === item.value)}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+                <p ref={status} tabIndex={-1} className="mt-3 text-sm" role="status" aria-live="polite">
+                  {message}
+                </p>
+                {shown.length === 0 ? (
+                  <p className="mt-4 text-sm">No case matches this choice.</p>
+                ) : (
+                  <ul className="mt-4 grid gap-3">
+                    {shown.map((item) => (
+                      <CaseItem
+                        key={item.id}
+                        item={item}
+                        opened={opened === item.id}
+                        locked={dirty || busy}
+                        onOpen={() => {
+                          close();
+                          setMessage("");
+                          setOpened(item.id);
                         }}
-                        data-testid={"form-acceptance-" + item.id}
                       >
-                        <fieldset className="grid gap-2">
-                          <legend className="font-medium">{answerLegend}</legend>
-                          {(
-                            [
-                              ["confirmed", confirmLabel],
-                              ["rejected", rejectLabel],
-                            ] as const
-                          ).map(([value, label]) => (
-                            <label key={value} className="flex items-start gap-2">
-                              <input
-                                type="radio"
-                                name={"answer-" + item.id}
-                                value={value}
-                                className="mt-1"
-                                checked={answer === value}
-                                onChange={() => setAnswer(value)}
-                              />
-                              <span>{label}</span>
+                        {opened === item.id && (
+                          <form
+                            className="mt-3 grid gap-3 rounded-lg border border-border p-3"
+                            onSubmit={(e) => {
+                              e.preventDefault();
+                              void save(item);
+                            }}
+                            data-testid={"form-acceptance-" + item.id}
+                          >
+                            <fieldset className="grid gap-2">
+                              <legend className="font-medium">{answerLegend}</legend>
+                              {(
+                                [
+                                  ["confirmed", confirmLabel],
+                                  ["rejected", rejectLabel],
+                                ] as const
+                              ).map(([value, label]) => (
+                                <label key={value} className="flex items-start gap-2">
+                                  <input
+                                    type="radio"
+                                    name={"answer-" + item.id}
+                                    value={value}
+                                    className="mt-1"
+                                    checked={answer === value}
+                                    onChange={() => setAnswer(value)}
+                                  />
+                                  <span>{label}</span>
+                                </label>
+                              ))}
+                            </fieldset>
+                            <label className="font-medium" htmlFor={"reason-" + item.id}>
+                              {reasonLabel}
                             </label>
-                          ))}
-                        </fieldset>
-                        <label className="font-medium" htmlFor={"reason-" + item.id}>
-                          {reasonLabel}
-                        </label>
-                        <textarea
-                          id={"reason-" + item.id}
-                          className="block w-full rounded-lg border border-border bg-background p-2 text-base"
-                          rows={4}
-                          minLength={20}
-                          maxLength={2000}
-                          aria-describedby={"reason-hint-" + item.id}
-                          value={reason}
-                          onChange={(e) => setReason(e.target.value)}
-                        />
-                        <p id={"reason-hint-" + item.id} className="text-muted-foreground">
-                          {reasonHint}
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            type="submit"
-                            className="btn btn-primary btn-sm"
-                            disabled={busy || !answer || reason.trim().length < 20}
-                          >
-                            {busy ? "Saving…" : saveButton}
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn-ghost btn-sm"
-                            disabled={busy}
-                            onClick={close}
-                          >
-                            Discard
-                          </button>
-                        </div>
-                        {error && (
-                          <p className="text-sm text-destructive" role="alert">
-                            {error}
-                          </p>
+                            <textarea
+                              id={"reason-" + item.id}
+                              className="block w-full rounded-lg border border-border bg-background p-2 text-base"
+                              rows={4}
+                              minLength={20}
+                              maxLength={2000}
+                              aria-describedby={"reason-hint-" + item.id}
+                              value={reason}
+                              onChange={(e) => setReason(e.target.value)}
+                            />
+                            <p id={"reason-hint-" + item.id} className="text-muted-foreground">
+                              {reasonHint}
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              <button
+                                type="submit"
+                                className="btn btn-primary btn-sm"
+                                disabled={busy || !answer || reason.trim().length < 20}
+                              >
+                                {busy ? "Saving…" : saveButton}
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-ghost btn-sm"
+                                disabled={busy}
+                                onClick={close}
+                              >
+                                Discard
+                              </button>
+                            </div>
+                            {error && (
+                              <p className="text-sm text-destructive" role="alert">
+                                {error}
+                              </p>
+                            )}
+                          </form>
                         )}
-                      </form>
-                    )}
-                  </CaseItem>
-                ))}
-              </ul>
+                      </CaseItem>
+                    ))}
+                  </ul>
+                )}
+              </>
             )}
           </section>
         )}

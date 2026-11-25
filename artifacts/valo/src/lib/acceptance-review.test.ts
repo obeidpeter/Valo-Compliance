@@ -4,10 +4,18 @@ import {
   caseFilters,
   corpusNames,
   decisionLine,
+  keptRunLine,
   pageIntro,
   recordedMessage,
+  recordedRunMessage,
+  runCaseStatusLine,
+  runDecisionLine,
+  runIntro,
+  runStatusesLine,
+  runTallyLine,
   shownUnder,
   tallyLine,
+  viewNames,
 } from "./acceptance-review";
 
 // EDP-010, RUL-008 and AI-008 (decision 0016, docs/architecture/reviewer-record.md, slice 1): the words a
@@ -70,5 +78,50 @@ test("the tally and the filters count a case by its latest decision on its curre
   assert.deepEqual(
     [shownUnder("rejected", null), shownUnder("rejected", confirmed), shownUnder("rejected", rejected)],
     [false, false, true],
+  );
+});
+
+test("the latest kept run says who kept it and when, the suite's own results, and where each case left for a reviewer stands", () => {
+  assert.deepEqual(
+    viewNames.map((item) => item.label),
+    ["Expected outcomes", "The latest kept run"],
+  );
+  assert.match(runIntro, /A decision holds only for the run and the case as kept/);
+  assert.equal(
+    keptRunLine({ keptBy: "operator:synthetic-operator", createdAt: "2026-11-25T08:00:00Z", cases: 80 }),
+    "Kept by synthetic-operator on 25 Nov 2026, 09:00 · 80 cases",
+  );
+  assert.equal(
+    runStatusesLine([
+      { status: "differs", count: 9 },
+      { status: "matches_expected", count: 71 },
+    ]),
+    "The suite's own results: 9 differs, 71 matches expected.",
+  );
+  assert.equal(runTallyLine(9, 2, 1), "2 met, 1 not met and 6 without a decision, of 9 left for a reviewer.");
+  assert.equal(
+    runCaseStatusLine("differs", "The check's own calculation."),
+    "The suite's result: differs. The check's own calculation.",
+  );
+  assert.equal(
+    runCaseStatusLine("needs_evaluator_decision", null),
+    "The suite's result: needs evaluator decision.",
+  );
+  const decision = { reviewer: "user_synthetic_reviewer", createdAt: "2026-11-25T08:00:00Z" };
+  assert.equal(
+    runDecisionLine({ ...decision, answer: "met" }, 1),
+    "Met, by user_synthetic_reviewer on 25 Nov 2026, 09:00",
+  );
+  assert.equal(
+    runDecisionLine({ ...decision, answer: "not_met" }, 3),
+    "Not met, by user_synthetic_reviewer on 25 Nov 2026, 09:00 · 2 earlier decisions",
+  );
+  assert.equal(
+    recordedRunMessage("CHK-CAND-NDPA-009", "met"),
+    "Recorded: you decided the run met CHK-CAND-NDPA-009.",
+  );
+  assert.equal(
+    recordedRunMessage("CHK-CAND-NDPA-009", "not_met"),
+    "Recorded: you decided the run did not meet CHK-CAND-NDPA-009.",
   );
 });
