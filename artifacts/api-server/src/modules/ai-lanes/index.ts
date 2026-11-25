@@ -14,6 +14,7 @@
  * readiness check and the publication of a reviewed pair load the database client, and the rules
  * module, only when they run.
  */
+export * from "./customer-rubric";
 export * from "./inference-customer-controls";
 export * from "./inference-customer-evaluation";
 export * from "./inference-customer-manifest";

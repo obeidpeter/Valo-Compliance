@@ -277,6 +277,8 @@ export function bindCustomerCase(c: AuthoredCustomerCase, followup: Record<strin
     originalFactsHash: hashAI(f),
     followup: { version: customerFollowupVersion, synthetic: true, values: followup, hash: hashAI(followup) },
     input: valid,
+    /** The input as the suite submits it, before the application's own checks; `input` is null when they refuse it. */
+    submitted: input,
     inputHash: hashAI(input),
     issues,
     missing: valid ? missingCustomerFields(valid) : [],
