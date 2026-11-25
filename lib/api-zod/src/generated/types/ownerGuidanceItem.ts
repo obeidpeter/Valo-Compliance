@@ -23,4 +23,9 @@ export interface OwnerGuidanceItem {
   holds: string[];
   sources: PublicSourceReference[];
   live: OwnerGuidanceItemLive;
+  /**
+     * The latest earlier version of this article that was released, or null. Signing this version then needs a note of what changed.
+     * @nullable
+     */
+  previousRelease: number | null;
 }

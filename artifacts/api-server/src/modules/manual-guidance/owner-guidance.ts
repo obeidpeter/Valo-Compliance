@@ -1,4 +1,4 @@
-import { and, desc, eq, getTableColumns, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, getTableColumns, inArray, isNotNull, sql } from "drizzle-orm";
 import { sha256 } from "@workspace/valo-core";
 import { DecideOwnerGuidanceBody, RefreshOwnerGuidanceBody } from "@workspace/api-zod";
 import { registeredManualGuidance, checkManualRegulatorySources } from "./regulatory-evidence";
@@ -71,12 +71,31 @@ export function listOwnerGuidance(actor: StaffActor, page: number) {
             ),
           )
       : [];
+    // Every version of these articles that was released: signing a later one says what changed
+    // (docs/architecture/guidance-currency.md, slice 3).
+    const releases = entries.length
+      ? await tx
+          .select({ itemId: t.itemId, version: t.version })
+          .from(t)
+          .where(
+            and(
+              isNotNull(t.publishedAt),
+              inArray(
+                t.itemId,
+                entries.map((x) => x.itemId),
+              ),
+            ),
+          )
+      : [];
     return {
       hasMore: rows.length > 50,
       items: entries.map((row) => {
         const check = latest.find((x) => x.title === row.title);
         const holds = holdsFor(check, row);
         const released = live.find((r) => r.itemId === row.itemId);
+        const earlier = releases
+          .filter((r) => r.itemId === row.itemId && r.version < row.version)
+          .map((r) => r.version);
         return {
           ...row,
           checkId: check?.id ?? null,
@@ -84,6 +103,7 @@ export function listOwnerGuidance(actor: StaffActor, page: number) {
           holds,
           sources: (check?.sources ?? []).map(({ url, title, locator }) => ({ url, title, locator })),
           live: released ? { version: released.version, digest: released.digest } : null,
+          previousRelease: earlier.length ? Math.max(...earlier) : null,
         };
       }),
     };
@@ -183,6 +203,10 @@ export function decideOwnerGuidance(actor: StaffActor, itemId: string, body: unk
         409,
         "This regulatory article already has a published entry. Use its existing revision history.",
       );
+    // A version that follows an earlier release says what changed, as in the staff library
+    // (docs/architecture/guidance-currency.md, slice 3). The owner writes it when signing.
+    const { recordChange } = await import("../manual-library");
+    await recordChange(tx, target, input.change, actor.identityId);
     await tx
       .update(t)
       .set({ state: "replaced", closedAt: now, closedBy: actor.identityId })

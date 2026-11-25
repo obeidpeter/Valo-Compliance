@@ -460,6 +460,14 @@ export const ReleasedResourcePublicationMethod = {
   manual: 'manual',
 } as const;
 
+/**
+ * What changed in the published version of a staff-library entry that followed an earlier release, as its editor wrote it, and when that version was released (docs/architecture/guidance-currency.md, slice 3). Absent for a first release, or a version released before change notes were kept.
+ */
+export interface ReleaseChange {
+  on: string;
+  note: string;
+}
+
 export interface ReleasedResource {
   id: string;
   slug: string;
@@ -474,6 +482,7 @@ export interface ReleasedResource {
   scope: string;
   limitations: string;
   sources: PublicSourceReference[];
+  change?: ReleaseChange;
 }
 
 export interface IndustryCoverage {
@@ -624,6 +633,7 @@ export interface ReleasedTemplate {
   needs?: string[];
   /** A staff-library template's related guides that are released now. */
   relatedGuides?: RelatedGuide[];
+  change?: ReleaseChange;
 }
 
 export interface CataloguePage {
@@ -2020,6 +2030,11 @@ export interface OwnerGuidanceItem {
   holds: string[];
   sources: PublicSourceReference[];
   live: OwnerGuidanceItemLive;
+  /**
+     * The latest earlier version of this article that was released, or null. Signing this version then needs a note of what changed.
+     * @nullable
+     */
+  previousRelease: number | null;
 }
 
 export interface OwnerGuidancePage {
@@ -2043,6 +2058,12 @@ export interface OwnerGuidanceDecision {
   digest: string;
   checkId: string | null;
   confirmed: true;
+  /**
+     * What changed in this version since the article's earlier release. Signing a version that follows an earlier release needs it (docs/architecture/guidance-currency.md, slice 3).
+     * @minLength 20
+     * @maxLength 1000
+     */
+  change?: string;
 }
 
 export type OwnerGuidanceReceiptState = typeof OwnerGuidanceReceiptState[keyof typeof OwnerGuidanceReceiptState];
@@ -2366,6 +2387,11 @@ export interface ManualLibraryRevision {
   aiDrafted: boolean | null;
   /** The related guides by their library items, as the editor sees them: the title and kind of each item's latest version, whether a version of it is released now, or nulls for an item not in the library yet. */
   relatedGuides: ManualLibraryRevisionRelatedGuidesItem[];
+  /**
+     * The latest earlier version of this entry that was released, or null. Releasing this version then needs a note of what changed (docs/architecture/guidance-currency.md, slice 3).
+     * @nullable
+     */
+  previousRelease: number | null;
 }
 
 export type ManualLibraryDraftKind = typeof ManualLibraryDraftKind[keyof typeof ManualLibraryDraftKind];
@@ -2475,6 +2501,12 @@ export interface ManualLibraryAction {
      * @maxLength 1000
      */
   reason?: string;
+  /**
+     * What changed in this version since the entry's earlier release, in 20 to 1,000 characters. Releasing a version that follows an earlier release needs it, and a first release takes none; the entry's page and the customers who hold the template see it (docs/architecture/guidance-currency.md, slice 3).
+     * @minLength 20
+     * @maxLength 1000
+     */
+  change?: string;
 }
 
 export interface BuildStatus {

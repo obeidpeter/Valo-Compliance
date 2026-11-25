@@ -43,7 +43,7 @@ export const valoEditionNotices = pgTable(
     index("valo_edition_notice_workspace").on(t.workspaceId, t.createdAt),
     check(
       "valo_edition_notice_shape",
-      sql`${t.route} IN ('library', 'reviewed') AND ${t.kind} IN ('replaced', 'withdrawn') AND ${t.documents} >= 0 AND (${t.held} OR ${t.documents} > 0) AND ((${t.kind} = 'replaced') = (${t.replacementVersion} IS NOT NULL)) AND (${t.reason} IS NULL OR ${t.kind} = 'withdrawn')`,
+      sql`${t.route} IN ('library', 'reviewed') AND ${t.kind} IN ('replaced', 'withdrawn') AND ${t.documents} >= 0 AND (${t.held} OR ${t.documents} > 0) AND ((${t.kind} = 'replaced') = (${t.replacementVersion} IS NOT NULL)) AND (${t.reason} IS NULL OR ${t.kind} = 'withdrawn' OR ${t.route} = 'library')`,
     ),
     workspaceRowPolicy(t.workspaceId),
   ],

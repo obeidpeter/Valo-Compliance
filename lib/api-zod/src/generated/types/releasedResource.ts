@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { PublicSourceReference } from './publicSourceReference';
+import type { ReleaseChange } from './releaseChange';
 import type { ReleasedResourceKind } from './releasedResourceKind';
 import type { ReleasedResourcePublicationMethod } from './releasedResourcePublicationMethod';
 
@@ -23,4 +24,5 @@ export interface ReleasedResource {
   scope: string;
   limitations: string;
   sources: PublicSourceReference[];
+  change?: ReleaseChange;
 }

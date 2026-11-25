@@ -188,6 +188,24 @@ export const valoManualWithdrawals = pgTable(
   (t) => [check("valo_manual_withdrawal_reason", sql`char_length(${t.reason}) BETWEEN 20 AND 1000`)],
 );
 /**
+ * What changed in a staff-library version that follows an earlier release, written by whoever releases it
+ * (docs/architecture/guidance-currency.md, slice 3, CMP-005). The entry's page shows it while the version
+ * is published, and the notice to a template's holders carries it. Recorded once, before the version is
+ * released in the same transaction, and never changed; the database releases such a version only with it.
+ */
+export const valoManualChanges = pgTable(
+  "valo_manual_changes",
+  {
+    edition: uuid("edition")
+      .primaryKey()
+      .references(() => valoManualLibrary.id),
+    note: text("note").notNull(),
+    recordedBy: text("recorded_by").notNull(),
+    recordedAt: timestamp("recorded_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [check("valo_manual_change_note", sql`char_length(${t.note}) BETWEEN 20 AND 1000`)],
+);
+/**
  * A Content editor's review of a published staff-library entry: that they re-read it and it needs no
  * change (docs/architecture/guidance-currency.md, slice 2). An entry other than a regulatory guide is due
  * for review 90 days after it was published or last reviewed, and is held from new use once overdue. The

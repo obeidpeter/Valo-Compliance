@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { RelatedGuide } from './relatedGuide';
+import type { ReleaseChange } from './releaseChange';
 import type { ReleasedTemplateAccess } from './releasedTemplateAccess';
 import type { ReleasedTemplateFormatsItem } from './releasedTemplateFormatsItem';
 import type { ReleasedTemplatePublicationMethod } from './releasedTemplatePublicationMethod';
@@ -37,4 +38,5 @@ export interface ReleasedTemplate {
   needs?: string[];
   /** A staff-library template's related guides that are released now. */
   relatedGuides?: RelatedGuide[];
+  change?: ReleaseChange;
 }

@@ -65,6 +65,17 @@ test("a notice names the template, its version and what happened, says what it m
     "Your 3 documents made from it stay yours: you can still open, edit and download them. Check their wording before you use them.",
     "Files you already downloaded are not affected.",
   ]);
+  // A replacement's notice says what changed in the new version, as its editor wrote it
+  // (docs/architecture/guidance-currency.md, slice 3).
+  assert.deepEqual(
+    editionNoticeWords({ ...replaced, reason: "The payment clause now names the due date" }).lines,
+    [
+      "What changed: The payment clause now names the due date.",
+      "Your purchase carries to version 2 at no further charge. Download it from Purchases.",
+      "Your 2 documents made from version 1 are unchanged.",
+      "Files you already downloaded are not affected.",
+    ],
+  );
 });
 
 test("the workspace's home lists its unread notices, each with a way to mark it read, and nothing when there are none", () => {

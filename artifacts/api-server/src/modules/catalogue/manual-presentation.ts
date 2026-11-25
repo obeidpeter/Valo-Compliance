@@ -24,6 +24,10 @@ const disclosure = "Published by the Valo editorial team.";
  * finds it. */
 const registeredTemplate = (title: string) =>
   baselineTemplates.find((entry) => entry.title.toLowerCase() === title.toLowerCase());
+/** What changed in the published version, when it followed an earlier release, and when it was released
+ * (docs/architecture/guidance-currency.md, slice 3). */
+const change = (row: Pick<PublicRevision, "change" | "publishedAt">) =>
+  row.change && row.publishedAt ? { change: { on: row.publishedAt.toISOString(), note: row.change } } : {};
 export function manualResource(row: PublicRevision) {
   const regulatory = row.kind === "regulatory_article";
   return {
@@ -48,6 +52,7 @@ export function manualResource(row: PublicRevision) {
       ? "General information. State and local requirements and individual facts may differ."
       : "Everyday business guidance.",
     sources: (row.regulatorySources ?? []).map(({ url, title, locator }) => ({ url, title, locator })),
+    ...change(row),
   };
 }
 export function manualCatalogue(row: CatalogueRow): ReleasedLibraryItem {
@@ -120,5 +125,6 @@ export function manualTemplate(row: PublicRevision, released: readonly PublicRev
     ...(row.purpose ? { purpose: row.purpose } : {}),
     ...(row.needs ? { needs: row.needs.split("\n") } : {}),
     ...(related.length ? { relatedGuides: related } : {}),
+    ...change(row),
   };
 }

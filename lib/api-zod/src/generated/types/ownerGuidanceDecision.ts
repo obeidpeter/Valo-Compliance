@@ -15,4 +15,10 @@ export interface OwnerGuidanceDecision {
   digest: string;
   checkId: string | null;
   confirmed: true;
+  /**
+     * What changed in this version since the article's earlier release. Signing a version that follows an earlier release needs it (docs/architecture/guidance-currency.md, slice 3).
+     * @minLength 20
+     * @maxLength 1000
+     */
+  change?: string;
 }

@@ -15,7 +15,12 @@ import {
 } from "../test-support/manual-premium-template";
 import { exercisePremiumPriceCommand } from "../test-support/premium-price-command";
 import { exerciseOverduePremiumTemplate } from "../test-support/manual-overdue-premium";
-import { libraryAction, templateDetails, withdrawalReason } from "../test-support/template-details";
+import {
+  changeNote,
+  libraryAction,
+  templateDetails,
+  withdrawalReason,
+} from "../test-support/template-details";
 import { exerciseOwnerRuleRoutes } from "../test-support/owner-rule-routes";
 import {
   GetManualLibraryRevisionResponse,
@@ -370,6 +375,69 @@ test(
       assert.equal((await call("/public/resources/manual-" + id)).status, 404);
       assert.equal((await act(id, "publish", r2)).status, 409);
     });
+    await t.test(
+      "a version released after an earlier one is released only with what changed, which its page shows while it is published",
+      async () => {
+        const id = randomUUID(),
+          data = input("practical_guide", "Synthetic changed guide " + id);
+        const publish = (r: { version: number; digest: string }, change?: string) =>
+          call(item(id) + "/actions", {
+            action: "publish",
+            version: r.version,
+            digest: r.digest,
+            ...(change === undefined ? {} : { change }),
+          });
+        // A first release takes no note of what changed, and its page shows none.
+        const first = await revision(await draft(id, data));
+        assert.equal(first.previousRelease, null);
+        assert.equal((await publish(first, changeNote)).status, 422);
+        await revision(await publish(first));
+        assert.equal((await publicResource(id)).change, undefined);
+        // The next version follows a release: it is released only with what changed, in 20 to 1,000
+        // characters once trimmed, and a refused release changes nothing.
+        const body = "Synthetic corrected editorial text";
+        const second = await revision(
+          await draft(id, { ...data, requestId: randomUUID(), baseVersion: 1, body }),
+        );
+        assert.equal(second.previousRelease, 1);
+        for (const change of [undefined, "  Too short a note  ", "x".repeat(1001), " ".repeat(30)])
+          assert.equal((await publish(second, change)).status, 422);
+        assert.equal((await publicResource(id)).body, data.body);
+        const released = await revision(await publish(second, "  " + changeNote + "  "));
+        const page = await publicResource(id);
+        assert.equal(page.body, body);
+        assert.equal(page.change?.note, changeNote);
+        assert.equal(new Date(page.change!.on).toISOString(), released.publishedAt);
+        // The note is recorded once, with the release, and never changed.
+        const keepsNote = (error: Error) =>
+          /A change note keeps what it said/.test(
+            String((error as { cause?: Error }).cause?.message ?? error.message),
+          );
+        await assert.rejects(
+          db.execute(
+            sql`update valo_manual_changes set note = ${"x".repeat(30)} where edition = ${second.id}`,
+          ),
+          keepsNote,
+        );
+        assert.deepEqual(
+          (
+            await db.execute(
+              sql`select note, recorded_by from valo_manual_changes where edition = ${second.id}`,
+            )
+          ).rows,
+          [{ note: changeNote, recorded_by: editor }],
+        );
+        // A version released after a withdrawal follows a release too.
+        await revision(await act(id, "withdraw", released));
+        const third = await revision(
+          await draft(id, { ...data, requestId: randomUUID(), baseVersion: 2, body: "Synthetic text again" }),
+        );
+        assert.equal(third.previousRelease, 2);
+        assert.equal((await publish(third)).status, 422);
+        await revision(await act(id, "publish", third));
+        assert.equal((await publicResource(id)).change?.note, changeNote);
+      },
+    );
     await t.test(
       "a published entry is due for review 90 days after its release or last review, a Content editor records one, and an entry overdue for its review is held from new use",
       async () => {
@@ -862,11 +930,33 @@ test(
             .fill("Synthetic: re-read the introduction, and it needs no change.");
           await reviewForm.getByRole("button", { name: "Record review" }).click();
           await expect(page.getByText(/Review recorded\. The next review is due on/)).toBeVisible();
+          // A new version follows the release, so publishing it asks what changed, and the guide's page
+          // then says so (docs/architecture/guidance-currency.md, slice 3).
+          await page.getByLabel("Content source").selectOption("upload");
+          await page.getByLabel("Word or PDF file").setInputFiles({
+            name: "intro-2.docx",
+            mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            buffer: wordFromText(title, "Keep a dated delivery note and a copy of the invoice.").bytes,
+          });
+          await page.getByRole("button", { name: "Save draft and preview" }).click();
+          await expect(preview).toContainText("a copy of the invoice");
+          await page.getByRole("button", { name: "Publish this version" }).click();
+          const changeForm = page.getByRole("form", { name: "Say what changed, then publish this version" });
+          await expect(changeForm.getByRole("button", { name: "Publish this version" })).toBeDisabled();
+          await changeForm
+            .getByLabel("What changed in this version?")
+            .fill("It now says to keep a copy of the invoice too.");
+          await changeForm.getByRole("button", { name: "Publish this version" }).click();
+          await expect(preview).toContainText("Readers can see version 2.");
+          await guidesPage.page.getByRole("link").filter({ hasText: title }).click();
+          await expect(guidesPage.page.getByTestId("text-change")).toHaveText(
+            /^Updated on \d{1,2} [A-Z][a-z]{2} \d{4}\. What changed: It now says to keep a copy of the invoice too\.$/,
+          );
           // A withdrawal says why, for the customers who bought or used the version
           // (docs/architecture/editions.md, slice 3); "Keep it" withdraws nothing.
           await page.getByRole("button", { name: "Withdraw live version" }).click();
           await page.getByRole("button", { name: "Keep it" }).click();
-          await expect(preview).toContainText("Readers can see version 1.");
+          await expect(preview).toContainText("Readers can see version 2.");
           await page.getByRole("button", { name: "Withdraw live version" }).click();
           const withdrawal = page.getByRole("form", { name: "Withdraw the live version" });
           await expect(withdrawal.getByRole("button", { name: "Withdraw this version" })).toBeDisabled();
@@ -879,7 +969,7 @@ test(
           await expect(
             page.getByText("Withdrawn. Readers can no longer open this version.", { exact: true }),
           ).toBeVisible();
-          await expect(preview).toContainText("Saved preview · version 1 · withdrawn");
+          await expect(preview).toContainText("Saved preview · version 2 · withdrawn");
           await expect(withdrawal).toHaveCount(0);
           await publicPage.page.reload();
           await expect(publicPage.page.getByTestId("link-industries")).toBeVisible();
@@ -1367,6 +1457,8 @@ test(
         for (const _copy of [1, 2]) await inScope(early, () => createReleasedTemplateDraft(early, first.id));
         assert.deepEqual(await written(first.id), []);
         const second = await release(1);
+        // The notice of a replacement carries what changed in the new version
+        // (docs/architecture/guidance-currency.md, slice 3).
         const replacedFirst = {
           workspace_id: early.workspaceId,
           route: "library",
@@ -1374,7 +1466,7 @@ test(
           title,
           version: 1,
           replacement_version: 2,
-          reason: null,
+          reason: changeNote,
           held: false,
           documents: 2,
         };
@@ -1398,10 +1490,11 @@ test(
           documents: 1,
         };
         assert.deepEqual(await written(second.id), [withdrawnSecond]);
-        // A new edition released after the withdrawn one tells its users that it was replaced too.
+        // A new edition released after the withdrawn one tells its users that it was replaced too, with
+        // what changed (docs/architecture/guidance-currency.md, slice 3).
         await release(2);
         assert.deepEqual(await written(second.id), [
-          { ...withdrawnSecond, kind: "replaced", replacement_version: 3, reason: null },
+          { ...withdrawnSecond, kind: "replaced", replacement_version: 3, reason: changeNote },
           withdrawnSecond,
         ]);
         assert.deepEqual(await written(first.id), [replacedFirst]);
@@ -1418,7 +1511,7 @@ test(
             version: 1,
             kind: "replaced",
             replacementVersion: 2,
-            reason: null,
+            reason: changeNote,
             held: false,
             documents: 2,
             createdAt: undefined,
@@ -1427,7 +1520,7 @@ test(
         assert.deepEqual(
           (await notices(late)).map((n) => [n.kind, n.version, n.replacementVersion, n.reason]),
           [
-            ["replaced", 2, 3, null],
+            ["replaced", 2, 3, changeNote],
             ["withdrawn", 2, null, withdrawalReason],
           ],
         );

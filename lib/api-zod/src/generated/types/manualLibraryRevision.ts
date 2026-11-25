@@ -53,4 +53,9 @@ export interface ManualLibraryRevision {
   aiDrafted: boolean | null;
   /** The related guides by their library items, as the editor sees them: the title and kind of each item's latest version, whether a version of it is released now, or nulls for an item not in the library yet. */
   relatedGuides: ManualLibraryRevisionRelatedGuidesItem[];
+  /**
+     * The latest earlier version of this entry that was released, or null. Releasing this version then needs a note of what changed (docs/architecture/guidance-currency.md, slice 3).
+     * @nullable
+     */
+  previousRelease: number | null;
 }
