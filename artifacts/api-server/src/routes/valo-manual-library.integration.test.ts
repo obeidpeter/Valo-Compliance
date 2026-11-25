@@ -1093,6 +1093,16 @@ test(
           await page.getByRole("button", { name: "Save draft and preview" }).click();
           await expect(preview).toContainText("Awaiting the owner's source check.");
           await expect(page.getByRole("button", { name: "Publish this version" })).toHaveCount(0);
+          // Its record (docs/architecture/guidance-record.md): saved without whom it applies to, the
+          // preview says the owner cannot sign it yet; saved with it, the preview shows the record.
+          await expect(preview.getByTestId("preview-record-missing")).toContainText("say whom it applies to");
+          await page.getByLabel("Who it applies to").fill("Synthetic businesses in the browser test.");
+          await page.getByLabel("Related templates (optional)").fill("tpl-16, TPL-10");
+          await page.getByRole("button", { name: "Save draft and preview" }).click();
+          const recordPreview = preview.getByTestId("preview-guidance-record");
+          await expect(recordPreview).toContainText("Synthetic businesses in the browser test.");
+          await expect(recordPreview).toContainText("TPL-16, TPL-10");
+          await expect(preview.getByTestId("preview-record-missing")).toHaveCount(0);
           // A template's entry details (docs/architecture/library-entries.md): the editor writes them,
           // previews them with the statement they make, and cannot publish the template without them.
           await page.getByRole("button", { name: "New item", exact: true }).click();

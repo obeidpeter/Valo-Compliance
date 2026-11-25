@@ -8,6 +8,7 @@ import {
 } from "@workspace/api-client-react";
 import { describeError } from "@/lib/describe-error";
 import { formatCount, formatDateTime, formatDay } from "@/lib/format";
+import { fileRecordButton, recordFiled, recordStates, recordWaiting } from "@/lib/guidance-record";
 import { ErrorState } from "./states";
 
 const GROUPS: { kinds: RetainedDraft["kind"][]; label: string }[] = [
@@ -56,11 +57,15 @@ export function RetainedDrafts() {
   // Filed templates whose latest version lacks what it is for, its limits and how it was written.
   const detailsWaiting =
     status.data?.items.filter((item) => item.details === "proposed" && item.itemId !== null).length ?? 0;
+  // Filed regulatory guides whose latest version does not say whom they apply to, while their drafts do
+  // (docs/architecture/guidance-record.md).
+  const recordsWaiting =
+    status.data?.items.filter((item) => item.record === "proposed" && item.itemId !== null).length ?? 0;
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  async function fileAll(load: "missing" | "form_text" | "details" = "missing") {
+  async function fileAll(load: "missing" | "form_text" | "details" | "record" = "missing") {
     setBusy(true);
     setError("");
     setMessage("");
@@ -80,7 +85,9 @@ export function RetainedDrafts() {
           ? `Filed the form text of ${formatCount(filed)} ${filed === 1 ? "template" : "templates"} as a new draft version. Each is private until it is published.`
           : load === "details"
             ? `Filed the proposed details of ${formatCount(filed)} ${filed === 1 ? "template" : "templates"} as a new draft version. Each is private until it is published.`
-            : `Filed ${formatCount(filed)} ${filed === 1 ? "draft" : "drafts"}. Each is private until it is published.`,
+            : load === "record"
+              ? recordFiled(filed, formatCount(filed))
+              : `Filed ${formatCount(filed)} ${filed === 1 ? "draft" : "drafts"}. Each is private until it is published.`,
       );
     } catch (e) {
       setError(describeError(e).message);
@@ -168,6 +175,20 @@ export function RetainedDrafts() {
               </button>
             </div>
           )}
+          {recordsWaiting > 0 && (
+            <div className="mt-3 grid gap-1">
+              <p className="text-sm">{recordWaiting(recordsWaiting, formatCount(recordsWaiting))}</p>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm justify-self-start"
+                disabled={busy}
+                onClick={() => void fileAll("record")}
+                data-testid="button-file-record"
+              >
+                {busy ? "Filing…" : fileRecordButton}
+              </button>
+            </div>
+          )}
           <p className="mt-2 text-sm" role="status" aria-live="polite">
             {message}
           </p>
@@ -219,6 +240,9 @@ export function RetainedDrafts() {
                               ? "What it is for, its limits and how it was written: filed with the latest version"
                               : "What it is for, its limits and how it was written: proposed, not filed yet"}
                           </span>
+                        )}
+                        {item.record && item.state !== "not_in_library" && (
+                          <span className="text-muted-foreground">{recordStates[item.record]}</span>
                         )}
                       </li>
                     ))}
