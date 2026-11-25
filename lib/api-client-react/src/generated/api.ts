@@ -149,6 +149,8 @@ import type {
   SourceControlResult,
   SourceControls,
   SourceEvidenceRegister,
+  SourceRegister,
+  SourceRegisterRevision,
   StaffOperations,
   StaffRoleAdministration,
   StaffRoleChangeInput,
@@ -5097,6 +5099,287 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getActOnSourceControlsMutationOptions(options), queryClient);
+    }
+
+export const getListSourceRegisterUrl = () => {
+
+
+
+
+  return `/api/admin/source-register`
+}
+
+/**
+ * Each official source as staff keep it, with every earlier version and its watch (docs/architecture/source-register.md, slice 1, ADM-003). Development only.
+ * @summary The source register, for content staff
+ */
+export const listSourceRegister = async ( options?: Parameters<typeof customFetch>[1]): Promise<SourceRegister> => {
+
+  return customFetch<SourceRegister>(getListSourceRegisterUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListSourceRegisterQueryKey = () => {
+    return [
+    "listSourceRegister"
+    ] as const;
+    }
+
+
+export const getListSourceRegisterQueryOptions = <TData = Awaited<ReturnType<typeof listSourceRegister>>, TError = ErrorType<void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSourceRegister>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListSourceRegisterQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listSourceRegister>>> = ({ signal }) => listSourceRegister({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listSourceRegister>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListSourceRegisterQueryResult = NonNullable<Awaited<ReturnType<typeof listSourceRegister>>>
+export type ListSourceRegisterQueryError = ErrorType<void>
+
+
+/**
+ * Each official source as staff keep it, with every earlier version and its watch (docs/architecture/source-register.md, slice 1, ADM-003). Development only.
+ * @summary The source register, for content staff
+ */
+export function useListSourceRegister<TData = Awaited<ReturnType<typeof listSourceRegister>>, TError = ErrorType<void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSourceRegister>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listSourceRegister>>,
+          TError,
+          Awaited<ReturnType<typeof listSourceRegister>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Each official source as staff keep it, with every earlier version and its watch (docs/architecture/source-register.md, slice 1, ADM-003). Development only.
+ * @summary The source register, for content staff
+ */
+export function useListSourceRegister<TData = Awaited<ReturnType<typeof listSourceRegister>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSourceRegister>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listSourceRegister>>,
+          TError,
+          Awaited<ReturnType<typeof listSourceRegister>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Each official source as staff keep it, with every earlier version and its watch (docs/architecture/source-register.md, slice 1, ADM-003). Development only.
+ * @summary The source register, for content staff
+ */
+export function useListSourceRegister<TData = Awaited<ReturnType<typeof listSourceRegister>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSourceRegister>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Each official source as staff keep it, with every earlier version and its watch (docs/architecture/source-register.md, slice 1, ADM-003). Development only.
+ * @summary The source register, for content staff
+ */
+export function useListSourceRegister<TData = Awaited<ReturnType<typeof listSourceRegister>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSourceRegister>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListSourceRegisterQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getFileSourceRegisterUrl = () => {
+
+
+
+
+  return `/api/admin/source-register/file`
+}
+
+/**
+ * Files each regulatory source lead kept in the repository that the register does not hold yet, as its first version, with what the claim maps and amendment records say of it. Filing again files nothing more.
+ * @summary File the regulatory sources kept in the repository into the register
+ */
+export const fileSourceRegister = async ( options?: Parameters<typeof customFetch>[1]): Promise<SourceRegister> => {
+
+  return customFetch<SourceRegister>(getFileSourceRegisterUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getFileSourceRegisterMutationKey = () => ['fileSourceRegister'] as const;
+
+export const getFileSourceRegisterMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof fileSourceRegister>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof fileSourceRegister>>, TError,void, TContext> => {
+
+const mutationKey = getFileSourceRegisterMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof fileSourceRegister>>, void> = () => {
+
+
+          return  fileSourceRegister(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FileSourceRegisterMutationResult = NonNullable<Awaited<ReturnType<typeof fileSourceRegister>>>
+
+    export type FileSourceRegisterMutationError = ErrorType<void>
+
+
+    /**
+ * Files each regulatory source lead kept in the repository that the register does not hold yet, as its first version, with what the claim maps and amendment records say of it. Filing again files nothing more.
+ * @summary File the regulatory sources kept in the repository into the register
+ */
+export const useFileSourceRegister = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof fileSourceRegister>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof fileSourceRegister>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getFileSourceRegisterMutationOptions(options), queryClient);
+    }
+
+export const getReviseSourceRegisterEntryUrl = (sourceId: string,) => {
+
+
+
+
+  return `/api/admin/source-register/${encodeURIComponent(String(sourceId))}/versions`
+}
+
+/**
+ * Its corrected fields, or its retirement or return, with why. The title and address stay its own, and no version is ever changed or removed.
+ * @summary Record the next version of a source's entry
+ */
+export const reviseSourceRegisterEntry = async (sourceId: string,
+    sourceRegisterRevision: SourceRegisterRevision, options?: Parameters<typeof customFetch>[1]): Promise<SourceRegister> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<SourceRegister>(getReviseSourceRegisterEntryUrl(sourceId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(sourceRegisterRevision)
+  }
+);}
+
+
+
+
+
+export const getReviseSourceRegisterEntryMutationKey = () => ['reviseSourceRegisterEntry'] as const;
+
+export const getReviseSourceRegisterEntryMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviseSourceRegisterEntry>>, TError,ReviseSourceRegisterEntryMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reviseSourceRegisterEntry>>, TError,ReviseSourceRegisterEntryMutationVariables, TContext> => {
+
+const mutationKey = getReviseSourceRegisterEntryMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reviseSourceRegisterEntry>>, ReviseSourceRegisterEntryMutationVariables> = (props) => {
+          const {sourceId,data} = props ?? {};
+
+          return  reviseSourceRegisterEntry(sourceId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReviseSourceRegisterEntryMutationResult = NonNullable<Awaited<ReturnType<typeof reviseSourceRegisterEntry>>>
+    export type ReviseSourceRegisterEntryMutationBody = BodyType<SourceRegisterRevision>
+    export type ReviseSourceRegisterEntryMutationError = ErrorType<void>
+    export type ReviseSourceRegisterEntryMutationVariables = {sourceId: string;data: BodyType<SourceRegisterRevision>}
+
+    /**
+ * Its corrected fields, or its retirement or return, with why. The title and address stay its own, and no version is ever changed or removed.
+ * @summary Record the next version of a source's entry
+ */
+export const useReviseSourceRegisterEntry = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviseSourceRegisterEntry>>, TError,ReviseSourceRegisterEntryMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof reviseSourceRegisterEntry>>,
+        TError,
+        ReviseSourceRegisterEntryMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReviseSourceRegisterEntryMutationOptions(options), queryClient);
     }
 
 export const getGetEditorialRecordUrl = (kind: 'content' | 'rule',

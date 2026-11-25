@@ -3771,6 +3771,193 @@ export const ActOnSourceControlsResponse = zod.object({
 
 
 /**
+ * Each official source as staff keep it, with every earlier version and its watch (docs/architecture/source-register.md, slice 1, ADM-003). Development only.
+ * @summary The source register, for content staff
+ */
+
+export const listSourceRegisterResponseEntriesItemOneEffectiveFromRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+
+export const listSourceRegisterResponseEntriesItemTwoEarlierItemEffectiveFromRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const listSourceRegisterResponseUnfiledMin = 0;
+
+
+
+export const ListSourceRegisterResponse = zod.object({
+  "entries": zod.array(zod.object({
+  "version": zod.int().min(1),
+  "title": zod.string(),
+  "authority": zod.string().nullable().describe('The body that issues the text. Empty until it is known.'),
+  "jurisdiction": zod.string().describe('Nigeria, or one of the states the requirements check lists.'),
+  "instrument": zod.union([zod.literal('act'),zod.literal('regulatory_document'),zod.literal('official_page'),zod.literal(null)]).nullable(),
+  "versionInForce": zod.string().nullable().describe('The edition in force, as the text names it.'),
+  "effectiveFrom": zod.string().regex(listSourceRegisterResponseEntriesItemOneEffectiveFromRegExp).nullable().describe('The day the version in force took effect. An official page has none.'),
+  "status": zod.enum(['active', 'retired']),
+  "reason": zod.string().describe('Why this version was recorded.'),
+  "createdBy": zod.string(),
+  "createdAt": zod.string()
+}).and(zod.object({
+  "sourceId": zod.string(),
+  "url": zod.string(),
+  "earlier": zod.array(zod.object({
+  "version": zod.int().min(1),
+  "title": zod.string(),
+  "authority": zod.string().nullable().describe('The body that issues the text. Empty until it is known.'),
+  "jurisdiction": zod.string().describe('Nigeria, or one of the states the requirements check lists.'),
+  "instrument": zod.union([zod.literal('act'),zod.literal('regulatory_document'),zod.literal('official_page'),zod.literal(null)]).nullable(),
+  "versionInForce": zod.string().nullable().describe('The edition in force, as the text names it.'),
+  "effectiveFrom": zod.string().regex(listSourceRegisterResponseEntriesItemTwoEarlierItemEffectiveFromRegExp).nullable().describe('The day the version in force took effect. An official page has none.'),
+  "status": zod.enum(['active', 'retired']),
+  "reason": zod.string().describe('Why this version was recorded.'),
+  "createdBy": zod.string(),
+  "createdAt": zod.string()
+})).describe('Its earlier versions, newest first.'),
+  "watch": zod.union([zod.object({
+  "checkedAt": zod.string().nullable(),
+  "failureCode": zod.string().nullable(),
+  "nextCheckAt": zod.string().nullable()
+}),zod.null()]).describe('Its daily check as it last ran, or null while it is not watched.')
+}))),
+  "unfiled": zod.int().min(listSourceRegisterResponseUnfiledMin).describe('How many regulatory sources kept in the repository are not filed yet.'),
+  "jurisdictions": zod.array(zod.string())
+})
+
+
+/**
+ * Files each regulatory source lead kept in the repository that the register does not hold yet, as its first version, with what the claim maps and amendment records say of it. Filing again files nothing more.
+ * @summary File the regulatory sources kept in the repository into the register
+ */
+
+export const fileSourceRegisterResponseEntriesItemOneEffectiveFromRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+
+export const fileSourceRegisterResponseEntriesItemTwoEarlierItemEffectiveFromRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const fileSourceRegisterResponseUnfiledMin = 0;
+
+
+
+export const FileSourceRegisterResponse = zod.object({
+  "entries": zod.array(zod.object({
+  "version": zod.int().min(1),
+  "title": zod.string(),
+  "authority": zod.string().nullable().describe('The body that issues the text. Empty until it is known.'),
+  "jurisdiction": zod.string().describe('Nigeria, or one of the states the requirements check lists.'),
+  "instrument": zod.union([zod.literal('act'),zod.literal('regulatory_document'),zod.literal('official_page'),zod.literal(null)]).nullable(),
+  "versionInForce": zod.string().nullable().describe('The edition in force, as the text names it.'),
+  "effectiveFrom": zod.string().regex(fileSourceRegisterResponseEntriesItemOneEffectiveFromRegExp).nullable().describe('The day the version in force took effect. An official page has none.'),
+  "status": zod.enum(['active', 'retired']),
+  "reason": zod.string().describe('Why this version was recorded.'),
+  "createdBy": zod.string(),
+  "createdAt": zod.string()
+}).and(zod.object({
+  "sourceId": zod.string(),
+  "url": zod.string(),
+  "earlier": zod.array(zod.object({
+  "version": zod.int().min(1),
+  "title": zod.string(),
+  "authority": zod.string().nullable().describe('The body that issues the text. Empty until it is known.'),
+  "jurisdiction": zod.string().describe('Nigeria, or one of the states the requirements check lists.'),
+  "instrument": zod.union([zod.literal('act'),zod.literal('regulatory_document'),zod.literal('official_page'),zod.literal(null)]).nullable(),
+  "versionInForce": zod.string().nullable().describe('The edition in force, as the text names it.'),
+  "effectiveFrom": zod.string().regex(fileSourceRegisterResponseEntriesItemTwoEarlierItemEffectiveFromRegExp).nullable().describe('The day the version in force took effect. An official page has none.'),
+  "status": zod.enum(['active', 'retired']),
+  "reason": zod.string().describe('Why this version was recorded.'),
+  "createdBy": zod.string(),
+  "createdAt": zod.string()
+})).describe('Its earlier versions, newest first.'),
+  "watch": zod.union([zod.object({
+  "checkedAt": zod.string().nullable(),
+  "failureCode": zod.string().nullable(),
+  "nextCheckAt": zod.string().nullable()
+}),zod.null()]).describe('Its daily check as it last ran, or null while it is not watched.')
+}))),
+  "unfiled": zod.int().min(fileSourceRegisterResponseUnfiledMin).describe('How many regulatory sources kept in the repository are not filed yet.'),
+  "jurisdictions": zod.array(zod.string())
+})
+
+
+/**
+ * Its corrected fields, or its retirement or return, with why. The title and address stay its own, and no version is ever changed or removed.
+ * @summary Record the next version of a source's entry
+ */
+export const reviseSourceRegisterEntryPathSourceIdMax = 100;
+
+
+
+export const ReviseSourceRegisterEntryParams = zod.object({
+  "sourceId": zod.coerce.string().min(1).max(reviseSourceRegisterEntryPathSourceIdMax)
+})
+
+
+export const reviseSourceRegisterEntryBodyAuthorityMax = 200;
+
+export const reviseSourceRegisterEntryBodyJurisdictionMax = 60;
+
+export const reviseSourceRegisterEntryBodyVersionInForceMax = 200;
+
+export const reviseSourceRegisterEntryBodyEffectiveFromRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const reviseSourceRegisterEntryBodyReasonMax = 1000;
+
+
+
+export const ReviseSourceRegisterEntryBody = zod.object({
+  "baseVersion": zod.int().min(1).describe('The latest version, as read.'),
+  "authority": zod.string().max(reviseSourceRegisterEntryBodyAuthorityMax).nullable(),
+  "jurisdiction": zod.string().max(reviseSourceRegisterEntryBodyJurisdictionMax),
+  "instrument": zod.union([zod.literal('act'),zod.literal('regulatory_document'),zod.literal('official_page'),zod.literal(null)]).nullable(),
+  "versionInForce": zod.string().max(reviseSourceRegisterEntryBodyVersionInForceMax).nullable(),
+  "effectiveFrom": zod.string().regex(reviseSourceRegisterEntryBodyEffectiveFromRegExp).nullable(),
+  "status": zod.enum(['active', 'retired']),
+  "reason": zod.string().max(reviseSourceRegisterEntryBodyReasonMax).describe('Why, in 20 to 1,000 characters.')
+})
+
+
+export const reviseSourceRegisterEntryResponseEntriesItemOneEffectiveFromRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+
+export const reviseSourceRegisterEntryResponseEntriesItemTwoEarlierItemEffectiveFromRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const reviseSourceRegisterEntryResponseUnfiledMin = 0;
+
+
+
+export const ReviseSourceRegisterEntryResponse = zod.object({
+  "entries": zod.array(zod.object({
+  "version": zod.int().min(1),
+  "title": zod.string(),
+  "authority": zod.string().nullable().describe('The body that issues the text. Empty until it is known.'),
+  "jurisdiction": zod.string().describe('Nigeria, or one of the states the requirements check lists.'),
+  "instrument": zod.union([zod.literal('act'),zod.literal('regulatory_document'),zod.literal('official_page'),zod.literal(null)]).nullable(),
+  "versionInForce": zod.string().nullable().describe('The edition in force, as the text names it.'),
+  "effectiveFrom": zod.string().regex(reviseSourceRegisterEntryResponseEntriesItemOneEffectiveFromRegExp).nullable().describe('The day the version in force took effect. An official page has none.'),
+  "status": zod.enum(['active', 'retired']),
+  "reason": zod.string().describe('Why this version was recorded.'),
+  "createdBy": zod.string(),
+  "createdAt": zod.string()
+}).and(zod.object({
+  "sourceId": zod.string(),
+  "url": zod.string(),
+  "earlier": zod.array(zod.object({
+  "version": zod.int().min(1),
+  "title": zod.string(),
+  "authority": zod.string().nullable().describe('The body that issues the text. Empty until it is known.'),
+  "jurisdiction": zod.string().describe('Nigeria, or one of the states the requirements check lists.'),
+  "instrument": zod.union([zod.literal('act'),zod.literal('regulatory_document'),zod.literal('official_page'),zod.literal(null)]).nullable(),
+  "versionInForce": zod.string().nullable().describe('The edition in force, as the text names it.'),
+  "effectiveFrom": zod.string().regex(reviseSourceRegisterEntryResponseEntriesItemTwoEarlierItemEffectiveFromRegExp).nullable().describe('The day the version in force took effect. An official page has none.'),
+  "status": zod.enum(['active', 'retired']),
+  "reason": zod.string().describe('Why this version was recorded.'),
+  "createdBy": zod.string(),
+  "createdAt": zod.string()
+})).describe('Its earlier versions, newest first.'),
+  "watch": zod.union([zod.object({
+  "checkedAt": zod.string().nullable(),
+  "failureCode": zod.string().nullable(),
+  "nextCheckAt": zod.string().nullable()
+}),zod.null()]).describe('Its daily check as it last ran, or null while it is not watched.')
+}))),
+  "unfiled": zod.int().min(reviseSourceRegisterEntryResponseUnfiledMin).describe('How many regulatory sources kept in the repository are not filed yet.'),
+  "jurisdictions": zod.array(zod.string())
+})
+
+
+/**
  * The stored bundle's current check, the drafting and review runs, check counts, safety holds and publication audit of one content or rule version (ADM-002). Read-only: it approves, publishes and holds nothing.
  * @summary One version's publication record, for content staff
  */

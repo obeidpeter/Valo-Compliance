@@ -898,6 +898,34 @@
       "proves": "A synthetic candidate that fails its gates is recorded as held, the publisher refuses to publish it, it is left out of the live versions, and a request for its PDF master made without a workspace is refused."
     },
     {
+      "requirement": "ADM-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/source-register/source-register.integration.test.ts",
+      "test": "the source register files the repository's regulatory sources once, keeps every version, and records a correction only by an active Content editor, with why, on the latest version",
+      "proves": "Against real PostgreSQL, only an active Content editor reads, files or corrects the source register; filing records each of the repository's 28 regulatory sources once as its first version, the data protection Act as an Act of the Nigeria Data Protection Commission in effect from 12 June 2023; a correction without why, outside the listed jurisdictions, on a day the calendar does not have, with a day for an official page, with nothing changed or on an earlier version is refused; a correction, a retirement and a return each add a version that keeps the ones before; and the database refuses to change or remove a version, to move an entry's address, to skip a version or to take one from anyone but an active Content editor."
+    },
+    {
+      "requirement": "ADM-003",
+      "job": "foundation",
+      "file": "lib/db/scripts/phase1-migrations.test.mjs",
+      "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
+      "proves": "The source register migration keeps every existing row and rolls back cleanly, and the register it starts takes a version only from an active Content editor, as the next version of its entry at the entry's address, dates each version itself, keeps each field within its limits and never changes or removes a version."
+    },
+    {
+      "requirement": "ADM-003",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/source-register.test.ts",
+      "test": "the source register names each source's jurisdiction, instrument, version and day, and its daily check",
+      "proves": "The staff register's words give each source's jurisdiction, kind of text, version in force and the day it took effect, what the daily check last did and when it checks next on a Lagos clock, and each earlier version with its day and why."
+    },
+    {
+      "requirement": "ADM-003",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "the source register lists each source's fields and daily check, and records a correction only with why",
+      "proves": "In the staff Content area on a phone, the register lists each source with its fields, its daily check and a retired entry's note, offers to file the sources not yet filed, sends a correction only once why is written, with every field and the version it corrects, and has no automated WCAG 2.2 AA failure."
+    },
+    {
       "requirement": "ADM-005",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/publication/publication-guards.integration.test.ts",
