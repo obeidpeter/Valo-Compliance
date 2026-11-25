@@ -140,7 +140,27 @@ Slice 2, first part (retiring and the picker):
 - The source controls' database step runs its files one at a time (`--test-concurrency=1`), as the
   library's and the disputes' steps do. The register's test drives the same check queue the source
   controls' test claims from, and the test runner sorts the files, so the register's runs first.
-- Adding sources on the policy's hosts is the slice's second part.
+
+Slice 2, second part (adding sources):
+- A Content editor adds a source with its title, its https address, its fields and why, and chooses
+  whether its daily check starts now. The address must be on a host the approved guidance policy lists,
+  with no user name, password or port. An address the register holds already (409), or one of a source
+  kept in the repository, which is filed instead, is refused. The fields are checked as a correction's
+  are.
+- The register gives a source staff add the next id after the highest it holds: REG-001, REG-002, and
+  so on. No lead kept in the repository takes that prefix, and adding takes the filing lock, so two
+  additions never take the same id or address.
+- The daily check fetches a source staff added at its registered address, read from the register's
+  latest version. The address is checked against the policy's hosts again on every read, so a row put
+  straight into the database at another host is never fetched. The fetch is the one a listed page gets:
+  a public address, https on the same host across at most three redirects, and the page size cap. A
+  retired source is not read.
+- The policy's host list moved into the sources module, unchanged, so the fetcher reads the same list
+  the guidance policy checks against its file. Adding a host is still a change to the policy, which only
+  the owner approves.
+- A source staff added is watched and its captures are kept, but no release rests on it: the release
+  bindings, the guides' claim maps and the rules still read only the leads kept in the repository. A
+  guide or rule can cite such a source only once it is added to those leads.
 
 ## What does not change
 
