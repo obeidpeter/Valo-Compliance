@@ -17,13 +17,20 @@ import {
   NOT_ANSWERED,
   PARTNER_QUESTIONS,
   RULE_FAMILIES,
+  RULE_FEEDS,
   RULE_QUESTIONS,
+  RULE_STEPS,
   STATES,
+  type RuleFamily,
   type RuleQuestion,
+  type When,
   answerAt,
+  checkerQuestion,
   holds,
   isAsked,
+  ruleAnswersToSend,
   stepOfQuestion,
+  withoutFilledAnswers,
 } from "@workspace/valo-core/checker-questionnaire";
 
 /** The schema of each of the check's answers, as a request is read. */
@@ -329,6 +336,208 @@ test("each rule's questions fill only answers its rule's schema takes, with ever
   assert.equal(new Set(asked).size, asked.length, "no rule's question is asked twice");
   assert.deepEqual(
     RULE_FAMILIES.map((family) => RULE_QUESTIONS[family].length),
-    [12, 8, 23, 15],
+    [12, 9, 23, 15],
   );
+});
+
+/** The check's own answers a condition reads. */
+function answersNamed(when: When): string[] {
+  if ("all" in when) return when.all.flatMap(answersNamed);
+  if ("any" in when) return when.any.flatMap(answersNamed);
+  return [when.answer];
+}
+
+/** The rule answers the earlier answers fill, by their full path. */
+const filledBy = (answers: Record<string, unknown>) =>
+  Object.fromEntries(
+    RULE_FEEDS.filter((feed) => holds(feed.when, answers)).map((feed) => [feed.fills, feed.value]),
+  );
+
+test("earlier answers fill a rule's answers exactly as the design's table lists, each with an answer the rule's question offers", () => {
+  // docs/architecture/requirements-questions.md, section 3, row by row.
+  assert.deepEqual(filledBy({ legalForm: "sole_proprietor" }), {
+    "rich.businessName.legalForm": "individual",
+    "rich.tax.incorporatedAsCompany": false,
+  });
+  assert.deepEqual(filledBy({ legalForm: "partnership" }), {
+    "rich.businessName.legalForm": "firm",
+    "rich.tax.incorporatedAsCompany": false,
+  });
+  assert.deepEqual(filledBy({ legalForm: "limited_company" }), {
+    "rich.businessName.legalForm": "company",
+    "rich.tax.legalForm": "company",
+    "rich.tax.incorporatedAsCompany": true,
+  });
+  assert.deepEqual(filledBy({ legalForm: "company_limited_by_guarantee" }), {
+    "rich.businessName.legalForm": "company",
+    "rich.tax.legalForm": "company_limited_by_guarantee",
+    "rich.tax.incorporatedAsCompany": true,
+  });
+  assert.deepEqual(filledBy({ legalForm: "incorporated_trustees" }), {
+    "rich.tax.legalForm": "incorporated_trustees",
+    "rich.tax.incorporatedAsCompany": false,
+  });
+  for (const legalForm of ["limited_company", "company_limited_by_guarantee"])
+    assert.equal(
+      filledBy({ legalForm, registrationStatus: "registered" })["rich.tax.incorporatedInNigeria"],
+      true,
+    );
+  for (const [legalForm, registrationStatus] of [
+    ["sole_proprietor", "registered"],
+    ["partnership", "registered"],
+    ["incorporated_trustees", "registered"],
+    ["limited_company", "pending"],
+    ["limited_company", "unregistered"],
+    ["limited_company", "unknown"],
+  ])
+    assert.equal(
+      Object.hasOwn(filledBy({ legalForm, registrationStatus }), "rich.tax.incorporatedInNigeria"),
+      false,
+      `${legalForm}, ${registrationStatus}`,
+    );
+  for (const state of STATES)
+    assert.deepEqual(filledBy({ state }), { "rich.privacy.operatesInNigeria": true });
+  assert.deepEqual(filledBy({ personalData: "yes" }), { "rich.privacy.processesPersonalData": true });
+  // "No" to the personal-data question fills nothing: it asks about customers and staff only.
+  assert.deepEqual(filledBy({ personalData: "no" }), {});
+  // Not knowing, skipping or not applying settles nothing, so it fills nothing.
+  for (const marker of NOT_ANSWERED)
+    assert.deepEqual(
+      filledBy({ legalForm: marker, registrationStatus: marker, state: marker, personalData: marker }),
+      {},
+    );
+
+  for (const feed of RULE_FEEDS) {
+    const [, family, key] = feed.fills.split(".") as [string, RuleFamily, string];
+    const question = RULE_QUESTIONS[family].find((each) => each.key === key);
+    assert.ok(question, `${feed.fills} is a rule's question`);
+    if (question.kind === "flag") assert.equal(typeof feed.value, "boolean", feed.fills);
+    else
+      assert.ok(
+        question.choices?.some((choice) => choice.value === feed.value),
+        feed.fills,
+      );
+    // A filled answer comes from the check's own questions, named as the answers it reads, and each
+    // is asked in the same step as the rule's question or before it.
+    assert.deepEqual([...new Set(answersNamed(feed.when))].sort(), [...feed.from].sort(), feed.fills);
+    for (const answer of feed.from) {
+      assert.ok(checkerQuestion(answer), `${answer} is one of the check's questions`);
+      assert.ok(stepOfQuestion(answer) <= RULE_STEPS[family], `${answer} is asked before ${feed.fills}`);
+    }
+  }
+});
+
+const ALL_RULES: ReadonlySet<RuleFamily> = new Set(RULE_FAMILIES);
+
+test("a check sends the answers of the rules in use only, filled ones in place of the visitor's own while they hold, and none of a question not asked", () => {
+  const own = {
+    rich: {
+      businessName: {
+        hasPlaceOfBusinessInNigeria: true,
+        carryingOnBusiness: true,
+        legalForm: "firm",
+        trueSurname: "Okafor",
+        partners: [{ type: "individual", surname: "Okafor" }],
+      },
+      // An answer no question asks, which a saved check can hold, is sent as it is.
+      tax: { legalForm: "other", finalTaxTreatment: "synthetic treatment" },
+      product: {
+        commercialSupplyOfRegulatedProducts: false,
+        manufacturesInNigeria: false,
+        activity: "manufacture",
+      },
+    },
+  };
+  // No rule in use: nothing of theirs is sent.
+  assert.deepEqual(ruleAnswersToSend({ ...own, legalForm: "sole_proprietor" }, new Set()), {});
+  assert.deepEqual(Object.keys(ruleAnswersToSend(own, new Set(["tax"]))), ["tax"]);
+
+  // A sole proprietor fills the operator in place of the visitor's own answer. The partners are then
+  // not asked, and not sent; the operator's surname is.
+  const sole = ruleAnswersToSend({ ...own, legalForm: "sole_proprietor" }, ALL_RULES);
+  assert.deepEqual(sole.businessName, {
+    hasPlaceOfBusinessInNigeria: true,
+    carryingOnBusiness: true,
+    legalForm: "individual",
+    trueSurname: "Okafor",
+  });
+  assert.deepEqual(sole.tax, {
+    legalForm: "other",
+    finalTaxTreatment: "synthetic treatment",
+    incorporatedAsCompany: false,
+  });
+  // Neither regulated supply nor manufacture in Nigeria settles the product rule: the activity is
+  // not asked, and not sent.
+  assert.deepEqual(sole.product, {
+    commercialSupplyOfRegulatedProducts: false,
+    manufacturesInNigeria: false,
+  });
+
+  // When the earlier answer no longer settles it, the visitor's own answer is sent again.
+  const unknown = ruleAnswersToSend({ ...own, legalForm: "unknown" }, ALL_RULES);
+  assert.deepEqual(unknown.businessName, {
+    hasPlaceOfBusinessInNigeria: true,
+    carryingOnBusiness: true,
+    legalForm: "firm",
+    partners: [{ type: "individual", surname: "Okafor" }],
+  });
+  assert.deepEqual(unknown.tax, { legalForm: "other", finalTaxTreatment: "synthetic treatment" });
+
+  // A filled answer whose question the filled answers settle is not sent either: once the records
+  // describe a company, whether it was incorporated as one is not asked.
+  const company = ruleAnswersToSend(
+    { legalForm: "limited_company", registrationStatus: "registered" },
+    ALL_RULES,
+  );
+  assert.deepEqual(company, { tax: { legalForm: "company", incorporatedInNigeria: true } });
+
+  // The rule's own answers filled from where the business is and what it keeps.
+  assert.deepEqual(ruleAnswersToSend({ state: "Kano", personalData: "yes" }, ALL_RULES), {
+    privacy: { processesPersonalData: true, operatesInNigeria: true },
+  });
+  // A connection to Nigeria that holds already means the next ones are not asked.
+  assert.deepEqual(
+    ruleAnswersToSend(
+      { state: "Kano", personalData: "yes", rich: { privacy: { dataSubjectsInNigeria: false } } },
+      ALL_RULES,
+    ).privacy,
+    { processesPersonalData: true, operatesInNigeria: true },
+  );
+});
+
+test("a saved check's filled answers are read as filled when it is loaded again, and its other answers as the visitor's own", () => {
+  const saved = {
+    legalForm: "limited_company",
+    registrationStatus: "registered",
+    state: "Lagos",
+    personalData: "no",
+    rich: {
+      tax: { legalForm: "company", incorporatedInNigeria: true, companyStatus: "active" },
+      privacy: { processesPersonalData: true, operatesInNigeria: true },
+      businessName: { legalForm: "individual" },
+    },
+  };
+  const loaded = withoutFilledAnswers(saved);
+  assert.deepEqual(loaded.rich, {
+    // The records and the incorporation follow the earlier answers again.
+    tax: { companyStatus: "active" },
+    // "No" fills nothing, so the saved "yes" is the visitor's own; the state fills the operation.
+    privacy: { processesPersonalData: true },
+    // Not what the earlier answer fills: the visitor's own, kept.
+    businessName: { legalForm: "individual" },
+  });
+  // Sent again, the loaded check sends what the saved one sent.
+  assert.deepEqual(ruleAnswersToSend(loaded, ALL_RULES), ruleAnswersToSend(saved, ALL_RULES));
+  // Nothing of the saved answers is changed.
+  assert.equal(saved.rich.tax.legalForm, "company");
+  // A check whose rule answers were all filled keeps none of its own.
+  assert.equal(
+    Object.hasOwn(
+      withoutFilledAnswers({ state: "Lagos", rich: { privacy: { operatesInNigeria: true } } }),
+      "rich",
+    ),
+    false,
+  );
+  const plain = { legalForm: "partnership" };
+  assert.equal(withoutFilledAnswers(plain), plain);
 });

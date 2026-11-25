@@ -110,7 +110,8 @@ function QuestionOrNote({ question, context }: { question: CheckerQuestion; cont
   return <Question question={question} context={context} />;
 }
 
-/** One question, drawn by the kind of answer it takes. */
+/** One question, drawn by the kind of answer it takes. Its first control's id is the answer's name,
+ * which a link to the question moves the focus to. */
 function Question({ question, context }: { question: CheckerQuestion; context: QuestionContext }) {
   const name = question.answer;
   const value: unknown = Reflect.get(context.facts, name);
@@ -132,6 +133,7 @@ function Question({ question, context }: { question: CheckerQuestion; context: Q
           value={text}
           options={[...(question.choices ?? [])]}
           markers={markers}
+          inputId={name}
         />
       );
     case "list":
@@ -143,6 +145,7 @@ function Question({ question, context }: { question: CheckerQuestion; context: Q
           value={Array.isArray(value) ? (value as string[]) : (text as Marker)}
           markers={markers}
           placeholder={question.placeholder ?? ""}
+          inputId={name}
         />
       );
     case "amount":

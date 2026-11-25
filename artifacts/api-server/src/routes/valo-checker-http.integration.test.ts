@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import express, { type Request, type Response, type NextFunction } from "express";
 import { checkerFactsSchema, digest } from "@workspace/valo-core";
+import { ListCheckerRulesInUseResponse, PreviewAssessmentResponse } from "@workspace/api-zod";
 
 /** Real HTTP middleware/router/domain/SQL. Identity-provider transport alone is
  * controlled in this process; this is not a managed Clerk browser proof.
@@ -147,6 +148,28 @@ test(
           assert.ok(body.unanswered.includes("premises"), body.unanswered.join(", "));
           for (const item of body.items)
             assert.ok(item.label && item.reason && item.nextStep && item.sources.length > 0, item.label);
+        },
+      );
+      // RUL-001: the page asks only the questions of the rules a result would use.
+      await t.test(
+        "an anonymous visitor reads which rules the check uses today, which are the rules a result evaluates, and the reply is not cached",
+        async () => {
+          const response = await request("/checker/questions", undefined, "");
+          assert.equal(response.status, 200);
+          assert.equal(response.headers.get("cache-control"), "no-store");
+          const listed = ListCheckerRulesInUseResponse.parse(await response.json());
+          for (const rule of listed.rules)
+            assert.deepEqual(Object.keys(rule).sort(), ["family", "ruleId", "ruleVersion", "title"]);
+          const basic = Object.fromEntries(
+            Object.entries(facts).filter(([key]) => key !== "factsVersion" && key !== "rich"),
+          );
+          const preview = await request("/checker/preview", { facts: basic, asOfDate: listed.asOfDate }, "");
+          assert.equal(preview.status, 200);
+          const result = PreviewAssessmentResponse.parse(await preview.json());
+          assert.deepEqual(
+            listed.rules.map((rule) => `${rule.ruleId}@${rule.ruleVersion}`),
+            result.items.map((item) => `${item.ruleId}@${item.ruleVersion}`),
+          );
         },
       );
       // RUL-007: "anonymous answers are cleared unless they explicitly choose to save".

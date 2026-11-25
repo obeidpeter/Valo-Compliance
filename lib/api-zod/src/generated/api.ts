@@ -5579,6 +5579,20 @@ export const PreviewAssessmentResponse = zod.object({
 })
 
 
+/**
+ * The released rules the requirements check would use today, under the same release checks as an assessment, and which of the check's rule questions each reads (RUL-001). Holds no customer data. Counts against the per-visitor limit on public reads.
+ */
+export const ListCheckerRulesInUseResponse = zod.object({
+  "asOfDate": zod.string(),
+  "rules": zod.array(zod.object({
+  "ruleId": zod.string(),
+  "ruleVersion": zod.int(),
+  "title": zod.string(),
+  "family": zod.union([zod.literal('businessName'),zod.literal('tax'),zod.literal('privacy'),zod.literal('product'),zod.literal(null)]).nullable().describe('The rule questions the rule reads, or null for a rule that reads only the check\'s own questions.')
+}))
+})
+
+
 export const previewWorkspaceAssessmentBodyFactsRichBusinessNameTrueSurnameOneMax = 300;
 
 export const previewWorkspaceAssessmentBodyFactsRichBusinessNameTrueForenamesOneItemMax = 150;

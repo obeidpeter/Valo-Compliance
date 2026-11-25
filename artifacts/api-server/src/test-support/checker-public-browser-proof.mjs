@@ -47,7 +47,8 @@ try {
   );
   assert.ok(await page.getByTestId("radio-legalForm-unknown").isChecked());
   report.checks.push("Unknown and unanswered remain separate answers, each chosen only by the visitor.");
-  assert.equal(await page.locator('[data-testid="rich-section-businessName"]').count(), 0);
+  // The business-name questions ask for names, so a visitor who is not signed in is not asked them.
+  assert.equal(await page.locator('[id^="rich-businessName-"]').count(), 0);
   report.checks.push("Private business-name questions absent from public questionnaire.");
   for (let i = 0; i < 5; i++) await page.getByTestId("button-next").click();
   await page.getByTestId("list-review").waitFor();

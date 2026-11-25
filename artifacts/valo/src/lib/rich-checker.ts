@@ -1,4 +1,5 @@
 import type { CheckerFacts, RichCheckerFacts as RichFactGroups } from "@workspace/api-client-react";
+import { RULE_STEPS } from "@workspace/valo-core/checker-questionnaire";
 
 export const ANSWER_STATES = ["unknown", "unanswered", "not_applicable"] as const;
 export type AnswerState = (typeof ANSWER_STATES)[number];
@@ -165,6 +166,7 @@ const QUESTION_FIELDS = {
     "incorporatedInNigeria",
     "effectiveManagementCountry",
     "managementStatusVerification",
+    "nonresident",
     "companyStatus",
     "accountingPeriodStart",
     "accountingPeriodEnd",
@@ -199,12 +201,13 @@ type RichQuestionTarget = { section: RichSection; step: number; id: string; fall
 const arrayIndex = (value: string | undefined, limit: number) =>
   value !== undefined && /^(0|[1-9]\d*)$/.test(value) && Number(value) < limit;
 
-/** Only fields with customer controls have targets. Legal review aliases do not. */
+/** Where a rule's answer is asked: its step, from the questionnaire, and its control's id. Only
+ * fields with customer controls have targets. Legal review aliases do not. */
 export function richQuestionTarget(path: string): RichQuestionTarget | undefined {
   const [root, sectionKey, ...parts] = path.split(".");
   if (root !== "rich" || !Object.hasOwn(QUESTION_FIELDS, sectionKey ?? "")) return undefined;
   const section = sectionKey as RichSection;
-  const step = section === "privacy" ? 4 : section === "product" ? 1 : 0;
+  const step = RULE_STEPS[section];
   const target = (id: string, fallbackId?: string): RichQuestionTarget => ({
     section,
     step,

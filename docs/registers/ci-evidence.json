@@ -2792,35 +2792,105 @@
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/rules/rule-questions.test.ts",
       "test": "the businessName rule's questions are asked whenever their answer can change what the rule says",
-      "proves": "Over a seeded walk of about 3,800 states of synthetic answers to the business-name rule's questions, half of the walks starting from its prepared scenarios, everything the rule's pinned calculation still needs is a question asked in that state, changing any question not asked to any of its answers changes nothing the rule says, and every question a visitor can be asked is reached in at least 20 states. It runs the calculation directly, not through the page."
+      "proves": "Over a seeded walk of about 3,800 states of synthetic answers to the business-name rule's questions, half of the walks starting from its prepared scenarios, everything the rule's pinned calculation still needs is a question asked in that state, changing any question not asked to any of its answers changes nothing the rule says, what the check sends of those answers makes the rule say exactly the same and leaves nothing it still needs unasked, and every question a visitor can be asked is reached in at least 20 states. It runs the calculation directly, not through the page."
     },
     {
       "requirement": "RUL-001",
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/rules/rule-questions.test.ts",
       "test": "the tax rule's questions are asked whenever their answer can change what the rule says",
-      "proves": "Over a seeded walk of about 3,800 states of synthetic answers to the company-return rule's questions, half of the walks starting from its prepared scenarios, everything the rule's pinned calculation still needs is a question asked in that state, changing any question not asked to any of its answers changes nothing the rule says, and every question a visitor can be asked is reached in at least 20 states. It runs the calculation directly, not through the page."
+      "proves": "Over a seeded walk of about 3,800 states of synthetic answers to the company-return rule's questions, half of the walks starting from its prepared scenarios, everything the rule's pinned calculation still needs is a question asked in that state, changing any question not asked, or either of the two answers its schema takes that no question asks, to any of its answers changes nothing the rule says, what the check sends of those answers makes the rule say exactly the same and leaves nothing it still needs unasked, and every question a visitor can be asked is reached in at least 20 states. It runs the calculation directly, not through the page."
     },
     {
       "requirement": "RUL-001",
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/rules/rule-questions.test.ts",
       "test": "the privacy rule's questions are asked whenever their answer can change what the rule says",
-      "proves": "Over a seeded walk of about 3,800 states of synthetic answers to the personal-data rule's questions, half of the walks starting from its prepared scenarios, everything the rule's pinned calculation still needs is a question asked in that state, changing any question not asked to any of its answers changes nothing the rule says, and every question a visitor can be asked is reached in at least 20 states. It runs the calculation directly, not through the page."
+      "proves": "Over a seeded walk of about 3,800 states of synthetic answers to the personal-data rule's questions, half of the walks starting from its prepared scenarios, everything the rule's pinned calculation still needs is a question asked in that state, changing any question not asked to any of its answers changes nothing the rule says, what the check sends of those answers makes the rule say exactly the same and leaves nothing it still needs unasked, and every question a visitor can be asked is reached in at least 20 states. It runs the calculation directly, not through the page."
     },
     {
       "requirement": "RUL-001",
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/rules/rule-questions.test.ts",
       "test": "the product rule's questions are asked whenever their answer can change what the rule says",
-      "proves": "Over a seeded walk of about 3,800 states of synthetic answers to the product-registration rule's questions, half of the walks starting from its prepared scenarios, everything the rule's pinned calculation still needs is a question asked in that state, changing any question not asked to any of its answers changes nothing the rule says, and every question a visitor can be asked is reached in at least 20 states. It runs the calculation directly, not through the page."
+      "proves": "Over a seeded walk of about 3,800 states of synthetic answers to the product-registration rule's questions, half of the walks starting from its prepared scenarios, everything the rule's pinned calculation still needs is a question asked in that state, changing any question not asked to any of its answers changes nothing the rule says, what the check sends of those answers makes the rule say exactly the same and leaves nothing it still needs unasked, and every question a visitor can be asked is reached in at least 20 states. It runs the calculation directly, not through the page."
     },
     {
       "requirement": "RUL-001",
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/rules/rule-questions.test.ts",
       "test": "each prepared rule's scenarios are asked by the same conditions",
-      "proves": "For each of the four prepared rules' scenarios, at least 40 in all, everything the rule's calculation still needs is a question its conditions ask, and no question they skip changes what the rule says."
+      "proves": "For each of the four prepared rules' scenarios, at least 40 in all, everything the rule's calculation still needs is a question its conditions ask, no question they skip changes what the rule says, and what the check sends of each scenario's answers makes the rule say the same."
+    },
+    {
+      "requirement": "RUL-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/rule-questions.test.ts",
+      "test": "every answer a rule's schema takes is one of its questions, or one the walk tries as never asked",
+      "proves": "Every answer the four prepared rules' schemas take is one of that rule's questions in the check's questionnaire, or one of the two company-return answers that the walk tries as a question never asked, so no answer a calculation can read is left out of the walk."
+    },
+    {
+      "requirement": "RUL-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/checker-questionnaire.test.ts",
+      "test": "earlier answers fill a rule's answers exactly as the design's table lists, each with an answer the rule's question offers",
+      "proves": "The check's earlier answers fill the rules' answers exactly as the design's table lists them, row by row; “No” to the personal-data question and “I do not know”, “Skip for now” or “Not applicable” to any of them fill nothing; and each filled answer is one its rule's question offers, from a question of the check asked in the same step or before it."
+    },
+    {
+      "requirement": "RUL-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/checker-questionnaire.test.ts",
+      "test": "a check sends the answers of the rules in use only, filled ones in place of the visitor's own while they hold, and none of a question not asked",
+      "proves": "With synthetic answers, a check sends rules' answers only for the rules in use; a filled answer takes the place of the visitor's own only while the earlier answer settles it, and the visitor's own is sent again once it does not; the answers of questions not asked, such as a firm's partners once the business is a sole proprietor, are not sent; and an answer no question asks is sent as it is."
+    },
+    {
+      "requirement": "RUL-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/checker-questionnaire.test.ts",
+      "test": "a saved check's filled answers are read as filled when it is loaded again, and its other answers as the visitor's own",
+      "proves": "A synthetic saved check, loaded again, reads each rule answer equal to what its earlier answer fills as filled, and every other rule answer as the visitor's own, without changing the saved answers, and sends what the saved check sent."
+    },
+    {
+      "requirement": "RUL-001",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/rich-checker.test.ts",
+      "test": "what is sent leaves out unfinished blank rows and the answers of questions not asked now, keeps them on the page, and invents no answer",
+      "proves": "Before the web app sends a check, unfinished blank list rows and the answers of the rules' questions not asked now, such as an individual operator's partners, are left out, while the page keeps them as typed, and they are sent again once the choice that hid them changes back."
+    },
+    {
+      "requirement": "RUL-001",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/rich-checker.test.ts",
+      "test": "only the rules in use are sent, and a check with no rule in use sends none of their answers",
+      "proves": "The web app sends the answers of the rules in use only, and none of the rules' answers, with no answers version for them, when no rule is in use."
+    },
+    {
+      "requirement": "RUL-001",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/rich-checker.test.ts",
+      "test": "the check's earlier answers fill a rule's answers while they settle them, and the visitor's own answer comes back when they no longer do",
+      "proves": "The web app sends a rule's answers filled from a sole proprietor, a state and kept personal data while those earlier answers settle them, keeps the visitor's own answer on the page meanwhile and sends it again once they do not, and fills no business-name answer for a visitor who is not asked those questions."
+    },
+    {
+      "requirement": "RUL-001",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-screens-accessibility.test.ts",
+      "test": "each rule's questions are asked in their step under the requirement's name, only while they can matter: an earlier answer that settles one shows it answered, with where it came from and a way back to it, an answer a changed choice hides is kept but not sent, and a visitor who is not signed in is offered the sign-in links in place of the business-name questions",
+      "proves": "In a browser on an emulated phone, with one synthetic rule of each kind in use, a signed-out visitor sees each rule's questions in its step under the requirement's name, asked only while they can matter; an answer filled from an earlier one shows it answered with where it came from, and its link moves the focus back to that question; an answer a changed choice hides comes back with the choice; the business-name questions are replaced by links to sign in that keep the answers; the questions have no automated WCAG 2.2 AA failure; and what is sent holds exactly the questions asked, filled answers included."
+    },
+    {
+      "requirement": "RUL-001",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-screens-accessibility.test.ts",
+      "test": "when the rules the check uses cannot be loaded, the steps that would ask their questions say so, and the check still runs on its own questions",
+      "proves": "In a browser, when the list of rules in use fails to load, the steps that would ask the rules' questions say that some questions could not be loaded, the other steps do not, and the check still runs and sends none of the rules' answers."
+    },
+    {
+      "requirement": "RUL-001",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "signed in, the requirements check asks the business-name requirement's questions by the operator's form: a firm's partners, how a name is composed once there is one, and a sole proprietor's operator answered from how the business is set up",
+      "proves": "In a browser on an emulated phone, a signed-in customer is asked the business-name questions in the first step, by the operator's form: a firm's partners and, once there is a name, how it is composed; a sole proprietor's operator is shown answered from how the business is set up; the questions have no automated WCAG 2.2 AA failure; and what is sent leaves out the partners once they are no longer asked."
     },
     {
       "requirement": "RUL-002",

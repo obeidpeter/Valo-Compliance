@@ -282,6 +282,144 @@ test("the requirements check chooses no answer for a visitor: every question sta
   }
 });
 
+// RUL-001: "irrelevant questions are skipped, progress is clear, and the user can return to previous answers."
+test("each rule's questions are asked in their step under the requirement's name, only while they can matter: an earlier answer that settles one shows it answered, with where it came from and a way back to it, an answer a changed choice hides is kept but not sent, and a visitor who is not signed in is offered the sign-in links in place of the business-name questions", async () => {
+  const { sent, respond } = checking();
+  const { page, unknown, errors, close } = await app.phone("/checker", respond);
+  try {
+    await ready(page);
+    const step = page.locator("#checker-step");
+
+    // In place of the business-name questions: the requirement, and the links that keep the answers.
+    const signIn = page.getByTestId("rule-questions-businessName-sign-in");
+    await expect(signIn.locator("h3")).toHaveText("Synthetic business-name requirement");
+    await expect(signIn).toContainText("We never ask for your business name here.");
+    await expect(signIn.getByTestId("link-signin-business-name")).toHaveAttribute(
+      "href",
+      /^\/sign-in\?start=/,
+    );
+    await expect(step.locator('[id^="rich-businessName-"]')).toHaveCount(0);
+
+    // The company-return questions, under their requirement's name, before any answer settles them.
+    const tax = page.getByTestId("rule-questions-tax");
+    await expect(tax.locator("h3")).toHaveText("Synthetic company-return requirement");
+    await expect(tax.getByTestId("radio-rich-tax-legalForm-company")).toHaveCount(1);
+    await expect(tax.getByTestId("radio-rich-tax-incorporatedAsCompany-true")).toHaveCount(1);
+    await expect(tax.getByTestId("radio-rich-tax-incorporatedInNigeria-true")).toHaveCount(0);
+
+    // A limited company settles what its records describe, which is shown answered and not asked.
+    await choose(page, "radio-legalForm-limited_company");
+    const records = page.getByTestId("filled-rich-tax-legalForm");
+    await expect(records).toContainText("What do the entity’s formation records describe?");
+    await expect(records).toContainText("Company. From your answer to ‘How is the business set up?’.");
+    await expect(tax.getByTestId("radio-rich-tax-legalForm-company")).toHaveCount(0);
+    // Records that describe a company settle whether it was incorporated as one: neither asked nor shown.
+    await expect(tax.getByTestId("radio-rich-tax-incorporatedAsCompany-true")).toHaveCount(0);
+    await expect(page.getByTestId("filled-rich-tax-incorporatedAsCompany")).toHaveCount(0);
+    // Registered with the CAC, it was incorporated in Nigeria, and its status is asked.
+    await choose(page, "radio-registrationStatus-registered");
+    await expect(page.getByTestId("filled-rich-tax-incorporatedInNigeria")).toContainText(
+      "Yes. From your answers to ‘How is the business set up?’ and ‘Is it registered with the Corporate Affairs Commission (CAC)?’.",
+    );
+    await choose(page, "radio-rich-tax-companyStatus-active");
+
+    // A partnership's records are the visitor's to describe: the status question goes, and its
+    // answer is kept for when it comes back.
+    await choose(page, "radio-legalForm-partnership");
+    await expect(tax.getByTestId("radio-rich-tax-companyStatus-active")).toHaveCount(0);
+    await expect(tax.getByTestId("radio-rich-tax-legalForm-company")).toHaveCount(1);
+    await expect(page.getByTestId("filled-rich-tax-incorporatedAsCompany")).toContainText("No.");
+    // The way back to the answer that filled it.
+    await page.getByTestId("button-change-rich-tax-incorporatedAsCompany").click();
+    await expect(page.locator("#legalForm")).toBeFocused();
+    await choose(page, "radio-legalForm-limited_company");
+    await expect(tax.getByTestId("radio-rich-tax-companyStatus-active")).toBeChecked();
+
+    // Products: with neither regulated supply nor manufacture in Nigeria, the rest is not asked.
+    await page.getByTestId("button-step-1").click();
+    const product = page.getByTestId("rule-questions-product");
+    await expect(product.locator("h3")).toHaveText("Synthetic product requirement");
+    await choose(page, "radio-rich-product-commercialSupplyOfRegulatedProducts-false");
+    await expect(product.getByTestId("radio-rich-product-activity-manufacture")).toHaveCount(1);
+    await choose(page, "radio-rich-product-manufacturesInNigeria-false");
+    await expect(product.getByTestId("radio-rich-product-activity-manufacture")).toHaveCount(0);
+
+    // Personal data: a business that says it uses no information about identifiable people is
+    // asked which kinds it keeps, ticked as boxes.
+    await page.getByTestId("button-step-2").click();
+    await page.getByTestId("select-state").selectOption("Lagos");
+    await page.getByTestId("button-step-4").click();
+    const privacy = page.getByTestId("rule-questions-privacy");
+    await expect(privacy.locator("h3")).toHaveText("Synthetic personal-data requirement");
+    await choose(page, "radio-rich-privacy-processesPersonalData-false");
+    const phones = privacy.getByTestId("check-rich-privacy-dataCategories-phone");
+    await phones.locator("xpath=..").click();
+    await expect(phones).toBeChecked();
+    const { failures } = await wcagFailures(page);
+    assert.deepEqual(failures, [], "the rule's questions have no automated WCAG 2.2 AA failure");
+    assert.deepEqual(await phoneProblems(page, "the personal-data questions"), []);
+    // Keeping customers' or staff's personal data settles that it does, and where the business is
+    // settles that it operates in Nigeria.
+    await page.setViewportSize({ width: 360, height: 640 });
+    await choose(page, "radio-personalData-yes");
+    await expect(page.getByTestId("filled-rich-privacy-processesPersonalData")).toContainText(
+      "Yes. From your answer to ‘Do you collect or keep customer or staff personal data?’.",
+    );
+    await expect(page.getByTestId("filled-rich-privacy-operatesInNigeria")).toContainText(
+      "Yes. From your answer to ‘Which state is the business in?’.",
+    );
+    await expect(phones).toHaveCount(0);
+    await expect(privacy.getByTestId("radio-rich-privacy-controllerRole-controller")).toHaveCount(1);
+
+    // What is sent: the answers asked, the filled ones in place, and none that a changed choice hid.
+    await page.getByTestId("button-step-5").click();
+    await page.getByTestId("button-run").click();
+    await page.getByTestId("assessment-result").waitFor();
+    assert.equal(sent.length, 1);
+    assert.deepEqual(sent[0]!.facts["rich"], {
+      tax: { legalForm: "company", incorporatedInNigeria: true, companyStatus: "active" },
+      product: { commercialSupplyOfRegulatedProducts: false, manufacturesInNigeria: false },
+      privacy: { processesPersonalData: true, operatesInNigeria: true },
+    });
+    assert.equal(sent[0]!.facts["factsVersion"], "checker-facts-v2");
+    assert.deepEqual(unknown, [], "every API call the page made has a test answer");
+    assert.deepEqual(errors, []);
+  } finally {
+    await close();
+  }
+});
+
+test("when the rules the check uses cannot be loaded, the steps that would ask their questions say so, and the check still runs on its own questions", async () => {
+  const { sent, respond } = checking();
+  const failing: Api = async (route, method, path, query) =>
+    method === "GET" && path === "/checker/questions"
+      ? route.fulfill({
+          status: 503,
+          contentType: "application/json",
+          body: JSON.stringify({ error: "Synthetic outage." }),
+        })
+      : respond(route, method, path, query);
+  const { page, errors, close } = await app.phone("/checker", failing);
+  try {
+    await ready(page);
+    const notice = page.getByText("Some questions could not be loaded", { exact: true });
+    await expect(notice).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByTestId("rule-questions-tax")).toHaveCount(0);
+    await page.getByTestId("button-step-2").click();
+    await expect(notice).toHaveCount(0);
+    await page.getByTestId("button-step-4").click();
+    await expect(notice).toBeVisible();
+    await page.getByTestId("button-step-5").click();
+    await page.getByTestId("button-run").click();
+    await page.getByTestId("assessment-result").waitFor();
+    assert.equal(sent.length, 1);
+    assert.equal(Object.hasOwn(sent[0]!.facts, "rich"), false);
+    assert.deepEqual(errors, []);
+  } finally {
+    await close();
+  }
+});
+
 test("'Start over' has nothing to clear on a fresh page, asks before it clears a visitor's answers, keeps them on 'Keep my answers' or Escape, and on 'Clear my answers' empties the page, removes the results and moves to the first step", async () => {
   const { respond } = checking();
   for (const kind of ["phone", "desktop"] as const) {

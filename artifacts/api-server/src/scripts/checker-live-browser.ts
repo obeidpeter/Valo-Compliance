@@ -14,10 +14,13 @@ const browser = await chromium.launch({
   args: ["--no-sandbox"],
 });
 const evidence: unknown[] = [];
+/** Three of the personal-data rule's questions, each given one of the three ways of not answering.
+ * Each is asked by the answers before it (checker-questionnaire.ts), once the business says it uses
+ * information about identifiable people. */
 const states = [
-  ["processesPersonalData", "unknown"],
+  ["section3Exception", "unknown"],
   ["operatesInNigeria", "unanswered"],
-  ["dataSubjectsInNigeria", "not_applicable"],
+  ["processingOccursInNigeria", "not_applicable"],
 ] as const;
 try {
   for (const width of [360, 1280]) {
@@ -27,10 +30,16 @@ try {
       await page.goto("http://127.0.0.1:80/checker", { waitUntil: "networkidle" });
       await page.getByTestId("text-anonymous").waitFor();
       assert.equal(await page.evaluate("document.documentElement.scrollWidth<=innerWidth"), true);
+      // The rule's questions are asked only while the rule is in use.
+      const inUse = await page.evaluate(async () => (await fetch("/api/checker/questions")).json());
+      assert.ok(
+        inUse.rules.some((rule: { family: string | null }) => rule.family === "privacy"),
+        "the personal-data rule is in use in development",
+      );
       for (let i = 0; i < 4; i++) await page.getByTestId("button-next").click();
-      await page.getByTestId("rich-section-privacy").locator("summary").click();
+      await page.getByTestId("radio-rich-privacy-processesPersonalData-true").locator("..").click();
       for (const [field, state] of states)
-        await page.locator(`#rich-privacy-${field}-state`).selectOption(state);
+        await page.getByTestId(`radio-rich-privacy-${field}-${state}`).locator("..").click();
       await page.keyboard.press("Tab");
       assert.equal(await page.evaluate("!!document.activeElement?.matches(':focus-visible')"), true);
       await page.getByTestId("button-next").click();

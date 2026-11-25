@@ -14,20 +14,28 @@ import {
 } from "lucide-react";
 import {
   useGetAssessment,
+  useListCheckerRulesInUse,
   usePreviewAssessment,
   usePreviewWorkspaceAssessment,
   useGetWorkspace,
   getGetAssessmentQueryKey,
   getGetWorkspaceQueryKey,
+  getListCheckerRulesInUseQueryKey,
   type CheckerFacts,
   type AssessmentResult,
 } from "@workspace/api-client-react";
-import { CHECKER_QUESTIONNAIRE } from "@workspace/valo-core/checker-questionnaire";
+import {
+  CHECKER_QUESTIONNAIRE,
+  RULE_FAMILIES,
+  RULE_STEPS,
+  withoutFilledAnswers,
+  type RuleFamily,
+} from "@workspace/valo-core/checker-questionnaire";
 import { AssessmentResultView } from "@/components/assessment-result";
 import { StepQuestions, type QuestionContext } from "@/components/checker-question";
 import { Review, SavePanel } from "@/components/checker-review";
 import { ConfirmDialog } from "@/components/confirm-dialog";
-import { RichCheckerFields } from "@/components/rich-checker-fields";
+import { NameQuestionsNeedSignIn, RuleQuestions } from "@/components/rule-questions";
 import { UnsavedNavigationDialog } from "@/components/unsaved-navigation-dialog";
 import { richQuestionTarget, type RichCheckerFacts } from "@/lib/rich-checker";
 import { Notice } from "@/components/states";
@@ -63,6 +71,8 @@ const STEPS = CHECKER_STEPS.map((step) => step.name);
 const REVIEW = STEPS.length - 1;
 /** The step that asks about size and turnover, which holds the one box that can hold a mistake. */
 const TURNOVER = stepOf("turnoverAmountKobo");
+/** The steps that ask rules' questions. */
+const RULE_STEP_NUMBERS: ReadonlySet<number> = new Set(Object.values(RULE_STEPS));
 
 export default function Checker() {
   const currentAccount = useAccountEpoch();
@@ -111,6 +121,30 @@ export default function Checker() {
     },
   });
   const profile = isSignedIn ? (ws.data?.profile ?? null) : null;
+  // The released rules the check uses today, read once: only their questions are asked (RUL-001).
+  const rulesInUse = useListCheckerRulesInUse({
+    query: {
+      queryKey: getListCheckerRulesInUseQueryKey(),
+      staleTime: Infinity,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  });
+  const rules = rulesInUse.data?.rules;
+  /** The kinds of rule in use, each with its rules' titles. */
+  const inUse = useMemo(() => {
+    const titles = new Map<RuleFamily, string[]>();
+    for (const rule of rules ?? [])
+      if (rule.family) titles.set(rule.family, [...(titles.get(rule.family) ?? []), rule.title]);
+    return titles;
+  }, [rules]);
+  /** The kinds of rule whose questions this visitor is asked: the business-name questions ask for
+   * names, so only a signed-in visitor is asked them. */
+  const families = useMemo(
+    () =>
+      new Set<RuleFamily>([...inUse.keys()].filter((family) => family !== "businessName" || !!isSignedIn)),
+    [inUse, isSignedIn],
+  );
 
   const set = <K extends keyof CheckerFacts>(k: K, v: CheckerFacts[K], chosen = true) => {
     setFacts((o) => ({ ...o, [k]: v }));
@@ -124,7 +158,7 @@ export default function Checker() {
       return next;
     });
   };
-  const final = useMemo(() => finaliseFacts(facts), [facts]);
+  const final = useMemo(() => finaliseFacts(facts, families), [facts, families]);
   const sig = JSON.stringify(final);
   const stale = result && result.sig !== sig;
   /** Answers that only this page holds: starting over would lose them. */
@@ -193,7 +227,8 @@ export default function Checker() {
       return;
     loadedFromAssessment.current = fromAssessmentId;
     const savedFacts = sourceAssessment.data.facts as RichCheckerFacts;
-    setFacts({ ...EMPTY_FACTS, ...savedFacts });
+    // A rule's saved answer that an earlier answer fills is read as filled, so it follows that answer.
+    setFacts(withoutFilledAnswers({ ...EMPTY_FACTS, ...savedFacts }));
     setSkipped(new Set());
     setAmountText(koboToNaira(savedFacts.turnoverAmountKobo ?? null));
     setAmountError(null);
@@ -230,32 +265,31 @@ export default function Checker() {
     );
   }
 
-  /** Shows a step and moves the focus to it, or to one of its optional questions. */
-  function show(n: number, field?: string) {
-    const target = field ? richQuestionTarget(field) : undefined;
-    setStep(target?.step ?? n);
+  /** Moves the focus to the first of these elements that can take it, or else to the step. */
+  function focusFirst(ids: readonly (string | undefined)[]) {
     requestAnimationFrame(() => {
-      if (target) {
-        const details = document.querySelector<HTMLDetailsElement>(
-          `[data-testid="rich-section-${target.section}"]`,
-        );
-        if (details) {
-          details.open = true;
-          const primary = document.getElementById(target.id);
-          const input =
-            primary && !primary.matches(":disabled")
-              ? primary
-              : target.fallbackId
-                ? document.getElementById(target.fallbackId)
-                : null;
-          if (input) {
-            input.focus();
-            return;
-          }
+      for (const id of ids) {
+        const element = id ? document.getElementById(id) : null;
+        if (element && !element.matches(":disabled")) {
+          element.focus();
+          return;
         }
       }
       document.getElementById("checker-step")?.focus();
     });
+  }
+
+  /** Shows a step and moves the focus to it, or to one of the rules' questions asked in it. */
+  function show(n: number, field?: string) {
+    const target = field ? richQuestionTarget(field) : undefined;
+    setStep(target?.step ?? n);
+    focusFirst(target ? [target.id, target.fallbackId] : []);
+  }
+
+  /** Shows one of the check's own questions, from a rule's answer that it fills. */
+  function goToQuestion(answer: string) {
+    setStep(stepOf(answer));
+    focusFirst([answer]);
   }
 
   function go(n: number, field?: string) {
@@ -433,8 +467,8 @@ export default function Checker() {
         }}
       >
         <p>
-          This replaces the answers you gave on this page with the ones in your business profile. Any optional
-          details you entered are kept.
+          This replaces the answers you gave on this page with the ones in your business profile. Your answers
+          to the questions asked for particular requirements are kept.
         </p>
       </ConfirmDialog>
 
@@ -500,17 +534,36 @@ export default function Checker() {
                 </p>
               )}
               <StepQuestions questions={CHECKER_QUESTIONNAIRE[step]?.questions ?? []} context={questions} />
-              {step === 0 && (
-                <>
-                  {!isSignedIn && <p className="hint">We never ask for your business name here.</p>}
-                  {isSignedIn && (
-                    <RichCheckerFields section="businessName" facts={facts} onChange={setFacts} />
-                  )}
-                  <RichCheckerFields section="tax" facts={facts} onChange={setFacts} />
-                </>
+              {step === 0 && !isSignedIn && !inUse.has("businessName") && (
+                <p className="hint">We never ask for your business name here.</p>
               )}
-              {step === 1 && <RichCheckerFields section="product" facts={facts} onChange={setFacts} />}
-              {step === 4 && <RichCheckerFields section="privacy" facts={facts} onChange={setFacts} />}
+              {RULE_FAMILIES.filter((family) => RULE_STEPS[family] === step && inUse.has(family)).map(
+                (family) =>
+                  families.has(family) ? (
+                    <RuleQuestions
+                      key={family}
+                      family={family}
+                      titles={inUse.get(family) ?? []}
+                      facts={facts}
+                      sent={final}
+                      onChange={setFacts}
+                      onGoTo={goToQuestion}
+                    />
+                  ) : (
+                    <NameQuestionsNeedSignIn
+                      key={family}
+                      titles={inUse.get(family) ?? []}
+                      onKeep={stashForAuth}
+                    />
+                  ),
+              )}
+              {rulesInUse.isError && RULE_STEP_NUMBERS.has(step) && (
+                <Notice title="Some questions could not be loaded">
+                  Some requirements ask questions of their own, and they could not be loaded just now. You can
+                  still check your requirements: those requirements will say what more they need. Reload the
+                  page to try again.
+                </Notice>
+              )}
               {step === REVIEW && (
                 <>
                   <p className="text-sm leading-relaxed text-muted-foreground">
@@ -629,7 +682,7 @@ export default function Checker() {
                 // oxlint-disable-next-line react/no-unstable-nested-components -- a render function the result calls, not a component
                 questionAction={(field) => {
                   const target = richQuestionTarget(field);
-                  return target && (target.section !== "businessName" || isSignedIn) ? (
+                  return target && families.has(target.section) ? (
                     <button
                       type="button"
                       className="btn btn-ghost btn-sm"

@@ -12,7 +12,9 @@ import {
   CHECKER_QUESTIONNAIRE,
   checkerQuestion,
   isAsked,
+  ruleAnswersToSend,
   stepOfQuestion,
+  type RuleFamily,
 } from "@workspace/valo-core/checker-questionnaire";
 import { formatNaira } from "./format";
 
@@ -118,14 +120,22 @@ export function stepDone(f: CheckerFacts, skipped: ReadonlySet<string>, step: nu
   return questions.length > 0 && questions.every((question) => answered(f, skipped, question));
 }
 
+/** No rule in use: a check asks only its own questions. */
+export const NO_RULES: ReadonlySet<RuleFamily> = new Set();
+
 /**
  * Normalise before sending. A question the check skips sends no answer it was given before: the
  * product types become not applicable when the business neither makes nor imports goods, and are left
- * out otherwise; the local government area is sent as unanswered until a state is chosen.
+ * out otherwise; the local government area is sent as unanswered until a state is chosen. Of the
+ * rules' answers, only those of the rules in use (`families`) are sent, with the answers the earlier
+ * ones fill, and only while their questions are asked (`ruleAnswersToSend`).
  */
-export function finaliseFacts(f: RichCheckerFacts): RichCheckerFacts {
+export function finaliseFacts(
+  f: RichCheckerFacts,
+  families: ReadonlySet<RuleFamily> = NO_RULES,
+): RichCheckerFacts {
   const out: RichCheckerFacts = { ...f };
-  if (f.rich) out.rich = normaliseRichAnswers(f.rich) as NonNullable<RichCheckerFacts["rich"]>;
+  delete out.rich;
   if (Array.isArray(out.activities)) {
     const a = out.activities.map((x) => x.trim()).filter(Boolean);
     out.activities = a.length ? a : "unanswered";
@@ -152,6 +162,14 @@ export function finaliseFacts(f: RichCheckerFacts): RichCheckerFacts {
     out.turnoverAmountKobo = null;
   }
   if (!out.turnoverAmountKobo) out.turnoverAmountKobo = null;
+  const rich = ruleAnswersToSend(
+    { ...out, ...(f.rich ? { rich: normaliseRichAnswers(f.rich) } : {}) },
+    families,
+  );
+  if (Object.keys(rich).length) {
+    out.rich = rich as NonNullable<RichCheckerFacts["rich"]>;
+    out.factsVersion = "checker-facts-v2";
+  } else delete out.factsVersion;
   return out;
 }
 

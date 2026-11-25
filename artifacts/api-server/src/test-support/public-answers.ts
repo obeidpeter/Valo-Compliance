@@ -159,6 +159,45 @@ answers["GET /public/discovery"] = api.GetPublicDiscoveryResponse.parse({
   ],
 });
 
+/** The rules the requirements check uses: one of each kind that asks questions of its own, so that
+ * the check draws all of their questions, and one that reads only the check's own (RUL-001). */
+export const rulesInUse = api.ListCheckerRulesInUseResponse.parse({
+  asOfDate: "2026-11-18",
+  rules: [
+    {
+      ruleId: "synthetic-business-name-rule",
+      ruleVersion: 1,
+      title: "Synthetic business-name requirement",
+      family: "businessName",
+    },
+    {
+      ruleId: "synthetic-company-return-rule",
+      ruleVersion: 1,
+      title: "Synthetic company-return requirement",
+      family: "tax",
+    },
+    {
+      ruleId: "synthetic-personal-data-rule",
+      ruleVersion: 1,
+      title: "Synthetic personal-data requirement",
+      family: "privacy",
+    },
+    {
+      ruleId: "synthetic-product-rule",
+      ruleVersion: 1,
+      title: "Synthetic product requirement",
+      family: "product",
+    },
+    {
+      ruleId: "synthetic-own-questions-rule",
+      ruleVersion: 1,
+      title: "Synthetic requirement read from the check's own questions",
+      family: null,
+    },
+  ],
+});
+answers["GET /checker/questions"] = rulesInUse;
+
 /** Answers the web server's API calls, from the synthetic API (test-support/synthetic-api.ts). */
 export const serverAnswer = (method: string, url: URL) => {
   const body = answers[`${method} ${url.pathname.replace(/^\/api/, "")}`];
