@@ -205,6 +205,7 @@ export * from './manualLibraryRevision';
 export * from './manualLibraryRevisionFileFormat';
 export * from './manualLibraryRevisionKind';
 export * from './manualLibraryRevisionLive';
+export * from './manualLibraryRevisionReach';
 export * from './manualLibraryRevisionRelatedGuidesItem';
 export * from './manualLibraryRevisionRelatedGuidesItemKind';
 export * from './manualLibraryRevisionState';

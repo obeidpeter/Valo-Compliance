@@ -2322,6 +2322,21 @@ export type ManualLibraryRevisionRelatedGuidesItem = {
   live: boolean;
 };
 
+/**
+ * For a template's published edition, whom its withdrawal would tell: the workspaces that bought the template (any of its editions, under a verified order) and those that made documents from this edition, each counted once in workspaces, as its notices count them (docs/architecture/library-holds.md, slice 1). Null for a guide, which has no buyers or documents, for an entry with no published edition, and on a database without the counts.
+ */
+export type ManualLibraryRevisionReach = {
+  version: number;
+  /** @minimum 0 */
+  workspaces: number;
+  /** @minimum 0 */
+  bought: number;
+  /** @minimum 0 */
+  documentWorkspaces: number;
+  /** @minimum 0 */
+  documents: number;
+} | null;
+
 export type ManualFormFitState = typeof ManualFormFitState[keyof typeof ManualFormFitState];
 
 
@@ -2392,6 +2407,14 @@ export interface ManualLibraryRevision {
      * @nullable
      */
   previousRelease: number | null;
+  /** For a template's published edition, whom its withdrawal would tell: the workspaces that bought the template (any of its editions, under a verified order) and those that made documents from this edition, each counted once in workspaces, as its notices count them (docs/architecture/library-holds.md, slice 1). Null for a guide, which has no buyers or documents, for an entry with no published edition, and on a database without the counts. */
+  reach: ManualLibraryRevisionReach;
+  /**
+     * For a withdrawn template edition, how many workspaces its withdrawal told, from its notices. Null otherwise.
+     * @minimum 0
+     * @nullable
+     */
+  told: number | null;
 }
 
 export type ManualLibraryDraftKind = typeof ManualLibraryDraftKind[keyof typeof ManualLibraryDraftKind];

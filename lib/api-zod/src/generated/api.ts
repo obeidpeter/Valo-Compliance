@@ -4386,6 +4386,16 @@ export const getManualLibraryRevisionResponseFormFitOneProblemsItemMax = 400;
 
 export const getManualLibraryRevisionResponseFormFitOneProblemsMax = 200;
 
+export const getManualLibraryRevisionResponseReachOneWorkspacesMin = 0;
+
+export const getManualLibraryRevisionResponseReachOneBoughtMin = 0;
+
+export const getManualLibraryRevisionResponseReachOneDocumentWorkspacesMin = 0;
+
+export const getManualLibraryRevisionResponseReachOneDocumentsMin = 0;
+
+export const getManualLibraryRevisionResponseToldMin = 0;
+
 
 
 export const GetManualLibraryRevisionResponse = zod.object({
@@ -4424,7 +4434,15 @@ export const GetManualLibraryRevisionResponse = zod.object({
   "kind": zod.union([zod.literal('practical_guide'),zod.literal('industry_introduction'),zod.literal('industry_pack'),zod.literal('template'),zod.literal('premium_template'),zod.literal('regulatory_article'),zod.literal(null)]).nullable(),
   "live": zod.boolean()
 })).describe('The related guides by their library items, as the editor sees them: the title and kind of each item\'s latest version, whether a version of it is released now, or nulls for an item not in the library yet.'),
-  "previousRelease": zod.int().nullable().describe('The latest earlier version of this entry that was released, or null. Releasing this version then needs a note of what changed (docs/architecture/guidance-currency.md, slice 3).')
+  "previousRelease": zod.int().nullable().describe('The latest earlier version of this entry that was released, or null. Releasing this version then needs a note of what changed (docs/architecture/guidance-currency.md, slice 3).'),
+  "reach": zod.union([zod.object({
+  "version": zod.int(),
+  "workspaces": zod.int().min(getManualLibraryRevisionResponseReachOneWorkspacesMin),
+  "bought": zod.int().min(getManualLibraryRevisionResponseReachOneBoughtMin),
+  "documentWorkspaces": zod.int().min(getManualLibraryRevisionResponseReachOneDocumentWorkspacesMin),
+  "documents": zod.int().min(getManualLibraryRevisionResponseReachOneDocumentsMin)
+}),zod.null()]).describe('For a template\'s published edition, whom its withdrawal would tell: the workspaces that bought the template (any of its editions, under a verified order) and those that made documents from this edition, each counted once in workspaces, as its notices count them (docs/architecture/library-holds.md, slice 1). Null for a guide, which has no buyers or documents, for an entry with no published edition, and on a database without the counts.'),
+  "told": zod.int().min(getManualLibraryRevisionResponseToldMin).nullable().describe('For a withdrawn template edition, how many workspaces its withdrawal told, from its notices. Null otherwise.')
 })
 
 
@@ -4478,6 +4496,16 @@ export const saveManualLibraryDraftResponseFormFitOneProblemsItemMax = 400;
 
 export const saveManualLibraryDraftResponseFormFitOneProblemsMax = 200;
 
+export const saveManualLibraryDraftResponseReachOneWorkspacesMin = 0;
+
+export const saveManualLibraryDraftResponseReachOneBoughtMin = 0;
+
+export const saveManualLibraryDraftResponseReachOneDocumentWorkspacesMin = 0;
+
+export const saveManualLibraryDraftResponseReachOneDocumentsMin = 0;
+
+export const saveManualLibraryDraftResponseToldMin = 0;
+
 
 
 export const SaveManualLibraryDraftResponse = zod.object({
@@ -4516,7 +4544,15 @@ export const SaveManualLibraryDraftResponse = zod.object({
   "kind": zod.union([zod.literal('practical_guide'),zod.literal('industry_introduction'),zod.literal('industry_pack'),zod.literal('template'),zod.literal('premium_template'),zod.literal('regulatory_article'),zod.literal(null)]).nullable(),
   "live": zod.boolean()
 })).describe('The related guides by their library items, as the editor sees them: the title and kind of each item\'s latest version, whether a version of it is released now, or nulls for an item not in the library yet.'),
-  "previousRelease": zod.int().nullable().describe('The latest earlier version of this entry that was released, or null. Releasing this version then needs a note of what changed (docs/architecture/guidance-currency.md, slice 3).')
+  "previousRelease": zod.int().nullable().describe('The latest earlier version of this entry that was released, or null. Releasing this version then needs a note of what changed (docs/architecture/guidance-currency.md, slice 3).'),
+  "reach": zod.union([zod.object({
+  "version": zod.int(),
+  "workspaces": zod.int().min(saveManualLibraryDraftResponseReachOneWorkspacesMin),
+  "bought": zod.int().min(saveManualLibraryDraftResponseReachOneBoughtMin),
+  "documentWorkspaces": zod.int().min(saveManualLibraryDraftResponseReachOneDocumentWorkspacesMin),
+  "documents": zod.int().min(saveManualLibraryDraftResponseReachOneDocumentsMin)
+}),zod.null()]).describe('For a template\'s published edition, whom its withdrawal would tell: the workspaces that bought the template (any of its editions, under a verified order) and those that made documents from this edition, each counted once in workspaces, as its notices count them (docs/architecture/library-holds.md, slice 1). Null for a guide, which has no buyers or documents, for an entry with no published edition, and on a database without the counts.'),
+  "told": zod.int().min(saveManualLibraryDraftResponseToldMin).nullable().describe('For a withdrawn template edition, how many workspaces its withdrawal told, from its notices. Null otherwise.')
 })
 
 
@@ -4547,6 +4583,16 @@ export const actOnManualLibraryResponseLiveOneDigestRegExp = new RegExp('^[0-9a-
 export const actOnManualLibraryResponseFormFitOneProblemsItemMax = 400;
 
 export const actOnManualLibraryResponseFormFitOneProblemsMax = 200;
+
+export const actOnManualLibraryResponseReachOneWorkspacesMin = 0;
+
+export const actOnManualLibraryResponseReachOneBoughtMin = 0;
+
+export const actOnManualLibraryResponseReachOneDocumentWorkspacesMin = 0;
+
+export const actOnManualLibraryResponseReachOneDocumentsMin = 0;
+
+export const actOnManualLibraryResponseToldMin = 0;
 
 
 
@@ -4586,7 +4632,15 @@ export const ActOnManualLibraryResponse = zod.object({
   "kind": zod.union([zod.literal('practical_guide'),zod.literal('industry_introduction'),zod.literal('industry_pack'),zod.literal('template'),zod.literal('premium_template'),zod.literal('regulatory_article'),zod.literal(null)]).nullable(),
   "live": zod.boolean()
 })).describe('The related guides by their library items, as the editor sees them: the title and kind of each item\'s latest version, whether a version of it is released now, or nulls for an item not in the library yet.'),
-  "previousRelease": zod.int().nullable().describe('The latest earlier version of this entry that was released, or null. Releasing this version then needs a note of what changed (docs/architecture/guidance-currency.md, slice 3).')
+  "previousRelease": zod.int().nullable().describe('The latest earlier version of this entry that was released, or null. Releasing this version then needs a note of what changed (docs/architecture/guidance-currency.md, slice 3).'),
+  "reach": zod.union([zod.object({
+  "version": zod.int(),
+  "workspaces": zod.int().min(actOnManualLibraryResponseReachOneWorkspacesMin),
+  "bought": zod.int().min(actOnManualLibraryResponseReachOneBoughtMin),
+  "documentWorkspaces": zod.int().min(actOnManualLibraryResponseReachOneDocumentWorkspacesMin),
+  "documents": zod.int().min(actOnManualLibraryResponseReachOneDocumentsMin)
+}),zod.null()]).describe('For a template\'s published edition, whom its withdrawal would tell: the workspaces that bought the template (any of its editions, under a verified order) and those that made documents from this edition, each counted once in workspaces, as its notices count them (docs/architecture/library-holds.md, slice 1). Null for a guide, which has no buyers or documents, for an entry with no published edition, and on a database without the counts.'),
+  "told": zod.int().min(actOnManualLibraryResponseToldMin).nullable().describe('For a withdrawn template edition, how many workspaces its withdrawal told, from its notices. Null otherwise.')
 })
 
 

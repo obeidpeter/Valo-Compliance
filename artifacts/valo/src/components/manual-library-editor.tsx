@@ -25,6 +25,7 @@ import {
   reviewStatus,
 } from "@/lib/library-review";
 import { changeHint, changeLabel } from "@/lib/library-change";
+import { reachLine, toldLine, withdrawalHelp } from "@/lib/library-reach";
 import { FormTextOutline } from "./form-text-outline";
 import { RelatedGuidesPicker } from "./related-guides-picker";
 import { PlainText } from "./resource-parts";
@@ -780,6 +781,16 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
               {snapshot.live && (
                 <p className="mt-3 text-sm">Readers can see version {snapshot.live.version}.</p>
               )}
+              {snapshot.live && snapshot.reach && (
+                <p className="mt-1 text-sm" data-testid="text-withdrawal-reach">
+                  {reachLine(snapshot.reach)}
+                </p>
+              )}
+              {snapshot.told !== null && (
+                <p className="mt-3 text-sm" data-testid="text-withdrawal-told">
+                  {toldLine(snapshot.told)}
+                </p>
+              )}
               <div className="mt-4 flex flex-wrap gap-3">
                 {snapshot.fileFormat && (
                   <button
@@ -939,8 +950,7 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
                     Why is it withdrawn?
                   </label>
                   <p id="manual-withdraw-reason-help" className="text-sm text-muted-foreground">
-                    Readers can no longer open version {snapshot.live.version}. The customers who bought or
-                    used it are told, with this reason, so write it for them, in 20 to 1,000 characters.
+                    {withdrawalHelp(snapshot.live.version, isTemplate(snapshot.kind), snapshot.reach)}
                   </p>
                   <textarea
                     id="manual-withdraw-reason"
