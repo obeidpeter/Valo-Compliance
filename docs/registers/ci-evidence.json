@@ -1335,8 +1335,8 @@
       "requirement": "AI-008",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/ai-lanes/customer-rubric.integration.test.ts",
-      "test": "each drafting case, scored on what the app kept for it: failures where the app falls short, the binding's gaps named, the rest left for the reviewer",
-      "proves": "Put through the app's own drafting service with a stand-in for the AI provider, the 51 cases the rubric scores give: two failures where the app falls short (INV-11 and QUO-12), none critical; eight cases waiting on facts the suite's binding does not give the app; and 41 with every amount, word, payload and log line checked, left for the reviewer. The stand-in's plan is no evidence of an AI's quality, and nothing is accepted."
+      "test": "each drafting case, scored on what the app kept for it: failures where the app falls short, every fact given to the app, the rest left for the reviewer",
+      "proves": "Put through the app's own drafting service with a stand-in for the AI provider, the 51 cases the rubric scores, each given every one of its facts by the suite's binding, give four failures where the app falls short (INV-11, QUO-12, PRO-04 and PRO-06), none critical, and 47 with every amount, word, payload and log line checked, left for the reviewer. The stand-in's plan is no evidence of an AI's quality, and nothing is accepted."
     },
     {
       "requirement": "AI-008",
