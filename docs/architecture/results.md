@@ -152,6 +152,41 @@ result carries its own checksum, and is shown only while the checksum matches.
 - **The prepared personal-data rule relates the privacy notice (TPL-29).** The rule is not signed and
   TPL-29 is held, so no result shows it yet.
 
+**Slice 2: official pages, fees and deadlines.**
+- **A rule may record its authority's official page and its figures.** The figures are fees,
+  deadlines, rates and thresholds, since CMP-006 names all four. Each is checked as its release is:
+  - a figure is in the words its source quotes, which the release checks against the official text,
+    so nothing is shown that the source does not say. A fee is the government's: a rule records only
+    its source's words, never a Valo or provider charge;
+  - the page is on one of the policy's official hosts, as the sources must be, on both release routes.
+    The owner signs it with the rule.
+- **A requirement says "Official page"**, where the design proposed "Where to act". A privacy notice
+  is not filed with the regulator, so "Official page" is true of all four prepared rules.
+- **A requirement shows each figure in its source's words, with the passage it rests on.** A fee is
+  shown as "Government fee". When its rule records no fee, or no deadline, it says "Confirm with the
+  authority" after "Fees and deadlines", "Fees" or "Deadlines". No date is scheduled from a figure.
+- **A requirement these answers do not indicate shows neither** a page nor a figure, so it suggests no
+  action.
+- **The result's official sources** are the pages of its requirements that may apply. A released rule
+  in force that is held gives no result but still sends the business to its page (CMP-007, EDP-012).
+  Holds of that kind are stale evidence, conflicting versions and a changed calculation. A withdrawn
+  rule, or one not yet in force, sends nobody. A result with none keeps the Corporate Affairs
+  Commission's service page.
+- **The summary a customer copies** names the same page and figures.
+- **The owner's panel** shows the page each rule links and its figures.
+- **The prepared rules' pages**, each read on 25 November 2026 before it was recorded:
+  - the business-name rule: the Corporate Affairs Commission's registration portal, which calls itself
+    the Commission's official registration portal and offers the steps for registering a business;
+  - the company-return rule: the Nigeria Revenue Service's site, which serves the Act. Its title reads
+    "Nigeria Revenue Service (NRS) | Official Tax Authority of Nigeria". The rest of the page shows a
+    browser a check for robots, so where on it a return is filed was not read;
+  - the personal-data rule: the Nigeria Data Protection Commission's site, which serves the Act. Its
+    pages for registering data controllers, filing audits and reporting breaches are reached from it;
+  - the product rule: NAFDAC's page for small businesses. It says how to register a product, points to
+    the online registration portal and lists what registration costs.
+
+  None records a figure.
+
 ## Slices
 
 1. **Documents.** The catalogue's `templateIds` filter, the documents under each requirement and
@@ -165,15 +200,18 @@ result carries its own checksum, and is shown only while the checksum matches.
 
 1. **The prepared rules' records.** These are proposals, each for the owner to confirm:
    - the personal-data rule's privacy notice;
-   - each rule's official route;
-   - each fee and deadline, with its passage, when one is recorded.
+   - each rule's official page. The tax authority's could be read only as far as its title;
+   - each fee and deadline, with its passage, when one is recorded. NAFDAC's page for small
+     businesses lists what registering a product costs. Showing those costs needs that page as one of
+     the product rule's sources and the owner's approval of each figure's words.
 2. **The words**, all of them proposals:
    - "Documents for this requirement";
    - "Recommended documents", with its sentence "These are the documents for the requirements above
      that are likely relevant. Using one does not by itself meet a requirement.";
    - "The documents for these requirements could not be loaded. Your results above are not
      affected.";
-   - "Where to act";
-   - "Fee: confirm with the authority" and "Deadline: confirm with the authority";
+   - "Official page";
+   - "Government fee", "Deadline", "Rate" and "Threshold";
+   - "Confirm with the authority.", after "Fees and deadlines", "Fees" or "Deadlines";
    - the sentences on what is not checked;
    - the three dates' labels.

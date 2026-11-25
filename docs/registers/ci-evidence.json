@@ -1052,6 +1052,48 @@
       "proves": "In the privacy candidate evaluator, a household contact list reused for commercial promotions is likely relevant, but the timing under section 27(1) stays “not established” and no automatic statutory deadline is set."
     },
     {
+      "requirement": "CMP-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/valo-checker-explanations.test.ts",
+      "test": "a rule's route and figures are carried to its requirement, and the result's official sources are the routes of the requirements that may apply and of the released rules held from it",
+      "proves": "A synthetic rule's fee reaches its requirement in the result only as the rule records it, a rule recording none adds nothing to its requirement, and a fee, deadline, rate or threshold is refused unless it is in the words of the passage its own source quotes."
+    },
+    {
+      "requirement": "CMP-006",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/result-words.test.ts",
+      "test": "a requirement shows each figure its rule records with the passage it rests on, says 'Confirm with the authority' for the fees and deadlines it records none of, and shows nothing when these answers do not indicate it",
+      "proves": "A requirement shows each recorded figure in its source's words with the passage it rests on, names a fee as a government fee, says “Confirm with the authority” for the fees and deadlines its rule records none of, and shows no figure when these answers do not indicate it."
+    },
+    {
+      "requirement": "CMP-006",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/assessment-result.test.tsx",
+      "test": "a requirement links its authority's official page, shows each figure its rule records with the passage it rests on, and says 'Confirm with the authority' for the rest; one these answers do not indicate shows neither",
+      "proves": "Drawn on the server from a synthetic result, a requirement shows its rule's government fee with the passage it rests on and “Confirm with the authority” for its deadlines, a requirement whose rule records none says to confirm both, and one these answers do not indicate shows none."
+    },
+    {
+      "requirement": "CMP-006",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/requirements-brief.test.ts",
+      "test": "the summary names the official page of each requirement that may apply, with its figures and what to confirm with the authority",
+      "proves": "The plain-text summary a customer copies gives each requirement's recorded figures with their passage and “Confirm with the authority” for the rest, and none for a requirement these answers do not indicate."
+    },
+    {
+      "requirement": "CMP-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/owner-rule-signoff.test.ts",
+      "test": "each rule prepared in the repository links its authority's own page, on a host the guidance policy lists, and records no figure",
+      "proves": "None of the four rules prepared for the owner's sign-off records a fee, deadline, rate or threshold, so their requirements tell the customer to confirm them with the authority."
+    },
+    {
+      "requirement": "CMP-006",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-screens-accessibility.test.ts",
+      "test": "a requirement names its authority's official page and shows each figure its rule records with the passage it rests on, says 'Confirm with the authority' for the rest, and the result's official sources are those pages",
+      "proves": "On an emulated phone, a signed-out visitor's synthetic result shows a requirement's government fee with the passage it rests on and “Confirm with the authority” for the rest, with no automated WCAG 2.2 AA failure."
+    },
+    {
       "requirement": "CMP-007",
       "job": "foundation",
       "file": "scripts/src/valo/rule-evaluation.test.ts",
@@ -1085,6 +1127,41 @@
       "file": "artifacts/valo/src/components/assessment-result.test.tsx",
       "test": "the result page shows why a held rule gives no result and links each official route",
       "proves": "The checker's result page, rendered on the server from a synthetic result with no items, lists a held rule among what is not covered, with its stale-evidence reason in the site's words (its review date has passed, or its sources have not been checked yet), says no published rule covers these answers yet and links the official route to open in a new tab."
+    },
+    {
+      "requirement": "CMP-007",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/valo-checker-explanations.test.ts",
+      "test": "a rule's route and figures are carried to its requirement, and the result's official sources are the routes of the requirements that may apply and of the released rules held from it",
+      "proves": "A released synthetic rule held for stale evidence gives no result but its official page is listed among the result's official sources, a withdrawn rule or one not yet in force adds none, and a result whose rules record no page keeps the Corporate Affairs Commission's service page."
+    },
+    {
+      "requirement": "CMP-007",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/owner-rule-signoff.test.ts",
+      "test": "a rule's official page is in the manifest the owner signs, and a page off the policy's official hosts holds the rule",
+      "proves": "A prepared rule's official page is part of the manifest the owner signs, and a page that is not on one of the guidance policy's official hosts holds the rule, in the screen's words."
+    },
+    {
+      "requirement": "CMP-007",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/owner-rule-signoff.test.ts",
+      "test": "each rule prepared in the repository links its authority's own page, on a host the guidance policy lists, and records no figure",
+      "proves": "Each of the four rules prepared for the owner's sign-off links its authority's own page: the Corporate Affairs Commission, the Nigeria Revenue Service, the Nigeria Data Protection Commission and NAFDAC, each on a host the guidance policy lists."
+    },
+    {
+      "requirement": "CMP-007",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/assessment-result.test.tsx",
+      "test": "a requirement links its authority's official page, shows each figure its rule records with the passage it rests on, and says 'Confirm with the authority' for the rest; one these answers do not indicate shows neither",
+      "proves": "Drawn on the server from a synthetic result, a requirement links its authority's official page in a new tab, the result lists that page among its official sources, and a requirement these answers do not indicate links none."
+    },
+    {
+      "requirement": "CMP-007",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-screens-accessibility.test.ts",
+      "test": "a requirement names its authority's official page and shows each figure its rule records with the passage it rests on, says 'Confirm with the authority' for the rest, and the result's official sources are those pages",
+      "proves": "On an emulated phone, a signed-out visitor's synthetic result names the requirement's official page and links it, lists the same page among the result's official sources, and has no automated WCAG 2.2 AA failure."
     },
     {
       "requirement": "DOC-001",
