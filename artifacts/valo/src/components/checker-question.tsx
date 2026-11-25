@@ -151,6 +151,7 @@ function Question({ question, context }: { question: CheckerQuestion; context: Q
       return (
         <AnswerOr
           {...common}
+          {...hint}
           label={question.label}
           value={text}
           markers={markers}

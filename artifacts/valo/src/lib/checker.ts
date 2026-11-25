@@ -73,8 +73,6 @@ export function factsFromProfile(p: Profile): CheckerFacts {
   };
 }
 
-export const needsProducts = (f: CheckerFacts) => f.manufacturing === "yes" || f.importing === "yes";
-
 /**
  * The checker's steps in order, each with the questions it asks, from the questionnaire
  * (`@workspace/valo-core/checker-questionnaire`). The last step reviews the answers. The optional
@@ -91,7 +89,8 @@ export const stepOf = stepOfQuestion;
 
 /**
  * Whether the checker asks a question, given the other answers. RUL-001: "irrelevant questions are
- * skipped". Each question's condition is in the questionnaire.
+ * skipped". Each question's condition is in the questionnaire, which the engine's `missingQuestions`
+ * reads too, so a result lists as unanswered only a question this page asks.
  */
 export function asked(f: CheckerFacts, question: string): boolean {
   return isAsked(f, question);
@@ -119,7 +118,11 @@ export function stepDone(f: CheckerFacts, skipped: ReadonlySet<string>, step: nu
   return questions.length > 0 && questions.every((question) => answered(f, skipped, question));
 }
 
-/** Normalise before sending: dependent questions become not_applicable / omitted. */
+/**
+ * Normalise before sending. A question the check skips sends no answer it was given before: the
+ * product types become not applicable when the business neither makes nor imports goods, and are left
+ * out otherwise; the local government area is sent as unanswered until a state is chosen.
+ */
 export function finaliseFacts(f: RichCheckerFacts): RichCheckerFacts {
   const out: RichCheckerFacts = { ...f };
   if (f.rich) out.rich = normaliseRichAnswers(f.rich) as NonNullable<RichCheckerFacts["rich"]>;
@@ -127,7 +130,7 @@ export function finaliseFacts(f: RichCheckerFacts): RichCheckerFacts {
     const a = out.activities.map((x) => x.trim()).filter(Boolean);
     out.activities = a.length ? a : "unanswered";
   }
-  if (needsProducts(out)) {
+  if (asked(out, "productTypes")) {
     if (Array.isArray(out.productTypes)) {
       const a = out.productTypes.map((x) => x.trim()).filter(Boolean);
       out.productTypes = a.length ? a : "unanswered";
@@ -137,8 +140,7 @@ export function finaliseFacts(f: RichCheckerFacts): RichCheckerFacts {
   } else {
     delete out.productTypes;
   }
-  if (out.premises === "no") out.lga = "not_applicable";
-  else if (!out.lga.trim()) out.lga = "unanswered";
+  if (!asked(out, "lga") || !out.lga.trim()) out.lga = "unanswered";
   else out.lga = out.lga.trim();
   if (out.turnoverBand === "not_applicable") {
     out.turnoverYear = "not_applicable";

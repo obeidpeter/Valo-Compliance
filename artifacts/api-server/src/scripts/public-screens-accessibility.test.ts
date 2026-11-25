@@ -178,7 +178,6 @@ test("the requirements check chooses no answer for a visitor: every question sta
     const boxes = [
       '[data-testid="input-activities-0"]',
       '[data-testid="select-state"]',
-      '[data-testid="input-lga"]',
       '[data-testid="input-employees"]',
       '[data-testid="input-amount"]',
       '[data-testid="input-turnover-year"]',
@@ -196,6 +195,17 @@ test("the requirements check chooses no answer for a visitor: every question sta
         }
     }
     assert.deepEqual(seen, boxes, "every answer box was looked at");
+    assert.deepEqual(await ticked(page), []);
+
+    // The local government area is asked once a state is chosen, and its box starts empty too.
+    await page.getByTestId("button-step-2").click();
+    await expect(step.getByTestId("input-lga")).toHaveCount(0);
+    await expect(step).toContainText("The local government area is asked once you choose a state.");
+    await page.getByTestId("select-state").selectOption("Lagos");
+    assert.equal(await step.getByTestId("input-lga").inputValue(), "");
+    await page.getByTestId("select-state").selectOption("");
+    await expect(step.getByTestId("input-lga")).toHaveCount(0);
+    assert.deepEqual(await chosen(page), []);
     assert.deepEqual(await ticked(page), []);
 
     // "I do not know" and "Skip for now" are separate choices, and neither is made for the visitor.
@@ -349,11 +359,14 @@ test("on a phone, every step of the requirements check, its review, its results 
   };
   try {
     await ready(page);
-    // An answer that brings out the question asked only of importers. The others are all in view:
-    // the local government area, and the questions about the turnover figure.
+    // An answer that brings out the question asked only of importers, and a state, which brings
+    // out the local government area. The questions about the turnover figure are in view already.
     await page.getByTestId("button-step-1").click();
     await choose(page, "radio-importing-yes");
     await expect(page.getByTestId("input-productTypes-0")).toHaveCount(1);
+    await page.getByTestId("button-step-2").click();
+    await page.getByTestId("select-state").selectOption("Lagos");
+    await expect(page.getByTestId("input-lga")).toHaveCount(1);
     // And one that ticks a step whose place in the list of steps is past the screen's edge, where
     // the tick's hidden words must not widen the page.
     await page.getByTestId("button-step-4").click();

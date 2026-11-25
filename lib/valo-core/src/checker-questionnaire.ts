@@ -193,13 +193,15 @@ export const CHECKER_QUESTIONNAIRE: readonly CheckerStep[] = [
         answer: "productTypes",
         kind: "list",
         label: "Which kinds of product?",
-        hint: "Asked because you manufacture or import goods.",
+        hint: "Asked because you make, process or import goods, or are not sure whether you do.",
         placeholder: "e.g. Packaged snacks",
         notAnswered: KNOWN_OR_SKIPPED,
+        // Asked too of a business that does not know whether it makes or imports goods: the rules
+        // that read the products need them unless it does neither.
         askedWhen: {
           any: [
-            { answer: "manufacturing", is: ["yes"] },
-            { answer: "importing", is: ["yes"] },
+            { answer: "manufacturing", is: ["yes", "unknown"] },
+            { answer: "importing", is: ["yes", "unknown"] },
           ],
         },
       },
@@ -228,10 +230,13 @@ export const CHECKER_QUESTIONNAIRE: readonly CheckerStep[] = [
         answer: "lga",
         kind: "area",
         label: "Which local government area (LGA)?",
+        hint: "Where the business is run from, even if that is a home.",
         placeholder: "e.g. Ikeja",
         notAnswered: KNOWN_OR_SKIPPED,
-        askedWhen: { answer: "premises", isNot: ["no"] },
-        skippedNote: "The local government area is skipped because you have no premises.",
+        // Asked once a state is chosen, with or without premises: a business run from home is in
+        // an area too, and a rule for one area needs it.
+        askedWhen: { answer: "state", is: STATES },
+        skippedNote: "The local government area is asked once you choose a state.",
       },
     ],
   },

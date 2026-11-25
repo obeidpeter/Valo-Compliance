@@ -38,11 +38,18 @@ test("a question that depends on another answer is asked only when that answer m
   assert.equal(asked(EMPTY_FACTS, "productTypes"), false);
   assert.equal(asked(facts({ manufacturing: "yes" }), "productTypes"), true);
   assert.equal(asked(facts({ importing: "yes" }), "productTypes"), true);
-  assert.equal(asked(facts({ manufacturing: "no", importing: "unknown" }), "productTypes"), false);
+  // Not knowing whether the business makes or imports goods asks for its products too.
+  assert.equal(asked(facts({ manufacturing: "no", importing: "unknown" }), "productTypes"), true);
+  assert.equal(asked(facts({ manufacturing: "unknown" }), "productTypes"), true);
+  assert.equal(asked(facts({ manufacturing: "no", importing: "no" }), "productTypes"), false);
+  assert.equal(asked(facts({ manufacturing: "no", importing: "unanswered" }), "productTypes"), false);
 
-  assert.equal(asked(EMPTY_FACTS, "lga"), true);
-  assert.equal(asked(facts({ premises: "unknown" }), "lga"), true);
-  assert.equal(asked(facts({ premises: "no" }), "lga"), false);
+  // The local government area is asked once a state is chosen, premises or not.
+  assert.equal(asked(EMPTY_FACTS, "lga"), false);
+  assert.equal(asked(facts({ state: "unknown" }), "lga"), false);
+  assert.equal(asked(facts({ state: "Lagos" }), "lga"), true);
+  assert.equal(asked(facts({ state: "FCT", premises: "no" }), "lga"), true);
+  assert.equal(asked(facts({ state: "Bayelsa", premises: "unknown" }), "lga"), true);
 
   const details = [
     "turnoverAmountKobo",
@@ -98,10 +105,11 @@ test("a step is done only when every question it asks has been dealt with; the o
   assert.equal(stepDone({ ...does, importing: "yes" }, none, 1), false);
   assert.equal(stepDone({ ...does, importing: "yes", productTypes: ["Fabric"] }, none, 1), true);
 
-  // Where it is: no premises, so no local government area.
-  const where = facts({ premises: "no", state: "Lagos" });
+  // Where it is: the local government area joins the step once a state is chosen, premises or not.
+  const where = facts({ premises: "no", state: "unknown" });
   assert.equal(stepDone(where, none, 2), true);
-  assert.equal(stepDone({ ...where, premises: "yes" }, none, 2), false);
+  assert.equal(stepDone({ ...where, state: "Lagos" }, none, 2), false);
+  assert.equal(stepDone({ ...where, state: "Lagos", lga: "Ikeja" }, none, 2), true);
 
   // Size and turnover: when turnover does not apply, only the number of people is left.
   const size = facts({ employees: "4", turnoverBand: "not_applicable" });
@@ -123,11 +131,30 @@ test("a step is done only when every question it asks has been dealt with; the o
   assert.equal(stepDone(facts({}), new Set(FACT_ORDER), CHECKER_STEPS.length - 1), false);
 });
 
-test("what is sent marks the questions the checker skipped as not applicable, and invents no other answer", () => {
+test("what is sent marks the questions the checker skipped as not applicable or unanswered, and invents no other answer", () => {
   const untouched = finaliseFacts(EMPTY_FACTS);
   assert.equal(untouched.turnoverYear, "unanswered");
   assert.equal(untouched.employees, "unanswered");
   assert.equal(untouched.lga, "unanswered");
+
+  // A business with no premises still has an area, once its state is chosen.
+  assert.equal(finaliseFacts(facts({ premises: "no", state: "Lagos", lga: " Ikeja " })).lga, "Ikeja");
+  // Without a state the area is not asked, and an area typed before is not sent.
+  assert.equal(finaliseFacts(facts({ state: "unknown", lga: "Ikeja" })).lga, "unanswered");
+  // Products are kept when they are asked, also of a business not sure whether it imports.
+  assert.deepEqual(
+    finaliseFacts(facts({ manufacturing: "no", importing: "unknown", productTypes: [" Snacks ", ""] }))
+      .productTypes,
+    ["Snacks"],
+  );
+  assert.equal(
+    Object.hasOwn(
+      finaliseFacts(facts({ manufacturing: "no", importing: "unanswered", productTypes: ["Snacks"] })),
+      "productTypes",
+    ),
+    false,
+    "an unasked question sends nothing",
+  );
 
   const sent = finaliseFacts(
     facts({
@@ -145,7 +172,7 @@ test("what is sent marks the questions the checker skipped as not applicable, an
       turnoverAmountKobo: "150000",
     }),
   );
-  assert.equal(sent.lga, "not_applicable");
+  assert.equal(sent.lga, "unanswered", "no state was chosen");
   assert.equal(sent.productTypes, "not_applicable");
   for (const question of [
     "turnoverYear",

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { PreviewAssessmentBody } from "@workspace/api-zod";
-import { factNames } from "@workspace/valo-core";
+import { checkerFactsSchema, factNames, missingQuestions } from "@workspace/valo-core";
 import {
   CHECKER_QUESTIONNAIRE,
   CHECKER_QUESTIONS,
@@ -143,4 +143,113 @@ test("a condition reads an answer, a list of answers, a rule's way of not answer
   );
   // A question the questionnaire does not name is asked.
   assert.equal(isAsked(answers, "rich.privacy.controllerRole"), true);
+});
+
+/** Every answer given, so that a test changes only what it names. */
+const answeredFacts = {
+  legalForm: "limited_company",
+  registrationStatus: "registered",
+  activities: ["Selling fabric wholesale"],
+  productTypes: "not_applicable",
+  state: "Lagos",
+  lga: "Ikeja",
+  employees: "4",
+  turnoverBand: "under_5m",
+  turnoverYear: "2025",
+  turnoverMetric: "gross_revenue",
+  turnoverCurrency: "NGN",
+  turnoverPeriod: "annual",
+  turnoverAmountKobo: null,
+  turnoverPeriodStart: "2025-01-01",
+  turnoverPeriodEnd: "2025-12-31",
+  premises: "yes",
+  manufacturing: "no",
+  importing: "no",
+  personalData: "yes",
+};
+const stillUnanswered = (changes: Record<string, unknown>) =>
+  missingQuestions(checkerFactsSchema.parse({ ...answeredFacts, ...changes }));
+
+// RUL-001: "irrelevant questions are skipped". A result lists as unanswered only what the page asked.
+test("a result lists as still unanswered the questions the check asks and has no answer for, by the page's own conditions", () => {
+  assert.deepEqual(stillUnanswered({}), [], "every question answered, the optional exact figure included");
+
+  // Not knowing whether the business makes goods asks for its products, and lists them until given.
+  assert.deepEqual(stillUnanswered({ manufacturing: "unknown", productTypes: "unanswered" }), [
+    "productTypes",
+    "manufacturing",
+  ]);
+  assert.deepEqual(stillUnanswered({ manufacturing: "unknown", productTypes: ["Packaged snacks"] }), [
+    "manufacturing",
+  ]);
+  // A skipped question does not ask for its products, so they are not listed with it.
+  assert.deepEqual(stillUnanswered({ importing: "unanswered", productTypes: "unanswered" }), ["importing"]);
+
+  // "Not applicable" is an answer: it is not listed, and turnover not applying skips its details.
+  assert.deepEqual(
+    stillUnanswered({
+      employees: "not_applicable",
+      turnoverBand: "not_applicable",
+      turnoverYear: "unanswered",
+      turnoverPeriodStart: "unanswered",
+    }),
+    [],
+  );
+  assert.deepEqual(stillUnanswered({ employees: "unknown", turnoverBand: "unknown" }), [
+    "employees",
+    "turnoverBand",
+  ]);
+
+  // The area is asked once a state is chosen, premises or not, and is listed until it is given.
+  assert.deepEqual(stillUnanswered({ premises: "no", lga: "unanswered" }), ["lga"]);
+  assert.deepEqual(stillUnanswered({ state: "unknown", lga: "unknown" }), ["state"]);
+});
+
+test("over many sets of answers, the result lists exactly the questions the page asks that have no answer yet", () => {
+  const options = (answer: string): readonly unknown[] => {
+    const question = CHECKER_QUESTIONS.find((each) => each.answer === answer)!;
+    const given: Record<string, readonly unknown[]> = {
+      activities: [["Selling fabric"], []],
+      productTypes: [["Packaged snacks"], []],
+      lga: ["Ikeja", ""],
+      employees: ["0", "12"],
+      turnoverYear: ["2025"],
+      turnoverPeriodStart: ["2025-01-01"],
+      turnoverPeriodEnd: ["2025-12-31"],
+      turnoverAmountKobo: [null, "150000"],
+      legalForm: ["sole_proprietor", "limited_company"],
+      registrationStatus: ["registered", "pending"],
+    };
+    return [
+      ...(given[answer] ?? []),
+      ...(question.choices ?? []).map((choice) => choice.value),
+      ...(answer === "turnoverAmountKobo" ? [] : NOT_ANSWERED),
+    ];
+  };
+  let seed = 20261125;
+  const next = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+  const pick = <T>(list: readonly T[]) => list[Math.floor(next() * list.length)]!;
+  for (let run = 0; run < 2000; run++) {
+    const facts = checkerFactsSchema.parse(
+      Object.fromEntries(
+        CHECKER_QUESTIONS.map((question) => [question.answer, pick(options(question.answer))]),
+      ),
+    );
+    const listed: readonly string[] = missingQuestions(facts);
+    for (const answer of listed)
+      assert.ok(isAsked(facts, answer), `${answer} is listed, so the page asks it`);
+    for (const question of CHECKER_QUESTIONS) {
+      const value = (facts as Record<string, unknown>)[question.answer];
+      const toGive =
+        value === "unknown" ||
+        value === "unanswered" ||
+        value === "" ||
+        (Array.isArray(value) && value.length === 0);
+      assert.equal(
+        listed.includes(question.answer),
+        !question.optional && isAsked(facts, question.answer) && toGive,
+        `${question.answer} = ${JSON.stringify(value)}`,
+      );
+    }
+  }
 });

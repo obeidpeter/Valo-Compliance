@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { digest, disclosure, ownerRuleDisclosure } from "./publication";
+import { checkerQuestion, isAsked } from "./checker-questionnaire";
 import {
   richCheckerFactsSchema,
   sourceFamilyReleaseSchema,
@@ -289,24 +290,23 @@ function predicate(
   return { truth: values.some((x) => x !== null && expected.includes(x)) ? "true" : "false", missing: [] };
 }
 
+/** Whether an answer is still to be given: not given, not known, or skipped. "Not applicable" is an
+ * answer, as the check's page counts it. */
+const stillToGive = (v: unknown) =>
+  v === undefined ||
+  v === null ||
+  v === "" ||
+  v === "unknown" ||
+  v === "unanswered" ||
+  (Array.isArray(v) && v.length === 0);
+
+/**
+ * The questions a result lists as still unanswered: those the check asks, by the same conditions as
+ * its page (`checker-questionnaire.ts`), whose answer is still to be given. The optional exact
+ * turnover figure is never listed.
+ */
 export function missingQuestions(f: CheckerFacts) {
-  return factNames.filter(
-    (k) =>
-      k !== "turnoverAmountKobo" &&
-      absent(f[k]) &&
-      !(k === "productTypes" && f.manufacturing === "no" && f.importing === "no") &&
-      !(k === "lga" && f.premises === "no") &&
-      !(
-        [
-          "turnoverYear",
-          "turnoverMetric",
-          "turnoverCurrency",
-          "turnoverPeriod",
-          "turnoverPeriodStart",
-          "turnoverPeriodEnd",
-        ].includes(k) && f.turnoverBand === "not_applicable"
-      ),
-  );
+  return factNames.filter((k) => !checkerQuestion(k)?.optional && isAsked(f, k) && stillToGive(f[k]));
 }
 
 /** Server supplies the immutable, trusted registry. HTTP callers cannot supply rules or fixtureMode. */
