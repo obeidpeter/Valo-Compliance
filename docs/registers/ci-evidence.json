@@ -2316,7 +2316,7 @@
       "job": "foundation",
       "file": "artifacts/valo/src/lib/rich-checker.test.ts",
       "test": "rich question targets cover every declared customer control, including support facts",
-      "proves": "Each question control the test finds in the rich checker form's field lists, including the supporting-facts question, has a jump target named after that control with the step the test expects for its section, though the test's pattern misses controls whose declaration wraps onto a second line."
+      "proves": "Each question control of the rich checker form, read from the check's questionnaire file, including the supporting-facts question, has a jump target named after that control with the step the test expects for its section."
     },
     {
       "requirement": "RUL-001",
@@ -2786,6 +2786,41 @@
       "file": "artifacts/api-server/src/modules/rules/checker-questionnaire.test.ts",
       "test": "over many sets of answers, the result lists exactly the questions the page asks that have no answer yet",
       "proves": "Over 2,000 seeded sets of synthetic answers to the check's nineteen questions, the rules engine's list of still-unanswered questions holds exactly the questions the check's page asks whose answer is unknown, skipped or empty, and never the optional exact turnover figure."
+    },
+    {
+      "requirement": "RUL-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/rule-questions.test.ts",
+      "test": "the businessName rule's questions are asked whenever their answer can change what the rule says",
+      "proves": "Over a seeded walk of about 3,800 states of synthetic answers to the business-name rule's questions, half of the walks starting from its prepared scenarios, everything the rule's pinned calculation still needs is a question asked in that state, changing any question not asked to any of its answers changes nothing the rule says, and every question a visitor can be asked is reached in at least 20 states. It runs the calculation directly, not through the page."
+    },
+    {
+      "requirement": "RUL-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/rule-questions.test.ts",
+      "test": "the tax rule's questions are asked whenever their answer can change what the rule says",
+      "proves": "Over a seeded walk of about 3,800 states of synthetic answers to the company-return rule's questions, half of the walks starting from its prepared scenarios, everything the rule's pinned calculation still needs is a question asked in that state, changing any question not asked to any of its answers changes nothing the rule says, and every question a visitor can be asked is reached in at least 20 states. It runs the calculation directly, not through the page."
+    },
+    {
+      "requirement": "RUL-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/rule-questions.test.ts",
+      "test": "the privacy rule's questions are asked whenever their answer can change what the rule says",
+      "proves": "Over a seeded walk of about 3,800 states of synthetic answers to the personal-data rule's questions, half of the walks starting from its prepared scenarios, everything the rule's pinned calculation still needs is a question asked in that state, changing any question not asked to any of its answers changes nothing the rule says, and every question a visitor can be asked is reached in at least 20 states. It runs the calculation directly, not through the page."
+    },
+    {
+      "requirement": "RUL-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/rule-questions.test.ts",
+      "test": "the product rule's questions are asked whenever their answer can change what the rule says",
+      "proves": "Over a seeded walk of about 3,800 states of synthetic answers to the product-registration rule's questions, half of the walks starting from its prepared scenarios, everything the rule's pinned calculation still needs is a question asked in that state, changing any question not asked to any of its answers changes nothing the rule says, and every question a visitor can be asked is reached in at least 20 states. It runs the calculation directly, not through the page."
+    },
+    {
+      "requirement": "RUL-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/rule-questions.test.ts",
+      "test": "each prepared rule's scenarios are asked by the same conditions",
+      "proves": "For each of the four prepared rules' scenarios, at least 40 in all, everything the rule's calculation still needs is a question its conditions ask, and no question they skip changes what the rule says."
     },
     {
       "requirement": "RUL-002",
