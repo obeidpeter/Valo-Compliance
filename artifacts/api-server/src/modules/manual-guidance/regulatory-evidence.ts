@@ -16,6 +16,43 @@ import { consumerGazetteLead, hasConsumerReading, checkConsumerGazette } from ".
 import { compareManualEmployment, hasMinistryComparison, manualCheckedPassages } from "./source-comparisons";
 
 type Capture = Awaited<ReturnType<typeof readManualOfficialSource>>;
+
+/** A web page can return different bytes on every request while saying the same words, so it is
+ * compared by its words, as the daily source watch compares one. A file is compared by its bytes. */
+const isPage = (capture: Capture) => ["text/html", "application/xhtml+xml"].includes(capture.mime);
+
+/**
+ * A check's evidence, twice (docs/architecture/guidance-currency.md): with each source's bytes, and with
+ * each web page's words in place of its bytes. A published guide is shown while its newest check matches
+ * the check it was signed on in either.
+ */
+export function regulatoryEvidence(input: {
+  id: string;
+  title: string;
+  bodySha256: string;
+  sources: readonly ManualRegulatorySource[];
+  holds: readonly string[];
+}) {
+  const { id, title, bodySha256, sources, holds } = input;
+  return {
+    evidenceSha256: digest({
+      id,
+      title,
+      bodySha256,
+      sources: sources.map(({ url, title, locator, rawSha256 }) => ({ url, title, locator, rawSha256 })),
+      holds,
+    }),
+    wordsSha256: digest({
+      id,
+      title,
+      bodySha256,
+      sources: sources.map(({ url, title, locator, rawSha256, textSha256 }) =>
+        textSha256 ? { url, title, locator, textSha256 } : { url, title, locator, rawSha256 },
+      ),
+      holds,
+    }),
+  };
+}
 export const manualGuidanceIds = Array.from(
   { length: 30 },
   (_, i) => "GUD-" + String(i + 1).padStart(2, "0"),
@@ -123,12 +160,16 @@ export async function checkManualRegulatorySources(ids: readonly string[]) {
       }
     }
     if (!sources.length && !holds.length) holds.push("No official source was verified.");
+    for (const source of sources) {
+      const capture = captures.find((c) => c.url === source.url && c.rawChecksum === source.rawSha256);
+      if (capture && isPage(capture)) source.textSha256 = sha256(capture.text);
+    }
     const bodySha256 = sha256(section.body);
-    const evidenceSha256 = digest({
+    const { evidenceSha256, wordsSha256 } = regulatoryEvidence({
       id,
       title: section.title,
       bodySha256,
-      sources: sources.map(({ url, title, locator, rawSha256 }) => ({ url, title, locator, rawSha256 })),
+      sources,
       holds,
     });
     await db.transaction(async (tx) => {
@@ -138,6 +179,7 @@ export async function checkManualRegulatorySources(ids: readonly string[]) {
         title: section.title,
         bodySha256,
         evidenceSha256,
+        wordsSha256,
         sources,
         holds,
         checkedAt: started,

@@ -597,8 +597,14 @@ export async function releasedManualEntries(
           released,
           or(
             ne(t.kind, "regulatory_article"),
+            // The newest check has the evidence the guide was signed on, with each source's bytes or with
+            // each web page's words in their place (docs/architecture/guidance-currency.md). The words are
+            // read through each row's JSON, so a database the words migration has not reached yet keeps
+            // comparing bytes alone.
             sql`${regulatoryEnabled} and (
-        select newest.evidence_sha256 = ${c.evidenceSha256} and cardinality(newest.holds) = 0
+        select (newest.evidence_sha256 = ${c.evidenceSha256}
+            or to_jsonb(newest)->>'words_sha256' = to_jsonb(${c})->>'words_sha256')
+          and cardinality(newest.holds) = 0
           and newest.checked_at between clock_timestamp() - interval '30 days' and clock_timestamp()
           and not exists (select from jsonb_array_elements(newest.sources) ref where coalesce((ref->>'validThrough')::timestamptz,'-infinity') <= clock_timestamp())
         from valo_manual_regulatory_checks newest where newest.candidate_id = ${c.candidateId}

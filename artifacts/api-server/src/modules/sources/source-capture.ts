@@ -45,6 +45,7 @@ export async function readRetainedOfficialPdf(leadId: string, dir: string, pinne
     checkedAt: new Date(checked).toISOString(),
     rawChecksum,
     text,
+    mime: "application/pdf",
     retrieval: "retained_official_pdf" as const,
   };
 }
@@ -65,6 +66,8 @@ export async function readManualOfficialSource(leadId: string, pinnedSha256?: st
     retrieval: "official_url" as const,
     rawChecksum: createHash("sha256").update(response.bytes).digest("hex"),
     text,
+    // Whether it was a web page, which is compared by its words, or a file, compared by its bytes.
+    mime: response.mime,
   };
 }
 export async function captureReference(id: string) {

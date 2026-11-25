@@ -442,6 +442,13 @@
       "when": 1795597712220,
       "tag": "20261125090832_rule_change_notices",
       "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1795605876438,
+      "tag": "20261125112436_manual_regulatory_words",
+      "breakpoints": true
     }
   ]
 }

@@ -21,6 +21,9 @@ export type ManualRegulatorySource = {
   title: string;
   locator: string;
   rawSha256: string;
+  /** For a web page, the SHA-256 of the words read from it: a page can return different bytes on
+   * every request while saying the same words. A file has none and is compared by its bytes. */
+  textSha256?: string;
   validThrough: string;
   retrievedAt: string;
   retrieval: "official_url" | "retained_official_pdf";
@@ -35,6 +38,9 @@ export const valoManualRegulatoryChecks = pgTable(
     title: text("title").notNull(),
     bodySha256: text("body_sha256").notNull(),
     evidenceSha256: text("evidence_sha256").notNull(),
+    /** The evidence with each web page's words in place of its bytes (docs/architecture/guidance-currency.md).
+     * A check made before it was recorded has none. */
+    wordsSha256: text("words_sha256"),
     checkedAt: timestamp("checked_at", { withTimezone: true }).notNull(),
     sources: jsonb("sources").$type<ManualRegulatorySource[]>().notNull(),
     holds: text("holds").array().notNull(),
@@ -48,6 +54,10 @@ export const valoManualRegulatoryChecks = pgTable(
     check(
       "valo_manual_regulatory_hashes",
       sql`${t.bodySha256} ~ '^[a-f0-9]{64}$' AND ${t.evidenceSha256} ~ '^[a-f0-9]{64}$'`,
+    ),
+    check(
+      "valo_manual_regulatory_words",
+      sql`${t.wordsSha256} IS NULL OR ${t.wordsSha256} ~ '^[a-f0-9]{64}$'`,
     ),
     check(
       "valo_manual_regulatory_references",
