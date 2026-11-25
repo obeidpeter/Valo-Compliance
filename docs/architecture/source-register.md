@@ -113,6 +113,35 @@ Slice 1:
   register runs in development only. A database the migration has not reached answers on the register
   alone, with the migration's name.
 
+Slice 2, first part (retiring and the picker):
+- Every watched source stays on the daily check, as the specification asks: the design's weekly check at
+  standard risk was dropped.
+- Retiring a source stops its watch, in the database. The register's trigger
+  (`valo_source_register_watch`, migration `20261125171850_source_watch_stops`) stops the watch of a
+  source whose new version is retired. It restarts the watch, due at once, when a later version brings
+  the source back. A watch started for a retired source starts stopped, and a source retired before the
+  migration stops when it is applied.
+- What rests on a retired source is held at once, not a day later. The retirement queues the same job a
+  changed source does, with "The official source was retired from the source register." as why. So each
+  version bound to the source and not held yet gets a hold and its review work. The source gate, the
+  release bindings and the current captures a guide or rule is prepared from refuse a stopped watch
+  straight away, before that job runs. The daily sweep of overdue sources still holds whatever is bound
+  to a stopped watch, as a backstop.
+- The scheduler skips a stopped watch. A check queued before the source was retired completes as
+  `SOURCE_WATCH_STOPPED` and fetches nothing.
+- Bringing a source back restarts its check. What was held stays held until a new version passes the
+  gates.
+- The register says how many versions rest on each source. Before a retirement is saved, it says what
+  the retirement will hold. A stopped watch says when it stopped, in the register and in the source
+  controls.
+- Staff can start watching only the regulatory leads kept in the repository that the register has not
+  retired. The picker offers only those, and the watch action refuses anything else (422). The
+  provider's terms and the quality documents are no longer offered; watches already started go on.
+- The source controls' database step runs its files one at a time (`--test-concurrency=1`), as the
+  library's and the disputes' steps do. The register's test drives the same check queue the source
+  controls' test claims from, and the test runner sorts the files, so the register's runs first.
+- Adding sources on the policy's hosts is the slice's second part.
+
 ## What does not change
 
 - The daily check's rule for calling a source changed, the impacts and what they hold, the notices,
