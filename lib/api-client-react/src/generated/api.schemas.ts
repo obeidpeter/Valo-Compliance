@@ -4446,6 +4446,47 @@ export interface AssessmentComparison {
   explanations: AssessmentChange[];
 }
 
+export type AuditHistoryPageKind = typeof AuditHistoryPageKind[keyof typeof AuditHistoryPageKind];
+
+
+export const AuditHistoryPageKind = {
+  access: 'access',
+  safety: 'safety',
+  prices: 'prices',
+  refunds: 'refunds',
+  counts: 'counts',
+} as const;
+
+export interface AuditHistoryEntry {
+  id: string;
+  at: string;
+  /** @maxLength 300 */
+  actor: string;
+  /** @maxLength 300 */
+  action: string;
+  /** @maxLength 300 */
+  object: string;
+  /**
+     * Null where the history keeps none, or where it may hold a customer's own words.
+     * @maxLength 2000
+     * @nullable
+     */
+  reason: string | null;
+}
+
+export interface AuditHistoryPage {
+  kind: AuditHistoryPageKind;
+  /** @maxItems 50 */
+  entries: AuditHistoryEntry[];
+  /** @minimum 1 */
+  page: number;
+  /** @minimum 1 */
+  pageSize: number;
+  /** @minimum 0 */
+  total: number;
+  notice: string;
+}
+
 export interface VerifyStaffRoleTargetInput {
   /**
      * @maxLength 128
@@ -5567,6 +5608,26 @@ export const GetStaffOperationsArea = {
   support: 'support',
   finance: 'finance',
   system: 'system',
+} as const;
+
+export type GetAuditHistoryParams = {
+  kind: GetAuditHistoryKind;
+  /**
+   * @minimum 1
+   * @maximum 1000
+   */
+  page?: number;
+};
+
+export type GetAuditHistoryKind = typeof GetAuditHistoryKind[keyof typeof GetAuditHistoryKind];
+
+
+export const GetAuditHistoryKind = {
+  access: 'access',
+  safety: 'safety',
+  prices: 'prices',
+  refunds: 'refunds',
+  counts: 'counts',
 } as const;
 
 export type ListCustomerSupportCasesParams = {

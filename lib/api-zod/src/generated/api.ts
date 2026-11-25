@@ -9319,6 +9319,48 @@ export const GetStaffOperationsResponse = zod.object({
 })
 
 
+export const getAuditHistoryQueryPageMax = 1000;
+
+
+
+export const GetAuditHistoryQueryParams = zod.object({
+  "kind": zod.enum(['access', 'safety', 'prices', 'refunds', 'counts']),
+  "page": zod.coerce.number().int().min(1).max(getAuditHistoryQueryPageMax).optional()
+})
+
+export const getAuditHistoryResponseEntriesItemActorMax = 300;
+
+export const getAuditHistoryResponseEntriesItemActionMax = 300;
+
+export const getAuditHistoryResponseEntriesItemObjectMax = 300;
+
+export const getAuditHistoryResponseEntriesItemReasonMax = 2000;
+
+export const getAuditHistoryResponseEntriesMax = 50;
+
+
+
+export const getAuditHistoryResponseTotalMin = 0;
+
+
+
+export const GetAuditHistoryResponse = zod.object({
+  "kind": zod.enum(['access', 'safety', 'prices', 'refunds', 'counts']),
+  "entries": zod.array(zod.object({
+  "id": zod.uuid(),
+  "at": zod.coerce.date(),
+  "actor": zod.string().max(getAuditHistoryResponseEntriesItemActorMax),
+  "action": zod.string().max(getAuditHistoryResponseEntriesItemActionMax),
+  "object": zod.string().max(getAuditHistoryResponseEntriesItemObjectMax),
+  "reason": zod.string().max(getAuditHistoryResponseEntriesItemReasonMax).nullable().describe('Null where the history keeps none, or where it may hold a customer\'s own words.')
+})).max(getAuditHistoryResponseEntriesMax),
+  "page": zod.int().min(1),
+  "pageSize": zod.int().min(1),
+  "total": zod.int().min(getAuditHistoryResponseTotalMin),
+  "notice": zod.string()
+})
+
+
 export const requestAccessSupportBodyEmailMax = 254;
 
 export const requestAccessSupportBodyMessageMin = 20;

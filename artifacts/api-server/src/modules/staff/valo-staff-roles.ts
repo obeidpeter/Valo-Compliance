@@ -70,7 +70,11 @@ function changeView(row: Change) {
     createdAt: row.createdAt.toISOString(),
   };
 }
-async function systemAuthority(tx: Tx, actor: StaffActor) {
+export async function systemAuthority(
+  tx: Tx,
+  actor: StaffActor,
+  refusal = "A current permanent system assignment is required to administer staff roles. Emergency access cannot grant privileges.",
+) {
   requireFreshStaffSession(actor);
   const [row] = await tx
     .select()
@@ -85,11 +89,7 @@ async function systemAuthority(tx: Tx, actor: StaffActor) {
     )
     .for("share");
   requireFreshStaffSession(actor);
-  if (!row)
-    throw new ValoProblem(
-      403,
-      "A current permanent system assignment is required to administer staff roles. Emergency access cannot grant privileges.",
-    );
+  if (!row) throw new ValoProblem(403, refusal);
   await assertStaffAssignmentCurrent(tx, row.id);
   return row;
 }

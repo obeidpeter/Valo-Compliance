@@ -35,6 +35,7 @@ import type {
   AssessmentComparison,
   AssessmentInput,
   AssessmentResult,
+  AuditHistoryPage,
   AuthErrorResponse,
   BuildStatus,
   BusinessDocument,
@@ -80,6 +81,7 @@ import type {
   FindSupportLibraryEntriesParams,
   FormDocumentStart,
   FormTemplates,
+  GetAuditHistoryParams,
   GetCommerceReceipt200,
   GetCorrectionNoticesParams,
   GetCustomerSupportCaseParams,
@@ -11801,6 +11803,107 @@ export function useGetStaffOperations<TData = Awaited<ReturnType<typeof getStaff
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetStaffOperationsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetAuditHistoryUrl = (params: GetAuditHistoryParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/audit-history?${stringifiedParams}` : `/api/admin/audit-history`
+}
+
+export const getAuditHistory = async (params: GetAuditHistoryParams, options?: Parameters<typeof customFetch>[1]): Promise<AuditHistoryPage> => {
+
+  return customFetch<AuditHistoryPage>(getGetAuditHistoryUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAuditHistoryQueryKey = (params?: GetAuditHistoryParams,) => {
+    return [
+    "getAuditHistory", ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetAuditHistoryQueryOptions = <TData = Awaited<ReturnType<typeof getAuditHistory>>, TError = ErrorType<void>>(params: GetAuditHistoryParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuditHistory>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAuditHistoryQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAuditHistory>>> = ({ signal }) => getAuditHistory(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAuditHistory>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetAuditHistoryQueryResult = NonNullable<Awaited<ReturnType<typeof getAuditHistory>>>
+export type GetAuditHistoryQueryError = ErrorType<void>
+
+
+export function useGetAuditHistory<TData = Awaited<ReturnType<typeof getAuditHistory>>, TError = ErrorType<void>>(
+ params: GetAuditHistoryParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuditHistory>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAuditHistory>>,
+          TError,
+          Awaited<ReturnType<typeof getAuditHistory>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAuditHistory<TData = Awaited<ReturnType<typeof getAuditHistory>>, TError = ErrorType<void>>(
+ params: GetAuditHistoryParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuditHistory>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAuditHistory>>,
+          TError,
+          Awaited<ReturnType<typeof getAuditHistory>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAuditHistory<TData = Awaited<ReturnType<typeof getAuditHistory>>, TError = ErrorType<void>>(
+ params: GetAuditHistoryParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuditHistory>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAuditHistory<TData = Awaited<ReturnType<typeof getAuditHistory>>, TError = ErrorType<void>>(
+ params: GetAuditHistoryParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuditHistory>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetAuditHistoryQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
