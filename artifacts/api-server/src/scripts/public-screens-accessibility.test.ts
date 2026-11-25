@@ -925,6 +925,124 @@ test("under a result, business documents are offered as optional, in words that 
   }
 });
 
+// RUL-006 (docs/architecture/results.md): a requirement lists the released documents its rule relates, and
+// the likely relevant requirements' documents are listed together. A related document that is not
+// released is never named.
+test("under each requirement are the released documents its rule relates, and the likely relevant requirements' documents are listed together as recommended documents; a document that is not released is not named, and when the documents cannot be loaded the visitor is told the results are not affected and can try again", async () => {
+  const privacyNotice = {
+    id: "synthetic-privacy-notice",
+    slug: "synthetic-privacy-notice",
+    title: "Synthetic privacy notice",
+    type: "template",
+    summary: "Synthetic test fixture: what the privacy notice is for.",
+    industry: "All industries",
+    templateId: "synthetic-privacy-notice",
+    templateNumber: "TPL-29",
+    access: "premium",
+  };
+  // TPL-30 is related too, but it is held, so the released list does not have it.
+  const relating = api.PreviewAssessmentResponse.parse({
+    ...noResult,
+    items: [
+      {
+        ruleId: "SYN-PRIVACY",
+        ruleVersion: 1,
+        requirementVersionId: "SYN-PRIVACY@1",
+        title: "Synthetic rule about personal data",
+        label: "Likely relevant",
+        reason: "Synthetic test fixture: why this may apply.",
+        missingFacts: [],
+        matchedFacts: [],
+        nextStep: "Synthetic test fixture: what to do next.",
+        jurisdiction: { level: "federal" },
+        sources: [
+          {
+            id: "synthetic-source",
+            url: "https://example.test/source",
+            title: "Synthetic source",
+            locator: "section 1",
+            quote: "Synthetic quoted passage.",
+            snapshotHash: "a".repeat(64),
+          },
+        ],
+        relatedTemplateIds: ["TPL-29", "TPL-30"],
+      },
+    ],
+    recommendedTemplateIds: ["TPL-29", "TPL-30"],
+    sourceBackedRecommendations: 1,
+  });
+  const releasedList = api.ListPublicCatalogueResponse.parse({
+    items: [privacyNotice],
+    total: 1,
+    page: 1,
+    heldTemplates: 0,
+  });
+  let failing = true;
+  const asked: string[] = [];
+  const { respond } = checking();
+  const { page, unknown, errors, close } = await app.phone("/checker", async (route, method, path, query) => {
+    const json = (status: number, body: unknown) =>
+      route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) });
+    if (method === "POST" && path === "/checker/preview") return json(200, relating);
+    if (method === "GET" && path === "/public/catalogue" && query.has("templateIds")) {
+      asked.push(query.get("templateIds")!);
+      return failing ? json(500, { error: "Synthetic failure" }) : json(200, releasedList);
+    }
+    return respond(route, method, path, query);
+  });
+  try {
+    await ready(page);
+    await page.getByTestId("button-step-5").click();
+    await page.getByTestId("button-run").click();
+    await page.getByTestId("assessment-result").waitFor();
+    // The documents could not be loaded: what happened, what it does not change, and a way on. The
+    // requirement itself is still shown.
+    const failed = page.getByTestId("status-result-documents-error");
+    await expect(failed.locator("p")).toHaveText(
+      "The documents for these requirements could not be loaded. Your results above are not affected.",
+    );
+    await expect(failed).toHaveAttribute("role", "status");
+    await expect(page.getByTestId("card-item-SYN-PRIVACY")).toBeVisible();
+    await expect(page.getByTestId("section-recommended-documents")).toHaveCount(0);
+    assert.deepEqual(oldWordsIn(await failed.innerText()), []);
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "the documents that could not be loaded"), []);
+    await page.setViewportSize({ width: 360, height: 640 });
+
+    failing = false;
+    await page.getByTestId("button-retry-result-documents").click();
+    const documents = page.getByTestId("documents-SYN-PRIVACY");
+    await documents.waitFor();
+    await expect(failed).toHaveCount(0);
+    await expect(documents.locator("p")).toHaveText("Documents for this requirement");
+    const link = page.getByTestId("link-document-SYN-PRIVACY-synthetic-privacy-notice");
+    await expect(link).toHaveText("Synthetic privacy notice");
+    await expect(link).toHaveAttribute("href", "/library/synthetic-privacy-notice");
+    await expect(documents.locator("li")).toHaveText("Synthetic privacy notice · Premium");
+    const recommended = page.getByTestId("section-recommended-documents");
+    await expect(recommended.getByRole("heading", { name: "Recommended documents" })).toBeVisible();
+    await expect(recommended).toContainText(
+      "These are the documents for the requirements above that are likely relevant. Using one does not by itself meet a requirement.",
+    );
+    await expect(page.getByTestId("link-recommended-synthetic-privacy-notice")).toHaveAttribute(
+      "href",
+      "/library/synthetic-privacy-notice",
+    );
+    // The page asked the released list for the result's documents by their numbers alone, and names no
+    // held one.
+    assert.ok(asked.length >= 2, JSON.stringify(asked));
+    assert.deepEqual([...new Set(asked)], ["TPL-29,TPL-30"]);
+    await expect(page.getByTestId("assessment-result")).not.toContainText("TPL-30");
+    assert.deepEqual(oldWordsIn(await recommended.innerText()), []);
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "the documents for the requirements"), []);
+    assert.deepEqual(unknown, [], "every API call the page made has a test answer");
+    assert.deepEqual(errors, []);
+  } finally {
+    await close();
+  }
+});
+
 // The banner is on every page. The sign-in pages draw no site frame and have a line of their own.
 test("a visitor is told to use made-up details, on a page's banner and on the sign-in pages, and the sign-in service is named in the words the contact page uses", async () => {
   {

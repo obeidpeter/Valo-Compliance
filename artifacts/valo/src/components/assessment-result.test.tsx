@@ -3,10 +3,12 @@ import { test } from "node:test";
 import * as React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import type { AssessmentItem, AssessmentResult } from "@workspace/api-client-react";
+import { Router } from "wouter";
+import type { AssessmentItem, AssessmentResult, PublicItem } from "@workspace/api-client-react";
 import { factLabel } from "@/lib/checker";
 import { resultGaps, resultNotice } from "@/lib/result-words";
 import { AssessmentResultView } from "./assessment-result";
+import { resultDocumentsKey } from "./result-documents";
 
 const source = {
   id: "synthetic-source",
@@ -216,4 +218,120 @@ test("a result shows how its rule was released, and an older saved result shows 
   // The notice sits with the rule's name, above why it is shown.
   assert.ok(page.indexOf("release-notice-SYN-SIGNED") < page.indexOf('data-testid="why-SYN-SIGNED"'));
   assert.ok(!page.includes("release-notice-SYN-OLDER"));
+});
+
+/** A synthetic released template, as the released list gives it. */
+const released = (number: string, title: string, access: "free" | "premium"): PublicItem => ({
+  id: `synthetic-${number}`,
+  slug: `synthetic-${number.toLowerCase()}`,
+  title,
+  type: "template",
+  summary: `Synthetic test fixture: what the ${title.toLowerCase()} is for.`,
+  industry: "All industries",
+  templateId: `synthetic-${number}`,
+  templateNumber: number,
+  access,
+});
+// The documents link to the library, so the page is drawn on the checker's own address.
+const renderWith = (client: QueryClient, shown: AssessmentResult) =>
+  renderToStaticMarkup(
+    <Router ssrPath="/checker">
+      <QueryClientProvider client={client}>
+        <AssessmentResultView result={shown} />
+      </QueryClientProvider>
+    </Router>,
+  );
+const relating: AssessmentResult = {
+  ...result,
+  items: [
+    item("SYN-PRIVACY", "Likely relevant", { relatedTemplateIds: ["TPL-29", "TPL-30"] }),
+    item("SYN-INVOICE", "May apply", { relatedTemplateIds: ["TPL-01"] }),
+    item("SYN-NONE", "Likely relevant", {}),
+  ],
+  // The engine recommends the documents of the likely relevant requirements alone.
+  recommendedTemplateIds: ["TPL-29", "TPL-30"],
+};
+
+// RUL-006 (docs/architecture/results.md): a requirement lists the released documents its rule relates,
+// and the likely relevant requirements' documents are listed together. A related document that is not
+// released is never named, and a result that relates none shows neither list.
+test("each requirement lists the released documents its rule relates, the likely relevant ones are listed together as recommended documents, and a document that is not released is not named", () => {
+  const client = new QueryClient();
+  // The released list has the privacy notice and the invoice. TPL-30 is held, so it is not in the list.
+  const notice = released("TPL-29", "Synthetic privacy notice", "premium");
+  const invoice = released("TPL-01", "Synthetic invoice", "free");
+  client.setQueryData(resultDocumentsKey("TPL-01,TPL-29,TPL-30"), [notice, invoice]);
+  const page = renderWith(client, relating);
+  const block = (ruleId: string) => {
+    const start = page.indexOf(`data-testid="documents-${ruleId}"`);
+    return start < 0 ? "" : page.slice(start, page.indexOf("</ul>", start));
+  };
+  assert.match(block("SYN-PRIVACY"), /<p class="font-medium">Documents for this requirement<\/p>/);
+  assert.match(
+    block("SYN-PRIVACY"),
+    /<a [^>]*href="\/library\/synthetic-tpl-29"[^>]*>Synthetic privacy notice<\/a><span class="text-muted-foreground"> · Premium<\/span>/,
+  );
+  assert.match(
+    block("SYN-INVOICE"),
+    /<a [^>]*href="\/library\/synthetic-tpl-01"[^>]*>Synthetic invoice<\/a><\/li>/,
+  );
+  assert.equal(block("SYN-NONE"), "");
+  // The documents sit after the requirement's next step, inside its card.
+  assert.ok(
+    page.indexOf("Next step: </span>Synthetic next step for SYN-PRIVACY") <
+      page.indexOf("documents-SYN-PRIVACY"),
+  );
+  assert.ok(page.indexOf("documents-SYN-PRIVACY") < page.indexOf("button-sources-SYN-PRIVACY"));
+
+  // The likely relevant requirements' released documents are listed together, after the requirements and
+  // before the official sources, with what they are for; the invoice's requirement only may apply.
+  const start = page.indexOf('data-testid="section-recommended-documents"');
+  assert.ok(start > page.indexOf('data-testid="card-item-SYN-NONE"'));
+  assert.ok(start < page.indexOf("Official sources"));
+  const section = page.slice(start, page.indexOf("</section>", start));
+  assert.match(section, /<h3 id="recommended-documents-heading"[^>]*>Recommended documents<\/h3>/);
+  assert.ok(
+    section.includes(
+      "These are the documents for the requirements above that are likely relevant. Using one does not by itself meet a requirement.",
+    ),
+  );
+  assert.match(section, /href="\/library\/synthetic-tpl-29"/);
+  assert.ok(section.includes("Synthetic test fixture: what the synthetic privacy notice is for."));
+  assert.ok(!section.includes("Synthetic invoice"));
+  // No held document is named anywhere, and a result that relates no document shows neither list.
+  assert.ok(!page.includes("TPL-30"));
+  assert.ok(!html.includes("Documents for this requirement"));
+  assert.ok(!html.includes("Recommended documents"));
+  assert.ok(!html.includes("status-result-documents-error"));
+});
+
+test("when the related documents cannot be loaded, the result says its requirements are not affected and offers to try again, in place of the recommended documents", () => {
+  // A page drawn on the server shows a failed load as loading again, since a browser retries it on
+  // opening; here it stays failed, as it does when that retry fails too. The browser check runs it.
+  const client = new QueryClient({ defaultOptions: { queries: { retryOnMount: false } } });
+  const query = client
+    .getQueryCache()
+    .build(client, { queryKey: resultDocumentsKey("TPL-01,TPL-29,TPL-30") });
+  query.setState({
+    ...query.state,
+    status: "error",
+    error: new Error("Synthetic failure"),
+    errorUpdateCount: 1,
+  });
+  const page = renderWith(client, relating);
+  const start = page.indexOf('data-testid="status-result-documents-error"');
+  assert.ok(start >= 0, page);
+  const status = page.slice(page.lastIndexOf("<div", start), page.indexOf("</div>", start));
+  assert.match(status, /role="status"/);
+  assert.ok(
+    status.includes(
+      "The documents for these requirements could not be loaded. Your results above are not affected.",
+    ),
+  );
+  assert.match(page, /data-testid="button-retry-result-documents">Try again<\/button>/);
+  assert.ok(!page.includes("Recommended documents"));
+  assert.ok(!page.includes("Documents for this requirement"));
+  // The requirements themselves are all still shown.
+  for (const ruleId of ["SYN-PRIVACY", "SYN-INVOICE", "SYN-NONE"])
+    assert.ok(page.includes(`data-testid="card-item-${ruleId}"`), ruleId);
 });
