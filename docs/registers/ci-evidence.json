@@ -3339,6 +3339,62 @@
       "file": "lib/db/scripts/phase1-migrations.test.mjs",
       "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
       "proves": "After the library entry details migration, a template revision records whether AI drafted it, a template is released only with that record, and the record cannot be changed once the revision is saved."
+    },
+    {
+      "requirement": "DOC-009",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-manual-library.integration.test.ts",
+      "test": "manual publishing through staff HTTP routes and public readers",
+      "proves": "Against PostgreSQL, a workspace saves a released staff-library template once under its address name, is suggested the library's other released templates, keeps the saved entry with its title, marked unavailable, once the template is withdrawn, and can remove it."
+    },
+    {
+      "requirement": "DOC-009",
+      "job": "foundation",
+      "file": "artifacts/valo/src/public-screens/template-detail.test.tsx",
+      "test": "a library template's page offers saving to a signed-in reader, a copy of a free one, and says why a premium one has none",
+      "proves": "A staff-library template's rendered actions offer a signed-in reader the save button and a copy of a free template, and for a premium one offer no copy and say that its text comes in its Word file."
+    },
+    {
+      "requirement": "DOC-009",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/catalogue/library-copy.test.ts",
+      "test": "a library template's text is copied as paragraphs and tables, and a text too long for a document is not copied",
+      "proves": "A free library template's text is copied into a document as its paragraphs and bar-separated tables, and a text a document cannot hold (over 100 blocks, a block over 8,000 characters, or a table over 100 rows or 10 cells) is not copied at all rather than cut short."
+    },
+    {
+      "requirement": "DOC-005",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/library-exports.test.tsx",
+      "test": "a document copied from a staff-library template names the template by the title it was released under",
+      "proves": "The business library names the template a copied document came from by the title it was released under, with its version, and never shows the release's internal address name."
+    },
+    {
+      "requirement": "DOC-007",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/exports/valo-export-library.integration.test.ts",
+      "test": "ready exports appear in the business library with their revision and the template version their document came from",
+      "proves": "In PostgreSQL, in the workspace's own scope, a document copied from a released free staff-library template records that release, and the business library still names it beside the document's file after the template is withdrawn."
+    },
+    {
+      "requirement": "DOC-007",
+      "job": "foundation",
+      "file": "lib/db/scripts/phase1-migrations.test.mjs",
+      "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
+      "proves": "After the library saves and copies migration, the database records the staff-library release a document was copied from only from a released free template, when the document is written, and refuses any later change to it."
+    },
+    {
+      "requirement": "EDT-010",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/exports/valo-export-library.integration.test.ts",
+      "test": "ready exports appear in the business library with their revision and the template version their document came from",
+      "proves": "In PostgreSQL, a workspace's copy of a free staff-library template and its file stay in its business library, still named with the release they came from, after the template is withdrawn."
+    },
+    {
+      "requirement": "DOC-009",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-client-writes.test.ts",
+      "test": "the web client's changes that send nothing still reach their routes through the same-origin check",
+      "proves": "Saving a template, removing a saved one and making a copy, sent by the real browser client through the server's real same-origin check, each reach their route, while the same changes sent with no body are still refused."
     }
   ]
 }
