@@ -28,6 +28,137 @@ import { ErrorState } from "./states";
 
 const inputStyle = "mt-1 block w-full rounded-lg border border-border bg-background p-2 text-base";
 
+type Instrument = "" | NonNullable<SourceRegisterEntry["instrument"]>;
+/** The fields every version of an entry gives, as typed into a form. */
+type Fields = {
+  authority: string;
+  jurisdiction: string;
+  instrument: Instrument;
+  versionInForce: string;
+  effectiveFrom: string;
+};
+/** The fields as the register's routes take them. An official page has no day it took effect. */
+const sent = (fields: Fields) => ({
+  authority: fields.authority.trim() || null,
+  jurisdiction: fields.jurisdiction,
+  instrument: fields.instrument || null,
+  versionInForce: fields.versionInForce.trim() || null,
+  effectiveFrom: fields.instrument === "official_page" ? null : fields.effectiveFrom || null,
+});
+
+/** Who issues a source, where it applies, the kind of text, the version in force and its day. */
+function VersionFields({
+  prefix,
+  value,
+  onChange,
+  jurisdictions,
+}: {
+  prefix: string;
+  value: Fields;
+  onChange: (next: Fields) => void;
+  jurisdictions: string[];
+}) {
+  const id = (field: string) => `${prefix}-${field}`;
+  return (
+    <>
+      <label className="text-sm font-medium" htmlFor={id("authority")}>
+        Who issues it
+        <input
+          id={id("authority")}
+          className={inputStyle}
+          maxLength={200}
+          value={value.authority}
+          onChange={(e) => onChange({ ...value, authority: e.target.value })}
+        />
+      </label>
+      <label className="text-sm font-medium" htmlFor={id("jurisdiction")}>
+        Where it applies
+        <select
+          id={id("jurisdiction")}
+          className={inputStyle}
+          value={value.jurisdiction}
+          onChange={(e) => onChange({ ...value, jurisdiction: e.target.value })}
+        >
+          {jurisdictions.map((name) => (
+            <option key={name} value={name}>
+              {name}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="text-sm font-medium" htmlFor={id("instrument")}>
+        Kind of text
+        <select
+          id={id("instrument")}
+          className={inputStyle}
+          value={value.instrument}
+          onChange={(e) => onChange({ ...value, instrument: e.target.value as Instrument })}
+        >
+          <option value="">{notKnown}</option>
+          {(Object.keys(instrumentNames) as (keyof typeof instrumentNames)[]).map((kind) => (
+            <option key={kind} value={kind}>
+              {instrumentNames[kind]}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="text-sm font-medium" htmlFor={id("version")}>
+        Version in force
+        <input
+          id={id("version")}
+          className={inputStyle}
+          maxLength={200}
+          value={value.versionInForce}
+          onChange={(e) => onChange({ ...value, versionInForce: e.target.value })}
+        />
+      </label>
+      {value.instrument !== "official_page" && (
+        <label className="text-sm font-medium" htmlFor={id("effective")}>
+          In effect from
+          <input
+            id={id("effective")}
+            type="date"
+            className={inputStyle}
+            value={value.effectiveFrom}
+            onChange={(e) => onChange({ ...value, effectiveFrom: e.target.value })}
+          />
+        </label>
+      )}
+    </>
+  );
+}
+
+/** Why a version is recorded, with its hint. */
+function ReasonField({
+  prefix,
+  value,
+  onChange,
+}: {
+  prefix: string;
+  value: string;
+  onChange: (next: string) => void;
+}) {
+  const id = (field: string) => `${prefix}-${field}`;
+  return (
+    <label className="text-sm font-medium" htmlFor={id("reason")}>
+      {reasonLabel}
+      <textarea
+        id={id("reason")}
+        className={inputStyle}
+        rows={2}
+        minLength={20}
+        maxLength={1000}
+        aria-describedby={id("reason-help")}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      <span id={id("reason-help")} className="mt-1 block font-normal text-muted-foreground">
+        {reasonHint}
+      </span>
+    </label>
+  );
+}
+
 /** One entry's correction form: its fields as they stand, and why they change. */
 function EntryForm({
   entry,
@@ -39,18 +170,19 @@ function EntryForm({
   onSaved: (message: string) => void;
 }) {
   const client = useQueryClient();
-  const [authority, setAuthority] = useState(entry.authority ?? "");
-  const [jurisdiction, setJurisdiction] = useState(entry.jurisdiction);
-  const [instrument, setInstrument] = useState<"" | NonNullable<SourceRegisterEntry["instrument"]>>(
-    entry.instrument ?? "",
-  );
-  const [versionInForce, setVersionInForce] = useState(entry.versionInForce ?? "");
-  const [effectiveFrom, setEffectiveFrom] = useState(entry.effectiveFrom ?? "");
+  const [fields, setFields] = useState<Fields>({
+    authority: entry.authority ?? "",
+    jurisdiction: entry.jurisdiction,
+    instrument: entry.instrument ?? "",
+    versionInForce: entry.versionInForce ?? "",
+    effectiveFrom: entry.effectiveFrom ?? "",
+  });
   const [status, setStatus] = useState(entry.status);
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const id = (field: string) => `register-${entry.sourceId}-${field}`;
+  const prefix = `register-${entry.sourceId}`;
+  const id = (field: string) => `${prefix}-${field}`;
   // Retiring an active source stops its daily check and holds what rests on it: say so before saving.
   const retiring = status === "retired" && entry.status !== "retired";
   async function save() {
@@ -59,11 +191,7 @@ function EntryForm({
     try {
       const register = await reviseSourceRegisterEntry(entry.sourceId, {
         baseVersion: entry.version,
-        authority: authority.trim() || null,
-        jurisdiction,
-        instrument: instrument || null,
-        versionInForce: versionInForce.trim() || null,
-        effectiveFrom: instrument === "official_page" ? null : effectiveFrom || null,
+        ...sent(fields),
         status,
         reason: reason.trim(),
       });
@@ -85,69 +213,7 @@ function EntryForm({
       }}
       data-testid={"form-register-" + entry.sourceId}
     >
-      <label className="text-sm font-medium" htmlFor={id("authority")}>
-        Who issues it
-        <input
-          id={id("authority")}
-          className={inputStyle}
-          maxLength={200}
-          value={authority}
-          onChange={(e) => setAuthority(e.target.value)}
-        />
-      </label>
-      <label className="text-sm font-medium" htmlFor={id("jurisdiction")}>
-        Where it applies
-        <select
-          id={id("jurisdiction")}
-          className={inputStyle}
-          value={jurisdiction}
-          onChange={(e) => setJurisdiction(e.target.value)}
-        >
-          {jurisdictions.map((name) => (
-            <option key={name} value={name}>
-              {name}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="text-sm font-medium" htmlFor={id("instrument")}>
-        Kind of text
-        <select
-          id={id("instrument")}
-          className={inputStyle}
-          value={instrument}
-          onChange={(e) => setInstrument(e.target.value as typeof instrument)}
-        >
-          <option value="">{notKnown}</option>
-          {(Object.keys(instrumentNames) as (keyof typeof instrumentNames)[]).map((kind) => (
-            <option key={kind} value={kind}>
-              {instrumentNames[kind]}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="text-sm font-medium" htmlFor={id("version")}>
-        Version in force
-        <input
-          id={id("version")}
-          className={inputStyle}
-          maxLength={200}
-          value={versionInForce}
-          onChange={(e) => setVersionInForce(e.target.value)}
-        />
-      </label>
-      {instrument !== "official_page" && (
-        <label className="text-sm font-medium" htmlFor={id("effective")}>
-          In effect from
-          <input
-            id={id("effective")}
-            type="date"
-            className={inputStyle}
-            value={effectiveFrom}
-            onChange={(e) => setEffectiveFrom(e.target.value)}
-          />
-        </label>
-      )}
+      <VersionFields prefix={prefix} value={fields} onChange={setFields} jurisdictions={jurisdictions} />
       <fieldset className="text-sm" aria-describedby={retiring ? id("retiring") : undefined}>
         <legend className="font-medium">Status</legend>
         <label className="mr-4 inline-flex items-center gap-2">
@@ -174,22 +240,7 @@ function EntryForm({
           </p>
         )}
       </fieldset>
-      <label className="text-sm font-medium" htmlFor={id("reason")}>
-        {reasonLabel}
-        <textarea
-          id={id("reason")}
-          className={inputStyle}
-          rows={2}
-          minLength={20}
-          maxLength={1000}
-          aria-describedby={id("reason-help")}
-          value={reason}
-          onChange={(e) => setReason(e.target.value)}
-        />
-        <span id={id("reason-help")} className="mt-1 block font-normal text-muted-foreground">
-          {reasonHint}
-        </span>
-      </label>
+      <ReasonField prefix={prefix} value={reason} onChange={setReason} />
       <button
         type="submit"
         className="btn btn-primary btn-sm justify-self-start"
