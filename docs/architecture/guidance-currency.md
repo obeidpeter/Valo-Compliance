@@ -127,7 +127,18 @@ Slice 2, its database and routes:
   premium offers and starting an order. What a buyer already has stays: their purchased file, their
   documents and starting a document from the edition they bought. The owner's price command refuses an
   overdue template too, and says why.
-- The staff screen's dates and its review action are slice 2's second part.
+
+Slice 2, its staff screen:
+- Under each published entry other than a regulatory guide, the list says "Review due 23 Feb 2027" or
+  "Review overdue since 20 Nov 2026", the overdue ones in the warning colour. A filter lists only the
+  entries due for review in the next 14 days, or overdue.
+- The open entry says when its published version is due for review. Once that has passed, it says that
+  customers cannot find, download or buy it until it is reviewed, and that what they already have is
+  unchanged.
+- "Record a review" asks what the editor re-read and why it needs no change, in 20 to 1,000 characters,
+  and once the review is recorded says when the next one is due. An entry that needs a change gets a new
+  version instead, as before.
+- An entry counts as overdue from the moment its review falls due, as the database holds it from then.
 
 ## What does not change
 

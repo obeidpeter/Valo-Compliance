@@ -4123,6 +4123,13 @@
       "file": "artifacts/api-server/src/modules/manual-guidance/daily-check.integration.test.ts",
       "test": "a published guide stays shown while its web page says the same words, is held when a source or its words change, and is due again a day after its newest check or an hour after a check that held it",
       "proves": "In a database, a regulatory guide stays shown while a later check finds its web page's words the same, is held when the page's words or a file's bytes change or a source cannot be read, and is shown again on the evidence it was signed on."
+    },
+    {
+      "requirement": "EDP-011",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/library-review.test.ts",
+      "test": "the staff library says when a published entry's review is due, and once overdue that customers cannot find, download or buy it",
+      "proves": "The staff library gives a published entry's review date and, once it is overdue, says that customers cannot find, download or buy it until it is reviewed and that what they already have is unchanged; an entry counts as overdue from the moment its review falls due."
     }
   ]
 }
