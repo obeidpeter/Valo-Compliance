@@ -10,6 +10,10 @@ import {
   WatchOwnerRuleSourcesParams,
   WatchOwnerRuleSourcesResponse,
   DecideOwnerRuleResponse,
+  ListSourceRegisterResponse,
+  FileSourceRegisterResponse,
+  ReviseSourceRegisterEntryParams,
+  ReviseSourceRegisterEntryResponse,
 } from "@workspace/api-zod";
 import { sameOriginMutation } from "../middlewares/valo-identity";
 import { verifiedStaffSession } from "./valo-customer-access";
@@ -20,6 +24,7 @@ import {
   type SourceStaffActor,
 } from "../modules/sources";
 import { decideOwnerRule, listOwnerRules, watchOwnerRuleSources } from "../modules/editorial";
+import { fileRepositorySources, listSourceRegister, reviseSourceEntry } from "../modules/source-register";
 import { editorialRecord } from "../lib/valo-editorial-record";
 import { ValoProblem } from "../platform/valo-problem";
 const page = (value: unknown) => z.coerce.number().int().min(1).max(10000).default(1).parse(value);
@@ -53,6 +58,22 @@ export function createSourceControlsRouter(
   });
   router.post("/admin/source-controls/action", sameOriginMutation, async (req, res) => {
     res.json(ActOnSourceControlsResponse.parse(await actOnSourceControls(await authenticate(req), req.body)));
+  });
+  // The source register (docs/architecture/source-register.md, slice 1).
+  router.get("/admin/source-register", async (req, res) => {
+    res.json(ListSourceRegisterResponse.parse(await listSourceRegister(await authenticate(req))));
+  });
+  router.post("/admin/source-register/file", sameOriginMutation, async (req, res) => {
+    res.json(FileSourceRegisterResponse.parse(await fileRepositorySources(await authenticate(req))));
+  });
+  router.post("/admin/source-register/:sourceId/versions", sameOriginMutation, async (req, res) => {
+    const actor = await authenticate(req);
+    // A malformed name names no source, whoever asks.
+    const params = ReviseSourceRegisterEntryParams.safeParse(req.params);
+    if (!params.success) throw new ValoProblem(404, "This source is not in the register.");
+    res.json(
+      ReviseSourceRegisterEntryResponse.parse(await reviseSourceEntry(actor, params.data.sourceId, req.body)),
+    );
   });
   // Requirements-checker rules on the development owner's sign-off (decision 0020).
   const owner = (req: Request, locals: Record<string, unknown>) =>

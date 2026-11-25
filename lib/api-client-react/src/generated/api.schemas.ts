@@ -1582,6 +1582,141 @@ export interface SourceControlChoice {
   title: string;
 }
 
+/**
+ * @nullable
+ */
+export type SourceRegisterFieldsInstrument = typeof SourceRegisterFieldsInstrument[keyof typeof SourceRegisterFieldsInstrument] | null;
+
+
+export const SourceRegisterFieldsInstrument = {
+  act: 'act',
+  regulatory_document: 'regulatory_document',
+  official_page: 'official_page',
+} as const;
+
+export type SourceRegisterFieldsStatus = typeof SourceRegisterFieldsStatus[keyof typeof SourceRegisterFieldsStatus];
+
+
+export const SourceRegisterFieldsStatus = {
+  active: 'active',
+  retired: 'retired',
+} as const;
+
+export interface SourceRegisterFields {
+  /** @minimum 1 */
+  version: number;
+  title: string;
+  /**
+     * The body that issues the text. Empty until it is known.
+     * @nullable
+     */
+  authority: string | null;
+  /** Nigeria, or one of the states the requirements check lists. */
+  jurisdiction: string;
+  /** @nullable */
+  instrument: SourceRegisterFieldsInstrument;
+  /**
+     * The edition in force, as the text names it.
+     * @nullable
+     */
+  versionInForce: string | null;
+  /**
+     * The day the version in force took effect. An official page has none.
+     * @nullable
+     * @pattern ^\d{4}-\d{2}-\d{2}$
+     */
+  effectiveFrom: string | null;
+  status: SourceRegisterFieldsStatus;
+  /** Why this version was recorded. */
+  reason: string;
+  createdBy: string;
+  createdAt: string;
+}
+
+/**
+ * Its daily check as it last ran, or null while it is not watched.
+ */
+export type SourceRegisterEntryWatch = {
+  /** @nullable */
+  checkedAt: string | null;
+  /** @nullable */
+  failureCode: string | null;
+  /** @nullable */
+  nextCheckAt: string | null;
+} | null;
+
+export type SourceRegisterEntry = SourceRegisterFields & {
+  sourceId: string;
+  url: string;
+  /** Its earlier versions, newest first. */
+  earlier: SourceRegisterFields[];
+  /** Its daily check as it last ran, or null while it is not watched. */
+  watch: SourceRegisterEntryWatch;
+};
+
+export interface SourceRegister {
+  entries: SourceRegisterEntry[];
+  /**
+     * How many regulatory sources kept in the repository are not filed yet.
+     * @minimum 0
+     */
+  unfiled: number;
+  jurisdictions: string[];
+}
+
+/**
+ * @nullable
+ */
+export type SourceRegisterRevisionInstrument = typeof SourceRegisterRevisionInstrument[keyof typeof SourceRegisterRevisionInstrument] | null;
+
+
+export const SourceRegisterRevisionInstrument = {
+  act: 'act',
+  regulatory_document: 'regulatory_document',
+  official_page: 'official_page',
+} as const;
+
+export type SourceRegisterRevisionStatus = typeof SourceRegisterRevisionStatus[keyof typeof SourceRegisterRevisionStatus];
+
+
+export const SourceRegisterRevisionStatus = {
+  active: 'active',
+  retired: 'retired',
+} as const;
+
+export interface SourceRegisterRevision {
+  /**
+     * The latest version, as read.
+     * @minimum 1
+     */
+  baseVersion: number;
+  /**
+     * @maxLength 200
+     * @nullable
+     */
+  authority: string | null;
+  /** @maxLength 60 */
+  jurisdiction: string;
+  /** @nullable */
+  instrument: SourceRegisterRevisionInstrument;
+  /**
+     * @maxLength 200
+     * @nullable
+     */
+  versionInForce: string | null;
+  /**
+     * @nullable
+     * @pattern ^\d{4}-\d{2}-\d{2}$
+     */
+  effectiveFrom: string | null;
+  status: SourceRegisterRevisionStatus;
+  /**
+     * Why, in 20 to 1,000 characters.
+     * @maxLength 1000
+     */
+  reason: string;
+}
+
 export type SourceControlsArea = typeof SourceControlsArea[keyof typeof SourceControlsArea];
 
 

@@ -2,6 +2,53 @@
 paths:
   /admin/source-controls: {"get": {"operationId": "getSourceControls", "tags": ["staff"], "parameters": [{"name": "area", "in": "query", "required": true, "schema": {"type": "string", "enum": ["content", "system"]}}, {"name": "page", "in": "query", "schema": {"type": "integer", "minimum": 1, "maximum": 10000, "default": 1}}], "responses": {"200": {"description": "Current authorized result. No publication or spending approval is granted.", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SourceControls"}}}}, "401": {"description": "Sign-in required"}, "403": {"description": "Active area role and recent MFA required"}, "409": {"description": "Changed version or request-key conflict"}}}}
   /admin/source-controls/action: {"post": {"operationId": "actOnSourceControls", "tags": ["staff"], "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SourceControlAction"}}}}, "responses": {"200": {"description": "Current authorized result. No publication or spending approval is granted.", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SourceControlResult"}}}}, "401": {"description": "Sign-in required"}, "403": {"description": "Active area role and recent MFA required"}, "409": {"description": "Changed version or request-key conflict"}}}}
+  /admin/source-register:
+    get:
+      operationId: listSourceRegister
+      tags: [staff]
+      summary: The source register, for content staff
+      description: >-
+        Each official source as staff keep it, with every earlier version and its watch
+        (docs/architecture/source-register.md, slice 1, ADM-003). Development only.
+      responses:
+        '200': { description: 'The register. Nothing is published or fetched.', content: { application/json: { schema: { $ref: '#/components/schemas/SourceRegister' } } } }
+        '401': { description: Sign-in required }
+        '403': { description: An active Content editor with recent MFA is required }
+        '503': { description: The register migration has not been applied }
+  /admin/source-register/file:
+    post:
+      operationId: fileSourceRegister
+      tags: [staff]
+      summary: File the regulatory sources kept in the repository into the register
+      description: >-
+        Files each regulatory source lead kept in the repository that the register does not hold yet,
+        as its first version, with what the claim maps and amendment records say of it. Filing again
+        files nothing more.
+      responses:
+        '200': { description: 'The register after filing.', content: { application/json: { schema: { $ref: '#/components/schemas/SourceRegister' } } } }
+        '401': { description: Sign-in required }
+        '403': { description: An active Content editor with recent MFA is required }
+        '503': { description: The register migration has not been applied }
+  /admin/source-register/{sourceId}/versions:
+    post:
+      operationId: reviseSourceRegisterEntry
+      tags: [staff]
+      summary: Record the next version of a source's entry
+      description: >-
+        Its corrected fields, or its retirement or return, with why. The title and address stay its
+        own, and no version is ever changed or removed.
+      parameters:
+        - { name: sourceId, in: path, required: true, schema: { type: string, minLength: 1, maxLength: 100 } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/SourceRegisterRevision' } } }
+      responses:
+        '200': { description: 'The register after the new version.', content: { application/json: { schema: { $ref: '#/components/schemas/SourceRegister' } } } }
+        '401': { description: Sign-in required }
+        '403': { description: An active Content editor with recent MFA is required }
+        '404': { description: The source is not in the register }
+        '409': { description: The entry changed since it was read }
+        '422': { description: 'A field is invalid, nothing changed, or why is missing' }
   /admin/editorial-records/{kind}/{id}:
     get:
       operationId: getEditorialRecord
@@ -89,6 +136,60 @@ schemas:
   SourceControlReview: {"type": "object", "required": ["id", "status", "targetKind", "targetKey", "targetVersion", "reason", "createdAt"], "properties": {"id": {"type": "string", "format": "uuid"}, "status": {"type": "string"}, "targetKind": {"type": "string"}, "targetKey": {"type": "string"}, "targetVersion": {"type": "integer"}, "reason": {"type": "string"}, "createdAt": {"type": "string", "format": "date-time"}}}
   SourceControlService: {"type": "object", "required": ["key", "enabled", "reason", "updatedAt"], "properties": {"key": {"type": "string"}, "enabled": {"type": "boolean"}, "reason": {"type": "string"}, "updatedAt": {"type": "string", "format": "date-time"}}}
   SourceControlChoice: {"type": "object", "required": ["id", "title"], "properties": {"id": {"type": "string"}, "title": {"type": "string"}}}
+  SourceRegisterFields:
+    type: object
+    required: [version, title, authority, jurisdiction, instrument, versionInForce, effectiveFrom, status, reason, createdBy, createdAt]
+    properties:
+      version: { type: integer, minimum: 1 }
+      title: { type: string }
+      authority: { type: [string, 'null'], description: 'The body that issues the text. Empty until it is known.' }
+      jurisdiction: { type: string, description: 'Nigeria, or one of the states the requirements check lists.' }
+      instrument: { type: [string, 'null'], enum: [act, regulatory_document, official_page, null] }
+      versionInForce: { type: [string, 'null'], description: 'The edition in force, as the text names it.' }
+      effectiveFrom: { type: [string, 'null'], pattern: '^\d{4}-\d{2}-\d{2}$', description: 'The day the version in force took effect. An official page has none.' }
+      status: { type: string, enum: [active, retired] }
+      reason: { type: string, description: 'Why this version was recorded.' }
+      createdBy: { type: string }
+      createdAt: { type: string }
+  SourceRegisterEntry:
+    allOf:
+      - $ref: '#/components/schemas/SourceRegisterFields'
+      - type: object
+        required: [sourceId, url, earlier, watch]
+        properties:
+          sourceId: { type: string }
+          url: { type: string }
+          earlier: { type: array, description: 'Its earlier versions, newest first.', items: { $ref: '#/components/schemas/SourceRegisterFields' } }
+          watch:
+            description: Its daily check as it last ran, or null while it is not watched.
+            anyOf:
+              - type: object
+                required: [checkedAt, failureCode, nextCheckAt]
+                properties:
+                  checkedAt: { type: [string, 'null'] }
+                  failureCode: { type: [string, 'null'] }
+                  nextCheckAt: { type: [string, 'null'] }
+              - { type: 'null' }
+  SourceRegister:
+    type: object
+    required: [entries, unfiled, jurisdictions]
+    properties:
+      entries: { type: array, items: { $ref: '#/components/schemas/SourceRegisterEntry' } }
+      unfiled: { type: integer, minimum: 0, description: 'How many regulatory sources kept in the repository are not filed yet.' }
+      jurisdictions: { type: array, items: { type: string } }
+  SourceRegisterRevision:
+    type: object
+    required: [baseVersion, authority, jurisdiction, instrument, versionInForce, effectiveFrom, status, reason]
+    additionalProperties: false
+    properties:
+      baseVersion: { type: integer, minimum: 1, description: 'The latest version, as read.' }
+      authority: { type: [string, 'null'], maxLength: 200 }
+      jurisdiction: { type: string, maxLength: 60 }
+      instrument: { type: [string, 'null'], enum: [act, regulatory_document, official_page, null] }
+      versionInForce: { type: [string, 'null'], maxLength: 200 }
+      effectiveFrom: { type: [string, 'null'], pattern: '^\d{4}-\d{2}-\d{2}$' }
+      status: { type: string, enum: [active, retired] }
+      reason: { type: string, maxLength: 1000, description: 'Why, in 20 to 1,000 characters.' }
   SourceControls: {"type": "object", "required": ["area", "page", "hasMore", "notice", "versions", "sources", "review", "services", "sourceChoices"], "properties": {"area": {"type": "string", "enum": ["content", "system"]}, "page": {"type": "integer"}, "hasMore": {"type": "boolean"}, "notice": {"type": "string"}, "versions": {"type": "array", "items": {"$ref": "#/components/schemas/SourceControlVersion"}}, "sources": {"type": "array", "items": {"$ref": "#/components/schemas/SourceControlWatch"}}, "review": {"type": "array", "items": {"$ref": "#/components/schemas/SourceControlReview"}}, "services": {"type": "array", "items": {"$ref": "#/components/schemas/SourceControlService"}}, "sourceChoices": {"type": "array", "items": {"$ref": "#/components/schemas/SourceControlChoice"}}}}
   EditorialRun:
     type: object
