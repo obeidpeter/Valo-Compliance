@@ -260,6 +260,29 @@ The walk itself is checked too:
 - Changing either of two conditions to a wrong one made it fail: the company-return rule's question
   on incorporation in Nigeria, and the personal-data rule's question on how information is collected.
 
+**Slice 2: the page.** The four panels are gone, and the rules' questions are asked in the steps.
+- **A question is shown exactly when its answer would be sent.** The page reads each condition on
+  what the check sends, not on everything the visitor has answered. The walk checks at every state
+  that what is sent makes the rule say exactly what all the answers make it say, and that
+  everything the rule still needs is asked of what is sent.
+- **A question was missing.** The company-return rule's calculation reads whether a foreign company
+  managed outside Nigeria is non-resident. No panel asked it, so such a company could only be told
+  that more information is needed. The walk found it from a prepared scenario that answers it. It is
+  now asked in exactly that case: "Is the entity non-resident in Nigeria?", with the hint "This
+  records your answer. It does not establish tax residence."
+- **Every answer a rule takes is accounted for.** The walk now also tries each answer a rule's schema
+  takes that no question asks, as a question never asked. There are two, both for the company
+  return: whether all its income is Nigerian, and its final tax treatment. No calculation reads
+  them, so they are not asked. A saved check that holds one sends it as it is.
+- **One filled answer is never sent.** Once the records describe a company, whether the entity was
+  incorporated as a company is not asked. So for a limited company or a company limited by
+  guarantee, the table's "incorporated as a company" fills a question that is neither shown nor
+  sent. The row stays as the table states it.
+- **Before the rules in use are known,** no rule's question is shown. If they cannot be loaded, the
+  steps that would ask them say so, and the check runs on its own questions.
+- **The review** lists what is sent, filled answers included. Saying where each came from is
+  slice 4's.
+
 ## What does not change
 
 - The answers' fields and types, so saved checks, saved results and signed scenarios read as they did.
@@ -290,7 +313,7 @@ Each slice keeps every test that ran before it.
 ## The owner's points
 
 1. **The words.** These are proposals:
-   - the new questions;
+   - the new questions, the company return's question on non-residence among them;
    - the line naming the rule a question is asked for;
    - the line for a filled answer;
    - the progress line;
