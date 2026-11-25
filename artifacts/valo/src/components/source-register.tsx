@@ -231,7 +231,7 @@ export function SourceRegister() {
           {register.data.unfiled > 0 && (
             <button
               type="button"
-              className="btn btn-primary btn-sm mt-3"
+              className="btn btn-primary btn-sm mt-3 max-w-full whitespace-normal py-2 text-left"
               disabled={busy}
               onClick={() => void fileAll()}
               data-testid="button-file-register"
