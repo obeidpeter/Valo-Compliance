@@ -4868,6 +4868,8 @@ test("the review queue says what each hold opened and who is accountable, and re
     await expect(save).toBeEnabled();
     await settled(page);
     assert.deepEqual(await phoneProblems(page, "the review queue with a note"), []);
+    // The check ends on a 320-pixel screen; the phone is 360 pixels wide again for the rest.
+    await page.setViewportSize({ width: 360, height: 640 });
     await save.click();
     await expect(queue.getByRole("status")).toHaveText("Recorded what was checked on TPL-16, version 2.");
     assert.deepEqual(sent, [
