@@ -200,6 +200,47 @@ const privacyCase = {
 } as const;
 
 /** Synthetic answers, each checked against the contract's schema, keyed by method and API path. */
+/**
+ * A page of one history as the System area's audit history reads it (ADM-009,
+ * docs/architecture/audit-trail.md, slice 4): one synthetic entry on each of two pages.
+ */
+function auditHistoryPage(query: URLSearchParams) {
+  const kinds = ["access", "safety", "prices", "refunds", "counts"],
+    kind = query.get("kind") ?? "access",
+    page = Number(query.get("page") ?? 1),
+    id = (n: number) => `00000000-0000-4000-8000-${(0xaa0000 + n).toString(16).padStart(12, "0")}`;
+  const entry = {
+    access: {
+      actor: "user_synthetic_accessibility",
+      action: "Read in system",
+      object: "audit_history:access",
+      reason: `Read page ${page} of the access history`,
+    },
+    safety: {
+      actor: "user_synthetic_editor",
+      action: "source: hold",
+      object: "source:SRC-SYNTH-01",
+      reason: "Synthetic: held while its official copy is checked.",
+    },
+    prices: { actor: "valo_app", action: "Price created", object: `price:${id(1)}`, reason: null },
+    refunds: { actor: "user_synthetic_finance", action: "approved", object: `refund:${id(2)}`, reason: null },
+    counts: {
+      actor: "worker",
+      action: "Every history matched its digest",
+      object: "histories",
+      reason: null,
+    },
+  }[kind];
+  return api.GetAuditHistoryResponse.parse({
+    kind,
+    entries: entry ? [{ id: id(16 * kinds.indexOf(kind) + page), at: at(25 - page), ...entry }] : [],
+    page,
+    pageSize: 50,
+    total: 51,
+    notice: `Synthetic notice for the ${kind} history.`,
+  });
+}
+
 /** A corpus of synthetic acceptance cases as the reviewer's page reads it (decision 0016, slice 1). */
 function acceptanceCases(corpus: string) {
   const prefix =
@@ -1010,6 +1051,7 @@ const answers: Record<string, unknown> = {
   // with a case confirmed after an earlier decision, and one without a decision.
   "GET /admin/acceptance-cases": (query: URLSearchParams) => acceptanceCases(query.get("corpus") ?? ""),
   "GET /admin/acceptance-runs": (query: URLSearchParams) => acceptanceRun(query.get("corpus") ?? ""),
+  "GET /admin/audit-history": auditHistoryPage,
 };
 
 const answer: Api = async (route, method, path, query) => {
@@ -5477,6 +5519,53 @@ test("the owner's rule panel lists the reported problems with the versions the o
     assert.deepEqual(await phoneProblems(page, "the owner's rule panel with reported problems"), []);
     assert.deepEqual([...new Set(unknown)], []);
     assert.deepEqual(errors, []);
+  } finally {
+    await close();
+  }
+});
+
+// ADM-009 (docs/architecture/audit-trail.md, slice 4): in the System area, a permanent system operator
+// reads one history at a time, newest first, a page at a time.
+test("the System area's audit history shows one history at a time and pages through it", async () => {
+  const asked: string[] = [];
+  const recording: Api = async (route, method, path, query) => {
+    if (method === "GET" && path === "/admin/audit-history")
+      asked.push(`${query.get("kind")}:${query.get("page")}`);
+    await answer(route, method, path, query);
+  };
+  const { page, unknown, errors, close } = await phone("/staff", recording);
+  try {
+    await ready(page);
+    await page.getByTestId("tab-staff-system").click();
+    const history = page.getByRole("region", { name: "Audit history" });
+    const kind = (name: string) => history.getByRole("button", { name, exact: true });
+    await expect(kind("Staff reads")).toHaveAttribute("aria-pressed", "true");
+    await expect(kind("Refund changes")).toHaveAttribute("aria-pressed", "false");
+    await expect(history.getByRole("list", { name: "Staff reads history" }).getByRole("listitem")).toHaveText(
+      [
+        "Read in system24 Nov 2026, 10:00 · user_synthetic_accessibility · audit_history:accessRead page 1 of the access history",
+      ],
+    );
+    await expect(history.getByRole("navigation", { name: "History pages" })).toContainText("Page 1 of 2");
+    await expect(history.getByRole("button", { name: "Newer" })).toBeDisabled();
+    await history.getByRole("button", { name: "Older" }).click();
+    await expect(history.getByRole("navigation", { name: "History pages" })).toContainText("Page 2 of 2");
+    await expect(history.getByRole("button", { name: "Older" })).toBeDisabled();
+    await expect(history).toContainText("Read page 2 of the access history");
+    // Another history starts at its first page, and a refund's reason is never shown.
+    await kind("Refund changes").click();
+    await expect(kind("Refund changes")).toHaveAttribute("aria-pressed", "true");
+    await expect(
+      history.getByRole("list", { name: "Refund changes history" }).getByRole("listitem"),
+    ).toHaveText([
+      "approved24 Nov 2026, 10:00 · user_synthetic_finance · refund:00000000-0000-4000-8000-000000aa0002",
+    ]);
+    await expect(history.getByRole("navigation", { name: "History pages" })).toContainText("Page 1 of 2");
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "the audit history"), []);
+    assert.deepEqual(asked, ["access:1", "access:2", "refunds:1"]);
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
   } finally {
     await close();
   }
