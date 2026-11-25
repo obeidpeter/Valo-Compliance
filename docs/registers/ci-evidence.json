@@ -3607,6 +3607,55 @@
       "proves": "In a browser, the owner's panel shows a Content editor's hold on a published regulatory guide with since when and why, lifts it only once why is given in 20 characters or more, sends the reason, and has no automated WCAG 2.2 AA failure."
     },
     {
+      "requirement": "ADM-008",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-manual-library.integration.test.ts",
+      "test": "manual publishing through staff HTTP routes and public readers",
+      "proves": "Support staff refer a workspace's reported problem to a published library entry found by its title, and the Content triage queue's hold takes that exact version out of new use at once, with a reason that names the request and copies none of its words, points a second referral at the same hold and refuses a version no longer published."
+    },
+    {
+      "requirement": "ADM-008",
+      "job": "foundation",
+      "file": "lib/db/scripts/phase1-migrations.test.mjs",
+      "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
+      "proves": "The library escalations migration keeps every referral, lets one point at a staff-library edition, sets its hold once and only to a hold on that edition, and keeps the version every referral points at."
+    },
+    {
+      "requirement": "ADM-008",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/editorial/owner-rule-signoff.integration.test.ts",
+      "test": "the development owner watches a prepared rule's sources, signs the exact version shown, supersedes it and withdraws it",
+      "proves": "A support referral of a rule version the owner signed reaches the owner's panel, says so once content staff hold that version through the source controls, and leaves the panel when it is resolved."
+    },
+    {
+      "requirement": "ADM-008",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/library-referrals.test.ts",
+      "test": "a library referral names the entry, its kind and version, and the owner's panel says whether the version was held",
+      "proves": "The words for a library referral name the entry, its kind and its version, and the owner's panel says whether the referred version was held."
+    },
+    {
+      "requirement": "ADM-008",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "support staff find a library entry by its title and refer a case to its published version",
+      "proves": "On a phone, support staff find a library entry by words of its title and refer a case to its published edition, with no automated WCAG 2.2 AA failure."
+    },
+    {
+      "requirement": "ADM-008",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "the triage queue names a library referral's entry and holds that exact version in the staff library",
+      "proves": "On a phone, the triage queue names a library referral's entry and version, holds it only with a triage reason, says what the hold does, and has no automated WCAG 2.2 AA failure."
+    },
+    {
+      "requirement": "ADM-008",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "the owner's rule panel lists the reported problems with the versions the owner signed",
+      "proves": "On a phone, the owner's rule panel lists each reported problem with a signed version, its reason and whether that version was held, with no automated WCAG 2.2 AA failure."
+    },
+    {
       "requirement": "AI-001",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai.integration.test.ts",

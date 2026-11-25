@@ -1,6 +1,7 @@
 import {
   actOnContentEscalation as postContentEscalationAction,
   actOnSupportCase as postSupportCaseAction,
+  findSupportLibraryEntries,
   getCustomerSupportCase,
   getStaffSupportCase,
   listContentEscalations as getContentEscalations,
@@ -22,6 +23,8 @@ import {
 // component render both the customer and the staff shape of a case.
 export type SupportStatus = SupportCaseStatus;
 export type SupportAction = "assign" | "reply" | "resolve" | "reopen" | "escalate_content";
+/** What a referral points at: a reviewed content version, a rule release, or a staff-library edition. */
+export type SupportTargetKind = "content" | "rule" | "library";
 export interface SupportCase {
   id: string;
   reference: string;
@@ -47,7 +50,7 @@ export interface SupportCaseDetail {
   events?: { id: string; action: string; actorId: string; createdAt: string }[];
   escalations?: {
     id: string;
-    targetKind: "content" | "rule";
+    targetKind: SupportTargetKind;
     targetId: string;
     status: "queued" | "acknowledged" | "resolved";
     reason: string;
@@ -68,7 +71,7 @@ export interface SupportStaffInput {
   action: SupportAction;
   body?: string;
   assigneeId?: string;
-  targetKind?: "content" | "rule";
+  targetKind?: SupportTargetKind;
   targetId?: string;
 }
 export type SupportReplyInput = GeneratedSupportReplyInput;
@@ -83,6 +86,7 @@ export const supportCaseKeys = {
     ["support-case", staff ? "staff" : "customer", id, messagesPage] as const,
   assignees: ["support-case-assignees"] as const,
   escalations: ["support-content-escalations"] as const,
+  libraryEntries: (words: string) => ["support-library-entries", words] as const,
 };
 // A successful status with an unreadable body stays uncertain instead of clearing a draft.
 const json = { responseType: "json" } as const;
@@ -137,6 +141,10 @@ export async function actOnSupportCase(id: string, input: SupportStaffInput) {
     input.expectedVersion,
   );
 }
+/** The published staff-library entries whose titles contain the words, for a referral to point at. */
+export function findLibraryEntries(words: string, signal?: AbortSignal) {
+  return findSupportLibraryEntries({ q: words }, request(signal));
+}
 export function listContentEscalations(page: number, signal?: AbortSignal): Promise<ContentEscalationList> {
   return getContentEscalations({ page }, request(signal));
 }
@@ -149,11 +157,7 @@ export async function actOnContentEscalation(id: string, input: ContentEscalatio
     !Number.isSafeInteger(result.caseVersion) ||
     result.caseVersion <= input.expectedVersion ||
     !["queued", "acknowledged", "resolved"].includes(result.escalation.status) ||
-    (input.action === "hold_and_reassess" &&
-      (typeof result.escalation.sourceImpactId !== "string" ||
-        !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-          result.escalation.sourceImpactId,
-        )))
+    (input.action === "hold_and_reassess" && !heldRecord(result))
   ) {
     throw new Error(
       "The content triage result could not be verified. Retry the same operation with its existing reference.",
@@ -162,6 +166,18 @@ export async function actOnContentEscalation(id: string, input: ContentEscalatio
   return result;
 }
 
+/** The record a hold left: the staff-library hold of a library referral, or the source controls'
+ * reassessment of a reviewed version or rule release. */
+function heldRecord(result: ContentEscalationResult) {
+  const record =
+    result.escalation.targetKind === "library"
+      ? result.escalation.libraryHoldId
+      : result.escalation.sourceImpactId;
+  return (
+    typeof record === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(record)
+  );
+}
 /** Retain one key for the same submitted payload after an uncertain response. */
 export function supportAttempt<T extends object>(
   previous: { signature: string; input: T & { idempotencyKey: string } } | null,

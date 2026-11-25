@@ -17,10 +17,14 @@ export interface ContentEscalation {
   /** @minimum 1 */
   targetVersion: number;
   targetHash: string;
+  /** @nullable */
+  targetTitle: string | null;
   status: ContentEscalationStatus;
   reason: string;
   /** @nullable */
   sourceImpactId: string | null;
+  /** @nullable */
+  libraryHoldId: string | null;
   /** @minimum 1 */
   caseVersion: number;
   createdAt: Date;

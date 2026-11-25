@@ -19,6 +19,8 @@ import {
   ListContentEscalationsResponse,
   ActOnContentEscalationParams,
   ActOnContentEscalationResponse,
+  FindSupportLibraryEntriesQueryParams,
+  FindSupportLibraryEntriesResponse,
 } from "@workspace/api-zod";
 import { sameOriginMutation } from "../middlewares/valo-identity";
 import { verifiedStaffSession } from "./valo-customer-access";
@@ -32,6 +34,7 @@ import {
   actOnSupportCase,
   contentSupportEscalations,
   actOnContentSupportEscalation,
+  supportLibraryEntries,
   type SupportStaffActor,
 } from "../modules/support";
 
@@ -64,10 +67,13 @@ export function makeSupportOperationsRouter(
   authenticate: (req: Request) => Promise<SupportStaffActor> = verifiedStaffSession,
 ) {
   const router = Router();
-  router.use(["/admin/support-cases", "/admin/support-escalations"], (_req, res, next) => {
-    res.set("Cache-Control", "private, no-store");
-    next();
-  });
+  router.use(
+    ["/admin/support-cases", "/admin/support-escalations", "/admin/support-library-entries"],
+    (_req, res, next) => {
+      res.set("Cache-Control", "private, no-store");
+      next();
+    },
+  );
   router.get("/admin/support-escalations", async (req, res) => {
     const actor = await authenticate(req),
       { page } = ListContentEscalationsQueryParams.parse(req.query);
@@ -77,6 +83,12 @@ export function makeSupportOperationsRouter(
     const actor = await authenticate(req),
       { id } = ActOnContentEscalationParams.parse(req.params);
     res.json(ActOnContentEscalationResponse.parse(await actOnContentSupportEscalation(actor, id, req.body)));
+  });
+  // The published staff-library entries a referral can point at, found by title.
+  router.get("/admin/support-library-entries", async (req, res) => {
+    const actor = await authenticate(req),
+      { q } = FindSupportLibraryEntriesQueryParams.parse(req.query);
+    res.json(FindSupportLibraryEntriesResponse.parse(await supportLibraryEntries(actor, q)));
   });
   router.get("/admin/support-cases", async (req, res) => {
     const actor = await authenticate(req),

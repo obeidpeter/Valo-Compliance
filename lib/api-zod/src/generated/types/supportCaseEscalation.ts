@@ -20,6 +20,8 @@ export interface SupportCaseEscalation {
   status: SupportCaseEscalationStatus;
   /** @nullable */
   sourceImpactId: string | null;
+  /** @nullable */
+  libraryHoldId: string | null;
   createdAt: Date;
   updatedAt: Date;
 }

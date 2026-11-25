@@ -19,6 +19,7 @@ import {
   type SupportCaseDetail,
   type SupportStaffInput,
   type SupportStatus,
+  type SupportTargetKind,
 } from "@/lib/support-case-api";
 
 const statuses: (SupportStatus | "all")[] = ["all", "open", "in_progress", "awaiting_customer", "resolved"];
@@ -32,7 +33,7 @@ export function StaffSupportCases({ onDirtyChange }: { onDirtyChange?: (dirty: b
   const [action, setAction] = useState<SupportAction>("reply");
   const [body, setBody] = useState("");
   const [assignee, setAssignee] = useState("");
-  const [targetKind, setTargetKind] = useState<"content" | "rule">("content");
+  const [targetKind, setTargetKind] = useState<SupportTargetKind>("content");
   const [targetId, setTargetId] = useState("");
   const [saved, setSaved] = useState("");
   const attempt = useRef<ReturnType<typeof supportAttempt<Omit<SupportStaffInput, "idempotencyKey">>> | null>(
@@ -278,7 +279,11 @@ export function StaffSupportCases({ onDirtyChange }: { onDirtyChange?: (dirty: b
           assignee={assignee}
           onAssignee={setAssignee}
           targetKind={targetKind}
-          onTargetKind={setTargetKind}
+          onTargetKind={(kind) => {
+            // An identifier chosen for one kind of target never carries over to another.
+            setTargetKind(kind);
+            setTargetId("");
+          }}
           targetId={targetId}
           onTargetId={setTargetId}
           fieldsLocked={fieldsLocked}

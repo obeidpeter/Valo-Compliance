@@ -9,6 +9,7 @@ import {
 } from "@workspace/api-client-react";
 import { formatCount, formatDateTime, formatDay } from "@/lib/format";
 import { describeError } from "@/lib/describe-error";
+import { referralLine, referralsHeading, referralsHint } from "@/lib/library-referrals";
 import { FIGURE_LABELS } from "@/lib/result-words";
 import { ErrorState } from "./states";
 
@@ -320,6 +321,26 @@ export function OwnerCheckerRules() {
                   {formatCount(item.profilesRun)} most recent saved checks.
                 </p>
               </section>
+              {item.referrals.length > 0 && (
+                // Support referrals of the versions the owner signed (docs/architecture/library-holds.md,
+                // slice 3), which content staff triage in the support queue.
+                <section aria-label={referralsHeading}>
+                  <h4 className="font-semibold">{referralsHeading}</h4>
+                  <p className="text-sm text-muted-foreground">{referralsHint}</p>
+                  <ul className="mt-2 grid gap-3">
+                    {item.referrals.map((r, i) => (
+                      <li
+                        key={`${r.reference}-${i}`}
+                        className="rounded-xl border border-border p-3 text-sm"
+                        data-testid="owner-rule-referral"
+                      >
+                        <p className="font-medium">{referralLine(r)}</p>
+                        <p className="mt-1 whitespace-pre-wrap [overflow-wrap:anywhere]">{r.reason}</p>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
               {item.holds.length > 0 && (
                 <section aria-label="What holds this rule">
                   <h4 className="font-semibold">What holds this rule</h4>

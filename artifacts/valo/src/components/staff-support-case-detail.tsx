@@ -1,5 +1,7 @@
 import { formatDateTime } from "@/lib/format";
-import type { SupportAction, SupportCaseDetail } from "@/lib/support-case-api";
+import { targetKindNames } from "@/lib/library-referrals";
+import type { SupportAction, SupportCaseDetail, SupportTargetKind } from "@/lib/support-case-api";
+import { LibraryEntryChooser } from "./library-entry-chooser";
 import { ErrorState } from "./states";
 import { SupportMessages } from "./support-cases";
 
@@ -70,8 +72,8 @@ export function StaffSupportCaseDetail({
   onBody: (body: string) => void;
   assignee: string;
   onAssignee: (assignee: string) => void;
-  targetKind: "content" | "rule";
-  onTargetKind: (kind: "content" | "rule") => void;
+  targetKind: SupportTargetKind;
+  onTargetKind: (kind: SupportTargetKind) => void;
   targetId: string;
   onTargetId: (id: string) => void;
   fieldsLocked: boolean;
@@ -181,8 +183,8 @@ export function StaffSupportCaseDetail({
                 {detail.data.escalations.map((item) => (
                   <li key={item.id} className="rounded-xl border border-border p-4 text-sm">
                     <p className="[overflow-wrap:anywhere]">
-                      <strong>{item.status.replaceAll("_", " ")}</strong> · {item.targetKind} ·{" "}
-                      {item.targetId}
+                      <strong>{item.status.replaceAll("_", " ")}</strong> · {targetKindNames[item.targetKind]}{" "}
+                      · {item.targetId}
                     </p>
                     <p className="mt-2 whitespace-pre-wrap [overflow-wrap:anywhere]">{item.reason}</p>
                     <p className="mt-2 text-xs text-muted-foreground">{formatDateTime(item.createdAt)}</p>
@@ -333,26 +335,34 @@ export function StaffSupportCaseDetail({
                     className="field"
                     value={targetKind}
                     disabled={fieldsLocked}
-                    onChange={(e) => onTargetKind(e.target.value as "content" | "rule")}
+                    onChange={(e) => onTargetKind(e.target.value as SupportTargetKind)}
                   >
-                    <option value="content">Content record</option>
-                    <option value="rule">Rule record</option>
+                    {(Object.keys(targetKindNames) as SupportTargetKind[]).map((kind) => (
+                      <option key={kind} value={kind}>
+                        {targetKindNames[kind]}
+                      </option>
+                    ))}
                   </select>
                 </div>
-                <div className="grid gap-2 text-sm">
-                  <label htmlFor="support-target-id">Existing target record UUID</label>
-                  <input
-                    id="support-target-id"
-                    className="field font-mono text-sm"
-                    value={targetId}
-                    onChange={(e) => onTargetId(e.target.value)}
-                    disabled={fieldsLocked}
-                    required
-                    autoComplete="off"
-                    maxLength={36}
-                    pattern="[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
-                  />
-                </div>
+                {targetKind === "library" ? (
+                  // A library entry is chosen by its title (docs/architecture/library-holds.md, slice 3).
+                  <LibraryEntryChooser value={targetId} onChoose={onTargetId} disabled={fieldsLocked} />
+                ) : (
+                  <div className="grid gap-2 text-sm">
+                    <label htmlFor="support-target-id">Existing target record UUID</label>
+                    <input
+                      id="support-target-id"
+                      className="field font-mono text-sm"
+                      value={targetId}
+                      onChange={(e) => onTargetId(e.target.value)}
+                      disabled={fieldsLocked}
+                      required
+                      autoComplete="off"
+                      maxLength={36}
+                      pattern="[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
+                    />
+                  </div>
+                )}
                 <p className="rounded-xl bg-secondary p-3 text-sm">
                   Internal content triage creates a queue item for authorised content staff. Include only the
                   issue and relevant version details; leave out contact details and private document text.

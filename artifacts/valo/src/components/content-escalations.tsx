@@ -5,6 +5,13 @@ import { ErrorState } from "./states";
 import { SupportDraftGuard } from "./support-cases";
 import { formatDateTime } from "@/lib/format";
 import {
+  libraryHeldMessage,
+  libraryHoldButton,
+  libraryHoldExplained,
+  libraryHoldTerm,
+  referredLine,
+} from "@/lib/library-referrals";
+import {
   actOnContentEscalation,
   listContentEscalations,
   supportAttempt,
@@ -64,7 +71,9 @@ export function ContentEscalations({ onDirtyChange }: { onDirtyChange?: (dirty: 
       attempt.current = null;
       setSaved(
         submitted.input.action === "hold_and_reassess"
-          ? "The referred version was held and reassessment was queued. No AI work was dispatched and publication was not approved."
+          ? result.escalation.targetKind === "library"
+            ? libraryHeldMessage
+            : "The referred version was held and reassessment was queued. No AI work was dispatched and publication was not approved."
           : submitted.input.action === "resolve"
             ? "Content triage was closed. This does not release a hold or establish publication eligibility."
             : "The content referral was acknowledged. Its publication state is unchanged.",
@@ -76,6 +85,10 @@ export function ContentEscalations({ onDirtyChange }: { onDirtyChange?: (dirty: 
   });
   const current = list.data?.escalations.find((item) => item.id === selected?.id);
   const row = current ?? selected;
+  // A library version is held in the staff library; a reviewed version or a rule release through the
+  // source controls (docs/architecture/library-holds.md, slice 3).
+  const library = row?.targetKind === "library";
+  const held = Boolean(library ? row?.libraryHoldId : row?.sourceImpactId);
   const uncertain = uncertainSupportResult(mutation.error);
   const conflict = supportErrorStatus(mutation.error) === 409;
   const dirty = !!body.trim() || mutation.isPending || uncertain;
@@ -119,7 +132,7 @@ export function ContentEscalations({ onDirtyChange }: { onDirtyChange?: (dirty: 
       !row ||
       locked ||
       (action === "acknowledge" && row.status !== "queued") ||
-      (action === "hold_and_reassess" && row.sourceImpactId)
+      (action === "hold_and_reassess" && held)
     )
       return;
     attempt.current = supportAttempt(attempt.current, {
@@ -174,7 +187,7 @@ export function ContentEscalations({ onDirtyChange }: { onDirtyChange?: (dirty: 
               <li key={item.id} className="min-w-0 rounded-xl border border-border p-4">
                 <h3 className="break-all font-mono text-sm">{item.reference}</h3>
                 <p className="mt-2 text-sm">
-                  <strong>{item.status}</strong> · {item.targetKind} version {item.targetVersion} ·{" "}
+                  <strong>{item.status}</strong> · {referredLine(item).replace(/^Referred /, "")} ·{" "}
                   {formatDateTime(item.createdAt)}
                 </p>
                 <p className="mt-2 break-all font-mono text-xs text-muted-foreground">
@@ -234,7 +247,7 @@ export function ContentEscalations({ onDirtyChange }: { onDirtyChange?: (dirty: 
           aria-labelledby="content-referral-detail-heading"
         >
           <h3 id="content-referral-detail-heading" className="font-display break-all text-2xl">
-            Referred {row.targetKind} version {row.targetVersion}
+            {referredLine(row)}
           </h3>
           <dl className="grid min-w-0 gap-3 text-sm sm:grid-cols-2">
             {(
@@ -244,7 +257,9 @@ export function ContentEscalations({ onDirtyChange }: { onDirtyChange?: (dirty: 
                 ["Exact version hash", row.targetHash],
                 ["Triage status", row.status],
                 ["Expected case version", String(row.caseVersion)],
-                ["Reassessment record", row.sourceImpactId ?? "Not queued"],
+                library
+                  ? [libraryHoldTerm, row.libraryHoldId ?? "Not held"]
+                  : ["Reassessment record", row.sourceImpactId ?? "Not queued"],
               ] as const
             ).map(([label, value]) => (
               <div className="min-w-0" key={label}>
@@ -291,8 +306,9 @@ export function ContentEscalations({ onDirtyChange }: { onDirtyChange?: (dirty: 
                 complaint details into source audit notes.
               </p>
               <p className="rounded-xl bg-secondary p-3 text-sm">
-                “Hold version and queue reassessment” changes the exact referred version's safety state.
-                Reassessment stays queued; this action does not dispatch AI or approve publication.
+                {library
+                  ? libraryHoldExplained
+                  : "“Hold version and queue reassessment” changes the exact referred version's safety state. Reassessment stays queued; this action does not dispatch AI or approve publication."}
               </p>
               <div className="flex flex-wrap gap-3">
                 <button
@@ -306,10 +322,10 @@ export function ContentEscalations({ onDirtyChange }: { onDirtyChange?: (dirty: 
                 <button
                   type="button"
                   className="btn btn-primary btn-sm"
-                  disabled={locked || !!row.sourceImpactId}
+                  disabled={locked || held}
                   onClick={() => act("hold_and_reassess")}
                 >
-                  Hold version and queue reassessment
+                  {library ? libraryHoldButton : "Hold version and queue reassessment"}
                 </button>
                 <button
                   type="button"

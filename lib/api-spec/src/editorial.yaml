@@ -178,10 +178,22 @@ schemas:
     required: [items]
     properties:
       items: { type: array, items: { $ref: "#/components/schemas/OwnerRuleItem" } }
+  OwnerRuleReferral:
+    type: object
+    required: [reference, version, status, reason, held, referredAt]
+    properties:
+      reference: { type: string }
+      version: { type: integer, minimum: 1 }
+      status: { type: string, enum: [queued, acknowledged] }
+      reason: { type: string }
+      held:
+        type: boolean
+        description: Whether content staff held that version through the source controls, which keeps it out of the requirements check.
+      referredAt: { type: string, format: date-time }
   OwnerRuleItem:
     type: object
     required:
-      [ruleId, title, reason, nextStep, appliesWhen, jurisdiction, validFrom, validTo, risk, scope, limitations, assumptions, disclosure, version, manifestHash, live, holds, checks, sources, scenarios, profilesRun, changedProfiles]
+      [ruleId, title, reason, nextStep, appliesWhen, jurisdiction, validFrom, validTo, risk, scope, limitations, assumptions, disclosure, version, manifestHash, live, holds, checks, sources, scenarios, profilesRun, changedProfiles, referrals]
     properties:
       ruleId: { type: string }
       title: { type: string }
@@ -214,6 +226,10 @@ schemas:
       scenarios: { type: array, items: { $ref: "#/components/schemas/OwnerRuleScenario" } }
       profilesRun: { type: integer, minimum: 0 }
       changedProfiles: { type: integer, minimum: 0 }
+      referrals:
+        type: array
+        description: Support referrals not yet resolved that point at a version of this rule the owner signed, newest first (docs/architecture/library-holds.md, slice 3).
+        items: { $ref: "#/components/schemas/OwnerRuleReferral" }
       officialRoute:
         $ref: "#/components/schemas/RequirementRoute"
       figures:

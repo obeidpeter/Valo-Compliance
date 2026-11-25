@@ -669,6 +669,7 @@ const answers: Record<string, unknown> = {
         scenarios: [],
         profilesRun: 0,
         changedProfiles: 0,
+        referrals: [],
       },
     ],
   }),
@@ -4350,6 +4351,283 @@ test("a saved result whose rule changed since says so above it and under that ru
     assert.deepEqual(await phoneProblems(page, "a saved result whose rule changed"), []);
     assert.deepEqual(errors, []);
     assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
+
+// docs/architecture/library-holds.md, slice 3 (ADM-008): support staff refer a case to a staff-library
+// entry found by its title, and the referral sends that entry's published version.
+test("support staff find a library entry by its title and refer a case to its published version", async () => {
+  const listed = (answers["GET /admin/support-cases"] as { cases: Record<string, unknown>[] }).cases[0]!;
+  const caseId = String(listed.id);
+  const edition = "00000000-0000-4000-8000-00000000a7e1";
+  const detail = (version: number, escalations: unknown[]) =>
+    api.GetStaffSupportCaseResponse.parse({
+      case: {
+        ...listed,
+        category: "support",
+        scope: "Synthetic request: a template's payment clause reads wrongly.",
+        contactEmail: "synthetic-accessibility@example.test",
+        sharingConsent: true,
+        version,
+        createdAt: at(17),
+      },
+      messages: [],
+      messagesPage: 1,
+      messagePageSize: 25,
+      moreMessages: false,
+      events: [],
+      eventsTruncated: false,
+      escalations,
+      escalationsTruncated: false,
+      notice: "Synthetic test fixture.",
+    });
+  let current = detail(1, []);
+  const searched: string[] = [],
+    sent: unknown[] = [];
+  const referring: Api = async (route, method, path, query) => {
+    const json = (body: unknown) =>
+      route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
+    if (method === "GET" && path === `/admin/support-cases/${caseId}`) await json(current);
+    else if (method === "GET" && path === "/admin/support-library-entries") {
+      searched.push(query.get("q") ?? "");
+      await json(
+        api.FindSupportLibraryEntriesResponse.parse({
+          entries: [
+            { editionId: edition, title: "Synthetic sales agreement", kind: "premium_template", version: 2 },
+          ],
+        }),
+      );
+    } else if (method === "POST" && path === `/admin/support-cases/${caseId}/action`) {
+      sent.push(route.request().postDataJSON());
+      current = detail(2, [
+        {
+          id: "00000000-0000-4000-8000-00000000a7e2",
+          caseId,
+          targetKind: "library",
+          targetId: edition,
+          targetHash: "a".repeat(64),
+          targetVersion: 2,
+          reason: "Synthetic referral: the payment clause reads wrongly.",
+          status: "queued",
+          sourceImpactId: null,
+          libraryHoldId: null,
+          createdAt: at(18),
+          updatedAt: at(18),
+        },
+      ]);
+      await json(current);
+    } else await answer(route, method, path, query);
+  };
+  const { page, unknown, errors, close } = await phone("/staff", referring);
+  try {
+    await ready(page);
+    await page.getByTestId("tab-staff-support").click();
+    const cases = page.getByTestId("staff-support-cases");
+    await cases.getByRole("button", { name: "Open case operations" }).click();
+    await cases.getByLabel("Operation").selectOption("escalate_content");
+    await cases.getByLabel("Review target").selectOption("library");
+    await cases
+      .getByLabel("Reason and relevant scope")
+      .fill("Synthetic referral: the payment clause reads wrongly.");
+    // Words of the title find the entry; Enter finds it too, and never sends the referral.
+    const words = cases.getByLabel("Find the guide or template by words of its title");
+    await words.fill("sales agreement");
+    await words.press("Enter");
+    const entry = cases.getByRole("radio", {
+      name: "Synthetic sales agreement · Premium template · version 2",
+    });
+    await expect(entry).toBeVisible();
+    assert.deepEqual(searched, ["sales agreement"]);
+    assert.deepEqual(sent, []);
+    const send = cases.getByRole("button", { name: "Queue internal content triage" });
+    await expect(send).toBeDisabled();
+    await entry.check();
+    await expect(send).toBeEnabled();
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "the support case referring a library entry"), []);
+    await page.setViewportSize({ width: 360, height: 640 });
+    await send.click();
+    await expect(
+      page.getByText("Content review was queued. No hold or publication change was made.", { exact: true }),
+    ).toBeVisible();
+    assert.deepEqual(
+      sent.map((body) => {
+        const { idempotencyKey: _key, ...rest } = body as Record<string, unknown>;
+        return rest;
+      }),
+      [
+        {
+          expectedVersion: 1,
+          action: "escalate_content",
+          body: "Synthetic referral: the payment clause reads wrongly.",
+          targetKind: "library",
+          targetId: edition,
+        },
+      ],
+    );
+    await expect(cases.getByText(`queued · Guide or template · ${edition}`, { exact: false })).toBeVisible();
+    assert.deepEqual([...new Set(unknown)], []);
+    assert.deepEqual(errors, []);
+  } finally {
+    await close();
+  }
+});
+
+// docs/architecture/library-holds.md, slice 3 (ADM-008): the Content triage queue names a library
+// referral's entry and holds that version in the staff library, with the triage reason.
+test("the triage queue names a library referral's entry and holds that exact version in the staff library", async () => {
+  const referral = {
+    id: "00000000-0000-4000-8000-00000000a7f1",
+    caseId: "00000000-0000-4000-8000-00000000a701",
+    reference: "VALO-SYNTH-1",
+    targetKind: "library",
+    targetId: "00000000-0000-4000-8000-00000000a7e1",
+    targetVersion: 2,
+    targetHash: "a".repeat(64),
+    targetTitle: "Synthetic sales agreement",
+    status: "queued",
+    reason: "Synthetic referral: the payment clause reads wrongly.",
+    sourceImpactId: null,
+    libraryHoldId: null,
+    caseVersion: 2,
+    createdAt: at(18),
+    updatedAt: at(18),
+  };
+  let listed = api.ListContentEscalationsResponse.parse({
+    escalations: [referral],
+    page: 1,
+    pageSize: 25,
+    hasMore: false,
+    notice: "Synthetic test fixture.",
+  });
+  const sent: unknown[] = [];
+  const triaging: Api = async (route, method, path, query) => {
+    const json = (body: unknown) =>
+      route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
+    if (method === "GET" && path === "/admin/support-escalations") await json(listed);
+    else if (method === "POST" && path === `/admin/support-escalations/${referral.id}/action`) {
+      sent.push(route.request().postDataJSON());
+      const held = {
+        ...referral,
+        status: "acknowledged",
+        libraryHoldId: "00000000-0000-4000-8000-00000000a7f2",
+      };
+      listed = api.ListContentEscalationsResponse.parse({
+        ...listed,
+        escalations: [{ ...held, caseVersion: 3 }],
+      });
+      const { reference: _r, targetTitle: _t, caseVersion: _v, ...row } = held;
+      await json(
+        api.ActOnContentEscalationResponse.parse({
+          escalation: row,
+          caseVersion: 3,
+          notice: "Exact version held in the staff library.",
+        }),
+      );
+    } else await answer(route, method, path, query);
+  };
+  const { page, unknown, errors, close } = await phone("/staff", triaging);
+  try {
+    await ready(page);
+    await page.getByTestId("tab-staff-content").click();
+    const queue = page.getByTestId("content-escalations");
+    await expect(queue).toContainText('queued · guide or template "Synthetic sales agreement", version 2');
+    await queue.getByRole("button", { name: "Review referred version" }).click();
+    await expect(queue.getByRole("heading", { level: 3, name: /^Referred guide or template/ })).toHaveText(
+      'Referred guide or template "Synthetic sales agreement", version 2',
+    );
+    await expect(queue).toContainText("Hold from new use");
+    await expect(queue).toContainText("copies none of its words");
+    const hold = queue.getByRole("button", { name: "Hold this version from new use" });
+    await expect(hold).toBeDisabled();
+    await queue
+      .getByLabel("Triage reason and relevant evidence")
+      .fill("Synthetic triage: check the payment clause.");
+    await expect(hold).toBeEnabled();
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "the triage queue with a library referral"), []);
+    await page.setViewportSize({ width: 360, height: 640 });
+    await hold.click();
+    await expect(
+      queue.getByText(
+        "The referred version is held from new use. A Content editor reassesses it, or the owner for a regulatory article. No AI work was dispatched and publication was not approved.",
+        { exact: true },
+      ),
+    ).toBeVisible();
+    await expect(hold).toBeDisabled();
+    assert.deepEqual(
+      sent.map((body) => {
+        const { idempotencyKey: _key, ...rest } = body as Record<string, unknown>;
+        return rest;
+      }),
+      [
+        {
+          expectedVersion: 2,
+          action: "hold_and_reassess",
+          body: "Synthetic triage: check the payment clause.",
+        },
+      ],
+    );
+    assert.deepEqual([...new Set(unknown)], []);
+    assert.deepEqual(errors, []);
+  } finally {
+    await close();
+  }
+});
+
+// docs/architecture/library-holds.md, slice 3 (ADM-008): the owner's panel lists the reported problems
+// with the versions of a rule the owner signed.
+test("the owner's rule panel lists the reported problems with the versions the owner signed", async () => {
+  const shown = (answers["GET /admin/owner-rules"] as { items: Record<string, unknown>[] }).items[0]!;
+  const listed = api.ListOwnerRulesResponse.parse({
+    items: [
+      {
+        ...shown,
+        live: { version: 1, manifestHash: "b".repeat(64) },
+        referrals: [
+          {
+            reference: "VALO-SYNTH-2",
+            version: 1,
+            status: "acknowledged",
+            reason: "Synthetic referral: the rule's next step reads wrongly.",
+            held: true,
+            referredAt: at(18),
+          },
+          {
+            reference: "VALO-SYNTH-3",
+            version: 1,
+            status: "queued",
+            reason: "Synthetic referral: the rule names the wrong office.",
+            held: false,
+            referredAt: at(19),
+          },
+        ],
+      },
+    ],
+  });
+  const owning: Api = async (route, method, path, query) => {
+    if (method === "GET" && path === "/admin/owner-rules")
+      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(listed) });
+    else await answer(route, method, path, query);
+  };
+  const { page, unknown, errors, close } = await phone("/staff", owning);
+  try {
+    await ready(page);
+    await page.getByTestId("tab-staff-system").click();
+    const panel = page.getByRole("region", { name: "Requirements check: rule sign-off" });
+    await panel.getByLabel("Prepared rule").selectOption(String(shown.ruleId));
+    const reports = panel.getByRole("region", { name: "Reported problems" });
+    await expect(reports).toContainText("Content staff triage these in the support queue.");
+    await expect(reports.getByTestId("owner-rule-referral")).toHaveText([
+      "VALO-SYNTH-2, about version 1, reported 18 Nov 2026. Content staff held that version, so the requirements check no longer uses it.Synthetic referral: the rule's next step reads wrongly.",
+      "VALO-SYNTH-3, about version 1, reported 19 Nov 2026. That version is not held.Synthetic referral: the rule names the wrong office.",
+    ]);
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "the owner's rule panel with reported problems"), []);
+    assert.deepEqual([...new Set(unknown)], []);
+    assert.deepEqual(errors, []);
   } finally {
     await close();
   }

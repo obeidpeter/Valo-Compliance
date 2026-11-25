@@ -8,6 +8,7 @@
 import type { OwnerRuleCheck } from './ownerRuleCheck';
 import type { OwnerRuleFigure } from './ownerRuleFigure';
 import type { OwnerRuleItemLive } from './ownerRuleItemLive';
+import type { OwnerRuleReferral } from './ownerRuleReferral';
 import type { OwnerRuleScenario } from './ownerRuleScenario';
 import type { OwnerRuleSource } from './ownerRuleSource';
 import type { RequirementRoute } from './requirementRoute';
@@ -48,6 +49,8 @@ export interface OwnerRuleItem {
   profilesRun: number;
   /** @minimum 0 */
   changedProfiles: number;
+  /** Support referrals not yet resolved that point at a version of this rule the owner signed, newest first (docs/architecture/library-holds.md, slice 3). */
+  referrals: OwnerRuleReferral[];
   officialRoute?: RequirementRoute;
   /** Each fee, deadline, rate or threshold the rule records, with the passage it rests on, as a customer would see it. Absent when it records none. */
   figures?: OwnerRuleFigure[];

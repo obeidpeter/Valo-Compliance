@@ -7,3 +7,4 @@
 export * from "./valo-support-lifecycle";
 export * from "./valo-support-tickets";
 export * from "./valo-support-intake";
+export { ownerRuleReferrals } from "./valo-support-triage";

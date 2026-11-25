@@ -15,6 +15,7 @@ import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { valoWorkspaces } from "./valo-workspaces";
 import { valoAccessSupport } from "./valo-customer-access";
+import { valoManualHolds } from "./valo-manual-library";
 
 export const valoSupportTickets = pgTable(
   "valo_support_tickets",
@@ -142,7 +143,9 @@ export const valoSupportEscalations = pgTable(
     caseId: uuid("case_id")
       .notNull()
       .references(() => valoSupportCases.id, { onDelete: "cascade" }),
-    targetKind: text("target_kind", { enum: ["content", "rule"] }).notNull(),
+    // A reviewed content version, a rule release, or a staff-library edition
+    // (docs/architecture/library-holds.md, slice 3).
+    targetKind: text("target_kind", { enum: ["content", "rule", "library"] }).notNull(),
     targetId: uuid("target_id").notNull(),
     targetHash: text("target_hash").notNull(),
     targetVersion: integer("target_version").notNull(),
@@ -151,15 +154,29 @@ export const valoSupportEscalations = pgTable(
       .notNull()
       .default("queued"),
     sourceImpactId: uuid("source_impact_id"),
+    /** The staff-library hold that "Hold and reassess" placed, or found already placed, for a library
+     * edition's escalation. Set once, to a hold on that edition. */
+    libraryHoldId: uuid("library_hold_id"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     index("valo_support_escalation_queue").on(t.status, t.createdAt),
-    check("valo_support_escalations_target_kind_check", sql`${t.targetKind} IN ('content','rule')`),
+    check("valo_support_escalations_target_kind_check", sql`${t.targetKind} IN ('content','rule','library')`),
     check("valo_support_escalations_target_version_check", sql`${t.targetVersion} > 0`),
     check("valo_support_escalations_reason_check", sql`char_length(${t.reason}) BETWEEN 8 AND 4000`),
     check("valo_support_escalations_status_check", sql`${t.status} IN ('queued','acknowledged','resolved')`),
+    // A library edition is held in the staff library; a reviewed version or a rule release through the
+    // source controls.
+    check(
+      "valo_support_escalation_hold_kind",
+      sql`(${t.libraryHoldId} IS NULL OR ${t.targetKind} = 'library') AND (${t.sourceImpactId} IS NULL OR ${t.targetKind} <> 'library')`,
+    ),
+    foreignKey({
+      name: "valo_support_escalation_library_hold_fk",
+      columns: [t.libraryHoldId],
+      foreignColumns: [valoManualHolds.id],
+    }),
     supportCaseRowPolicy(t.caseId),
   ],
 );
