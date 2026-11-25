@@ -1143,6 +1143,34 @@
       "proves": "With stubbed probe readings, twenty refusals of one address in ten minutes raise no alert while twenty-one do, one staff role change raises its own alert, both under the security/privacy incident runbook, and the alerts resolve when the readings return to zero."
     },
     {
+      "requirement": "ADM-009",
+      "job": "foundation",
+      "file": "lib/db/scripts/phase1-migrations.test.mjs",
+      "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
+      "proves": "The staff access object migration keeps every access row, marking the earlier ones unrecorded, and refuses a new row that does not name what it read. The audit history guards migration keeps every row; the database then refuses any change to a workspace's activity, and its removal except by a verified deletion request at its activity step or with a synthetic workspace; it refuses removing a privacy case's history from a real workspace, and lets a row change only as an erasure replaces its reason with the projection it recorded; and it refuses TRUNCATE on every table whose rows a trigger guards against deletion, and on a cascade that would reach one."
+    },
+    {
+      "requirement": "ADM-009",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/privacy/valo-privacy-erasure.integration.test.ts",
+      "test": "resumable physical development erasure with retained exclusions and replay",
+      "proves": "On a disposable database the application's own connection cannot change a privacy case's history, and a corrupt copy made with the guard off, as a damaged restore could hold, is still refused by the erasure's replay before any deletion."
+    },
+    {
+      "requirement": "ADM-009",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-privacy-http.integration.test.ts",
+      "test": "actual HTTP privacy routes apply an independent privacy role and fresh MFA",
+      "proves": "A privacy operator's read of one privacy case over HTTP records an access row naming that case."
+    },
+    {
+      "requirement": "ADM-009",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/privacy/valo-customer-access.integration.test.ts",
+      "test": "real development access intake, privacy isolation and staff boundaries",
+      "proves": "A finance operator's read of the staff overview records exactly one access row, in the finance area, naming the overview it read."
+    },
+    {
       "requirement": "AI-001",
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai.test.ts",

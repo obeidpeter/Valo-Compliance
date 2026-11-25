@@ -167,8 +167,10 @@ Every change must keep these true. Each has tests; none may be weakened.
 3. **Same-origin writes.** Mutations require the configured exact origin and a
    JSON body.
 4. **Immutable history.** Document revisions, publication records, audit logs,
-   dispute history and staff role changes are append-only; database triggers
-   enforce it.
+   dispute history, staff role changes, workspace activity and privacy case
+   history are append-only, and no history can be truncated; database triggers
+   enforce it ([audit trail](audit-trail.md)). The application login owns the
+   tables and could disable a trigger; its code never does.
 5. **Publication gates.** Content and rules reach customers only through the
    editorial gates. Public reads re-check eligibility on every request.
 6. **Payments.** Access is granted only after server-side verification with the
