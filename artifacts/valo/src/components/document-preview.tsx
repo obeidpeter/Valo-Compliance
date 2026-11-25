@@ -1,26 +1,29 @@
 import type { CanonicalDocument } from "@workspace/api-client-react";
-import { GUIDED_PREFIX, guidedRenderableBlocks } from "@workspace/valo-core/guided-runtime";
-import { GUIDED_V2_PREFIX } from "@workspace/valo-core/guided-v2";
-import { FIELD_LABELS } from "@/lib/api";
-import { formatDay } from "@/lib/format";
+import type { FormText } from "@workspace/valo-core/form-text";
+import { printedPage } from "@workspace/valo-core/printed-page";
+import { finishedFileState } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
+/**
+ * The editor's preview: the document's printed page, drawn from the same description as its Word
+ * file and its PDF (docs/architecture/editor.md, EDT-002). It shows what the file would print now:
+ * the finished notice when the document is complete, the draft notice otherwise.
+ */
 export function DocPreview({
   title,
   content,
   revision,
+  formText,
 }: {
   title: string;
   content: CanonicalDocument;
   revision: number;
+  /** A form document's released wording, which says whether every slot is filled. */
+  formText?: FormText | null;
 }) {
   const accent = content.formatting.accent === "forest" ? "hsl(var(--primary))" : "hsl(var(--foreground))";
-  const f = content.fields;
-  // A document made from a form, v1's questions or v2's filled wording, has the names and dates in
-  // its own text, as its file prints them.
-  const guidedLayout = content.blocks.some(
-    (b) => b.id.startsWith(GUIDED_PREFIX) || b.id.startsWith(GUIDED_V2_PREFIX),
-  );
+  const finished = finishedFileState(content, formText) === "complete";
+  const page = printedPage({ title, content }, revision, finished ? "business_finished" : "business_draft");
   return (
     <article
       className={cn(
@@ -30,27 +33,41 @@ export function DocPreview({
       style={{ overflowWrap: "anywhere" }}
       data-testid="preview-doc"
     >
-      <div className="h-1 w-16 rounded-full" style={{ background: accent }} />
+      <p
+        className="rounded-xl border border-border px-4 py-3 font-sans text-xs leading-relaxed text-muted-foreground"
+        data-testid="preview-notice"
+      >
+        {page.notice}
+      </p>
+      <div className="mt-6 h-1 w-16 rounded-full" style={{ background: accent }} />
       <h2 className="mt-6 text-3xl leading-tight" style={{ color: accent }}>
-        {title}
+        {page.title}
       </h2>
-      {!guidedLayout && (
+      <p className="mt-2 font-mono text-[0.7rem] uppercase tracking-wider text-muted-foreground">
+        {page.savedLine}
+      </p>
+      {page.fields.length > 0 && (
         <dl className="mt-6 grid gap-x-8 gap-y-2 font-sans text-sm sm:grid-cols-2">
-          {(["issuerName", "recipientName", "documentNumber", "issueDate", "dueDate"] as const).map((k) => (
+          {page.fields.map((field) => (
             <div
-              key={k}
+              key={field.name}
               className="flex min-w-0 flex-wrap justify-between gap-3 border-b border-border py-1.5"
             >
-              <dt className="text-muted-foreground">{FIELD_LABELS[k]}</dt>
-              <dd className={cn("min-w-0", f[k] ? "" : "italic text-[hsl(var(--ochre-foreground))]")}>
-                {(k === "issueDate" || k === "dueDate" ? formatDay(f[k]) : f[k]) || "Missing"}
+              <dt className="text-muted-foreground">{field.name}</dt>
+              <dd
+                className={cn(
+                  "min-w-0 whitespace-pre-wrap",
+                  field.supplied ? "" : "italic text-[hsl(var(--ochre-foreground))]",
+                )}
+              >
+                {field.value}
               </dd>
             </div>
           ))}
         </dl>
       )}
       <div className="mt-8 grid gap-4 text-[1.05rem] leading-relaxed">
-        {guidedRenderableBlocks(content).map((b, index) =>
+        {page.blocks.map((b, index) =>
           b.type === "heading" ? (
             // The document's title is this page's second-level heading, so a form's own headings
             // sit one level below it.
@@ -65,12 +82,9 @@ export function DocPreview({
             )
           ) : b.type === "list" ? (
             <ul key={b.id} className="list-disc pl-6">
-              {b.text
-                .split("\n")
-                .filter((l) => l.trim())
-                .map((l, i) => (
-                  <li key={i}>{l}</li>
-                ))}
+              {b.text.split("\n").map((l, i) => (
+                <li key={i}>{l}</li>
+              ))}
             </ul>
           ) : b.type === "table" ? (
             <div
@@ -109,25 +123,14 @@ export function DocPreview({
                 </tbody>
               </table>
             </div>
-          ) : b.text.trim() ? (
-            <p key={b.id} className="whitespace-pre-wrap">
-              {b.text}
-            </p>
           ) : (
-            <p key={b.id} className="font-sans text-sm italic text-muted-foreground">
-              Empty paragraph
+            // An empty paragraph prints nothing, as in the files; it keeps its line.
+            <p key={b.id} className="min-h-[1.5em] whitespace-pre-wrap">
+              {b.text}
             </p>
           ),
         )}
       </div>
-      {f.notes && (
-        <p className="mt-8 whitespace-pre-wrap border-t border-border pt-4 font-sans text-sm text-muted-foreground">
-          {f.notes}
-        </p>
-      )}
-      <p className="mt-10 font-mono text-[0.7rem] uppercase tracking-wider text-muted-foreground">
-        Draft · version {revision} · your own document, not reviewed
-      </p>
     </article>
   );
 }

@@ -122,8 +122,10 @@ test("extractReusableCustomerDetails, applyCustomerDetailsToGuided, and formatDo
   assert.equal(applied.data.values.recipientAddress, "9 Sample Crescent, Yaba, Lagos");
   assert.equal(applied.data.values.issuerName, "");
 
-  const plain = formatDocumentPlainText("Invoice — Synthetic Customer Enterprises", compiled);
-  assert.match(plain, /\(DRAFT\)/);
+  // "Copy text" is the page the files print (docs/architecture/editor.md): an invoice still missing
+  // answers starts with the draft notice.
+  const plain = formatDocumentPlainText("Invoice — Synthetic Customer Enterprises", compiled, 1);
+  assert.match(plain, /^INCOMPLETE DRAFT/);
   assert.match(plain, /Synthetic Customer Enterprises/);
 
   const second = emptyGuidedData("TPL-02");

@@ -5,6 +5,7 @@ import { expect, type Page } from "@playwright/test";
 import * as api from "@workspace/api-zod";
 import { sha256 } from "@workspace/valo-core";
 import { parseFormText } from "@workspace/valo-core/form-text";
+import { DRAFT_NOTICE } from "@workspace/valo-core/printed-page";
 import { GUIDED_TEMPLATE_IDS } from "@workspace/valo-core/guided";
 import { emptyFormData, formDocumentContent } from "@workspace/valo-core/guided-runtime-v2";
 import { GUIDED_SPECS_V2 } from "@workspace/valo-core/guided-specs-v2";
@@ -1559,17 +1560,18 @@ test("the document editor shows a draft status and the saved version, lists the 
     await expect(page.getByRole("tab")).toHaveText(["Edit", "Preview"]);
     await page.getByRole("tab", { name: "Preview", exact: true }).click();
     await expect(page.getByTestId("preview-doc")).toContainText("Supply of synthetic goods, as agreed.");
-    await expect(page.getByTestId("preview-doc")).toContainText(
-      /Draft · version 3 · your own document, not reviewed/i,
-    );
-    // The document's own details, its two dates written as the site writes a day: the files print
-    // the same names and the same dates.
+    // The preview prints the page the files print (docs/architecture/editor.md): the draft notice, the
+    // line under the title, and the document's own details with their names, its two dates written
+    // as the site writes a day, and its notes.
+    await expect(page.getByTestId("preview-notice")).toHaveText(DRAFT_NOTICE);
+    await expect(page.getByTestId("preview-doc")).toContainText("Valo · Saved version 3");
     await expect(page.getByTestId("preview-doc").locator("dl dt")).toHaveText([
       "Issued by",
       "Addressed to",
       "Reference number",
       "Issue date",
       "Due date",
+      "Notes",
     ]);
     await expect(page.getByTestId("preview-doc").locator("dl dd")).toHaveText([
       "Synthetic Trading Ltd",
@@ -1577,6 +1579,7 @@ test("the document editor shows a draft status and the saved version, lists the 
       "INV-0007",
       "18 Nov 2026",
       "2 Dec 2026",
+      "Synthetic test fixture.",
     ]);
     assert.doesNotMatch(await shown(), OLD_EDITOR_WORDS);
     assert.deepEqual(errors, []);
@@ -1636,8 +1639,8 @@ test("an invoice started from its questions lists what it still needs by each qu
         shown,
         /TPL-\d+|Guided form|\brev\b|\brevisions?\b|business draft|\bexports?\b|\bkobo\b|\bNGN\b/i,
       );
-      // The preview ends with the note such a document starts with. It is printed in the files too,
-      // so it is in plain words and claims nothing.
+      // The preview shows the note such a document starts with, among its details, as the files print
+      // it, so it is in plain words and claims nothing.
       await page.getByRole("tab", { name: "Preview", exact: true }).click();
       const preview = page.getByTestId("preview-doc");
       await expect(preview).toContainText(
@@ -1813,8 +1816,9 @@ test("an invoice started from its form asks its questions and fills its template
     );
     assert.deepEqual((await wcagFailures(page)).failures, []);
 
-    // An answer fills its place in the wording, which the preview shows with its header rows, and
-    // without the questions-only form's list of names and dates: they are in the wording.
+    // An answer fills its place in the wording, which the preview shows with its header rows. Of the
+    // document's details it lists only the notes, as the files print them: the names and dates are in
+    // the wording.
     await page.locator("#g-recipientName").fill("Synthetic Buyer Ltd");
     await page.getByRole("tab", { name: "Preview", exact: true }).click();
     const preview = page.getByTestId("preview-doc");
@@ -1824,7 +1828,7 @@ test("an invoice started from its form asks its questions and fills its template
       "Issue date",
       "Currency",
     ]);
-    await expect(preview.locator("dl")).toHaveCount(0);
+    await expect(preview.locator("dl dt")).toHaveText(["Notes"]);
     assert.deepEqual(oldWordsIn(await preview.innerText()), []);
     assert.deepEqual((await wcagFailures(page)).failures, []);
 

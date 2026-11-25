@@ -2,15 +2,11 @@ import type { BusinessDocument, CanonicalDocument, Profile } from "@workspace/ap
 import type { GuidedData, GuidedTemplateId } from "@workspace/valo-core/guided";
 import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
 import { GUIDED_SPECS_V2 } from "@workspace/valo-core/guided-specs-v2";
-import {
-  emptyGuidedData,
-  guidedDataFromBlocks,
-  guidedFieldIssue,
-  guidedRenderableBlocks,
-} from "@workspace/valo-core/guided-runtime";
-import { FIELD_LABELS } from "./api";
+import { emptyGuidedData, guidedDataFromBlocks, guidedFieldIssue } from "@workspace/valo-core/guided-runtime";
+import type { FormText } from "@workspace/valo-core/form-text";
+import { printedPage, printedPageText } from "@workspace/valo-core/printed-page";
+import { finishedFileState } from "./api";
 import type { FormValue } from "./form-view";
-import { formatDay } from "./format";
 
 /** The questions of a document's form, of either version: a v2 form asks v1's questions, by reference. */
 function formFields(current: FormValue) {
@@ -186,44 +182,20 @@ export function uniqueSavedCustomerNames(docs: readonly Pick<BusinessDocument, "
   return names;
 }
 
-/** Formats a clean plain-text draft summary of a document for quick copy-paste into WhatsApp or email. */
-export function formatDocumentPlainText(title: string, content: CanonicalDocument): string {
-  const lines: string[] = [
-    `${(title.trim() || "Untitled document").toUpperCase()} (DRAFT)`,
-    "Your own draft — not reviewed by Valo and not legal, tax or payment confirmation.",
-    "",
-  ];
-  const guided = content.blocks.some((b) => b.id.startsWith("guided-"));
-  if (!guided) {
-    const fields = content.fields;
-    for (const key of ["issuerName", "recipientName", "documentNumber", "issueDate", "dueDate"] as const) {
-      const raw = fields[key]?.trim();
-      if (!raw) continue;
-      const shown = key === "issueDate" || key === "dueDate" ? formatDay(raw) : raw;
-      lines.push(`${FIELD_LABELS[key]}: ${shown}`);
-    }
-    if (lines[lines.length - 1] !== "") lines.push("");
-  }
-
-  for (const block of guidedRenderableBlocks(content)) {
-    if (block.type === "table") {
-      for (const row of block.rows) {
-        lines.push(row.filter(Boolean).join(" | "));
-      }
-      lines.push("");
-    } else if (block.type === "list") {
-      for (const item of block.text.split("\n").filter((l) => l.trim())) {
-        lines.push(`- ${item.trim()}`);
-      }
-      lines.push("");
-    } else if (block.text.trim()) {
-      lines.push(block.text.trim(), "");
-    }
-  }
-
-  if (!guided && content.fields.notes.trim()) {
-    lines.push("Notes:", content.fields.notes.trim());
-  }
-
-  return lines.join("\n").trim();
+/**
+ * "Copy text": the document's printed page as plain text, for quick copy-paste into WhatsApp or email.
+ * It says what the preview and the files say, word for word, from the same description
+ * (docs/architecture/editor.md): the notice the file would carry now, the title and its version, the
+ * details, then the document itself.
+ */
+export function formatDocumentPlainText(
+  title: string,
+  content: CanonicalDocument,
+  revision: number,
+  formText?: FormText | null,
+): string {
+  const finished = finishedFileState(content, formText) === "complete";
+  return printedPageText(
+    printedPage({ title, content }, revision, finished ? "business_finished" : "business_draft"),
+  );
 }

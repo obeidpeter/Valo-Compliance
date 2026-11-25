@@ -129,20 +129,73 @@ export const usesFormLayout = (blocks: readonly PrintedBlock[]) =>
 
 /** The document a page is printed from, as the renderers parse it. */
 export type PrintedDocument = { title: string; content: Parameters<typeof guidedRenderableBlocks>[0] };
-/** A document's printed page: the notice, the title, the line under it, the fields with their names
- * and the blocks, as its files print them. */
+/** What a field left empty prints: in the files, in the preview and in "Copy text". */
+export const NOT_SUPPLIED = "[Not supplied]";
+/** One of a document's fields as its page prints it, with whether the business supplied it. */
+export type PrintedField = { name: string; value: string; supplied: boolean };
+/**
+ * A document's printed page: the notice, the title, the line under it, the fields with their names
+ * and the blocks. The Word file, the PDF, the editor's preview and "Copy text" each draw this, and
+ * add no text of their own (docs/architecture/editor.md, EDT-002). A list prints no blank line, and a
+ * list with no line left prints nothing.
+ */
 export function printedPage(
   document: PrintedDocument,
   revision: number,
   mode: RenderMode = "business_draft",
 ) {
   const { title, content } = document;
-  const blocks: PrintedBlock[] = guidedRenderableBlocks(content);
+  const blocks = guidedRenderableBlocks(content).flatMap((block): PrintedBlock[] => {
+    if (block.type !== "list") return [block];
+    const lines = block.text.split("\n").filter((line) => line.trim());
+    return lines.length ? [{ ...block, text: lines.join("\n") }] : [];
+  });
   return {
     notice: noticeFor(mode),
     title,
     savedLine: savedLine(mode, revision),
-    fields: printedFields(content.fields, madeFromForm(content.blocks), mode),
+    fields: printedFields(content.fields, madeFromForm(content.blocks), mode).map(
+      ([name, value]): PrintedField => ({
+        name,
+        value: value || NOT_SUPPLIED,
+        supplied: Boolean(value),
+      }),
+    ),
     blocks,
   };
+}
+export type PrintedPage = ReturnType<typeof printedPage>;
+
+/**
+ * A page's text in reading order, as plain text: the notice, the title and the line under it, each
+ * field as "Name: value", then the blocks, a list's items each after "- " and a table's cells joined
+ * by " | ". "Copy text" copies this, and the tests compare the preview's and the files' words with it.
+ */
+export function printedPageText(page: PrintedPage) {
+  const lines = [page.notice, "", page.title, page.savedLine, ""];
+  for (const field of page.fields) lines.push(`${field.name}: ${field.value}`);
+  lines.push("");
+  for (const block of page.blocks) {
+    if (block.type === "table") for (const row of block.rows) lines.push(row.join(" | "));
+    else if (block.type === "list") for (const item of block.text.split("\n")) lines.push(`- ${item}`);
+    else lines.push(block.text);
+    lines.push("");
+  }
+  return lines
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+/** Every word a page prints, in reading order, with nothing added: what the preview, the Word file
+ * and the PDF must each say (the tests compare them with this). */
+export function printedPageWords(page: PrintedPage) {
+  return [
+    page.notice,
+    page.title,
+    page.savedLine,
+    ...page.fields.flatMap((field) => [field.name, field.value]),
+    ...page.blocks.flatMap((block) => (block.type === "table" ? block.rows.flat() : [block.text])),
+  ]
+    .flatMap((text) => text.split(/\s+/))
+    .filter(Boolean);
 }

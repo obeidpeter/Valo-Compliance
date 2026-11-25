@@ -44,8 +44,9 @@ export {
  * version, so the name changes whenever the same saved version would print differently. Version 4:
  * a guided document prints an amount in naira under its question's name, without "kobo". Version 5:
  * a customer's own document says "Saved version", names its fields as the editor does, prints a
- * date with the month as a word, and carries the draft notice below. */
-export const RENDER_VERSION = "manual-draft-5";
+ * date with the month as a word, and carries the draft notice below. Version 6: a list prints no blank line, as the
+ * editor's preview does (docs/architecture/editor.md). */
+export const RENDER_VERSION = "manual-draft-6";
 export const exportMime = {
   docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   pdf: "application/pdf",
@@ -99,7 +100,7 @@ export function controlledHtml(raw: unknown, revision: number, mode: RenderMode 
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'"><title>${e(title)}</title><style>
   @page{size:A4;margin:25mm 18mm}body{font:11pt/1.25 ${font};color:#292724;overflow-wrap:anywhere}h1{color:${colour};font-size:23pt}p,li,td{white-space:pre-wrap}table{width:100%;border-collapse:collapse;margin:14pt 0}td{border:1px solid #aaa;padding:7pt;vertical-align:top}tr{break-inside:avoid}.notice{border:1px solid #b6ac94;padding:10pt;color:#675c3b;font-size:9pt}.field{margin:5pt 0}thead{display:table-header-group}${layout}</style></head><body>
   <div class="notice">${notice}</div><h1>${e(title)}</h1><p>${savedLine}</p>
-  ${fields.map(([key, value]) => `<div class="field"><strong>${e(key)}:</strong> ${e(value || "[Not supplied]")}</div>`).join("")}
+  ${fields.map(({ name, value }) => `<div class="field"><strong>${e(name)}:</strong> ${e(value)}</div>`).join("")}
   ${blocks}</body></html>`;
 }
 export async function renderDocument(
@@ -122,9 +123,9 @@ export async function renderDocument(
       }),
       new Paragraph(savedLine),
       ...fields.map(
-        ([key, value]) =>
+        ({ name, value }) =>
           new Paragraph({
-            children: [new TextRun({ text: `${key}: `, bold: true }), new TextRun(value || "[Not supplied]")],
+            children: [new TextRun({ text: `${name}: `, bold: true }), new TextRun(value)],
           }),
       ),
     ];

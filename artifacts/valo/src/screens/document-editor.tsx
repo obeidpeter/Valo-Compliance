@@ -915,7 +915,12 @@ export default function DocumentEditor({ id }: { id: string }) {
                     type="button"
                     className="btn btn-ghost btn-sm"
                     onClick={async () => {
-                      const plain = formatDocumentPlainText(title || saved.title, content);
+                      const plain = formatDocumentPlainText(
+                        title || saved.title,
+                        content,
+                        baseRev.current,
+                        formText,
+                      );
                       try {
                         await navigator.clipboard.writeText(plain);
                         setCopiedPreview(true);
@@ -976,7 +981,12 @@ export default function DocumentEditor({ id }: { id: string }) {
                   )}
                 </p>
               )}
-              <DocPreview title={title || saved.title} content={content} revision={baseRev.current} />
+              <DocPreview
+                title={title || saved.title}
+                content={content}
+                revision={baseRev.current}
+                formText={formText}
+              />
             </div>
           ) : (
             <div className={cn(splitPreview && "xl:grid xl:grid-cols-2 xl:items-start xl:gap-6")}>
@@ -1336,7 +1346,12 @@ export default function DocumentEditor({ id }: { id: string }) {
               {splitPreview && (
                 <div className="hidden xl:sticky xl:top-24 xl:block" aria-label="Live preview">
                   <p className="eyebrow mb-3">Live preview</p>
-                  <DocPreview title={title || saved.title} content={content} revision={baseRev.current} />
+                  <DocPreview
+                    title={title || saved.title}
+                    content={content}
+                    revision={baseRev.current}
+                    formText={formText}
+                  />
                 </div>
               )}
             </div>
