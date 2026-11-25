@@ -69,6 +69,22 @@ owner.
   queue, and its hold goes through the source controls, as for a reviewed rule.
 - So an escalated entry is held at once by whoever triages it. It does not wait for a specialist.
 
+## Settled while building it
+
+Slice 1:
+- The counts come from `valo_manual_edition_reach`, and the notices of a replaced or withdrawn edition
+  are written from the same function, so the editor sees whom the notices will reach. A workspace bought
+  the template if it holds an active entitlement to any of its editions under a verified order, as the
+  notices have counted since editions slice 3. An order only started does not count.
+- A workspace is counted once, however many documents it made. The line says how many workspaces bought
+  the template, and how many made how many documents from the version.
+- The counts are of the published edition, which is the one a withdrawal acts on, even while a newer
+  draft is open. A guide shows none.
+- A withdrawn template edition says how many workspaces its withdrawal told, counted from its notices.
+- The counts are read only where the migration has added the function. On a database it has not
+  reached, the screen shows none and the withdrawal form says what it said before. Withdrawals and
+  their notices work either way.
+
 ## What does not change
 
 - Who may release which entry (decision 0018), and the reviewed route's holds.

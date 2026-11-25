@@ -3555,7 +3555,7 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/routes/valo-manual-library.integration.test.ts",
       "test": "manual publishing through staff HTTP routes and public readers",
-      "proves": "A Content editor's withdrawal takes a released practical guide off the public site, whose page then answers 404, and the withdrawn version cannot be published again. The test does not show a recorded reason or the customers affected."
+      "proves": "A Content editor's withdrawal takes a released practical guide off the public site, whose page then answers 404, and the withdrawn version cannot be published again. Before a template's published edition is withdrawn, the staff view counts the workspaces that bought the template and those that made documents from the edition, each once with its documents; the withdrawal's notices reach exactly those workspaces, the withdrawn edition says how many it told, and a guide shows no counts."
     },
     {
       "requirement": "ADM-007",
@@ -3576,7 +3576,7 @@
       "job": "foundation",
       "file": "lib/db/scripts/phase1-migrations.test.mjs",
       "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
-      "proves": "After the rule changes migration, PostgreSQL refuses to move a released rule version to superseded or withdrawn without a record written in the same transaction, sets the record's time and its counts of affected workspaces, saved results and live tasks itself, and refuses any change to a record."
+      "proves": "After the rule changes migration, PostgreSQL refuses to move a released rule version to superseded or withdrawn without a record written in the same transaction, sets the record's time and its counts of affected workspaces, saved results and live tasks itself, and refuses any change to a record; and after the manual reach migration, the database gives each workspace a library edition reaches once, a verified buyer of any of the template's editions or one that made documents from the edition with their count, writes a withdrawal's notices from exactly those rows, and refuses the count to a customer request."
     },
     {
       "requirement": "ADM-007",
@@ -3584,6 +3584,13 @@
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
       "test": "the owner's panel asks what changed before a version replaces a released one, and why before a withdrawal, and sends each reason with the decision",
       "proves": "In a browser, the owner's panel will not sign a version that replaces a released one until what changed is given in 20 characters or more, nor withdraw one until why is given, sends each reason with the decision, and has no automated WCAG 2.2 AA failure."
+    },
+    {
+      "requirement": "ADM-007",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/library-reach.test.ts",
+      "test": "an entry says whom its withdrawal would tell, its form says it before the editor confirms, and a withdrawn edition says how many it told",
+      "proves": "The staff library says, under a template's published version and in its withdrawal form, how many workspaces a withdrawal tells, which bought the template and which made how many documents from the version, says when nobody is told, and says after a withdrawal how many workspaces it told."
     },
     {
       "requirement": "AI-001",
