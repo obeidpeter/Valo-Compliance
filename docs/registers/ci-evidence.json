@@ -2641,6 +2641,27 @@
       "proves": "In the tax candidate evaluator, an unincorporated partnership that claims it is confirmed not to be a company under the extended definition still gets “More information needed”, with no company-return obligation determined and no registration task."
     },
     {
+      "requirement": "RUL-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/checker-corpus.test.ts",
+      "test": "the frozen corpus is unchanged and holds RUL-008's 80 scenarios across six sectors, the three checked places, other states, unknowns and date boundaries",
+      "proves": "The frozen scenario corpus still has the checksum it was frozen with and holds 80 distinct scenarios across the six priority sectors, with 21 in Lagos, 21 in the FCT and 19 in Bayelsa, 17 naming a state no rule covers locally, 15 with an unknown or unanswered answer, four other dates and six that must stay held."
+    },
+    {
+      "requirement": "RUL-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/checker-corpus.test.ts",
+      "test": "each of the 80 scenarios is put to the live check as a business would answer it, and every result keeps the corpus's conditions: national only, no deadline or reminder, no certification, unknowns never an exemption, and holds kept",
+      "proves": "Each of the 80 scenarios, mapped to the check's own answers with every fact answered, reworded or listed as not asked, and put to the live check with the four rules prepared as the owner's sign-off would release them, gives the same result twice, stays national with the local coverage gap shown, sets no deadline, certifies nothing, never turns an unknown into an exemption, offers no task while held for source review, and the six that test a hold give no result from their rule or are refused."
+    },
+    {
+      "requirement": "RUL-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/checker-corpus.test.ts",
+      "test": "the live check gives the corpus's expected result for 71 of the 80, and for each of the other 9 exactly the result recorded with its reason",
+      "proves": "The live check gives the corpus's expected result for 71 of the 80 scenarios and, for each of the other nine, exactly the result recorded with whose result it is and why; it does not show that those nine pass."
+    },
+    {
       "requirement": "RUL-009",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/sources/valo-source-controls.integration.test.ts",

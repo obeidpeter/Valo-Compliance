@@ -26,8 +26,10 @@ research note's own calculation, in the note's words.
 - Its last run gave the expected result for 72 of the 80. For the other 8,
   `docs/valo/source-checker-oracle-v2-proposed.md` proposes other results from the sources. None is
   accepted.
-- It is not in CI, and its source bindings run out around 14 December 2026.
-- It never runs the requirements check.
+- It is not in CI, and its source bindings run out around 14 December 2026. In CI, a test runs the
+  20 business-name cases through their research note alone, and others test a few cases of the other
+  notes.
+- None of them runs the requirements check.
 
 **The requirements check** runs the four rules once the owner signs them (decision 0020). Each rule
 has its own critical scenarios, 52 in all, which its release plan runs before it can be released.
@@ -101,6 +103,42 @@ that tests a hold meets it like this:
 - The rules and the check's calculation. A difference the run finds in the check is reported, not
   fixed here. Fixing it changes what a released calculation gives, so it needs a new version of the
   calculation and new rule versions, which the owner signs.
+
+## Settled while building it
+
+**Slice 1: the 80 through the live check.**
+- **The run, on 25 November 2026:**
+  - every case kept every condition;
+  - 71 of the 80 give the expected result. The six that test a hold are held: five give no result
+    from their rule, and the check refuses the future date. Five results stay held for source review,
+    with no task offered;
+  - 9 do not give the expected result. Eight are the research notes' own results, which the check
+    repeats: the same eight as the run of 14 November, each with the sources' reasons in the oracle
+    v2 proposal. One is the check's own, below;
+  - on every other case not held, the check gives its research note's own result. So the mapping
+    changed no note's answer.
+- **The check's own difference: CHK-CAND-NDPA-009**, a household contact list reused for a salon's
+  promotions. The business claims the personal or household exception. The check's answer "personal
+  or household" cannot say "claimed" apart from "confirmed", and its calculation reads the answer as
+  confirmed. So, with commercial use stated, it asks whether privacy rights were violated (More
+  information needed). The research note and the corpus say commercial reuse ends the exception
+  (Likely relevant). The check gives the weaker result, not an exemption.
+- **The record of differences** (`corpusDifferences` in `modules/rules/checker-corpus.ts`) names
+  each of the nine, the result the check gives, whose result it is and why. The test fails when any
+  case's result moves away from the record, or comes back to the expected one. So a change is seen,
+  and the record is updated with it. Nothing in the record accepts a result.
+- **The mapping is the check's.** Every fact a case gives is answered, put in the check's words or
+  listed as not asked, and the test checks each one. A value the check words differently is taken as
+  the business's assertion, as the check takes every answer; the questions that would confirm it are
+  answered on their own.
+- **The run's report** is kept by CI (`checker-corpus-live-run`). For each case it gives the check's
+  result, the research note's, the corpus's expected one, the checks, and how the case's facts were
+  put. It records no acceptance, and no person or model reviewed it.
+- **The test needs no binding that runs out.** The rules' copies are dated from the amendment
+  records' latest search, and the research notes are bound to the prepared rules' own sources, as the
+  check binds them.
+- **RUL-008 is not accepted.** "All critical results and exclusions pass" is not met while nine
+  differ, and the AI challenge has not run.
 
 ## Slices
 
