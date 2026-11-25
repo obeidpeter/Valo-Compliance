@@ -310,6 +310,19 @@ The walk itself is checked too:
   The owner's fifth point now asks for a born-digital official copy, or for approval to read the
   scan's pages.
 
+**Slice 4: progress and links.**
+- **Progress counts the questions asked now**, the rules' among them: "9 of 14 questions answered".
+  A rule's question that an earlier answer fills counts as answered, and so do "I do not know" and
+  "Skip for now". The optional exact figure is never counted.
+- **A step's tick includes its rules' questions.** So filling the page in from the business profile
+  ticks a step only once its rules' questions are answered too.
+- **The review lists every question asked**, in the page's order, with its answer as it is sent. A
+  filled answer says where it came from, and a question the check skips is not listed. A rule's
+  answer is named in its question's own words, for example "Individual with a business name".
+- **"Change" moves to the question itself.** Before, "Edit" moved to its step. A result's "Still
+  unanswered" questions are links to their places too. "Review answer", beside a requirement's
+  answers still to give, now reaches the check's own questions as well as the rules'.
+
 ## What does not change
 
 - The answers' fields and types, so saved checks, saved results and signed scenarios read as they did.

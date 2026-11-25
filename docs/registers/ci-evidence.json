@@ -2764,7 +2764,7 @@
       "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/public-screens-accessibility.test.ts",
       "test": "the requirements check chooses no answer for a visitor: every question starts with nothing chosen, 'I do not know', 'Skip for now' and 'Not applicable' show only once chosen, an emptied box is untouched again, a step is ticked only when its questions are dealt with, and what is sent keeps each apart from 'No' and zero",
-      "proves": "For a signed-out visitor on an emulated phone with synthetic data, choosing “Not applicable” for turnover takes the year and exact-figure questions off the requirements check, with a note that the questions about the figure are skipped, and choosing “I do not know” brings the year question back; the first step is marked as answered only after both its questions are dealt with, and the size step when turnover does not apply but not when it is unknown; and “Edit” on the review returns to the step with the answer still there. The local government area's box appears once a state is chosen, empty, and goes again when the state is cleared. The page draws these questions from the check's questionnaire file; the test changes nothing in that file."
+      "proves": "For a signed-out visitor on an emulated phone with synthetic data and no rule in use, choosing “Not applicable” for turnover takes the year and exact-figure questions off the requirements check, with a note that the questions about the figure are skipped, and choosing “I do not know” brings the year question back; the first step is marked as answered only after both its questions are dealt with, and the size step when turnover does not apply but not when it is unknown; and “Change” on the review moves the focus to the question, with the answer still there. The local government area's box appears once a state is chosen, empty, and goes again when the state is cleared. The page draws these questions from the check's questionnaire file; the test changes nothing in that file."
     },
     {
       "requirement": "RUL-001",
@@ -2914,11 +2914,32 @@
       "proves": "In a browser on an emulated phone, a visitor ticks any of the twenty industries, named as the site names them, beside their own words, up to ten entries in all; once the business imports goods, one of the Act's six kinds of product, alone, answers the product rule's question about the particular product, and a second kind brings that question back; and the review and what is sent hold the answers as given."
     },
     {
+      "requirement": "RUL-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/checker-questionnaire.test.ts",
+      "test": "the questions asked now are listed in the order the page shows them, each rule's after the check's own in its step, with the filled ones marked and none the check skips",
+      "proves": "With synthetic answers, the questions the check asks now are listed in the page's order, each in its step, the check's own before the rules' in use; questions the answers skip, such as the products of a business that neither makes nor imports goods, are left out; each answer an earlier one fills names where it came from; and no business-name question is listed for a visitor who is not asked those questions."
+    },
+    {
+      "requirement": "RUL-001",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/rich-checker.test.ts",
+      "test": "progress counts the questions asked now, a rule's filled answers and its chosen ways of not answering as dealt with, and a step is ticked only once every question it asks is",
+      "proves": "The web app counts as progress the questions asked now, without the optional exact figure, counts a rule's filled answers, an answer, “I do not know” and “Skip for now” as dealt with, ticks a step only once its rules' questions are dealt with too, and changes the count when an answer opens questions."
+    },
+    {
+      "requirement": "RUL-001",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-screens-accessibility.test.ts",
+      "test": "progress counts the questions asked now, the rules' among them, and a step is ticked once every question it asks is dealt with; the review lists every question asked, a filled answer saying where it came from, each with a link back to it; and a result's still-unanswered questions link back too",
+      "proves": "In a browser on an emulated phone, the line of progress counts the questions answered of those asked, rising when an answer opens more; the first step is ticked only once its rule's questions are dealt with; the review lists a filled answer with where it came from and leaves out questions not asked; its “Change” link moves the focus to the question; and a result's still-unanswered question moves the focus to its box."
+    },
+    {
       "requirement": "RUL-002",
       "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/public-screens-accessibility.test.ts",
       "test": "the requirements check chooses no answer for a visitor: every question starts with nothing chosen, 'I do not know', 'Skip for now' and 'Not applicable' show only once chosen, an emptied box is untouched again, a step is ticked only when its questions are dealt with, and what is sent keeps each apart from 'No' and zero",
-      "proves": "For a signed-out visitor on an emulated phone with synthetic data, every question on the requirements check's five steps opens with nothing chosen and every answer box empty (the optional detail sections are not looked at), “I do not know”, “Skip for now” and “Not applicable” each show as chosen only once chosen, a typed 0 chooses none of them, and the answers sent carry unknown, unanswered and a typed number as given, with nothing sent as “no”, false or zero. The rule engine's use of those answers is not tested here."
+      "proves": "For a signed-out visitor on an emulated phone with synthetic data, every question on the requirements check's five steps opens with nothing chosen and every answer box empty (with no rule in use, so only the check's own questions are drawn), “I do not know”, “Skip for now” and “Not applicable” each show as chosen only once chosen, a typed 0 chooses none of them, and the answers sent carry unknown, unanswered and a typed number as given, with nothing sent as “no”, false or zero. The rule engine's use of those answers is not tested here."
     },
     {
       "requirement": "RUL-002",
