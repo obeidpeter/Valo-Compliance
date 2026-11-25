@@ -86,7 +86,57 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/AssessmentComparison" }
+  /workspace/rule-notices:
+    get:
+      operationId: listRuleNotices
+      description: "The workspace's unread notices that a requirements-check rule version it saved a result under, or made a task from, was replaced or withdrawn, newest first, up to 50 (docs/architecture/rule-changes.md). The database writes each one with the change."
+      responses:
+        "200":
+          description: The workspace's notices
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RuleNotices" }
+        "401": { $ref: "#/components/responses/AuthError" }
+        "403": { $ref: "#/components/responses/AuthError" }
+        "429": { $ref: "#/components/responses/QuotaError" }
+  /workspace/rule-notices/{id}/read:
+    parameters:
+      - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+    post:
+      operationId: markRuleNoticeRead
+      description: "Marks one of the workspace's rule notices read, so that its home no longer lists it. Nothing else of it changes."
+      responses:
+        "200":
+          description: The workspace's unread rule notices, without this one
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RuleNotices" }
+        "401": { $ref: "#/components/responses/AuthError" }
+        "403": { $ref: "#/components/responses/AuthError" }
+        "404": { $ref: "#/components/responses/AuthError" }
+        "429": { $ref: "#/components/responses/WriteLimit" }
 schemas:
+  RuleNotices:
+    type: object
+    additionalProperties: false
+    required: [items]
+    properties:
+      items: { type: array, maxItems: 50, items: { $ref: "#/components/schemas/RuleNotice" } }
+  RuleNotice:
+    type: object
+    additionalProperties: false
+    required: [id, ruleId, title, version, kind, replacementVersion, reason, results, tasks, createdAt]
+    properties:
+      id: { type: string, format: uuid }
+      ruleId: { type: string }
+      title: { type: string, description: "The rule's title in the version that changed." }
+      version: { type: integer, description: "The version that changed." }
+      kind: { type: string, enum: [replaced, withdrawn] }
+      replacementVersion: { type: [integer, "null"], description: "The version that replaced it, for a replaced version." }
+      reason: { type: string, description: "What changed, or why it was withdrawn, as the person who made the change wrote it." }
+      results: { type: integer, minimum: 0, description: "How many of the workspace's saved results list the version." }
+      tasks: { type: integer, minimum: 0, description: "How many of the workspace's tasks were made from the version." }
+      createdAt: { type: string, format: date-time, description: "When the version was replaced or withdrawn." }
   RichCheckerFacts:
     type: object
     properties:
@@ -1632,6 +1682,11 @@ schemas:
       facts: { $ref: "#/components/schemas/CheckerFacts" }
       result: { $ref: "#/components/schemas/AssessmentResult" }
       createdAt: { type: string }
+      ruleChanges:
+        type: array
+        maxItems: 100
+        description: When the saved result is read on its own, each change since to a rule version it lists, from the workspace's rule notices (docs/architecture/rule-changes.md, slice 3). Absent when none of its rule versions changed. The result itself is unchanged.
+        items: { $ref: "#/components/schemas/RuleChange" }
   AssessmentComparison:
     type: object
     required: [previousId, currentId, changedFacts, addedRuleIds, removedRuleIds, changedRuleIds, explanations]

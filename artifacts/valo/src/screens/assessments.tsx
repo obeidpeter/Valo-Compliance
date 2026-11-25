@@ -42,12 +42,12 @@ import {
   untrackedActionableItems,
   type AssessmentListFilter,
 } from "@/lib/assessment-tasks";
-import { formatDateTime, formatDay } from "@/lib/format";
+import { formatCount, formatDateTime, formatDay } from "@/lib/format";
 import { describeAssessmentChange } from "@/lib/assessment-changes";
 import { reviewFacts, displayFact, factLabel, isMarker, live } from "@/lib/checker";
 import { formatRequirementsBrief } from "@/lib/requirements-brief";
 import { RESULT_LABELS, RESULT_TONES, factAtPath, canCreateSourceTask } from "@/lib/rich-checker";
-import { shortRulesVersion } from "@/lib/result-words";
+import { savedRuleChangeWords, shortRulesVersion } from "@/lib/result-words";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
@@ -319,6 +319,9 @@ export function AssessmentDetail({ id }: { id: string }) {
   const profileMovedAhead = Boolean(
     ws.data?.profile && s.profileRevision && ws.data.profileRevision > s.profileRevision,
   );
+  // docs/architecture/rule-changes.md, slice 3: the rule versions this result lists that have changed
+  // since it was saved. The result is shown as it was saved.
+  const changes = new Map((s.ruleChanges ?? []).map((change) => [change.ruleId, change]));
 
   return (
     <div className="mx-auto max-w-5xl px-5 py-12 lg:px-8">
@@ -417,6 +420,27 @@ export function AssessmentDetail({ id }: { id: string }) {
         </div>
       )}
 
+      {changes.size > 0 && (
+        <div className="no-print mt-6" data-testid="notice-result-rules-changed">
+          <Notice
+            title={
+              changes.size === 1
+                ? "A rule in this result has changed since it was saved"
+                : `${formatCount(changes.size)} rules in this result have changed since it was saved`
+            }
+          >
+            <p>This result is kept as it was saved. Each changed rule says what changed below it.</p>
+            <Link
+              href="/workspace/checker"
+              className="btn btn-ink btn-sm mt-3"
+              data-testid="link-recheck-changed-rules"
+            >
+              Check again
+            </Link>
+          </Notice>
+        </div>
+      )}
+
       {batchOpen && untrackedItems.length > 0 && (
         <BatchTasksPanel assessmentId={s.id} items={untrackedItems} onClose={() => setBatchOpen(false)} />
       )}
@@ -428,9 +452,19 @@ export function AssessmentDetail({ id }: { id: string }) {
             // oxlint-disable-next-line react/no-unstable-nested-components -- a render function the list calls, not a component
             itemAction={(it) => {
               const tracked = trackedRules.has(it.ruleId);
-              if (!canCreateSourceTask(it)) return null;
+              const change = changes.get(it.ruleId);
+              const changed = change && change.version === it.ruleVersion && (
+                <p
+                  className="text-sm text-[hsl(var(--ochre-foreground))]"
+                  data-testid={"changed-" + it.ruleId}
+                >
+                  {savedRuleChangeWords(change)}
+                </p>
+              );
+              if (!canCreateSourceTask(it)) return changed || null;
               return (
                 <div className="flex flex-wrap items-center gap-2">
+                  {changed}
                   {tracked && (
                     <Link
                       href="/workspace/tasks"

@@ -5,6 +5,30 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export type RuleChangeKind = typeof RuleChangeKind[keyof typeof RuleChangeKind];
+
+
+export const RuleChangeKind = {
+  replaced: 'replaced',
+  withdrawn: 'withdrawn',
+} as const;
+
+export interface RuleChange {
+  ruleId: string;
+  /** The version that changed: the one a saved result lists, or a task was made from. */
+  version: number;
+  kind: RuleChangeKind;
+  /**
+     * The version that replaced it, for a replaced version.
+     * @nullable
+     */
+  replacementVersion: number | null;
+  /** What changed, or why it was withdrawn, as the person who made the change wrote it. */
+  reason: string;
+  /** When the version was replaced or withdrawn, as an ISO 8601 time. */
+  changedAt: string;
+}
+
 /**
  * The authority's own official page for a requirement, as its rule records it. Absent when the rule records none, and in a result saved before routes were recorded.
  */
@@ -2682,6 +2706,48 @@ export interface WorkspaceDataExport {
   data: WorkspaceDataExportData;
 }
 
+export type RuleNoticeKind = typeof RuleNoticeKind[keyof typeof RuleNoticeKind];
+
+
+export const RuleNoticeKind = {
+  replaced: 'replaced',
+  withdrawn: 'withdrawn',
+} as const;
+
+export interface RuleNotice {
+  id: string;
+  ruleId: string;
+  /** The rule's title in the version that changed. */
+  title: string;
+  /** The version that changed. */
+  version: number;
+  kind: RuleNoticeKind;
+  /**
+     * The version that replaced it, for a replaced version.
+     * @nullable
+     */
+  replacementVersion: number | null;
+  /** What changed, or why it was withdrawn, as the person who made the change wrote it. */
+  reason: string;
+  /**
+     * How many of the workspace's saved results list the version.
+     * @minimum 0
+     */
+  results: number;
+  /**
+     * How many of the workspace's tasks were made from the version.
+     * @minimum 0
+     */
+  tasks: number;
+  /** When the version was replaced or withdrawn. */
+  createdAt: string;
+}
+
+export interface RuleNotices {
+  /** @maxItems 50 */
+  items: RuleNotice[];
+}
+
 export type RichCheckerFactsBusinessNameLegalForm = 'individual' | 'firm' | 'company' | 'other' | {
   status: 'unknown' | 'unanswered' | 'not_applicable';
   /** @nullable */
@@ -3513,6 +3579,11 @@ export interface SavedAssessment {
   facts: CheckerFacts;
   result: AssessmentResult;
   createdAt: string;
+  /**
+     * When the saved result is read on its own, each change since to a rule version it lists, from the workspace's rule notices (docs/architecture/rule-changes.md, slice 3). Absent when none of its rule versions changed. The result itself is unchanged.
+     * @maxItems 100
+     */
+  ruleChanges?: RuleChange[];
 }
 
 export type AssessmentChangeChange = typeof AssessmentChangeChange[keyof typeof AssessmentChangeChange];
@@ -4173,6 +4244,8 @@ export interface WorkspaceTask {
   /** @nullable */
   ruleId: string | null;
   needsReview: boolean;
+  /** For a task marked for review because the rule version it was made from was replaced or withdrawn, that change, from the workspace's rule notices (docs/architecture/rule-changes.md, slice 3). Absent otherwise. */
+  ruleChange?: RuleChange;
   createdAt: string;
   updatedAt: string;
 }

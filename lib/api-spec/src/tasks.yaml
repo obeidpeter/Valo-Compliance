@@ -138,6 +138,9 @@ schemas:
       assessmentId: { type: [string, "null"] }
       ruleId: { type: [string, "null"] }
       needsReview: { type: boolean }
+      ruleChange:
+        description: For a task marked for review because the rule version it was made from was replaced or withdrawn, that change, from the workspace's rule notices (docs/architecture/rule-changes.md, slice 3). Absent otherwise.
+        allOf: [{ $ref: "#/components/schemas/RuleChange" }]
       createdAt: { type: string }
       updatedAt: { type: string }
   TaskPage:

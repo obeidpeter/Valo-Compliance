@@ -6,6 +6,8 @@ import {
   db,
   valoEvents,
   valoRuleChanges,
+  valoRuleNotices,
+  valoTasks,
   valoRuleOwnerSignoffs,
   valoRuleReleases,
   valoStaffAssignments,
@@ -21,7 +23,12 @@ import {
 } from "@workspace/valo-core";
 import { ValoProblem } from "../../platform/valo-problem";
 import { guidancePolicy } from "../publication";
-import { createAssessment, currentAssessmentDate, releasedRegistry } from "../rules/valo-assessments";
+import {
+  createAssessment,
+  currentAssessmentDate,
+  getAssessment,
+  releasedRegistry,
+} from "../rules/valo-assessments";
 import { createTask, listReminders, listTasks, saveReminderPreferences } from "../tasks/valo-tasks";
 import { resolveWorkspace } from "../workspaces";
 import {
@@ -472,8 +479,55 @@ test(
         label: "Likely relevant",
         notice: ownerRuleDisclosure,
       });
-      // The task made under version 1 is flagged for review. It keeps its date, state and notes and is
-      // not deleted; its reminders are called off with the reason, and the change is recorded once.
+      // The task made under version 1 is flagged for review in the change's own transaction, before
+      // anything reads the workspace's tasks (docs/architecture/rule-changes.md, slice 2). It keeps its
+      // date, state and notes and is not deleted; its reminders are called off with the reason, and the
+      // change is recorded once.
+      const [stored] = await db
+        .select({ needsReview: valoTasks.needsReview })
+        .from(valoTasks)
+        .where(eq(valoTasks.id, made.id));
+      assert.equal(stored!.needsReview, true);
+      assert.equal(await reviewEvents(), 1);
+      // The customer is told once, with the reason, its saved result and its task.
+      const notices = async () =>
+        db
+          .select({
+            version: valoRuleNotices.version,
+            kind: valoRuleNotices.kind,
+            replacementVersion: valoRuleNotices.replacementVersion,
+            reason: valoRuleNotices.reason,
+            results: valoRuleNotices.results,
+            tasks: valoRuleNotices.tasks,
+          })
+          .from(valoRuleNotices)
+          .where(
+            and(eq(valoRuleNotices.ruleId, ruleId), eq(valoRuleNotices.workspaceId, customer.workspaceId)),
+          )
+          .orderBy(valoRuleNotices.version);
+      assert.deepEqual(await notices(), [
+        { version: 1, kind: "replaced", replacementVersion: 2, reason: changedWhy, results: 1, tasks: 1 },
+      ]);
+      // The saved result is read as it was saved, with the change to the version it lists
+      // (docs/architecture/rule-changes.md, slice 3).
+      const reread = await getAssessment(customer, saved.id);
+      assert.equal(reread.result.resultHash, saved.result.resultHash);
+      const [notice] = await db
+        .select({ createdAt: valoRuleNotices.createdAt })
+        .from(valoRuleNotices)
+        .where(
+          and(eq(valoRuleNotices.ruleId, ruleId), eq(valoRuleNotices.workspaceId, customer.workspaceId)),
+        );
+      const change = {
+        ruleId,
+        version: 1,
+        kind: "replaced",
+        replacementVersion: 2,
+        reason: changedWhy,
+        changedAt: notice!.createdAt.toISOString(),
+      };
+      assert.deepEqual(reread.ruleChanges, [change]);
+      assert.deepEqual((await listTasks(customer)).find((t) => t.id === made.id)?.ruleChange, change);
       const flagged = (await listTasks(customer)).find((t) => t.id === made.id);
       assert.deepEqual(
         {
@@ -543,6 +597,8 @@ test(
           tasks: 0,
         },
       ]);
+      // No workspace used version 2, so its withdrawal tells nobody.
+      assert.equal((await notices()).length, 1);
       [item] = await list();
       assert.equal(item!.version, 3);
       assert.equal(item!.live, null);

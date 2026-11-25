@@ -148,3 +148,21 @@ export function requirementDates(item: Pick<AssessmentItem, "sourceCheckedAt" | 
     );
   return dates;
 }
+
+/**
+ * CMP-005 and EDP-011 (docs/architecture/rule-changes.md, slice 3): what a saved result says about a
+ * rule version it lists that has since been replaced or withdrawn, with the date and the reason the
+ * change was given. The saved result itself is unchanged.
+ */
+export function savedRuleChangeWords(change: {
+  kind: "replaced" | "withdrawn";
+  replacementVersion: number | null;
+  reason: string;
+  changedAt: string;
+}) {
+  const reason = change.reason.trim();
+  const said = reason + (/[.!?]$/.test(reason) ? "" : ".");
+  return change.kind === "replaced"
+    ? `Version ${change.replacementVersion} of this rule was published on ${formatDay(change.changedAt)}. What changed: ${said}`
+    : `This rule was withdrawn on ${formatDay(change.changedAt)}. Why: ${said}`;
+}

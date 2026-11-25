@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { RuleChange } from './ruleChange';
 import type { TaskState } from './taskState';
 
 export interface WorkspaceTask {
@@ -21,6 +22,8 @@ export interface WorkspaceTask {
   /** @nullable */
   ruleId: string | null;
   needsReview: boolean;
+  /** For a task marked for review because the rule version it was made from was replaced or withdrawn, that change, from the workspace's rule notices (docs/architecture/rule-changes.md, slice 3). Absent otherwise. */
+  ruleChange?: RuleChange;
   createdAt: string;
   updatedAt: string;
 }

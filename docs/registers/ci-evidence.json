@@ -548,6 +548,41 @@
       "proves": "The saved-assessments page explains each changed recommendation in sentences: a changed result, a rule updated from one version to another, the changed answers by their question labels, a rule that is new or no longer in the result, or updated wording or sources."
     },
     {
+      "requirement": "CMP-005",
+      "job": "foundation",
+      "file": "lib/db/scripts/phase1-migrations.test.mjs",
+      "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
+      "proves": "After the rule change notices migration, a released rule version's change writes one notice, with its reason and counts, to each workspace that saved a result or made a task under it, none to an erased workspace or any other, and each workspace reads only its own notices and may only mark them read."
+    },
+    {
+      "requirement": "CMP-005",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/rule-notices.test.tsx",
+      "test": "the workspace's home lists its unread rule notices, each with a way to check again and to mark it read, and nothing when there are none",
+      "proves": "The home's list of rule notices, rendered on the server, shows each changed rule's notice under “Changes to requirements you checked” with “Check again” linking to the requirements check and a button to mark it read, and shows nothing when there are none."
+    },
+    {
+      "requirement": "CMP-005",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/editorial/owner-rule-signoff.integration.test.ts",
+      "test": "the development owner watches a prepared rule's sources, signs the exact version shown, supersedes it and withdraws it",
+      "proves": "After the development owner replaces a signed rule version, the customer's saved result is read with the same checksum and with the change to the version it lists, and the customer's task made from it carries the same change."
+    },
+    {
+      "requirement": "CMP-005",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/result-words.test.ts",
+      "test": "a changed rule's mark gives the new version or the withdrawal, its date and the reason given",
+      "proves": "A changed rule's mark reads “Version 2 of this rule was published on 25 Nov 2026. What changed: …” or “This rule was withdrawn on 25 Nov 2026. Why: …”, with the reason given trimmed."
+    },
+    {
+      "requirement": "CMP-005",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "a saved result whose rule changed since says so above it and under that rule, with the date and the reason, and offers to check again",
+      "proves": "In a browser, a saved result whose rule changed since it was saved says so above the result and under that rule, with the date and the reason, offers to check again, still shows the result as saved, and has no automated WCAG 2.2 AA failure."
+    },
+    {
       "requirement": "SEC-008",
       "job": "postgres",
       "file": "artifacts/api-server/src/lib/valo-security-signals.integration.test.ts",
@@ -3513,7 +3548,14 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/editorial/owner-rule-signoff.integration.test.ts",
       "test": "the development owner watches a prepared rule's sources, signs the exact version shown, supersedes it and withdraws it",
-      "proves": "A synthetic task made from a saved result under version 1 of an owner-signed rule is flagged for review once version 2 supersedes it, keeps its due date, state and notes and is not deleted, has its two held reminders cancelled with the reason that its source is no longer eligible, and records one review event, which listing again does not repeat."
+      "proves": "A synthetic task made from a saved result under version 1 of an owner-signed rule is flagged for review in the transaction in which version 2 supersedes it, before anything reads the workspace's tasks, keeps its due date, state and notes and is not deleted, has its two held reminders cancelled with the reason that its source is no longer eligible, and records one review event, which listing again does not repeat."
+    },
+    {
+      "requirement": "RUL-009",
+      "job": "foundation",
+      "file": "lib/db/scripts/phase1-migrations.test.mjs",
+      "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
+      "proves": "After the rule change notices migration, a released rule version's change marks its live tasks for review with their dates kept, leaves a deleted task alone, calls off unsent reminders but not a sent one, and logs each mark in the workspace's events."
     },
     {
       "requirement": "EDT-008",
@@ -3877,7 +3919,21 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/editorial/owner-rule-signoff.integration.test.ts",
       "test": "the development owner watches a prepared rule's sources, signs the exact version shown, supersedes it and withdraws it",
-      "proves": "Replacing or withdrawing a signed rule version logs the change, with its reason, who made it and whom it affected, in the transaction that makes it."
+      "proves": "Replacing or withdrawing a signed rule version logs the change, with its reason, who made it and whom it affected, and tells the workspace that saved a result and made a task under the replaced version once, with the reason and its counts, in the transaction that makes it."
+    },
+    {
+      "requirement": "EDP-011",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/rule-notices.test.tsx",
+      "test": "a rule notice names the rule, its version and what happened, gives the reason, and says what it means for the saved results and tasks",
+      "proves": "A rule notice names the rule, its version, whether it was replaced or withdrawn and when, gives the reason as “What changed” or “Why”, says the saved results are kept as they were saved, and says the tasks are marked for review with their reminders stopped."
+    },
+    {
+      "requirement": "EDP-011",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "the home lists a changed rule's notice with its reason, links to checking again, and marks it read",
+      "proves": "In a browser, the home lists a changed rule's notice with the reason given, says the saved results are kept and the task is marked for review, links to checking again and marks the notice read, with no automated WCAG 2.2 AA failure."
     },
     {
       "requirement": "EDT-010",

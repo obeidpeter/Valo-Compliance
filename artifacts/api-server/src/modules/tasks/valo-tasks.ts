@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { and, desc, eq, isNull, ne, sql } from "drizzle-orm";
-import { valoTasks, valoReminderPreferences, valoReminderOutbox } from "@workspace/db";
+import { and, desc, eq, inArray, isNull, ne, sql } from "drizzle-orm";
+import { valoTasks, valoReminderPreferences, valoReminderOutbox, valoRuleNotices } from "@workspace/db";
 import {
   CreateTaskBody,
   UpdateTaskBody,
@@ -50,12 +50,58 @@ export function reminderInstant(dueDate: string, offset: number) {
   // Africa/Lagos uses UTC+01:00. User-selected calendar date at 09:00 local, never an inferred statutory date.
   return new Date(new Date(`${dueDate}T09:00:00+01:00`).getTime() - offset * 86400000);
 }
-function taskDto(row: typeof valoTasks.$inferSelect) {
+type RuleChange = {
+  ruleId: string;
+  version: number;
+  kind: "replaced" | "withdrawn";
+  replacementVersion: number | null;
+  reason: string;
+  changedAt: string;
+};
+function taskDto(row: typeof valoTasks.$inferSelect, ruleChange?: RuleChange) {
   return CreateTaskResponse.parse({
     ...row,
+    ...(row.needsReview && ruleChange && { ruleChange }),
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   });
+}
+/**
+ * docs/architecture/rule-changes.md, slice 3: for each listed task made from a rule version that was
+ * replaced or withdrawn, that change, from the workspace's own rule notices, read or not. Keyed
+ * `ruleId@version`.
+ */
+async function taskRuleChanges(
+  tx: WorkspaceTx,
+  actor: WorkspaceActor,
+  rows: readonly (typeof valoTasks.$inferSelect)[],
+) {
+  const linked = rows.filter((row) => row.ruleId && row.ruleVersion !== null && row.needsReview);
+  const changes = new Map<string, RuleChange>();
+  if (!linked.length) return changes;
+  const notices = await tx
+    .select()
+    .from(valoRuleNotices)
+    .where(
+      and(
+        eq(valoRuleNotices.workspaceId, actor.workspaceId),
+        inArray(
+          valoRuleNotices.ruleId,
+          linked.map((row) => row.ruleId!),
+        ),
+      ),
+    )
+    .orderBy(valoRuleNotices.createdAt, valoRuleNotices.id);
+  for (const notice of notices)
+    changes.set(`${notice.ruleId}@${notice.version}`, {
+      ruleId: notice.ruleId,
+      version: notice.version,
+      kind: notice.kind as RuleChange["kind"],
+      replacementVersion: notice.replacementVersion,
+      reason: notice.reason,
+      changedAt: notice.createdAt.toISOString(),
+    });
+  return changes;
 }
 async function findTask(tx: WorkspaceTx, actor: WorkspaceActor, id: string) {
   const [row] = await tx
@@ -277,8 +323,9 @@ export async function listTasksPage(actor: WorkspaceActor, raw: unknown) {
       .limit(pageSize)
       .offset((query.page - 1) * pageSize);
     await markIneligibleSourceTasks(tx, actor, rows);
+    const changes = await taskRuleChanges(tx, actor, rows);
     return {
-      items: rows.map(taskDto),
+      items: rows.map((row) => taskDto(row, changes.get(`${row.ruleId}@${row.ruleVersion}`))),
       total: counts.total,
       openCount: counts.openCount,
       filteredTotal,
@@ -297,7 +344,8 @@ export async function listTasks(actor: WorkspaceActor) {
       .orderBy(desc(valoTasks.updatedAt))
       .limit(200);
     await markIneligibleSourceTasks(tx, actor, rows);
-    return rows.map(taskDto);
+    const changes = await taskRuleChanges(tx, actor, rows);
+    return rows.map((row) => taskDto(row, changes.get(`${row.ruleId}@${row.ruleVersion}`)));
   });
 }
 export async function updateTask(actor: WorkspaceActor, id: string, raw: unknown) {

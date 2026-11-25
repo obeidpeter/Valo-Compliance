@@ -18,6 +18,7 @@ import { describeError } from "@/lib/api";
 import { buildTasksIcs, downloadIcsFile } from "@/lib/calendar-export";
 import { dueDateUrgency } from "@/lib/date-shortcuts";
 import { formatDateTime, formatDay } from "@/lib/format";
+import { savedRuleChangeWords } from "@/lib/result-words";
 import { cn } from "@/lib/utils";
 
 const STATE_LABEL: Record<TaskState, string> = {
@@ -309,6 +310,15 @@ export function TaskRow({
                 Version {task.revision} · saved {formatDateTime(task.updatedAt)}
               </span>
             </div>
+            {/* docs/architecture/rule-changes.md, slice 3: why its linked rule changed. */}
+            {task.needsReview && task.ruleChange && (
+              <p
+                className="mt-2 text-sm text-[hsl(var(--ochre-foreground))]"
+                data-testid={"task-rule-change-" + task.id}
+              >
+                {savedRuleChangeWords(task.ruleChange)}
+              </p>
+            )}
             {done && (
               <p className="mt-2 text-xs text-muted-foreground">
                 Recorded as done by you. Not regulator approval.

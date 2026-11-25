@@ -122,6 +122,41 @@ Sending notices by email waits for a sender and the owner's decision on messages
 - **A deletion is not a change.** No code deletes a release. An owner-signed release cannot be
   deleted (decision 0020); one on the reviewed route can, and needs no record.
 
+**Slice 2: marks and notices.**
+- **The change's own transaction marks the tasks**, calls off their unsent reminders with the reason
+  the reminders screen already explains (`SOURCE_NO_LONGER_ELIGIBLE`), and writes an event in the
+  workspace's log for each mark, as a mark made when the workspace's tasks are read does. A task
+  already marked is left as it is.
+- **The notice's words** follow the edition notices' beside them on the home, under "Changes to
+  requirements you checked":
+  - "“{title}” version 1 was replaced by version 2 on 25 Nov 2026", or "… version 2 was withdrawn on
+    26 Nov 2026";
+  - "What changed: …" or "Why: …", in the words the change was given;
+  - "Your 2 saved results that list it are kept as they were saved. Check again to see what applies
+    now.", with "Check again" linking to the requirements check;
+  - "Your task made from it is marked for review, and its reminders have stopped."
+- **A workspace whose data was erased gets no notice.** Its erasure does not remove notices it already
+  has, as for the edition notices. They hold no text the customer wrote: the rule's title, its
+  versions, counts and the reason the change was given. Phase 7's processing inventory lists them.
+- **The home reads the notices with a live sign-in check.** The cached check serves only the read-only
+  screens the owner approved; this list is not one of them.
+- **The owner's panel now says** the businesses that used the old version are told what the owner
+  writes.
+
+**Slice 3: the saved result's marks.**
+- **The marks come from the workspace's own notices**, read or not. The database wrote one for the
+  workspace when a version its saved result lists changed, so no other record is read and no customer
+  request reads the change records.
+- **The saved result's page says, above the result,** "A rule in this result has changed since it was
+  saved" (or how many have), "This result is kept as it was saved. Each changed rule says what changed
+  below it.", and offers "Check again".
+- **Under the changed rule**, beside its tasks: "Version 2 of this rule was published on 25 Nov 2026.
+  What changed: …", or "This rule was withdrawn on 25 Nov 2026. Why: …".
+- **A task marked for review says the same**, under "Linked rule changed. Review this task.", when its
+  rule version's change is known.
+- **The saved result is read unchanged**: its checksum is checked as before, and the changes come
+  beside it, not inside it.
+
 ## Slices
 
 | # | Slice | Requirements |
@@ -133,7 +168,7 @@ Sending notices by email waits for a sender and the owner's decision on messages
 ## The owner's points
 
 1. **The words:** the two questions ("What changed in this version?" and "Why is this rule
-   withdrawn?"), the notices and the marks.
+   withdrawn?"), the notices under "Changes to requirements you checked", and the marks.
 2. **Every change tells the businesses it affects.** CMP-005 and EDP-011 ask for a notice "when
    material". Every change gives a reason, few rules are released, and a rule says what a business
    may have to do. So every change is treated as material. The owner may prefer a change to be
