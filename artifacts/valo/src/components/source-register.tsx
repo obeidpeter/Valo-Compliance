@@ -18,7 +18,9 @@ import {
   registerHeading,
   registerIntro,
   registerSummary,
+  restingLine,
   retiredNote,
+  retireWarning,
   versionLine,
   watchLine,
 } from "@/lib/source-register";
@@ -49,6 +51,8 @@ function EntryForm({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const id = (field: string) => `register-${entry.sourceId}-${field}`;
+  // Retiring an active source stops its daily check and holds what rests on it: say so before saving.
+  const retiring = status === "retired" && entry.status !== "retired";
   async function save() {
     setBusy(true);
     setError("");
@@ -144,16 +148,31 @@ function EntryForm({
           />
         </label>
       )}
-      <fieldset className="text-sm">
+      <fieldset className="text-sm" aria-describedby={retiring ? id("retiring") : undefined}>
         <legend className="font-medium">Status</legend>
         <label className="mr-4 inline-flex items-center gap-2">
-          <input type="radio" checked={status === "active"} onChange={() => setStatus("active")} />
+          <input
+            type="radio"
+            name={id("status")}
+            checked={status === "active"}
+            onChange={() => setStatus("active")}
+          />
           Active
         </label>
         <label className="inline-flex items-center gap-2">
-          <input type="radio" checked={status === "retired"} onChange={() => setStatus("retired")} />
+          <input
+            type="radio"
+            name={id("status")}
+            checked={status === "retired"}
+            onChange={() => setStatus("retired")}
+          />
           Retired
         </label>
+        {retiring && (
+          <p id={id("retiring")} className="mt-2 font-medium" data-testid={"text-retire-" + entry.sourceId}>
+            {retireWarning(entry.restingVersions)}
+          </p>
+        )}
       </fieldset>
       <label className="text-sm font-medium" htmlFor={id("reason")}>
         {reasonLabel}
@@ -263,6 +282,9 @@ export function SourceRegister() {
                 </p>
                 <p>{entryLine(entry)}</p>
                 <p className="text-muted-foreground">{watchLine(entry.watch)}</p>
+                {entry.restingVersions > 0 && (
+                  <p className="text-muted-foreground">{restingLine(entry.restingVersions)}</p>
+                )}
                 {entry.status === "retired" && <p className="font-medium">{retiredNote}</p>}
                 <p className="text-muted-foreground">{versionLine(entry)}</p>
                 {entry.earlier.length > 0 && (

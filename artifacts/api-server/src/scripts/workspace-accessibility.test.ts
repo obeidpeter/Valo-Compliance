@@ -386,7 +386,8 @@ const answers: Record<string, unknown> = {
             createdAt: at(19),
           },
         ],
-        watch: { checkedAt: at(21), failureCode: null, nextCheckAt: at(22) },
+        restingVersions: 2,
+        watch: { checkedAt: at(21), failureCode: null, nextCheckAt: at(22), stoppedAt: null },
       },
       {
         sourceId: "S06",
@@ -403,6 +404,7 @@ const answers: Record<string, unknown> = {
         createdBy: "synthetic-content-editor",
         createdAt: at(20),
         earlier: [],
+        restingVersions: 0,
         watch: null,
       },
     ],
@@ -506,6 +508,7 @@ const answers: Record<string, unknown> = {
           checkedAt: at(18),
           failureCode: null,
           nextCheckAt: at(19),
+          stoppedAt: null,
         },
       ],
       review: [],
@@ -4620,12 +4623,21 @@ test("the source register lists each source's fields and daily check, and record
     await expect(act).toContainText("Nigeria · Act · As enacted · in effect from 12 Jun 2023");
     await expect(act).toContainText("Synthetic Data Commission");
     await expect(act).toContainText(/Checked by the daily check .+ · next check /);
+    await expect(act).toContainText("2 versions rest on it");
     await expect(register.getByTestId("register-entry-S06")).toContainText(
-      "Retired. Its versions stay on the record; for now, a daily check that watches it carries on.",
+      "Retired. The daily check no longer reads it, and what rested on it is held until a new version passes the gates.",
     );
     await act.getByRole("button", { name: "Correct this entry" }).click();
     const form = act.getByTestId("form-register-S04");
     const save = form.getByRole("button", { name: "Save a new version" });
+    // Choosing to retire it says what that does before anything is saved, and choosing active again
+    // takes the warning away.
+    await form.getByRole("radio", { name: "Retired" }).check();
+    await expect(form.getByTestId("text-retire-S04")).toHaveText(
+      "Retiring it stops its daily check and holds the 2 versions that rest on it, until a new version of each passes the gates.",
+    );
+    await form.getByRole("radio", { name: "Active" }).check();
+    await expect(form.getByTestId("text-retire-S04")).toHaveCount(0);
     await form.getByLabel("Version in force").fill("As enacted, 2023");
     await expect(save).toBeDisabled();
     await form.getByLabel("Why").fill("Synthetic: the edition was named from the Act's own copy.");

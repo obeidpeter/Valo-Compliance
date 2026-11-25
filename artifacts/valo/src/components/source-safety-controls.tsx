@@ -218,15 +218,19 @@ export function SourceSafetyControls({ area }: { area: "content" | "system" }) {
                       {s.sourceId}
                     </a>{" "}
                     ·{" "}
-                    {s.failureCode
-                      ? "Check unavailable"
-                      : s.checkedAt
-                        ? `Checked ${formatDateTime(s.checkedAt)}`
-                        : "First check pending"}
-                    <p className="mt-1 text-muted-foreground">
-                      Next check: {formatDateTime(s.nextCheckAt)}. Successful retrieval does not approve legal
-                      claims.
-                    </p>
+                    {s.stoppedAt
+                      ? `Stopped ${formatDateTime(s.stoppedAt)}: the source register retired it`
+                      : s.failureCode
+                        ? "Check unavailable"
+                        : s.checkedAt
+                          ? `Checked ${formatDateTime(s.checkedAt)}`
+                          : "First check pending"}
+                    {!s.stoppedAt && (
+                      <p className="mt-1 text-muted-foreground">
+                        Next check: {formatDateTime(s.nextCheckAt)}. Successful retrieval does not approve
+                        legal claims.
+                      </p>
+                    )}
                   </li>
                 ))}
               </ul>
