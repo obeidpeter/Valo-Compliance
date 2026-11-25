@@ -3243,6 +3243,27 @@
       "proves": "A template released on the reviewed route and saved by a workspace is listed with its template's number (TPL-01)."
     },
     {
+      "requirement": "RUL-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/valo-checker-explanations.test.ts",
+      "test": "a result names the local government area and each of the specification's industries the answers name that no released rule covers, keeps the excluded sectors, and adds nothing for answers that name neither",
+      "proves": "A result names each of the specification's industries the answers give that no released rule in force tests for, says nothing of the visitor's own words, keeps naming the excluded healthcare, financial services and energy activities, and is unchanged for answers that name no area or listed industry."
+    },
+    {
+      "requirement": "RUL-006",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/result-words.test.ts",
+      "test": "a result says in the site's words that Valo has not checked the local government area or the industries the answers name, and keeps the excluded sectors",
+      "proves": "The engine's own result for answers naming an area and two industries lists, in the site's words and with none of the system's own, the place, the area and each industry as not checked, then the excluded sectors."
+    },
+    {
+      "requirement": "RUL-006",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-screens-accessibility.test.ts",
+      "test": "a result the engine works out from answers that name a local government area and industries says Valo has not checked them, in the site's words, and still names the excluded sectors",
+      "proves": "On an emulated phone, a visitor who ticks two industries sees each said to be not checked, with the excluded sectors still named, in the result the engine works out."
+    },
+    {
       "requirement": "RUL-004",
       "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
@@ -3255,6 +3276,20 @@
       "file": "artifacts/valo/src/components/assessment-result.test.tsx",
       "test": "each result says in words whether it is federal, a state's or a local government's, with its rule and version",
       "proves": "On the result page, rendered on the server from a synthetic result, a federal requirement is marked “Federal”, a state's “State: Lagos” or “State: FCT”, and a local government's “Local government: Ikeja, Lagos”, each beside its rule and version, and only the federal one is marked federal."
+    },
+    {
+      "requirement": "CMP-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/valo-checker-explanations.test.ts",
+      "test": "a result names the local government area and each of the specification's industries the answers name that no released rule covers, keeps the excluded sectors, and adds nothing for answers that name neither",
+      "proves": "A result for answers that name a local government area says no released rule covers that area's own requirements, unless a released rule in force is scoped to it, and a result for answers that give no area invents nothing local."
+    },
+    {
+      "requirement": "CMP-003",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-screens-accessibility.test.ts",
+      "test": "a result the engine works out from answers that name a local government area and industries says Valo has not checked them, in the site's words, and still names the excluded sectors",
+      "proves": "On an emulated phone, the engine's own result for a visitor who names Lagos and a local government area says, in the site's words, that Valo has not checked that local government's own requirements, after the sentence on the state, with no automated WCAG 2.2 AA failure."
     },
     {
       "requirement": "EDT-005",

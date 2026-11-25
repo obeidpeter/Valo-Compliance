@@ -187,6 +187,24 @@ result carries its own checksum, and is shown only while the checksum matches.
 
   None records a figure.
 
+**Slice 3: what Valo has not checked.**
+- **A result names what the answers give that no published rule covers**, after its sentence on the
+  place:
+  - the local government area given, unless a released rule in force is scoped to it: "Valo has not
+    checked the local government's own requirements for Ikeja.";
+  - each of the specification's industries the business does, unless a released rule in force tests
+    for it: "Valo has not checked requirements specific to retail/wholesale."
+
+  The visitor's own words and "Other" name no industry, so nothing is said of them. A rule held from
+  the result covers nothing, so what it would cover is still named.
+- **The excluded sectors stay named on every result.** The design proposed naming them only when no
+  industry is chosen. RUL-006, though, is accepted only when "excluded high-risk sectors are
+  visible".
+- **The sentence on the place is unchanged.** It already names the state given, or the visitor's area
+  when none is.
+- **Answers that name neither an area nor a listed industry add nothing.** So a result from them is
+  what it was: the pinned old result among them.
+
 ## Slices
 
 1. **Documents.** The catalogue's `templateIds` filter, the documents under each requirement and
@@ -213,5 +231,6 @@ result carries its own checksum, and is shown only while the checksum matches.
    - "Official page";
    - "Government fee", "Deadline", "Rate" and "Threshold";
    - "Confirm with the authority.", after "Fees and deadlines", "Fees" or "Deadlines";
-   - the sentences on what is not checked;
+   - the sentences on what is not checked: "Valo has not checked the local government's own
+     requirements for …" and "Valo has not checked requirements specific to …";
    - the three dates' labels.
