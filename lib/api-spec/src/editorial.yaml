@@ -132,7 +132,7 @@ schemas:
   SourceControlAction: {"oneOf": [{"type": "object", "required": ["requestKey", "reason", "action", "sourceId"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["watch_source"]}, "sourceId": {"type": "string", "minLength": 1, "maxLength": 100}}, "additionalProperties": false}, {"type": "object", "required": ["requestKey", "reason", "action", "kind", "id", "version"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["hold_version"]}, "kind": {"type": "string", "enum": ["content", "rule"]}, "id": {"type": "string", "format": "uuid"}, "version": {"type": "integer", "minimum": 1}}, "additionalProperties": false}, {"type": "object", "required": ["requestKey", "reason", "action", "kind", "id", "version"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["withdraw_version"]}, "kind": {"type": "string", "enum": ["content", "rule"]}, "id": {"type": "string", "format": "uuid"}, "version": {"type": "integer", "minimum": 1}}, "additionalProperties": false}, {"type": "object", "required": ["requestKey", "reason", "action", "service"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["pause_service"]}, "service": {"type": "string", "enum": ["ai", "checkout"]}}, "additionalProperties": false}, {"type": "object", "required": ["requestKey", "reason", "action", "service"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["resume_service"]}, "service": {"type": "string", "enum": ["ai", "checkout"]}}, "additionalProperties": false}]}
   SourceControlResult: {"type": "object", "required": ["auditId", "replayed", "result"], "properties": {"auditId": {"type": "string", "format": "uuid"}, "replayed": {"type": "boolean"}, "result": {"type": "object", "additionalProperties": true}}}
   SourceControlVersion: {"type": "object", "required": ["kind", "id", "key", "version", "status", "reviewBy", "safetyHeld"], "properties": {"kind": {"type": "string", "enum": ["content", "rule"]}, "id": {"type": "string", "format": "uuid"}, "key": {"type": "string"}, "version": {"type": "integer"}, "status": {"type": "string"}, "reviewBy": {"type": ["string", "null"]}, "safetyHeld": {"type": "boolean"}}}
-  SourceControlWatch: {"type": "object", "required": ["sourceId", "url", "risk", "checkedAt", "failureCode", "nextCheckAt"], "properties": {"sourceId": {"type": "string"}, "url": {"type": "string"}, "risk": {"type": "string"}, "checkedAt": {"type": ["string", "null"]}, "failureCode": {"type": ["string", "null"]}, "nextCheckAt": {"type": "string", "format": "date-time"}}}
+  SourceControlWatch: {"type": "object", "required": ["sourceId", "url", "risk", "checkedAt", "failureCode", "nextCheckAt", "stoppedAt"], "properties": {"sourceId": {"type": "string"}, "url": {"type": "string"}, "risk": {"type": "string"}, "checkedAt": {"type": ["string", "null"]}, "failureCode": {"type": ["string", "null"]}, "nextCheckAt": {"type": "string", "format": "date-time"}, "stoppedAt": {"type": ["string", "null"], "description": "When the daily check stopped because the source register retired the source."}}}
   SourceControlReview: {"type": "object", "required": ["id", "status", "targetKind", "targetKey", "targetVersion", "reason", "createdAt"], "properties": {"id": {"type": "string", "format": "uuid"}, "status": {"type": "string"}, "targetKind": {"type": "string"}, "targetKey": {"type": "string"}, "targetVersion": {"type": "integer"}, "reason": {"type": "string"}, "createdAt": {"type": "string", "format": "date-time"}}}
   SourceControlService: {"type": "object", "required": ["key", "enabled", "reason", "updatedAt"], "properties": {"key": {"type": "string"}, "enabled": {"type": "boolean"}, "reason": {"type": "string"}, "updatedAt": {"type": "string", "format": "date-time"}}}
   SourceControlChoice: {"type": "object", "required": ["id", "title"], "properties": {"id": {"type": "string"}, "title": {"type": "string"}}}
@@ -155,20 +155,22 @@ schemas:
     allOf:
       - $ref: '#/components/schemas/SourceRegisterFields'
       - type: object
-        required: [sourceId, url, earlier, watch]
+        required: [sourceId, url, earlier, restingVersions, watch]
         properties:
           sourceId: { type: string }
           url: { type: string }
           earlier: { type: array, description: 'Its earlier versions, newest first.', items: { $ref: '#/components/schemas/SourceRegisterFields' } }
+          restingVersions: { type: integer, minimum: 0, description: 'How many versions bound to it are not held yet: what retiring it holds.' }
           watch:
             description: Its daily check as it last ran, or null while it is not watched.
             anyOf:
               - type: object
-                required: [checkedAt, failureCode, nextCheckAt]
+                required: [checkedAt, failureCode, nextCheckAt, stoppedAt]
                 properties:
                   checkedAt: { type: [string, 'null'] }
                   failureCode: { type: [string, 'null'] }
                   nextCheckAt: { type: [string, 'null'] }
+                  stoppedAt: { type: [string, 'null'], description: 'When the daily check stopped because the source was retired.' }
               - { type: 'null' }
   SourceRegister:
     type: object

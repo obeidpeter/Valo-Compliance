@@ -48,7 +48,8 @@ test(
     const activeSources = (await db.execute(sql`select source_id from valo_source_watches`)).rows.map(
       (r) => r.source_id,
     );
-    const lead = allSourceLeads.find((s) => !activeSources.includes(s.id));
+    // Staff start watching only official sources (docs/architecture/source-register.md, slice 2).
+    const lead = allSourceLeads.find((s) => s.category === "regulatory" && !activeSources.includes(s.id));
     assert.ok(lead, "An unused allowlisted fixture source is required");
     const b = heldSourceBundle(now);
     b.candidate.id = prefix;

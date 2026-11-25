@@ -1558,6 +1558,11 @@ export interface SourceControlWatch {
   /** @nullable */
   failureCode: string | null;
   nextCheckAt: string;
+  /**
+     * When the daily check stopped because the source register retired the source.
+     * @nullable
+     */
+  stoppedAt: string | null;
 }
 
 export interface SourceControlReview {
@@ -1643,6 +1648,11 @@ export type SourceRegisterEntryWatch = {
   failureCode: string | null;
   /** @nullable */
   nextCheckAt: string | null;
+  /**
+     * When the daily check stopped because the source was retired.
+     * @nullable
+     */
+  stoppedAt: string | null;
 } | null;
 
 export type SourceRegisterEntry = SourceRegisterFields & {
@@ -1650,6 +1660,11 @@ export type SourceRegisterEntry = SourceRegisterFields & {
   url: string;
   /** Its earlier versions, newest first. */
   earlier: SourceRegisterFields[];
+  /**
+     * How many versions bound to it are not held yet: what retiring it holds.
+     * @minimum 0
+     */
+  restingVersions: number;
   /** Its daily check as it last ran, or null while it is not watched. */
   watch: SourceRegisterEntryWatch;
 };

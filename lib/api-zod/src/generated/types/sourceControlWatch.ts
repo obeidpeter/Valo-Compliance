@@ -15,4 +15,9 @@ export interface SourceControlWatch {
   /** @nullable */
   failureCode: string | null;
   nextCheckAt: Date;
+  /**
+     * When the daily check stopped because the source register retired the source.
+     * @nullable
+     */
+  stoppedAt: string | null;
 }

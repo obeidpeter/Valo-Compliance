@@ -63,6 +63,24 @@ export async function impactSourceDependants(
   await tx.execute(sql`insert into valo_source_dependency_jobs(id,source_id,dedupe_key,reason,new_snapshot_id,observed_hash)
   values(${randomUUID()}::uuid,${sourceId},${key},${reason},${newSnapshotId}::uuid,${newSnapshotId && !watch?.failure_code ? String(watch?.last_raw_hash) : null}) on conflict(dedupe_key) do nothing`);
 }
+/**
+ * Holds what rests on a source the register retired (docs/architecture/source-register.md, slice 2),
+ * as a changed source's dependants are held: every version bound to it that is not held yet. A source
+ * nothing watched has nothing bound to it. Call it under the source-state lock, in the transaction
+ * that records the retirement.
+ */
+export async function holdRetiredSourceDependants(tx: SourceTx, sourceId: string, version: number) {
+  const watched = (await tx.execute(sql`select 1 from valo_source_watches where source_id=${sourceId}`)).rows;
+  if (!watched.length) return false;
+  await impactSourceDependants(
+    tx,
+    sourceId,
+    "The official source was retired from the source register.",
+    `retired:${sourceId}:${version}`,
+    null,
+  );
+  return true;
+}
 export async function processSourceDependencyJob() {
   const { db } = await import("@workspace/db");
   return db.transaction(async (tx) => {

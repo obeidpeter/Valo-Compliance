@@ -28,6 +28,9 @@ export const valoSourceWatches = pgTable(
     failureCode: text("failure_code"),
     nextCheckAt: timestamp("next_check_at", { withTimezone: true }).notNull().defaultNow(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    // When the daily check stopped, because the source register retired the source
+    // (docs/architecture/source-register.md, slice 2). Null while it is watched.
+    stoppedAt: timestamp("stopped_at", { withTimezone: true }),
   },
   (t) => [check("valo_source_watches_risk_check", sql`${t.risk} IN ('high', 'standard')`)],
 );

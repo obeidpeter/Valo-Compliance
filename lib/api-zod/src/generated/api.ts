@@ -3687,7 +3687,8 @@ export const GetSourceControlsResponse = zod.object({
   "risk": zod.string(),
   "checkedAt": zod.string().nullable(),
   "failureCode": zod.string().nullable(),
-  "nextCheckAt": zod.coerce.date()
+  "nextCheckAt": zod.coerce.date(),
+  "stoppedAt": zod.string().nullable().describe('When the daily check stopped because the source register retired the source.')
 })),
   "review": zod.array(zod.object({
   "id": zod.uuid(),
@@ -3778,6 +3779,8 @@ export const ActOnSourceControlsResponse = zod.object({
 export const listSourceRegisterResponseEntriesItemOneEffectiveFromRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
 
 export const listSourceRegisterResponseEntriesItemTwoEarlierItemEffectiveFromRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const listSourceRegisterResponseEntriesItemTwoRestingVersionsMin = 0;
+
 export const listSourceRegisterResponseUnfiledMin = 0;
 
 
@@ -3811,10 +3814,12 @@ export const ListSourceRegisterResponse = zod.object({
   "createdBy": zod.string(),
   "createdAt": zod.string()
 })).describe('Its earlier versions, newest first.'),
+  "restingVersions": zod.int().min(listSourceRegisterResponseEntriesItemTwoRestingVersionsMin).describe('How many versions bound to it are not held yet: what retiring it holds.'),
   "watch": zod.union([zod.object({
   "checkedAt": zod.string().nullable(),
   "failureCode": zod.string().nullable(),
-  "nextCheckAt": zod.string().nullable()
+  "nextCheckAt": zod.string().nullable(),
+  "stoppedAt": zod.string().nullable().describe('When the daily check stopped because the source was retired.')
 }),zod.null()]).describe('Its daily check as it last ran, or null while it is not watched.')
 }))),
   "unfiled": zod.int().min(listSourceRegisterResponseUnfiledMin).describe('How many regulatory sources kept in the repository are not filed yet.'),
@@ -3830,6 +3835,8 @@ export const ListSourceRegisterResponse = zod.object({
 export const fileSourceRegisterResponseEntriesItemOneEffectiveFromRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
 
 export const fileSourceRegisterResponseEntriesItemTwoEarlierItemEffectiveFromRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const fileSourceRegisterResponseEntriesItemTwoRestingVersionsMin = 0;
+
 export const fileSourceRegisterResponseUnfiledMin = 0;
 
 
@@ -3863,10 +3870,12 @@ export const FileSourceRegisterResponse = zod.object({
   "createdBy": zod.string(),
   "createdAt": zod.string()
 })).describe('Its earlier versions, newest first.'),
+  "restingVersions": zod.int().min(fileSourceRegisterResponseEntriesItemTwoRestingVersionsMin).describe('How many versions bound to it are not held yet: what retiring it holds.'),
   "watch": zod.union([zod.object({
   "checkedAt": zod.string().nullable(),
   "failureCode": zod.string().nullable(),
-  "nextCheckAt": zod.string().nullable()
+  "nextCheckAt": zod.string().nullable(),
+  "stoppedAt": zod.string().nullable().describe('When the daily check stopped because the source was retired.')
 }),zod.null()]).describe('Its daily check as it last ran, or null while it is not watched.')
 }))),
   "unfiled": zod.int().min(fileSourceRegisterResponseUnfiledMin).describe('How many regulatory sources kept in the repository are not filed yet.'),
@@ -3913,6 +3922,8 @@ export const ReviseSourceRegisterEntryBody = zod.object({
 export const reviseSourceRegisterEntryResponseEntriesItemOneEffectiveFromRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
 
 export const reviseSourceRegisterEntryResponseEntriesItemTwoEarlierItemEffectiveFromRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const reviseSourceRegisterEntryResponseEntriesItemTwoRestingVersionsMin = 0;
+
 export const reviseSourceRegisterEntryResponseUnfiledMin = 0;
 
 
@@ -3946,10 +3957,12 @@ export const ReviseSourceRegisterEntryResponse = zod.object({
   "createdBy": zod.string(),
   "createdAt": zod.string()
 })).describe('Its earlier versions, newest first.'),
+  "restingVersions": zod.int().min(reviseSourceRegisterEntryResponseEntriesItemTwoRestingVersionsMin).describe('How many versions bound to it are not held yet: what retiring it holds.'),
   "watch": zod.union([zod.object({
   "checkedAt": zod.string().nullable(),
   "failureCode": zod.string().nullable(),
-  "nextCheckAt": zod.string().nullable()
+  "nextCheckAt": zod.string().nullable(),
+  "stoppedAt": zod.string().nullable().describe('When the daily check stopped because the source was retired.')
 }),zod.null()]).describe('Its daily check as it last ran, or null while it is not watched.')
 }))),
   "unfiled": zod.int().min(reviseSourceRegisterEntryResponseUnfiledMin).describe('How many regulatory sources kept in the repository are not filed yet.'),

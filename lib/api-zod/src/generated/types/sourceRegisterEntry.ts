@@ -13,6 +13,11 @@ export type SourceRegisterEntry = SourceRegisterFields & {
   url: string;
   /** Its earlier versions, newest first. */
   earlier: SourceRegisterFields[];
+  /**
+     * How many versions bound to it are not held yet: what retiring it holds.
+     * @minimum 0
+     */
+  restingVersions: number;
   /** Its daily check as it last ran, or null while it is not watched. */
   watch: SourceRegisterEntryWatch;
 };

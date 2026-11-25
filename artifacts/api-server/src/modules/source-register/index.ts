@@ -13,7 +13,12 @@ import type { db } from "@workspace/db";
 import { ValoProblem } from "../../platform/valo-problem";
 import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
 import { repositorySourceFacts } from "../publication";
-import { requireSourceStaff, type SourceStaffActor } from "../sources";
+import {
+  holdRetiredSourceDependants,
+  lockSourceState,
+  requireSourceStaff,
+  type SourceStaffActor,
+} from "../sources";
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
@@ -33,11 +38,18 @@ function pgCode(error: unknown) {
   const e = error as { cause?: { code?: string }; code?: string };
   return (e.cause ?? e).code;
 }
-async function asEditor<T>(actor: SourceStaffActor, work: (tx: Tx) => Promise<T>) {
+async function asEditor<T>(
+  actor: SourceStaffActor,
+  work: (tx: Tx) => Promise<T>,
+  options: { sourceState?: boolean } = {},
+) {
   assertDevelopmentRuntime();
   const { db } = await import("@workspace/db");
   try {
     return await db.transaction(async (tx) => {
+      // A change that can stop a watch takes the source-state lock first, as the daily check and the
+      // source controls do, so that it and they wait on the same lock before any watch row.
+      if (options.sourceState) await lockSourceState(tx, true);
       await requireSourceStaff(tx, actor, "content");
       return work(tx);
     });
@@ -54,13 +66,25 @@ async function read(tx: Tx) {
   const { valoSourceRegister: r } = await import("@workspace/db");
   const versions = await tx.select().from(r).orderBy(r.sourceId, desc(r.version));
   const watches = (
-    await tx.execute(sql`select source_id, checked_at, failure_code, next_check_at from valo_source_watches`)
+    await tx.execute(
+      sql`select source_id, checked_at, failure_code, next_check_at, stopped_at from valo_source_watches`,
+    )
   ).rows as {
     source_id: string;
     checked_at: Date | null;
     failure_code: string | null;
     next_check_at: Date | null;
+    stopped_at: Date | null;
   }[];
+  // The versions bound to each source that are not held yet: what retiring it would hold.
+  const resting = new Map(
+    (
+      await tx.execute(sql`select b.source_id, count(distinct (b.target_kind, b.target_id))::int as n
+        from valo_source_release_bindings b
+        where not exists (select 1 from valo_source_impacts i where i.target_kind = b.target_kind and i.target_id = b.target_id)
+        group by b.source_id`)
+    ).rows.map((row) => [String(row.source_id), Number(row.n)]),
+  );
   const iso = (value: Date | string | null) => (value === null ? null : new Date(value).toISOString());
   const entries = new Map<string, (typeof versions)[number][]>();
   for (const version of versions)
@@ -87,11 +111,13 @@ async function read(tx: Tx) {
         url: latest!.url,
         ...view(latest!),
         earlier: earlier.map(view),
+        restingVersions: resting.get(latest!.sourceId) ?? 0,
         watch: watch
           ? {
               checkedAt: iso(watch.checked_at),
               failureCode: watch.failure_code,
               nextCheckAt: iso(watch.next_check_at),
+              stoppedAt: iso(watch.stopped_at),
             }
           : null,
       };
@@ -151,39 +177,47 @@ export function reviseSourceEntry(actor: SourceStaffActor, sourceId: string, val
     throw new ValoProblem(422, "Enter the day the version took effect as a real date.");
   if (reason.length < 20 || reason.length > 1000)
     throw new ValoProblem(422, "Say why, in 20 to 1,000 characters.");
-  return asEditor(actor, async (tx) => {
-    const { valoSourceRegister: r } = await import("@workspace/db");
-    await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${sourceId}, 813))`);
-    const [latest] = await tx
-      .select()
-      .from(r)
-      .where(eq(r.sourceId, sourceId))
-      .orderBy(desc(r.version))
-      .limit(1);
-    if (!latest) throw new ValoProblem(404, "This source is not in the register.");
-    if (latest.version !== input.baseVersion)
-      throw new ValoProblem(409, "This source changed. Reopen the register before correcting it.");
-    const next = {
-      authority,
-      jurisdiction: input.jurisdiction,
-      instrument: input.instrument,
-      versionInForce,
-      effectiveFrom: input.effectiveFrom,
-      status: input.status,
-    };
-    if (
-      (Object.keys(next) as (keyof typeof next)[]).every((field) => (latest[field] ?? null) === next[field])
-    )
-      throw new ValoProblem(422, "Nothing changed. Correct a field, or retire or bring back the source.");
-    await tx.insert(r).values({
-      sourceId,
-      version: latest.version + 1,
-      title: latest.title,
-      url: latest.url,
-      ...next,
-      reason,
-      createdBy: actor.identityId,
-    });
-    return read(tx);
-  });
+  return asEditor(
+    actor,
+    async (tx) => {
+      const { valoSourceRegister: r } = await import("@workspace/db");
+      await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${sourceId}, 813))`);
+      const [latest] = await tx
+        .select()
+        .from(r)
+        .where(eq(r.sourceId, sourceId))
+        .orderBy(desc(r.version))
+        .limit(1);
+      if (!latest) throw new ValoProblem(404, "This source is not in the register.");
+      if (latest.version !== input.baseVersion)
+        throw new ValoProblem(409, "This source changed. Reopen the register before correcting it.");
+      const next = {
+        authority,
+        jurisdiction: input.jurisdiction,
+        instrument: input.instrument,
+        versionInForce,
+        effectiveFrom: input.effectiveFrom,
+        status: input.status,
+      };
+      if (
+        (Object.keys(next) as (keyof typeof next)[]).every((field) => (latest[field] ?? null) === next[field])
+      )
+        throw new ValoProblem(422, "Nothing changed. Correct a field, or retire or bring back the source.");
+      await tx.insert(r).values({
+        sourceId,
+        version: latest.version + 1,
+        title: latest.title,
+        url: latest.url,
+        ...next,
+        reason,
+        createdBy: actor.identityId,
+      });
+      // The database stops a retired source's watch and restarts it when the source comes back; what
+      // rested on a retired source is held now, before anything can go on resting on it.
+      if (next.status === "retired" && latest.status !== "retired")
+        await holdRetiredSourceDependants(tx, sourceId, latest.version + 1);
+      return read(tx);
+    },
+    { sourceState: true },
+  );
 }
