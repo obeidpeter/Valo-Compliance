@@ -17,10 +17,13 @@ import { publicPages } from "@/lib/public-pages";
 import { startPath } from "@/lib/landing-tasks";
 import { isServerPage } from "@/lib/server-pages";
 import { watchBackAndForward } from "@/lib/use-unsaved-navigation";
+import { keepFocusClearOfBars } from "@/lib/focus-clear";
 import NotFound from "@/screens/not-found";
 
 // Before the router renders, so that a screen with unsaved changes is asked first.
 watchBackAndForward();
+// Focus lands clear of the bars that stay on screen, on every screen (WCAG 2.2, Focus Not Obscured).
+keepFocusClearOfBars();
 
 // Each screen is its own chunk, so a page downloads only the screens it shows, not the whole
 // workspace and staff app (NFR-002).
