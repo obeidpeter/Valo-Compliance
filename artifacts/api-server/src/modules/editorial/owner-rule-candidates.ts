@@ -365,7 +365,9 @@ const collectionInformationRule: OwnerRuleCandidate = {
       "Section 27 of the Nigeria Data Protection Act 2023 says what a business must tell people when it collects their personal data, and that it must be in a privacy policy.",
     nextStep:
       "Compare what you tell people when you collect their personal data with section 27, and keep it in a clear privacy policy.",
-    relatedTemplateIds: [],
+    // The privacy notice (TPL-29) is the document that tells people what will be done with their
+    // personal data (docs/architecture/results.md). It is listed only while it is released.
+    relatedTemplateIds: ["TPL-29"],
     evaluator: {
       family: "privacy",
       version: "source-family-v1",
