@@ -8,6 +8,7 @@
 import type { RetainedDraftDetails } from './retainedDraftDetails';
 import type { RetainedDraftFormText } from './retainedDraftFormText';
 import type { RetainedDraftKind } from './retainedDraftKind';
+import type { RetainedDraftRecord } from './retainedDraftRecord';
 import type { RetainedDraftSourceCheck } from './retainedDraftSourceCheck';
 import type { RetainedDraftState } from './retainedDraftState';
 
@@ -35,5 +36,10 @@ export interface RetainedDraft {
      * @nullable
      */
   details: RetainedDraftDetails;
+  /**
+     * For a regulatory guide: whether the library's latest version says whom it applies to (filed); or not yet, while its draft's editorial lines say it, so that the record they give waits to be filed (proposed); or neither does, so that a Content editor writes it (unwritten) (docs/architecture/guidance-record.md). Null for every other draft.
+     * @nullable
+     */
+  record: RetainedDraftRecord;
   sourceCheck: RetainedDraftSourceCheck | null;
 }

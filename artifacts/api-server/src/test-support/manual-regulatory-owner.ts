@@ -29,6 +29,12 @@ export async function exerciseManualRegulatoryOwner(call: Call, editor: string) 
   const assignment = randomUUID(),
     title = "Synthetic source sign-off " + id,
     body = "An exact synthetic regulatory article.";
+  // The article's record, which the owner signs with its text (docs/architecture/guidance-record.md).
+  const record = {
+    appliesTo: "Synthetic businesses that keep the synthetic register.",
+    actionEvidence: "Keep the synthetic register and the receipts that show it.",
+    relatedTemplates: ["TPL-16"],
+  };
   const draft = {
     kind: "regulatory_article",
     title,
@@ -37,6 +43,7 @@ export async function exerciseManualRegulatoryOwner(call: Call, editor: string) 
     fileMode: "text",
     baseVersion: 0,
     requestId: randomUUID(),
+    ...record,
   };
   const path = "/admin/owner-guidance",
     page = "/public/resources/manual-" + id;
@@ -127,6 +134,30 @@ export async function exerciseManualRegulatoryOwner(call: Call, editor: string) 
     assert.equal((await call(page)).status, 404);
     const pass = await check([]);
     assert.equal((await list()).checkId, pass);
+    // The owner's panel shows the version's record with its text, and a version that does not say whom
+    // it applies to is not signed, even on a passing check (CMP-001, docs/architecture/guidance-record.md).
+    const listed = await list();
+    assert.equal(listed.appliesTo, record.appliesTo);
+    assert.equal(listed.actionEvidence, record.actionEvidence);
+    assert.deepEqual(listed.relatedTemplates, [{ number: "TPL-16", title: "Employment contract" }]);
+    const scopeless = randomUUID();
+    const unscoped = GetManualLibraryRevisionResponse.parse(
+      await (
+        await call(
+          "/admin/manual-library/" + scopeless + "/drafts",
+          { ...draft, appliesTo: null, actionEvidence: null, relatedTemplates: [], requestId: randomUUID() },
+          editor,
+        )
+      ).json(),
+    );
+    assert.equal(unscoped.appliesTo, null);
+    const refused = await call(
+      path + "/" + scopeless + "/decisions",
+      { ...decision(pass), digest: unscoped.digest },
+      owner,
+    );
+    assert.equal(refused.status, 409);
+    assert.match(((await refused.json()) as { error: string }).error, /does not say whom it applies to/);
     assert.equal((await decide({ ...decision(pass), confirmed: false })).status, 422);
     assert.equal((await decide(decision(pass), editor)).status, 403);
     assert.equal((await decide(decision(pass))).status, 200);

@@ -27,6 +27,14 @@ export type ManualRegulatorySource = {
   validThrough: string;
   retrievedAt: string;
   retrieval: "official_url" | "retained_official_pdf";
+  /**
+   * The body that issued the text, and for an Act or a regulator's document the day its text took
+   * effect, as the claim map's instrument records them (docs/architecture/guidance-record.md). An
+   * official page says what it says when it is read, so it has no such day. Neither joins the
+   * evidence, and a check made before they were kept has neither.
+   */
+  issuingBody?: string;
+  effectiveFrom?: string;
 };
 
 /** Each source check records its own result, including unsuccessful checks. */
@@ -117,6 +125,15 @@ export const valoManualLibrary = pgTable(
     limits: text("limits"),
     relatedItems: uuid("related_items").array(),
     aiDrafted: boolean("ai_drafted"),
+    /**
+     * A regulatory article's record (docs/architecture/guidance-record.md, CMP-001): whom and when it
+     * applies to, what a business does and keeps, and the registered numbers of its related templates.
+     * Released with the rest of the revision and unchanged afterwards. A regulatory article is released
+     * only with whom it applies to.
+     */
+    appliesTo: text("applies_to"),
+    actionEvidence: text("action_evidence"),
+    relatedTemplates: text("related_templates").array(),
   },
   (t) => [
     foreignKey({
@@ -163,6 +180,10 @@ export const valoManualLibrary = pgTable(
     check(
       "valo_manual_entry_details",
       sql`(${t.purpose} IS NULL AND ${t.needs} IS NULL AND ${t.limits} IS NULL AND ${t.relatedItems} IS NULL AND ${t.aiDrafted} IS NULL) OR (${t.kind} IN ('template','premium_template') AND (${t.purpose} IS NULL OR length(${t.purpose}) BETWEEN 1 AND 400) AND (${t.needs} IS NULL OR length(${t.needs}) BETWEEN 1 AND 1600) AND (${t.limits} IS NULL OR length(${t.limits}) BETWEEN 1 AND 800) AND (${t.relatedItems} IS NULL OR cardinality(${t.relatedItems}) BETWEEN 1 AND 6))`,
+    ),
+    check(
+      "valo_manual_guidance_record",
+      sql`(${t.appliesTo} IS NULL AND ${t.actionEvidence} IS NULL AND ${t.relatedTemplates} IS NULL) OR (${t.kind} = 'regulatory_article' AND (${t.appliesTo} IS NULL OR length(${t.appliesTo}) BETWEEN 1 AND 800) AND (${t.actionEvidence} IS NULL OR length(${t.actionEvidence}) BETWEEN 1 AND 800) AND (${t.relatedTemplates} IS NULL OR (cardinality(${t.relatedTemplates}) BETWEEN 1 AND 6 AND array_to_string(${t.relatedTemplates}, ',') ~ '^TPL-[0-9]{2}(,TPL-[0-9]{2})*$')))`,
     ),
     check(
       "valo_manual_actors",

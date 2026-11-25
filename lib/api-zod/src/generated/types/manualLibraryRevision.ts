@@ -70,4 +70,22 @@ export interface ManualLibraryRevision {
   told: number | null;
   /** The hold on the entry's published version, while it is not lifted, or null. */
   hold: ManualLibraryHoldRecord | null;
+  /**
+     * For a regulatory article only: whom and when it applies to. A regulatory article is released only with it (docs/architecture/guidance-record.md, CMP-001).
+     * @maxLength 800
+     * @nullable
+     */
+  appliesTo: string | null;
+  /**
+     * For a regulatory article only: what a business does, and the records it keeps to show it.
+     * @maxLength 800
+     * @nullable
+     */
+  actionEvidence: string | null;
+  /**
+     * For a regulatory article only: the registered numbers of its related templates. Omitted or empty, it has none.
+     * @maxItems 6
+     * @items.pattern ^TPL-[0-9]{2}$
+     */
+  relatedTemplates: string[];
 }

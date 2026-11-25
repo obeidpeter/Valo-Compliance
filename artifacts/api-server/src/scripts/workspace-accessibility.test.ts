@@ -368,6 +368,7 @@ const answers: Record<string, unknown> = {
         sourceCheck: null,
         formText: "proposed",
         details: "proposed",
+        record: null,
       },
       {
         retainedId: "GUD-01",
@@ -382,6 +383,8 @@ const answers: Record<string, unknown> = {
         sourceCheck: { checkedAt: at(18), holds: 1, validThrough: null },
         formText: null,
         details: null,
+        // Filed without the record its draft gives (docs/architecture/guidance-record.md).
+        record: "proposed",
       },
     ],
     notInLibrary: 1,
@@ -637,6 +640,9 @@ const answers: Record<string, unknown> = {
         live: null,
         previousRelease: null,
         libraryHold: null,
+        appliesTo: "Synthetic businesses that keep a synthetic register.",
+        actionEvidence: "Keep the synthetic register and the receipts that show it.",
+        relatedTemplates: [{ number: "TPL-16", title: "Employment contract" }],
       },
     ],
     hasMore: false,

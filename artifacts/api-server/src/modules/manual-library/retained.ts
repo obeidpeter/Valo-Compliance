@@ -13,6 +13,11 @@ import {
 } from "../publication";
 import { practicalDraftPath, retainedContentSections } from "../../lib/retained-content-sections";
 import { renderDocument } from "../../lib/valo-render";
+import {
+  guideSection,
+  guidanceRecordFromSection,
+  type ProposedGuidanceRecord,
+} from "./retained-guidance-record";
 
 /**
  * The 108 drafts kept in the repository, as the staff library files them (plan: content and speed,
@@ -22,7 +27,9 @@ import { renderDocument } from "../../lib/valo-render";
  *
  * Each draft's text is the customer text the reviewed route already cuts from the same pinned file,
  * and a regulatory guide's is exactly that text, as the owner's source check requires. Editorial
- * notes stay out: status lines, related-template suggestions, template connections and source leads.
+ * notes stay out of the text: status lines, related-template suggestions, template connections and
+ * source leads. A regulatory guide's record is filed beside its text, from its own editorial lines
+ * (`retained-guidance-record.ts`).
  */
 export type RetainedKind =
   | "template"
@@ -41,6 +48,8 @@ export type RetainedDraft = {
   body: string;
   /** A template's section, from which its Word file is made when the draft is filed. */
   template?: OriginalSection;
+  /** A regulatory guide's record, from its draft's editorial lines (docs/architecture/guidance-record.md). */
+  record?: ProposedGuidanceRecord;
 };
 
 /** The library item a retained draft is filed under, the same on every run, so filing twice files it
@@ -190,13 +199,14 @@ export async function retainedDrafts(): Promise<RetainedDraft[]> {
   }
   for (let i = 1; i <= 30; i++) {
     const id = `GUD-${String(i).padStart(2, "0")}`;
-    const { section } = await readGuidanceIntake(id);
+    const { section, provenance } = await readGuidanceIntake(id);
     drafts.push({
       retainedId: id,
       kind: "regulatory_article",
       title: section.title,
       industry: null,
       body: section.body,
+      record: guidanceRecordFromSection(id, guideSection(provenance.sourceText, id, section.title)),
     });
   }
   return drafts;

@@ -122,6 +122,8 @@ test(
           title,
           body,
           digest: sha256(body),
+          // A regulatory guide is released only with whom it applies to (docs/architecture/guidance-record.md).
+          appliesTo: "Synthetic businesses the daily check covers.",
           state: "draft",
           createdBy: editor,
         })

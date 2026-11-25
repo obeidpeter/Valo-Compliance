@@ -597,13 +597,66 @@ test(
             .status,
           409,
         );
+        // A regulatory article is released only with whom it applies to (CMP-001,
+        // docs/architecture/guidance-record.md), and then only on the owner's sign-off of a current source
+        // check of its exact text.
+        assert.equal(r.appliesTo, null);
         await assert.rejects(
           pool.query(
             "update valo_manual_library set state='published',published_at=now(),published_by=$2 where id=$1",
             [r.id, editor],
           ),
+          /released with whom it applies to/,
+        );
+        // Only a regulatory article has a record, within its limits, and its template numbers are
+        // registered ones.
+        assert.equal(
+          (await draft(randomUUID(), { ...input("practical_guide", "Synthetic guide"), appliesTo: "Anyone" }))
+            .status,
+          422,
+        );
+        const next = { ...data, baseVersion: 1, requestId: randomUUID() };
+        assert.equal((await draft(id, { ...next, appliesTo: "x".repeat(801) })).status, 422);
+        assert.equal(
+          (await draft(id, { ...next, appliesTo: "Employers", relatedTemplates: ["TPL-41"] })).status,
+          422,
+        );
+        const record = {
+          appliesTo: "Synthetic employers who keep staff records.",
+          actionEvidence: "Keep each synthetic record and its receipt.",
+          relatedTemplates: ["TPL-16", "TPL-10"],
+        };
+        const scoped = await revision(await draft(id, { ...next, ...record }));
+        assert.equal(scoped.version, 2);
+        assert.deepEqual(
+          {
+            appliesTo: scoped.appliesTo,
+            actionEvidence: scoped.actionEvidence,
+            relatedTemplates: scoped.relatedTemplates,
+          },
+          record,
+        );
+        // The record is part of the version's digest, which the owner signs.
+        assert.notEqual(scoped.digest, r.digest);
+        assert.deepEqual((await revision(await call(item(id)))).relatedTemplates, record.relatedTemplates);
+        assert.equal((await act(id, "publish", scoped)).status, 409);
+        await assert.rejects(
+          pool.query(
+            "update valo_manual_library set state='published',published_at=now(),published_by=$2 where id=$1",
+            [scoped.id, editor],
+          ),
           /current source check of this exact draft/,
         );
+        // It never changes once saved: a correction is a new version.
+        for (const change of [
+          "applies_to='Someone else'",
+          "action_evidence=null",
+          "related_templates=array['TPL-01']",
+        ])
+          await assert.rejects(
+            pool.query(`update valo_manual_library set ${change} where id=$1`, [scoped.id]),
+            /Save corrections/,
+          );
         await assert.rejects(
           pool.query("update valo_manual_library set kind='practical_guide' where id=$1", [r.id]),
           /Save corrections/,
@@ -1341,6 +1394,74 @@ test(
         );
         assert.deepEqual(
           LoadRetainedDraftsResponse.parse(await ok(await call(retained, { load: "details" }))).loaded,
+          [],
+        );
+        // A regulatory guide is filed with the record its draft's editorial lines give, beside its text
+        // (CMP-001, docs/architecture/guidance-record.md). GUD-01's says whom it applies to and what to do
+        // and keep; GUD-19's draft does not say whom it applies to, so a Content editor writes it.
+        const { retainedDrafts } = await import("../modules/manual-library/retained");
+        const guideRecord = (await retainedDrafts()).find((entry) => entry.retainedId === "GUD-01")!.record!;
+        assert.ok(guideRecord.appliesTo && guideRecord.actionEvidence);
+        const recordOf = (r: { appliesTo: unknown; actionEvidence: unknown; relatedTemplates: unknown }) => ({
+          appliesTo: r.appliesTo,
+          actionEvidence: r.actionEvidence,
+          relatedTemplates: r.relatedTemplates,
+        });
+        assert.ok(
+          withDetails.status.items.every(
+            (entry) => (entry.record !== null) === (entry.kind === "regulatory_article"),
+          ),
+        );
+        const gud01 = withDetails.status.items.find((entry) => entry.retainedId === "GUD-01")!;
+        const gudItem = () => call(item(gud01.itemId!));
+        if (loaded.includes("GUD-01")) {
+          assert.equal(gud01.record, "filed");
+          assert.deepEqual(recordOf(await revision(await gudItem())), guideRecord);
+        }
+        if (loaded.includes("GUD-19"))
+          assert.equal(
+            withDetails.status.items.find((entry) => entry.retainedId === "GUD-19")!.record,
+            "unwritten",
+          );
+        // A version saved without the record waits for it, and filing it adds a draft version with the
+        // record, keeping the text.
+        const guideBase = await revision(await gudItem());
+        await revision(
+          await draft(gud01.itemId!, {
+            requestId: randomUUID(),
+            baseVersion: guideBase.version,
+            title: guideBase.title,
+            kind: guideBase.kind,
+            industry: null,
+            body: guideBase.body,
+            fileMode: "text",
+          }),
+        );
+        const noRecord = (await status()).items
+          .filter((entry) => entry.record === "proposed" && entry.itemId !== null)
+          .map((entry) => entry.retainedId);
+        assert.ok(noRecord.includes("GUD-01"));
+        assert.deepEqual(
+          noRecord.filter((id) => id !== "GUD-01" && loaded.includes(id)),
+          [],
+          "every guide filed here was filed with its record",
+        );
+        const withRecords = LoadRetainedDraftsResponse.parse(
+          await ok(await call(retained, { load: "record" })),
+        );
+        assert.deepEqual(withRecords.loaded, noRecord);
+        assert.equal(withRecords.remaining, 0);
+        const recorded = await revision(await gudItem());
+        assert.equal(recorded.version, guideBase.version + 2);
+        assert.equal(recorded.state, "draft");
+        assert.equal(recorded.body, guideBase.body);
+        assert.deepEqual(recordOf(recorded), guideRecord);
+        assert.equal(
+          withRecords.status.items.find((entry) => entry.retainedId === "GUD-01")!.record,
+          "filed",
+        );
+        assert.deepEqual(
+          LoadRetainedDraftsResponse.parse(await ok(await call(retained, { load: "record" }))).loaded,
           [],
         );
         assert.deepEqual(await publicLists(), shownBefore);

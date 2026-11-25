@@ -7,6 +7,7 @@
  */
 import type { ManualLibraryHoldRecord } from './manualLibraryHoldRecord';
 import type { OwnerGuidanceItemLive } from './ownerGuidanceItemLive';
+import type { OwnerGuidanceItemRelatedTemplatesItem } from './ownerGuidanceItemRelatedTemplatesItem';
 import type { OwnerGuidanceItemState } from './ownerGuidanceItemState';
 import type { PublicSourceReference } from './publicSourceReference';
 
@@ -31,4 +32,16 @@ export interface OwnerGuidanceItem {
   previousRelease: number | null;
   /** The hold a Content editor placed on the published version, while it is not lifted, or null. Only the owner lifts it (docs/architecture/library-holds.md, slice 2). */
   libraryHold: ManualLibraryHoldRecord | null;
+  /**
+     * Whom and when the article applies to. It is released only with it.
+     * @nullable
+     */
+  appliesTo: string | null;
+  /**
+     * What a business does, and the records it keeps to show it.
+     * @nullable
+     */
+  actionEvidence: string | null;
+  /** The registered templates the version names as related, each with its registered title. */
+  relatedTemplates: OwnerGuidanceItemRelatedTemplatesItem[];
 }

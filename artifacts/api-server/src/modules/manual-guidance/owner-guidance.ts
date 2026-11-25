@@ -1,5 +1,5 @@
 import { and, desc, eq, getTableColumns, inArray, isNotNull, sql } from "drizzle-orm";
-import { sha256 } from "@workspace/valo-core";
+import { baselineTemplates, sha256 } from "@workspace/valo-core";
 import {
   DecideOwnerGuidanceBody,
   LiftOwnerGuidanceHoldBody,
@@ -16,7 +16,22 @@ type Check = typeof valoManualRegulatoryChecks.$inferSelect;
 const conflict = () =>
   new ValoProblem(409, "The draft or its source check changed. Reopen the article before signing.");
 
-const asOwner = <T>(actor: StaffActor, work: (tx: Tx) => Promise<T>) => asDevelopmentOwner(actor, work);
+const asOwner = <T>(actor: StaffActor, work: (tx: Tx) => Promise<T>) =>
+  asDevelopmentOwner(actor, work).catch((error: unknown) => {
+    // The panel reads each version's record (docs/architecture/guidance-record.md), which a database
+    // the guidance record migration has not reached has no columns for; it says so, as the staff
+    // library does.
+    const e = error as { cause?: { code?: string }; code?: string };
+    if ((e.cause ?? e).code === "42703")
+      throw new ValoProblem(
+        503,
+        "Apply the latest editorial library migrations before signing regulatory guides.",
+      );
+    throw error;
+  });
+/** The registered title of a template number a regulatory article's record names. */
+const templateTitle = (number: string) =>
+  baselineTemplates.find((entry) => entry.id === number)?.title ?? null;
 
 function holdsFor(check: Check | undefined, row: { title: string; body: string }) {
   if (!check || check.title !== row.title || check.bodySha256 !== sha256(row.body))
@@ -45,6 +60,10 @@ export function listOwnerGuidance(actor: StaffActor, page: number) {
         title: t.title,
         body: t.body,
         state: t.state,
+        // The version's record, which the owner signs with its text (docs/architecture/guidance-record.md).
+        appliesTo: t.appliesTo,
+        actionEvidence: t.actionEvidence,
+        relatedTemplates: t.relatedTemplates,
       })
       .from(t)
       .where(eq(t.kind, "regulatory_article"))
@@ -109,6 +128,10 @@ export function listOwnerGuidance(actor: StaffActor, page: number) {
           .map((r) => r.version);
         return {
           ...row,
+          relatedTemplates: (row.relatedTemplates ?? []).map((number) => ({
+            number,
+            title: templateTitle(number),
+          })),
           checkId: check?.id ?? null,
           checkedAt: check?.checkedAt.toISOString() ?? null,
           holds,
@@ -192,6 +215,13 @@ export function decideOwnerGuidance(actor: StaffActor, itemId: string, body: unk
     if (target.state === "published" && target.regulatoryCheckId === input.checkId)
       return { itemId, version: target.version, state: "published" as const };
     if (target.state !== "draft") throw conflict();
+    // A regulatory article is released only with whom it applies to (CMP-001's scope), which the database
+    // also requires (docs/architecture/guidance-record.md).
+    if (target.appliesTo === null)
+      throw new ValoProblem(
+        409,
+        "This version does not say whom it applies to. A Content editor saves a new version that says it before you sign.",
+      );
     if (target.createdBy === actor.identityId)
       throw new ValoProblem(403, "A different Content editor must prepare the draft for owner sign-off.");
     const [check] = await tx.select().from(c).where(eq(c.id, input.checkId));
