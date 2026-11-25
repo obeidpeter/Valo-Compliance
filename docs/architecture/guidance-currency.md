@@ -116,6 +116,19 @@ Slice 1:
 - A check that outlasts its four minutes fails the worker's run and is not started again by that
   worker until it ends. It may still record its result.
 
+Slice 2, its database and routes:
+- The staff list gives each entry's published version and when its review is due. In place of listing
+  the entries due first, the list keeps its order, and `review=due` lists only those due within 14 days
+  or overdue.
+- A review records its own time, so it cannot be dated in the past. The route refuses a regulatory
+  guide, whose review is its source check, and any version but the published one.
+- An entry overdue for its review is held from: the public library's pages and lists, a free template's
+  download, the templates a workspace can save, copying a free template into a new document, the
+  premium offers and starting an order. What a buyer already has stays: their purchased file, their
+  documents and starting a document from the edition they bought. The owner's price command refuses an
+  overdue template too, and says why.
+- The staff screen's dates and its review action are slice 2's second part.
+
 ## What does not change
 
 - What holds a guide, and its 30-day amendment records.

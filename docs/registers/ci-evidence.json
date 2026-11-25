@@ -3947,7 +3947,7 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/routes/valo-manual-library.integration.test.ts",
       "test": "manual publishing through staff HTTP routes and public readers",
-      "proves": "Against PostgreSQL, when a staff-library template's edition is replaced or withdrawn, each workspace that bought it or made a document from it gets one notice, with the editor's reason for a withdrawal, no other workspace gets one, and a workspace can only read its own notices and mark them read."
+      "proves": "Against PostgreSQL, when a staff-library template's edition is replaced or withdrawn, each workspace that bought it or made a document from it gets one notice, with the editor's reason for a withdrawal, no other workspace gets one, a workspace can only read its own notices and mark them read, and an entry overdue for its 90-day review is held from the public library and new downloads until a Content editor records a review of its published version, which is refused for any other version, without a note or from anyone else."
     },
     {
       "requirement": "EDP-011",
