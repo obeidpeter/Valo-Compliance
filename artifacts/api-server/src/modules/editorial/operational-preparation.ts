@@ -1,5 +1,4 @@
 import { randomUUID } from "node:crypto";
-import { readFile } from "node:fs/promises";
 import { eq, sql } from "drizzle-orm";
 import {
   candidateDigest,
@@ -39,26 +38,34 @@ import { assertDevelopmentRuntime } from "../../platform/valo-development-runtim
 import { supportsOperationalInferenceTemplate } from "../publication";
 import { setting } from "../../platform/settings";
 import { singleRow } from "../../platform/rows";
+import { termsFile, termsInHand, type TermsCopy } from "./terms-copy";
 export async function prepareInventoryRelease(snapshotPath: string) {
-  return prepareRelease("TPL-07", snapshotPath, true);
+  return prepareRelease("TPL-07", termsFile(snapshotPath), true);
 }
 /** Prepares the actual canonical candidate and its export evidence for its two finite reviews, as a
  * private artifact (decision 0014); a candidate that fails a check is saved and held instead.
  * This entry never authors, requests AI reviews, approves inference or publishes. */
 export async function prepareOperationalCandidateRelease(templateId: string, snapshotPath: string) {
+  return prepareCandidate(templateId, termsFile(snapshotPath));
+}
+/** The same, with the provider-terms copy given as a value rather than a file. */
+export async function prepareOperationalCandidate(templateId: string, terms: unknown) {
+  return prepareCandidate(templateId, termsInHand(terms));
+}
+async function prepareCandidate(templateId: string, terms: TermsCopy) {
   assertDevelopmentRuntime();
   if (!supportsOperationalInferenceTemplate(templateId) && !isPracticalGuideId(templateId))
     throw Error("CANDIDATE_REQUEST_PREPARER_UNAVAILABLE");
-  return prepareRelease(templateId, snapshotPath, false);
+  return prepareRelease(templateId, terms, false);
 }
-async function prepareRelease(templateId: string, snapshotPath: string, requestReviews: boolean) {
+async function prepareRelease(templateId: string, terms: TermsCopy, requestReviews: boolean) {
   const { db, valoContentVersions, valoPublicationPolicies, valoPreparedCandidates } =
     await import("@workspace/db");
   developmentPublicationOnly();
   // The one-step path pays for authoring and reviews and then releases. It finds out now, before
   // anything is paid for, whether the publisher can log in.
   if (requestReviews) await assertPublisherCanLogIn();
-  const snapshot = JSON.parse(await readFile(snapshotPath, "utf8"));
+  const snapshot = await terms();
   const useRecordedAuthoring = requestReviews && setting("VALO_OPERATIONAL_AUTHORING") === "recorded";
   const versions = await db
     .select()
