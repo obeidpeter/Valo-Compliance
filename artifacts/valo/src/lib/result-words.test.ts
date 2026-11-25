@@ -7,6 +7,7 @@ import { EMPTY_FACTS } from "./checker";
 import type { AssessmentItem } from "@workspace/api-client-react";
 import {
   KNOWN_HOLD_REASONS,
+  requirementDates,
   requirementFigures,
   resultGaps,
   resultNotice,
@@ -166,4 +167,34 @@ test("a result says in the site's words that Valo has not checked the local gove
     "Healthcare, financial services and energy are covered only where a published rule is about that activity.",
   ]);
   for (const sentence of said) assert.doesNotMatch(sentence, SYSTEM_WORDS, sentence);
+});
+
+// docs/architecture/results.md, slice 4. CMP-004: labels say "AI reviewed" or "Source checked", and
+// "professionally reviewed" appears only if that review occurred and was recorded.
+test("a requirement's dates each have their own label: when its sources were checked, and how and when it was released, with no professional review claimed", () => {
+  const checked = "2026-11-01T09:00:00.000Z",
+    published = "2026-11-12T10:00:00.000Z";
+  assert.deepEqual(
+    requirementDates({
+      sourceCheckedAt: checked,
+      publication: { route: "owner_signoff", publishedAt: published },
+    }),
+    ["Source checked on 1 Nov 2026", "Signed off by the Valo development owner and published on 12 Nov 2026"],
+  );
+  assert.deepEqual(
+    requirementDates({
+      sourceCheckedAt: checked,
+      publication: { route: "editorial_release", publishedAt: published },
+    }),
+    ["Source checked on 1 Nov 2026", "AI reviewed, and published on 12 Nov 2026"],
+  );
+  assert.deepEqual(requirementDates({ sourceCheckedAt: checked }), ["Source checked on 1 Nov 2026"]);
+  // A result saved before the dates were recorded shows none.
+  assert.deepEqual(requirementDates({}), []);
+  for (const route of ["owner_signoff", "editorial_release"] as const)
+    for (const date of requirementDates({
+      sourceCheckedAt: checked,
+      publication: { route, publishedAt: published },
+    }))
+      assert.doesNotMatch(date, /professional/i, date);
 });

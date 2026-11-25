@@ -205,6 +205,31 @@ result carries its own checksum, and is shown only while the checksum matches.
 - **Answers that name neither an area nor a listed industry add nothing.** So a result from them is
   what it was: the pinned old result among them.
 
+**Slice 4: dates.**
+- **Each requirement carries its dates apart:**
+  - when its rule's sources were checked, from the rule's `sourceCheckedAt`;
+  - how its rule was released and when, from its release record's `published_at`. The registry hands
+    the engine that date for each version it admits.
+- **The words:**
+  - "Source checked on 1 Nov 2026";
+  - for an owner-signed rule, "Signed off by the Valo development owner and published on 12 Nov
+    2026". The design proposed two dates here. The owner's sign-off is made in the transaction that
+    publishes the rule, and the rule's trigger refuses it otherwise, so one date is both;
+  - for a rule released on the reviewed route, "AI reviewed, and published on 12 Nov 2026".
+
+  "Source checked" and "AI reviewed" are CMP-004's labels. Nothing says a professional reviewed a
+  rule, since no such review is recorded.
+- **A review on the reviewed route has no date of its own.** Its record in the release's bundle holds
+  the run's id, model, prompt version and hashes, but no time. So the date shown is the publication's,
+  and CMP-004's separate review date is not recorded for that route. Recording it needs each review's
+  completion time bound into the bundle, which changes the reviewed route's bundle.
+- **Where the dates go:** under the rule's name and version, before how it was released. The summary a
+  customer copies gives them too.
+- **What shows none:** a test rule shows only when its sources were checked. A result saved before
+  dates were recorded shows none.
+- **Dates alone are no change.** Comparing a saved result with a new one leaves them out, as it leaves
+  out how the rule was released. So a result saved before this change shows no change for them.
+
 ## Slices
 
 1. **Documents.** The catalogue's `templateIds` filter, the documents under each requirement and
@@ -233,4 +258,8 @@ result carries its own checksum, and is shown only while the checksum matches.
    - "Confirm with the authority.", after "Fees and deadlines", "Fees" or "Deadlines";
    - the sentences on what is not checked: "Valo has not checked the local government's own
      requirements for …" and "Valo has not checked requirements specific to …";
-   - the three dates' labels.
+   - the dates' labels: "Source checked on …", "Signed off by the Valo development owner and
+     published on …" and "AI reviewed, and published on …".
+3. **A review date for the reviewed route.** CMP-004 keeps the AI review's date apart from the
+   publication's. The reviewed route records none today, so its review date is not shown. Recording it
+   changes that route's bundle.

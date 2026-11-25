@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { AssessmentItemLabel } from './assessmentItemLabel';
+import type { AssessmentItemPublication } from './assessmentItemPublication';
 import type { MissingAnswerState } from './missingAnswerState';
 import type { RequirementFigure } from './requirementFigure';
 import type { RequirementRoute } from './requirementRoute';
@@ -35,4 +36,8 @@ export interface AssessmentItem {
   officialRoute?: RequirementRoute;
   /** Each fee, deadline, rate or threshold the item's rule records, with the source it rests on (CMP-006). Absent when the rule records none, and in a result saved before figures were recorded. */
   figures?: RequirementFigure[];
+  /** When the rule's sources were last checked (CMP-004). Absent in a result saved before dates were recorded. */
+  sourceCheckedAt?: string;
+  /** How the rule was released and when, from its release record (CMP-004). Absent for a test rule, and in a result saved before dates were recorded. */
+  publication?: AssessmentItemPublication;
 }

@@ -3388,6 +3388,22 @@ export const AssessmentItemLabel = {
   Not_indicated_by_these_answers: 'Not indicated by these answers',
 } as const;
 
+export type AssessmentItemPublicationRoute = typeof AssessmentItemPublicationRoute[keyof typeof AssessmentItemPublicationRoute];
+
+
+export const AssessmentItemPublicationRoute = {
+  owner_signoff: 'owner_signoff',
+  editorial_release: 'editorial_release',
+} as const;
+
+/**
+ * How the rule was released and when, from its release record (CMP-004). Absent for a test rule, and in a result saved before dates were recorded.
+ */
+export type AssessmentItemPublication = {
+  route: AssessmentItemPublicationRoute;
+  publishedAt: string;
+};
+
 export type RequirementFigureKind = typeof RequirementFigureKind[keyof typeof RequirementFigureKind];
 
 
@@ -3429,6 +3445,10 @@ export interface AssessmentItem {
   officialRoute?: RequirementRoute;
   /** Each fee, deadline, rate or threshold the item's rule records, with the source it rests on (CMP-006). Absent when the rule records none, and in a result saved before figures were recorded. */
   figures?: RequirementFigure[];
+  /** When the rule's sources were last checked (CMP-004). Absent in a result saved before dates were recorded. */
+  sourceCheckedAt?: string;
+  /** How the rule was released and when, from its release record (CMP-004). Absent for a test rule, and in a result saved before dates were recorded. */
+  publication?: AssessmentItemPublication;
 }
 
 /**

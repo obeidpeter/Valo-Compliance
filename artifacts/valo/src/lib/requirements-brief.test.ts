@@ -174,3 +174,62 @@ test("the summary names the official page of each requirement that may apply, wi
   assert.match(block("SYNTH-PLAIN"), /\n {2}Fees and deadlines: Confirm with the authority\./);
   assert.doesNotMatch(block("SYNTH-NOT"), /Official page|Confirm with the authority/);
 });
+
+// docs/architecture/results.md, slice 4 (CMP-004): the summary gives each requirement's dates as the
+// result does.
+test("the summary gives each requirement's dates with their labels, and none for a result saved before they were recorded", () => {
+  const source = {
+    id: "src-1",
+    url: "https://example.test/source",
+    title: "Synthetic Act",
+    locator: "Section 5",
+    quote: "Synthetic quote.",
+    snapshotHash: "a".repeat(64),
+  };
+  const requirement = (ruleId: string, extra: Partial<AssessmentItem> = {}) => ({
+    ruleId,
+    ruleVersion: 1,
+    requirementVersionId: `${ruleId}@1`,
+    title: `Synthetic requirement ${ruleId}`,
+    label: "Likely relevant" as const,
+    reason: "Synthetic reason.",
+    missingFacts: [],
+    matchedFacts: [],
+    nextStep: "Synthetic next step.",
+    jurisdiction: { level: "federal" as const },
+    sources: [source],
+    relatedTemplateIds: [],
+    ...extra,
+  });
+  const text = formatRequirementsBrief({
+    result: {
+      schemaVersion: "checker-result-v1",
+      asOfDate: "2026-11-18",
+      rulesetVersion: "abcdef1234567890",
+      items: [
+        requirement("SYNTH-DATED", {
+          sourceCheckedAt: "2026-11-01T09:00:00.000Z",
+          publication: { route: "editorial_release", publishedAt: "2026-11-12T10:00:00.000Z" },
+        }),
+        requirement("SYNTH-SAVED"),
+      ],
+      unanswered: [],
+      gaps: [],
+      recommendedTemplateIds: [],
+      officialRoutes: [],
+      notice: "Not legal advice.",
+      sourceBackedRecommendations: 2,
+      resultHash: "1234567890abcdef".repeat(4),
+    },
+    facts: {},
+  });
+  assert.match(
+    text,
+    /Synthetic requirement SYNTH-DATED [^\n]*\n(?: {2}[^\n]*\n)*? {2}Dates: Source checked on 1 Nov 2026; AI reviewed, and published on 12 Nov 2026\n/,
+  );
+  const saved = text.slice(text.indexOf("Synthetic requirement SYNTH-SAVED"));
+  assert.doesNotMatch(
+    saved.slice(0, saved.indexOf("\n\n") < 0 ? undefined : saved.indexOf("\n\n")),
+    /Dates:/,
+  );
+});

@@ -5612,7 +5612,12 @@ export const PreviewAssessmentResponse = zod.object({
   "kind": zod.enum(['fee', 'deadline', 'rate', 'threshold']),
   "words": zod.string().describe('In the words of the passage of the item\'s source it rests on.'),
   "sourceId": zod.string().describe('The id of one of the item\'s sources.')
-})).optional().describe('Each fee, deadline, rate or threshold the item\'s rule records, with the source it rests on (CMP-006). Absent when the rule records none, and in a result saved before figures were recorded.')
+})).optional().describe('Each fee, deadline, rate or threshold the item\'s rule records, with the source it rests on (CMP-006). Absent when the rule records none, and in a result saved before figures were recorded.'),
+  "sourceCheckedAt": zod.string().optional().describe('When the rule\'s sources were last checked (CMP-004). Absent in a result saved before dates were recorded.'),
+  "publication": zod.object({
+  "route": zod.enum(['owner_signoff', 'editorial_release']),
+  "publishedAt": zod.string()
+}).optional().describe('How the rule was released and when, from its release record (CMP-004). Absent for a test rule, and in a result saved before dates were recorded.')
 })),
   "unanswered": zod.array(zod.string()),
   "gaps": zod.array(zod.string()),
@@ -6082,7 +6087,12 @@ export const PreviewWorkspaceAssessmentResponse = zod.object({
   "kind": zod.enum(['fee', 'deadline', 'rate', 'threshold']),
   "words": zod.string().describe('In the words of the passage of the item\'s source it rests on.'),
   "sourceId": zod.string().describe('The id of one of the item\'s sources.')
-})).optional().describe('Each fee, deadline, rate or threshold the item\'s rule records, with the source it rests on (CMP-006). Absent when the rule records none, and in a result saved before figures were recorded.')
+})).optional().describe('Each fee, deadline, rate or threshold the item\'s rule records, with the source it rests on (CMP-006). Absent when the rule records none, and in a result saved before figures were recorded.'),
+  "sourceCheckedAt": zod.string().optional().describe('When the rule\'s sources were last checked (CMP-004). Absent in a result saved before dates were recorded.'),
+  "publication": zod.object({
+  "route": zod.enum(['owner_signoff', 'editorial_release']),
+  "publishedAt": zod.string()
+}).optional().describe('How the rule was released and when, from its release record (CMP-004). Absent for a test rule, and in a result saved before dates were recorded.')
 })),
   "unanswered": zod.array(zod.string()),
   "gaps": zod.array(zod.string()),
@@ -6536,7 +6546,12 @@ export const ListAssessmentsResponseItem = zod.object({
   "kind": zod.enum(['fee', 'deadline', 'rate', 'threshold']),
   "words": zod.string().describe('In the words of the passage of the item\'s source it rests on.'),
   "sourceId": zod.string().describe('The id of one of the item\'s sources.')
-})).optional().describe('Each fee, deadline, rate or threshold the item\'s rule records, with the source it rests on (CMP-006). Absent when the rule records none, and in a result saved before figures were recorded.')
+})).optional().describe('Each fee, deadline, rate or threshold the item\'s rule records, with the source it rests on (CMP-006). Absent when the rule records none, and in a result saved before figures were recorded.'),
+  "sourceCheckedAt": zod.string().optional().describe('When the rule\'s sources were last checked (CMP-004). Absent in a result saved before dates were recorded.'),
+  "publication": zod.object({
+  "route": zod.enum(['owner_signoff', 'editorial_release']),
+  "publishedAt": zod.string()
+}).optional().describe('How the rule was released and when, from its release record (CMP-004). Absent for a test rule, and in a result saved before dates were recorded.')
 })),
   "unanswered": zod.array(zod.string()),
   "gaps": zod.array(zod.string()),
@@ -7392,7 +7407,12 @@ export const CreateAssessmentResponse = zod.object({
   "kind": zod.enum(['fee', 'deadline', 'rate', 'threshold']),
   "words": zod.string().describe('In the words of the passage of the item\'s source it rests on.'),
   "sourceId": zod.string().describe('The id of one of the item\'s sources.')
-})).optional().describe('Each fee, deadline, rate or threshold the item\'s rule records, with the source it rests on (CMP-006). Absent when the rule records none, and in a result saved before figures were recorded.')
+})).optional().describe('Each fee, deadline, rate or threshold the item\'s rule records, with the source it rests on (CMP-006). Absent when the rule records none, and in a result saved before figures were recorded.'),
+  "sourceCheckedAt": zod.string().optional().describe('When the rule\'s sources were last checked (CMP-004). Absent in a result saved before dates were recorded.'),
+  "publication": zod.object({
+  "route": zod.enum(['owner_signoff', 'editorial_release']),
+  "publishedAt": zod.string()
+}).optional().describe('How the rule was released and when, from its release record (CMP-004). Absent for a test rule, and in a result saved before dates were recorded.')
 })),
   "unanswered": zod.array(zod.string()),
   "gaps": zod.array(zod.string()),
@@ -7852,7 +7872,12 @@ export const GetAssessmentResponse = zod.object({
   "kind": zod.enum(['fee', 'deadline', 'rate', 'threshold']),
   "words": zod.string().describe('In the words of the passage of the item\'s source it rests on.'),
   "sourceId": zod.string().describe('The id of one of the item\'s sources.')
-})).optional().describe('Each fee, deadline, rate or threshold the item\'s rule records, with the source it rests on (CMP-006). Absent when the rule records none, and in a result saved before figures were recorded.')
+})).optional().describe('Each fee, deadline, rate or threshold the item\'s rule records, with the source it rests on (CMP-006). Absent when the rule records none, and in a result saved before figures were recorded.'),
+  "sourceCheckedAt": zod.string().optional().describe('When the rule\'s sources were last checked (CMP-004). Absent in a result saved before dates were recorded.'),
+  "publication": zod.object({
+  "route": zod.enum(['owner_signoff', 'editorial_release']),
+  "publishedAt": zod.string()
+}).optional().describe('How the rule was released and when, from its release record (CMP-004). Absent for a test rule, and in a result saved before dates were recorded.')
 })),
   "unanswered": zod.array(zod.string()),
   "gaps": zod.array(zod.string()),
