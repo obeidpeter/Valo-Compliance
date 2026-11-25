@@ -1038,6 +1038,48 @@
       "proves": "The source register, rendered on the server from a synthetic register, labels each reference's dates “Source checked” and “AI reviewed”, shows “Not recorded” for dates never recorded, and contains no professionally reviewed, lawyer, legal review or specialist review wording."
     },
     {
+      "requirement": "CMP-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/valo-checker-explanations.test.ts",
+      "test": "each requirement carries when its rule's sources were checked and how and when the rule was released, and its dates alone never make two saved results differ",
+      "proves": "A requirement carries its rule's source-check date apart from its release, on the owner's sign-off or on the reviewed route with the publication date given for that version, while a test rule or a version with no release record given carries no release, and a saved requirement without the dates compares the same as one with them."
+    },
+    {
+      "requirement": "CMP-004",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/result-words.test.ts",
+      "test": "a requirement's dates each have their own label: when its sources were checked, and how and when it was released, with no professional review claimed",
+      "proves": "A requirement's dates read “Source checked on 1 Nov 2026” and either “Signed off by the Valo development owner and published on 12 Nov 2026” or “AI reviewed, and published on 12 Nov 2026”, a result saved before dates were recorded gives none, and no date mentions a professional."
+    },
+    {
+      "requirement": "CMP-004",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/assessment-result.test.tsx",
+      "test": "each requirement shows its dates under its rule, each with its own label, and a result saved before dates were recorded shows none",
+      "proves": "The result view, rendered on the server from a synthetic result, shows a requirement's labelled dates under its rule and version and above why it is shown, shows none for a requirement saved without them, and says nothing of a professional."
+    },
+    {
+      "requirement": "CMP-004",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/requirements-brief.test.ts",
+      "test": "the summary gives each requirement's dates with their labels, and none for a result saved before they were recorded",
+      "proves": "The plain-text summary a customer copies gives a requirement's dates as “Dates: Source checked on 1 Nov 2026; AI reviewed, and published on 12 Nov 2026”, and no dates for a requirement saved without them."
+    },
+    {
+      "requirement": "CMP-004",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-screens-accessibility.test.ts",
+      "test": "each requirement's dates are shown under its rule, each with its own label, and no professional review is claimed",
+      "proves": "On an emulated phone, a result's requirements show their labelled dates, one rule signed off by the Valo development owner and one AI reviewed, the result never mentions a professional, and the page has no automated WCAG 2.2 AA failure."
+    },
+    {
+      "requirement": "CMP-004",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/editorial/owner-rule-signoff.integration.test.ts",
+      "test": "the development owner watches a prepared rule's sources, signs the exact version shown, supersedes it and withdraws it",
+      "proves": "Once the development owner signs a synthetic rule in PostgreSQL, the result the engine works out from the released rules dates the rule's source check as the stored rule records it, and its release on the owner's sign-off at its release record's publication time."
+    },
+    {
       "requirement": "CMP-006",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/tasks/valo-requirements.integration.test.ts",
