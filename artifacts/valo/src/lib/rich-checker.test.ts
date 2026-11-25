@@ -1,6 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import {
+  NAMING_QUESTIONS,
+  PARTNER_QUESTIONS,
+  RULE_QUESTIONS,
+} from "@workspace/valo-core/checker-questionnaire";
 import { EMPTY_FACTS, displayFact, finaliseFacts, reviewFacts } from "./checker";
 import {
   ANSWER_STATES,
@@ -131,23 +135,17 @@ test("exact names stay literal across review and grouped comparison", () => {
 });
 
 test("rich question targets cover every declared customer control, including support facts", () => {
-  const source = readFileSync(new URL("../components/rich-checker-fields.tsx", import.meta.url), "utf8");
+  // The controls are the rules' questions in the questionnaire, which the panels draw.
   const groups = [
-    ["BUSINESS", "businessName", "rich-businessName", 0],
-    ["PRIVACY", "privacy", "rich-privacy", 4],
-    ["TAX", "tax", "rich-tax", 0],
-    ["PRODUCT", "product", "rich-product", 1],
-    ["NAMING", "businessName.namingAssessment", "rich-naming", 0],
-    ["PARTNER", "businessName.partners.0", "rich-partner-0", 0],
+    [RULE_QUESTIONS.businessName, "businessName", "rich-businessName", 0],
+    [RULE_QUESTIONS.privacy, "privacy", "rich-privacy", 4],
+    [RULE_QUESTIONS.tax, "tax", "rich-tax", 0],
+    [RULE_QUESTIONS.product, "product", "rich-product", 1],
+    [NAMING_QUESTIONS, "businessName.namingAssessment", "rich-naming", 0],
+    [PARTNER_QUESTIONS, "businessName.partners.0", "rich-partner-0", 0],
   ] as const;
-  for (const [group, path, prefix, step] of groups) {
-    const definitions = source.match(
-      new RegExp(`const ${group}_FIELDS: Field\\[\\] = \\[([\\s\\S]*?)\\n\\];`),
-    )?.[1];
-    assert.ok(definitions, `${group} controls are declared`);
-    const keys = [...definitions.matchAll(/(?:flag|select)\(["']([^"']+)["']|key: ["']([^"']+)["']/g)].map(
-      (match) => match[1] ?? match[2],
-    );
+  for (const [questions, path, prefix, step] of groups) {
+    const keys = questions.map((question) => question.key);
     assert.ok(keys.length > 0);
     for (const key of keys) {
       const target = richQuestionTarget(`rich.${path}.${key}`);

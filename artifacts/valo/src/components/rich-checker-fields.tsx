@@ -1,6 +1,12 @@
 import { useState } from "react";
 import { Plus, X } from "lucide-react";
 import {
+  NAMING_QUESTIONS,
+  PARTNER_QUESTIONS,
+  RULE_QUESTIONS,
+  type RuleQuestion,
+} from "@workspace/valo-core/checker-questionnaire";
+import {
   ANSWER_STATES,
   ANSWER_STATE_LABELS,
   isRichMarker,
@@ -19,242 +25,25 @@ type Field = {
   choices?: readonly Choice[];
   hint?: string | undefined;
 };
-const flag = (key: string, label: string, hint?: string): Field => ({ key, label, kind: "flag", hint });
-const select = (key: string, label: string, choices: readonly Choice[], hint?: string): Field => ({
-  key,
-  label,
-  choices,
-  hint,
+/** A rule's question, from the questionnaire, as this panel draws it. */
+const asField = (question: RuleQuestion): Field => ({
+  key: question.key,
+  label: question.label,
+  ...(question.kind === "flag" || question.kind === "list" || question.kind === "date"
+    ? { kind: question.kind }
+    : {}),
+  ...(question.choices
+    ? { choices: question.choices.map((choice): Choice => [choice.value, choice.label]) }
+    : {}),
+  ...(question.hint ? { hint: question.hint } : {}),
 });
 
-const BUSINESS_FIELDS: Field[] = [
-  select("legalForm", "Who operates under this name?", [
-    ["individual", "One individual"],
-    ["firm", "A partnership or firm"],
-    ["company", "A company"],
-  ]),
-  flag("hasPlaceOfBusinessInNigeria", "Does this operator have a place of business in Nigeria?"),
-  flag("carryingOnBusiness", "Is business being carried on under the name?"),
-  { key: "businessName", label: "Exact name used for this business" },
-  { key: "trueSurname", label: "Individual operator’s true surname or patronymic" },
-  { key: "trueForenames", label: "Individual operator’s forenames", kind: "list" },
-  {
-    key: "recognizedAbbreviations",
-    label: "Recognised abbreviations of the individual’s names",
-    kind: "list",
-  },
-  { key: "corporateName", label: "Company’s exact registered corporate name" },
-  select("operatorRole", "Role of the person carrying on the business", [
-    ["proprietor", "Proprietor or partner"],
-    ["manager", "Manager"],
-    ["receiver", "Receiver"],
-    ["other", "Another role"],
-  ]),
-  select("appointmentAuthority", "How was the manager or receiver appointed?", [
-    ["court", "By a court"],
-    ["private_contract", "By private agreement"],
-    ["other", "Another route"],
-  ]),
-  flag("appointmentConfirmed", "Have you checked the appointment record?"),
-  flag(
-    "businessNameRegistered",
-    "Do you have a registration record for this exact name and operator?",
-    "This records your answer; Valo does not verify the registration.",
-  ),
-];
-const NAMING_FIELDS: Field[] = [
-  flag(
-    "onlyAddedWordsIndicateSuccession",
-    "Do the added words only describe succession to a previous business?",
-  ),
-  flag("otherBrandAddition", "Is there any other brand wording added to the names?"),
-  flag("sameSurnameAllPartners", "Do all the partners have the same surname?"),
-  flag("onlyAdditionIsPluralS", "Is the only addition a final “s” making a shared surname plural?"),
-];
-const PARTNER_FIELDS: Field[] = [
-  select("type", "Partner type", [
-    ["individual", "Individual"],
-    ["corporation", "Corporation"],
-  ]),
-  { key: "surname", label: "True surname or patronymic" },
-  { key: "forenames", label: "Forenames", kind: "list" },
-  { key: "recognizedAbbreviations", label: "Recognised name abbreviations", kind: "list" },
-  { key: "corporateName", label: "Corporate name, if this partner is a corporation" },
-];
-const TAX_FIELDS: Field[] = [
-  select("legalForm", "What do the entity’s formation records describe?", [
-    ["individual_business_name", "Individual with a business name"],
-    ["ordinary_unincorporated_partnership", "Ordinary unincorporated partnership"],
-    ["company", "Company"],
-    ["company_limited_by_guarantee", "Company limited by guarantee"],
-    ["foreign_company", "Company incorporated outside Nigeria"],
-    ["incorporated_trustees", "Incorporated trustees"],
-    ["other", "Another form"],
-  ]),
-  flag("incorporatedAsCompany", "Was the entity incorporated as a company?"),
-  flag("incorporatedInNigeria", "Was the entity incorporated in Nigeria?"),
-  select(
-    "effectiveManagementCountry",
-    "Where are the entity’s central management decisions made?",
-    [
-      ["Nigeria", "Nigeria"],
-      ["outside_Nigeria", "Outside Nigeria"],
-      ["mixed", "In more than one country"],
-    ],
-    "This answer does not establish tax residence.",
-  ),
-  select("managementStatusVerification", "Have you checked records supporting that management location?", [
-    ["not_verified", "Not checked"],
-    ["records_available", "Supporting records available"],
-  ]),
-  select("companyStatus", "What is the entity’s current operating status?", [
-    ["active", "Operating"],
-    ["dormant", "Dormant"],
-    ["permanently_ceased", "Permanently ceased operations"],
-  ]),
-  { key: "accountingPeriodStart", label: "Accounting period start", kind: "date" },
-  { key: "accountingPeriodEnd", label: "Accounting period end", kind: "date" },
-];
-const PRIVACY_FIELDS: Field[] = [
-  flag("processesPersonalData", "Does the selected activity use information about identifiable people?"),
-  {
-    key: "dataCategories",
-    label: "Kinds of personal information used",
-    kind: "list",
-    choices: [
-      ["phone", "Phone numbers"],
-      ["email", "Email addresses"],
-      ["employee_name", "Employee names"],
-      ["bank_account", "Bank account details"],
-      ["other", "Other information about identifiable people"],
-    ],
-    hint: "Select categories only. Do not enter anyone’s actual details.",
-  },
-  flag("automatedDecisionMaking", "Are decisions about people made automatically?"),
-  flag("profiling", "Is the information used to profile people?"),
-  select("controllerRole", "Who decides why and how that information is used?", [
-    ["controller", "We make those decisions"],
-    ["processor_only", "We act only on another organisation’s instructions"],
-    ["mixed", "It varies by activity"],
-  ]),
-  flag("determinesPurposesAndMeans", "Do you decide the purposes and means of this particular use?"),
-  flag("ownPurposeReuse", "Do you reuse the information for your own purposes?"),
-  select("collectionMethod", "How is the information collected?", [
-    ["direct", "Directly from the person"],
-    ["indirect", "From someone or somewhere else"],
-    ["mixed", "Both"],
-  ]),
-  flag("newCollectionEvent", "Does this activity involve collecting information now?"),
-  flag("operatesInNigeria", "Does the organisation operate in Nigeria?"),
-  flag("processingOccursInNigeria", "Does any processing for this activity take place in Nigeria?"),
-  flag("dataSubjectsInNigeria", "Are any of the people concerned located in Nigeria?"),
-  flag("controllerDomiciledInNigeria", "Is the organisation deciding the use domiciled in Nigeria?"),
-  flag("controllerResidentInNigeria", "Is that organisation resident in Nigeria?"),
-  flag(
-    "processorConnectionInNigeria",
-    "Does a processor involved have a Nigerian connection?",
-    "Consider its domicile, residence, operations, processing, and the people whose information it uses.",
-  ),
-  select("processingPurpose", "What is the information used for?", [
-    ["solely_personal_household", "Only personal or household activity"],
-    ["household_and_commercial_promotions", "Household activity and commercial promotion"],
-    ["commercial", "Business or commercial activity"],
-    ["legal_claim", "A legal claim"],
-    ["other", "Another purpose"],
-  ]),
-  flag("commercialUse", "Is there any business or commercial use?"),
-  flag("privacyRightsViolationIndicated", "Is there any reported or indicated privacy-rights concern?"),
-  select(
-    "section3Exception",
-    "Is any of this context relevant?",
-    [
-      ["none", "None of these contexts"],
-      ["personal_household", "Personal or household activity"],
-      ["legal_claim", "A legal claim"],
-      ["other", "Another context"],
-    ],
-    "A context choice does not establish a legal exemption.",
-  ),
-  flag("dataSubjectAlreadyInformed", "Has the person already been given information about this use?"),
-  select(
-    "indirectNoticeException",
-    "For indirect collection, has an effort-related concern been raised?",
-    [
-      ["none", "No such concern"],
-      ["disproportionate_effort_claim", "Concern about the effort of contacting people"],
-      ["other", "Another concern"],
-    ],
-    "This does not establish that a notice exception applies.",
-  ),
-  flag(
-    "exceptionScopeConfirmed",
-    "Have the particular circumstances behind the stated context been checked?",
-    "This records a factual check, not approval of a legal exception.",
-  ),
-  {
-    key: "exceptionSupportingFacts",
-    label: "What factual circumstances support the stated context or contacting concern?",
-    hint: "Describe circumstances only. Do not include names, contact details or other personal or sensitive information. This does not establish a legal exception.",
-  },
-];
-const PRODUCT_FIELDS: Field[] = [
-  select("productCategory", "Which description fits the particular product?", [
-    ["processed_food", "Processed food"],
-    ["cosmetic", "Cosmetic"],
-    ["claimed_cosmetic", "Described as cosmetic, with classification unresolved"],
-    ["water", "Water"],
-    ["drug", "Drug"],
-    ["medical_device", "Medical device"],
-    ["live_fish", "Live fish"],
-    ["other", "Another product"],
-  ]),
-  flag("manufacturesInNigeria", "Do you manufacture this product in Nigeria?"),
-  flag("commercialSupplyInNigeria", "Do you commercially supply this product in Nigeria?"),
-  flag(
-    "commercialSupplyOfRegulatedProducts",
-    "Does the activity supply food, drugs, cosmetics, water, or medical devices?",
-  ),
-  select("activity", "What do you do with this product?", [
-    ["manufacture", "Manufacture it"],
-    ["resale_only", "Resell it"],
-    ["own_brand_repackaging", "Repackage or supply it under our own brand"],
-    ["import_and_distribute", "Import and distribute it"],
-    ["sample_for_registration_only", "Use samples only for registration"],
-    ["service_use_only", "Use it only while providing a service"],
-    ["other", "Another activity"],
-  ]),
-  flag("ownBrandOrRepackaging", "Do you add your own brand or repackage the product?"),
-  flag("processingOrPackaging", "Do you process or package the product?"),
-  flag("drugOrMedicalUse", "Is it supplied for drug or medical use?"),
-  flag("therapeuticClaims", "Are treatment or therapeutic claims made about it?"),
-  select(
-    "productRegistration",
-    "What product-registration record do you state that you hold?",
-    [
-      ["current_for_product_and_manufacturer", "A current record for this product and manufacturer"],
-      ["supplier_registration_claimed", "A supplier’s claimed registration"],
-      ["none", "No registration record held"],
-    ],
-    "These are your stated records, not verification by Valo. A supplier’s record may not cover your activity.",
-  ),
-  flag(
-    "registrationCoversExactProductAndManufacturer",
-    "Does the registration record identify this exact product and manufacturer?",
-    "Your answer is not independent verification of registration.",
-  ),
-  flag("registrationConditionsChanged", "Have any recorded registration conditions changed?"),
-  select(
-    "specialSamplePermit",
-    "Do you state that you hold a special permit for these samples?",
-    [
-      ["permit_held", "I hold a sample permit"],
-      ["none", "I do not hold a sample permit"],
-    ],
-    "Valo has not independently verified permission. A permit claim does not establish commercial-supply permission.",
-  ),
-  flag("permitScopeMatchesActivity", "Does the sample permit describe this exact product and activity?"),
-  flag("permitConditionsSatisfied", "Have you checked that the stated permit conditions are satisfied?"),
-];
+const BUSINESS_FIELDS: Field[] = RULE_QUESTIONS.businessName.map(asField);
+const NAMING_FIELDS: Field[] = NAMING_QUESTIONS.map(asField);
+const PARTNER_FIELDS: Field[] = PARTNER_QUESTIONS.map(asField);
+const TAX_FIELDS: Field[] = RULE_QUESTIONS.tax.map(asField);
+const PRIVACY_FIELDS: Field[] = RULE_QUESTIONS.privacy.map(asField);
+const PRODUCT_FIELDS: Field[] = RULE_QUESTIONS.product.map(asField);
 
 function AnswerField({
   field,
