@@ -353,6 +353,8 @@ function printed(field: GuidedFieldV2, value: string | undefined, context: Recor
   return answer;
 }
 
+/** A piece of a form document's text: the edition's own words, or what the answers put there. */
+export type FormPiece = { text: string; answer: boolean };
 /**
  * The document a form's answers make from an edition's form text: the edition's own words, each slot
  * filled with its answer as the document prints it, and each choice keeping the passage its answer
@@ -400,31 +402,46 @@ export function compileForm(spec: GuidedSpecV2, text: FormText, data: GuidedData
       .map((line) => line.trim())
       .filter(Boolean)
       .join(", ");
-  const render = (parts: FormInline[], row?: Row): string => {
+  // Each line, heading and cell is rendered as pieces: the edition's own words, and what the answers
+  // put there (an answer, or what the form works out from the answers). Their text, joined, is the
+  // document's; the editor's preview marks the answers' pieces (docs/architecture/editor.md, slice 4).
+  const render = (parts: FormInline[], row?: Row): FormPiece[] => {
     const alone = parts.filter((p) => p.kind !== "text" || p.text.trim()).length === 1;
-    return parts
-      .map((part) => {
-        if (part.kind === "text") return part.text;
-        if (part.kind === "span") return choice(part.span) ? render(part.parts, row) : "";
-        if (spec.blanks.includes(part.name)) return part.placeholder;
-        let value: string | null = null;
-        if (part.name.startsWith("calc.")) value = spec.calculated?.[part.name]?.(data, row?.values) ?? null;
-        else if (part.name.includes(".")) {
-          const column = row?.table.columns.find((c) => `${row.table.id}.${c.id}` === part.name);
-          value = column ? printed(column, row!.values[column.id], { ...data.values, ...row!.values }) : null;
-        } else {
-          const answers = (filling.get(part.name) ?? []).map(answerOf).filter((a): a is string => a !== null);
-          value = answers.length ? (alone ? answers.join("\n") : answers.join(", ")) : null;
-        }
-        if (value === null) {
-          note(part.name);
-          return part.placeholder;
-        }
-        return alone ? value : oneLine(value);
-      })
-      .join("");
+    return parts.flatMap((part): FormPiece[] => {
+      if (part.kind === "text") return [{ text: part.text, answer: false }];
+      if (part.kind === "span") return choice(part.span) ? render(part.parts, row) : [];
+      if (spec.blanks.includes(part.name)) return [{ text: part.placeholder, answer: false }];
+      let value: string | null = null;
+      if (part.name.startsWith("calc.")) value = spec.calculated?.[part.name]?.(data, row?.values) ?? null;
+      else if (part.name.includes(".")) {
+        const column = row?.table.columns.find((c) => `${row.table.id}.${c.id}` === part.name);
+        value = column ? printed(column, row!.values[column.id], { ...data.values, ...row!.values }) : null;
+      } else {
+        const answers = (filling.get(part.name) ?? []).map(answerOf).filter((a): a is string => a !== null);
+        value = answers.length ? (alone ? answers.join("\n") : answers.join(", ")) : null;
+      }
+      if (value === null) {
+        note(part.name);
+        return [{ text: part.placeholder, answer: false }];
+      }
+      return [{ text: alone ? value : oneLine(value), answer: true }];
+    });
   };
+  /** The pieces with the whitespace around them taken off, as the text trims it. */
+  const trimmed = (pieces: FormPiece[]) => {
+    const kept = pieces.map((piece) => ({ ...piece }));
+    while (kept.length && !kept[0]!.text.trimStart()) kept.shift();
+    while (kept.length && !kept.at(-1)!.text.trimEnd()) kept.pop();
+    if (kept.length) {
+      kept[0]!.text = kept[0]!.text.trimStart();
+      kept.at(-1)!.text = kept.at(-1)!.text.trimEnd();
+    }
+    return kept.filter((piece) => piece.text);
+  };
+  const line = (parts: FormInline[], row?: Row) => trimmed(render(parts, row));
+  const textOf = (pieces: FormPiece[]) => pieces.map((piece) => piece.text).join("");
   const blocks: FormBlock[] = [];
+  const pieces: Record<string, FormPiece[][][]> = {};
   const id = () => `${GUIDED_V2_PREFIX}${spec.templateId}:${blocks.length + 1}`;
   const walk = (nodes: FormNode[], row?: Row) => {
     for (const node of nodes) {
@@ -438,29 +455,34 @@ export function compileForm(spec: GuidedSpecV2, text: FormText, data: GuidedData
         continue;
       }
       if (node.kind === "heading") {
-        const heading = render(node.parts, row).trim();
-        if (heading) blocks.push({ id: id(), type: "heading", level: node.level, text: heading, rows: [] });
+        const heading = line(node.parts, row);
+        if (!heading.length) continue;
+        pieces[id()] = [[heading]];
+        blocks.push({ id: id(), type: "heading", level: node.level, text: textOf(heading), rows: [] });
         continue;
       }
       if (node.kind === "paragraph" || node.kind === "list") {
         const lines = (node.kind === "paragraph" ? node.lines : node.items)
-          .map((line) => render(line, row).trim())
-          .filter(Boolean);
-        if (lines.length) blocks.push({ id: id(), type: node.kind, text: lines.join("\n"), rows: [] });
+          .map((each) => line(each, row))
+          .filter((each) => each.length);
+        if (!lines.length) continue;
+        pieces[id()] = lines.map((each) => [each]);
+        blocks.push({ id: id(), type: node.kind, text: lines.map(textOf).join("\n"), rows: [] });
         continue;
       }
-      const rows: string[][] = [node.header.map((cell) => render(cell, row).trim())];
+      const rows: FormPiece[][][] = [node.header.map((cell) => line(cell, row))];
       for (const tableRow of node.rows) {
         if (tableRow.span && !choice(tableRow.span)) continue;
         const table = tableRow.repeat ? tables.get(tableRow.repeat) : undefined;
         if (!table) {
-          rows.push(tableRow.cells.map((cell) => render(cell, row).trim()));
+          rows.push(tableRow.cells.map((cell) => line(cell, row)));
           continue;
         }
         for (const values of rowsOf(table))
-          rows.push(tableRow.cells.map((cell) => render(cell, { table, values }).trim()));
+          rows.push(tableRow.cells.map((cell) => line(cell, { table, values })));
       }
-      blocks.push({ id: id(), type: "table", text: "", rows });
+      pieces[id()] = rows;
+      blocks.push({ id: id(), type: "table", text: "", rows: rows.map((cells) => cells.map(textOf)) });
     }
   };
   walk(text.nodes);
@@ -470,7 +492,7 @@ export function compileForm(spec: GuidedSpecV2, text: FormText, data: GuidedData
       const answer = (data.values[f.id] ?? "").trim();
       return f.options?.some((o) => o.value === answer) ? [`${f.id}=${answer}`] : [];
     });
-  return { title: text.title, blocks, selectedClauses, unfilled };
+  return { title: text.title, blocks, selectedClauses, unfilled, pieces };
 }
 
 /** A form document's block, as the contract holds it: a heading keeps its level, and a table's

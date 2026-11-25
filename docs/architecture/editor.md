@@ -139,6 +139,19 @@ The server's refusals do not change; they are tested already. The new checks are
 marks, a database test of the refused typed document, and the signed-in screens' accessibility check of
 a form document with its marks.
 
+Settled while building it:
+
+- What the preview marks in a form's wording is what the answers put there: each answer, and what the
+  form works out from the answers, such as a line's amount or a total. A placeholder still waiting for
+  its answer is part of the wording. The marks are highlighted and underlined, so they show without
+  colour too. The preview marks only text whose pieces are the block's own text, so a mark can never
+  change what the page says.
+- "From your answers" is said once above each run of blocks the questions make, which carry a line
+  down their side.
+- The notice's mark reads: "Added by Valo to every page of the file. It cannot be removed."
+- The refused typed document is one with a block of a form's wording (forms v2). A stray block of a
+  form made from questions (v1) was refused already: the questions' check needs their form's own block.
+
 ## What does not change
 
 - The saved documents, their versions and their files already made.

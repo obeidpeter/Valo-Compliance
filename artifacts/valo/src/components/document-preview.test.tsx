@@ -16,6 +16,9 @@ import {
   questionsSample,
   typedSample,
 } from "@workspace/valo-core/printed-page-samples";
+import { parseFormText } from "@workspace/valo-core/form-text";
+import { emptyFormData, formDocumentContent } from "@workspace/valo-core/guided-runtime-v2";
+import { GUIDED_SPECS_V2 } from "@workspace/valo-core/guided-specs-v2";
 import { finishedFileState } from "@/lib/api";
 import { formatDocumentPlainText } from "@/lib/guided-prefill";
 import { DocPreview } from "./document-preview";
@@ -24,6 +27,8 @@ import { DocPreview } from "./document-preview";
 // document's files say, from the same printed page.
 const decoded = (html: string) =>
   html
+    // What the preview adds to mark the page (slice 4) is not the page's: the files print none of it.
+    .replace(/<p[^>]*data-preview-mark[^>]*>[\s\S]*?<\/p>/g, " ")
     .replace(/<[^>]+>/g, " ")
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
@@ -121,4 +126,80 @@ test("the preview prints a table's heading row as its column headings, for each 
     assert.deepEqual(columns, heading ? page.blocks[index]!.rows[0] : [], `the column headings of ${name}`);
     assert.equal(shown.includes("<thead>"), heading, `the heading row of ${name}`);
   }
+});
+
+// EDT-003 (docs/architecture/editor.md, slice 4): the preview shows what is fixed and what is the
+// customer's: the answers inside a form's wording, the blocks made from questions, and the notice.
+const SYNTHETIC_FORM_TEXT = parseFormText(
+  [
+    "# Synthetic invoice",
+    "",
+    "From [Seller name]{=issuerName} to [Buyer name]{=recipientName}.",
+    "",
+    "Address: [Seller contact/address]{=issuerAddress}",
+  ].join("\n"),
+);
+test("the preview marks a form's answers inside its wording, the blocks made from questions and the notice, and nothing in a customer's own text", () => {
+  const spec = GUIDED_SPECS_V2["TPL-01"]!;
+  const answers = emptyFormData(spec);
+  answers.values = {
+    ...answers.values,
+    issuerName: "Synthetic Supplies Ltd",
+    recipientName: "Synthetic Buyer Ltd",
+  };
+  const { unfilled: _unfilled, ...content } = formDocumentContent(spec, SYNTHETIC_FORM_TEXT, answers);
+  const form = renderToStaticMarkup(
+    <DocPreview
+      title="Synthetic invoice"
+      content={content as CanonicalDocument}
+      revision={2}
+      formText={SYNTHETIC_FORM_TEXT}
+    />,
+  );
+  const marked = [...form.matchAll(/<mark[^>]*data-testid="preview-answer"[^>]*>([^<]*)<\/mark>/g)].map((m) =>
+    decoded(m[1]!).trim(),
+  );
+  assert.deepEqual(marked, ["Synthetic Supplies Ltd", "Synthetic Buyer Ltd"], "only the answers are marked");
+  assert.ok(decoded(form).includes("[Seller contact/address]"), "an unanswered slot keeps its placeholder");
+  assert.equal(
+    letters(decoded(form)),
+    letters(printedPageWords(pageOf({ title: "Synthetic invoice", content }, 2)).join(" ")),
+    "the marks add no word to the page",
+  );
+  assert.match(
+    form,
+    /data-testid="preview-notice-mark"[^>]*>Added by Valo to every page of the file\. It cannot be removed\.</,
+  );
+  assert.doesNotMatch(form, /From your answers/);
+  // Without its wording the preview marks nothing inside it, and prints the same page.
+  const unmarked = renderToStaticMarkup(
+    <DocPreview title="Synthetic invoice" content={content as CanonicalDocument} revision={2} />,
+  );
+  assert.doesNotMatch(unmarked, /preview-answer/);
+  assert.equal(letters(decoded(unmarked)), letters(decoded(form)));
+
+  // A document made from questions marks the blocks its questions make, once for each run of them.
+  const questions = renderToStaticMarkup(
+    <DocPreview
+      title={questionsSample(3).title}
+      content={questionsSample(3).content as CanonicalDocument}
+      revision={2}
+    />,
+  );
+  const page = pageOf(questionsSample(3), 2);
+  assert.equal(
+    (questions.match(/data-testid="preview-from-answers"/g) ?? []).length,
+    page.blocks.filter((block) => block.id.startsWith("valo-guided-v1:")).length,
+  );
+  assert.equal((questions.match(/>From your answers</g) ?? []).length, 1);
+  // A document typed by hand is all the customer's own: only the notice is marked.
+  const typed = renderToStaticMarkup(
+    <DocPreview
+      title={typedSample().title}
+      content={typedSample().content as CanonicalDocument}
+      revision={2}
+    />,
+  );
+  assert.doesNotMatch(typed, /preview-answer|preview-from-answers|From your answers/);
+  assert.match(typed, /data-testid="preview-notice-mark"/);
 });
