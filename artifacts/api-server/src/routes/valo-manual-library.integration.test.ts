@@ -406,7 +406,8 @@ test(
         const released = await revision(await publish(second, "  " + changeNote + "  "));
         const page = await publicResource(id);
         assert.equal(page.body, body);
-        assert.deepEqual(page.change, { on: released.publishedAt, note: changeNote });
+        assert.equal(page.change?.note, changeNote);
+        assert.equal(new Date(page.change!.on).toISOString(), released.publishedAt);
         // The note is recorded once, with the release, and never changed.
         const keepsNote = (error: Error) =>
           /A change note keeps what it said/.test(
@@ -1489,10 +1490,11 @@ test(
           documents: 1,
         };
         assert.deepEqual(await written(second.id), [withdrawnSecond]);
-        // A new edition released after the withdrawn one tells its users that it was replaced too.
+        // A new edition released after the withdrawn one tells its users that it was replaced too, with
+        // what changed (docs/architecture/guidance-currency.md, slice 3).
         await release(2);
         assert.deepEqual(await written(second.id), [
-          { ...withdrawnSecond, kind: "replaced", replacement_version: 3, reason: null },
+          { ...withdrawnSecond, kind: "replaced", replacement_version: 3, reason: changeNote },
           withdrawnSecond,
         ]);
         assert.deepEqual(await written(first.id), [replacedFirst]);
@@ -1509,7 +1511,7 @@ test(
             version: 1,
             kind: "replaced",
             replacementVersion: 2,
-            reason: null,
+            reason: changeNote,
             held: false,
             documents: 2,
             createdAt: undefined,
@@ -1518,7 +1520,7 @@ test(
         assert.deepEqual(
           (await notices(late)).map((n) => [n.kind, n.version, n.replacementVersion, n.reason]),
           [
-            ["replaced", 2, 3, null],
+            ["replaced", 2, 3, changeNote],
             ["withdrawn", 2, null, withdrawalReason],
           ],
         );

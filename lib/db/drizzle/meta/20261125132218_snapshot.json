@@ -1,5 +1,5 @@
 {
-  "id": "121b95e8-2256-4cb0-8396-422302e63d06",
+  "id": "b3079274-8e06-426c-a89c-7f0c3745aa77",
   "prevId": "65af2e25-d44e-4e5c-aa3d-20c0bba7b634",
   "version": "7",
   "dialect": "postgresql",
@@ -2023,7 +2023,7 @@
       "checkConstraints": {
         "valo_edition_notice_shape": {
           "name": "valo_edition_notice_shape",
-          "value": "\"valo_edition_notices\".\"route\" IN ('library', 'reviewed') AND \"valo_edition_notices\".\"kind\" IN ('replaced', 'withdrawn') AND \"valo_edition_notices\".\"documents\" >= 0 AND (\"valo_edition_notices\".\"held\" OR \"valo_edition_notices\".\"documents\" > 0) AND ((\"valo_edition_notices\".\"kind\" = 'replaced') = (\"valo_edition_notices\".\"replacement_version\" IS NOT NULL)) AND (\"valo_edition_notices\".\"reason\" IS NULL OR \"valo_edition_notices\".\"kind\" = 'withdrawn')"
+          "value": "\"valo_edition_notices\".\"route\" IN ('library', 'reviewed') AND \"valo_edition_notices\".\"kind\" IN ('replaced', 'withdrawn') AND \"valo_edition_notices\".\"documents\" >= 0 AND (\"valo_edition_notices\".\"held\" OR \"valo_edition_notices\".\"documents\" > 0) AND ((\"valo_edition_notices\".\"kind\" = 'replaced') = (\"valo_edition_notices\".\"replacement_version\" IS NOT NULL)) AND (\"valo_edition_notices\".\"reason\" IS NULL OR \"valo_edition_notices\".\"kind\" = 'withdrawn' OR \"valo_edition_notices\".\"route\" = 'library')"
         }
       },
       "isRLSEnabled": false

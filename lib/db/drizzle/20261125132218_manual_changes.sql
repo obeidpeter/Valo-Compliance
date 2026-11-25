@@ -6,7 +6,12 @@ CREATE TABLE "valo_manual_changes" (
 	CONSTRAINT "valo_manual_change_note" CHECK (char_length("valo_manual_changes"."note") BETWEEN 20 AND 1000)
 );
 --> statement-breakpoint
+ALTER TABLE "valo_edition_notices" DROP CONSTRAINT "valo_edition_notice_shape";--> statement-breakpoint
 ALTER TABLE "valo_manual_changes" ADD CONSTRAINT "valo_manual_changes_edition_valo_manual_library_id_fk" FOREIGN KEY ("edition") REFERENCES "public"."valo_manual_library"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "valo_edition_notices" ADD CONSTRAINT "valo_edition_notice_shape" CHECK ("valo_edition_notices"."route" IN ('library', 'reviewed') AND "valo_edition_notices"."kind" IN ('replaced', 'withdrawn') AND "valo_edition_notices"."documents" >= 0 AND ("valo_edition_notices"."held" OR "valo_edition_notices"."documents" > 0) AND (("valo_edition_notices"."kind" = 'replaced') = ("valo_edition_notices"."replacement_version" IS NOT NULL)) AND ("valo_edition_notices"."reason" IS NULL OR "valo_edition_notices"."kind" = 'withdrawn' OR "valo_edition_notices"."route" = 'library'));--> statement-breakpoint
+-- The notices' shape now lets a library notice of a replacement carry the new version's change note, as
+-- a withdrawal's notice carries its reason (docs/architecture/guidance-currency.md, slice 3). A notice on
+-- the reviewed route still carries a reason only for a withdrawal.
 -- What changed in a version that follows an earlier release of its entry is written once, before the
 -- version is released in the same transaction, and never changed (docs/architecture/guidance-currency.md,
 -- slice 3). It is written only for a draft that follows an earlier release.
