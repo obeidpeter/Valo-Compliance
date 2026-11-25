@@ -1310,6 +1310,75 @@ export function withoutFilledAnswers<T>(answers: T): T {
   return out as T;
 }
 
+/** What the page calls the business-name rule's partners, asked as one list. */
+export const PARTNERS_LABEL = "Partners, if relevant";
+
+/** A question the check asks now, where the page shows it. */
+export interface AskedQuestion {
+  /**
+   * The answer it fills, by its full path: `legalForm`, `rich.tax.legalForm`,
+   * `rich.businessName.namingAssessment.otherBrandAddition`, or `rich.businessName.partners` for the
+   * partners, asked as one list.
+   */
+  readonly path: string;
+  /** The step that asks it. */
+  readonly step: number;
+  readonly label: string;
+  /** The kind of rule whose question it is; none for the check's own. */
+  readonly family?: RuleFamily;
+  /** A rule's question's answers, by which a chosen one is named. */
+  readonly choices?: readonly Choice[];
+  /** An optional figure, never counted against the visitor. */
+  readonly optional?: true;
+  /** The earlier answer that fills it, while one does. */
+  readonly filledBy?: Feed;
+}
+
+/**
+ * The questions the check asks now, in the order the page shows them: each step's own questions,
+ * then the questions of the rules in use asked in that step, a rule's question filled by an earlier
+ * answer included. `sent` is what the check sends, on which the page reads the conditions;
+ * `families` are the kinds of rule whose questions this visitor is asked.
+ */
+export function questionsAsked(sent: unknown, families: ReadonlySet<RuleFamily>): AskedQuestion[] {
+  const asked: AskedQuestion[] = [];
+  CHECKER_QUESTIONNAIRE.forEach((step, index) => {
+    for (const question of step.questions)
+      if (isAsked(sent, question.answer))
+        asked.push({
+          path: question.answer,
+          step: index,
+          label: question.label,
+          ...(question.optional ? { optional: true as const } : {}),
+        });
+    for (const family of RULE_FAMILIES) {
+      if (RULE_STEPS[family] !== index || !families.has(family)) continue;
+      const add = (path: string, question: Pick<RuleQuestion, "label" | "choices" | "askedWhen">) => {
+        if (question.askedWhen && !holds(question.askedWhen, sent)) return;
+        const filledBy = feedFor(sent, path);
+        asked.push({
+          path,
+          step: index,
+          label: question.label,
+          family,
+          ...(question.choices ? { choices: question.choices } : {}),
+          ...(filledBy ? { filledBy } : {}),
+        });
+      };
+      for (const question of RULE_QUESTIONS[family]) add(`rich.${family}.${question.key}`, question);
+      if (family !== "businessName") continue;
+      const partners = PARTNER_QUESTIONS[0]?.askedWhen;
+      add("rich.businessName.partners", {
+        label: PARTNERS_LABEL,
+        ...(partners ? { askedWhen: partners } : {}),
+      });
+      for (const question of NAMING_QUESTIONS)
+        add(`rich.businessName.namingAssessment.${question.key}`, question);
+    }
+  });
+  return asked;
+}
+
 /** Each rule's questions, in order. The business-name rule's questions on how the name is composed
  * (`NAMING_QUESTIONS`, under `namingAssessment`) and about each partner (`PARTNER_QUESTIONS`, under
  * `partners`) are asked with it. */

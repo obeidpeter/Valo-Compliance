@@ -32,6 +32,7 @@ import {
   checkerQuestion,
   holds,
   isAsked,
+  questionsAsked,
   ruleAnswersToSend,
   stepOfQuestion,
   withoutFilledAnswers,
@@ -613,4 +614,88 @@ test("what the business does is chosen from the specification's twenty industrie
       kind.value,
     );
   }
+});
+
+test("the questions asked now are listed in the order the page shows them, each rule's after the check's own in its step, with the filled ones marked and none the check skips", () => {
+  const base = {
+    legalForm: "limited_company",
+    registrationStatus: "registered",
+    activities: ["retail/wholesale"],
+    manufacturing: "no",
+    importing: "no",
+    premises: "yes",
+    state: "Lagos",
+    lga: "Ikeja",
+    employees: "4",
+    turnoverBand: "not_applicable",
+    personalData: "yes",
+  };
+  // The check's own questions only: neither the products nor the turnover details are asked here.
+  assert.deepEqual(
+    questionsAsked(base, new Set()).map((question) => question.path),
+    [
+      "legalForm",
+      "registrationStatus",
+      "activities",
+      "manufacturing",
+      "importing",
+      "premises",
+      "state",
+      "lga",
+      "employees",
+      "turnoverBand",
+      "personalData",
+    ],
+  );
+  const sent = { ...base, rich: ruleAnswersToSend(base, ALL_RULES) };
+  const asked = questionsAsked(sent, ALL_RULES);
+  // Each in its step, the check's own first, then the rules' in the order the questionnaire holds them.
+  for (const question of asked)
+    assert.equal(
+      question.step,
+      question.family ? RULE_STEPS[question.family] : stepOfQuestion(question.path),
+      question.path,
+    );
+  assert.deepEqual(
+    asked.filter((question) => question.step === 0).map((question) => question.path),
+    [
+      "legalForm",
+      "registrationStatus",
+      "rich.businessName.hasPlaceOfBusinessInNigeria",
+      "rich.businessName.carryingOnBusiness",
+      "rich.businessName.businessNameRegistered",
+      "rich.tax.legalForm",
+      "rich.tax.incorporatedInNigeria",
+      "rich.tax.companyStatus",
+      "rich.tax.accountingPeriodStart",
+      "rich.tax.accountingPeriodEnd",
+    ],
+  );
+  // The filled answers say where they came from.
+  assert.deepEqual(
+    asked.filter((question) => question.filledBy).map((question) => [question.path, question.filledBy!.from]),
+    [
+      ["rich.tax.legalForm", ["legalForm"]],
+      ["rich.tax.incorporatedInNigeria", ["legalForm", "registrationStatus"]],
+      ["rich.privacy.processesPersonalData", ["personalData"]],
+      ["rich.privacy.operatesInNigeria", ["state"]],
+    ],
+  );
+  // A rule's question carries its answers, by which a chosen one is named.
+  assert.deepEqual(
+    asked.find((question) => question.path === "rich.tax.companyStatus")!.choices,
+    RULE_QUESTIONS.tax.find((question) => question.key === "companyStatus")!.choices,
+  );
+  // The optional exact figure is marked as such.
+  const figure = questionsAsked({ ...base, turnoverBand: "under_5m" }, new Set()).find(
+    (question) => question.path === "turnoverAmountKobo",
+  );
+  assert.equal(figure?.optional, true);
+  // Only the kinds of rule asked: no business-name question for a visitor who is not asked them.
+  assert.equal(
+    questionsAsked(sent, new Set(["tax", "privacy", "product"])).some(
+      (question) => question.family === "businessName",
+    ),
+    false,
+  );
 });
