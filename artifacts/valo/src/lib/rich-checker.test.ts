@@ -165,6 +165,29 @@ test("the check's earlier answers fill a rule's answers while they settle them, 
   assert.equal(Object.hasOwn(anonymous.rich!, "businessName"), false);
 });
 
+test("one kind of product the business makes, alone, answers the product rule's question about the particular product; more kinds, or the visitor's own words, answer nothing", () => {
+  const making = (productTypes: string[]): RichCheckerFacts => ({
+    ...EMPTY_FACTS,
+    manufacturing: "yes",
+    productTypes,
+    activities: ["packaged-food manufacturing", " Making cosmetics ", ""],
+  });
+  const one = finaliseFacts(making(["cosmetic", ""]), ALL_RULES);
+  assert.deepEqual(one.activities, ["packaged-food manufacturing", "Making cosmetics"]);
+  assert.deepEqual(one.productTypes, ["cosmetic"]);
+  assert.deepEqual(one.rich?.product, { productCategory: "cosmetic" });
+  for (const productTypes of [["cosmetic", "water"], ["cosmetic", "Hair oil"], ["Hair oil"]])
+    assert.equal(
+      Object.hasOwn(finaliseFacts(making(productTypes), ALL_RULES), "rich"),
+      false,
+      String(productTypes),
+    );
+  // A business that neither makes nor imports goods is not asked for its products: nothing is filled.
+  const neither = finaliseFacts({ ...making(["cosmetic"]), manufacturing: "no", importing: "no" }, ALL_RULES);
+  assert.equal(neither.productTypes, "not_applicable");
+  assert.equal(Object.hasOwn(neither, "rich"), false);
+});
+
 test("all four result labels are represented and server task restrictions override likely relevance", () => {
   assert.deepEqual(RESULT_LABELS, [
     "Likely relevant",

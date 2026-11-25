@@ -331,3 +331,144 @@ export function ChecksOr({
     </fieldset>
   );
 }
+
+/**
+ * A question answered by ticking any of a fixed list of answers, with the visitor's own words beside
+ * them, all held in one list: the ticked answers first, in the order they are offered, then the
+ * visitor's own words as typed. An answer held before in the visitor's own words is shown as typed.
+ * Ticking an answer, or typing one, takes the place of a chosen way of not answering.
+ */
+export function PickOrList({
+  name,
+  label,
+  hint,
+  value,
+  skipped,
+  options,
+  markers,
+  onChange,
+  placeholder,
+  inputId,
+  max = 10,
+}: {
+  name: string;
+  label: string;
+  hint?: string;
+  value: string[] | Marker;
+  skipped: boolean;
+  options: Opt[];
+  markers: readonly Marker[];
+  onChange: Change<never>;
+  placeholder: string;
+  /** The first answer's id, which a link to the question moves the focus to. */
+  inputId?: string;
+  /** How many entries the answer holds at most, ticked and typed together. */
+  max?: number;
+}) {
+  const choose = onChange as Change<string[] | Marker>;
+  const entries = Array.isArray(value) ? value : [];
+  const offered = options.map((o) => o.value);
+  const ticked = entries.filter((entry) => offered.includes(entry));
+  const words = entries.filter((entry) => !offered.includes(entry));
+  const shown = words.length ? words : [""];
+  const given = entries.filter((entry) => entry.trim() !== "").length;
+  const join = (nextTicked: readonly string[], nextWords: readonly string[]) =>
+    choose([...offered.filter((option) => nextTicked.includes(option)), ...nextWords]);
+  const wordsId = name + "-words";
+  return (
+    <fieldset>
+      <legend className="label text-base">{label}</legend>
+      {hint && <p className="hint !mt-0 mb-2">{hint}</p>}
+      <div className="flex flex-wrap gap-2">
+        {options.map((o, index) => {
+          const on = ticked.includes(o.value);
+          return (
+            <label
+              key={o.value}
+              className={cn(
+                "cursor-pointer rounded-full border px-3.5 py-2 text-sm transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60",
+                on ? "border-primary bg-primary text-primary-foreground" : "border-input hover:bg-secondary",
+              )}
+            >
+              <input
+                type="checkbox"
+                className="sr-only"
+                name={name}
+                value={o.value}
+                checked={on}
+                disabled={!on && given >= max}
+                onChange={() =>
+                  join(on ? ticked.filter((each) => each !== o.value) : [...ticked, o.value], words)
+                }
+                data-testid={"check-" + name + "-" + o.value}
+                {...(index === 0 && inputId ? { id: inputId } : {})}
+              />
+              {o.label}
+            </label>
+          );
+        })}
+      </div>
+      <p id={wordsId} className="mt-4 text-sm font-medium">
+        In your own words
+      </p>
+      <div className="mt-2 grid gap-2" role="group" aria-labelledby={wordsId}>
+        {shown.map((a, i) => (
+          <div key={i} className="flex gap-2">
+            <input
+              aria-label={label + ", in your own words " + (i + 1)}
+              className="field"
+              maxLength={120}
+              value={a}
+              placeholder={placeholder}
+              // A list already holding as many entries as it can takes no more in an empty box.
+              disabled={a.trim() === "" && given >= max}
+              onChange={(e) =>
+                join(
+                  ticked,
+                  shown.map((x, j) => (j === i ? e.target.value : x)),
+                )
+              }
+              data-testid={"input-" + name + "-" + i}
+            />
+            {shown.length > 1 && (
+              <button
+                type="button"
+                aria-label={"Remove item " + (i + 1)}
+                className="btn btn-ghost !px-3"
+                onClick={() =>
+                  join(
+                    ticked,
+                    shown.filter((_, j) => j !== i),
+                  )
+                }
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        ))}
+        {ticked.length + shown.length < max && (
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm w-fit"
+            onClick={() => join(ticked, [...shown, ""])}
+          >
+            <Plus className="h-4 w-4" />
+            Add another
+          </button>
+        )}
+      </div>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <span className="text-sm text-muted-foreground">or</span>
+        <Markers
+          name={name}
+          group={name + "-mode"}
+          value={value}
+          skipped={skipped}
+          markers={markers}
+          onChange={choose}
+        />
+      </div>
+    </fieldset>
+  );
+}
