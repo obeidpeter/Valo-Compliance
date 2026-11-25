@@ -12,6 +12,7 @@
 export * from "./business-name-candidate-binding";
 export * from "./business-name-evidence";
 export * from "./listed-page";
+export * from "./official-hosts";
 export * from "./source-candidate-bindings";
 export * from "./source-capture";
 export * from "./source-current-captures";
