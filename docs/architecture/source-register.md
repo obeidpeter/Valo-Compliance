@@ -57,7 +57,9 @@ the command line.
 
 ### 2. Watching from the register (ADM-003, CMP-007)
 
-- A watched entry is checked daily at high risk or weekly at standard risk, and staff choose which.
+- Every watched entry is checked daily, as EDP-011 and the specification's operating targets ask
+  ("Check source availability/changes daily"). Risk sets only how often a version is reviewed, monthly
+  for high-impact content and quarterly for the rest, as it does today.
 - Retiring an entry stops its watch. A version bound to it then fails the source gate as a stale source
   does, so nothing goes on resting on a retired source.
 - The picker offers only active regulatory entries.
@@ -124,7 +126,7 @@ Slice 1:
 | # | Slice | Requirements |
 | --- | --- | --- |
 | 1 | **The register.** A migration adds the register's entries, kept as versions that are never changed or removed, with its upgrade test and runbook. Filing the repository's 28 regulatory sources with what the code says of them; a Content editor's corrections, retiring and bringing back, each with why. The staff screen. The fetcher still reads the addresses in code. Tests: an entry's versions are kept and never changed, a correction needs why and the latest version, only a Content editor files or corrects, and a browser check. | ADM-003 |
-| 2 | **New sources and watching.** A Content editor adds a source at an address on the policy's hosts, and the daily check fetches it. Risk and its interval, retiring that stops a watch, the picker. Tests of each, and a browser check. | ADM-003, CMP-007 |
+| 2 | **New sources and watching.** A Content editor adds a source at an address on the policy's hosts, and the daily check fetches it. Retiring that stops a watch, and the picker. Tests of each, and a browser check. | ADM-003, CMP-007 |
 | 3 | **Review work with its owner.** The accountable owner, the queue in the Content area and on the owner's panel, the note of what was checked, and closing by release or withdrawal for rules too. Tests of each, and browser checks. | ADM-008, CMP-007 |
 | 4 | **A prepared candidate from review work.** The preparer run from a row for the reviewed route's templates and guides, the row pointing at the candidate, and its reviews waiting for an approved allocation. Tests that the candidate is prepared and nothing is sent or published. | ADM-003, CMP-007 |
 
