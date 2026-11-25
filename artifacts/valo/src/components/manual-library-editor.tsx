@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   actOnManualLibrary,
   getManualLibraryRevision,
+  recordManualLibraryReview,
   previewManualLibraryFile,
   saveManualLibraryDraft,
   useGetPublicCoverage,
@@ -14,6 +15,15 @@ import {
 import { libraryTemplateStatement } from "@workspace/valo-core/library-statement";
 import { describeError } from "@/lib/describe-error";
 import { industryName } from "@/lib/library-filters";
+import {
+  dueFilterLabel,
+  isOverdue,
+  reviewLine,
+  reviewNoteHint,
+  reviewNoteLabel,
+  reviewRecorded,
+  reviewStatus,
+} from "@/lib/library-review";
 import { FormTextOutline } from "./form-text-outline";
 import { RelatedGuidesPicker } from "./related-guides-picker";
 import { PlainText } from "./resource-parts";
@@ -136,6 +146,8 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
   const [kindFilter, setKindFilter] = useState<"" | ManualLibraryDraft["kind"]>("");
   const [stateFilter, setStateFilter] = useState<"" | ManualLibraryEntryState>("");
   const [industryFilter, setIndustryFilter] = useState("");
+  // Entries due for their review within 14 days, or overdue (docs/architecture/guidance-currency.md).
+  const [reviewFilter, setReviewFilter] = useState(false);
   const trimmedSearch = searchFilter.trim();
   const listParams: ListManualLibraryParams = {
     page,
@@ -143,8 +155,9 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
     ...(kindFilter ? { kind: kindFilter } : {}),
     ...(stateFilter ? { state: stateFilter } : {}),
     ...(industryFilter ? { industry: industryFilter } : {}),
+    ...(reviewFilter ? { review: "due" as const } : {}),
   };
-  const hasFilters = Boolean(trimmedSearch || kindFilter || stateFilter || industryFilter);
+  const hasFilters = Boolean(trimmedSearch || kindFilter || stateFilter || industryFilter || reviewFilter);
   const list = useListManualLibrary(listParams, { query: { retry: false } });
   const coverage = useGetPublicCoverage({ query: { retry: false, staleTime: 60000 } });
   const [form, setForm] = useState(emptyForm);
@@ -158,6 +171,9 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
   const [error, setError] = useState("");
   // A withdrawal says why, for the customers who bought or used the version (docs/architecture/editions.md).
   const [withdrawing, setWithdrawing] = useState(false);
+  // A review of the published version records that it was re-read and needs no change.
+  const [reviewing, setReviewing] = useState(false);
+  const [reviewNote, setReviewNote] = useState("");
   const [reason, setReason] = useState("");
   function mark(value: boolean) {
     setDirty(value);
@@ -172,6 +188,7 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
   }
   function load(row: ManualLibraryRevision | null) {
     setSnapshot(row);
+    setReviewing(false);
     setForm(
       row
         ? {
@@ -260,6 +277,19 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
         ? "Published. Readers can now open this version."
         : "Withdrawn. Readers can no longer open this version.",
     );
+  }
+  // The published version's review date, from the list row of the open entry.
+  const review = list.data?.items.find((item) => item.itemId === form.itemId)?.review;
+  async function recordReview() {
+    if (!review) return;
+    const next = await recordManualLibraryReview(form.itemId, {
+      version: review.version,
+      digest: review.digest,
+      note: reviewNote.trim(),
+    });
+    setReviewing(false);
+    await list.refetch();
+    setMessage(reviewRecorded(next.due));
   }
   async function previewFile() {
     if (!snapshot?.fileFormat) return;
@@ -383,6 +413,17 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
                 ))}
               </select>
             </label>
+            <label className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={reviewFilter}
+                onChange={(e) => {
+                  setReviewFilter(e.target.checked);
+                  setPage(1);
+                }}
+              />
+              {dueFilterLabel}
+            </label>
           </div>
           {list.isError ? (
             <ErrorState error={list.error} onRetry={() => list.refetch()} />
@@ -404,6 +445,16 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
                   >
                     <span className="block font-medium">{row.title}</span>
                     {kinds[row.kind]} · {row.state} · v{row.version}
+                    {row.review && (
+                      <span
+                        className={
+                          "block text-xs " +
+                          (isOverdue(row.review) ? "font-medium text-destructive" : "text-muted-foreground")
+                        }
+                      >
+                        {reviewLine(row.review)}
+                      </span>
+                    )}
                   </button>
                 </li>
               ))}
@@ -756,6 +807,66 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
                   </button>
                 )}
               </div>
+              {review && snapshot.live && !reviewing && (
+                <div className="mt-4 grid gap-2">
+                  <p className="text-sm">{reviewStatus(review)}</p>
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm justify-self-start"
+                    disabled={busy || dirty}
+                    onClick={() => {
+                      setReviewNote("");
+                      setReviewing(true);
+                    }}
+                  >
+                    Record a review
+                  </button>
+                </div>
+              )}
+              {review && snapshot.live && reviewing && (
+                <form
+                  className="mt-4 grid gap-2"
+                  aria-label="Record a review of the published version"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    void work(recordReview);
+                  }}
+                >
+                  <label className="text-sm font-medium" htmlFor="manual-review-note">
+                    {reviewNoteLabel}
+                  </label>
+                  <p id="manual-review-note-help" className="text-sm text-muted-foreground">
+                    {reviewNoteHint}
+                  </p>
+                  <textarea
+                    id="manual-review-note"
+                    className="field min-h-24"
+                    aria-describedby="manual-review-note-help"
+                    minLength={20}
+                    maxLength={1000}
+                    required
+                    value={reviewNote}
+                    onChange={(e) => setReviewNote(e.target.value)}
+                  />
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      type="submit"
+                      className="btn btn-primary btn-sm"
+                      disabled={busy || reviewNote.trim().length < 20}
+                    >
+                      Record review
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm"
+                      disabled={busy}
+                      onClick={() => setReviewing(false)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
               {snapshot.live && withdrawing && (
                 <form
                   className="mt-4 grid gap-2"

@@ -842,6 +842,17 @@ test(
           await expect(publicPage.page.getByRole("region", { name: title })).toContainText(
             "Keep a dated delivery note.",
           );
+          // The published version's review date, and a review of it (docs/architecture/guidance-currency.md,
+          // slice 2): the note is asked for, and the next date is said once the review is recorded.
+          await expect(page.getByText(/Published version 1 is due for review on/)).toBeVisible();
+          await page.getByRole("button", { name: "Record a review" }).click();
+          const reviewForm = page.getByRole("form", { name: "Record a review of the published version" });
+          await expect(reviewForm.getByRole("button", { name: "Record review" })).toBeDisabled();
+          await reviewForm
+            .getByLabel("What you re-read, and why it needs no change")
+            .fill("Synthetic: re-read the introduction, and it needs no change.");
+          await reviewForm.getByRole("button", { name: "Record review" }).click();
+          await expect(page.getByText(/Review recorded\. The next review is due on/)).toBeVisible();
           // A withdrawal says why, for the customers who bought or used the version
           // (docs/architecture/editions.md, slice 3); "Keep it" withdraws nothing.
           await page.getByRole("button", { name: "Withdraw live version" }).click();
