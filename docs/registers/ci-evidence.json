@@ -254,6 +254,41 @@
       "proves": "C060's pair is refused until C018's pair, run through the real dispatcher, ledger and managed SDK transport against a local destination that answers with synthetic holds, is recorded with both reviews holding; C060's fresh reviews of its own revised candidate then name that pair, with no provider call."
     },
     {
+      "requirement": "EDP-010",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/acceptance-review/acceptance-review.integration.test.ts",
+      "test": "the reviewer's record: an active reviewer's decisions, kept for good, from someone who prepares no content",
+      "proves": "Against real PostgreSQL, only an active reviewer with recent MFA reads the editorial corpus's 60 cases and records a decision on one, other staff learn nothing of the cases or the corpora, a decision says why in 20 to 2,000 characters and holds only for the case's hash as read, a later decision is added rather than written over, the database keeps every decision as written from an active reviewer only, and no one can hold the reviewer and content roles at once, an emergency content grant included."
+    },
+    {
+      "requirement": "EDP-010",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/acceptance-review/acceptance-cases.test.ts",
+      "test": "each case carries the hash the disabled allocation package binds it by, in the corpus's order",
+      "proves": "Each of the editorial corpus's 60 cases, and each case of the other two corpora, is read for the reviewer with the SHA-256 hash the disabled allocation package lists for it, in the corpus's order, so a decision names the hash a suite binds the case by; a case whose row changes gets another hash."
+    },
+    {
+      "requirement": "EDP-010",
+      "job": "foundation",
+      "file": "lib/db/scripts/phase1-migrations.test.mjs",
+      "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
+      "proves": "The acceptance reviews migration keeps every existing row and rolls back cleanly, adds the reviewer role, refuses the reviewer and content roles to one person whichever comes first, takes a decision only from an active reviewer with exactly the fields of its kind, dates it itself, and never changes, removes or truncates a decision."
+    },
+    {
+      "requirement": "EDP-010",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "an acceptance reviewer reads a corpus's cases with what a confirmation claims, and records a decision with why, bound to the case's words",
+      "proves": "On a phone with no automated WCAG 2.2 AA failure, the acceptance cases page shows what a confirmation claims, how many cases are confirmed, rejected and without a decision, and each case's expected outcome, critical failure conditions, sources and latest decision, and records a decision with why for the case's hash as read, holding the other cases and sets while one is started."
+    },
+    {
+      "requirement": "EDP-010",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/acceptance-review.test.ts",
+      "test": "a decision says who made it, when, and how many came before it",
+      "proves": "The acceptance cases page says on a Lagos clock who made a case's latest decision, when, and how many came before it, counts cases by their latest decision on their current words, and says that nothing on it accepts a case or a requirement."
+    },
+    {
       "requirement": "EDP-011",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/sources/valo-source-controls.integration.test.ts",
@@ -1176,6 +1211,20 @@
       "file": "artifacts/api-server/src/modules/ai-lanes/inference-customer-evaluation.test.ts",
       "test": "preparation preserves all original60 identities, full oracles and actual numeric checks without invented follow-ups",
       "proves": "All 60 authored customer drafting cases keep their identities, expected checks and critical-failure conditions, integer-kobo arithmetic built on the application's money functions reproduces all 45 expected amounts in them, and no case is marked as accepted for output quality."
+    },
+    {
+      "requirement": "AI-008",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/acceptance-review/acceptance-review.integration.test.ts",
+      "test": "the reviewer's record: an active reviewer's decisions, kept for good, from someone who prepares no content",
+      "proves": "Against real PostgreSQL, an active reviewer with recent MFA reads the customer AI corpus's 60 cases, other staff can read no corpus, and the record keeps a reviewer's decisions as written, from someone who cannot also hold the content role."
+    },
+    {
+      "requirement": "AI-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/acceptance-review/acceptance-cases.test.ts",
+      "test": "each case carries the hash the disabled allocation package binds it by, in the corpus's order",
+      "proves": "Each of the customer AI corpus's 60 cases is read for the reviewer with the SHA-256 hash the disabled allocation package lists for it, in the corpus's order, so a decision names the hash a suite binds the case by."
     },
     {
       "requirement": "AI-009",
@@ -2884,6 +2933,27 @@
       "file": "artifacts/api-server/src/modules/rules/checker-challenge-run.integration.test.ts",
       "test": "the challenges of a released rule's scenarios are admitted under a checker-challenge package, run one approved work at a time and kept as answers that accept nothing, and none runs once the release is withdrawn",
       "proves": "Under a synthetic owner approval of a checker-challenge package in an isolated ledger, a released rule's 20 challenge requests are admitted, each sent once through the real dispatcher to a local stand-in destination and kept as an answer that accepts nothing; run again, nothing is sent and each answer is the one kept; once the release is withdrawn, each is refused at its binding check and nothing is sent; it does not show a run against the provider."
+    },
+    {
+      "requirement": "RUL-008",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/acceptance-review/acceptance-review.integration.test.ts",
+      "test": "the reviewer's record: an active reviewer's decisions, kept for good, from someone who prepares no content",
+      "proves": "Against real PostgreSQL, an active reviewer with recent MFA reads the 80 rule scenarios and records a decision on one over HTTP, other staff cannot, a decision holds only for the scenario's hash as read and is kept as written, and no one can hold the reviewer and content roles at once."
+    },
+    {
+      "requirement": "RUL-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/acceptance-review/acceptance-cases.test.ts",
+      "test": "each case carries the hash the disabled allocation package binds it by, in the corpus's order",
+      "proves": "Each of the 80 rule scenarios is read for the reviewer with the SHA-256 hash the disabled allocation package lists for it, in the corpus's order, so a decision names the hash the checker suite binds the scenario by."
+    },
+    {
+      "requirement": "RUL-008",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "an acceptance reviewer reads a corpus's cases with what a confirmation claims, and records a decision with why, bound to the case's words",
+      "proves": "On a phone with no automated WCAG 2.2 AA failure, a reviewer opens the rule scenarios on the acceptance cases page, rejects a scenario's expected result with why, and the decision is sent with the scenario's hash as read and then shown with who made it."
     },
     {
       "requirement": "RUL-009",

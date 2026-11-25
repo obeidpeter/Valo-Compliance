@@ -88,6 +88,34 @@ that a person decided. A row written only by a signed-in reviewer with recent MF
 - Each report names the review rows it used, by id and hash. The scores still accept nothing: accepting a
   requirement stays the owner's decision, and a reviewer's confirmations are evidence for it.
 
+## Settled while building it
+
+Slice 1:
+- The role is `reviewer`, granted and revoked on the staff roles screen like the other roles, never by a
+  system administrator to themselves, each change recorded in the role audit. Its routes run in
+  development only. It opens only the acceptance cases page, with recent MFA, and
+  the role is checked before any input is read, so other staff learn nothing of the corpora or the cases.
+- The role change refuses the reviewer role to someone who holds the content role, and the content role
+  to a reviewer, an emergency grant included, with a sentence saying which role to revoke first. The
+  database refuses the pair written any other way (`valo_guard_reviewer_independence()`), and takes two
+  such grants to one person one after the other, so both cannot pass. A grant that has ended does not
+  count.
+- The record is `valo_acceptance_reviews` (migration `20261125191813_acceptance_reviews`). Its guard takes
+  a row only from an active reviewer, dates it itself, and refuses any change or removal; a truncate is
+  refused too. Each kind of judgment carries exactly its own fields: an expected outcome names no run, and
+  a run outcome names its run and the hash of its results. A check passes on a null, so the run's fields
+  are required outright.
+- A case is shown as the reviewer reads it: its title, its expected outcome, its critical failure
+  conditions and its sources, taken from the frozen row, with the row's hash. A decision is sent with the
+  hash the reviewer read. The server refuses a hash that is not the case's current one ("This case changed
+  since you read it."), so a decision is never about other words.
+- The page lists one corpus at a time, says what a confirmation claims, counts the cases confirmed,
+  rejected and without a decision, and filters by them. Each case shows its latest decision on its
+  current hash, with who made it, when, why and how many came before it. While a decision is started, the
+  page holds the other cases and corpora, and asks before leaving.
+- Slice 1 records expected outcomes only. The kind of judgment for a run outcome is in the record already,
+  for slice 2.
+
 ## Decision 0016's points, under the owner's delegation
 
 The owner approved the finishing plan with "Implement all (make the best decisions for me)". This row
