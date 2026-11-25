@@ -35,6 +35,7 @@ import type {
   BuildStatus,
   BusinessDocument,
   CataloguePage,
+  CheckerRulesInUse,
   CommerceActionInput,
   CommerceOrder,
   CommerceOrderInput,
@@ -9163,6 +9164,107 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       > => {
       return useMutation(getPreviewAssessmentMutationOptions(options), queryClient);
     }
+
+export const getListCheckerRulesInUseUrl = () => {
+
+
+
+
+  return `/api/checker/questions`
+}
+
+/**
+ * The released rules the requirements check would use today, under the same release checks as an assessment, and which of the check's rule questions each reads (RUL-001). Holds no customer data. Counts against the per-visitor limit on public reads.
+ */
+export const listCheckerRulesInUse = async ( options?: Parameters<typeof customFetch>[1]): Promise<CheckerRulesInUse> => {
+
+  return customFetch<CheckerRulesInUse>(getListCheckerRulesInUseUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListCheckerRulesInUseQueryKey = () => {
+    return [
+    "listCheckerRulesInUse"
+    ] as const;
+    }
+
+
+export const getListCheckerRulesInUseQueryOptions = <TData = Awaited<ReturnType<typeof listCheckerRulesInUse>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCheckerRulesInUse>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListCheckerRulesInUseQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCheckerRulesInUse>>> = ({ signal }) => listCheckerRulesInUse({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCheckerRulesInUse>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListCheckerRulesInUseQueryResult = NonNullable<Awaited<ReturnType<typeof listCheckerRulesInUse>>>
+export type ListCheckerRulesInUseQueryError = ErrorType<unknown>
+
+
+/** The released rules the requirements check would use today, under the same release checks as an assessment, and which of the check's rule questions each reads (RUL-001). Holds no customer data. Counts against the per-visitor limit on public reads. */
+export function useListCheckerRulesInUse<TData = Awaited<ReturnType<typeof listCheckerRulesInUse>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCheckerRulesInUse>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listCheckerRulesInUse>>,
+          TError,
+          Awaited<ReturnType<typeof listCheckerRulesInUse>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** The released rules the requirements check would use today, under the same release checks as an assessment, and which of the check's rule questions each reads (RUL-001). Holds no customer data. Counts against the per-visitor limit on public reads. */
+export function useListCheckerRulesInUse<TData = Awaited<ReturnType<typeof listCheckerRulesInUse>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCheckerRulesInUse>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listCheckerRulesInUse>>,
+          TError,
+          Awaited<ReturnType<typeof listCheckerRulesInUse>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** The released rules the requirements check would use today, under the same release checks as an assessment, and which of the check's rule questions each reads (RUL-001). Holds no customer data. Counts against the per-visitor limit on public reads. */
+export function useListCheckerRulesInUse<TData = Awaited<ReturnType<typeof listCheckerRulesInUse>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCheckerRulesInUse>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** The released rules the requirements check would use today, under the same release checks as an assessment, and which of the check's rule questions each reads (RUL-001). Holds no customer data. Counts against the per-visitor limit on public reads. */
+export function useListCheckerRulesInUse<TData = Awaited<ReturnType<typeof listCheckerRulesInUse>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCheckerRulesInUse>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListCheckerRulesInUseQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getPreviewWorkspaceAssessmentUrl = () => {
 

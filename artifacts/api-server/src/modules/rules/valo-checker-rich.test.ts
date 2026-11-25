@@ -8,6 +8,7 @@ import {
   ruleSchema,
   type CheckerFacts,
   type ReleasedRule,
+  rulesInUse,
 } from "@workspace/valo-core";
 import {
   changedCheckerFactPaths,
@@ -337,6 +338,78 @@ test("period and product questions retain their narrow scope without an automati
   assert.equal(product.items[0]!.sourceLinkedTaskEligible, false);
   assert.match(product.items[0]!.nextStep, /do not create a duplicate/);
   assert.equal(Object.hasOwn(product.items[0]!, "dueDate"), false);
+});
+
+// RUL-001: the page asks the questions of the rules in use, which are exactly the rules a result uses.
+test("the rules in use are exactly the rules a result evaluates, under the same release checks", () => {
+  const f = facts({ privacy: { processesPersonalData: true } });
+  const privacy = fixture("privacy");
+  const tax = fixture("tax");
+  const trusted = {
+    ...fixture("product"),
+    provenance: "editorial_release" as const,
+    manifestHash: "d".repeat(64),
+  };
+  const sets: {
+    name: string;
+    rules: ReleasedRule[];
+    options: { fixtureMode?: boolean; trustedManifestHashes?: ReadonlySet<string> };
+  }[] = [
+    { name: "none", rules: [], options: {} },
+    { name: "fixtures without fixture mode", rules: [privacy, tax], options: {} },
+    { name: "fixtures in fixture mode", rules: [privacy, tax], options: { fixtureMode: true } },
+    { name: "an untrusted manifest", rules: [trusted], options: {} },
+    {
+      name: "a trusted manifest",
+      rules: [trusted],
+      options: { trustedManifestHashes: new Set(["d".repeat(64)]) },
+    },
+    {
+      name: "a withdrawn version",
+      rules: [{ ...privacy, status: "withdrawn" }, tax],
+      options: { fixtureMode: true },
+    },
+    {
+      name: "a stale review",
+      rules: [{ ...privacy, reviewBy: "2026-11-13T00:00:00Z" }, tax],
+      options: { fixtureMode: true },
+    },
+    {
+      name: "a version not yet in effect",
+      rules: [{ ...privacy, validFrom: "2026-11-15" }],
+      options: { fixtureMode: true },
+    },
+    {
+      name: "an expired version",
+      rules: [{ ...privacy, validTo: "2026-11-14" }],
+      options: { fixtureMode: true },
+    },
+    {
+      name: "two versions in force",
+      rules: [privacy, { ...privacy, version: 2 }, tax],
+      options: { fixtureMode: true },
+    },
+    {
+      name: "another build's calculation",
+      rules: [{ ...privacy, evaluator: { ...privacy.evaluator!, algorithmHash: "c".repeat(64) } }, tax],
+      options: { fixtureMode: true },
+    },
+  ];
+  const used: string[] = [];
+  for (const { name, rules, options } of sets) {
+    const inUse = rulesInUse(rules, asOfDate, now, options).map((rule) => `${rule.id}@${rule.version}`);
+    const evaluated = assess(f, rules, asOfDate, now, options).items.map(
+      (item) => `${item.ruleId}@${item.ruleVersion}`,
+    );
+    assert.deepEqual(inUse, evaluated, name);
+    used.push(...inUse);
+  }
+  // The sets reach rules both in use and held.
+  assert.deepEqual([...new Set(used)].sort(), [
+    "synthetic-rich-privacy@1",
+    "synthetic-rich-product@1",
+    "synthetic-rich-tax@1",
+  ]);
 });
 
 test("source-family implementation, publication, period and freshness gates fail closed", () => {

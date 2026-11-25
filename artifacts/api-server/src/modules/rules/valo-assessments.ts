@@ -25,6 +25,7 @@ import {
   ownerRuleBundleSchema,
   ownerRuleMatchesBundle,
   ruleSchema,
+  rulesInUse,
   publicationSchema,
   changedCheckerFactPaths,
   comparableItemDigest,
@@ -256,6 +257,26 @@ export async function runAssessment(
       `${registry.excluded} registry versions were excluded because their publication evidence is not eligible.`,
     );
   return { ...body, resultHash: digest(body) };
+}
+/**
+ * The released rules the check would use today, and which of the check's rule questions each reads,
+ * so that the page asks only their questions (RUL-001). The same release checks as an assessment,
+ * through `rulesInUse`; it holds no customer data.
+ */
+export async function listRulesInUse(now = new Date()) {
+  const asOfDate = currentAssessmentDate(now);
+  const registry = await releasedRegistry(db, now);
+  return {
+    asOfDate,
+    rules: rulesInUse(registry.rules, asOfDate, now, { trustedManifestHashes: registry.trusted }).map(
+      (rule) => ({
+        ruleId: rule.id,
+        ruleVersion: rule.version,
+        title: rule.title,
+        family: rule.evaluator?.family ?? null,
+      }),
+    ),
+  };
 }
 export async function previewAssessment(raw: unknown) {
   const facts = checkerFactsSchema.parse(z.object({ facts: z.unknown() }).parse(raw).facts);

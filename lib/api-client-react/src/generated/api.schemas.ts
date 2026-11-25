@@ -3377,6 +3377,36 @@ export interface AssessmentItem {
   relatedTemplateIds: string[];
 }
 
+/**
+ * The rule questions the rule reads, or null for a rule that reads only the check's own questions.
+ * @nullable
+ */
+export type CheckerRuleInUseFamily = typeof CheckerRuleInUseFamily[keyof typeof CheckerRuleInUseFamily] | null;
+
+
+export const CheckerRuleInUseFamily = {
+  businessName: 'businessName',
+  tax: 'tax',
+  privacy: 'privacy',
+  product: 'product',
+} as const;
+
+export interface CheckerRuleInUse {
+  ruleId: string;
+  ruleVersion: number;
+  title: string;
+  /**
+     * The rule questions the rule reads, or null for a rule that reads only the check's own questions.
+     * @nullable
+     */
+  family: CheckerRuleInUseFamily;
+}
+
+export interface CheckerRulesInUse {
+  asOfDate: string;
+  rules: CheckerRuleInUse[];
+}
+
 export interface OfficialRoute {
   title: string;
   url: string;

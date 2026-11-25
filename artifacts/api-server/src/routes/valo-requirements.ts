@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import {
+  ListCheckerRulesInUseResponse,
   PreviewAssessmentResponse,
   ListAssessmentsResponse,
   CreateAssessmentResponse,
@@ -38,6 +39,25 @@ router.post("/checker/preview", async (req, res): Promise<void> => {
     return;
   }
   res.json(PreviewAssessmentResponse.parse(await assessments.previewAssessment(req.body)));
+});
+// The rules the check would use today, so that its page asks only their questions (RUL-001). It
+// holds no customer data, and counts against the same per-visitor limit as a check.
+router.get("/checker/questions", async (req, res): Promise<void> => {
+  res.set("Cache-Control", "no-store");
+  const quota = await consumeQuota(
+    "anonymous-read",
+    quotaSubjectHash(setting("SESSION_SECRET"), "ip", clientAddress(req)),
+  );
+  if (!quota.allowed) {
+    res.set("Retry-After", String(quota.retryAfter));
+    res.status(429).json({
+      code: "CHECKER_RATE_LIMIT",
+      error:
+        "Too many checks in a short time. Your answers are still on this page. Wait a moment and try again.",
+    });
+    return;
+  }
+  res.json(ListCheckerRulesInUseResponse.parse(await assessments.listRulesInUse()));
 });
 // Mounted behind the shared verified-workspace and same-origin boundaries.
 router.post("/workspace/checker/preview", async (req, res): Promise<void> => {

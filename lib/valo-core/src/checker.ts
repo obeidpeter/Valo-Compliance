@@ -358,6 +358,24 @@ function releaseHolds(
   return holds;
 }
 
+/**
+ * The rule versions the check would use on `asOfDate`: those that pass the same release checks as
+ * `assess`, in its order. The route that lists the rules in use reads it, so that the page asks the
+ * questions of exactly the rules a result would use (RUL-001).
+ */
+export function rulesInUse(
+  rules: ReleasedRule[],
+  asOfDate: string,
+  evaluatedAt: Date,
+  options: { fixtureMode?: boolean; trustedManifestHashes?: ReadonlySet<string> } = {},
+): ReleasedRule[] {
+  const parsed = rules.map((r) => ruleSchema.parse(r));
+  const holds = releaseHolds(parsed, asOfDate, evaluatedAt, options);
+  return [...parsed]
+    .sort((a, b) => a.id.localeCompare(b.id) || a.version - b.version)
+    .filter((r) => holds.get(`${r.id}@${r.version}`) === null);
+}
+
 /** Server supplies the immutable, trusted registry. HTTP callers cannot supply rules or fixtureMode. */
 export function assess(
   facts: CheckerFacts,
