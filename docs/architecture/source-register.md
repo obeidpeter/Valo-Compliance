@@ -197,6 +197,41 @@ Slice 3:
   controls' test. It and the register's retirement test process the holds they make to the end, as the
   worker would, so no step after them finds their work pending.
 
+Slice 4:
+- A Content editor asks for the next candidate from an open row on a held template or guide that has a
+  preparer: an operational template or practical guide the template preparer serves, or a guide with a
+  claim map. Rules are not prepared from the queue: a rule's next version is prepared by its own commands
+  and released on the reviewed route or the owner's sign-off. Staff-library entries keep their own holds.
+- The request is a record of its own (`valo_source_review_preparations`, migration
+  `20261125183409_source_review_preparations`): who asked, for which row and when, where it stands, and
+  what came of it. The database takes one only on open review work of a template or guide, only from an
+  active Content editor, one at a time for a row, and dates it itself. It never changes who asked, for
+  which row or when, never changes a finished request, and never removes one.
+- The worker runs the requests, one a minute, as its own scheduled task (`preparations`), because the
+  preparer renders the candidate's Word and PDF files and the worker is where the renderer runs. A run
+  takes a lease of 15 minutes, and a request is tried at most three times.
+- Each run takes a fresh copy of the AI provider's terms, as the `capture-provider-terms` command does:
+  the five pages the permission record reads, through the listed-page fetcher, refused when a page no
+  longer holds the sentence the record looks for. The preparers check the copy as they check the
+  command's file, and refuse one older than a day. No transaction is held while the pages are read or
+  the candidate is prepared.
+- The run gives the request one of these outcomes:
+  - **prepared:** the candidate is kept as a private artifact awaiting its two reviews, in the list of
+    templates and guides awaiting their reviews, and the request names it;
+  - **held:** a template's candidate failed a check, and it was saved as a held version, as its command
+    saves one;
+  - **not ready:** a guide's candidate was not ready, for the reasons the gate named, and nothing was kept;
+  - **failed:** the preparation stopped with a code, and nothing was kept;
+  - **closed:** the review work closed before the request's turn, and nothing was prepared.
+- A preparation calls no model, writes no inference budget, sends nothing and publishes nothing. The
+  candidate's two reviews are its reassessment, and they run, as every candidate's do, only under an AI
+  allocation the owner approves (the owner's second point). The review work stays open until a release
+  replaces the version or it is withdrawn.
+- The queue marks the rows a candidate can be prepared from, and says where the latest request on each
+  stands. A database the migration has not reached marks none, and asking for one there answers 503.
+- The guide preparation's database step runs its files one at a time (`--test-concurrency=1`), so the
+  preparation test's counts of AI calls and budgets are not changed meanwhile by the other files' reviews.
+
 ## What does not change
 
 - The daily check's rule for calling a source changed, the impacts and what they hold, the notices,
