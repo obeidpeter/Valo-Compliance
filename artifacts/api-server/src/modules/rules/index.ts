@@ -16,5 +16,7 @@ export {
   checkerChallengeTwin,
   checkerChallengeVerdictSchema,
   prepareCheckerChallengeManifest,
+  rebuildCheckerChallengeManifest,
   type CheckerChallengeVerdict,
 } from "./checker-challenge";
+export { executeCheckerChallenges } from "./checker-challenge-run";

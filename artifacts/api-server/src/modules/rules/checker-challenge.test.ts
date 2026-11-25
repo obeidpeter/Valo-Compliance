@@ -186,3 +186,35 @@ test("built again from the same release at the same moment the requests are iden
     /PREPARATION_TIME_INVALID/,
   );
 });
+
+test("a checker-challenge package admits exactly the challenges of the corpus's scenarios, and no other package admits them", async () => {
+  const { assertWorkPackageMembership, finitePackagePreparers, prepareFiniteAllocationPackage } =
+    await import("../ai");
+  const pkg = await prepareFiniteAllocationPackage(now, finitePackagePreparers.checkerChallenges);
+  assert.ok(pkg.holds.some((h) => h.startsWith("Supported checker challenges")));
+  assert.ok(pkg.holds.some((h) => h.includes("accepts nothing and is not professional review")));
+  const checker = pkg.corpora.find((c) => c.name === "checker")!;
+  assert.equal(checker.cases.length, 80);
+  for (const work of works) {
+    assert.equal(checker.cases.find((c) => c.id === work.bindings!.caseId)?.hash, work.caseHash);
+    assertWorkPackageMembership(work, pkg, null);
+  }
+  const [work] = works;
+  assert.throws(
+    () => assertWorkPackageMembership({ ...work!, caseHash: "0".repeat(64) }, pkg, null),
+    /WORK_OUTSIDE_PACKAGE/,
+  );
+  assert.throws(
+    () => assertWorkPackageMembership(work!, pkg, "TPL-01"),
+    /PACKAGE_EXECUTABLE_PREPARER_UNAVAILABLE/,
+  );
+  for (const other of [finitePackagePreparers.editorialCases, finitePackagePreparers.templatePairs])
+    assert.throws(
+      () => assertWorkPackageMembership(work!, { ...pkg, supportedPreparers: other }, null),
+      /WORK_OUTSIDE_PACKAGE/,
+    );
+  // An editorial case's pair is not admitted by a checker-challenge package.
+  const { prepareEditorialCaseManifest } = await import("../editorial");
+  const editorial = prepareEditorialCaseManifest("EVAL-EDP-C004", {}, now).works[0]!;
+  assert.throws(() => assertWorkPackageMembership(editorial, pkg, null), /WORK_OUTSIDE_PACKAGE/);
+});

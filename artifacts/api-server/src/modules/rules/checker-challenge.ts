@@ -262,15 +262,24 @@ export async function prepareCheckerChallengeManifest(
 }
 
 /**
- * The work for one case rebuilt from the release it names, at the moment it was prepared, or null
- * when there is none. The release must still be published, and its review not run out.
+ * The challenge manifest rebuilt from the release it names, at the moment it was prepared: how the
+ * binding checks test each work and the runner tests an admitted manifest. The release must still be
+ * published, and its review not run out.
  */
-export async function checkerChallengeTwin(releaseId: string, caseId: string, preparedAt: Date) {
+export async function rebuildCheckerChallengeManifest(
+  releaseId: string,
+  options: { packageId?: string },
+  preparedAt: Date,
+) {
   const release = await releaseById(releaseId);
   const parsed = release && parseOwnerRuleRelease(release.rule, release.publicationBundle);
   if (!release || !parsed || release.status !== "published" || Date.parse(parsed.rule.reviewBy) <= Date.now())
     throw Error("CANDIDATE_UNAVAILABLE_OR_STALE");
-  return (
-    checkerChallengeManifest(release, {}, preparedAt).works.find((w) => w.bindings?.caseId === caseId) ?? null
-  );
+  return checkerChallengeManifest(release, options, preparedAt);
+}
+
+/** The work for one case rebuilt from the release it names, at the moment it was prepared. */
+export async function checkerChallengeTwin(releaseId: string, caseId: string, preparedAt: Date) {
+  const manifest = await rebuildCheckerChallengeManifest(releaseId, {}, preparedAt);
+  return manifest.works.find((w) => w.bindings?.caseId === caseId) ?? null;
 }
