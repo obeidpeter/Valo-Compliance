@@ -19,6 +19,7 @@ import { GUIDED_CHANGES_V2, GUIDED_SPECS_V2 } from "@workspace/valo-core/guided-
 import type { GuidedSpecV2 } from "@workspace/valo-core/guided-v2";
 import { readTemplateIntake } from "../publication";
 import { FORM_TEXT_MAPS, annotateDraft, proposedFormText } from "./form-text-maps";
+import { everyAnswer, owing } from "../../test-support/complete-answers";
 
 // Forms v2, slice 4 (docs/architecture/forms-v2.md): the annotation maps that turn a retained draft
 // into proposed form text, and the v2 forms that fill it. The answers below are synthetic.
@@ -1235,4 +1236,54 @@ test("an invoice form document is saved as its answers make it, hashed as V2, an
   );
   assert.match(html, /Bill to: Synthetic Buyer Ltd/);
   assert.equal((html.match(/class="field"/g) ?? []).length, 1);
+});
+
+// EDT-003 (docs/architecture/editor.md, slice 4): the editor's preview marks a form document's answers
+// inside its template's wording. The compiler gives each answer's place, without changing the text.
+test("every v2 form gives each answer's place in its wording: the pieces of each block are its text, and only what the answers put there is marked", async () => {
+  const textOf = (pieces: readonly { text: string }[]) => pieces.map((piece) => piece.text).join("");
+  let forms = 0;
+  for (const id of Object.keys(GUIDED_SPECS_V2) as GuidedTemplateId[]) {
+    const spec = GUIDED_SPECS_V2[id]!;
+    const text = parseFormText((await proposedFormText(id))!);
+    forms++;
+    for (const answered of [true, false]) {
+      const data = answered ? owing(everyAnswer(emptyFormData(spec), spec)) : emptyFormData(spec);
+      const compiled = compileForm(spec, text, data);
+      assert.deepEqual(
+        Object.keys(compiled.pieces),
+        compiled.blocks.map((block) => block.id),
+        id,
+      );
+      for (const block of compiled.blocks) {
+        const rows = compiled.pieces[block.id]!;
+        if (block.type === "table")
+          assert.deepEqual(
+            rows.map((cells) => cells.map(textOf)),
+            block.rows,
+            `${id} ${block.id}`,
+          );
+        else assert.equal(rows.map((cells) => textOf(cells[0]!)).join("\n"), block.text, `${id} ${block.id}`);
+      }
+      const marked = Object.values(compiled.pieces)
+        .flat(3)
+        .filter((piece) => piece.answer);
+      // A text answer is "Synthetic answer": answered, it is marked; unanswered, nothing is, and each
+      // placeholder stays part of the wording.
+      assert.equal(
+        marked.some((piece) => piece.text.includes("Synthetic answer")),
+        answered,
+        `${id} answered`,
+      );
+      if (!answered)
+        assert.ok(
+          Object.values(compiled.pieces)
+            .flat(3)
+            .filter((piece) => /^\[[^\]]+\]$/.test(piece.text))
+            .every((piece) => !piece.answer),
+          `${id}: a placeholder is wording`,
+        );
+    }
+  }
+  assert.equal(forms, 12);
 });

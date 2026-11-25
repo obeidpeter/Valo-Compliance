@@ -1820,9 +1820,21 @@ test("an invoice started from its form asks its questions and fills its template
     // document's details it lists only the notes, as the files print them: the names and dates are in
     // the wording.
     await page.locator("#g-recipientName").fill("Synthetic Buyer Ltd");
+    // The wording is fixed, and the line under the questions says so (docs/architecture/editor.md,
+    // slice 4).
+    await expect(page.getByTestId("form-wording-fixed")).toHaveText(
+      "The template\u2019s wording stays as it was released. You change this document by changing your answers.",
+    );
     await page.getByRole("tab", { name: "Preview", exact: true }).click();
     const preview = page.getByTestId("preview-doc");
     await expect(preview).toContainText("Bill to: Synthetic Buyer Ltd");
+    // The preview marks the answer inside the wording, and the notice as Valo's.
+    await expect(
+      preview.getByTestId("preview-answer").filter({ hasText: "Synthetic Buyer Ltd" }),
+    ).toHaveCount(1);
+    await expect(preview.getByTestId("preview-notice-mark")).toHaveText(
+      "Added by Valo to every page of the file. It cannot be removed.",
+    );
     await expect(preview.locator("table").first().locator("thead th")).toHaveText([
       "Invoice reference",
       "Issue date",

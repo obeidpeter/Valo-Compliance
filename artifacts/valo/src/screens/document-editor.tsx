@@ -1079,7 +1079,14 @@ export default function DocumentEditor({ id }: { id: string }) {
                 )}
                 {formAnswers ? (
                   formView && formText ? (
-                    <GuidedFields spec={formView} value={formAnswers} onChange={fillAnswers} />
+                    <>
+                      <GuidedFields spec={formView} value={formAnswers} onChange={fillAnswers} />
+                      {/* A form document's wording is fixed (docs/architecture/editor.md, slice 4). */}
+                      <p className="hint mt-4" data-testid="form-wording-fixed">
+                        The template&rsquo;s wording stays as it was released. You change this document by
+                        changing your answers.
+                      </p>
+                    </>
                   ) : formWording.isError || (formWording.isSuccess && !formText) || !formView ? (
                     <ErrorState
                       error={formWording.error}

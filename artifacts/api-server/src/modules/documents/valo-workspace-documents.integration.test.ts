@@ -536,6 +536,38 @@ test(
           );
         },
       );
+      await t.test(
+        "a document not started from a form holds no block of a form's wording: it is refused, as the editor would show no way to change it",
+        async () => {
+          // EDT-003 (docs/architecture/editor.md, slice 4). The editor's block list leaves out a form's
+          // blocks, so on a typed document nobody could change or remove one.
+          const wording = {
+            id: "valo-guided-v2:TPL-01:1",
+            type: "paragraph" as const,
+            text: "Synthetic Supplies Ltd",
+            rows: [],
+          };
+          await assert.rejects(
+            createDocument(a, {
+              ...syntheticDocument,
+              content: {
+                ...syntheticDocument.content,
+                blocks: [...syntheticDocument.content.blocks, wording],
+              },
+            }),
+            { status: 422, message: /belong to a document started from a form/ },
+          );
+          const typed = await createDocument(a, syntheticDocument);
+          await assert.rejects(
+            saveDocument(a, typed.id, {
+              expectedRevision: 1,
+              title: syntheticDocument.title,
+              content: { ...syntheticDocument.content, blocks: [wording] },
+            }),
+            { status: 422, message: /belong to a document started from a form/ },
+          );
+        },
+      );
       await t.test("suspended membership is not automatically restored", async () => {
         await db
           .update(valoMemberships)

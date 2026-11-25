@@ -9,7 +9,7 @@ import { FormTextError, parseFormText } from "@workspace/valo-core/form-text";
 import type { GuidedTemplateId } from "@workspace/valo-core/guided";
 import { formAnswerIssues, formDocumentContent, formFit } from "@workspace/valo-core/guided-runtime-v2";
 import { GUIDED_SPECS_V2 } from "@workspace/valo-core/guided-specs-v2";
-import type { GuidedDataV2, GuidedSpecV2 } from "@workspace/valo-core/guided-v2";
+import { GUIDED_V2_PREFIX, type GuidedDataV2, type GuidedSpecV2 } from "@workspace/valo-core/guided-v2";
 import { ValoProblem } from "../../platform/valo-problem";
 
 /**
@@ -59,14 +59,18 @@ export async function assertFormAvailable(tx: Tx, templateId: string) {
       "This form comes with a template you buy. Buy the template first, then start the document here. Your other documents are unchanged.",
     );
 }
-/** A document that was not started from a form holds none of a form document's parts. Its tables may
+/** A document that was not started from a form holds none of a form document's parts, its wording's
+ * blocks included: the editor shows none of them, so nobody could change or remove them. Its tables may
  * print their first row as a heading row, as a form's tables do (docs/architecture/editor.md). */
 export function assertPlainContent(content: Content) {
   if (
     content.formAnswers !== undefined ||
     content.selectedClauses.length > 0 ||
     content.blocks.some(
-      (block) => block.type === "heading" || (block.headerRows !== undefined && block.type !== "table"),
+      (block) =>
+        block.type === "heading" ||
+        block.id.startsWith(GUIDED_V2_PREFIX) ||
+        (block.headerRows !== undefined && block.type !== "table"),
     )
   )
     throw new ValoProblem(
