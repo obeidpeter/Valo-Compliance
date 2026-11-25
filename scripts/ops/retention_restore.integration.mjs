@@ -324,6 +324,18 @@ if (process.argv[2] === "--probe") {
       await t.test(
         "concurrent replay commits once, preserves held files and never extends an earlier deadline",
         async () => {
+          // The replay writes three tables. The database keeps the digest of each history with its rows
+          // (docs/architecture/audit-trail.md, slice 3), so the digests of those it writes change with
+          // them, and every other digest stays as it was.
+          const written = ["valo_file_assets", "valo_export_jobs", "valo_events"];
+          const otherDigests = async () =>
+            (
+              await target.query(
+                "SELECT table_name, shard, row_count::text, hash_sum::text FROM valo_history_digests WHERE table_name <> ALL($1) ORDER BY table_name, shard",
+                [written],
+              )
+            ).rows;
+          const digestsBefore = await otherDigests();
           const second = new Client({ connectionString: url("valo_retention_restore") });
           await second.connect();
           let results;
@@ -365,8 +377,11 @@ if (process.argv[2] === "--probe") {
           );
           const after = await snapshots(target);
           for (const name of Object.keys(before))
-            if (!["valo_file_assets", "valo_export_jobs", "valo_events"].includes(name))
+            if (![...written, "valo_history_digests"].includes(name))
               assert.deepEqual(after[name], before[name], name);
+          assert.deepEqual(await otherDigests(), digestsBefore);
+          // Each history's digest still matches its rows.
+          assert.deepEqual((await target.query("SELECT * FROM valo_history_digest_mismatches()")).rows, []);
           for (const f of fixtures)
             assert.equal(hash(await readFile(join(directory, "objects", f.assetId))), f.checksum);
           const again = await replayExportRetention(target, envelope, key, binding, {
