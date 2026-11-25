@@ -15,6 +15,8 @@ export const OPERATIONAL_DOMAINS = [
   "disputes",
   "disputeActions",
   "paymentReconciliation",
+  // A published regulatory guide's daily source check (docs/architecture/guidance-currency.md).
+  "guidance",
 ] as const;
 export type OperationalDomain = (typeof OPERATIONAL_DOMAINS)[number];
 /**

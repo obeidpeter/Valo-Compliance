@@ -35,6 +35,9 @@ The Replit development database has no Drizzle ledger. Follow the existing proce
    - `SELECT count(*) FROM pg_constraint WHERE conname = 'valo_manual_regulatory_words'` is 1.
 5. Record the target, commit, file hash, operator, result and time outside customer logs.
    Do not add rows to `drizzle.__drizzle_migrations`.
+6. Install the worker's new `guidance` schedule by running the reviewed queue setup again:
+   `VALO_DEV_QUEUE_MIGRATION=reviewed-synthetic-development pnpm --filter @workspace/api-server run queue:apply-development`.
+   It adds the schedule and changes no other.
 
 A guide signed before the migration is shown as before, on its evidence in bytes. Once its owner
 signs it again, its check has evidence in words too, and a web page's changed bytes no longer hold
