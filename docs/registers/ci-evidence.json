@@ -1672,7 +1672,7 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/documents/valo-workspace-documents.integration.test.ts",
       "test": "development PostgreSQL tenant, concurrency, history and durable-ticket proof",
-      "proves": "After a change to a synthetic document is saved, a later read of the document reports revision 2, and its history still holds revision 1 with its original content hash."
+      "proves": "After a change to a synthetic document is saved, a later read of the document reports revision 2, and its history still holds revision 1 with its original content hash; and a document not started from a form that carries a block of a form's wording is refused, on creation and on a save, since the editor shows no way to change or remove such a block."
     },
     {
       "requirement": "EDT-004",
@@ -3556,6 +3556,27 @@
       "file": "artifacts/valo/src/components/document-preview.test.tsx",
       "test": "the preview prints a table's heading row as its column headings, for each kind of table that has one, and a table without the mark as rows",
       "proves": "The editor's preview prints the first row of a table made from questions, a totals table, a form's table and a customer's table marked so as column headings, as the files print it, and a table without the mark as rows."
+    },
+    {
+      "requirement": "EDT-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/manual-library/form-text-maps.test.ts",
+      "test": "every v2 form gives each answer's place in its wording: the pieces of each block are its text, and only what the answers put there is marked",
+      "proves": "For each of the twelve v2 forms, answered and unanswered, the compiler gives each block's text as pieces that join to exactly that text, marks what the answers put there when they are given and nothing when they are not, and keeps each placeholder as part of the template's wording."
+    },
+    {
+      "requirement": "EDT-003",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/document-preview.test.tsx",
+      "test": "the preview marks a form's answers inside its wording, the blocks made from questions and the notice, and nothing in a customer's own text",
+      "proves": "The editor's preview marks only the customer's answers inside a form document's wording, adds no word to the page, marks the blocks made from questions as from the customer's answers, marks the notice as added by Valo, and marks nothing in a document typed by hand but its notice."
+    },
+    {
+      "requirement": "EDT-003",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "an invoice started from its form asks its questions and fills its template's own wording as they are answered: the wording is not edited directly, what is still needed is listed by question, the preview shows the wording with its header rows, and a save sends the answers with exactly the wording they make",
+      "proves": "In a browser, an invoice started from its form says under its questions that the template's wording stays as it was released, and its preview marks the customer's answer inside that wording and the notice as added by Valo, with no automated WCAG 2.2 AA failure."
     }
   ]
 }
