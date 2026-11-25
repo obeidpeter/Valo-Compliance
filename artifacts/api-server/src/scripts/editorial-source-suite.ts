@@ -46,6 +46,7 @@ import {
   isControlledFailureEditorialCase,
   readEditorialCaseBatches,
 } from "../modules/editorial";
+import { editorialKeptCases, keepAcceptanceRun } from "../modules/acceptance-review";
 type Case = { id: string; scenario: string; inputMutation: string; requiresProviderRun: boolean };
 class Blocked extends Error {}
 async function main() {
@@ -58,11 +59,16 @@ async function main() {
   const corpus = JSON.parse(bytes.toString()) as { cases: Case[] };
   assert.equal(corpus.cases.length, 60);
   const args = process.argv.slice(2);
+  const caseArgs = args.filter((a) => a.startsWith("--cases=")),
+    keepArgs = args.filter((a) => a.startsWith("--keep-for-review="));
   assert.ok(
-    args.length <= 1 && (!args.length || args[0]!.startsWith("--cases=")),
+    args.length === caseArgs.length + keepArgs.length && caseArgs.length <= 1 && keepArgs.length <= 1,
     "UNSUPPORTED_EDITORIAL_ARGUMENT",
   );
-  const selected = args.length ? args[0]!.slice("--cases=".length).split(",") : null;
+  const selected = caseArgs.length ? caseArgs[0]!.slice("--cases=".length).split(",") : null;
+  // With --keep-for-review=<operator>, the run is also kept for an independent reviewer
+  // (docs/architecture/reviewer-record.md, slice 2), with what it left for one.
+  const keepFor = keepArgs.length ? keepArgs[0]!.slice("--keep-for-review=".length) : null;
   assert.ok(
     !selected || selected.every((id) => corpus.cases.some((c) => c.id === id)),
     "UNKNOWN_EDITORIAL_CASE",
@@ -555,6 +561,19 @@ async function main() {
   assert.equal(report.providerRequiredCases, 34);
   const reportPath = resolve(out, `results-${evaluationRunId}.json`);
   await writeFile(reportPath, JSON.stringify(report, null, 2) + "\n", { flag: "wx" });
+  if (keepFor) {
+    const kept = await keepAcceptanceRun({
+      corpus: "editorial",
+      operator: keepFor,
+      summary: [
+        `The editorial suite's run ${evaluationRunId}, executed at ${report.executedAt}.`,
+        `${report.controlsPassed} controls passed, ${report.failed} failed, ${report.blocked} blocked and ${report.notSelected} not selected.`,
+        `${report.score.passed} of ${report.score.cases} cases passed; EDP-010's bar is ${report.score.requiredToPass}, with no critical false publication.`,
+      ],
+      cases: editorialKeptCases(results),
+    });
+    console.log(JSON.stringify({ keptForReview: kept }));
+  }
   if (!selected) await writeFile(resolve(out, "results.json"), JSON.stringify(report, null, 2) + "\n");
   console.log(
     JSON.stringify({

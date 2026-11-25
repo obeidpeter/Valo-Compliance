@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
-import { asc, and, eq, like } from "drizzle-orm";
+import { asc, and, eq, inArray, like } from "drizzle-orm";
 import { db, pool, valoAIDrafts } from "@workspace/db";
 import {
   bindCustomerCase,
@@ -20,6 +20,7 @@ import { organizeCustomerDraft, type CustomerTransport } from "../modules/ai-lan
 import { createCustomerAIDraft, customerAIUsage, getCustomerAIDraft } from "../modules/ai-lanes";
 import { sha256 } from "@workspace/valo-core";
 import { workspaceActorFromRecord } from "../platform/workspace-context";
+import { customerKeptCases, keepAcceptanceRun, type CustomerAnswer } from "../modules/acceptance-review";
 type NativeRecord = {
   caseID: string;
   caseHash: string;
@@ -57,6 +58,14 @@ async function main() {
     corpus = JSON.parse(bytes.toString()) as { cases: AuthoredCustomerCase[] };
   assert.equal(corpus.cases.length, 60);
   assert.equal(new Set(corpus.cases.map((c) => c.caseID)).size, 60);
+  // With --keep-for-review=<operator>, the run is also kept for an independent reviewer
+  // (docs/architecture/reviewer-record.md, slice 2), with each answer the provider wrote.
+  const args = process.argv.slice(2);
+  assert.ok(
+    args.length <= 1 && (!args.length || args[0]!.startsWith("--keep-for-review=")),
+    "UNSUPPORTED_CUSTOMER_ARGUMENT",
+  );
+  const keepFor = args.length ? args[0]!.slice("--keep-for-review=".length) : null;
   const selected = (process.env.VALO_SOURCE_AI_CASES ?? "").split(",").filter(Boolean);
   assert.ok(
     selected.every((id) => corpus.cases.some((c) => c.caseID === id)),
@@ -361,6 +370,33 @@ async function main() {
     AI008Accepted: false,
   };
   await writeFile(resolve(dir, "results.json"), JSON.stringify(report, null, 2) + "\n");
+  if (keepFor) {
+    // Each case in the corpus's order, with the corpus's own hash, a runner failure's record included.
+    const ordered: Record<string, unknown>[] = corpus.cases.map((c) => ({
+      ...(unique.find((r) => r.caseID === c.caseID) as Record<string, unknown>),
+      caseHash: hashAI(c),
+    }));
+    const ids = ordered.flatMap((r) =>
+      typeof r.previewId === "string" && r.previewStatus === "ready" ? [r.previewId] : [],
+    );
+    // Only the suite's evaluation identity's drafts are read: they are synthetic.
+    const rows = ids.length
+      ? await db
+          .select({ id: valoAIDrafts.id, preview: valoAIDrafts.preview })
+          .from(valoAIDrafts)
+          .where(and(inArray(valoAIDrafts.id, ids), like(valoAIDrafts.actorId, "valo-ai-eval-invoice-%")))
+      : [];
+    const kept = await keepAcceptanceRun({
+      corpus: "customer_ai",
+      operator: keepFor,
+      summary: [
+        `The customer AI suite's run, executed at ${report.executedAt}.`,
+        `${report.partialProviderEvidence} answers await a full rubric, ${report.controlledBoundaryPasses} controls passed, ${report.blocked} blocked and ${report.failed} failed.`,
+      ],
+      cases: customerKeptCases(ordered, new Map(rows.map((row) => [row.id, row.preview as CustomerAnswer]))),
+    });
+    console.log(JSON.stringify({ keptForReview: kept }));
+  }
   console.log(
     JSON.stringify({
       cases: 60,

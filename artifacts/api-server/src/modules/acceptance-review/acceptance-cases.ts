@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { digest } from "@workspace/valo-core";
@@ -68,6 +69,11 @@ const shapes: Record<AcceptanceCorpus, (row: Row) => Omit<AcceptanceCase, "hash"
 };
 
 const read = (path: string) => readFileSync(resolve(publicationWorkspaceRoot(), path), "utf8");
+/** The SHA-256 of a corpus file's bytes, as the editorial suite and the live check record it. */
+export const corpusFileHash = (corpus: AcceptanceCorpus) =>
+  createHash("sha256")
+    .update(readFileSync(resolve(publicationWorkspaceRoot(), files[corpus])))
+    .digest("hex");
 const cache = new Map<AcceptanceCorpus, AcceptanceCase[]>();
 /** A corpus's cases, read once: the corpora are frozen. `readFile` is for tests. */
 export function corpusCases(corpus: AcceptanceCorpus, readFile: (path: string) => string = read) {

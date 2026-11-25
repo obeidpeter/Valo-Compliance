@@ -20,7 +20,7 @@ import {
  * reviewer with recent MFA reads a corpus's cases with the latest decision on each case's current hash,
  * and confirms or rejects a case's expected outcome, with why. The database keeps every decision.
  */
-type Tx = Parameters<Parameters<Awaited<typeof import("@workspace/db")>["db"]["transaction"]>[0]>[0];
+export type Tx = Parameters<Parameters<Awaited<typeof import("@workspace/db")>["db"]["transaction"]>[0]>[0];
 
 /** The active reviewer assignment of the caller, under a shared lock until the transaction ends. */
 export async function requireReviewer(tx: Tx, actor: StaffActor) {
@@ -51,8 +51,9 @@ function pgCode(error: unknown) {
   const e = error as { cause?: { code?: string }; code?: string };
   return (e.cause ?? e).code;
 }
-const iso = (value: unknown) => (value instanceof Date ? value : new Date(String(value))).toISOString();
-function corpusOf(value: unknown): AcceptanceCorpus {
+export const iso = (value: unknown) =>
+  (value instanceof Date ? value : new Date(String(value))).toISOString();
+export function corpusOf(value: unknown): AcceptanceCorpus {
   if (!isAcceptanceCorpus(value)) throw new ValoProblem(404, "There is no such set of acceptance cases.");
   return value;
 }
@@ -91,7 +92,8 @@ async function casesWithDecisions(tx: Tx, corpus: AcceptanceCorpus) {
   };
 }
 
-async function asReviewer<T>(actor: StaffActor, work: (tx: Tx) => Promise<T>) {
+/** Work an active reviewer with recent MFA does, in one transaction that holds the reviewer's role. */
+export async function asReviewer<T>(actor: StaffActor, work: (tx: Tx) => Promise<T>) {
   assertDevelopmentRuntime();
   const { db } = await import("@workspace/db");
   try {
