@@ -498,6 +498,13 @@
       "when": 1795625237258,
       "tag": "20261125164717_source_register",
       "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1795627130911,
+      "tag": "20261125171850_source_watch_stops",
+      "breakpoints": true
     }
   ]
 }

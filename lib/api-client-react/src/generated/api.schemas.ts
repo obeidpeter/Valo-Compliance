@@ -1558,6 +1558,11 @@ export interface SourceControlWatch {
   /** @nullable */
   failureCode: string | null;
   nextCheckAt: string;
+  /**
+     * When the daily check stopped because the source register retired the source.
+     * @nullable
+     */
+  stoppedAt: string | null;
 }
 
 export interface SourceControlReview {
@@ -1634,6 +1639,17 @@ export interface SourceRegisterFields {
 }
 
 /**
+ * Whether it is a source kept in the repository, or one staff added.
+ */
+export type SourceRegisterEntryOrigin = typeof SourceRegisterEntryOrigin[keyof typeof SourceRegisterEntryOrigin];
+
+
+export const SourceRegisterEntryOrigin = {
+  repository: 'repository',
+  staff: 'staff',
+} as const;
+
+/**
  * Its daily check as it last ran, or null while it is not watched.
  */
 export type SourceRegisterEntryWatch = {
@@ -1643,13 +1659,25 @@ export type SourceRegisterEntryWatch = {
   failureCode: string | null;
   /** @nullable */
   nextCheckAt: string | null;
+  /**
+     * When the daily check stopped because the source was retired.
+     * @nullable
+     */
+  stoppedAt: string | null;
 } | null;
 
 export type SourceRegisterEntry = SourceRegisterFields & {
   sourceId: string;
   url: string;
+  /** Whether it is a source kept in the repository, or one staff added. */
+  origin: SourceRegisterEntryOrigin;
   /** Its earlier versions, newest first. */
   earlier: SourceRegisterFields[];
+  /**
+     * How many versions bound to it are not held yet: what retiring it holds.
+     * @minimum 0
+     */
+  restingVersions: number;
   /** Its daily check as it last ran, or null while it is not watched. */
   watch: SourceRegisterEntryWatch;
 };
@@ -1662,6 +1690,53 @@ export interface SourceRegister {
      */
   unfiled: number;
   jurisdictions: string[];
+  /** The hosts the approved guidance policy lists, where staff may add a source. */
+  hosts: string[];
+}
+
+/**
+ * @nullable
+ */
+export type SourceRegisterAdditionInstrument = typeof SourceRegisterAdditionInstrument[keyof typeof SourceRegisterAdditionInstrument] | null;
+
+
+export const SourceRegisterAdditionInstrument = {
+  act: 'act',
+  regulatory_document: 'regulatory_document',
+  official_page: 'official_page',
+} as const;
+
+export interface SourceRegisterAddition {
+  /** @maxLength 300 */
+  title: string;
+  /** @maxLength 2000 */
+  url: string;
+  /**
+     * @maxLength 200
+     * @nullable
+     */
+  authority: string | null;
+  /** @maxLength 60 */
+  jurisdiction: string;
+  /** @nullable */
+  instrument: SourceRegisterAdditionInstrument;
+  /**
+     * @maxLength 200
+     * @nullable
+     */
+  versionInForce: string | null;
+  /**
+     * @nullable
+     * @pattern ^\d{4}-\d{2}-\d{2}$
+     */
+  effectiveFrom: string | null;
+  /**
+     * Why, in 20 to 1,000 characters.
+     * @maxLength 1000
+     */
+  reason: string;
+  /** Whether its daily check starts now. */
+  watch: boolean;
 }
 
 /**

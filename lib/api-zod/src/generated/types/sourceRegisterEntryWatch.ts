@@ -16,4 +16,9 @@ export type SourceRegisterEntryWatch = {
   failureCode: string | null;
   /** @nullable */
   nextCheckAt: string | null;
+  /**
+     * When the daily check stopped because the source was retired.
+     * @nullable
+     */
+  stoppedAt: string | null;
 } | null;

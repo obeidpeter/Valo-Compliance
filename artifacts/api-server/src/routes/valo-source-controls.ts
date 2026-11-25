@@ -11,6 +11,7 @@ import {
   WatchOwnerRuleSourcesResponse,
   DecideOwnerRuleResponse,
   ListSourceRegisterResponse,
+  AddSourceRegisterEntryResponse,
   FileSourceRegisterResponse,
   ReviseSourceRegisterEntryParams,
   ReviseSourceRegisterEntryResponse,
@@ -24,7 +25,12 @@ import {
   type SourceStaffActor,
 } from "../modules/sources";
 import { decideOwnerRule, listOwnerRules, watchOwnerRuleSources } from "../modules/editorial";
-import { fileRepositorySources, listSourceRegister, reviseSourceEntry } from "../modules/source-register";
+import {
+  addSourceEntry,
+  fileRepositorySources,
+  listSourceRegister,
+  reviseSourceEntry,
+} from "../modules/source-register";
 import { editorialRecord } from "../lib/valo-editorial-record";
 import { ValoProblem } from "../platform/valo-problem";
 const page = (value: unknown) => z.coerce.number().int().min(1).max(10000).default(1).parse(value);
@@ -59,9 +65,12 @@ export function createSourceControlsRouter(
   router.post("/admin/source-controls/action", sameOriginMutation, async (req, res) => {
     res.json(ActOnSourceControlsResponse.parse(await actOnSourceControls(await authenticate(req), req.body)));
   });
-  // The source register (docs/architecture/source-register.md, slice 1).
+  // The source register (docs/architecture/source-register.md, slices 1 and 2).
   router.get("/admin/source-register", async (req, res) => {
     res.json(ListSourceRegisterResponse.parse(await listSourceRegister(await authenticate(req))));
+  });
+  router.post("/admin/source-register", sameOriginMutation, async (req, res) => {
+    res.json(AddSourceRegisterEntryResponse.parse(await addSourceEntry(await authenticate(req), req.body)));
   });
   router.post("/admin/source-register/file", sameOriginMutation, async (req, res) => {
     res.json(FileSourceRegisterResponse.parse(await fileRepositorySources(await authenticate(req))));

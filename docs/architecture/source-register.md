@@ -113,6 +113,57 @@ Slice 1:
   register runs in development only. A database the migration has not reached answers on the register
   alone, with the migration's name.
 
+Slice 2, first part (retiring and the picker):
+- Every watched source stays on the daily check, as the specification asks: the design's weekly check at
+  standard risk was dropped.
+- Retiring a source stops its watch, in the database. The register's trigger
+  (`valo_source_register_watch`, migration `20261125171850_source_watch_stops`) stops the watch of a
+  source whose new version is retired. It restarts the watch, due at once, when a later version brings
+  the source back. A watch started for a retired source starts stopped, and a source retired before the
+  migration stops when it is applied.
+- What rests on a retired source is held at once, not a day later. The retirement queues the same job a
+  changed source does, with "The official source was retired from the source register." as why. So each
+  version bound to the source and not held yet gets a hold and its review work. The source gate, the
+  release bindings and the current captures a guide or rule is prepared from refuse a stopped watch
+  straight away, before that job runs. The daily sweep of overdue sources still holds whatever is bound
+  to a stopped watch, as a backstop.
+- The scheduler skips a stopped watch. A check queued before the source was retired completes as
+  `SOURCE_WATCH_STOPPED` and fetches nothing.
+- Bringing a source back restarts its check. What was held stays held until a new version passes the
+  gates.
+- The register says how many versions rest on each source. Before a retirement is saved, it says what
+  the retirement will hold. A stopped watch says when it stopped, in the register and in the source
+  controls.
+- Staff can start watching only the regulatory leads kept in the repository that the register has not
+  retired. The picker offers only those, and the watch action refuses anything else (422). The
+  provider's terms and the quality documents are no longer offered; watches already started go on.
+- The source controls' database step runs its files one at a time (`--test-concurrency=1`), as the
+  library's and the disputes' steps do. The register's test drives the same check queue the source
+  controls' test claims from, and the test runner sorts the files, so the register's runs first.
+
+Slice 2, second part (adding sources):
+- A Content editor adds a source with its title, its https address, its fields and why, and chooses
+  whether its daily check starts now. The address must be on a host the approved guidance policy lists,
+  with no user name, password or port. An address the register holds already (409), or one of a source
+  kept in the repository, which is filed instead, is refused. The fields are checked as a correction's
+  are.
+- The register gives a source staff add the next id after the highest it holds: REG-001, REG-002, and
+  so on. No lead kept in the repository takes that prefix, and adding takes the filing lock, so two
+  additions never take the same id or address.
+- The daily check fetches a source staff added at its registered address, read from the register's
+  latest version. The address is checked against the policy's hosts again on every read, so a row put
+  straight into the database at another host is never fetched. The fetch is the one a listed page gets:
+  a public address, https on the same host across at most three redirects, and the page size cap. A
+  retired source is not read.
+- The policy's host list moved out of the publication module into `platform/`, unchanged, so the fetcher
+  reads the same list the guidance policy checks against its file, and reading it loads neither module.
+  (A first move into the sources module made the guidance policy load the whole sources module, which
+  loaded the real snapshot storage before a test's stand-in for it.) Adding a host is still a change to
+  the policy, which only the owner approves.
+- A source staff added is watched and its captures are kept, but no release rests on it: the release
+  bindings, the guides' claim maps and the rules still read only the leads kept in the repository. A
+  guide or rule can cite such a source only once it is added to those leads.
+
 ## What does not change
 
 - The daily check's rule for calling a source changed, the impacts and what they hold, the notices,

@@ -20,7 +20,7 @@ export type VerifiedSourceCapture = {
 
 const captureFor = async (reader: SourceReader, url: string, snapshotId: string) =>
   (
-    await reader.execute(sql`select s.*,w.last_raw_hash,w.checked_at,w.failure_code from valo_source_snapshots s
+    await reader.execute(sql`select s.*,w.last_raw_hash,w.checked_at,w.failure_code,w.stopped_at from valo_source_snapshots s
    join valo_source_watches w on w.source_id=s.source_id where s.id=${snapshotId}::uuid and s.url=${url} and w.url=${url}`)
   ).rows[0];
 
@@ -34,6 +34,8 @@ export function currentCapture(snapshot: Record<string, unknown> | undefined, ur
     !!snapshot.raw_object_key &&
     !!snapshot.text_object_key &&
     snapshot.raw_checksum === snapshot.last_raw_hash &&
+    // A source the register retired is no longer watched (source-register.md, slice 2).
+    !snapshot.stopped_at &&
     !!snapshot.checked_at &&
     sourceTime(snapshot.checked_at) + 86400000 > +now
   );

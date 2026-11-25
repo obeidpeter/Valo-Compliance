@@ -3687,7 +3687,8 @@ export const GetSourceControlsResponse = zod.object({
   "risk": zod.string(),
   "checkedAt": zod.string().nullable(),
   "failureCode": zod.string().nullable(),
-  "nextCheckAt": zod.coerce.date()
+  "nextCheckAt": zod.coerce.date(),
+  "stoppedAt": zod.string().nullable().describe('When the daily check stopped because the source register retired the source.')
 })),
   "review": zod.array(zod.object({
   "id": zod.uuid(),
@@ -3778,6 +3779,8 @@ export const ActOnSourceControlsResponse = zod.object({
 export const listSourceRegisterResponseEntriesItemOneEffectiveFromRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
 
 export const listSourceRegisterResponseEntriesItemTwoEarlierItemEffectiveFromRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const listSourceRegisterResponseEntriesItemTwoRestingVersionsMin = 0;
+
 export const listSourceRegisterResponseUnfiledMin = 0;
 
 
@@ -3798,6 +3801,7 @@ export const ListSourceRegisterResponse = zod.object({
 }).and(zod.object({
   "sourceId": zod.string(),
   "url": zod.string(),
+  "origin": zod.enum(['repository', 'staff']).describe('Whether it is a source kept in the repository, or one staff added.'),
   "earlier": zod.array(zod.object({
   "version": zod.int().min(1),
   "title": zod.string(),
@@ -3811,14 +3815,102 @@ export const ListSourceRegisterResponse = zod.object({
   "createdBy": zod.string(),
   "createdAt": zod.string()
 })).describe('Its earlier versions, newest first.'),
+  "restingVersions": zod.int().min(listSourceRegisterResponseEntriesItemTwoRestingVersionsMin).describe('How many versions bound to it are not held yet: what retiring it holds.'),
   "watch": zod.union([zod.object({
   "checkedAt": zod.string().nullable(),
   "failureCode": zod.string().nullable(),
-  "nextCheckAt": zod.string().nullable()
+  "nextCheckAt": zod.string().nullable(),
+  "stoppedAt": zod.string().nullable().describe('When the daily check stopped because the source was retired.')
 }),zod.null()]).describe('Its daily check as it last ran, or null while it is not watched.')
 }))),
   "unfiled": zod.int().min(listSourceRegisterResponseUnfiledMin).describe('How many regulatory sources kept in the repository are not filed yet.'),
-  "jurisdictions": zod.array(zod.string())
+  "jurisdictions": zod.array(zod.string()),
+  "hosts": zod.array(zod.string()).describe('The hosts the approved guidance policy lists, where staff may add a source.')
+})
+
+
+/**
+ * A source a Content editor names, at an https address on a host the approved guidance policy lists, as its first version with why, and its daily check when asked (docs/architecture/source-register.md, slice 2). Nothing is published; the daily check fetches it with every check it makes of a source kept in the repository.
+ * @summary Add an official source to the register
+ */
+export const addSourceRegisterEntryBodyTitleMax = 300;
+
+export const addSourceRegisterEntryBodyUrlMax = 2000;
+
+export const addSourceRegisterEntryBodyAuthorityMax = 200;
+
+export const addSourceRegisterEntryBodyJurisdictionMax = 60;
+
+export const addSourceRegisterEntryBodyVersionInForceMax = 200;
+
+export const addSourceRegisterEntryBodyEffectiveFromRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const addSourceRegisterEntryBodyReasonMax = 1000;
+
+
+
+export const AddSourceRegisterEntryBody = zod.object({
+  "title": zod.string().max(addSourceRegisterEntryBodyTitleMax),
+  "url": zod.string().max(addSourceRegisterEntryBodyUrlMax),
+  "authority": zod.string().max(addSourceRegisterEntryBodyAuthorityMax).nullable(),
+  "jurisdiction": zod.string().max(addSourceRegisterEntryBodyJurisdictionMax),
+  "instrument": zod.union([zod.literal('act'),zod.literal('regulatory_document'),zod.literal('official_page'),zod.literal(null)]).nullable(),
+  "versionInForce": zod.string().max(addSourceRegisterEntryBodyVersionInForceMax).nullable(),
+  "effectiveFrom": zod.string().regex(addSourceRegisterEntryBodyEffectiveFromRegExp).nullable(),
+  "reason": zod.string().max(addSourceRegisterEntryBodyReasonMax).describe('Why, in 20 to 1,000 characters.'),
+  "watch": zod.boolean().describe('Whether its daily check starts now.')
+})
+
+
+export const addSourceRegisterEntryResponseEntriesItemOneEffectiveFromRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+
+export const addSourceRegisterEntryResponseEntriesItemTwoEarlierItemEffectiveFromRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const addSourceRegisterEntryResponseEntriesItemTwoRestingVersionsMin = 0;
+
+export const addSourceRegisterEntryResponseUnfiledMin = 0;
+
+
+
+export const AddSourceRegisterEntryResponse = zod.object({
+  "entries": zod.array(zod.object({
+  "version": zod.int().min(1),
+  "title": zod.string(),
+  "authority": zod.string().nullable().describe('The body that issues the text. Empty until it is known.'),
+  "jurisdiction": zod.string().describe('Nigeria, or one of the states the requirements check lists.'),
+  "instrument": zod.union([zod.literal('act'),zod.literal('regulatory_document'),zod.literal('official_page'),zod.literal(null)]).nullable(),
+  "versionInForce": zod.string().nullable().describe('The edition in force, as the text names it.'),
+  "effectiveFrom": zod.string().regex(addSourceRegisterEntryResponseEntriesItemOneEffectiveFromRegExp).nullable().describe('The day the version in force took effect. An official page has none.'),
+  "status": zod.enum(['active', 'retired']),
+  "reason": zod.string().describe('Why this version was recorded.'),
+  "createdBy": zod.string(),
+  "createdAt": zod.string()
+}).and(zod.object({
+  "sourceId": zod.string(),
+  "url": zod.string(),
+  "origin": zod.enum(['repository', 'staff']).describe('Whether it is a source kept in the repository, or one staff added.'),
+  "earlier": zod.array(zod.object({
+  "version": zod.int().min(1),
+  "title": zod.string(),
+  "authority": zod.string().nullable().describe('The body that issues the text. Empty until it is known.'),
+  "jurisdiction": zod.string().describe('Nigeria, or one of the states the requirements check lists.'),
+  "instrument": zod.union([zod.literal('act'),zod.literal('regulatory_document'),zod.literal('official_page'),zod.literal(null)]).nullable(),
+  "versionInForce": zod.string().nullable().describe('The edition in force, as the text names it.'),
+  "effectiveFrom": zod.string().regex(addSourceRegisterEntryResponseEntriesItemTwoEarlierItemEffectiveFromRegExp).nullable().describe('The day the version in force took effect. An official page has none.'),
+  "status": zod.enum(['active', 'retired']),
+  "reason": zod.string().describe('Why this version was recorded.'),
+  "createdBy": zod.string(),
+  "createdAt": zod.string()
+})).describe('Its earlier versions, newest first.'),
+  "restingVersions": zod.int().min(addSourceRegisterEntryResponseEntriesItemTwoRestingVersionsMin).describe('How many versions bound to it are not held yet: what retiring it holds.'),
+  "watch": zod.union([zod.object({
+  "checkedAt": zod.string().nullable(),
+  "failureCode": zod.string().nullable(),
+  "nextCheckAt": zod.string().nullable(),
+  "stoppedAt": zod.string().nullable().describe('When the daily check stopped because the source was retired.')
+}),zod.null()]).describe('Its daily check as it last ran, or null while it is not watched.')
+}))),
+  "unfiled": zod.int().min(addSourceRegisterEntryResponseUnfiledMin).describe('How many regulatory sources kept in the repository are not filed yet.'),
+  "jurisdictions": zod.array(zod.string()),
+  "hosts": zod.array(zod.string()).describe('The hosts the approved guidance policy lists, where staff may add a source.')
 })
 
 
@@ -3830,6 +3922,8 @@ export const ListSourceRegisterResponse = zod.object({
 export const fileSourceRegisterResponseEntriesItemOneEffectiveFromRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
 
 export const fileSourceRegisterResponseEntriesItemTwoEarlierItemEffectiveFromRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const fileSourceRegisterResponseEntriesItemTwoRestingVersionsMin = 0;
+
 export const fileSourceRegisterResponseUnfiledMin = 0;
 
 
@@ -3850,6 +3944,7 @@ export const FileSourceRegisterResponse = zod.object({
 }).and(zod.object({
   "sourceId": zod.string(),
   "url": zod.string(),
+  "origin": zod.enum(['repository', 'staff']).describe('Whether it is a source kept in the repository, or one staff added.'),
   "earlier": zod.array(zod.object({
   "version": zod.int().min(1),
   "title": zod.string(),
@@ -3863,14 +3958,17 @@ export const FileSourceRegisterResponse = zod.object({
   "createdBy": zod.string(),
   "createdAt": zod.string()
 })).describe('Its earlier versions, newest first.'),
+  "restingVersions": zod.int().min(fileSourceRegisterResponseEntriesItemTwoRestingVersionsMin).describe('How many versions bound to it are not held yet: what retiring it holds.'),
   "watch": zod.union([zod.object({
   "checkedAt": zod.string().nullable(),
   "failureCode": zod.string().nullable(),
-  "nextCheckAt": zod.string().nullable()
+  "nextCheckAt": zod.string().nullable(),
+  "stoppedAt": zod.string().nullable().describe('When the daily check stopped because the source was retired.')
 }),zod.null()]).describe('Its daily check as it last ran, or null while it is not watched.')
 }))),
   "unfiled": zod.int().min(fileSourceRegisterResponseUnfiledMin).describe('How many regulatory sources kept in the repository are not filed yet.'),
-  "jurisdictions": zod.array(zod.string())
+  "jurisdictions": zod.array(zod.string()),
+  "hosts": zod.array(zod.string()).describe('The hosts the approved guidance policy lists, where staff may add a source.')
 })
 
 
@@ -3913,6 +4011,8 @@ export const ReviseSourceRegisterEntryBody = zod.object({
 export const reviseSourceRegisterEntryResponseEntriesItemOneEffectiveFromRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
 
 export const reviseSourceRegisterEntryResponseEntriesItemTwoEarlierItemEffectiveFromRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const reviseSourceRegisterEntryResponseEntriesItemTwoRestingVersionsMin = 0;
+
 export const reviseSourceRegisterEntryResponseUnfiledMin = 0;
 
 
@@ -3933,6 +4033,7 @@ export const ReviseSourceRegisterEntryResponse = zod.object({
 }).and(zod.object({
   "sourceId": zod.string(),
   "url": zod.string(),
+  "origin": zod.enum(['repository', 'staff']).describe('Whether it is a source kept in the repository, or one staff added.'),
   "earlier": zod.array(zod.object({
   "version": zod.int().min(1),
   "title": zod.string(),
@@ -3946,14 +4047,17 @@ export const ReviseSourceRegisterEntryResponse = zod.object({
   "createdBy": zod.string(),
   "createdAt": zod.string()
 })).describe('Its earlier versions, newest first.'),
+  "restingVersions": zod.int().min(reviseSourceRegisterEntryResponseEntriesItemTwoRestingVersionsMin).describe('How many versions bound to it are not held yet: what retiring it holds.'),
   "watch": zod.union([zod.object({
   "checkedAt": zod.string().nullable(),
   "failureCode": zod.string().nullable(),
-  "nextCheckAt": zod.string().nullable()
+  "nextCheckAt": zod.string().nullable(),
+  "stoppedAt": zod.string().nullable().describe('When the daily check stopped because the source was retired.')
 }),zod.null()]).describe('Its daily check as it last ran, or null while it is not watched.')
 }))),
   "unfiled": zod.int().min(reviseSourceRegisterEntryResponseUnfiledMin).describe('How many regulatory sources kept in the repository are not filed yet.'),
-  "jurisdictions": zod.array(zod.string())
+  "jurisdictions": zod.array(zod.string()),
+  "hosts": zod.array(zod.string()).describe('The hosts the approved guidance policy lists, where staff may add a source.')
 })
 
 

@@ -22,11 +22,19 @@ export function fileButton(unfiled: number) {
   return `File the ${formatCount(unfiled)} ${unfiled === 1 ? "source" : "sources"} kept in the repository`;
 }
 
-/** What an entry's daily check last did and when it runs next, or that nothing watches it. */
+/** What an entry's daily check last did and when it runs next, that it stopped when the source was
+ * retired, or that nothing watches it. */
 export function watchLine(
-  watch: { checkedAt: string | null; failureCode: string | null; nextCheckAt: string | null } | null,
+  watch: {
+    checkedAt: string | null;
+    failureCode: string | null;
+    nextCheckAt: string | null;
+    stoppedAt: string | null;
+  } | null,
 ) {
   if (!watch) return "Not watched by the daily check";
+  if (watch.stoppedAt)
+    return `The daily check stopped ${formatDateTime(watch.stoppedAt)}, when the source was retired`;
   const last = watch.failureCode
     ? `The daily check could not read it (${watch.failureCode})`
     : watch.checkedAt
@@ -59,6 +67,29 @@ export function versionLine(version: { version: number; createdAt: string; reaso
 
 export const reasonLabel = "Why";
 export const reasonHint = "Say what you checked and why the entry changes, in 20 to 1,000 characters.";
-// Retiring stops nothing yet: slice 2 makes it stop the entry's watch.
 export const retiredNote =
-  "Retired. Its versions stay on the record; for now, a daily check that watches it carries on.";
+  "Retired. The daily check no longer reads it, and what rested on it is held until a new version passes the gates. Its versions stay on the record.";
+
+/** How many versions rest on a source: bound to it and not held yet. */
+export function restingLine(resting: number) {
+  return `${formatCount(resting)} ${resting === 1 ? "version rests" : "versions rest"} on it`;
+}
+/** What retiring a source does, said before it is saved. */
+export function retireWarning(resting: number) {
+  return resting
+    ? `Retiring it stops its daily check and holds the ${formatCount(resting)} ${resting === 1 ? "version that rests" : "versions that rest"} on it, until a new version of each passes the gates.`
+    : "Retiring it stops its daily check. Nothing rests on it, so nothing is held.";
+}
+
+/** Adding a source staff name (docs/architecture/source-register.md, slice 2). */
+export const addHeading = "Add an official source";
+export const addButton = "Add it to the register";
+export const watchNowLabel = "Start its daily check now";
+export const addedByStaff = "Added by staff";
+/** Where a source may be added: the hosts the approved guidance policy lists. */
+export function hostsHint(hosts: readonly string[]) {
+  return `An https address on one of the hosts the guidance policy lists: ${hosts.join(", ")}.`;
+}
+export function addedMessage(title: string, sourceId: string) {
+  return `Added ${title} to the register as ${sourceId}.`;
+}

@@ -5,14 +5,22 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { SourceRegisterEntryOrigin } from './sourceRegisterEntryOrigin';
 import type { SourceRegisterEntryWatch } from './sourceRegisterEntryWatch';
 import type { SourceRegisterFields } from './sourceRegisterFields';
 
 export type SourceRegisterEntry = SourceRegisterFields & {
   sourceId: string;
   url: string;
+  /** Whether it is a source kept in the repository, or one staff added. */
+  origin: SourceRegisterEntryOrigin;
   /** Its earlier versions, newest first. */
   earlier: SourceRegisterFields[];
+  /**
+     * How many versions bound to it are not held yet: what retiring it holds.
+     * @minimum 0
+     */
+  restingVersions: number;
   /** Its daily check as it last ran, or null while it is not watched. */
   watch: SourceRegisterEntryWatch;
 };

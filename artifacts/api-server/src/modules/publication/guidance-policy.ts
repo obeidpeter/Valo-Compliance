@@ -4,6 +4,7 @@ import { digest, sha256, type PublicationBundle } from "@workspace/valo-core";
 import { GUIDE_SHARED_WORDS_LIMIT } from "./guidance-copying";
 import { publicationWorkspaceRoot } from "./operational-policy";
 import { operationalRestrictionsSchema } from "./operational-restrictions";
+import { guidanceOfficialHosts } from "../../platform/guidance-hosts";
 
 /**
  * The publication policy for guides that say what the law requires (decision 0017, point 1).
@@ -33,25 +34,8 @@ export function guidancePolicyApprovedHash(): string | null {
   return "0dcd5221c7e075c8839df3f527fe639c2e2311d9e00f642dcfb8b0fee41a0a1b";
 }
 
-/** The hosts the policy file lists. A guide's sources, its links and the places searched for later
- * amendments must be on one of them. */
-export const guidanceOfficialHosts = [
-  "icrp.cac.gov.ng",
-  "www.cac.gov.ng",
-  "nass.gov.ng",
-  "www.nrs.gov.ng",
-  "taxid.nrs.gov.ng",
-  "ndpc.gov.ng",
-  "www.ncc.gov.ng",
-  "fccpc.gov.ng",
-  "nafdac.gov.ng",
-  "www.nafdac.gov.ng",
-  "www.pencom.gov.ng",
-  "nipc.gov.ng",
-  "m.nipc.gov.ng",
-  "fmino.gov.ng",
-  "budgetoffice.gov.ng",
-] as const;
+/** The hosts the policy file lists, kept in platform/ so that the sources module's fetcher reads them too. */
+export { guidanceOfficialHosts };
 
 /**
  * The most a guide's review request may measure before it is refused unsent, by the budget's

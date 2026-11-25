@@ -15,4 +15,6 @@ export interface SourceRegister {
      */
   unfiled: number;
   jurisdictions: string[];
+  /** The hosts the approved guidance policy lists, where staff may add a source. */
+  hosts: string[];
 }

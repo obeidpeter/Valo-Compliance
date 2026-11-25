@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { sql } from "drizzle-orm";
-import { referenceFor } from "./source-fetch";
+import { sourceReference } from "./source-reference";
 import { lockSourceState, sourceTime, type SourceTx } from "./valo-source-state";
 import {
   impactSourceDependants,
@@ -10,9 +10,14 @@ import {
 } from "./valo-source-corrections";
 import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
 export async function registerSourceWatch(tx: SourceTx, id: string) {
-  const source = referenceFor(id); // No request URL or newly discovered domain is fetched.
+  // A lead kept in the repository, or a source a Content editor added to the register at an address on
+  // a policy host. No request URL or newly discovered domain is fetched.
+  const source = await sourceReference(tx, id);
+  // A source the register retired starts stopped (docs/architecture/source-register.md, slice 2).
   await tx.execute(
-    sql`insert into valo_source_watches(source_id,url,risk) values(${source.id},${source.url},'high') on conflict(source_id) do nothing`,
+    sql`insert into valo_source_watches(source_id,url,risk,stopped_at) values(${source.id},${source.url},'high',
+     case when (select status from valo_source_register where source_id=${source.id} order by version desc limit 1)='retired' then now() end)
+     on conflict(source_id) do nothing`,
   );
 }
 export async function scheduleSourceChecks(now = new Date()) {
@@ -20,7 +25,7 @@ export async function scheduleSourceChecks(now = new Date()) {
   const { db } = await import("@workspace/db");
   return db.transaction(async (tx) => {
     const sources = await tx.execute(
-      sql`select source_id from valo_source_watches where next_check_at<=${now} order by next_check_at,source_id for update skip locked limit 10`,
+      sql`select source_id from valo_source_watches where next_check_at<=${now} and stopped_at is null order by next_check_at,source_id for update skip locked limit 10`,
     );
     for (const source of sources.rows) {
       await tx.execute(
@@ -80,10 +85,18 @@ export async function claimSourceCheck(now = new Date()): Promise<Claim | null> 
     )
       return null;
     const row = (
-      await tx.execute(sql`select id,source_id,attempts from valo_source_check_jobs
-   where status='pending' or (status='running' and lease_until<=${now}) order by created_at,id for update skip locked limit 1`)
+      await tx.execute(sql`select j.id,j.source_id,j.attempts,w.stopped_at from valo_source_check_jobs j
+   join valo_source_watches w on w.source_id=j.source_id
+   where j.status='pending' or (j.status='running' and j.lease_until<=${now}) order by j.created_at,j.id for update of j skip locked limit 1`)
     ).rows[0];
     if (!row) return null;
+    // A job queued before its source was retired fetches nothing.
+    if (row.stopped_at) {
+      await tx.execute(
+        sql`update valo_source_check_jobs set status='complete',result='SOURCE_WATCH_STOPPED',lease_token=null,lease_until=null where id=${String(row.id)}::uuid`,
+      );
+      return null;
+    }
     if (Number(row.attempts) >= 3) {
       await tx.execute(
         sql`update valo_source_check_jobs set status='complete',result='SOURCE_ATTEMPT_LIMIT',lease_token=null,lease_until=null where id=${String(row.id)}::uuid`,

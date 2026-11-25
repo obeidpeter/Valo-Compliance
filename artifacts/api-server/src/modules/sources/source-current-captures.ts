@@ -39,7 +39,7 @@ export async function currentSourceCaptures(
     await reader.execute(sql`select s.*, w.last_raw_hash, w.checked_at, w.failure_code
       from valo_source_watches w
       join valo_source_snapshots s on s.id = w.last_snapshot_id and s.source_id = w.source_id and s.url = w.url
-      where w.source_id in (${sql.join(
+      where w.stopped_at is null and w.source_id in (${sql.join(
         leadIds.map((id) => sql`${id}`),
         sql`, `,
       )})

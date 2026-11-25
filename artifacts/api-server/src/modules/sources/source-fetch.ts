@@ -2,6 +2,7 @@ import https from "node:https";
 import { lookup } from "node:dns/promises";
 import { BlockList } from "node:net";
 import { allSourceLeads } from "@workspace/valo-core";
+import { guidanceOfficialHosts } from "../../platform/guidance-hosts";
 export const MAX_SOURCE_BYTES = 8 * 1024 * 1024;
 export const MAX_INSTRUMENT_BYTES = 32 * 1024 * 1024;
 /** Larger ingestion is confined to explicitly identified authoritative instruments. */
@@ -166,4 +167,37 @@ export async function fetchListedPage(
     return { ...response, finalUrl: target.href, fetchedAt: new Date() };
   }
   throw new SourceFailure("SOURCE_REDIRECT_LIMIT");
+}
+
+/** The transport a listed page or a registered source is fetched through; tests replace it so that
+ * nothing is sent. */
+export type SourceTransport = NonNullable<Parameters<typeof fetchListedPage>[2]>;
+
+/**
+ * An address a Content editor gives the source register (docs/architecture/source-register.md, slice 2):
+ * https, with no user name, password or port, on a host the approved guidance policy lists. Returns the
+ * address as the URL parser writes it.
+ */
+export function assertOfficialAddress(address: string) {
+  let url: URL;
+  try {
+    url = new URL(address);
+  } catch {
+    throw new SourceFailure("SOURCE_ADDRESS_INVALID");
+  }
+  if (url.protocol !== "https:" || url.username || url.password || url.port)
+    throw new SourceFailure("SOURCE_ADDRESS_INVALID");
+  if (!(guidanceOfficialHosts as readonly string[]).includes(url.hostname))
+    throw new SourceFailure("SOURCE_HOST_NOT_LISTED");
+  return url;
+}
+
+/**
+ * A source a Content editor added to the register, fetched with every check a lead in code gets: its
+ * address on a host the policy lists, checked again here, a public address, the same host across at most
+ * three redirects, and the page size cap. Nothing a request or a fetched page names is fetched.
+ */
+export async function fetchRegisteredSource(address: string, send?: SourceTransport) {
+  const start = assertOfficialAddress(address).href;
+  return fetchListedPage(start, [start], send);
 }

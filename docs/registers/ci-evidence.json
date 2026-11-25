@@ -923,7 +923,70 @@
       "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
       "test": "the source register lists each source's fields and daily check, and records a correction only with why",
-      "proves": "In the staff Content area on a phone, the register lists each source with its fields, its daily check and a retired entry's note, offers to file the sources not yet filed, sends a correction only once why is written, with every field and the version it corrects, and has no automated WCAG 2.2 AA failure."
+      "proves": "In the staff Content area on a phone, the register lists each source with its fields, its daily check, how many versions rest on it and a retired entry's note, offers to file the sources not yet filed, says what retiring a source holds before it is saved, sends a correction only once why is written, with every field and the version it corrects, and has no automated WCAG 2.2 AA failure."
+    },
+    {
+      "requirement": "ADM-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/source-register/source-register.integration.test.ts",
+      "test": "retiring a source stops its daily check and holds what rests on it at once, and bringing it back restarts the check without releasing a hold",
+      "proves": "Against real PostgreSQL, retiring a source in the register stops its daily check and refuses the source gate at once, queues the hold of every version bound to it, which then holds the bound version with why, leaves the stopped watch unscheduled and completes a check queued before it without fetching, and bringing the source back restarts its check while the hold stays."
+    },
+    {
+      "requirement": "ADM-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/sources/valo-source-controls.test.ts",
+      "test": "staff may start watching the regulatory sources kept in the repository and those they added, except those the register retired",
+      "proves": "The sources staff may start watching are the regulatory leads kept in the repository and the active sources staff added, without the provider's terms or the quality documents, and without any the register retired."
+    },
+    {
+      "requirement": "ADM-003",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/source-register.test.ts",
+      "test": "the source register says what rests on a source, what retiring it holds, and when its check stopped",
+      "proves": "The register's words say how many versions rest on a source, what retiring it stops and holds before it is saved, and when a retired source's daily check stopped on a Lagos clock."
+    },
+    {
+      "requirement": "ADM-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/source-register/source-register.integration.test.ts",
+      "test": "a Content editor adds a source only at an https address on a policy host, once, and the daily check fetches it there with every check",
+      "proves": "Against real PostgreSQL, only an active Content editor adds a source, only at an https address on a host the guidance policy lists, never an address of a source kept in the repository or one the register holds, as the next REG- source with its first version and watch; the daily check's capture fetches exactly that address through a stand-in transport; staff can watch a source added without its check; and once retired it is neither fetched nor offered."
+    },
+    {
+      "requirement": "ADM-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/sources/registered-source.test.ts",
+      "test": "a registered source's address is https on a host the guidance policy lists, with no user name, password or port",
+      "proves": "An address staff give the register is accepted only over https on a host the guidance policy lists, and refused with a user name, a password, a port, a look-alike or sub-host, a bare address or no address at all."
+    },
+    {
+      "requirement": "ADM-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/sources/registered-source.test.ts",
+      "test": "a registered source is fetched only on a policy host, and a redirect stays on that host over https",
+      "proves": "A source staff added is fetched only on a policy host, nothing is sent for an address off them, a redirect on the same host is followed, and a redirect to another host, even another policy host, or to http is refused."
+    },
+    {
+      "requirement": "ADM-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/sources/registered-source.test.ts",
+      "test": "a source id names a lead kept in the repository, or the register's latest version while it is active on a policy host",
+      "proves": "A source id names a lead kept in the repository without asking the database, or the register's latest version of a source staff added, which is not read once retired, missing or at an address off the policy's hosts, and no lead in the repository takes the REG- prefix."
+    },
+    {
+      "requirement": "ADM-003",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/source-register.test.ts",
+      "test": "the source register names the hosts a source may be added on, and the id an added source gets",
+      "proves": "The register's words name the hosts the guidance policy lists for a source staff add, and the id the register gave it."
+    },
+    {
+      "requirement": "ADM-003",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "the source register adds a source only with why, names the policy's hosts, and marks the sources staff added",
+      "proves": "In the staff Content area on a phone, the register marks the sources staff added, names the policy's hosts in its add form, sends a source only once why is written, with its fields and its daily check, says the id it was given, and has no automated WCAG 2.2 AA failure."
     },
     {
       "requirement": "ADM-005",
@@ -4305,6 +4368,20 @@
       "file": "artifacts/api-server/src/modules/manual-guidance/daily-check.integration.test.ts",
       "test": "a published guide stays shown while its web page says the same words, is held when a source or its words change, and is due again a day after its newest check or an hour after a check that held it",
       "proves": "In a database, a regulatory guide stays shown while a later check finds its web page's words the same, is held when the page's words or a file's bytes change or a source cannot be read, and is shown again on the evidence it was signed on."
+    },
+    {
+      "requirement": "CMP-007",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/source-register/source-register.integration.test.ts",
+      "test": "retiring a source stops its daily check and holds what rests on it at once, and bringing it back restarts the check without releasing a hold",
+      "proves": "Against real PostgreSQL, a source retired from the register stops being monitored and every version bound to it is held with why until a new version passes the gates, and the source gate refuses it before that hold is fanned out."
+    },
+    {
+      "requirement": "CMP-007",
+      "job": "foundation",
+      "file": "lib/db/scripts/phase1-migrations.test.mjs",
+      "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
+      "proves": "The source watch stops migration keeps every existing row and rolls back cleanly, stops the check of a source the register retired before it, then stops a watch when its source is retired, restarts it, due at once, when the source comes back, and leaves a correction that keeps a source active alone."
     },
     {
       "requirement": "EDP-011",

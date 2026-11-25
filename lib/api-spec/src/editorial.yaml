@@ -15,6 +15,25 @@ paths:
         '401': { description: Sign-in required }
         '403': { description: An active Content editor with recent MFA is required }
         '503': { description: The register migration has not been applied }
+    post:
+      operationId: addSourceRegisterEntry
+      tags: [staff]
+      summary: Add an official source to the register
+      description: >-
+        A source a Content editor names, at an https address on a host the approved guidance policy
+        lists, as its first version with why, and its daily check when asked
+        (docs/architecture/source-register.md, slice 2). Nothing is published; the daily check fetches
+        it with every check it makes of a source kept in the repository.
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/SourceRegisterAddition' } } }
+      responses:
+        '200': { description: 'The register with the source added.', content: { application/json: { schema: { $ref: '#/components/schemas/SourceRegister' } } } }
+        '401': { description: Sign-in required }
+        '403': { description: An active Content editor with recent MFA is required }
+        '409': { description: The register holds this address already }
+        '422': { description: 'The address is not on a policy host, is a source kept in the repository, a field is invalid, or why is missing' }
+        '503': { description: The register migration has not been applied }
   /admin/source-register/file:
     post:
       operationId: fileSourceRegister
@@ -132,7 +151,7 @@ schemas:
   SourceControlAction: {"oneOf": [{"type": "object", "required": ["requestKey", "reason", "action", "sourceId"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["watch_source"]}, "sourceId": {"type": "string", "minLength": 1, "maxLength": 100}}, "additionalProperties": false}, {"type": "object", "required": ["requestKey", "reason", "action", "kind", "id", "version"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["hold_version"]}, "kind": {"type": "string", "enum": ["content", "rule"]}, "id": {"type": "string", "format": "uuid"}, "version": {"type": "integer", "minimum": 1}}, "additionalProperties": false}, {"type": "object", "required": ["requestKey", "reason", "action", "kind", "id", "version"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["withdraw_version"]}, "kind": {"type": "string", "enum": ["content", "rule"]}, "id": {"type": "string", "format": "uuid"}, "version": {"type": "integer", "minimum": 1}}, "additionalProperties": false}, {"type": "object", "required": ["requestKey", "reason", "action", "service"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["pause_service"]}, "service": {"type": "string", "enum": ["ai", "checkout"]}}, "additionalProperties": false}, {"type": "object", "required": ["requestKey", "reason", "action", "service"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["resume_service"]}, "service": {"type": "string", "enum": ["ai", "checkout"]}}, "additionalProperties": false}]}
   SourceControlResult: {"type": "object", "required": ["auditId", "replayed", "result"], "properties": {"auditId": {"type": "string", "format": "uuid"}, "replayed": {"type": "boolean"}, "result": {"type": "object", "additionalProperties": true}}}
   SourceControlVersion: {"type": "object", "required": ["kind", "id", "key", "version", "status", "reviewBy", "safetyHeld"], "properties": {"kind": {"type": "string", "enum": ["content", "rule"]}, "id": {"type": "string", "format": "uuid"}, "key": {"type": "string"}, "version": {"type": "integer"}, "status": {"type": "string"}, "reviewBy": {"type": ["string", "null"]}, "safetyHeld": {"type": "boolean"}}}
-  SourceControlWatch: {"type": "object", "required": ["sourceId", "url", "risk", "checkedAt", "failureCode", "nextCheckAt"], "properties": {"sourceId": {"type": "string"}, "url": {"type": "string"}, "risk": {"type": "string"}, "checkedAt": {"type": ["string", "null"]}, "failureCode": {"type": ["string", "null"]}, "nextCheckAt": {"type": "string", "format": "date-time"}}}
+  SourceControlWatch: {"type": "object", "required": ["sourceId", "url", "risk", "checkedAt", "failureCode", "nextCheckAt", "stoppedAt"], "properties": {"sourceId": {"type": "string"}, "url": {"type": "string"}, "risk": {"type": "string"}, "checkedAt": {"type": ["string", "null"]}, "failureCode": {"type": ["string", "null"]}, "nextCheckAt": {"type": "string", "format": "date-time"}, "stoppedAt": {"type": ["string", "null"], "description": "When the daily check stopped because the source register retired the source."}}}
   SourceControlReview: {"type": "object", "required": ["id", "status", "targetKind", "targetKey", "targetVersion", "reason", "createdAt"], "properties": {"id": {"type": "string", "format": "uuid"}, "status": {"type": "string"}, "targetKind": {"type": "string"}, "targetKey": {"type": "string"}, "targetVersion": {"type": "integer"}, "reason": {"type": "string"}, "createdAt": {"type": "string", "format": "date-time"}}}
   SourceControlService: {"type": "object", "required": ["key", "enabled", "reason", "updatedAt"], "properties": {"key": {"type": "string"}, "enabled": {"type": "boolean"}, "reason": {"type": "string"}, "updatedAt": {"type": "string", "format": "date-time"}}}
   SourceControlChoice: {"type": "object", "required": ["id", "title"], "properties": {"id": {"type": "string"}, "title": {"type": "string"}}}
@@ -155,28 +174,46 @@ schemas:
     allOf:
       - $ref: '#/components/schemas/SourceRegisterFields'
       - type: object
-        required: [sourceId, url, earlier, watch]
+        required: [sourceId, url, origin, earlier, restingVersions, watch]
         properties:
           sourceId: { type: string }
           url: { type: string }
+          origin: { type: string, enum: [repository, staff], description: 'Whether it is a source kept in the repository, or one staff added.' }
           earlier: { type: array, description: 'Its earlier versions, newest first.', items: { $ref: '#/components/schemas/SourceRegisterFields' } }
+          restingVersions: { type: integer, minimum: 0, description: 'How many versions bound to it are not held yet: what retiring it holds.' }
           watch:
             description: Its daily check as it last ran, or null while it is not watched.
             anyOf:
               - type: object
-                required: [checkedAt, failureCode, nextCheckAt]
+                required: [checkedAt, failureCode, nextCheckAt, stoppedAt]
                 properties:
                   checkedAt: { type: [string, 'null'] }
                   failureCode: { type: [string, 'null'] }
                   nextCheckAt: { type: [string, 'null'] }
+                  stoppedAt: { type: [string, 'null'], description: 'When the daily check stopped because the source was retired.' }
               - { type: 'null' }
   SourceRegister:
     type: object
-    required: [entries, unfiled, jurisdictions]
+    required: [entries, unfiled, jurisdictions, hosts]
     properties:
       entries: { type: array, items: { $ref: '#/components/schemas/SourceRegisterEntry' } }
       unfiled: { type: integer, minimum: 0, description: 'How many regulatory sources kept in the repository are not filed yet.' }
       jurisdictions: { type: array, items: { type: string } }
+      hosts: { type: array, description: 'The hosts the approved guidance policy lists, where staff may add a source.', items: { type: string } }
+  SourceRegisterAddition:
+    type: object
+    required: [title, url, authority, jurisdiction, instrument, versionInForce, effectiveFrom, reason, watch]
+    additionalProperties: false
+    properties:
+      title: { type: string, maxLength: 300 }
+      url: { type: string, maxLength: 2000 }
+      authority: { type: [string, 'null'], maxLength: 200 }
+      jurisdiction: { type: string, maxLength: 60 }
+      instrument: { type: [string, 'null'], enum: [act, regulatory_document, official_page, null] }
+      versionInForce: { type: [string, 'null'], maxLength: 200 }
+      effectiveFrom: { type: [string, 'null'], pattern: '^\d{4}-\d{2}-\d{2}$' }
+      reason: { type: string, maxLength: 1000, description: 'Why, in 20 to 1,000 characters.' }
+      watch: { type: boolean, description: 'Whether its daily check starts now.' }
   SourceRegisterRevision:
     type: object
     required: [baseVersion, authority, jurisdiction, instrument, versionInForce, effectiveFrom, status, reason]

@@ -33,7 +33,7 @@ export async function sourceTargetAllowed(
   if (held.rows.length) return false;
   if (!b.sources.length) return b.candidate.evidenceMode === "original_operational";
   const result =
-    await tx.execute(sql`select b.source_id,b.bundle_source_id,b.source_hash,b.raw_hash,w.url,w.last_raw_hash,w.checked_at,w.failure_code
+    await tx.execute(sql`select b.source_id,b.bundle_source_id,b.source_hash,b.raw_hash,w.url,w.last_raw_hash,w.checked_at,w.failure_code,w.stopped_at
    from valo_source_release_bindings b join valo_source_watches w using(source_id)
    where b.target_kind=${kind} and b.target_id=${id}::uuid`);
   if (result.rows.length !== b.sources.length) return false;
@@ -45,6 +45,8 @@ export async function sourceTargetAllowed(
         row.url === source.url &&
         row.raw_hash === row.last_raw_hash &&
         !row.failure_code &&
+        // A source the register retired is no longer watched (source-register.md, slice 2).
+        !row.stopped_at &&
         row.checked_at &&
         sourceTime(row.checked_at) <= +now &&
         sourceTime(row.checked_at) + 86400000 > +now,
