@@ -628,6 +628,8 @@ const answers: Record<string, unknown> = {
         reason: "A synthetic reason this may matter.",
         nextStep: "A synthetic next step.",
         appliesWhen: "When legal form is company.",
+        officialRoute: { authority: "Synthetic authority", url: "https://example.test/authority" },
+        figures: [{ kind: "fee", words: "Synthetic fee words.", source: "Synthetic Act, section 1" }],
         jurisdiction: "Nigeria as a whole (a federal rule).",
         validFrom: "2026-01-01",
         validTo: null,

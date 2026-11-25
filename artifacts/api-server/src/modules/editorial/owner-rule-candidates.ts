@@ -22,7 +22,7 @@ export type OwnerRuleCandidate = {
     | "nextStep"
     | "relatedTemplateIds"
   > &
-    Partial<Pick<ReleasedRule, "condition" | "evaluator">>;
+    Partial<Pick<ReleasedRule, "condition" | "evaluator" | "officialRoute" | "figures">>;
   risk: PublicationBundle["candidate"]["risk"];
   scope: string;
   limitations: string;
@@ -158,6 +158,10 @@ const businessNameRule: OwnerRuleCandidate = {
     nextStep:
       "Compare the name you trade under with section 814, and register it with the Corporate Affairs Commission if the section applies.",
     relatedTemplateIds: [],
+    // The Commission's Company Registration Portal, where business names are registered (S03). Read on
+    // 25 November 2026: it calls itself the Commission's official registration portal and offers the steps
+    // for registering a new business.
+    officialRoute: { authority: "Corporate Affairs Commission", url: "https://icrp.cac.gov.ng/" },
     evaluator: {
       family: "businessName",
       version: "source-family-v1",
@@ -368,6 +372,10 @@ const collectionInformationRule: OwnerRuleCandidate = {
     // The privacy notice (TPL-29) is the document that tells people what will be done with their
     // personal data (docs/architecture/results.md). It is listed only while it is released.
     relatedTemplateIds: ["TPL-29"],
+    // The Commission's own site, which serves the Act (S04). Read on 25 November 2026: its pages for
+    // registering data controllers, filing audits and reporting breaches are reached from it. Nothing
+    // about section 27 is filed there.
+    officialRoute: { authority: "Nigeria Data Protection Commission", url: "https://ndpc.gov.ng/" },
     evaluator: {
       family: "privacy",
       version: "source-family-v1",
@@ -612,6 +620,10 @@ const companyReturnRule: OwnerRuleCandidate = {
     nextStep:
       "Compare your company's filing with section 11 for each year of assessment, and file its self-assessment return with the Nigeria Revenue Service.",
     relatedTemplateIds: [],
+    // The Service's own site, which serves the Act (S02). On 25 November 2026 its title read "Nigeria
+    // Revenue Service (NRS) | Official Tax Authority of Nigeria"; the rest of the page shows a browser a
+    // check for robots, so where on it a return is filed was not read.
+    officialRoute: { authority: "Nigeria Revenue Service", url: "https://www.nrs.gov.ng/" },
     evaluator: {
       family: "tax",
       version: "source-family-v1",
@@ -781,6 +793,10 @@ const productRegistrationRule: OwnerRuleCandidate = {
     nextStep:
       "Check with NAFDAC that each product you make, import, export, advertise, sell or distribute is registered before you supply it.",
     relatedTemplateIds: [],
+    // NAFDAC's page for small businesses (S07). Read on 25 November 2026: it says how to register a
+    // product, points to the online registration portal and lists what registration costs. The costs are
+    // not recorded as figures: they are not in the Act this rule quotes.
+    officialRoute: { authority: "NAFDAC", url: "https://nafdac.gov.ng/our-services/msme/" },
     evaluator: {
       family: "product",
       version: "source-family-v1",

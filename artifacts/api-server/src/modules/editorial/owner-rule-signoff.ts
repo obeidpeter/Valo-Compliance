@@ -154,6 +154,8 @@ const holdWords: Record<string, (detail: string) => string> = {
   version_not_next: () => "This is not the rule's next version.",
   critical_scenario_failed: (id) => `Scenario ${id} does not give the result it expects.`,
   release_not_admissible: () => "The requirements check would not admit this version as it stands.",
+  route_not_allowlisted: () =>
+    "The rule's official page is not on one of the guidance policy's official sites.",
 };
 
 /** A reason the evidence check or the release plan gives, in the screen's words. */
@@ -412,6 +414,19 @@ async function present(candidates: readonly OwnerRuleCandidate[], now: Date, opt
       reason: candidate.rule.evaluator ? null : candidate.rule.reason,
       nextStep: candidate.rule.evaluator ? null : candidate.rule.nextStep,
       appliesWhen: describeRuleCondition(candidate.rule),
+      // Where the customer is sent, and each figure with the passage it rests on, as they would see
+      // them; both are in the manifest the owner signs (docs/architecture/results.md).
+      ...(candidate.rule.officialRoute && { officialRoute: candidate.rule.officialRoute }),
+      ...(candidate.rule.figures && {
+        figures: candidate.rule.figures.map((figure) => {
+          const source = prepared.rule.sources.find((s) => s.id === figure.sourceId);
+          return {
+            kind: figure.kind,
+            words: figure.words,
+            source: source ? `${source.title}, ${source.locator}` : figure.sourceId,
+          };
+        }),
+      }),
       jurisdiction: describeRuleJurisdiction(candidate.rule.jurisdiction),
       validFrom: candidate.rule.validFrom,
       validTo: candidate.rule.validTo,
