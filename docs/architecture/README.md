@@ -284,7 +284,8 @@ and neither imports it.
 
 `modules/acceptance-review` holds [the reviewer's record](reviewer-record.md) (decision 0016): the three
 frozen acceptance corpora as a reviewer reads them, each case with the hash the suites bind it by, the
-suites' runs kept for a reviewer, and the decisions an active reviewer records on them. It reads the staff checks from `modules/staff` and the
+suites' runs kept for a reviewer, the decisions an active reviewer records on them, and the score of a
+kept run that reads them. It reads the staff checks from `modules/staff` and the
 repository's root from `modules/publication`, and no module imports it.
 
 `modules/catalogue` holds the public catalogue, its search and discovery, the released content

@@ -310,6 +310,41 @@
       "proves": "The acceptance cases page's kept run says on a Lagos clock who kept it and when, the suite's own results by status, where the cases left for a reviewer stand, and who made each case's latest decision on the case as kept, when and how many came before it."
     },
     {
+      "requirement": "EDP-010",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/acceptance-review/reviewed-score.test.ts",
+      "test": "a case counts only when its expected outcome is confirmed and the suite passed it or its run was recorded as met; a rejected one is out of the score",
+      "proves": "With synthetic cases and rows, a kept case counts only when the latest decision on its expected outcome, for its own hash, is a confirmation and either the suite passed it or the latest decision on the case as kept in that run is met; a rejected expected outcome takes the case out of the score, and a decision on another hash of the case or on another run is never read. The score accepts nothing."
+    },
+    {
+      "requirement": "EDP-010",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/acceptance-review/reviewed-score.test.ts",
+      "test": "the score names the rows it used, by id and hash, and only those",
+      "proves": "A kept run's score names every row of the record it used, by id and by the hash of the row as read, and only those, with a hash of them all that changes when a used row changes and not when an unused one does."
+    },
+    {
+      "requirement": "EDP-010",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/acceptance-review/reviewed-score.test.ts",
+      "test": "the bar: 95% of scored cases for the editorial and customer AI corpora, every scored scenario for the checker, with no critical failure",
+      "proves": "The editorial corpus's bar asks that at least 95% of the scored cases count, 57 of 60, and a case the suite marks a critical false publication fails the bar however many count."
+    },
+    {
+      "requirement": "EDP-010",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/acceptance-review/reviewed-score.integration.test.ts",
+      "test": "a kept run scored with the record: confirmed and met or passed counts, rejected is out, and the score names the rows it used",
+      "proves": "Against real PostgreSQL, a kept run scored with the decisions a reviewer recorded counts a confirmed scenario the run met or the suite passed, leaves out a rejected one, does not read a decision on other words of a case or on an earlier run, names the eight rows of the record it used with the hash of each as read, gives the page the same score, and exports the run, the score and those rows to a new file, never over an existing one."
+    },
+    {
+      "requirement": "EDP-010",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/acceptance-review.test.ts",
+      "test": "the kept run's score says how many cases count of how many, what the bar asks, what is out of it, and that it accepts no requirement",
+      "proves": "The kept run's score on the acceptance cases page says how many scored cases count of how many, how many must count, how many are out of the score and how many are critical failures, and that it accepts no requirement."
+    },
+    {
       "requirement": "EDP-011",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/sources/valo-source-controls.integration.test.ts",
@@ -1260,6 +1295,20 @@
       "file": "artifacts/api-server/src/modules/acceptance-review/kept-runs.test.ts",
       "test": "the customer AI suite leaves each answer the provider wrote, as the customer saw it, with its limitations and the suite's numeric checks",
       "proves": "A kept customer AI run leaves each case whose draft is ready for a reviewer with the answer as the customer saw it (its title, fields and blocks), its limitations and the suite's own numeric checks; a draft that is not ready, and a case with no draft, is left with nothing to judge."
+    },
+    {
+      "requirement": "AI-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/acceptance-review/reviewed-score.test.ts",
+      "test": "a case counts only when its expected outcome is confirmed and the suite passed it or its run was recorded as met; a rejected one is out of the score",
+      "proves": "With synthetic cases and rows, a kept case counts only when the latest decision on its expected outcome, for its own hash, is a confirmation and either the suite passed it or the latest decision on the case as kept in that run is met; a rejected expected outcome takes the case out of the score, and a decision on another hash of the case or on another run is never read. The score accepts nothing."
+    },
+    {
+      "requirement": "AI-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/acceptance-review/reviewed-score.test.ts",
+      "test": "the bar: 95% of scored cases for the editorial and customer AI corpora, every scored scenario for the checker, with no critical failure",
+      "proves": "The customer AI corpus's bar asks that at least 95% of the scored cases count, 57 of 60, with no critical failure."
     },
     {
       "requirement": "AI-009",
@@ -3009,7 +3058,28 @@
       "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
       "test": "an acceptance reviewer reads the latest kept run of a corpus, and records whether it met a case with why, bound to the case as kept",
-      "proves": "On a phone with no automated WCAG 2.2 AA failure, a reviewer opens the rule scenarios' latest kept run, reads who kept it, the suite's own results and what each scenario left for a reviewer, and records that the run did not meet one with why; the decision is sent with the run's id and the hash of the case as kept, and the other corpora and views wait while it is started."
+      "proves": "On a phone with no automated WCAG 2.2 AA failure, a reviewer opens the rule scenarios' latest kept run, reads who kept it, the suite's own results, the run's score with the record and what each scenario left for a reviewer, and records that the run did not meet one with why; the decision is sent with the run's id and the hash of the case as kept, and the other corpora and views wait while it is started."
+    },
+    {
+      "requirement": "RUL-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/acceptance-review/reviewed-score.test.ts",
+      "test": "a case counts only when its expected outcome is confirmed and the suite passed it or its run was recorded as met; a rejected one is out of the score",
+      "proves": "With synthetic cases and rows, a kept case counts only when the latest decision on its expected outcome, for its own hash, is a confirmation and either the suite passed it or the latest decision on the case as kept in that run is met; a rejected expected outcome takes the case out of the score, and a decision on another hash of the case or on another run is never read. The score accepts nothing."
+    },
+    {
+      "requirement": "RUL-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/acceptance-review/reviewed-score.test.ts",
+      "test": "the bar: 95% of scored cases for the editorial and customer AI corpora, every scored scenario for the checker, with no critical failure",
+      "proves": "The rule scenarios' bar asks that every scored scenario count, 80 of 80, since RUL-008 asks that all critical results and exclusions pass, and a scenario that breaks one of the corpus's conditions fails the bar."
+    },
+    {
+      "requirement": "RUL-008",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/acceptance-review/reviewed-score.integration.test.ts",
+      "test": "a kept run scored with the record: confirmed and met or passed counts, rejected is out, and the score names the rows it used",
+      "proves": "Against real PostgreSQL, a kept run scored with the decisions a reviewer recorded counts a confirmed scenario the run met or the suite passed, leaves out a rejected one, does not read a decision on other words of a case or on an earlier run, names the eight rows of the record it used with the hash of each as read, gives the page the same score, and exports the run, the score and those rows to a new file, never over an existing one."
     },
     {
       "requirement": "RUL-009",

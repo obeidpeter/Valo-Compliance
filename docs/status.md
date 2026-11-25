@@ -30,7 +30,7 @@ No recorded evidence at all: none.
 
 ## Tests cited as evidence
 
-`docs/registers/ci-evidence.json` holds 653 citations of 443 tests for 126 requirements (decision 0010).
+`docs/registers/ci-evidence.json` holds 663 citations of 448 tests for 126 requirements (decision 0010).
 A CI job fails when a test cited for it does not pass, and each run's `readiness-report` artifact lists every citation's result.
 A citation is partial evidence: it never accepts a requirement.
 
@@ -52,7 +52,7 @@ A citation is partial evidence: it never accepts a requirement.
 | AI-005 | 3 | foundation, postgres |
 | AI-006 | 3 | foundation |
 | AI-007 | 2 | postgres |
-| AI-008 | 5 | foundation, postgres |
+| AI-008 | 7 | foundation, postgres |
 | AI-009 | 3 | foundation, postgres |
 | CMP-001 | 12 | foundation, postgres, web-performance |
 | CMP-002 | 4 | foundation, postgres, web-performance |
@@ -81,7 +81,7 @@ A citation is partial evidence: it never accepts a requirement.
 | EDP-007 | 11 | foundation, postgres |
 | EDP-008 | 7 | foundation |
 | EDP-009 | 6 | foundation, postgres |
-| EDP-010 | 16 | foundation, postgres, web-performance |
+| EDP-010 | 21 | foundation, postgres, web-performance |
 | EDP-011 | 17 | foundation, postgres, web-performance |
 | EDP-012 | 3 | foundation, postgres |
 | EDT-001 | 7 | foundation, web-performance |
@@ -138,7 +138,7 @@ A citation is partial evidence: it never accepts a requirement.
 | RUL-005 | 3 | foundation |
 | RUL-006 | 18 | foundation, postgres, web-performance |
 | RUL-007 | 3 | foundation, postgres |
-| RUL-008 | 16 | foundation, postgres, web-performance |
+| RUL-008 | 19 | foundation, postgres, web-performance |
 | RUL-009 | 4 | foundation, postgres |
 | SEC-001 | 3 | postgres |
 | SEC-002 | 3 | foundation, postgres |
