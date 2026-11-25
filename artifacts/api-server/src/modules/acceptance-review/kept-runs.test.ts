@@ -120,8 +120,12 @@ test("the editorial suite leaves a held template with why and its two reviews, a
     }),
     base(3, { status: "control_pass" }),
     base(4, { status: "blocked", reason: "no_admitted_review_pair" }),
+    base(5, { status: "fail", reason: "FALSE_ELIGIBILITY", criticalFalsePublication: true }),
   ]);
-  const [held, pair, nothing, passed, blocked] = kept;
+  const [held, pair, nothing, passed, blocked, falsePublication] = kept;
+  // Only a critical false publication is marked critical; no other case carries the field.
+  assert.equal(falsePublication!.critical, true);
+  assert.ok(kept.slice(0, 5).every((k) => !("critical" in k)));
   assert.deepEqual(
     held!.review!.sections.map((s) => s.heading),
     [

@@ -18,6 +18,12 @@ export type KeptCase = {
   reason: string | null;
   /** What the run left for a reviewer to judge, or null when it left nothing. */
   review: { sections: RunSection[] } | null;
+  /**
+   * Present, and true, only when the suite marks the case a critical failure: an editorial case's
+   * critical false publication, or a scenario whose result breaks one of the corpus's conditions. A
+   * case without it hashes as it did before the field existed.
+   */
+  critical?: true;
 };
 export type HashedKeptCase = KeptCase & { resultHash: string };
 
@@ -59,6 +65,7 @@ export function editorialKeptCases(results: readonly Record<string, unknown>[]):
       status,
       reason: text(result.reason),
       review: null,
+      ...(result.criticalFalsePublication === true ? { critical: true as const } : {}),
     };
     const reviews = list(result.reviews) as EditorialReview[];
     if (status !== "needs_evaluator_decision" || reviews.length === 0) return kept;
@@ -166,6 +173,7 @@ export function checkerKeptCases(
       caseHash,
       status,
       reason: recorded?.why ?? null,
+      ...(status === "condition_not_kept" ? { critical: true as const } : {}),
       review: {
         sections: [
           ...section("The scenario", [run.title, `rule ${run.ruleId}, as of ${run.asOfDate}`]),
