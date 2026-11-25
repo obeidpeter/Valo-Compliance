@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { digest, disclosure, ownerRuleDisclosure } from "./publication";
-import { checkerQuestion, isAsked } from "./checker-questionnaire";
+import { checkerQuestion, INDUSTRIES, isAsked } from "./checker-questionnaire";
 import {
   richCheckerFactsSchema,
   sourceFamilyReleaseSchema,
@@ -550,6 +550,7 @@ export function assess(
     eligibility,
   });
   const unanswered = uniq([...missingQuestions(f), ...items.flatMap((i) => i.missingFacts)]);
+  const eligible = parsedRules.filter((r) => !holds.get(`${r.id}@${r.version}`));
   const gaps = [
     ...(items.length === 0
       ? [
@@ -557,6 +558,7 @@ export function assess(
         ]
       : []),
     `State/FCT and LGA coverage is not comprehensive. Confirm location-specific requirements for ${absent(f.state) ? "your location" : f.state}.`,
+    ...uncoveredPlaceAndIndustries(f, eligible),
     "High-impact healthcare, financial services and energy activities require activity-specific released evidence.",
     ...held.map((h) => `${h.ruleId}: ${h.reason}`),
   ];
@@ -597,6 +599,30 @@ export function assess(
   return { ...result, resultHash: digest(result) };
 }
 export type AssessmentResult = ReturnType<typeof assess>;
+/**
+ * CMP-003 and RUL-006: what the answers name that no released rule covers (docs/architecture/results.md).
+ * The local government area given, unless a released rule is scoped to it; and each of the
+ * specification's industries the business does, unless a released rule tests for it. An answer that
+ * names neither adds nothing, so a result from such answers is what it was.
+ */
+function uncoveredPlaceAndIndustries(f: CheckerFacts, eligible: readonly ReleasedRule[]) {
+  const gaps: string[] = [];
+  if (!absent(f.lga) && !eligible.some((r) => r.jurisdiction.level === "lga" && r.jurisdiction.lga === f.lga))
+    gaps.push(`No released rule covers local requirements for ${f.lga}.`);
+  const named = Array.isArray(f.activities) ? f.activities : [];
+  for (const industry of INDUSTRIES) {
+    if (industry === "other" || !named.includes(industry)) continue;
+    const tested = eligible.some((r) =>
+      r.condition?.predicates.some(
+        (p) =>
+          p.field === "activities" &&
+          (Array.isArray(p.value) ? p.value.includes(industry) : p.value === industry),
+      ),
+    );
+    if (!tested) gaps.push(`No released rule covers requirements specific to ${industry}.`);
+  }
+  return gaps;
+}
 /**
  * Where a result sends the business (CMP-007, EDP-012): the routes of its requirements that may
  * apply, and of the rules held from it, each once. A result with none keeps the Corporate Affairs

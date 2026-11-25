@@ -274,3 +274,64 @@ test("a rule's route and figures are carried to its requirement, and the result'
     ruleSchema.parse({ ...base, officialRoute: { authority: "Synthetic", url: "http://example.test/" } }),
   );
 });
+
+// docs/architecture/results.md, slice 3. CMP-003: "Represent federal, state/FCT and LGA requirements
+// separately", accepted when "an unknown LGA never receives invented local obligations". RUL-006:
+// "coverage gaps and excluded high-risk sectors are visible".
+test("a result names the local government area and each of the specification's industries the answers name that no released rule covers, keeps the excluded sectors, and adds nothing for answers that name neither", () => {
+  const named = checkerFactsSchema.parse({
+    ...facts,
+    lga: "Ikeja",
+    activities: ["retail/wholesale", "healthcare", "selling synthetic widgets", "other"],
+  });
+  const gaps = assess(named, [], asOfDate, now, { fixtureMode: true }).gaps;
+  assert.deepEqual(gaps.slice(1), [
+    "State/FCT and LGA coverage is not comprehensive. Confirm location-specific requirements for Lagos.",
+    "No released rule covers local requirements for Ikeja.",
+    "No released rule covers requirements specific to retail/wholesale.",
+    "No released rule covers requirements specific to healthcare.",
+    // The excluded sectors stay named on every result.
+    "High-impact healthcare, financial services and energy activities require activity-specific released evidence.",
+  ]);
+  // The visitor's own words and "other" name no industry, so nothing is said about them.
+  assert.ok(!gaps.some((gap) => /widgets|specific to other/.test(gap)));
+
+  // A released rule scoped to the area, or testing for an industry, covers it: nothing is said.
+  const local = ruleSchema.parse({
+    ...rule("synthetic-ikeja", "legalForm", "company"),
+    jurisdiction: { level: "lga", state: "Lagos", lga: "Ikeja" },
+  });
+  const retail = ruleSchema.parse({
+    ...rule("synthetic-retail", "legalForm", "company"),
+    condition: { mode: "all", predicates: [{ field: "activities", op: "in", value: ["retail/wholesale"] }] },
+  });
+  const covered = assess(named, [local, retail], asOfDate, now, { fixtureMode: true }).gaps;
+  assert.ok(!covered.includes("No released rule covers local requirements for Ikeja."));
+  assert.ok(!covered.includes("No released rule covers requirements specific to retail/wholesale."));
+  assert.ok(covered.includes("No released rule covers requirements specific to healthcare."));
+  // A rule held from the result covers nothing.
+  const held = assess(named, [{ ...local, reviewBy: "2026-11-10T00:00:00Z" }], asOfDate, now, {
+    fixtureMode: true,
+  }).gaps;
+  assert.ok(held.includes("No released rule covers local requirements for Ikeja."));
+
+  // An area not given, and activities in the visitor's own words, add nothing: the result's gaps are
+  // the two sentences they always were.
+  for (const lga of ["unknown", "unanswered", ""] as const) {
+    const plain = assess(
+      checkerFactsSchema.parse({ ...facts, lga, activities: ["retail"] }),
+      [],
+      asOfDate,
+      now,
+      { fixtureMode: true },
+    ).gaps;
+    assert.deepEqual(
+      plain.slice(1),
+      [
+        "State/FCT and LGA coverage is not comprehensive. Confirm location-specific requirements for Lagos.",
+        "High-impact healthcare, financial services and energy activities require activity-specific released evidence.",
+      ],
+      lga,
+    );
+  }
+});
