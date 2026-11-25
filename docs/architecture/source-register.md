@@ -82,6 +82,35 @@ the command line.
   allocation the owner approves; nothing is sent and nothing is published from the row.
 - Staff-library entries keep their own holds and reviews (library holds, the owner's third point).
 
+## Settled while building it
+
+Slice 1:
+- The register is one table, `valo_source_register`, whose rows are versions. An entry is its source's
+  latest version, and the versions before it are its history, each with who recorded it, when and why.
+  The database records a version only from an active Content editor, only as the next version of its
+  entry, and only at the address the entry was first recorded at. It dates each version itself and never
+  changes or removes one. So a change's fields before and after are the version before it and the version
+  itself, and retiring or bringing back an entry is a version too.
+- **File the 28 sources kept in the repository** files each regulatory lead the register does not hold
+  yet as its version 1, with "Filed from the official sources kept in the repository." as why. Who issues
+  it and the kind of text come from the captured text its claim map cuts passages from. The day it took
+  effect comes from that text, or else from its amendment record's commencement. As the repository
+  stands, 11 leads are filed with who issues them and the kind of text, and 14 with the day. All 28 are
+  federal, so each is filed as applying to Nigeria. No lead records the version in force as a field, so
+  staff write it. Filing again files nothing more.
+- A correction gives every field as it should stand, with the version it corrects and why: who issues
+  the source, where it applies (Nigeria or one of the states the requirements check lists), the kind of
+  text, the version in force, the day it took effect, and whether the source is active or retired. It is
+  refused without why in 20 to 1,000 characters, with a day the calendar does not have, with a day for an
+  official page, or when nothing changes, and, with 409, on a version that is no longer the latest. The
+  title and the address stay the entry's own; a source at another address is a new source (slice 2).
+- Each entry shows its latest version, its earlier versions, and the daily check's last check and next
+  one, or that it does not watch the source. In this slice, retiring an entry changes no watch and no
+  gate, and the entry says so: slice 2 makes retiring stop its watch.
+- The fetcher, the daily check and the watch picker read none of this yet. Like the source controls, the
+  register runs in development only. A database the migration has not reached answers on the register
+  alone, with the migration's name.
+
 ## What does not change
 
 - The daily check's rule for calling a source changed, the impacts and what they hold, the notices,

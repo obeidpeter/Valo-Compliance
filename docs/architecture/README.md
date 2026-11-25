@@ -274,6 +274,11 @@ client only inside the functions that query it, as `modules/ai` does. Code and t
 editorial function therefore load no database client, and tests that stand in for a dependency
 mock the module's index, the boundary the code imports it through.
 
+`modules/source-register` holds the [source register](source-register.md): the official sources as
+staff keep them, each a series of versions. It reads the staff check from `modules/sources`, and what
+the claim maps and amendment records say of a source from `modules/publication`. So it sits above both,
+and neither imports it.
+
 `modules/catalogue` holds the public catalogue, its search and discovery, the released content
 customers may read or download, and saved templates. It reads published content through
 `modules/publication`, and the editorial lifecycle and commerce read it in turn. Like the editorial
