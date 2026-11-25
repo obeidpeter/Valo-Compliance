@@ -19,16 +19,12 @@ import {
   useGetWorkspace,
   getGetAssessmentQueryKey,
   getGetWorkspaceQueryKey,
-  CheckerFactsState,
-  CheckerFactsTurnoverBand,
-  CheckerFactsTurnoverMetric,
-  CheckerFactsTurnoverCurrency,
-  CheckerFactsTurnoverPeriod,
   type CheckerFacts,
   type AssessmentResult,
 } from "@workspace/api-client-react";
+import { CHECKER_QUESTIONNAIRE } from "@workspace/valo-core/checker-questionnaire";
 import { AssessmentResultView } from "@/components/assessment-result";
-import { AnswerOr, Choice, ListOr, known, opts, yesNo, type Change } from "@/components/checker-controls";
+import { StepQuestions, type QuestionContext } from "@/components/checker-question";
 import { Review, SavePanel } from "@/components/checker-review";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { RichCheckerFields } from "@/components/rich-checker-fields";
@@ -47,14 +43,11 @@ import { useUnsavedNavigation } from "@/lib/use-unsaved-navigation";
 import {
   CHECKER_STEPS,
   EMPTY_FACTS,
-  LEGAL_FORMS,
-  REG_STATUSES,
   asked,
   factsFromProfile,
   finaliseFacts,
   nairaToKobo,
   koboToNaira,
-  isMarker,
   live,
   stepDone,
   stepOf,
@@ -131,13 +124,6 @@ export default function Checker() {
       return next;
     });
   };
-  /** What every question takes from the page: its name, whether the visitor chose to skip it, and
-   * where its answer goes. */
-  const at = <K extends keyof CheckerFacts>(k: K) => ({
-    name: k,
-    skipped: skipped.has(k),
-    onChange: ((v, chosen) => set(k, v, chosen)) as Change<CheckerFacts[K]>,
-  });
   const final = useMemo(() => finaliseFacts(facts), [facts]);
   const sig = JSON.stringify(final);
   const stale = result && result.sig !== sig;
@@ -285,6 +271,25 @@ export default function Checker() {
 
   const err = preview.error ? describeError(preview.error) : null;
   const lastYear = Number(lagosToday().slice(0, 4)) - 1;
+  /** What every question takes from the page: the answers, which were skipped, and where an answer
+   * goes. */
+  const questions: QuestionContext = {
+    facts,
+    skipped,
+    asked: (answer) => asked(facts, answer),
+    onAnswer: (answer, value, chosen) => set(answer as keyof CheckerFacts, value as never, chosen),
+    amount: {
+      text: amountText,
+      error: amountError,
+      onChange: (text) => {
+        setAmountText(text);
+        const kobo = nairaToKobo(text);
+        setAmountError(text.trim() && !kobo ? "Use digits, with up to two decimal places." : null);
+        set("turnoverAmountKobo", kobo);
+      },
+    },
+    lastYear,
+  };
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-12 lg:px-8">
@@ -487,29 +492,16 @@ export default function Checker() {
             <h2 className="font-display mt-2 text-2xl sm:text-3xl">{STEPS[step]}</h2>
             <div className="mt-6 grid gap-8">
               {step === 0 && (
+                <p className="rounded-xl border border-border bg-sidebar/50 px-3.5 py-2.5 text-xs leading-relaxed text-muted-foreground">
+                  <strong className="font-medium text-foreground">Quick guide to answer choices:</strong>{" "}
+                  &ldquo;I do not know&rdquo; tells Valo which extra facts a rule needs; &ldquo;Skip for
+                  now&rdquo; leaves a question open for later; &ldquo;Not applicable&rdquo; skips follow-up
+                  questions that do not fit your business.
+                </p>
+              )}
+              <StepQuestions questions={CHECKER_QUESTIONNAIRE[step]?.questions ?? []} context={questions} />
+              {step === 0 && (
                 <>
-                  <p className="rounded-xl border border-border bg-sidebar/50 px-3.5 py-2.5 text-xs leading-relaxed text-muted-foreground">
-                    <strong className="font-medium text-foreground">Quick guide to answer choices:</strong>{" "}
-                    &ldquo;I do not know&rdquo; tells Valo which extra facts a rule needs; &ldquo;Skip for
-                    now&rdquo; leaves a question open for later; &ldquo;Not applicable&rdquo; skips follow-up
-                    questions that do not fit your business.
-                  </p>
-                  <Choice
-                    {...at("legalForm")}
-                    label="How is the business set up?"
-                    hint="For example: Business Name (sole trader or partnership), Private Limited Company (Ltd), or Unregistered."
-                    value={facts.legalForm}
-                    options={opts(LEGAL_FORMS)}
-                    markers={["unknown", "unanswered"]}
-                  />
-                  <Choice
-                    {...at("registrationStatus")}
-                    label="Is it registered with the Corporate Affairs Commission (CAC)?"
-                    hint="Choose Registered if you hold a CAC Business Name, Company or Incorporated Trustees certificate."
-                    value={facts.registrationStatus}
-                    options={opts(REG_STATUSES)}
-                    markers={["unknown", "unanswered"]}
-                  />
                   {!isSignedIn && <p className="hint">We never ask for your business name here.</p>}
                   {isSignedIn && (
                     <RichCheckerFields section="businessName" facts={facts} onChange={setFacts} />
@@ -517,263 +509,8 @@ export default function Checker() {
                   <RichCheckerFields section="tax" facts={facts} onChange={setFacts} />
                 </>
               )}
-              {step === 1 && (
-                <>
-                  <ListOr
-                    {...at("activities")}
-                    label="What does the business do?"
-                    hint="In your own words. You can add up to 10."
-                    value={facts.activities}
-                    placeholder="e.g. Selling fabric wholesale"
-                  />
-                  <Choice
-                    {...at("manufacturing")}
-                    label="Do you manufacture or process goods?"
-                    value={facts.manufacturing}
-                    options={yesNo}
-                    markers={["unknown", "unanswered"]}
-                  />
-                  <Choice
-                    {...at("importing")}
-                    label="Do you import goods into Nigeria?"
-                    value={facts.importing}
-                    options={yesNo}
-                    markers={["unknown", "unanswered"]}
-                  />
-                  {asked(facts, "productTypes") && (
-                    <ListOr
-                      {...at("productTypes")}
-                      label="Which kinds of product?"
-                      hint="Asked because you manufacture or import goods."
-                      value={facts.productTypes ?? "unanswered"}
-                      placeholder="e.g. Packaged snacks"
-                    />
-                  )}
-                  <RichCheckerFields section="product" facts={facts} onChange={setFacts} />
-                </>
-              )}
-              {step === 2 && (
-                <>
-                  <Choice
-                    {...at("premises")}
-                    label="Do you operate from physical premises?"
-                    hint="Choose Yes for a shop, office, workshop or warehouse; choose No if you operate only from home or online."
-                    value={facts.premises}
-                    options={yesNo}
-                    markers={["unknown", "unanswered"]}
-                  />
-                  <AnswerOr
-                    {...at("state")}
-                    label="Which state is the business in?"
-                    value={facts.state}
-                    markers={["unknown", "unanswered"]}
-                    render={(v, change, labelledBy) => (
-                      <select
-                        id="state"
-                        aria-labelledby={labelledBy}
-                        className="field sm:max-w-xs"
-                        value={v}
-                        onChange={(e) => change(e.target.value)}
-                        data-testid="select-state"
-                      >
-                        <option value="">Choose a state or the FCT</option>
-                        {Object.values(CheckerFactsState)
-                          .filter((s) => !isMarker(s))
-                          .map((s) => (
-                            <option key={s} value={s}>
-                              {s}
-                            </option>
-                          ))}
-                      </select>
-                    )}
-                  />
-                  {asked(facts, "lga") ? (
-                    <AnswerOr
-                      {...at("lga")}
-                      label="Which local government area (LGA)?"
-                      value={facts.lga}
-                      markers={["unknown", "unanswered"]}
-                      render={(v, change, labelledBy) => (
-                        <input
-                          id="lga"
-                          aria-labelledby={labelledBy}
-                          className="field sm:max-w-xs"
-                          maxLength={100}
-                          value={v}
-                          placeholder="e.g. Ikeja"
-                          onChange={(e) => change(e.target.value)}
-                          data-testid="input-lga"
-                        />
-                      )}
-                    />
-                  ) : (
-                    <p className="hint">The local government area is skipped because you have no premises.</p>
-                  )}
-                </>
-              )}
-              {step === 3 && (
-                <>
-                  <AnswerOr
-                    {...at("employees")}
-                    label="How many people work in the business?"
-                    value={facts.employees}
-                    markers={["unknown", "unanswered", "not_applicable"]}
-                    render={(v, change, labelledBy) => (
-                      <input
-                        id="employees"
-                        aria-labelledby={labelledBy}
-                        inputMode="numeric"
-                        className="field sm:max-w-[10rem]"
-                        value={v}
-                        onChange={(e) => change(e.target.value.replace(/\D/g, "").slice(0, 7))}
-                        data-testid="input-employees"
-                      />
-                    )}
-                  />
-                  <Choice
-                    {...at("turnoverBand")}
-                    label="Roughly, what is the business's turnover?"
-                    hint="Turnover is the total of the business's sales over a period."
-                    value={facts.turnoverBand}
-                    options={known(Object.values(CheckerFactsTurnoverBand))}
-                    markers={["unknown", "unanswered", "not_applicable"]}
-                  />
-                  {asked(facts, "turnoverYear") ? (
-                    <fieldset className="grid gap-7 rounded-2xl border border-border bg-sidebar/40 p-4 sm:p-5">
-                      <legend className="eyebrow float-left w-full">Optional turnover details</legend>
-                      <p className="-mt-4 text-sm text-muted-foreground">
-                        Add whatever details you have. You can leave any of these blank or skip them to
-                        continue.
-                      </p>
-                      <div>
-                        <label className="label text-base" htmlFor="amount">
-                          The exact figure, if you have it{" "}
-                          <span className="font-normal text-muted-foreground">(optional)</span>
-                        </label>
-                        <div className="flex max-w-xs items-center gap-2">
-                          <span className="text-muted-foreground" aria-hidden="true">
-                            ₦
-                          </span>
-                          <input
-                            id="amount"
-                            inputMode="decimal"
-                            className="field"
-                            value={amountText || koboToNaira(facts.turnoverAmountKobo)}
-                            aria-invalid={!!amountError}
-                            aria-describedby="amount-hint"
-                            onChange={(e) => {
-                              const t = e.target.value;
-                              setAmountText(t);
-                              const k = nairaToKobo(t);
-                              setAmountError(
-                                t.trim() && !k ? "Use digits, with up to two decimal places." : null,
-                              );
-                              set("turnoverAmountKobo", k);
-                            }}
-                            data-testid="input-amount"
-                          />
-                        </div>
-                        <p id="amount-hint" className={cn("hint", amountError && "!text-destructive")}>
-                          {amountError ?? "In naira. Leave this blank if you would rather not say."}
-                        </p>
-                      </div>
-                      <AnswerOr
-                        {...at("turnoverYear")}
-                        label="Which year is that figure for?"
-                        value={facts.turnoverYear}
-                        markers={["unknown", "unanswered", "not_applicable"]}
-                        render={(v, change, labelledBy) => (
-                          <input
-                            id="turnoverYear"
-                            aria-labelledby={labelledBy}
-                            inputMode="numeric"
-                            className="field sm:max-w-[8rem]"
-                            value={v}
-                            placeholder={"e.g. " + lastYear}
-                            onChange={(e) => change(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                            data-testid="input-turnover-year"
-                          />
-                        )}
-                      />
-                      <Choice
-                        {...at("turnoverPeriod")}
-                        label="What period does the figure cover?"
-                        value={facts.turnoverPeriod ?? "unanswered"}
-                        options={known(Object.values(CheckerFactsTurnoverPeriod))}
-                        markers={["unknown", "unanswered", "not_applicable"]}
-                      />
-                      <div className="grid gap-8 sm:grid-cols-2">
-                        <AnswerOr
-                          {...at("turnoverPeriodStart")}
-                          label="First day of that period"
-                          value={facts.turnoverPeriodStart ?? "unanswered"}
-                          markers={["unknown", "unanswered", "not_applicable"]}
-                          render={(v, change, labelledBy) => (
-                            <input
-                              id="turnoverPeriodStart"
-                              aria-labelledby={labelledBy}
-                              type="date"
-                              className="field"
-                              value={v}
-                              onChange={(e) => change(e.target.value)}
-                            />
-                          )}
-                        />
-                        <AnswerOr
-                          {...at("turnoverPeriodEnd")}
-                          label="Last day of that period"
-                          value={facts.turnoverPeriodEnd ?? "unanswered"}
-                          markers={["unknown", "unanswered", "not_applicable"]}
-                          render={(v, change, labelledBy) => (
-                            <input
-                              id="turnoverPeriodEnd"
-                              aria-labelledby={labelledBy}
-                              type="date"
-                              className="field"
-                              value={v}
-                              onChange={(e) => change(e.target.value)}
-                            />
-                          )}
-                        />
-                      </div>
-                      <div className="grid gap-8 sm:grid-cols-2">
-                        <Choice
-                          {...at("turnoverMetric")}
-                          label="What does the figure measure?"
-                          hint="Gross revenue is all sales, before any costs are taken off."
-                          value={facts.turnoverMetric}
-                          options={known(Object.values(CheckerFactsTurnoverMetric))}
-                          markers={["unknown", "unanswered", "not_applicable"]}
-                        />
-                        <Choice
-                          {...at("turnoverCurrency")}
-                          label="Which currency is the figure in?"
-                          value={facts.turnoverCurrency}
-                          options={known(Object.values(CheckerFactsTurnoverCurrency))}
-                          markers={["unknown", "unanswered", "not_applicable"]}
-                        />
-                      </div>
-                    </fieldset>
-                  ) : (
-                    <p className="hint">
-                      The questions about that figure are skipped because turnover does not apply.
-                    </p>
-                  )}
-                </>
-              )}
-              {step === 4 && (
-                <>
-                  <Choice
-                    {...at("personalData")}
-                    label="Do you collect or keep customer or staff personal data?"
-                    hint="Names, phone numbers, addresses, ID numbers and similar."
-                    value={facts.personalData}
-                    options={yesNo}
-                    markers={["unknown", "unanswered"]}
-                  />
-                  <RichCheckerFields section="privacy" facts={facts} onChange={setFacts} />
-                </>
-              )}
+              {step === 1 && <RichCheckerFields section="product" facts={facts} onChange={setFacts} />}
+              {step === 4 && <RichCheckerFields section="privacy" facts={facts} onChange={setFacts} />}
               {step === REVIEW && (
                 <>
                   <p className="text-sm leading-relaxed text-muted-foreground">

@@ -2764,14 +2764,28 @@
       "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/public-screens-accessibility.test.ts",
       "test": "the requirements check chooses no answer for a visitor: every question starts with nothing chosen, 'I do not know', 'Skip for now' and 'Not applicable' show only once chosen, an emptied box is untouched again, a step is ticked only when its questions are dealt with, and what is sent keeps each apart from 'No' and zero",
-      "proves": "For a signed-out visitor on an emulated phone with synthetic data, choosing “Not applicable” for turnover takes the year and exact-figure questions off the requirements check, with a note that the questions about the figure are skipped, and choosing “I do not know” brings the year question back; the first step is marked as answered only after both its questions are dealt with, and the size step when turnover does not apply but not when it is unknown; and “Edit” on the review returns to the step with the answer still there. It tests the web app's own questions; no configured questionnaire is tested."
+      "proves": "For a signed-out visitor on an emulated phone with synthetic data, choosing “Not applicable” for turnover takes the year and exact-figure questions off the requirements check, with a note that the questions about the figure are skipped, and choosing “I do not know” brings the year question back; the first step is marked as answered only after both its questions are dealt with, and the size step when turnover does not apply but not when it is unknown; and “Edit” on the review returns to the step with the answer still there. The local government area's box appears once a state is chosen, empty, and goes again when the state is cleared. The page draws these questions from the check's questionnaire file; the test changes nothing in that file."
     },
     {
       "requirement": "RUL-001",
       "job": "foundation",
       "file": "artifacts/valo/src/lib/checker.test.ts",
       "test": "a question that depends on another answer is asked only when that answer makes it relevant",
-      "proves": "The web app's rule for which questions the requirements check asks leaves out the product question unless the business manufactures or imports, the local government area when it has no premises, and the seven questions about the turnover figure when turnover does not apply, and still asks those seven when the turnover is unknown."
+      "proves": "The web app's rule for which questions the requirements check asks, read from the check's questionnaire file, asks for the products when the business makes, processes or imports goods or does not know whether it does, asks the local government area once a state is chosen whether or not the business has premises, leaves out the seven questions about the turnover figure when turnover does not apply, and still asks those seven when the turnover is unknown."
+    },
+    {
+      "requirement": "RUL-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/checker-questionnaire.test.ts",
+      "test": "a result lists as still unanswered the questions the check asks and has no answer for, by the page's own conditions",
+      "proves": "With synthetic answers, the rules engine lists as still unanswered the products of a business that does not know whether it makes goods until they are given, but not those of one that skipped the question; no answer of “Not applicable”; and the local government area once a state is chosen, also for a business without premises, by the same conditions as the check's page."
+    },
+    {
+      "requirement": "RUL-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/checker-questionnaire.test.ts",
+      "test": "over many sets of answers, the result lists exactly the questions the page asks that have no answer yet",
+      "proves": "Over 2,000 seeded sets of synthetic answers to the check's nineteen questions, the rules engine's list of still-unanswered questions holds exactly the questions the check's page asks whose answer is unknown, skipped or empty, and never the optional exact turnover figure."
     },
     {
       "requirement": "RUL-002",
@@ -2784,8 +2798,8 @@
       "requirement": "RUL-002",
       "job": "foundation",
       "file": "artifacts/valo/src/lib/checker.test.ts",
-      "test": "what is sent marks the questions the checker skipped as not applicable, and invents no other answer",
-      "proves": "Before the web app sends a visitor's answers, a question nobody touched stays unanswered, the questions skipped because another answer made them irrelevant become not applicable, and an unknown turnover leaves the answers about the figure as they were given."
+      "test": "what is sent marks the questions the checker skipped as not applicable or unanswered, and invents no other answer",
+      "proves": "Before the web app sends a visitor's answers, a question nobody touched stays unanswered; the product question becomes not applicable when the business neither makes nor imports goods and is left out when it is not asked; the local government area is sent as unanswered until a state is chosen, so an area typed before is not sent, and a business without premises keeps its area once its state is chosen; the questions about the turnover figure become not applicable when turnover does not apply; and an unknown turnover leaves the answers about the figure as they were given."
     },
     {
       "requirement": "NFR-006",

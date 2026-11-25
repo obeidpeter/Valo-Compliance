@@ -132,6 +132,7 @@ export function Choice({
 export function AnswerOr({
   name,
   label,
+  hint,
   value,
   skipped,
   markers,
@@ -140,6 +141,7 @@ export function AnswerOr({
 }: {
   name: string;
   label: string;
+  hint?: string;
   value: string;
   skipped: boolean;
   markers: readonly Marker[];
@@ -153,6 +155,7 @@ export function AnswerOr({
       <legend id={legend} className="label text-base">
         {label}
       </legend>
+      {hint && <p className="hint !mt-0 mb-2">{hint}</p>}
       {render(
         isMarker(value) ? "" : value,
         (next) => (next === "" ? choose("unanswered", false) : choose(next)),
@@ -182,6 +185,7 @@ export function ListOr({
   skipped,
   onChange,
   placeholder,
+  markers = ["unknown", "unanswered"],
 }: {
   name: string;
   label: string;
@@ -190,6 +194,7 @@ export function ListOr({
   skipped: boolean;
   onChange: Change<never>;
   placeholder: string;
+  markers?: readonly Marker[];
 }) {
   const choose = onChange as Change<string[] | Marker>;
   const list = Array.isArray(value) && value.length ? value : [""];
@@ -235,7 +240,7 @@ export function ListOr({
           group={name + "-mode"}
           value={value}
           skipped={skipped}
-          markers={["unknown", "unanswered"]}
+          markers={markers}
           onChange={choose}
         />
       </div>

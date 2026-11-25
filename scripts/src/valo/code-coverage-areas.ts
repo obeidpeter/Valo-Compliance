@@ -109,6 +109,8 @@ export const COVERAGE_AREAS = {
       "lib/valo-core/src/checker-rich.ts",
       "lib/valo-core/src/checker-business-name.ts",
       "lib/valo-core/src/checker-source-candidates.ts",
+      // The check's questions and when each is asked (RUL-001), read by the engine.
+      "lib/valo-core/src/checker-questionnaire.ts",
       // A rule version's release plan (ADM-004) and its owner-signed bundle (decision 0020).
       "lib/valo-core/src/rule-release.ts",
       "lib/valo-core/src/owner-rule-release.ts",
@@ -122,6 +124,7 @@ export const COVERAGE_AREAS = {
       api("modules/rules/owner-rule-release.test.ts"),
       api("modules/editorial/owner-rule-signoff.test.ts"),
       api("modules/rules/valo-checker-rich.test.ts"),
+      api("modules/rules/checker-questionnaire.test.ts"),
       "artifacts/valo/src/lib/rich-checker.test.ts",
       api("routes/valo-checker-http.integration.test.ts"),
       api("modules/sources/business-name-candidate-evaluation.test.ts"),

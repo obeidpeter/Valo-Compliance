@@ -8,6 +8,12 @@ import {
   richStringLabel,
   type RichCheckerFacts,
 } from "./rich-checker";
+import {
+  CHECKER_QUESTIONNAIRE,
+  checkerQuestion,
+  isAsked,
+  stepOfQuestion,
+} from "@workspace/valo-core/checker-questionnaire";
 import { formatNaira } from "./format";
 
 export const MARKERS = ["unknown", "unanswered", "not_applicable"] as const;
@@ -67,62 +73,27 @@ export function factsFromProfile(p: Profile): CheckerFacts {
   };
 }
 
-export const needsProducts = (f: CheckerFacts) => f.manufacturing === "yes" || f.importing === "yes";
-
 /**
- * The checker's steps in order, each with the questions it asks. The last step reviews the answers.
- * The optional detail sections (lib/rich-checker.ts) sit inside these steps and are not listed.
+ * The checker's steps in order, each with the questions it asks, from the questionnaire
+ * (`@workspace/valo-core/checker-questionnaire`). The last step reviews the answers. The optional
+ * detail sections (lib/rich-checker.ts) sit inside these steps and are not listed.
  */
-export const CHECKER_STEPS = [
-  { name: "Your business", questions: ["legalForm", "registrationStatus"] },
-  { name: "What it does", questions: ["activities", "manufacturing", "importing", "productTypes"] },
-  { name: "Where it is", questions: ["premises", "state", "lga"] },
-  {
-    name: "Size and turnover",
-    questions: [
-      "employees",
-      "turnoverBand",
-      "turnoverAmountKobo",
-      "turnoverYear",
-      "turnoverPeriod",
-      "turnoverPeriodStart",
-      "turnoverPeriodEnd",
-      "turnoverMetric",
-      "turnoverCurrency",
-    ],
-  },
-  { name: "Personal data", questions: ["personalData"] },
-  { name: "Review your answers", questions: [] },
-] as const satisfies readonly { name: string; questions: readonly (keyof CheckerFacts)[] }[];
+export const CHECKER_STEPS: readonly { name: string; questions: readonly string[] }[] =
+  CHECKER_QUESTIONNAIRE.map((step) => ({
+    name: step.name,
+    questions: step.questions.map((question) => question.answer),
+  }));
 
 /** The step that asks a question. */
-export const stepOf = (question: string) =>
-  Math.max(
-    0,
-    CHECKER_STEPS.findIndex((step) => (step.questions as readonly string[]).includes(question)),
-  );
-
-/** The questions about the turnover figure, which are skipped when turnover does not apply. */
-const TURNOVER_DETAILS: readonly string[] = [
-  "turnoverAmountKobo",
-  "turnoverYear",
-  "turnoverPeriod",
-  "turnoverPeriodStart",
-  "turnoverPeriodEnd",
-  "turnoverMetric",
-  "turnoverCurrency",
-];
+export const stepOf = stepOfQuestion;
 
 /**
  * Whether the checker asks a question, given the other answers. RUL-001: "irrelevant questions are
- * skipped". The rule engine leaves the same questions out of what is still unanswered
- * (`missingQuestions` in lib/valo-core/src/checker.ts).
+ * skipped". Each question's condition is in the questionnaire, which the engine's `missingQuestions`
+ * reads too, so a result lists as unanswered only a question this page asks.
  */
 export function asked(f: CheckerFacts, question: string): boolean {
-  if (question === "productTypes") return needsProducts(f);
-  if (question === "lga") return f.premises !== "no";
-  if (TURNOVER_DETAILS.includes(question)) return f.turnoverBand !== "not_applicable";
-  return true;
+  return isAsked(f, question);
 }
 
 /**
@@ -142,12 +113,16 @@ export function answered(f: CheckerFacts, skipped: ReadonlySet<string>, question
  * step back, and the review step asks nothing. */
 export function stepDone(f: CheckerFacts, skipped: ReadonlySet<string>, step: number): boolean {
   const questions = (CHECKER_STEPS[step]?.questions ?? []).filter(
-    (question) => question !== "turnoverAmountKobo" && asked(f, question),
+    (question) => !checkerQuestion(question)?.optional && asked(f, question),
   );
   return questions.length > 0 && questions.every((question) => answered(f, skipped, question));
 }
 
-/** Normalise before sending: dependent questions become not_applicable / omitted. */
+/**
+ * Normalise before sending. A question the check skips sends no answer it was given before: the
+ * product types become not applicable when the business neither makes nor imports goods, and are left
+ * out otherwise; the local government area is sent as unanswered until a state is chosen.
+ */
 export function finaliseFacts(f: RichCheckerFacts): RichCheckerFacts {
   const out: RichCheckerFacts = { ...f };
   if (f.rich) out.rich = normaliseRichAnswers(f.rich) as NonNullable<RichCheckerFacts["rich"]>;
@@ -155,7 +130,7 @@ export function finaliseFacts(f: RichCheckerFacts): RichCheckerFacts {
     const a = out.activities.map((x) => x.trim()).filter(Boolean);
     out.activities = a.length ? a : "unanswered";
   }
-  if (needsProducts(out)) {
+  if (asked(out, "productTypes")) {
     if (Array.isArray(out.productTypes)) {
       const a = out.productTypes.map((x) => x.trim()).filter(Boolean);
       out.productTypes = a.length ? a : "unanswered";
@@ -165,8 +140,7 @@ export function finaliseFacts(f: RichCheckerFacts): RichCheckerFacts {
   } else {
     delete out.productTypes;
   }
-  if (out.premises === "no") out.lga = "not_applicable";
-  else if (!out.lga.trim()) out.lga = "unanswered";
+  if (!asked(out, "lga") || !out.lga.trim()) out.lga = "unanswered";
   else out.lga = out.lga.trim();
   if (out.turnoverBand === "not_applicable") {
     out.turnoverYear = "not_applicable";
@@ -262,15 +236,6 @@ export function displayFact(k: string, v: unknown): string {
 }
 
 export const ANSWER_OPTIONS: Answer[] = ["yes", "no", "unknown", "unanswered"];
-
-export const LEGAL_FORMS = [
-  "sole_proprietor",
-  "partnership",
-  "limited_company",
-  "incorporated_trustees",
-  "company_limited_by_guarantee",
-];
-export const REG_STATUSES = ["registered", "unregistered", "pending"];
 
 export const FACT_ORDER = Object.keys(FACT_LABELS);
 

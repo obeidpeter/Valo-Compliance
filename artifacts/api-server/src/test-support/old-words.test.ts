@@ -32,6 +32,15 @@ const NOT_FOR_CUSTOMERS = [
 ];
 
 /**
+ * Files outside the web app whose words the web app shows, each with what they are. Their text is
+ * read as the web app's is.
+ */
+const SHOWN_FROM_ELSEWHERE = [
+  // The requirements check's questions, which the check's page draws (RUL-001).
+  "../../lib/valo-core/src/checker-questionnaire.ts",
+];
+
+/**
  * Text that holds an old word and is not shown as written, each with why. A line here is an
  * exception to the word list, so it says what it is.
  */
@@ -104,7 +113,7 @@ function shownText(file: string): { line: number; text: string }[] {
 }
 
 test("no text a customer can be shown, in any state of any screen, holds one of the project's own words that the word list replaced", () => {
-  const files = [...sourceFiles("src"), ...sourceFiles("app")].filter(
+  const files = [...sourceFiles("src"), ...sourceFiles("app"), ...SHOWN_FROM_ELSEWHERE].filter(
     (file) => !NOT_FOR_CUSTOMERS.includes(file),
   );
   assert.ok(files.length > 100, `the web app's source was read: ${files.length} files`);
@@ -112,7 +121,12 @@ test("no text a customer can be shown, in any state of any screen, holds one of 
     assert.doesNotThrow(() => readFileSync(join(web, file)), `${file} is still a file of the web app`);
   const pieces = files.flatMap((file) => shownText(file).map((piece) => ({ file, ...piece })));
   // The reader finds the text: sentences known to be on the screens are among what it read.
-  for (const known of ["No documents yet", "Still needed", "Reminder emails are not being sent yet"])
+  for (const known of [
+    "No documents yet",
+    "Still needed",
+    "Reminder emails are not being sent yet",
+    "How is the business set up?",
+  ])
     assert.ok(
       pieces.some((piece) => piece.text.includes(known)),
       `read: ${known}`,
