@@ -72,13 +72,22 @@ export const valoStaffAssignments = pgTable(
     ),
   ],
 );
-export const valoStaffAccessAudit = pgTable("valo_staff_access_audit", {
-  id: uuid("id").primaryKey(),
-  assignmentId: uuid("assignment_id")
-    .notNull()
-    .references(() => valoStaffAssignments.id),
-  actorId: text("actor_id").notNull(),
-  area: text("area").notNull(),
-  reason: text("reason").notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+export const valoStaffAccessAudit = pgTable(
+  "valo_staff_access_audit",
+  {
+    id: uuid("id").primaryKey(),
+    assignmentId: uuid("assignment_id")
+      .notNull()
+      .references(() => valoStaffAssignments.id),
+    actorId: text("actor_id").notNull(),
+    area: text("area").notNull(),
+    // What was read or acted on (ADM-009): a list by its kind alone ("privacy_cases"), one record by its
+    // kind and ID ("privacy_case:<id>"). Rows from before this column read "unrecorded".
+    object: text("object").notNull(),
+    reason: text("reason").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check("valo_staff_access_audit_object_check", sql`${t.object} ~ '^[a-z][a-z_]*(:[^[:space:]]{1,200})?$'`),
+  ],
+);

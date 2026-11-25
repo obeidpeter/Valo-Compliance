@@ -96,7 +96,7 @@ export async function sourceControls(actor: SourceStaffActor, area: "content" | 
   return db.transaction(async (tx) => {
     const assignment = await requireSourceStaff(tx, actor, area);
     await tx.execute(
-      sql`insert into valo_staff_access_audit(id,assignment_id,actor_id,area,reason) values(${randomUUID()}::uuid,${assignment}::uuid,${actor.identityId},${area},'Read source/safety controls with active role and recent MFA')`,
+      sql`insert into valo_staff_access_audit(id,assignment_id,actor_id,area,object,reason) values(${randomUUID()}::uuid,${assignment}::uuid,${actor.identityId},${area},${`source_controls:${area}`},'Read source/safety controls with active role and recent MFA')`,
     );
     const offset = (page - 1) * 50;
     const versions =

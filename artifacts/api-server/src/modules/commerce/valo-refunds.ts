@@ -73,7 +73,8 @@ export function refundView(row: Refund) {
     failure: row.failure,
   };
 }
-export async function requireFinance(tx: Tx, actor: FinanceActor, reason: string) {
+/** Checks the actor's live finance role and records the access: why, and to what (ADM-009). */
+export async function requireFinance(tx: Tx, actor: FinanceActor, reason: string, object: string) {
   const [row] = await tx
     .select()
     .from(valoStaffAssignments)
@@ -88,9 +89,14 @@ export async function requireFinance(tx: Tx, actor: FinanceActor, reason: string
   if (!row) throw new ValoProblem(403, "Active finance permission is required.");
   await assertStaffAssignmentCurrent(tx, row.id);
   freshMfa(actor);
-  await tx
-    .insert(valoStaffAccessAudit)
-    .values({ id: randomUUID(), assignmentId: row.id, actorId: actor.identityId, area: "finance", reason });
+  await tx.insert(valoStaffAccessAudit).values({
+    id: randomUUID(),
+    assignmentId: row.id,
+    actorId: actor.identityId,
+    area: "finance",
+    object,
+    reason,
+  });
 }
 async function orderLock(tx: Tx, id: string, workspaceId?: string) {
   const [row] = await tx
@@ -217,7 +223,7 @@ export async function requestOrderRefund(actor: WorkspaceActor, id: string, raw:
 }
 export async function financeRefunds(actor: FinanceActor) {
   return db.transaction(async (tx) => {
-    await requireFinance(tx, actor, "Read refund and dispute queue; no private document bodies.");
+    await requireFinance(tx, actor, "Read refund and dispute queue; no private document bodies.", "refunds");
     return {
       refunds: (
         await tx.select().from(valoRefundRequests).orderBy(desc(valoRefundRequests.createdAt)).limit(100)
@@ -235,7 +241,7 @@ export async function decideRefund(actor: FinanceActor, id: string, raw: unknown
   const input = DecideFinanceRefundBody.strict().parse(raw);
   return db.transaction(async (tx) => {
     const { row, order } = await refundLock(tx, id);
-    await requireFinance(tx, actor, `Refund ${id}: ${input.decision}; ${input.reason}`);
+    await requireFinance(tx, actor, `Refund ${id}: ${input.decision}; ${input.reason}`, `refund:${id}`);
     if (row.version !== input.expectedVersion)
       throw new ValoProblem(409, "Refund changed. Refresh before making a decision.");
     if (row.status !== "requested")
@@ -530,7 +536,7 @@ export async function handleRefundEvent(reference: string) {
 export async function reconcileFinanceRefund(actor: FinanceActor, id: string) {
   await db.transaction(async (tx) => {
     const { row } = await refundLock(tx, id);
-    await requireFinance(tx, actor, `Reconcile refund ${id} by its original reference.`);
+    await requireFinance(tx, actor, `Reconcile refund ${id} by its original reference.`, `refund:${id}`);
     if (!refundProvider.configured())
       throw new ValoProblem(
         503,
@@ -554,7 +560,7 @@ export async function reconcileFinanceRefund(actor: FinanceActor, id: string) {
   await processRefund(id, refundProvider, true);
   return db.transaction(async (tx) => {
     const { row } = await refundLock(tx, id);
-    await requireFinance(tx, actor, `Read reconciliation result ${id}.`);
+    await requireFinance(tx, actor, `Read reconciliation result ${id}.`, `refund:${id}`);
     return refundView(row);
   });
 }

@@ -78,10 +78,12 @@ async function currentSupportStaff(tx: Tx, actor: SupportStaffActor, role: "supp
     );
   if (!row) throw new ValoProblem(403, "An active, unexpired staff assignment for this area is required.");
 }
+/** Checks the actor's live support or content role and records the access, naming its object (ADM-009). */
 export async function requireSupportStaff(
   tx: Tx,
   actor: SupportStaffActor,
-  role: "support" | "content" = "support",
+  role: "support" | "content",
+  object: string,
 ) {
   requireFreshStaffSession(actor);
   const [row] = await tx
@@ -104,6 +106,7 @@ export async function requireSupportStaff(
     assignmentId: row.id,
     actorId: actor.identityId,
     area: role,
+    object,
     reason: "Support lifecycle access after current role and recent verified MFA checks",
   });
   return row;
@@ -421,7 +424,7 @@ export async function staffSupportCases(actor: SupportStaffActor, rawStatus?: un
   const status = statuses.default("all").parse(rawStatus),
     page = pageValue(rawPage);
   return db.transaction(async (tx) => {
-    await requireSupportStaff(tx, actor);
+    await requireSupportStaff(tx, actor, "support", "support_cases");
     return list(
       tx,
       and(
@@ -434,7 +437,7 @@ export async function staffSupportCases(actor: SupportStaffActor, rawStatus?: un
 }
 export async function supportAssignees(actor: SupportStaffActor) {
   return db.transaction(async (tx) => {
-    await requireSupportStaff(tx, actor);
+    await requireSupportStaff(tx, actor, "support", "support_assignees");
     const assignees = await tx
       .select({ identityId: valoStaffAssignments.identityId })
       .from(valoStaffAssignments)
@@ -449,14 +452,14 @@ export async function supportAssignees(actor: SupportStaffActor) {
 export async function staffSupportCase(actor: SupportStaffActor, id: string, rawPage?: unknown) {
   const page = pageValue(rawPage);
   return db.transaction(async (tx) => {
-    await requireSupportStaff(tx, actor);
+    await requireSupportStaff(tx, actor, "support", `support_case:${id}`);
     return detail(tx, await readCase(tx, id), true, page, false);
   });
 }
 export async function actOnSupportCase(actor: SupportStaffActor, id: string, raw: unknown) {
   const input = supportActionSchema.parse(raw);
   return db.transaction(async (tx) => {
-    await requireSupportStaff(tx, actor);
+    await requireSupportStaff(tx, actor, "support", `support_case:${id}`);
     let row = await lockedCase(tx, id);
     await currentSupportStaff(tx, actor, "support");
     if (await replay(tx, row, actor.identityId, input)) return detail(tx, row, true);
@@ -603,7 +606,7 @@ const libraryWords = z.string().trim().min(2).max(100);
 export async function supportLibraryEntries(actor: SupportStaffActor, words: unknown) {
   const q = libraryWords.parse(words);
   return db.transaction(async (tx) => {
-    await requireSupportStaff(tx, actor, "support");
+    await requireSupportStaff(tx, actor, "support", "library_entries");
     return { entries: await referableLibraryEntries(tx, q) };
   });
 }

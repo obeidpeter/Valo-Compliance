@@ -29,7 +29,12 @@ export const contentTriageSchema = z
 export type ContentTriageDeps = {
   pageValue: (v: unknown) => number;
   hash: (v: unknown) => string;
-  requireSupportStaff: (tx: Tx, actor: StaffActor, role?: "support" | "content") => Promise<unknown>;
+  requireSupportStaff: (
+    tx: Tx,
+    actor: StaffActor,
+    role: "support" | "content",
+    object: string,
+  ) => Promise<unknown>;
   currentSupportStaff: (tx: Tx, actor: StaffActor, role: "support" | "content") => Promise<void>;
   lockedCase: (tx: Tx, id: string, workspaceId?: string) => Promise<Case>;
   replay: (
@@ -55,7 +60,7 @@ export async function listContentSupportEscalations(
 ) {
   const page = deps.pageValue(rawPage);
   return db.transaction(async (tx) => {
-    await deps.requireSupportStaff(tx, actor, "content");
+    await deps.requireSupportStaff(tx, actor, "content", "support_escalations");
     const rows = await tx
       .select({
         escalation: valoSupportEscalations,
@@ -104,7 +109,7 @@ export async function runContentSupportEscalation(
   const input = { ...contentTriageSchema.parse(raw), escalationId: id };
   const sourceReason = `Support content triage ${id}; request ${deps.hash(input)}. Reassess the exact referred version.`;
   const prepared = await db.transaction(async (tx) => {
-    await deps.requireSupportStaff(tx, actor, "content");
+    await deps.requireSupportStaff(tx, actor, "content", `support_escalation:${id}`);
     const [e] = await tx.select().from(valoSupportEscalations).where(eq(valoSupportEscalations.id, id));
     if (!e) throw new ValoProblem(404, "Content escalation not found.");
     const row = await deps.lockedCase(tx, e.caseId);
@@ -191,7 +196,7 @@ export async function runContentSupportEscalation(
     impactId = result.impactId;
   }
   return db.transaction(async (tx) => {
-    await deps.requireSupportStaff(tx, actor, "content");
+    await deps.requireSupportStaff(tx, actor, "content", `support_escalation:${id}`);
     let row = await deps.lockedCase(tx, prepared.escalation.caseId);
     await deps.currentSupportStaff(tx, actor, "content");
     const [e] = await tx

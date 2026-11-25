@@ -533,6 +533,13 @@
       "when": 1795637743749,
       "tag": "20261125201543_acceptance_runs",
       "breakpoints": true
+    },
+    {
+      "idx": 76,
+      "version": "7",
+      "when": 1795644820054,
+      "tag": "20261125221340_staff_access_object",
+      "breakpoints": true
     }
   ]
 }
