@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import {
   db,
   valoAssessments,
@@ -398,9 +398,49 @@ export async function assessmentRow(tx: WorkspaceTx, actor: WorkspaceActor, id: 
   return row;
 }
 export async function getAssessment(actor: WorkspaceActor, id: string) {
-  return workspaceReadTransaction(actor, async (tx) =>
-    serializeAssessment(await assessmentRow(tx, actor, id)),
-  );
+  return workspaceReadTransaction(actor, async (tx) => {
+    const saved = serializeAssessment(await assessmentRow(tx, actor, id));
+    return { ...saved, ruleChanges: await savedRuleChanges(tx, actor, saved.result.items) };
+  });
+}
+/**
+ * CMP-005 and EDP-011 (docs/architecture/rule-changes.md, slice 3): each change since to a rule version
+ * a saved result lists, from the workspace's own rule notices, read or not. The database wrote one for
+ * the workspace when the version changed, since the workspace saved this result under it. The result
+ * itself is unchanged.
+ */
+async function savedRuleChanges(
+  tx: WorkspaceTx,
+  actor: WorkspaceActor,
+  items: readonly { ruleId: string; ruleVersion: number }[],
+) {
+  if (!items.length) return [];
+  const { valoRuleNotices: n } = await import("@workspace/db");
+  const listed = new Set(items.map((item) => `${item.ruleId}@${item.ruleVersion}`));
+  const rows = await tx
+    .select()
+    .from(n)
+    .where(
+      and(
+        eq(n.workspaceId, actor.workspaceId),
+        inArray(
+          n.ruleId,
+          items.map((item) => item.ruleId),
+        ),
+      ),
+    )
+    .orderBy(n.createdAt, n.id);
+  return rows
+    .filter((row) => listed.has(`${row.ruleId}@${row.version}`))
+    .slice(0, 100)
+    .map((row) => ({
+      ruleId: row.ruleId,
+      version: row.version,
+      kind: row.kind as "replaced" | "withdrawn",
+      replacementVersion: row.replacementVersion,
+      reason: row.reason,
+      changedAt: row.createdAt.toISOString(),
+    }));
 }
 export async function compareAssessments(actor: WorkspaceActor, id: string, previousId: string) {
   return workspaceReadTransaction(actor, async (tx) => {

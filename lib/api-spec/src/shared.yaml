@@ -1,5 +1,16 @@
 # Schemas that more than one module, or a shared response, uses.
 schemas:
+  RuleChange:
+    type: object
+    additionalProperties: false
+    required: [ruleId, version, kind, replacementVersion, reason, changedAt]
+    properties:
+      ruleId: { type: string }
+      version: { type: integer, description: "The version that changed: the one a saved result lists, or a task was made from." }
+      kind: { type: string, enum: [replaced, withdrawn] }
+      replacementVersion: { type: [integer, "null"], description: "The version that replaced it, for a replaced version." }
+      reason: { type: string, description: "What changed, or why it was withdrawn, as the person who made the change wrote it." }
+      changedAt: { type: string, format: date-time, description: "When the version was replaced or withdrawn." }
   RequirementRoute:
     type: object
     description: The authority's own official page for a requirement, as its rule records it. Absent when the rule records none, and in a result saved before routes were recorded.

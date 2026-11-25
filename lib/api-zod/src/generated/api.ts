@@ -6178,6 +6178,8 @@ export const listAssessmentsResponseFactsTurnoverYearRegExp = new RegExp('^(unkn
 export const listAssessmentsResponseFactsTurnoverAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const listAssessmentsResponseFactsTurnoverPeriodStartRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{4}-[0-9]{2}-[0-9]{2})$');
 export const listAssessmentsResponseFactsTurnoverPeriodEndRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{4}-[0-9]{2}-[0-9]{2})$');
+export const listAssessmentsResponseRuleChangesMax = 100;
+
 
 
 export const ListAssessmentsResponseItem = zod.object({
@@ -6568,7 +6570,15 @@ export const ListAssessmentsResponseItem = zod.object({
   "sourceBackedRecommendations": zod.int(),
   "resultHash": zod.string()
 }),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "ruleChanges": zod.array(zod.object({
+  "ruleId": zod.string(),
+  "version": zod.int().describe('The version that changed: the one a saved result lists, or a task was made from.'),
+  "kind": zod.enum(['replaced', 'withdrawn']),
+  "replacementVersion": zod.int().nullable().describe('The version that replaced it, for a replaced version.'),
+  "reason": zod.string().describe('What changed, or why it was withdrawn, as the person who made the change wrote it.'),
+  "changedAt": zod.coerce.date().describe('When the version was replaced or withdrawn.')
+})).max(listAssessmentsResponseRuleChangesMax).optional().describe('When the saved result is read on its own, each change since to a rule version it lists, from the workspace\'s rule notices (docs/architecture/rule-changes.md, slice 3). The result itself is unchanged.')
 })
 export const ListAssessmentsResponse = zod.array(ListAssessmentsResponseItem)
 
@@ -7039,6 +7049,8 @@ export const createAssessmentResponseFactsTurnoverYearRegExp = new RegExp('^(unk
 export const createAssessmentResponseFactsTurnoverAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const createAssessmentResponseFactsTurnoverPeriodStartRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{4}-[0-9]{2}-[0-9]{2})$');
 export const createAssessmentResponseFactsTurnoverPeriodEndRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{4}-[0-9]{2}-[0-9]{2})$');
+export const createAssessmentResponseRuleChangesMax = 100;
+
 
 
 export const CreateAssessmentResponse = zod.object({
@@ -7429,7 +7441,15 @@ export const CreateAssessmentResponse = zod.object({
   "sourceBackedRecommendations": zod.int(),
   "resultHash": zod.string()
 }),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "ruleChanges": zod.array(zod.object({
+  "ruleId": zod.string(),
+  "version": zod.int().describe('The version that changed: the one a saved result lists, or a task was made from.'),
+  "kind": zod.enum(['replaced', 'withdrawn']),
+  "replacementVersion": zod.int().nullable().describe('The version that replaced it, for a replaced version.'),
+  "reason": zod.string().describe('What changed, or why it was withdrawn, as the person who made the change wrote it.'),
+  "changedAt": zod.coerce.date().describe('When the version was replaced or withdrawn.')
+})).max(createAssessmentResponseRuleChangesMax).optional().describe('When the saved result is read on its own, each change since to a rule version it lists, from the workspace\'s rule notices (docs/architecture/rule-changes.md, slice 3). The result itself is unchanged.')
 })
 
 
@@ -7504,6 +7524,8 @@ export const getAssessmentResponseFactsTurnoverYearRegExp = new RegExp('^(unknow
 export const getAssessmentResponseFactsTurnoverAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const getAssessmentResponseFactsTurnoverPeriodStartRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{4}-[0-9]{2}-[0-9]{2})$');
 export const getAssessmentResponseFactsTurnoverPeriodEndRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{4}-[0-9]{2}-[0-9]{2})$');
+export const getAssessmentResponseRuleChangesMax = 100;
+
 
 
 export const GetAssessmentResponse = zod.object({
@@ -7894,7 +7916,15 @@ export const GetAssessmentResponse = zod.object({
   "sourceBackedRecommendations": zod.int(),
   "resultHash": zod.string()
 }),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "ruleChanges": zod.array(zod.object({
+  "ruleId": zod.string(),
+  "version": zod.int().describe('The version that changed: the one a saved result lists, or a task was made from.'),
+  "kind": zod.enum(['replaced', 'withdrawn']),
+  "replacementVersion": zod.int().nullable().describe('The version that replaced it, for a replaced version.'),
+  "reason": zod.string().describe('What changed, or why it was withdrawn, as the person who made the change wrote it.'),
+  "changedAt": zod.coerce.date().describe('When the version was replaced or withdrawn.')
+})).max(getAssessmentResponseRuleChangesMax).optional().describe('When the saved result is read on its own, each change since to a rule version it lists, from the workspace\'s rule notices (docs/architecture/rule-changes.md, slice 3). The result itself is unchanged.')
 })
 
 
@@ -8608,6 +8638,14 @@ export const ListTasksPageResponse = zod.object({
   "assessmentId": zod.string().nullable(),
   "ruleId": zod.string().nullable(),
   "needsReview": zod.boolean(),
+  "ruleChange": zod.object({
+  "ruleId": zod.string(),
+  "version": zod.int().describe('The version that changed: the one a saved result lists, or a task was made from.'),
+  "kind": zod.enum(['replaced', 'withdrawn']),
+  "replacementVersion": zod.int().nullable().describe('The version that replaced it, for a replaced version.'),
+  "reason": zod.string().describe('What changed, or why it was withdrawn, as the person who made the change wrote it.'),
+  "changedAt": zod.coerce.date().describe('When the version was replaced or withdrawn.')
+}).optional().describe('For a task marked for review because the rule version it was made from was replaced or withdrawn, that change, from the workspace\'s rule notices (docs/architecture/rule-changes.md, slice 3). Absent otherwise.'),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
 })),
@@ -8631,6 +8669,14 @@ export const ListTasksResponseItem = zod.object({
   "assessmentId": zod.string().nullable(),
   "ruleId": zod.string().nullable(),
   "needsReview": zod.boolean(),
+  "ruleChange": zod.object({
+  "ruleId": zod.string(),
+  "version": zod.int().describe('The version that changed: the one a saved result lists, or a task was made from.'),
+  "kind": zod.enum(['replaced', 'withdrawn']),
+  "replacementVersion": zod.int().nullable().describe('The version that replaced it, for a replaced version.'),
+  "reason": zod.string().describe('What changed, or why it was withdrawn, as the person who made the change wrote it.'),
+  "changedAt": zod.coerce.date().describe('When the version was replaced or withdrawn.')
+}).optional().describe('For a task marked for review because the rule version it was made from was replaced or withdrawn, that change, from the workspace\'s rule notices (docs/architecture/rule-changes.md, slice 3). Absent otherwise.'),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
 })
@@ -8666,6 +8712,14 @@ export const CreateTaskResponse = zod.object({
   "assessmentId": zod.string().nullable(),
   "ruleId": zod.string().nullable(),
   "needsReview": zod.boolean(),
+  "ruleChange": zod.object({
+  "ruleId": zod.string(),
+  "version": zod.int().describe('The version that changed: the one a saved result lists, or a task was made from.'),
+  "kind": zod.enum(['replaced', 'withdrawn']),
+  "replacementVersion": zod.int().nullable().describe('The version that replaced it, for a replaced version.'),
+  "reason": zod.string().describe('What changed, or why it was withdrawn, as the person who made the change wrote it.'),
+  "changedAt": zod.coerce.date().describe('When the version was replaced or withdrawn.')
+}).optional().describe('For a task marked for review because the rule version it was made from was replaced or withdrawn, that change, from the workspace\'s rule notices (docs/architecture/rule-changes.md, slice 3). Absent otherwise.'),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
 })
@@ -8703,6 +8757,14 @@ export const UpdateTaskResponse = zod.object({
   "assessmentId": zod.string().nullable(),
   "ruleId": zod.string().nullable(),
   "needsReview": zod.boolean(),
+  "ruleChange": zod.object({
+  "ruleId": zod.string(),
+  "version": zod.int().describe('The version that changed: the one a saved result lists, or a task was made from.'),
+  "kind": zod.enum(['replaced', 'withdrawn']),
+  "replacementVersion": zod.int().nullable().describe('The version that replaced it, for a replaced version.'),
+  "reason": zod.string().describe('What changed, or why it was withdrawn, as the person who made the change wrote it.'),
+  "changedAt": zod.coerce.date().describe('When the version was replaced or withdrawn.')
+}).optional().describe('For a task marked for review because the rule version it was made from was replaced or withdrawn, that change, from the workspace\'s rule notices (docs/architecture/rule-changes.md, slice 3). Absent otherwise.'),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
 })

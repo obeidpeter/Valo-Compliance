@@ -7,6 +7,7 @@
  */
 import type { AssessmentResult } from './assessmentResult';
 import type { CheckerFacts } from './checkerFacts';
+import type { RuleChange } from './ruleChange';
 
 export interface SavedAssessment {
   id: string;
@@ -15,4 +16,9 @@ export interface SavedAssessment {
   facts: CheckerFacts;
   result: AssessmentResult;
   createdAt: string;
+  /**
+     * When the saved result is read on its own, each change since to a rule version it lists, from the workspace's rule notices (docs/architecture/rule-changes.md, slice 3). The result itself is unchanged.
+     * @maxItems 100
+     */
+  ruleChanges?: RuleChange[];
 }

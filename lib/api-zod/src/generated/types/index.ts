@@ -381,6 +381,8 @@ export * from './richCheckerFactsTaxManagementStatusVerification';
 export * from './richCheckerFactsTaxNonresident';
 export * from './richCheckerFactsTaxOnlyNigeriaIncome';
 export * from './roadmapContext';
+export * from './ruleChange';
+export * from './ruleChangeKind';
 export * from './ruleJurisdiction';
 export * from './ruleJurisdictionLevel';
 export * from './ruleNotice';

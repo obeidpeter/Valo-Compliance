@@ -129,7 +129,7 @@ test(
     });
     const workspaceIds = [actor.workspaceId, other.workspaceId];
     const registryBefore = digest(await db.select().from(valoRuleReleases));
-    let saved: Awaited<ReturnType<typeof assessments.getAssessment>>;
+    let saved: ReturnType<typeof assessments.serializeAssessment>;
     try {
       for (const owner of [actor, other]) {
         await db.insert(valoWorkspaces).values({ id: owner.workspaceId, ownerIdentityId: owner.identityId });

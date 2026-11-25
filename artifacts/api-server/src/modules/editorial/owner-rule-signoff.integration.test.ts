@@ -23,7 +23,12 @@ import {
 } from "@workspace/valo-core";
 import { ValoProblem } from "../../platform/valo-problem";
 import { guidancePolicy } from "../publication";
-import { createAssessment, currentAssessmentDate, releasedRegistry } from "../rules/valo-assessments";
+import {
+  createAssessment,
+  currentAssessmentDate,
+  getAssessment,
+  releasedRegistry,
+} from "../rules/valo-assessments";
 import { createTask, listReminders, listTasks, saveReminderPreferences } from "../tasks/valo-tasks";
 import { resolveWorkspace } from "../workspaces";
 import {
@@ -503,6 +508,26 @@ test(
       assert.deepEqual(await notices(), [
         { version: 1, kind: "replaced", replacementVersion: 2, reason: changedWhy, results: 1, tasks: 1 },
       ]);
+      // The saved result is read as it was saved, with the change to the version it lists
+      // (docs/architecture/rule-changes.md, slice 3).
+      const reread = await getAssessment(customer, saved.id);
+      assert.equal(reread.result.resultHash, saved.result.resultHash);
+      const [notice] = await db
+        .select({ createdAt: valoRuleNotices.createdAt })
+        .from(valoRuleNotices)
+        .where(
+          and(eq(valoRuleNotices.ruleId, ruleId), eq(valoRuleNotices.workspaceId, customer.workspaceId)),
+        );
+      const change = {
+        ruleId,
+        version: 1,
+        kind: "replaced",
+        replacementVersion: 2,
+        reason: changedWhy,
+        changedAt: notice!.createdAt.toISOString(),
+      };
+      assert.deepEqual(reread.ruleChanges, [change]);
+      assert.deepEqual((await listTasks(customer)).find((t) => t.id === made.id)?.ruleChange, change);
       const flagged = (await listTasks(customer)).find((t) => t.id === made.id);
       assert.deepEqual(
         {

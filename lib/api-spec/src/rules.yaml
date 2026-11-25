@@ -1682,6 +1682,11 @@ schemas:
       facts: { $ref: "#/components/schemas/CheckerFacts" }
       result: { $ref: "#/components/schemas/AssessmentResult" }
       createdAt: { type: string }
+      ruleChanges:
+        type: array
+        maxItems: 100
+        description: When the saved result is read on its own, each change since to a rule version it lists, from the workspace's rule notices (docs/architecture/rule-changes.md, slice 3). The result itself is unchanged.
+        items: { $ref: "#/components/schemas/RuleChange" }
   AssessmentComparison:
     type: object
     required: [previousId, currentId, changedFacts, addedRuleIds, removedRuleIds, changedRuleIds, explanations]
