@@ -1,6 +1,7 @@
 import {
   actOnContentEscalation as postContentEscalationAction,
   actOnSupportCase as postSupportCaseAction,
+  findSupportLibraryEntries,
   getCustomerSupportCase,
   getStaffSupportCase,
   listContentEscalations as getContentEscalations,
@@ -85,6 +86,7 @@ export const supportCaseKeys = {
     ["support-case", staff ? "staff" : "customer", id, messagesPage] as const,
   assignees: ["support-case-assignees"] as const,
   escalations: ["support-content-escalations"] as const,
+  libraryEntries: (words: string) => ["support-library-entries", words] as const,
 };
 // A successful status with an unreadable body stays uncertain instead of clearing a draft.
 const json = { responseType: "json" } as const;
@@ -138,6 +140,10 @@ export async function actOnSupportCase(id: string, input: SupportStaffInput) {
     id,
     input.expectedVersion,
   );
+}
+/** The published staff-library entries whose titles contain the words, for a referral to point at. */
+export function findLibraryEntries(words: string, signal?: AbortSignal) {
+  return findSupportLibraryEntries({ q: words }, request(signal));
 }
 export function listContentEscalations(page: number, signal?: AbortSignal): Promise<ContentEscalationList> {
   return getContentEscalations({ page }, request(signal));
