@@ -165,6 +165,34 @@ export async function exerciseManualRegulatoryOwner(call: Call, editor: string) 
       db.update(checks).set({ holds: [] }).where(eq(checks.id, blocked)),
       /Record a new regulatory source check|Failed query/,
     );
+    // A corrected version follows the withdrawn release: the owner signs it only with what changed,
+    // and the article's page shows the note (docs/architecture/guidance-currency.md, slice 3).
+    const corrected = "An exact synthetic regulatory article, corrected.";
+    const next = await call(
+      "/admin/manual-library/" + id + "/drafts",
+      { ...draft, body: corrected, baseVersion: 1, requestId: randomUUID() },
+      editor,
+    );
+    assert.equal(next.status, 200);
+    const nextRevision = GetManualLibraryRevisionResponse.parse(await next.json());
+    assert.equal(nextRevision.previousRelease, 1);
+    assert.equal((await list()).previousRelease, 1);
+    const nextCheck = await check([], corrected);
+    const signNext = (change?: string) =>
+      decide({
+        action: "publish",
+        version: nextRevision.version,
+        digest: nextRevision.digest,
+        checkId: nextCheck,
+        confirmed: true,
+        ...(change === undefined ? {} : { change }),
+      });
+    assert.equal((await signNext()).status, 422);
+    const said = "Synthetic: the article now gives the corrected filing period.";
+    assert.equal((await signNext(said)).status, 200);
+    const correctedArticle = GetReleasedResourceResponse.parse(await (await call(page)).json());
+    assert.equal(correctedArticle.body, corrected);
+    assert.equal(correctedArticle.change?.note, said);
   } finally {
     for (const identity of [owner, system])
       await db.update(roles).set({ active: false }).where(eq(roles.identityId, identity));

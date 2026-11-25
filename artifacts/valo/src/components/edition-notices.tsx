@@ -26,9 +26,13 @@ export function editionNoticeWords(notice: EditionNotice) {
       ? `“${notice.title}” version ${notice.version} was replaced by version ${notice.replacementVersion}${on}`
       : `“${notice.title}” version ${notice.version} was withdrawn${on}`;
   const lines: string[] = [];
+  // A withdrawal's notice carries its reason, and a replacement's what changed in the new version
+  // (docs/architecture/guidance-currency.md, slice 3).
   const reason = notice.reason?.trim();
-  if (notice.kind === "withdrawn" && reason)
-    lines.push(`The reason given: ${reason}${/[.!?]$/.test(reason) ? "" : "."}`);
+  if (reason)
+    lines.push(
+      `${notice.kind === "withdrawn" ? "The reason given" : "What changed"}: ${reason}${/[.!?]$/.test(reason) ? "" : "."}`,
+    );
   if (notice.held)
     lines.push(
       notice.kind === "replaced"

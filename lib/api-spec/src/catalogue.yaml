@@ -180,6 +180,14 @@ schemas:
       scope: { type: string }
       limitations: { type: string }
       sources: { type: array, items: { $ref: "#/components/schemas/PublicSourceReference" } }
+      change: { $ref: "#/components/schemas/ReleaseChange" }
+  ReleaseChange:
+    type: object
+    description: "What changed in the published version of a staff-library entry that followed an earlier release, as its editor wrote it, and when that version was released (docs/architecture/guidance-currency.md, slice 3). Absent for a first release, or a version released before change notes were kept."
+    required: [on, note]
+    properties:
+      on: { type: string, format: date-time }
+      note: { type: string }
   IndustryCoverage:
     type: object
     required: [id, slug, title, deeperPackTarget, enhancedEvidenceRequired, coverageState, evidenceState, sourceCheckedAt, publishedItems]
@@ -283,6 +291,7 @@ schemas:
         type: array
         description: A staff-library template's related guides that are released now.
         items: { $ref: "#/components/schemas/RelatedGuide" }
+      change: { $ref: "#/components/schemas/ReleaseChange" }
   RelatedGuide:
     type: object
     required: [title, href, kind]

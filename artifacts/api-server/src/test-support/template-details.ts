@@ -21,10 +21,22 @@ export const templateDetailColumns = {
  * withdrawal gives one, of 20 to 1,000 characters, and the customers it concerns read it.
  */
 export const withdrawalReason = "A synthetic reason for this withdrawal, as its customers read it.";
-/** A staff-library action's body, with the withdrawal's reason when it is a withdrawal. */
-export const libraryAction = (action: string, revision: { version: number; digest: string }) => ({
+/**
+ * A synthetic note of what changed, for a test's release of a version that follows an earlier release
+ * (docs/architecture/guidance-currency.md, slice 3): such a release needs one, of 20 to 1,000 characters.
+ */
+export const changeNote = "A synthetic note of what changed in this version, as its readers see it.";
+/**
+ * A staff-library action's body, as the staff library sends it: with the withdrawal's reason when it is a
+ * withdrawal, and with what changed when it publishes a version that follows an earlier release.
+ */
+export const libraryAction = (
+  action: string,
+  revision: { version: number; digest: string; previousRelease?: number | null },
+) => ({
   action,
   version: revision.version,
   digest: revision.digest,
   ...(action === "withdraw" ? { reason: withdrawalReason } : {}),
+  ...(action === "publish" && typeof revision.previousRelease === "number" ? { change: changeNote } : {}),
 });

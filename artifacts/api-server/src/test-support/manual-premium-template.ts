@@ -10,7 +10,7 @@ import {
   ListPublicCatalogueResponse,
 } from "@workspace/api-zod";
 import { wordFromText } from "../modules/manual-library/files";
-import { libraryAction, templateDetails, withdrawalReason } from "./template-details";
+import { changeNote, libraryAction, templateDetails, withdrawalReason } from "./template-details";
 
 type Call = (path: string, body?: unknown, actor?: string) => Promise<Response>;
 
@@ -350,6 +350,8 @@ export async function exercisePremiumManualTemplate(call: Call, editor: string) 
     await (await call("/public/templates/manual-" + itemId)).json(),
   );
   assert.equal(replacement.id, next.id);
+  // Its page says what changed in the new edition (docs/architecture/guidance-currency.md, slice 3).
+  assert.equal(replacement.change?.note, changeNote);
   // The purchase carries to the new edition at no further charge (docs/architecture/editions.md,
   // delegated decision 3): the buyer's purchases list the new edition's file under the edition bought,
   // and say what it carries to.
@@ -382,6 +384,7 @@ export async function exercisePremiumManualTemplate(call: Call, editor: string) 
               from valo_edition_notices where edition = ${edition} order by kind`,
       )
     ).rows;
+  // A replacement's notice carries what changed (docs/architecture/guidance-currency.md, slice 3).
   const heldNotice = {
     workspace_id: secondBuyer.workspaceId,
     route: "library",
@@ -389,7 +392,7 @@ export async function exercisePremiumManualTemplate(call: Call, editor: string) 
     title: "Service agreement",
     version: 1,
     replacement_version: 2,
-    reason: null,
+    reason: changeNote,
     held: true,
     documents: 0,
   };
@@ -610,11 +613,7 @@ export async function exercisePremiumFormDocument(call: Call, editor: string) {
   );
   assert.equal(nextResponse.status, 200);
   const nextEdition = GetManualLibraryRevisionResponse.parse(await nextResponse.json());
-  const nextPublished = await call(
-    formed.path + "/actions",
-    { action: "publish", version: nextEdition.version, digest: nextEdition.digest },
-    editor,
-  );
+  const nextPublished = await call(formed.path + "/actions", libraryAction("publish", nextEdition), editor);
   assert.equal(nextPublished.status, 200);
   // The cleanup below withdraws the item's released edition, which is now the second.
   formed.revision = nextEdition;

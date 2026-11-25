@@ -22,6 +22,7 @@ import { SaveTemplateButton } from "@/components/saved-templates";
 import { ReleaseNotices } from "@/components/release-notices";
 import { KIND_LABEL } from "@/components/resource-parts";
 import { useIdentity } from "@/islands/identity-store";
+import { updatedLine } from "@/lib/library-change";
 
 function Unavailable() {
   return (
@@ -286,6 +287,12 @@ export function TemplateDetail({
                   data-testid="text-summary"
                 >
                   {t.purpose ?? t.summary}
+                </p>
+              )}
+              {/* A version released after an earlier one says what changed (CMP-005). */}
+              {t.change && (
+                <p className="mt-4 max-w-2xl border-l-2 border-border pl-3 text-sm" data-testid="text-change">
+                  {updatedLine(t.change)}
                 </p>
               )}
 

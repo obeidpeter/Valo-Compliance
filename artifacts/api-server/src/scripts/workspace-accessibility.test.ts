@@ -634,6 +634,7 @@ const answers: Record<string, unknown> = {
         holds: ["The official sources still need checking."],
         sources: [],
         live: null,
+        previousRelease: null,
       },
     ],
     hasMore: false,

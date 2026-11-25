@@ -19,4 +19,10 @@ export interface ManualLibraryAction {
      * @maxLength 1000
      */
   reason?: string;
+  /**
+     * What changed in this version since the entry's earlier release, in 20 to 1,000 characters. Releasing a version that follows an earlier release needs it, and a first release takes none; the entry's page and the customers who hold the template see it (docs/architecture/guidance-currency.md, slice 3).
+     * @minLength 20
+     * @maxLength 1000
+     */
+  change?: string;
 }

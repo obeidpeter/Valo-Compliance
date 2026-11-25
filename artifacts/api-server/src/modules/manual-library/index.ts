@@ -1,5 +1,18 @@
 import { randomUUID } from "node:crypto";
-import { and, desc, eq, getTableColumns, ilike, inArray, isNull, ne, or, sql } from "drizzle-orm";
+import {
+  and,
+  desc,
+  eq,
+  getTableColumns,
+  ilike,
+  inArray,
+  isNotNull,
+  isNull,
+  lt,
+  ne,
+  or,
+  sql,
+} from "drizzle-orm";
 import { baselineTemplates, coveragePlan, digest, sha256 } from "@workspace/valo-core";
 import { FormTextError, parseFormText } from "@workspace/valo-core/form-text";
 import { formFit } from "@workspace/valo-core/guided-runtime-v2";
@@ -71,6 +84,49 @@ export function formTextFit(row: Pick<Revision, "title" | "formText">) {
     problems: problems.slice(0, 200).map((problem) => problem.slice(0, 400)),
   };
 }
+/**
+ * The latest earlier version of an entry that was released, or null. A release of a later version then
+ * says what changed, and the database releases it only with that note
+ * (docs/architecture/guidance-currency.md, slice 3, CMP-005).
+ */
+export async function previousRelease(tx: Pick<Tx, "select">, itemId: string, version: number) {
+  const { valoManualLibrary: t } = await import("@workspace/db");
+  const [row] = await tx
+    .select({ version: t.version })
+    .from(t)
+    .where(and(eq(t.itemId, itemId), lt(t.version, version), isNotNull(t.publishedAt)))
+    .orderBy(desc(t.version))
+    .limit(1);
+  return row?.version ?? null;
+}
+/**
+ * Records what changed in a version about to be released, in the transaction that releases it, when the
+ * version follows an earlier release. Such a release needs the note, and a first release takes none.
+ */
+export async function recordChange(
+  tx: Tx,
+  edition: { id: string; itemId: string; version: number },
+  given: string | undefined,
+  recordedBy: string,
+) {
+  const previous = await previousRelease(tx, edition.itemId, edition.version);
+  if (previous === null) {
+    if (given !== undefined)
+      throw new ValoProblem(
+        422,
+        "This is the entry's first release, so nothing has changed from an earlier one. Leave out what changed to publish it.",
+      );
+    return;
+  }
+  const note = given?.trim() ?? "";
+  if (note.length < 20 || note.length > 1000)
+    throw new ValoProblem(
+      422,
+      `Say what changed since version ${previous}, in 20 to 1,000 characters. Readers see it on the entry's page, and customers who hold or used a template are told it.`,
+    );
+  const { valoManualChanges } = await import("@workspace/db");
+  await tx.insert(valoManualChanges).values({ edition: edition.id, note, recordedBy });
+}
 async function detail(tx: Tx, row: RevisionMeta) {
   const { valoManualLibrary: t } = await import("@workspace/db");
   const [live] = await tx
@@ -123,6 +179,7 @@ async function detail(tx: Tx, row: RevisionMeta) {
     publishedAt: row.publishedAt?.toISOString() ?? null,
     publishedBy: row.publishedBy,
     live: live ?? null,
+    previousRelease: await previousRelease(tx, row.itemId, row.version),
   };
 }
 function pgError(error: unknown) {
@@ -513,6 +570,9 @@ export async function actOnManualRevision(actor: SourceStaffActor, itemId: strin
             422,
             "Say what this template is for, give its limits and say whether AI drafted it, then save it again before you publish it.",
           );
+        // A version that follows an earlier release says what changed: the note is written first, so that
+        // the release and the notices it writes carry it (docs/architecture/guidance-currency.md, slice 3).
+        await recordChange(tx, target, input.change, actor.identityId);
         await tx
           .update(t)
           .set({ ...closed, state: "replaced" })
@@ -653,8 +713,38 @@ export async function freeLibraryEdition(tx: Pick<Tx, "execute">, id: string) {
   );
   return rows[0] ?? null;
 }
-/** Existing readers may still run against the schema preceding the additive migration. */
+/**
+ * The published entries the public library shows, each with the change note of its published version when
+ * that version followed an earlier release (docs/architecture/guidance-currency.md, slice 3). A summary
+ * reads no notes.
+ */
 export async function releasedManualEntries(
+  slugOrOptions?: string | { slug?: string | undefined; summaryOnly?: boolean | undefined },
+) {
+  const rows = await releasedManualRows(slugOrOptions);
+  const summaryOnly = typeof slugOrOptions === "object" && slugOrOptions.summaryOnly === true;
+  if (summaryOnly || !rows.length) return rows.map((row) => ({ ...row, change: null as string | null }));
+  const { db, valoManualChanges: c } = await import("@workspace/db");
+  let notes = new Map<string, string>();
+  try {
+    const found = await db
+      .select({ edition: c.edition, note: c.note })
+      .from(c)
+      .where(
+        inArray(
+          c.edition,
+          rows.map((row) => row.id),
+        ),
+      );
+    notes = new Map(found.map((row) => [row.edition, row.note]));
+  } catch (error) {
+    // A database the change notes migration has not reached keeps none.
+    if (pgError(error).code !== "42P01") throw error;
+  }
+  return rows.map((row) => ({ ...row, change: notes.get(row.id) ?? null }));
+}
+/** Existing readers may still run against the schema preceding the additive migration. */
+async function releasedManualRows(
   slugOrOptions?: string | { slug?: string | undefined; summaryOnly?: boolean | undefined },
 ) {
   if (!isDevelopmentRuntime()) return [];

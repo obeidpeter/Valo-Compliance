@@ -24,6 +24,7 @@ import {
   reviewRecorded,
   reviewStatus,
 } from "@/lib/library-review";
+import { changeHint, changeLabel } from "@/lib/library-change";
 import { FormTextOutline } from "./form-text-outline";
 import { RelatedGuidesPicker } from "./related-guides-picker";
 import { PlainText } from "./resource-parts";
@@ -175,6 +176,10 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
   const [reviewing, setReviewing] = useState(false);
   const [reviewNote, setReviewNote] = useState("");
   const [reason, setReason] = useState("");
+  // A version that follows an earlier release says what changed before it is published
+  // (docs/architecture/guidance-currency.md, slice 3).
+  const [publishing, setPublishing] = useState(false);
+  const [changeNote, setChangeNote] = useState("");
   function mark(value: boolean) {
     setDirty(value);
     onDirtyChange(value);
@@ -212,6 +217,8 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
     setRequestId(crypto.randomUUID());
     setWithdrawing(false);
     setReason("");
+    setPublishing(false);
+    setChangeNote("");
     mark(false);
   }
   async function work(fn: () => Promise<void>) {
@@ -269,6 +276,7 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
       version: target.version,
       digest: target.digest,
       ...(action === "withdraw" ? { reason: reason.trim() } : {}),
+      ...(action === "publish" && snapshot.previousRelease !== null ? { change: changeNote.trim() } : {}),
     });
     load(row);
     await list.refetch();
@@ -783,12 +791,19 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
                     Download preview file
                   </button>
                 )}
-                {snapshot.kind !== "regulatory_article" && snapshot.state === "draft" && (
+                {snapshot.kind !== "regulatory_article" && snapshot.state === "draft" && !publishing && (
                   <button
                     type="button"
                     className="btn btn-primary"
                     disabled={busy || dirty}
-                    onClick={() => void work(() => act("publish"))}
+                    onClick={() => {
+                      if (snapshot.previousRelease === null) {
+                        void work(() => act("publish"));
+                        return;
+                      }
+                      setChangeNote("");
+                      setPublishing(true);
+                    }}
                   >
                     Publish this version
                   </button>
@@ -807,6 +822,50 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
                   </button>
                 )}
               </div>
+              {snapshot.state === "draft" && snapshot.previousRelease !== null && publishing && (
+                <form
+                  className="mt-4 grid gap-2"
+                  aria-label="Say what changed, then publish this version"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    void work(() => act("publish"));
+                  }}
+                >
+                  <label className="text-sm font-medium" htmlFor="manual-change-note">
+                    {changeLabel}
+                  </label>
+                  <p id="manual-change-note-help" className="text-sm text-muted-foreground">
+                    {changeHint(snapshot.previousRelease)}
+                  </p>
+                  <textarea
+                    id="manual-change-note"
+                    className="field min-h-24"
+                    aria-describedby="manual-change-note-help"
+                    minLength={20}
+                    maxLength={1000}
+                    required
+                    value={changeNote}
+                    onChange={(e) => setChangeNote(e.target.value)}
+                  />
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      type="submit"
+                      className="btn btn-primary btn-sm"
+                      disabled={busy || dirty || changeNote.trim().length < 20}
+                    >
+                      Publish this version
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm"
+                      disabled={busy}
+                      onClick={() => setPublishing(false)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
               {review && snapshot.live && !reviewing && (
                 <div className="mt-4 grid gap-2">
                   <p className="text-sm">{reviewStatus(review)}</p>

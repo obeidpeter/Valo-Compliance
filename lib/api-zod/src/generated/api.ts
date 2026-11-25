@@ -767,7 +767,11 @@ export const ListReleasedResourcesResponseItem = zod.object({
   "url": zod.string(),
   "title": zod.string(),
   "locator": zod.string()
-}))
+})),
+  "change": zod.object({
+  "on": zod.coerce.date(),
+  "note": zod.string()
+}).optional().describe('What changed in the published version of a staff-library entry that followed an earlier release, as its editor wrote it, and when that version was released (docs/architecture/guidance-currency.md, slice 3). Absent for a first release, or a version released before change notes were kept.')
 })
 export const ListReleasedResourcesResponse = zod.array(ListReleasedResourcesResponseItem)
 
@@ -797,7 +801,11 @@ export const GetReleasedResourceResponse = zod.object({
   "url": zod.string(),
   "title": zod.string(),
   "locator": zod.string()
-}))
+})),
+  "change": zod.object({
+  "on": zod.coerce.date(),
+  "note": zod.string()
+}).optional().describe('What changed in the published version of a staff-library entry that followed an earlier release, as its editor wrote it, and when that version was released (docs/architecture/guidance-currency.md, slice 3). Absent for a first release, or a version released before change notes were kept.')
 })
 
 
@@ -923,7 +931,11 @@ export const GetReleasedTemplateResponse = zod.object({
   "title": zod.string(),
   "href": zod.string(),
   "kind": zod.enum(['guide', 'guidance', 'industry_introduction', 'industry_pack'])
-})).optional().describe('A staff-library template\'s related guides that are released now.')
+})).optional().describe('A staff-library template\'s related guides that are released now.'),
+  "change": zod.object({
+  "on": zod.coerce.date(),
+  "note": zod.string()
+}).optional().describe('What changed in the published version of a staff-library entry that followed an earlier release, as its editor wrote it, and when that version was released (docs/architecture/guidance-currency.md, slice 3). Absent for a first release, or a version released before change notes were kept.')
 })
 
 
@@ -4187,7 +4199,8 @@ export const ListOwnerGuidanceResponse = zod.object({
   "live": zod.union([zod.object({
   "version": zod.int(),
   "digest": zod.string()
-}),zod.null()])
+}),zod.null()]),
+  "previousRelease": zod.int().nullable().describe('The latest earlier version of this article that was released, or null. Signing this version then needs a note of what changed.')
 })),
   "hasMore": zod.boolean()
 })
@@ -4223,6 +4236,9 @@ export const DecideOwnerGuidanceParams = zod.object({
 
 
 export const decideOwnerGuidanceBodyDigestRegExp = new RegExp('^[a-f0-9]{64}$');
+export const decideOwnerGuidanceBodyChangeMin = 20;
+export const decideOwnerGuidanceBodyChangeMax = 1000;
+
 
 
 export const DecideOwnerGuidanceBody = zod.object({
@@ -4230,7 +4246,8 @@ export const DecideOwnerGuidanceBody = zod.object({
   "version": zod.int().min(1),
   "digest": zod.string().regex(decideOwnerGuidanceBodyDigestRegExp),
   "checkId": zod.union([zod.uuid(),zod.null()]),
-  "confirmed": zod.literal(true)
+  "confirmed": zod.literal(true),
+  "change": zod.string().min(decideOwnerGuidanceBodyChangeMin).max(decideOwnerGuidanceBodyChangeMax).optional().describe('What changed in this version since the article\'s earlier release. Signing a version that follows an earlier release needs it (docs/architecture/guidance-currency.md, slice 3).')
 })
 
 export const DecideOwnerGuidanceResponse = zod.object({
@@ -4406,7 +4423,8 @@ export const GetManualLibraryRevisionResponse = zod.object({
   "title": zod.string().nullable(),
   "kind": zod.union([zod.literal('practical_guide'),zod.literal('industry_introduction'),zod.literal('industry_pack'),zod.literal('template'),zod.literal('premium_template'),zod.literal('regulatory_article'),zod.literal(null)]).nullable(),
   "live": zod.boolean()
-})).describe('The related guides by their library items, as the editor sees them: the title and kind of each item\'s latest version, whether a version of it is released now, or nulls for an item not in the library yet.')
+})).describe('The related guides by their library items, as the editor sees them: the title and kind of each item\'s latest version, whether a version of it is released now, or nulls for an item not in the library yet.'),
+  "previousRelease": zod.int().nullable().describe('The latest earlier version of this entry that was released, or null. Releasing this version then needs a note of what changed (docs/architecture/guidance-currency.md, slice 3).')
 })
 
 
@@ -4497,7 +4515,8 @@ export const SaveManualLibraryDraftResponse = zod.object({
   "title": zod.string().nullable(),
   "kind": zod.union([zod.literal('practical_guide'),zod.literal('industry_introduction'),zod.literal('industry_pack'),zod.literal('template'),zod.literal('premium_template'),zod.literal('regulatory_article'),zod.literal(null)]).nullable(),
   "live": zod.boolean()
-})).describe('The related guides by their library items, as the editor sees them: the title and kind of each item\'s latest version, whether a version of it is released now, or nulls for an item not in the library yet.')
+})).describe('The related guides by their library items, as the editor sees them: the title and kind of each item\'s latest version, whether a version of it is released now, or nulls for an item not in the library yet.'),
+  "previousRelease": zod.int().nullable().describe('The latest earlier version of this entry that was released, or null. Releasing this version then needs a note of what changed (docs/architecture/guidance-currency.md, slice 3).')
 })
 
 
@@ -4510,13 +4529,17 @@ export const actOnManualLibraryBodyDigestRegExp = new RegExp('^[0-9a-f]{64}$');
 export const actOnManualLibraryBodyReasonMin = 20;
 export const actOnManualLibraryBodyReasonMax = 1000;
 
+export const actOnManualLibraryBodyChangeMin = 20;
+export const actOnManualLibraryBodyChangeMax = 1000;
+
 
 
 export const ActOnManualLibraryBody = zod.object({
   "action": zod.enum(['publish', 'withdraw']),
   "version": zod.int().min(1),
   "digest": zod.string().regex(actOnManualLibraryBodyDigestRegExp),
-  "reason": zod.string().min(actOnManualLibraryBodyReasonMin).max(actOnManualLibraryBodyReasonMax).optional().describe('Why the version is withdrawn. A withdrawal needs it; the customers who bought or used the version see it (docs/architecture/editions.md).')
+  "reason": zod.string().min(actOnManualLibraryBodyReasonMin).max(actOnManualLibraryBodyReasonMax).optional().describe('Why the version is withdrawn. A withdrawal needs it; the customers who bought or used the version see it (docs/architecture/editions.md).'),
+  "change": zod.string().min(actOnManualLibraryBodyChangeMin).max(actOnManualLibraryBodyChangeMax).optional().describe('What changed in this version since the entry\'s earlier release, in 20 to 1,000 characters. Releasing a version that follows an earlier release needs it, and a first release takes none; the entry\'s page and the customers who hold the template see it (docs/architecture/guidance-currency.md, slice 3).')
 })
 
 export const actOnManualLibraryResponseDigestRegExp = new RegExp('^[0-9a-f]{64}$');
@@ -4562,7 +4585,8 @@ export const ActOnManualLibraryResponse = zod.object({
   "title": zod.string().nullable(),
   "kind": zod.union([zod.literal('practical_guide'),zod.literal('industry_introduction'),zod.literal('industry_pack'),zod.literal('template'),zod.literal('premium_template'),zod.literal('regulatory_article'),zod.literal(null)]).nullable(),
   "live": zod.boolean()
-})).describe('The related guides by their library items, as the editor sees them: the title and kind of each item\'s latest version, whether a version of it is released now, or nulls for an item not in the library yet.')
+})).describe('The related guides by their library items, as the editor sees them: the title and kind of each item\'s latest version, whether a version of it is released now, or nulls for an item not in the library yet.'),
+  "previousRelease": zod.int().nullable().describe('The latest earlier version of this entry that was released, or null. Releasing this version then needs a note of what changed (docs/architecture/guidance-currency.md, slice 3).')
 })
 
 

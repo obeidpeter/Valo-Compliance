@@ -283,6 +283,7 @@ export * from './refundDecisionInputDecision';
 export * from './refundRecord';
 export * from './relatedGuide';
 export * from './relatedGuideKind';
+export * from './releaseChange';
 export * from './releaseControl';
 export * from './releasedResource';
 export * from './releasedResourceKind';

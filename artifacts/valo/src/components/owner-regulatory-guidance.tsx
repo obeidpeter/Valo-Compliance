@@ -2,6 +2,7 @@ import { useState } from "react";
 import { decideOwnerGuidance, refreshOwnerGuidance, useListOwnerGuidance } from "@workspace/api-client-react";
 import { formatDay } from "@/lib/format";
 import { describeError } from "@/lib/describe-error";
+import { changeLabel } from "@/lib/library-change";
 import { PlainText } from "./resource-parts";
 import { ErrorState } from "./states";
 
@@ -13,11 +14,16 @@ export function OwnerRegulatoryGuidance() {
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
+  // Signing a version that follows an earlier release says what changed
+  // (docs/architecture/guidance-currency.md, slice 3).
+  const [changeNote, setChangeNote] = useState("");
   const item = result.data?.items.find((row) => row.itemId === selected);
+  const needsChange = !!item && item.state === "draft" && item.previousRelease !== null;
   const key = item ? [item.itemId, item.digest, item.checkId].join("/") : "";
   function select(id: string) {
     setSelected(id);
     setApproval("");
+    setChangeNote("");
     setNotice("");
     setError("");
   }
@@ -34,8 +40,10 @@ export function OwnerRegulatoryGuidance() {
         version: revision.version,
         confirmed: true,
         checkId: action === "publish" ? item.checkId : null,
+        ...(action === "publish" && needsChange ? { change: changeNote.trim() } : {}),
       });
       setApproval("");
+      setChangeNote("");
       await result.refetch();
       setNotice(`Version ${saved.version} ${saved.state}.`);
     } catch (e) {
@@ -169,11 +177,32 @@ export function OwnerRegulatoryGuidance() {
                     I have checked this article version and its official sources and authorise the selected
                     action.
                   </label>
+                  {needsChange && !item.holds.length && item.checkId && (
+                    <div className="grid gap-1">
+                      <label className="font-medium" htmlFor="owner-change-note">
+                        {changeLabel}
+                      </label>
+                      <p id="owner-change-note-help" className="text-muted-foreground">
+                        Version {item.previousRelease} was released before. Readers see this note on the
+                        article's page. In 20 to 1,000 characters.
+                      </p>
+                      <textarea
+                        id="owner-change-note"
+                        className="field min-h-24"
+                        aria-describedby="owner-change-note-help"
+                        minLength={20}
+                        maxLength={1000}
+                        disabled={busy}
+                        value={changeNote}
+                        onChange={(e) => setChangeNote(e.target.value)}
+                      />
+                    </div>
+                  )}
                   <div className="flex flex-wrap gap-2">
                     {item.state === "draft" && !item.holds.length && item.checkId && (
                       <button
                         className="btn btn-primary"
-                        disabled={busy || approval !== key}
+                        disabled={busy || approval !== key || (needsChange && changeNote.trim().length < 20)}
                         onClick={() => void decide("publish")}
                       >
                         Sign off and publish this version

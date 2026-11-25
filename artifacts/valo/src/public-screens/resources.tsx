@@ -24,6 +24,7 @@ import { formatCount, formatDay } from "@/lib/format";
 import { industryName } from "@/lib/library-filters";
 import { fromServer } from "@/lib/server-data";
 import { ANY_DOCUMENT, signUpFor } from "@/lib/start";
+import { updatedLine } from "@/lib/library-change";
 
 /** The released resources, starting from what the server read; the browser reads them itself when
  * the server could not, and every 15 seconds after (decision 0011). */
@@ -276,6 +277,12 @@ export function ResourceDetail({
               </h1>
               {r.publicationMethod !== "manual" && (
                 <p className="mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">{r.summary}</p>
+              )}
+              {/* A version released after an earlier one says what changed (CMP-005). */}
+              {r.change && (
+                <p className="mt-6 max-w-2xl border-l-2 border-border pl-3 text-sm" data-testid="text-change">
+                  {updatedLine(r.change)}
+                </p>
               )}
               <PlainText
                 text={r.body}
