@@ -129,19 +129,36 @@ heading, and scores the drafts the app kept. The stand-in's plan is not evidence
 - **9 cases are controls**, run by `inference-customer-controls.test.ts` and
   `inference-customer-controls.integration.test.ts`.
 
+## The suite
+
+`customer-source-suite.ts` scores every case outside the controls with its rubric, giving each case to
+the app with the same helper as the database test (`scripts/customer-rubric-run.ts`).
+- A stop costs nothing, so it runs whenever the evaluation identity is available.
+- An ordinary case reaches the provider only when it is selected for the run, which needs the owner's AI
+  budget. An exact fresh answer from the last day is reused instead.
+- The run captures its routine logs, so the privacy case can be scored. A reused answer has none, and
+  leaves that case unscored.
+- QUO-01's coded check and the suite's `partial_provider_evidence` status are gone: QUO-01 is scored like
+  every other case.
+
+With `--keep-for-review`, the kept run carries the rubric's result:
+- a case no test fails is left for the reviewer with what the app answered, a draft, a stop or a
+  refusal, and each check with what the suite found;
+- a failed case is kept as failed with nothing to judge, marked critical where the rubric marks it, so
+  the score's bar fails.
+
+The controls keep their own path, and PRO-11 and PRO-15, which the suite cannot run in-process, are
+run by their CI tests.
+
 ## What comes next
 
-1. **The suite reads the rubric.** `customer-source-suite.ts` scores every case and keeps the run for the
-   reviewer with each check and what the suite found.
-   - Stopped cases cost nothing.
-   - The ordinary cases need the owner's AI budget.
-   - The run captures its routine logs.
-   - A failed case is kept as `rubric_failed`, marked critical where it is, so the score's bar fails.
-2. **The binding** carries each lost fact as a customer would give it: the unit in the line's
+1. **The binding** carries each lost fact as a customer would give it: the unit in the line's
    description, and the brief's price, the statement, the recipient, the ceiling and the email address as
    the customer's notes. Each is a fixture change the corpus's execution requirements ask to be recorded.
    PRO-04's percentage needs the app to show a contingency.
-3. **The app** (Phase 6, "The drafting assistant"):
+2. **The app** (Phase 6, "The drafting assistant"):
    - recognise a legal request in more of its wordings, with a reply that names where to go;
    - flag an instruction hidden in an item's description;
    - show an optional contingency apart from the committed budget.
+3. **The finite evaluation runner** (`inference-customer-runtime.ts`), the approved AI route, still
+   records an answer as partial evidence. It can score the answer with the rubric the same way.

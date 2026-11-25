@@ -1339,6 +1339,13 @@
       "proves": "Put through the app's own drafting service with a stand-in for the AI provider, the 51 cases the rubric scores give: two failures where the app falls short (INV-11 and QUO-12), none critical; eight cases waiting on facts the suite's binding does not give the app; and 41 with every amount, word, payload and log line checked, left for the reviewer. The stand-in's plan is no evidence of an AI's quality, and nothing is accepted."
     },
     {
+      "requirement": "AI-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/acceptance-review/kept-runs.test.ts",
+      "test": "with the rubric, a customer case no test fails is left for a reviewer with what the app answered and each check; a failed one is kept with nothing to judge",
+      "proves": "A kept customer AI run leaves a case no rubric test fails for a reviewer with what the app answered, a draft, a stop or a refusal, and each of its checks with what the suite found; a case the rubric fails is kept with nothing to judge, marked critical where the rubric marks it, and a case it cannot score is kept with its reason."
+    },
+    {
       "requirement": "AI-009",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/ai-lanes/inference-customer-controls.integration.test.ts",
