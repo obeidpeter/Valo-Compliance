@@ -1,6 +1,9 @@
 import { createHash, randomUUID } from "node:crypto";
 import { and, asc, eq, gt, inArray, isNull, or, sql } from "drizzle-orm";
+import type { db } from "@workspace/db";
 import { premiumEditions, type PremiumEdition } from "./premium-editions";
+
+type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 /**
  * A premium template's price, recorded for the product owner (step 5 of the content and speed plan
@@ -149,79 +152,82 @@ export async function premiumPriceStatus() {
  * Records the owner's price for a published premium template, and closes the template's open price
  * when the new one starts. Refused unless `confirm` is the checksum of exactly these terms.
  */
-export async function recordPremiumPrice(
-  terms: PremiumPriceTerms,
-  approval: { approvedBy: string; reference: string; confirm: string },
-) {
+export async function recordPremiumPrice(terms: PremiumPriceTerms, approval: PremiumPriceApproval) {
+  const { db: store } = await import("@workspace/db");
+  return store.transaction((tx) => recordPremiumPriceIn(tx, terms, approval));
+}
+
+export type PremiumPriceApproval = { approvedBy: string; reference: string; confirm: string };
+
+/** The same in the caller's transaction, which nothing else in it may have used for prices yet. */
+export async function recordPremiumPriceIn(tx: Tx, terms: PremiumPriceTerms, approval: PremiumPriceApproval) {
   if (approval.confirm !== premiumPriceTermsId(terms))
     throw Error("The confirmation is not the checksum of these terms. Preview them again and confirm that.");
   const approvedBy = approval.approvedBy.trim(),
     reference = approval.reference.trim();
   if (!oneLine(approvedBy, 2, 120)) throw Error("Name who approved the price, on one line.");
   if (!oneLine(reference, 3, 160)) throw Error("Say where the approval is written, on one line.");
-  const { db, valoManualLibrary, valoPrices } = await import("@workspace/db");
-  return db.transaction(async (tx) => {
-    await tx.execute(
-      sql`select pg_advisory_xact_lock(hashtextextended(${"premium-price:" + terms.edition}, 0))`,
+  const { valoManualLibrary, valoPrices } = await import("@workspace/db");
+  await tx.execute(
+    sql`select pg_advisory_xact_lock(hashtextextended(${"premium-price:" + terms.edition}, 0))`,
+  );
+  const { rows: live } = await tx.execute<PremiumEdition>(premiumEditions(terms.edition));
+  if (!live[0] || live[0].held)
+    throw Error(
+      "Only a published premium template from the staff library, not overdue for its review and not held by staff, can be priced. Check its edition ID and review date with status, and any hold in the staff library.",
     );
-    const { rows: live } = await tx.execute<PremiumEdition>(premiumEditions(terms.edition));
-    if (!live[0] || live[0].held)
-      throw Error(
-        "Only a published premium template from the staff library, not overdue for its review and not held by staff, can be priced. Check its edition ID and review date with status, and any hold in the staff library.",
-      );
-    const [entry] = await tx
-      .select({ title: valoManualLibrary.title })
-      .from(valoManualLibrary)
-      .where(eq(valoManualLibrary.id, terms.edition));
-    const { rows } = await tx.execute<{ now: Date | string }>(sql`select now() as now`);
-    const now = new Date(rows[0]!.now);
-    const from = terms.from === "now" ? now : new Date(terms.from);
-    if (+from < +now)
-      throw Error("This price would start in the past. Preview it again with now or a later start.");
-    // A price that starts now starts at the transaction's own time, as the database holds it: a copy
-    // read back keeps only milliseconds, and closing a price a fraction before now() is refused.
-    const start = terms.from === "now" ? sql`now()` : from;
-    const p = valoPrices;
-    const open = await tx
-      .select()
-      .from(p)
-      .where(and(eq(p.contentVersionId, terms.edition), or(isNull(p.effectiveTo), gt(p.effectiveTo, start))))
-      .orderBy(asc(p.effectiveFrom), asc(p.id))
-      .for("update");
-    const scheduled = open.find((price) => +price.effectiveFrom >= +from);
-    if (scheduled)
-      throw Error(
-        `A price for this template already starts at ${scheduled.effectiveFrom.toISOString()}. Start the new one after it.`,
-      );
-    const ending = open.find((price) => price.effectiveTo !== null);
-    if (ending)
-      throw Error(
-        `This template's price already ends at ${ending.effectiveTo!.toISOString()}. Start the new one then or later.`,
-      );
-    for (const price of open) await tx.update(p).set({ effectiveTo: start }).where(eq(p.id, price.id));
-    const priceId = randomUUID();
-    const [recorded] = await tx
-      .insert(p)
-      .values({
-        id: priceId,
-        contentVersionId: terms.edition,
-        title: entry!.title,
-        amountKobo: terms.amountKobo,
-        currency: "NGN",
-        licenceVersion: terms.licenceVersion,
-        licenceText: terms.licenceText,
-        taxTreatment: terms.taxTreatment,
-        approvalReference: `${reference} (approved by ${approvedBy})`,
-        effectiveFrom: start,
-      })
-      .returning({ effectiveFrom: p.effectiveFrom });
-    return {
-      priceId,
-      edition: terms.edition,
+  const [entry] = await tx
+    .select({ title: valoManualLibrary.title })
+    .from(valoManualLibrary)
+    .where(eq(valoManualLibrary.id, terms.edition));
+  const { rows } = await tx.execute<{ now: Date | string }>(sql`select now() as now`);
+  const now = new Date(rows[0]!.now);
+  const from = terms.from === "now" ? now : new Date(terms.from);
+  if (+from < +now)
+    throw Error("This price would start in the past. Preview it again with now or a later start.");
+  // A price that starts now starts at the transaction's own time, as the database holds it: a copy
+  // read back keeps only milliseconds, and closing a price a fraction before now() is refused.
+  const start = terms.from === "now" ? sql`now()` : from;
+  const p = valoPrices;
+  const open = await tx
+    .select()
+    .from(p)
+    .where(and(eq(p.contentVersionId, terms.edition), or(isNull(p.effectiveTo), gt(p.effectiveTo, start))))
+    .orderBy(asc(p.effectiveFrom), asc(p.id))
+    .for("update");
+  const scheduled = open.find((price) => +price.effectiveFrom >= +from);
+  if (scheduled)
+    throw Error(
+      `A price for this template already starts at ${scheduled.effectiveFrom.toISOString()}. Start the new one after it.`,
+    );
+  const ending = open.find((price) => price.effectiveTo !== null);
+  if (ending)
+    throw Error(
+      `This template's price already ends at ${ending.effectiveTo!.toISOString()}. Start the new one then or later.`,
+    );
+  for (const price of open) await tx.update(p).set({ effectiveTo: start }).where(eq(p.id, price.id));
+  const priceId = randomUUID();
+  const [recorded] = await tx
+    .insert(p)
+    .values({
+      id: priceId,
+      contentVersionId: terms.edition,
       title: entry!.title,
       amountKobo: terms.amountKobo,
-      from: recorded!.effectiveFrom,
-      closed: open.map((price) => ({ priceId: price.id, amountKobo: price.amountKobo })),
-    };
-  });
+      currency: "NGN",
+      licenceVersion: terms.licenceVersion,
+      licenceText: terms.licenceText,
+      taxTreatment: terms.taxTreatment,
+      approvalReference: `${reference} (approved by ${approvedBy})`,
+      effectiveFrom: start,
+    })
+    .returning({ effectiveFrom: p.effectiveFrom });
+  return {
+    priceId,
+    edition: terms.edition,
+    title: entry!.title,
+    amountKobo: terms.amountKobo,
+    from: recorded!.effectiveFrom,
+    closed: open.map((price) => ({ priceId: price.id, amountKobo: price.amountKobo })),
+  };
 }
