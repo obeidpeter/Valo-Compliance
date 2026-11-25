@@ -160,9 +160,25 @@ schemas:
     properties:
       status: { type: string }
       count: { type: integer, minimum: 0 }
+  AcceptanceRunScore:
+    type: object
+    description: >-
+      The run scored with the reviewer's record. A case counts only when its expected outcome is confirmed
+      for its hash and, where the suite cannot score it, the run is recorded as met for the case as kept; a
+      rejected expected outcome takes the case out of the score. Nothing here accepts a requirement.
+    required: [scored, counted, excluded, notCounted, required, critical, meetsBar, recordHash]
+    properties:
+      scored: { type: integer, minimum: 0, description: 'The cases left in the score.' }
+      counted: { type: integer, minimum: 0 }
+      excluded: { type: integer, minimum: 0, description: 'The cases whose expected outcome was rejected.' }
+      notCounted: { type: integer, minimum: 0 }
+      required: { type: integer, minimum: 0, description: 'How many scored cases the requirement asks to count.' }
+      critical: { type: integer, minimum: 0, description: 'The cases the suite marks a critical failure.' }
+      meetsBar: { type: boolean, description: 'Whether the counted cases reach the bar with no critical failure. Not acceptance.' }
+      recordHash: { type: string, description: 'The hash of every row of the record the score used.' }
   AcceptanceRun:
     type: object
-    required: [id, keptBy, createdAt, resultsHash, summary, cases, statuses, left, met, notMet]
+    required: [id, keptBy, createdAt, resultsHash, summary, cases, statuses, left, met, notMet, score]
     properties:
       id: { type: string }
       keptBy: { type: string }
@@ -174,6 +190,7 @@ schemas:
       left: { type: array, items: { $ref: '#/components/schemas/AcceptanceRunCase' }, description: 'The cases the run left for a reviewer.' }
       met: { type: integer, minimum: 0 }
       notMet: { type: integer, minimum: 0 }
+      score: { $ref: '#/components/schemas/AcceptanceRunScore' }
   AcceptanceRunView:
     type: object
     required: [corpus, run]

@@ -288,6 +288,16 @@ function acceptanceRun(corpus: string) {
       left: [left("CHK-CAND-SYNTH-001", true), left("CHK-CAND-SYNTH-002", false)],
       met: 1,
       notMet: 0,
+      score: {
+        scored: 80,
+        counted: 1,
+        excluded: 0,
+        notCounted: 79,
+        required: 80,
+        critical: 0,
+        meetsBar: false,
+        recordHash: "b".repeat(64),
+      },
     },
   });
 }

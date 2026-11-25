@@ -21,6 +21,7 @@ export * from './acceptanceRunCaseDecisionAnswer';
 export * from './acceptanceRunDecision';
 export * from './acceptanceRunDecisionAnswer';
 export * from './acceptanceRunDecisionCorpus';
+export * from './acceptanceRunScore';
 export * from './acceptanceRunSection';
 export * from './acceptanceRunStatus';
 export * from './acceptanceRunView';

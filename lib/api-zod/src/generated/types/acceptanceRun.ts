@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { AcceptanceRunCase } from './acceptanceRunCase';
+import type { AcceptanceRunScore } from './acceptanceRunScore';
 import type { AcceptanceRunStatus } from './acceptanceRunStatus';
 
 export interface AcceptanceRun {
@@ -23,4 +24,5 @@ export interface AcceptanceRun {
   met: number;
   /** @minimum 0 */
   notMet: number;
+  score: AcceptanceRunScore;
 }
