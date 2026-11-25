@@ -7,7 +7,7 @@ import {
   withApprovedInferenceWork,
   type FiniteWork,
 } from "../ai";
-import { putPublicationArtifact } from "../publication";
+import type { putPublicationArtifact } from "../publication";
 import { checkerChallengeVerdictSchema } from "./checker-challenge";
 
 type Put = typeof putPublicationArtifact;
@@ -22,11 +22,9 @@ type Put = typeof putPublicationArtifact;
  * of an expected result is not professional review, and the corpus's expected results stay as they
  * are until a person decides on each (decision 0016).
  */
-export async function executeCheckerChallenges(
-  batchId: string,
-  works: readonly FiniteWork[],
-  put: Put = putPublicationArtifact,
-) {
+export async function executeCheckerChallenges(batchId: string, works: readonly FiniteWork[], given?: Put) {
+  // The private store loads only when challenges run, not with every reader of the rules module.
+  const put = given ?? (await import("../publication")).putPublicationArtifact;
   // Each challenge opens its own approved work below, and the completion inside it refuses to run
   // without one, so no inference context is open, or needed, before the first.
   const [first] = works;
