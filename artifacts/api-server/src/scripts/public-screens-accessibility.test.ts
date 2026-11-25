@@ -856,6 +856,64 @@ test("a result worked out by the rules engine itself, with no rule published, sa
   }
 });
 
+// docs/architecture/results.md, slice 3. CMP-003: an unknown area "never receives invented local
+// obligations". RUL-006: "coverage gaps and excluded high-risk sectors are visible".
+test("a result the engine works out from answers that name a local government area and industries says Valo has not checked them, in the site's words, and still names the excluded sectors", async () => {
+  const worked: ReturnType<typeof assess>[] = [];
+  const { page, errors, close } = await app.phone("/checker", async (route, method, path, query) => {
+    if (method === "POST" && path === "/checker/preview") {
+      const { facts } = route.request().postDataJSON() as { facts: unknown };
+      const result = assess(
+        checkerFactsSchema.parse(facts),
+        [],
+        "2026-11-18",
+        new Date("2026-11-18T09:00:00Z"),
+      );
+      worked.push(result);
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(api.PreviewAssessmentResponse.parse(result)),
+      });
+    }
+    if (method === "GET" && path === "/public/recommendations")
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(noAids) });
+    return answer(route, method, path, query);
+  });
+  try {
+    await ready(page);
+    await page.getByTestId("button-step-1").click();
+    await choose(page, "check-activities-retail/wholesale");
+    await choose(page, "check-activities-healthcare");
+    await page.getByTestId("button-step-2").click();
+    await page.getByTestId("select-state").selectOption("Lagos");
+    await page.getByTestId("input-lga").fill("Ikeja");
+    await page.getByTestId("button-step-5").click();
+    await page.getByTestId("button-run").click();
+    const result = page.getByTestId("assessment-result");
+    await result.waitFor();
+    assert.equal(worked.length, 1);
+    await expect(result.locator("li.border-l-2")).toHaveText([
+      "Valo does not cover every state, the FCT and every local government area. Check what applies in Lagos with the authorities there.",
+      "Valo has not checked the local government's own requirements for Ikeja.",
+      "Valo has not checked requirements specific to retail/wholesale.",
+      "Valo has not checked requirements specific to healthcare.",
+      "Healthcare, financial services and energy are covered only where a published rule is about that activity.",
+    ]);
+    const shown = (await result.innerText()).replace(/\s+/g, " ");
+    assert.doesNotMatch(
+      shown,
+      /source-governed|released|eligible|not comprehensive|high-impact|establish exemption|\bLGA\b/i,
+    );
+    assert.deepEqual(oldWordsIn(shown), []);
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "what a result has not checked"), []);
+    assert.deepEqual(errors, []);
+  } finally {
+    await close();
+  }
+});
+
 // The list under a result is the same for everyone. The checks of the result answer it with nothing,
 // so neither the list nor its failure was ever on the screen for them.
 test("under a result, business documents are offered as optional, in words that say they are not advice and not chosen from the answers; when the list cannot be loaded the visitor is told the results are not affected and can try again", async () => {

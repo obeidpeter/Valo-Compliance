@@ -37,6 +37,9 @@ const PLACES =
   /^State\/FCT and LGA coverage is not comprehensive\. Confirm location-specific requirements for (.+)\.$/;
 const SECTORS =
   "High-impact healthcare, financial services and energy activities require activity-specific released evidence.";
+/** CMP-003 and RUL-006: the area and the industries the answers name that no published rule covers. */
+const LOCAL = /^No released rule covers local requirements for (.+)\.$/;
+const INDUSTRY = /^No released rule covers requirements specific to (.+)\.$/;
 
 /** Why the engine holds a rule back, by its own reason. */
 const HOLDS: Record<string, string> = {
@@ -74,6 +77,10 @@ export function resultGaps(sent: readonly string[], nothingShown: boolean): stri
       return [
         "Healthcare, financial services and energy are covered only where a published rule is about that activity.",
       ];
+    const local = LOCAL.exec(gap);
+    if (local) return [`Valo has not checked the local government's own requirements for ${local[1]}.`];
+    const industry = INDUSTRY.exec(gap);
+    if (industry) return [`Valo has not checked requirements specific to ${industry[1]}.`];
     const held = HELD.exec(gap);
     const reason = held ? HOLDS[held[2]!] : undefined;
     if (held && reason) return [`Rule ${held[1]} is on hold and gives no result here: ${reason}.`];

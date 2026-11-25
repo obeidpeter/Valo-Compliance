@@ -147,3 +147,23 @@ test("a requirement shows each figure its rule records with the passage it rests
   // A requirement these answers do not indicate shows no figure and nothing to confirm.
   assert.deepEqual(shown("Not indicated by these answers", [fee]), []);
 });
+
+// docs/architecture/results.md, slice 3 (CMP-003, RUL-006): what the answers name that no published
+// rule covers, said in the site's words.
+test("a result says in the site's words that Valo has not checked the local government area or the industries the answers name, and keeps the excluded sectors", () => {
+  const result = assess(
+    { ...EMPTY_FACTS, state: "Lagos", lga: "Ikeja", activities: ["retail/wholesale", "energy"] },
+    [],
+    "2026-11-18",
+    new Date("2026-11-18T09:00:00Z"),
+  );
+  const said = resultGaps(result.gaps, true);
+  assert.deepEqual(said, [
+    "Valo does not cover every state, the FCT and every local government area. Check what applies in Lagos with the authorities there.",
+    "Valo has not checked the local government's own requirements for Ikeja.",
+    "Valo has not checked requirements specific to retail/wholesale.",
+    "Valo has not checked requirements specific to energy.",
+    "Healthcare, financial services and energy are covered only where a published rule is about that activity.",
+  ]);
+  for (const sentence of said) assert.doesNotMatch(sentence, SYSTEM_WORDS, sentence);
+});
