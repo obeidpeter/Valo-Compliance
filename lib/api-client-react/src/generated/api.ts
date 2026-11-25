@@ -98,6 +98,8 @@ import type {
   ManualLibraryAction,
   ManualLibraryDraft,
   ManualLibraryPage,
+  ManualLibraryReview,
+  ManualLibraryReviewDate,
   ManualLibraryRevision,
   OwnerGuidanceCheck,
   OwnerGuidanceDecision,
@@ -6968,6 +6970,93 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getActOnManualLibraryMutationOptions(options), queryClient);
+    }
+
+export const getRecordManualLibraryReviewUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/manual-library/${encodeURIComponent(String(id))}/editorial-reviews`
+}
+
+/**
+ * A Content editor records that they re-read the published version of an entry other than a regulatory guide and it needs no change. Its next review is due 90 days later (docs/architecture/guidance-currency.md).
+ */
+export const recordManualLibraryReview = async (id: string,
+    manualLibraryReview: ManualLibraryReview, options?: Parameters<typeof customFetch>[1]): Promise<ManualLibraryReviewDate> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ManualLibraryReviewDate>(getRecordManualLibraryReviewUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(manualLibraryReview)
+  }
+);}
+
+
+
+
+
+export const getRecordManualLibraryReviewMutationKey = () => ['recordManualLibraryReview'] as const;
+
+export const getRecordManualLibraryReviewMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordManualLibraryReview>>, TError,RecordManualLibraryReviewMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof recordManualLibraryReview>>, TError,RecordManualLibraryReviewMutationVariables, TContext> => {
+
+const mutationKey = getRecordManualLibraryReviewMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recordManualLibraryReview>>, RecordManualLibraryReviewMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  recordManualLibraryReview(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RecordManualLibraryReviewMutationResult = NonNullable<Awaited<ReturnType<typeof recordManualLibraryReview>>>
+    export type RecordManualLibraryReviewMutationBody = BodyType<ManualLibraryReview>
+    export type RecordManualLibraryReviewMutationError = ErrorType<void>
+    export type RecordManualLibraryReviewMutationVariables = {id: string;data: BodyType<ManualLibraryReview>}
+
+    /** A Content editor records that they re-read the published version of an entry other than a regulatory guide and it needs no change. Its next review is due 90 days later (docs/architecture/guidance-currency.md). */
+export const useRecordManualLibraryReview = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordManualLibraryReview>>, TError,RecordManualLibraryReviewMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof recordManualLibraryReview>>,
+        TError,
+        RecordManualLibraryReviewMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRecordManualLibraryReviewMutationOptions(options), queryClient);
     }
 
 export const getPreviewManualLibraryFileUrl = (id: string,

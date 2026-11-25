@@ -187,3 +187,29 @@ export const valoManualWithdrawals = pgTable(
   },
   (t) => [check("valo_manual_withdrawal_reason", sql`char_length(${t.reason}) BETWEEN 20 AND 1000`)],
 );
+/**
+ * A Content editor's review of a published staff-library entry: that they re-read it and it needs no
+ * change (docs/architecture/guidance-currency.md, slice 2). An entry other than a regulatory guide is due
+ * for review 90 days after it was published or last reviewed, and is held from new use once overdue. The
+ * table's trigger accepts a review only of the published version, from an active Content editor, and
+ * never changes one.
+ */
+export const valoManualReviews = pgTable(
+  "valo_manual_reviews",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    edition: uuid("edition").notNull(),
+    reviewedBy: text("reviewed_by").notNull(),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }).notNull().defaultNow(),
+    note: text("note").notNull(),
+  },
+  (t) => [
+    foreignKey({
+      name: "valo_manual_review_edition_fk",
+      columns: [t.edition],
+      foreignColumns: [valoManualLibrary.id],
+    }),
+    index("valo_manual_review_edition").on(t.edition, t.reviewedAt),
+    check("valo_manual_review_note", sql`char_length(${t.note}) BETWEEN 20 AND 1000`),
+  ],
+);

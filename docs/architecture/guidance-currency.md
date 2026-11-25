@@ -116,6 +116,34 @@ Slice 1:
 - A check that outlasts its four minutes fails the worker's run and is not started again by that
   worker until it ends. It may still record its result.
 
+Slice 2, its database and routes:
+- The staff list gives each entry's published version and when its review is due. In place of listing
+  the entries due first, the list keeps its order, and `review=due` lists only those due within 14 days
+  or overdue.
+- A review records its own time, so it cannot be dated in the past. The route refuses a regulatory
+  guide, whose review is its source check, and any version but the published one.
+- An entry overdue for its review is held from: the public library's pages and lists, a free template's
+  download, the templates a workspace can save, copying a free template into a new document, starting
+  a free template's form from its wording, the premium offers and starting an order. What a buyer
+  already has stays: their purchased file, which their purchases still list, their documents and
+  starting a document from the edition they bought. A template a workspace saved stays saved, shown as
+  not available, as a withdrawn one is. The owner's price command refuses an overdue template too, and
+  says why.
+- A payment made while a premium template was offered, and verified after it fell due for its review,
+  still grants it.
+
+Slice 2, its staff screen:
+- Under each published entry other than a regulatory guide, the list says "Review due 23 Feb 2027" or
+  "Review overdue since 20 Nov 2026", the overdue ones in the warning colour. A filter lists only the
+  entries due for review in the next 14 days, or overdue.
+- The open entry says when its published version is due for review. Once that has passed, it says that
+  customers cannot find, download or buy it until it is reviewed, and that what they already have is
+  unchanged.
+- "Record a review" asks what the editor re-read and why it needs no change, in 20 to 1,000 characters,
+  and once the review is recorded says when the next one is due. An entry that needs a change gets a new
+  version instead, as before.
+- An entry counts as overdue from the moment its review falls due, as the database holds it from then.
+
 ## What does not change
 
 - What holds a guide, and its 30-day amendment records.

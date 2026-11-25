@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { ListManualLibraryKind } from './listManualLibraryKind';
+import type { ListManualLibraryReview } from './listManualLibraryReview';
 import type { ListManualLibraryState } from './listManualLibraryState';
 
 export type ListManualLibraryParams = {
@@ -17,4 +18,6 @@ export type ListManualLibraryParams = {
   state?: ListManualLibraryState;
   /** @maxLength 80 */
   industry?: string;
+  /** due lists only the entries whose published version is due for its review within 14 days, or overdue (docs/architecture/guidance-currency.md). */
+  review?: ListManualLibraryReview;
 };

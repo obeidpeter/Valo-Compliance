@@ -1,5 +1,6 @@
 import { randomUUID, createHash } from "node:crypto";
 import { syntheticReceiptBlockers } from "./valo-receipt-provenance";
+import { premiumEditions, type PremiumEdition } from "./premium-editions";
 import { and, desc, eq, sql, inArray } from "drizzle-orm";
 import {
   db,
@@ -135,15 +136,19 @@ type OwnedPrice = { offerId: string; edition: string; title: string };
 async function commercialCatalogue(ownedPrices: OwnedPrice[] = []) {
   const [released, prices] = await Promise.all([liveOperationalVersions(), activeTemplatePrices()]);
   const reviewedIds = new Set(released.filter((v) => !isFreeBaselineTemplate(v.templateId)).map((v) => v.id));
+  // The staff library's published premium editions download for their buyers; one held for its review
+  // is not offered (docs/architecture/guidance-currency.md, slice 2).
   const manualIds = new Set<string>();
+  const offeredManualIds = new Set<string>();
   if ((prices.length || ownedPrices.length) && isDevelopmentRuntime()) {
-    const { rows } = await db.execute<{ edition: string }>(
-      sql`select edition from public.valo_live_manual_premium_versions(null)`,
-    );
-    for (const { edition } of rows) manualIds.add(edition);
+    const { rows } = await db.execute<PremiumEdition>(premiumEditions(null));
+    for (const { edition, held } of rows) {
+      manualIds.add(edition);
+      if (!held) offeredManualIds.add(edition);
+    }
   }
   const offers = prices
-    .filter(({ edition }) => reviewedIds.has(edition) || manualIds.has(edition))
+    .filter(({ edition }) => reviewedIds.has(edition) || offeredManualIds.has(edition))
     .map(({ edition, product }) => ({ manual: manualIds.has(edition), product }));
   // A purchase whose edition was replaced carries to its template's released edition at no further
   // charge (docs/architecture/editions.md, slice 2): it downloads that edition instead.
@@ -363,10 +368,10 @@ export async function createOrder(actor: WorkspaceActor, raw: unknown) {
         "This product is not currently released with an approved price and licence. No order was created.",
       );
     if (offer.manual) {
-      const edition = await tx.execute(
-        sql`select edition from public.valo_live_manual_premium_versions(${price.contentVersionId}::uuid)`,
-      );
-      if (!edition.rows.length)
+      // Checked again under the edition's lock: it may have been withdrawn, or fallen due for its
+      // review, since the offer was read.
+      const { rows } = await tx.execute<PremiumEdition>(premiumEditions(price.contentVersionId));
+      if (!rows[0] || rows[0].held)
         throw new ValoProblem(409, "This template version is no longer available for purchase.");
     }
     if (input.acceptedLicenceVersion !== price.licenceVersion)

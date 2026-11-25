@@ -4253,8 +4253,13 @@ export const ListManualLibraryQueryParams = zod.object({
   "q": zod.coerce.string().max(listManualLibraryQueryQMax).optional(),
   "kind": zod.enum(['practical_guide', 'industry_introduction', 'industry_pack', 'template', 'premium_template', 'regulatory_article']).optional(),
   "state": zod.enum(['draft', 'published', 'replaced', 'withdrawn']).optional(),
-  "industry": zod.coerce.string().max(listManualLibraryQueryIndustryMax).optional()
+  "industry": zod.coerce.string().max(listManualLibraryQueryIndustryMax).optional(),
+  "review": zod.enum(['due']).optional().describe('due lists only the entries whose published version is due for its review within 14 days, or overdue (docs/architecture/guidance-currency.md).')
 })
+
+
+export const listManualLibraryResponseItemsItemReviewDigestRegExp = new RegExp('^[0-9a-f]{64}$');
+
 
 export const ListManualLibraryResponse = zod.object({
   "items": zod.array(zod.object({
@@ -4263,7 +4268,12 @@ export const ListManualLibraryResponse = zod.object({
   "title": zod.string(),
   "kind": zod.enum(['practical_guide', 'industry_introduction', 'industry_pack', 'template', 'premium_template', 'regulatory_article']),
   "state": zod.enum(['draft', 'published', 'replaced', 'withdrawn']),
-  "industry": zod.string().nullable()
+  "industry": zod.string().nullable(),
+  "review": zod.object({
+  "version": zod.int().min(1),
+  "digest": zod.string().regex(listManualLibraryResponseItemsItemReviewDigestRegExp),
+  "due": zod.string().describe('When the next review is due, as an ISO 8601 time. Once it passes, the entry is held from new use until it is reviewed.')
+}).optional().describe('The published version of an entry other than a regulatory guide, and when its next review is due: 90 days after it was published or last reviewed. Absent for a regulatory guide, an entry with no published version, and a database the reviews migration has not reached.')
 })),
   "hasMore": zod.boolean()
 })
@@ -4554,6 +4564,37 @@ export const ActOnManualLibraryResponse = zod.object({
   "live": zod.boolean()
 })).describe('The related guides by their library items, as the editor sees them: the title and kind of each item\'s latest version, whether a version of it is released now, or nulls for an item not in the library yet.')
 })
+
+
+/**
+ * A Content editor records that they re-read the published version of an entry other than a regulatory guide and it needs no change. Its next review is due 90 days later (docs/architecture/guidance-currency.md).
+ */
+export const RecordManualLibraryReviewParams = zod.object({
+  "id": zod.uuid()
+})
+
+
+export const recordManualLibraryReviewBodyDigestRegExp = new RegExp('^[0-9a-f]{64}$');
+export const recordManualLibraryReviewBodyNoteMin = 20;
+export const recordManualLibraryReviewBodyNoteMax = 1000;
+
+
+
+export const RecordManualLibraryReviewBody = zod.object({
+  "version": zod.int().min(1),
+  "digest": zod.string().regex(recordManualLibraryReviewBodyDigestRegExp),
+  "note": zod.string().min(recordManualLibraryReviewBodyNoteMin).max(recordManualLibraryReviewBodyNoteMax).describe('What the editor re-read and why it needs no change.')
+})
+
+
+export const recordManualLibraryReviewResponseDigestRegExp = new RegExp('^[0-9a-f]{64}$');
+
+
+export const RecordManualLibraryReviewResponse = zod.object({
+  "version": zod.int().min(1),
+  "digest": zod.string().regex(recordManualLibraryReviewResponseDigestRegExp),
+  "due": zod.string().describe('When the next review is due, as an ISO 8601 time. Once it passes, the entry is held from new use until it is reviewed.')
+}).describe('The published version of an entry other than a regulatory guide, and when its next review is due: 90 days after it was published or last reviewed. Absent for a regulatory guide, an entry with no published version, and a database the reviews migration has not reached.')
 
 
 export const PreviewManualLibraryFileParams = zod.object({

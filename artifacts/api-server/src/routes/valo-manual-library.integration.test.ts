@@ -14,6 +14,7 @@ import {
   exercisePremiumManualTemplate,
 } from "../test-support/manual-premium-template";
 import { exercisePremiumPriceCommand } from "../test-support/premium-price-command";
+import { exerciseOverduePremiumTemplate } from "../test-support/manual-overdue-premium";
 import { libraryAction, templateDetails, withdrawalReason } from "../test-support/template-details";
 import { exerciseOwnerRuleRoutes } from "../test-support/owner-rule-routes";
 import {
@@ -369,6 +370,79 @@ test(
       assert.equal((await call("/public/resources/manual-" + id)).status, 404);
       assert.equal((await act(id, "publish", r2)).status, 409);
     });
+    await t.test(
+      "a published entry is due for review 90 days after its release or last review, a Content editor records one, and an entry overdue for its review is held from new use",
+      async () => {
+        const { valoManualLibrary: library } = await import("@workspace/db");
+        const { ListManualLibraryResponse, RecordManualLibraryReviewResponse } =
+          await import("@workspace/api-zod");
+        const day = 86_400_000;
+        const listed = async (review = "") =>
+          ListManualLibraryResponse.parse(
+            await ok(await call("/admin/manual-library" + (review ? "?review=" + review : ""))),
+          ).items;
+        const near = (iso: string, at: number) => Math.abs(Date.parse(iso) - at) < 60_000;
+        // A guide published now is due in 90 days, shown, and not listed as due.
+        const fresh = randomUUID();
+        const freshDraft = await revision(
+          await draft(fresh, input("practical_guide", "Synthetic reviewed guide")),
+        );
+        await revision(await act(fresh, "publish", freshDraft));
+        const freshEntry = (await listed()).find((i) => i.itemId === fresh)!;
+        assert.ok(freshEntry.review && near(freshEntry.review.due, Date.now() + 90 * day));
+        assert.ok(!(await listed("due")).some((i) => i.itemId === fresh));
+        assert.equal((await call("/public/resources/manual-" + fresh)).status, 200);
+
+        // A free template published 91 days ago is overdue: listed as due, and neither shown nor
+        // downloaded anew. Released directly here, so it can be dated in the past; the library's own
+        // trigger still requires its Content editor.
+        const word = Buffer.from(wordFromText("Reviewed", "Synthetic reviewed template").bytes);
+        const overdue = randomUUID();
+        const overdueDraft = await revision(
+          await draft(overdue, {
+            ...input("template", "Synthetic overdue template"),
+            fileMode: "upload",
+            body: "",
+            upload: { format: "docx", base64: word.toString("base64") },
+          }),
+        );
+        await db
+          .update(library)
+          .set({ state: "published", publishedBy: editor, publishedAt: new Date(Date.now() - 91 * day) })
+          .where(eq(library.id, overdueDraft.id));
+        const download = "/account/manual-templates/" + overdueDraft.id + "/download";
+        const fetchFile = () => call(download, undefined, "synthetic-reader", { "x-test-mfa": "stale" });
+        assert.ok((await listed("due")).some((i) => i.itemId === overdue));
+        assert.equal((await call("/public/templates/manual-" + overdue)).status, 404);
+        assert.equal((await fetchFile()).status, 404);
+
+        // A review needs the published version and a note, and comes from a Content editor only.
+        const review = (body: unknown, actor = editor) =>
+          call(item(overdue) + "/editorial-reviews", body, actor);
+        const note =
+          "Synthetic: re-read the template against its purpose and limits, and it needs no change.";
+        const current = { version: overdueDraft.version, digest: overdueDraft.digest };
+        assert.equal((await review({ ...current, digest: "0".repeat(64), note })).status, 409);
+        assert.equal((await review({ ...current, note: "Too short." })).status, 422);
+        assert.equal((await review({ ...current, note }, "synthetic-reader")).status, 403);
+        assert.equal(
+          (await call(item(randomUUID()) + "/editorial-reviews", { ...current, note })).status,
+          404,
+        );
+        // Reviewed, it is shown and downloaded again, and its next review is due 90 days on.
+        const recorded = RecordManualLibraryReviewResponse.parse(
+          await ok(await review({ ...current, note })),
+        );
+        assert.ok(near(recorded.due, Date.now() + 90 * day));
+        assert.ok(!(await listed("due")).some((i) => i.itemId === overdue));
+        assert.equal((await call("/public/templates/manual-" + overdue)).status, 200);
+        assert.equal((await fetchFile()).status, 200);
+      },
+    );
+    await t.test(
+      "a premium template overdue for its review is neither offered, ordered nor priced, while its buyer keeps its file, and is offered again once reviewed",
+      () => exerciseOverduePremiumTemplate(call, editor),
+    );
     await t.test("one published introduction per industry and no implied regulatory evidence", async () => {
       const id = randomUUID(),
         second = randomUUID(),
@@ -777,6 +851,17 @@ test(
           await expect(publicPage.page.getByRole("region", { name: title })).toContainText(
             "Keep a dated delivery note.",
           );
+          // The published version's review date, and a review of it (docs/architecture/guidance-currency.md,
+          // slice 2): the note is asked for, and the next date is said once the review is recorded.
+          await expect(page.getByText(/Published version 1 is due for review on/)).toBeVisible();
+          await page.getByRole("button", { name: "Record a review" }).click();
+          const reviewForm = page.getByRole("form", { name: "Record a review of the published version" });
+          await expect(reviewForm.getByRole("button", { name: "Record review" })).toBeDisabled();
+          await reviewForm
+            .getByLabel("What you re-read, and why it needs no change")
+            .fill("Synthetic: re-read the introduction, and it needs no change.");
+          await reviewForm.getByRole("button", { name: "Record review" }).click();
+          await expect(page.getByText(/Review recorded\. The next review is due on/)).toBeVisible();
           // A withdrawal says why, for the customers who bought or used the version
           // (docs/architecture/editions.md, slice 3); "Keep it" withdraws nothing.
           await page.getByRole("button", { name: "Withdraw live version" }).click();
@@ -789,7 +874,13 @@ test(
             .getByLabel("Why is it withdrawn?")
             .fill("A synthetic reason for the browser withdrawal.");
           await withdrawal.getByRole("button", { name: "Withdraw this version" }).click();
-          await expect(preview).toContainText("withdrawn");
+          // The form's own question says "withdrawn", so the public page is read again only once the
+          // screen says the withdrawal was saved and the preview shows the withdrawn version.
+          await expect(
+            page.getByText("Withdrawn. Readers can no longer open this version.", { exact: true }),
+          ).toBeVisible();
+          await expect(preview).toContainText("Saved preview · version 1 · withdrawn");
+          await expect(withdrawal).toHaveCount(0);
           await publicPage.page.reload();
           await expect(publicPage.page.getByTestId("link-industries")).toBeVisible();
           await expect(publicPage.page.getByRole("heading", { name: title })).toHaveCount(0);
