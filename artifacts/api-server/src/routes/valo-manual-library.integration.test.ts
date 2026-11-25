@@ -1366,7 +1366,9 @@ test(
           ...input("template", "Synthetic library copy"),
           body: "Synthetic opening paragraph.\n\nItem | Quantity\nSynthetic item | 2\n\nSynthetic closing paragraph.",
         });
-        await releaseOf(otherId, input("template", "Synthetic library suggestion"));
+        // Suggestions are ranked, then ordered by title, six at most. This one's title comes first, so the
+        // templates other steps leave released cannot push it out of the six.
+        await releaseOf(otherId, input("template", "A synthetic library suggestion"));
         const { bytes } = wordFromText("Synthetic premium checklist", "Only a buyer reads this sentence.");
         const premium = await releaseOf(premiumId, {
           ...input("premium_template", "Synthetic library premium checklist"),
