@@ -415,3 +415,38 @@ test("a form's headings print as headings and its table's header row repeats on 
   assert.equal((xml.match(/<w:tblHeader\/>/g) ?? []).length, 1);
   assert.match(xml, /1\. Parties &lt;script&gt;/);
 });
+test("two tables in a row stay two tables in Word, kept apart by an empty paragraph, and a table after a paragraph needs none", async () => {
+  // EDT-006 (docs/architecture/editor.md, slice 3): with nothing between them, Word and LibreOffice
+  // join two tables into one, as an invoice's items and its totals were.
+  const table = (id: string, heading: string): PrintedBlock => ({
+    id,
+    type: "table",
+    text: "",
+    headerRows: 1,
+    rows: [
+      [heading, "Amount"],
+      ["Synthetic line", "₦100.00"],
+    ],
+  });
+  const blocks = [
+    table("items", "Description"),
+    table("totals", "Total"),
+    { id: "p", type: "paragraph", text: "Synthetic words", rows: [] },
+    table("after", "Item"),
+  ] satisfies PrintedBlock[];
+  const word = await Packer.toBuffer(new Document({ sections: [{ children: docxBlocks(blocks) }] }));
+  const body = strFromU8(unzipSync(new Uint8Array(word))["word/document.xml"]!);
+  const between = body.split(/<w:tbl>[\s\S]*?<\/w:tbl>/);
+  assert.equal(between.length, 4, "three tables");
+  assert.match(
+    between[1]!,
+    /^<w:p\b[^>]*\/>$|^<w:p\b[^>]*><\/w:p>$|^<w:p\b[^>]*><w:pPr\/><\/w:p>$/,
+    "an empty paragraph after the first table",
+  );
+  assert.match(between[2]!, /Synthetic words/);
+  assert.doesNotMatch(
+    between[2]!,
+    /<w:p\b[^>]*\/>|<w:p\b[^>]*><\/w:p>/,
+    "no empty paragraph after a paragraph",
+  );
+});

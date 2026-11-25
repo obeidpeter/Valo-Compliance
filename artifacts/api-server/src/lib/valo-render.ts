@@ -47,7 +47,7 @@ export {
  * date with the month as a word, and carries the draft notice below. Version 6: a list prints no blank line, as the
  * editor's preview does (docs/architecture/editor.md). Version 7: a table made from questions, a totals
  * table and a customer's table marked so print their first row as a heading row, repeated at the top of
- * each page. */
+ * each page, and a Word file keeps two tables in a row apart. */
 export const RENDER_VERSION = "manual-draft-7";
 export const exportMime = {
   docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -171,10 +171,14 @@ export async function renderDocument(
   return renderPdf(raw, revision, mode, notice);
 }
 /** The blocks as Word prints them: a heading in Word's own heading style, and a table's header row
- * marked to repeat at the top of each page. */
+ * marked to repeat at the top of each page. Two tables in a row are kept apart by an empty paragraph,
+ * as Word itself keeps them: with nothing between them, Word and LibreOffice join them into one table,
+ * whose heading row is then the first table's (docs/architecture/editor.md, slice 3). */
 export function docxBlocks(blocks: readonly PrintedBlock[], mode: RenderMode = "business_draft") {
   const children: (Paragraph | Table)[] = [];
   for (const block of blocks) {
+    if (block.type === "table" && block.rows.length && children.at(-1) instanceof Table)
+      children.push(new Paragraph({}));
     if (block.type === "heading")
       children.push(
         new Paragraph({ heading: block.level === 3 ? "Heading3" : "Heading2", text: block.text }),

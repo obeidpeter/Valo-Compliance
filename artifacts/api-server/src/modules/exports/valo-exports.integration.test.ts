@@ -6,7 +6,7 @@ import { promisify } from "node:util";
 import { mkdtemp, writeFile, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { unzipSync, strFromU8 } from "fflate";
+import { unzipSync, strFromU8, zipSync } from "fflate";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import {
   db,
@@ -39,7 +39,7 @@ import {
   writePrivateFile,
 } from "../../platform/valo-private-storage";
 import { syntheticDocument } from "../../lib/valo-test-fixtures";
-import { RENDER_VERSION } from "../../lib/valo-render";
+import { RENDER_VERSION, renderDocument } from "../../lib/valo-render";
 import { compileGuidedContent, emptyGuidedData } from "@workspace/valo-core/guided-runtime";
 import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
 import { everyAnswer } from "../../test-support/complete-answers";
@@ -241,6 +241,42 @@ test(
           assert.equal(refused.status, "failed");
           assert.equal(refused.errorCode, "DOCUMENT_INCOMPLETE");
           assert.equal(refused.attempts, 1);
+        },
+      );
+      await t.test(
+        "a Word file that fails the check Word makes is not stored: its job fails at once and says why",
+        async () => {
+          // EDT-006 (docs/architecture/editor.md, slice 3). The renderer here leaves out the file's
+          // styles, which its main document still points to: Word would refuse it.
+          const checked = await createDocument(a, { ...syntheticDocument, title: "Synthetic Word check" });
+          const job = await requestExport(a, checked.id, randomUUID(), {
+            revisionId: checked.revisionId,
+            format: "docx",
+            acknowledgeDraft: true,
+          });
+          const current = (await getExport(a, job.id)).job;
+          const withoutStyles: typeof renderDocument = async (...args) => {
+            const parts = unzipSync(new Uint8Array(await renderDocument(...args)));
+            delete parts["word/styles.xml"];
+            return Buffer.from(zipSync(parts));
+          };
+          await assert.rejects(
+            () => executeExport(job.id, a.workspaceId, current.queueId, undefined, undefined, withoutStyles),
+            /WORD_FILE_CHECK_FAILED/,
+          );
+          const refused = (await getExport(a, job.id)).job;
+          assert.equal(refused.status, "failed");
+          assert.equal(refused.errorCode, "WORD_FILE_CHECK_FAILED");
+          assert.equal(refused.attempts, 1);
+          // Nothing was stored for it: no file and no object, kept or pending.
+          assert.deepEqual(
+            await db.select().from(valoFileAssets).where(eq(valoFileAssets.jobId, job.id)),
+            [],
+          );
+          assert.deepEqual(
+            await db.select().from(valoExportObjects).where(eq(valoExportObjects.jobId, job.id)),
+            [],
+          );
         },
       );
       await t.test(

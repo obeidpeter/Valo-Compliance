@@ -23,6 +23,8 @@ const STATUS_WORDS = {
 const FAILURES: Record<string, string> = {
   EXPORT_EXPIRED: "This file has expired. You can make it again from the same saved version.",
   EXPORT_SIZE_LIMIT: "The document is too large to make into a file.",
+  WORD_FILE_CHECK_FAILED:
+    "This Word file did not pass Valo's check that Word can open it, so it was not kept. You can still make the PDF of the same version.",
   RENDER_OR_STORAGE_UNAVAILABLE: "The file could not be made just now. Try again in a moment.",
   DOCUMENT_INCOMPLETE:
     "This saved version is not complete, so its file can only be a marked draft. Give what Still needed lists and save, or make a marked draft.",

@@ -221,6 +221,9 @@ importers:
       express:
         specifier: ^5.3.0
         version: 5.3.0
+      fflate:
+        specifier: 0.8.3
+        version: 0.8.3
       httpxy:
         specifier: 0.5.6
         version: 0.5.6
@@ -273,9 +276,6 @@ importers:
       esbuild-plugin-pino:
         specifier: ^2.3.3
         version: 2.3.3(esbuild@0.28.2)(pino-pretty@13.2.0)(pino@10.4.0)(thread-stream@4.2.1)
-      fflate:
-        specifier: 0.8.3
-        version: 0.8.3
       pino-pretty:
         specifier: ^13.2.0
         version: 13.2.0
