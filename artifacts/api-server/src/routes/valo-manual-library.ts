@@ -5,6 +5,7 @@ import {
   RefreshOwnerGuidanceResponse,
   GetManualLibraryRevisionResponse,
   ListManualLibraryQueryParams,
+  RecordManualLibraryReviewResponse,
   ListManualLibraryResponse,
   ListOwnerGuidanceResponse,
   ListRetainedDraftsResponse,
@@ -22,6 +23,7 @@ import {
   getManualRevision,
   saveManualDraft,
   actOnManualRevision,
+  recordManualReview,
   privateManualFile,
   releasedManualFile,
   purchasedManualFile,
@@ -117,6 +119,13 @@ export function createManualLibraryRouter(
     res.json(
       GetManualLibraryRevisionResponse.parse(
         await actOnManualRevision(res.locals.manualEditor, uuid.parse(req.params.id), req.body),
+      ),
+    );
+  });
+  router.post("/admin/manual-library/:id/reviews", sameOriginMutation, async (req, res) => {
+    res.json(
+      RecordManualLibraryReviewResponse.parse(
+        await recordManualReview(res.locals.manualEditor, uuid.parse(req.params.id), req.body),
       ),
     );
   });

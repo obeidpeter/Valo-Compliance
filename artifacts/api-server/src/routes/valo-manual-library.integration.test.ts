@@ -369,6 +369,71 @@ test(
       assert.equal((await call("/public/resources/manual-" + id)).status, 404);
       assert.equal((await act(id, "publish", r2)).status, 409);
     });
+    await t.test(
+      "a published entry is due for review 90 days after its release or last review, a Content editor records one, and an entry overdue for its review is held from new use",
+      async () => {
+        const { valoManualLibrary: library } = await import("@workspace/db");
+        const { ListManualLibraryResponse, RecordManualLibraryReviewResponse } =
+          await import("@workspace/api-zod");
+        const day = 86_400_000;
+        const listed = async (review = "") =>
+          ListManualLibraryResponse.parse(
+            await ok(await call("/admin/manual-library" + (review ? "?review=" + review : ""))),
+          ).items;
+        const near = (iso: string, at: number) => Math.abs(Date.parse(iso) - at) < 60_000;
+        // A guide published now is due in 90 days, shown, and not listed as due.
+        const fresh = randomUUID();
+        const freshDraft = await revision(
+          await draft(fresh, input("practical_guide", "Synthetic reviewed guide")),
+        );
+        await revision(await act(fresh, "publish", freshDraft));
+        const freshEntry = (await listed()).find((i) => i.itemId === fresh)!;
+        assert.ok(freshEntry.review && near(freshEntry.review.due, Date.now() + 90 * day));
+        assert.ok(!(await listed("due")).some((i) => i.itemId === fresh));
+        assert.equal((await call("/public/resources/manual-" + fresh)).status, 200);
+
+        // A free template published 91 days ago is overdue: listed as due, and neither shown nor
+        // downloaded anew. Released directly here, so it can be dated in the past; the library's own
+        // trigger still requires its Content editor.
+        const word = Buffer.from(wordFromText("Reviewed", "Synthetic reviewed template").bytes);
+        const overdue = randomUUID();
+        const overdueDraft = await revision(
+          await draft(overdue, {
+            ...input("template", "Synthetic overdue template"),
+            fileMode: "upload",
+            body: "",
+            upload: { format: "docx", base64: word.toString("base64") },
+          }),
+        );
+        await db
+          .update(library)
+          .set({ state: "published", publishedBy: editor, publishedAt: new Date(Date.now() - 91 * day) })
+          .where(eq(library.id, overdueDraft.id));
+        const download = "/account/manual-templates/" + overdueDraft.id + "/download";
+        const fetchFile = () => call(download, undefined, "synthetic-reader", { "x-test-mfa": "stale" });
+        assert.ok((await listed("due")).some((i) => i.itemId === overdue));
+        assert.equal((await call("/public/templates/manual-" + overdue)).status, 404);
+        assert.equal((await fetchFile()).status, 404);
+
+        // A review needs the published version and a note, and comes from a Content editor only.
+        const review = (body: unknown, actor = editor) => call(item(overdue) + "/reviews", body, actor);
+        const note =
+          "Synthetic: re-read the template against its purpose and limits, and it needs no change.";
+        const current = { version: overdueDraft.version, digest: overdueDraft.digest };
+        assert.equal((await review({ ...current, digest: "0".repeat(64), note })).status, 409);
+        assert.equal((await review({ ...current, note: "Too short." })).status, 422);
+        assert.equal((await review({ ...current, note }, "synthetic-reader")).status, 403);
+        assert.equal((await call(item(randomUUID()) + "/reviews", { ...current, note })).status, 404);
+        // Reviewed, it is shown and downloaded again, and its next review is due 90 days on.
+        const recorded = RecordManualLibraryReviewResponse.parse(
+          await ok(await review({ ...current, note })),
+        );
+        assert.ok(near(recorded.due, Date.now() + 90 * day));
+        assert.ok(!(await listed("due")).some((i) => i.itemId === overdue));
+        assert.equal((await call("/public/templates/manual-" + overdue)).status, 200);
+        assert.equal((await fetchFile()).status, 200);
+      },
+    );
     await t.test("one published introduction per industry and no implied regulatory evidence", async () => {
       const id = randomUUID(),
         second = randomUUID(),

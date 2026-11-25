@@ -8,6 +8,7 @@ import type { GuidedTemplateId } from "@workspace/valo-core/guided";
 import {
   ActOnManualLibraryBody,
   LoadRetainedDraftsBody,
+  RecordManualLibraryReviewBody,
   SaveManualLibraryDraftBody,
 } from "@workspace/api-zod";
 import type { db, valoManualLibrary } from "@workspace/db";
@@ -160,7 +161,35 @@ export type ManualLibraryListFilters = {
   kind?: Revision["kind"] | undefined;
   state?: Revision["state"] | undefined;
   industry?: string | undefined;
+  /** "due": only entries whose published version is due for review within 14 days, or overdue. */
+  review?: "due" | undefined;
 };
+/** When each listed item's published version, other than a regulatory guide's, is next due for review
+ * (docs/architecture/guidance-currency.md, slice 2). A database the reviews migration has not reached has
+ * no review dates, and lists none. */
+async function reviewDates(tx: Tx, itemIds: string[]) {
+  if (!itemIds.length) return new Map<string, { version: number; digest: string; due: string }>();
+  try {
+    const { rows } = await tx.execute<{
+      item_id: string;
+      version: number;
+      digest: string;
+      due: Date | string;
+    }>(
+      sql`select item_id, version, digest, public.valo_manual_review_due(id) as due from valo_manual_library
+        where state = 'published' and kind <> 'regulatory_article' and item_id in ${itemIds}`,
+    );
+    return new Map(
+      rows.map((row) => [
+        row.item_id,
+        { version: row.version, digest: row.digest, due: new Date(row.due).toISOString() },
+      ]),
+    );
+  } catch (error) {
+    if (pgError(error).code !== "42883") throw error;
+    return new Map<string, { version: number; digest: string; due: string }>();
+  }
+}
 export async function listManualLibrary(
   actor: SourceStaffActor,
   pageOrFilters: number | ManualLibraryListFilters,
@@ -197,6 +226,11 @@ export async function listManualLibrary(
         : industry
           ? eq(latest.industry, industry)
           : undefined,
+      filters.review === "due"
+        ? sql`exists (select from valo_manual_library released where released.item_id = ${latest.itemId}
+            and released.state = 'published' and released.kind <> 'regulatory_article'
+            and public.valo_manual_review_due(released.id) <= clock_timestamp() + interval '14 days')`
+        : undefined,
     ];
     const items = await tx
       .select()
@@ -205,8 +239,55 @@ export async function listManualLibrary(
       .orderBy(desc(latest.createdAt), latest.itemId)
       .offset((filters.page - 1) * 50)
       .limit(51);
-    return { items: items.slice(0, 50), hasMore: items.length > 50 };
+    const page = items.slice(0, 50);
+    const dates = await reviewDates(
+      tx,
+      page.map((item) => item.itemId),
+    );
+    return {
+      items: page.map((item) => {
+        const review = dates.get(item.itemId);
+        return review ? { ...item, review } : item;
+      }),
+      hasMore: items.length > 50,
+    };
   });
+}
+/**
+ * A Content editor records that they re-read the published version of an entry other than a regulatory
+ * guide and it needs no change (docs/architecture/guidance-currency.md, slice 2). Its next review is due
+ * 90 days later. The database refuses a review of any other version, or from anyone but an active Content
+ * editor, and never changes one.
+ */
+export async function recordManualReview(actor: SourceStaffActor, itemId: string, value: unknown) {
+  const input = RecordManualLibraryReviewBody.strict().parse(value);
+  const note = input.note.trim();
+  if (note.length < 20 || note.length > 1000)
+    throw new ValoProblem(422, "Say what you re-read and why it needs no change, in 20 to 1,000 characters.");
+  return withEditor(
+    actor,
+    async (tx) => {
+      const { valoManualLibrary: t, valoManualReviews } = await import("@workspace/db");
+      const [published] = await tx
+        .select({ id: t.id, version: t.version, digest: t.digest, kind: t.kind })
+        .from(t)
+        .where(and(eq(t.itemId, itemId), eq(t.state, "published")));
+      if (!published) throw new ValoProblem(404, "This entry has no published version to review.");
+      if (published.kind === "regulatory_article")
+        throw new ValoProblem(
+          409,
+          "A regulatory guide is kept current by its daily source check and the owner's sign-off, not by a review here.",
+        );
+      if (published.version !== input.version || published.digest !== input.digest) throw conflict();
+      await tx
+        .insert(valoManualReviews)
+        .values({ edition: published.id, reviewedBy: actor.identityId, note });
+      const review = (await reviewDates(tx, [itemId])).get(itemId);
+      if (!review) throw new ValoProblem(503, "Apply the reviews migration before recording a review.");
+      return review;
+    },
+    itemId,
+  );
 }
 async function latestRevision(tx: Tx, itemId: string) {
   const { valoManualLibrary: t } = await import("@workspace/db");
@@ -492,14 +573,28 @@ export async function releasedManualFile(id: string, identityId: string) {
   const { assertAccountNotErasedOrSuspended } = await import("../workspaces");
   await assertAccountNotErasedOrSuspended(identityId);
   const { db, valoManualLibrary: t } = await import("@workspace/db");
-  return attachment(
-    (
-      await db
-        .select({ slug: t.slug, version: t.version, fileBytes: t.fileBytes, fileFormat: t.fileFormat })
-        .from(t)
-        .where(and(eq(t.id, id), eq(t.kind, "template"), eq(t.state, "published")))
-    )[0],
-  );
+  // A free template overdue for its review is not downloaded anew (docs/architecture/guidance-currency.md,
+  // slice 2); a database the reviews migration has not reached has no review dates.
+  const read = (reviewed: boolean) =>
+    db
+      .select({ slug: t.slug, version: t.version, fileBytes: t.fileBytes, fileFormat: t.fileFormat })
+      .from(t)
+      .where(
+        and(
+          eq(t.id, id),
+          eq(t.kind, "template"),
+          eq(t.state, "published"),
+          reviewed ? sql`public.valo_manual_review_due(${t.id}) > clock_timestamp()` : undefined,
+        ),
+      );
+  let rows: Awaited<ReturnType<typeof read>>;
+  try {
+    rows = await read(true);
+  } catch (error) {
+    if (pgError(error).code !== "42883") throw error;
+    rows = await read(false);
+  }
+  return attachment(rows[0]);
 }
 export async function purchasedManualFile(actor: WorkspaceActor, id: string) {
   assertDevelopmentRuntime();
@@ -588,20 +683,29 @@ export async function releasedManualEntries(
   };
   const released = and(eq(t.state, "published"), options.slug ? eq(t.slug, options.slug) : undefined);
   try {
-    return await db
-      .select({ ...fields, regulatorySources: c.sources, sourceCheckedAt: c.checkedAt })
-      .from(t)
-      .leftJoin(c, eq(c.id, t.regulatoryCheckId))
-      .where(
-        and(
-          released,
-          or(
-            ne(t.kind, "regulatory_article"),
-            // The newest check has the evidence the guide was signed on, with each source's bytes or with
-            // each web page's words in their place (docs/architecture/guidance-currency.md). The words are
-            // read through each row's JSON, so a database the words migration has not reached yet keeps
-            // comparing bytes alone.
-            sql`${regulatoryEnabled} and (
+    // An entry other than a regulatory guide is shown while its review is not overdue: 90 days after it
+    // was published or last reviewed (docs/architecture/guidance-currency.md, slice 2). A database the
+    // reviews migration has not reached has no review dates, and shows such entries as before.
+    const current = (reviewed: boolean) =>
+      db
+        .select({ ...fields, regulatorySources: c.sources, sourceCheckedAt: c.checkedAt })
+        .from(t)
+        .leftJoin(c, eq(c.id, t.regulatoryCheckId))
+        .where(
+          and(
+            released,
+            or(
+              reviewed
+                ? and(
+                    ne(t.kind, "regulatory_article"),
+                    sql`public.valo_manual_review_due(${t.id}) > clock_timestamp()`,
+                  )
+                : ne(t.kind, "regulatory_article"),
+              // The newest check has the evidence the guide was signed on, with each source's bytes or with
+              // each web page's words in their place (docs/architecture/guidance-currency.md). The words are
+              // read through each row's JSON, so a database the words migration has not reached yet keeps
+              // comparing bytes alone.
+              sql`${regulatoryEnabled} and (
         select (newest.evidence_sha256 = ${c.evidenceSha256}
             or to_jsonb(newest)->>'words_sha256' = to_jsonb(${c})->>'words_sha256')
           and cardinality(newest.holds) = 0
@@ -609,10 +713,16 @@ export async function releasedManualEntries(
           and not exists (select from jsonb_array_elements(newest.sources) ref where coalesce((ref->>'validThrough')::timestamptz,'-infinity') <= clock_timestamp())
         from valo_manual_regulatory_checks newest where newest.candidate_id = ${c.candidateId}
         order by newest.checked_at desc, newest.id desc limit 1) is true`,
+            ),
           ),
-        ),
-      )
-      .orderBy(desc(t.publishedAt), t.itemId);
+        )
+        .orderBy(desc(t.publishedAt), t.itemId);
+    try {
+      return await current(true);
+    } catch (error) {
+      if (pgError(error).code !== "42883") throw error;
+      return await current(false);
+    }
   } catch (error) {
     if (!["42P01", "42703"].includes(pgError(error).code ?? "")) throw error;
     try {

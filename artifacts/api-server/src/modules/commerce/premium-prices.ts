@@ -168,7 +168,7 @@ export async function recordPremiumPrice(
     );
     if (!live.rows.length)
       throw Error(
-        "Only a published premium template from the staff library can be priced. Check its edition ID with status.",
+        "Only a published premium template from the staff library, not overdue for its review, can be priced. Check its edition ID and review date with status.",
       );
     const [entry] = await tx
       .select({ title: valoManualLibrary.title })

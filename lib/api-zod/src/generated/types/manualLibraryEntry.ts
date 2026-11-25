@@ -7,6 +7,7 @@
  */
 import type { ManualLibraryEntryKind } from './manualLibraryEntryKind';
 import type { ManualLibraryEntryState } from './manualLibraryEntryState';
+import type { ManualLibraryReviewDate } from './manualLibraryReviewDate';
 
 export interface ManualLibraryEntry {
   itemId: string;
@@ -16,4 +17,5 @@ export interface ManualLibraryEntry {
   state: ManualLibraryEntryState;
   /** @nullable */
   industry: string | null;
+  review?: ManualLibraryReviewDate;
 }

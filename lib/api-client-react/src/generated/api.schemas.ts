@@ -2197,6 +2197,18 @@ export const ManualLibraryEntryState = {
   withdrawn: 'withdrawn',
 } as const;
 
+/**
+ * The published version of an entry other than a regulatory guide, and when its next review is due: 90 days after it was published or last reviewed. Absent for a regulatory guide, an entry with no published version, and a database the reviews migration has not reached.
+ */
+export interface ManualLibraryReviewDate {
+  /** @minimum 1 */
+  version: number;
+  /** @pattern ^[0-9a-f]{64}$ */
+  digest: string;
+  /** When the next review is due, as an ISO 8601 time. Once it passes, the entry is held from new use until it is reviewed. */
+  due: string;
+}
+
 export interface ManualLibraryEntry {
   itemId: string;
   version: number;
@@ -2205,6 +2217,20 @@ export interface ManualLibraryEntry {
   state: ManualLibraryEntryState;
   /** @nullable */
   industry: string | null;
+  review?: ManualLibraryReviewDate;
+}
+
+export interface ManualLibraryReview {
+  /** @minimum 1 */
+  version: number;
+  /** @pattern ^[0-9a-f]{64}$ */
+  digest: string;
+  /**
+     * What the editor re-read and why it needs no change.
+     * @minLength 20
+     * @maxLength 1000
+     */
+  note: string;
 }
 
 export interface ManualLibraryPage {
@@ -4606,6 +4632,8 @@ export type ListManualLibraryParams = {
   state?: ListManualLibraryState;
   /** @maxLength 80 */
   industry?: string;
+  /** due lists only the entries whose published version is due for its review within 14 days, or overdue (docs/architecture/guidance-currency.md). */
+  review?: ListManualLibraryReview;
 };
 
 export type ListManualLibraryKind = typeof ListManualLibraryKind[keyof typeof ListManualLibraryKind];
@@ -4628,6 +4656,13 @@ export const ListManualLibraryState = {
   published: 'published',
   replaced: 'replaced',
   withdrawn: 'withdrawn',
+} as const;
+
+export type ListManualLibraryReview = typeof ListManualLibraryReview[keyof typeof ListManualLibraryReview];
+
+
+export const ListManualLibraryReview = {
+  due: 'due',
 } as const;
 
 export type ListWorkspaceDataExportsParams = {
