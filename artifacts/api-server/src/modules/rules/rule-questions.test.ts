@@ -2,6 +2,10 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   evaluateReleasedSourceFamily,
+  richBusinessNameSchema,
+  richPrivacySchema,
+  richProductSchema,
+  richTaxSchema,
   sourceFamilyAlgorithmHashes,
   type RichCheckerFacts,
 } from "@workspace/valo-core";
@@ -12,6 +16,7 @@ import {
   RULE_FAMILIES,
   RULE_QUESTIONS,
   holds,
+  ruleAnswersToSend,
   type RuleFamily,
   type RuleQuestion,
   type When,
@@ -25,7 +30,10 @@ import { ownerRuleCandidates } from "../editorial/owner-rule-candidates";
  * - everything the calculation says it still needs is a question asked now, so a visitor can always
  *   answer what a result asks for;
  * - changing a question that is not asked, to any of its answers, changes nothing the rule says, so
- *   skipping it, or keeping an answer it was given before, cannot change a result.
+ *   skipping it, or keeping an answer it was given before, cannot change a result;
+ * - what the check sends (`ruleAnswersToSend`), which leaves out the answers of the questions not
+ *   asked, makes the rule say exactly what all the answers make it say, and everything it still needs
+ *   is asked of what is sent, since the page asks by what it sends.
  * The calculations are pinned by their files' checksums, so the walk runs on the released ones.
  */
 
@@ -84,12 +92,31 @@ function answersOf(question: RuleQuestion): readonly unknown[] {
   }
 }
 
+/**
+ * The answers a rule's schema takes that no question asks, with answers to try. The page cannot give
+ * them, but a saved check can hold them. The walk treats each as a question never asked, so it proves
+ * that no calculation reads them.
+ */
+const UNASKED: Readonly<Record<RuleFamily, Readonly<Record<string, readonly unknown[]>>>> = {
+  businessName: {},
+  tax: {
+    onlyNigeriaIncome: ["yes", "no", "Synthetic answer", ...markers],
+    finalTaxTreatment: ["final", "Synthetic answer", ...markers],
+  },
+  privacy: {},
+  product: {},
+};
+const NEVER: When = { any: [] };
+
 function questionsOf(family: RuleFamily): Asked[] {
-  const own = RULE_QUESTIONS[family].map((question) => ({
-    path: question.key,
-    askedWhen: question.askedWhen,
-    answers: answersOf(question),
-  }));
+  const own = [
+    ...RULE_QUESTIONS[family].map((question) => ({
+      path: question.key,
+      askedWhen: question.askedWhen,
+      answers: answersOf(question),
+    })),
+    ...Object.entries(UNASKED[family]).map(([path, answers]) => ({ path, askedWhen: NEVER, answers })),
+  ];
   if (family !== "businessName") return own;
   return [
     ...own,
@@ -158,21 +185,37 @@ function said(family: RuleFamily, answers: Answers): string {
 }
 const isAsked = (family: RuleFamily, question: Asked, answers: Answers) =>
   !question.askedWhen || holds(question.askedWhen, { rich: { [family]: answers } });
+/** What the check sends of these answers, for this rule alone. */
+const sentOf = (family: RuleFamily, answers: Answers): Answers =>
+  ruleAnswersToSend({ rich: { [family]: answers } }, new Set([family]))[family] ?? {};
+
+/** The fields the rule still needs that no question asked of these answers asks. */
+function unasked(family: RuleFamily, questions: readonly Asked[], answers: Answers): string[] {
+  const asked = questions.filter((question) => isAsked(family, question, answers));
+  return evaluate(family, answers)
+    .missingAnswerStates.map(({ field }) => field.replace(`rich.${family}.`, ""))
+    .filter(
+      (path) =>
+        !asked.some(
+          (question) =>
+            question.path === path ||
+            (path.startsWith("partners") && question.path === "partners") ||
+            (path === "namingAssessment" && question.path.startsWith("namingAssessment.")),
+        ),
+    );
+}
 
 /** The problems with one state of a rule's answers. */
 function problems(family: RuleFamily, questions: readonly Asked[], answers: Answers): string[] {
   const found: string[] = [];
   const asked = questions.filter((question) => isAsked(family, question, answers));
-  for (const { field } of evaluate(family, answers).missingAnswerStates) {
-    const path = field.replace(`rich.${family}.`, "");
-    const owners = asked.filter(
-      (question) =>
-        question.path === path ||
-        (path.startsWith("partners") && question.path === "partners") ||
-        (path === "namingAssessment" && question.path.startsWith("namingAssessment.")),
-    );
-    if (!owners.length) found.push(`${path} is still needed, but not asked: ${JSON.stringify(answers)}`);
-  }
+  for (const path of unasked(family, questions, answers))
+    found.push(`${path} is still needed, but not asked: ${JSON.stringify(answers)}`);
+  const sent = sentOf(family, answers);
+  if (said(family, sent) !== said(family, answers))
+    found.push(`what is sent changes what the rule says: ${JSON.stringify(answers)}`);
+  for (const path of unasked(family, questions, sent))
+    found.push(`${path} is still needed, but not asked of what is sent: ${JSON.stringify(sent)}`);
   for (const question of questions) {
     if (asked.includes(question)) continue;
     const without = said(family, withAnswer(answers, question.path, ABSENT));
@@ -225,13 +268,34 @@ function walk(family: RuleFamily, runs: number, steps: number) {
   return { states, found: [...found], reached, questions };
 }
 
-/** The questions no rule's calculation reads, which are never asked. */
+/** The questions no rule's calculation reads, which are never asked, and the answers no question asks. */
 const NEVER_ASKED = {
   businessName: [],
-  tax: [],
+  tax: ["onlyNigeriaIncome", "finalTaxTreatment"],
   privacy: ["dataSubjectAlreadyInformed"],
   product: ["registrationCoversExactProductAndManufacturer", "registrationConditionsChanged"],
 } as const satisfies Record<RuleFamily, readonly string[]>;
+
+test("every answer a rule's schema takes is one of its questions, or one the walk tries as never asked", () => {
+  const schemas = {
+    businessName: richBusinessNameSchema,
+    tax: richTaxSchema,
+    privacy: richPrivacySchema,
+    product: richProductSchema,
+  };
+  for (const family of RULE_FAMILIES) {
+    const asked = new Set([
+      ...RULE_QUESTIONS[family].map((question) => question.key),
+      "namingAssessment",
+      "partners",
+    ]);
+    assert.deepEqual(
+      Object.keys(schemas[family].shape).filter((key) => !asked.has(key)),
+      Object.keys(UNASKED[family]),
+      family,
+    );
+  }
+});
 
 for (const family of RULE_FAMILIES)
   test(`the ${family} rule's questions are asked whenever their answer can change what the rule says`, () => {
@@ -242,7 +306,8 @@ for (const family of RULE_FAMILIES)
         found.map((problem) =>
           problem
             .replace(/ = .* changes the result.*/, " changes")
-            .replace(/ is still needed.*/, " is needed"),
+            .replace(/ is still needed.*/, " is needed")
+            .replace(/ changes what the rule says.*/, " changes what the rule says"),
         ),
       ),
     ];
