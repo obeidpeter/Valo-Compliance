@@ -4231,3 +4231,49 @@ test("the home lists a changed rule's notice with its reason, links to checking 
     await close();
   }
 });
+
+// docs/architecture/rule-changes.md, slice 3 (CMP-005, EDP-011): a saved result says which of its rules
+// changed since it was saved, with the date and the reason, and is otherwise shown as it was saved.
+test("a saved result whose rule changed since says so above it and under that rule, with the date and the reason, and offers to check again", async () => {
+  const item = assessment.result.items[0]!;
+  const changed = api.GetAssessmentResponse.parse({
+    ...assessment,
+    ruleChanges: [
+      {
+        ruleId: item.ruleId,
+        version: item.ruleVersion,
+        kind: "replaced",
+        replacementVersion: item.ruleVersion + 1,
+        reason: "Synthetic change: the next version restates the synthetic provision",
+        changedAt: at(20),
+      },
+    ],
+  });
+  const { page, errors, unknown, close } = await phone(
+    `/workspace/assessments/${ASSESSMENT}`,
+    except({ [`GET /workspace/assessments/${ASSESSMENT}`]: changed }),
+  );
+  try {
+    await ready(page);
+    const notice = page.getByTestId("notice-result-rules-changed");
+    await expect(notice).toContainText("A rule in this result has changed since it was saved");
+    await expect(notice).toContainText(
+      "This result is kept as it was saved. Each changed rule says what changed below it.",
+    );
+    await expect(notice.getByRole("link", { name: "Check again" })).toHaveAttribute(
+      "href",
+      "/workspace/checker",
+    );
+    await expect(page.getByTestId(`changed-${item.ruleId}`)).toHaveText(
+      `Version ${item.ruleVersion + 1} of this rule was published on 20 Nov 2026. What changed: Synthetic change: the next version restates the synthetic provision.`,
+    );
+    // The result itself is as it was saved.
+    await expect(page.getByTestId(`card-item-${item.ruleId}`)).toContainText(item.reason);
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "a saved result whose rule changed"), []);
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});

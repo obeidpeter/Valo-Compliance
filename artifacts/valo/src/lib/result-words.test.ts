@@ -8,6 +8,7 @@ import type { AssessmentItem } from "@workspace/api-client-react";
 import {
   KNOWN_HOLD_REASONS,
   requirementDates,
+  savedRuleChangeWords,
   requirementFigures,
   resultGaps,
   resultNotice,
@@ -197,4 +198,27 @@ test("a requirement's dates each have their own label: when its sources were che
       publication: { route, publishedAt: published },
     }))
       assert.doesNotMatch(date, /professional/i, date);
+});
+
+// docs/architecture/rule-changes.md, slice 3 (CMP-005, EDP-011): what a saved result, or a task, says of a
+// rule version that changed since, with the date and the reason given.
+test("a changed rule's mark gives the new version or the withdrawal, its date and the reason given", () => {
+  const change = {
+    replacementVersion: 2,
+    reason: "Synthetic change: the second version restates the synthetic provision",
+    changedAt: "2026-11-25T09:00:00.000Z",
+  };
+  assert.equal(
+    savedRuleChangeWords({ ...change, kind: "replaced" }),
+    "Version 2 of this rule was published on 25 Nov 2026. What changed: Synthetic change: the second version restates the synthetic provision.",
+  );
+  assert.equal(
+    savedRuleChangeWords({
+      ...change,
+      kind: "withdrawn",
+      replacementVersion: null,
+      reason: "  Synthetic withdrawal: the synthetic provision no longer applies.  ",
+    }),
+    "This rule was withdrawn on 25 Nov 2026. Why: Synthetic withdrawal: the synthetic provision no longer applies.",
+  );
 });
