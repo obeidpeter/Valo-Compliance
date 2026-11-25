@@ -15,4 +15,5 @@ export const StaffRoleAssignmentRole = {
   finance: 'finance',
   system: 'system',
   privacy: 'privacy',
+  reviewer: 'reviewer',
 } as const;

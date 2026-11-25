@@ -8,6 +8,94 @@
 import * as zod from 'zod';
 
 
+/**
+ * For an active reviewer with recent MFA only. Each case gives its expected outcome, its critical failure conditions, its sources and the hash the suites bind it by. A decision holds only for the hash it names. Nothing here accepts a case or a requirement. Development only.
+ * @summary One corpus's acceptance cases, with the latest decision on each case's current hash
+ */
+export const ListAcceptanceCasesQueryParams = zod.object({
+  "corpus": zod.enum(['editorial', 'checker', 'customer_ai'])
+})
+
+export const listAcceptanceCasesResponseCasesItemDecisionsMin = 0;
+
+export const listAcceptanceCasesResponseConfirmedMin = 0;
+
+export const listAcceptanceCasesResponseRejectedMin = 0;
+
+
+
+export const ListAcceptanceCasesResponse = zod.object({
+  "corpus": zod.enum(['editorial', 'checker', 'customer_ai']),
+  "claim": zod.string().describe('What a confirmation claims.'),
+  "cases": zod.array(zod.object({
+  "id": zod.string(),
+  "hash": zod.string().describe('The SHA-256 of the case\'s row as key-sorted JSON, as the suites bind it.'),
+  "title": zod.string(),
+  "expected": zod.array(zod.string()).describe('The expected outcome.'),
+  "critical": zod.array(zod.string()).describe('The critical failure conditions.'),
+  "sources": zod.array(zod.string()),
+  "decision": zod.union([zod.object({
+  "answer": zod.enum(['confirmed', 'rejected']),
+  "reason": zod.string(),
+  "reviewer": zod.string().describe('The reviewer\'s staff identity.'),
+  "createdAt": zod.string()
+}),zod.null()]).describe('The latest decision on this hash, or null.'),
+  "decisions": zod.int().min(listAcceptanceCasesResponseCasesItemDecisionsMin).describe('How many decisions this hash has had.')
+})),
+  "confirmed": zod.int().min(listAcceptanceCasesResponseConfirmedMin),
+  "rejected": zod.int().min(listAcceptanceCasesResponseRejectedMin)
+})
+
+
+/**
+ * One decision, kept for good: a later decision is a new row, and the database never changes or removes one. A case that changed since the reviewer read it is refused.
+ * @summary Confirm or reject a case's expected outcome, for the case's hash as the reviewer read it
+ */
+export const recordAcceptanceDecisionBodyCaseIdRegExp = new RegExp('^[A-Z0-9][A-Z0-9-]{2,63}$');
+export const recordAcceptanceDecisionBodyCaseHashRegExp = new RegExp('^[a-f0-9]{64}$');
+export const recordAcceptanceDecisionBodyReasonMax = 2000;
+
+
+
+export const RecordAcceptanceDecisionBody = zod.object({
+  "corpus": zod.enum(['editorial', 'checker', 'customer_ai']),
+  "caseId": zod.string().regex(recordAcceptanceDecisionBodyCaseIdRegExp),
+  "caseHash": zod.string().regex(recordAcceptanceDecisionBodyCaseHashRegExp),
+  "answer": zod.enum(['confirmed', 'rejected']),
+  "reason": zod.string().max(recordAcceptanceDecisionBodyReasonMax).describe('Why, in 20 to 2,000 characters.')
+})
+
+export const recordAcceptanceDecisionResponseCasesItemDecisionsMin = 0;
+
+export const recordAcceptanceDecisionResponseConfirmedMin = 0;
+
+export const recordAcceptanceDecisionResponseRejectedMin = 0;
+
+
+
+export const RecordAcceptanceDecisionResponse = zod.object({
+  "corpus": zod.enum(['editorial', 'checker', 'customer_ai']),
+  "claim": zod.string().describe('What a confirmation claims.'),
+  "cases": zod.array(zod.object({
+  "id": zod.string(),
+  "hash": zod.string().describe('The SHA-256 of the case\'s row as key-sorted JSON, as the suites bind it.'),
+  "title": zod.string(),
+  "expected": zod.array(zod.string()).describe('The expected outcome.'),
+  "critical": zod.array(zod.string()).describe('The critical failure conditions.'),
+  "sources": zod.array(zod.string()),
+  "decision": zod.union([zod.object({
+  "answer": zod.enum(['confirmed', 'rejected']),
+  "reason": zod.string(),
+  "reviewer": zod.string().describe('The reviewer\'s staff identity.'),
+  "createdAt": zod.string()
+}),zod.null()]).describe('The latest decision on this hash, or null.'),
+  "decisions": zod.int().min(recordAcceptanceDecisionResponseCasesItemDecisionsMin).describe('How many decisions this hash has had.')
+})),
+  "confirmed": zod.int().min(recordAcceptanceDecisionResponseConfirmedMin),
+  "rejected": zod.int().min(recordAcceptanceDecisionResponseRejectedMin)
+})
+
+
 export const createCustomerAIDraftBodyIssuerNameMax = 160;
 
 export const createCustomerAIDraftBodyRecipientNameMax = 160;
@@ -8940,7 +9028,7 @@ export const GetStaffRoleAdministrationResponse = zod.object({
   "assignments": zod.array(zod.object({
   "id": zod.uuid(),
   "identityId": zod.string(),
-  "role": zod.enum(['content', 'support', 'finance', 'system', 'privacy']),
+  "role": zod.enum(['content', 'support', 'finance', 'system', 'privacy', 'reviewer']),
   "active": zod.boolean(),
   "grantMode": zod.enum(['permanent', 'break_glass']),
   "expiresAt": zod.coerce.date().nullable(),
@@ -8987,7 +9075,7 @@ export const changeStaffRoleBodyIncidentReferenceMax = 200;
 export const ChangeStaffRoleBody = zod.object({
   "requestKey": zod.uuid(),
   "identityId": zod.string().max(changeStaffRoleBodyIdentityIdMax).regex(changeStaffRoleBodyIdentityIdRegExp),
-  "role": zod.enum(['content', 'support', 'finance', 'system', 'privacy']),
+  "role": zod.enum(['content', 'support', 'finance', 'system', 'privacy', 'reviewer']),
   "action": zod.enum(['grant', 'revoke']),
   "expectedVersion": zod.int().min(changeStaffRoleBodyExpectedVersionMin),
   "reason": zod.string().min(changeStaffRoleBodyReasonMin).max(changeStaffRoleBodyReasonMax),

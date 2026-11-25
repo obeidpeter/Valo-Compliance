@@ -1,6 +1,12 @@
 # 0016 — Record the independent reviewer's decisions on the acceptance cases
 
-Date: 2026-11-20. Status: **proposed**. Nothing here is built.
+Date: 2026-11-20. Status: **proposed**; on 25 November 2026 it was taken under the owner's delegation
+(finishing plan, delegated decision 6) and is being built: see [the reviewer's record](../reviewer-record.md).
+The reviewer is still the owner's to name.
+
+Two facts below have moved since this was written: the live check now matches 71 of the 80 rule
+scenarios and differs on 9, one of them NDPA-009, the check's own; and of the three suites only the
+editorial suite marks a case `needs_evaluator_decision`.
 
 ## Context
 

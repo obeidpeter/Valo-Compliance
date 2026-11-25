@@ -359,6 +359,92 @@ export interface BusinessDocument {
   form: DocumentForm | null;
 }
 
+export type AcceptanceDecisionCorpus = typeof AcceptanceDecisionCorpus[keyof typeof AcceptanceDecisionCorpus];
+
+
+export const AcceptanceDecisionCorpus = {
+  editorial: 'editorial',
+  checker: 'checker',
+  customer_ai: 'customer_ai',
+} as const;
+
+export type AcceptanceDecisionAnswer = typeof AcceptanceDecisionAnswer[keyof typeof AcceptanceDecisionAnswer];
+
+
+export const AcceptanceDecisionAnswer = {
+  confirmed: 'confirmed',
+  rejected: 'rejected',
+} as const;
+
+export interface AcceptanceDecision {
+  corpus: AcceptanceDecisionCorpus;
+  /** @pattern ^[A-Z0-9][A-Z0-9-]{2,63}$ */
+  caseId: string;
+  /** @pattern ^[a-f0-9]{64}$ */
+  caseHash: string;
+  answer: AcceptanceDecisionAnswer;
+  /**
+     * Why, in 20 to 2,000 characters.
+     * @maxLength 2000
+     */
+  reason: string;
+}
+
+export type AcceptanceCaseDecisionAnswer = typeof AcceptanceCaseDecisionAnswer[keyof typeof AcceptanceCaseDecisionAnswer];
+
+
+export const AcceptanceCaseDecisionAnswer = {
+  confirmed: 'confirmed',
+  rejected: 'rejected',
+} as const;
+
+export interface AcceptanceCaseDecision {
+  answer: AcceptanceCaseDecisionAnswer;
+  reason: string;
+  /** The reviewer's staff identity. */
+  reviewer: string;
+  createdAt: string;
+}
+
+export interface AcceptanceCase {
+  id: string;
+  /** The SHA-256 of the case's row as key-sorted JSON, as the suites bind it. */
+  hash: string;
+  title: string;
+  /** The expected outcome. */
+  expected: string[];
+  /** The critical failure conditions. */
+  critical: string[];
+  sources: string[];
+  /** The latest decision on this hash, or null. */
+  decision: AcceptanceCaseDecision | null;
+  /**
+     * How many decisions this hash has had.
+     * @minimum 0
+     */
+  decisions: number;
+}
+
+export type AcceptanceCasesCorpus = typeof AcceptanceCasesCorpus[keyof typeof AcceptanceCasesCorpus];
+
+
+export const AcceptanceCasesCorpus = {
+  editorial: 'editorial',
+  checker: 'checker',
+  customer_ai: 'customer_ai',
+} as const;
+
+export interface AcceptanceCases {
+  corpus: AcceptanceCasesCorpus;
+  /** What a confirmation claims. */
+  claim: string;
+  cases: AcceptanceCase[];
+  /** @minimum 0 */
+  confirmed: number;
+  /** @minimum 0 */
+  rejected: number;
+}
+
 export type CustomerAIInputTone = typeof CustomerAIInputTone[keyof typeof CustomerAIInputTone];
 
 
@@ -4226,6 +4312,7 @@ export const StaffRoleAssignmentRole = {
   finance: 'finance',
   system: 'system',
   privacy: 'privacy',
+  reviewer: 'reviewer',
 } as const;
 
 export type StaffRoleAssignmentGrantMode = typeof StaffRoleAssignmentGrantMode[keyof typeof StaffRoleAssignmentGrantMode];
@@ -4292,6 +4379,7 @@ export const StaffRoleChangeInputRole = {
   finance: 'finance',
   system: 'system',
   privacy: 'privacy',
+  reviewer: 'reviewer',
 } as const;
 
 export type StaffRoleChangeInputAction = typeof StaffRoleChangeInputAction[keyof typeof StaffRoleChangeInputAction];
@@ -5109,6 +5197,19 @@ export type ConflictErrorResponse = {
  * Validation, access or concurrency error
  */
 export type AuthErrorResponse = ApiProblem;
+
+export type ListAcceptanceCasesParams = {
+  corpus: ListAcceptanceCasesCorpus;
+};
+
+export type ListAcceptanceCasesCorpus = typeof ListAcceptanceCasesCorpus[keyof typeof ListAcceptanceCasesCorpus];
+
+
+export const ListAcceptanceCasesCorpus = {
+  editorial: 'editorial',
+  checker: 'checker',
+  customer_ai: 'customer_ai',
+} as const;
 
 export type GetPublicDiscovery200ItemsItem = {
   path: string;

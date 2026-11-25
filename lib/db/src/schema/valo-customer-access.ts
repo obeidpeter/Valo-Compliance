@@ -42,7 +42,9 @@ export const valoStaffAssignments = pgTable(
   {
     id: uuid("id").primaryKey(),
     identityId: text("identity_id").notNull(),
-    role: text("role", { enum: ["content", "support", "finance", "system", "privacy"] }).notNull(),
+    role: text("role", {
+      enum: ["content", "support", "finance", "system", "privacy", "reviewer"],
+    }).notNull(),
     active: boolean("active").notNull().default(true),
     expiresAt: timestamp("expires_at", { withTimezone: true }),
     grantMode: text("grant_mode", { enum: ["permanent", "break_glass"] })
@@ -61,7 +63,7 @@ export const valoStaffAssignments = pgTable(
     check("valo_staff_assignments_reason_check", sql`length(${t.reason}) > 0`),
     check(
       "valo_staff_assignments_role_check",
-      sql`${t.role} IN ('content', 'support', 'finance', 'system', 'privacy')`,
+      sql`${t.role} IN ('content', 'support', 'finance', 'system', 'privacy', 'reviewer')`,
     ),
     check("valo_staff_assignments_version_check", sql`${t.version} > 0`),
     check(

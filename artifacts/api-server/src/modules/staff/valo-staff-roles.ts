@@ -239,6 +239,28 @@ export function makeStaffRoleService(verifyTarget: TargetVerifier = verifyManage
           throw new ValoProblem(409, "This assignment changed. Refresh and review the current permission.");
         if (input.action === "revoke" && (!old || !old.active))
           throw new ValoProblem(409, "There is no active assignment to revoke.");
+        // No one holds the reviewer and content roles at once, emergency grants included, so no one who
+        // prepares content confirms its acceptance cases (decision 0016). The database refuses it too.
+        if (input.action === "grant" && (input.role === "reviewer" || input.role === "content")) {
+          const other = input.role === "reviewer" ? "content" : "reviewer";
+          const [held] = await tx
+            .select({ id: valoStaffAssignments.id })
+            .from(valoStaffAssignments)
+            .where(
+              and(
+                eq(valoStaffAssignments.identityId, input.identityId),
+                eq(valoStaffAssignments.role, other),
+                activeStaffAssignment(),
+              ),
+            );
+          if (held)
+            throw new ValoProblem(
+              409,
+              input.role === "reviewer"
+                ? "This person holds the content role. A reviewer cannot also prepare content: revoke the content role first."
+                : "This person is an acceptance reviewer. A reviewer cannot also prepare content: revoke the reviewer role first.",
+            );
+        }
         const keepsPermanent = input.action === "grant" && input.grantMode === "permanent";
         if (old?.role === "system" && old.active && old.grantMode === "permanent" && !keepsPermanent) {
           const permanent = await tx

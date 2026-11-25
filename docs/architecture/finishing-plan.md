@@ -150,7 +150,7 @@ owner's to confirm. The rule changes are built in the three slices of [their des
 | **Keeping published guidance current** ([design](guidance-currency.md)). A regulatory guide stops showing 30 days after its last source check, and only a command or a button rechecks it. Schedule the recheck, give other library content a review date, and put a correction note on content that was republished | EDP-011, CMP-005, CMP-007 | M |
 | **The guidance record** ([design](guidance-record.md)). Of a draft's editorial lines only "applicability" is kept. Keep the authority, the action and evidence, the effective dates and the related documents, and show them | CMP-001 | M |
 | **The source register** ([design](source-register.md)). Sources are a list in code; staff can only start watching one. Let staff keep the register (authority, jurisdiction, instrument, version in force), and let a changed source or a complaint open review work that ends in a prepared candidate. Today such work waits in a row that nothing reads | ADM-003, ADM-008, CMP-007 | M to L |
-| **The reviewer's record** (decision 0016, proposed): a reviewer role, a record that cannot be edited, a queue, and the three suites reading it. Nothing of it is built | EDP-010, RUL-008, AI-008 | L |
+| **The reviewer's record** ([design](reviewer-record.md); decision 0016, taken under delegated decision 6 below): a reviewer role, a record that cannot be edited, a queue, and the three suites reading it. Nothing of it is built | EDP-010, RUL-008, AI-008 | L |
 | **The editorial cases.** Seventeen of the 31 case-bound candidates are unbuilt and each names a text it lacks; the suite's ceiling today is 43 of 60 against a bar of 57. Build them as their texts are retained. Build the scorer for the 60 drafting cases, which has a check for one case only | EDP-010, AI-008 | L |
 | **The audit trail.** Alert on an attempt to change it and on heavy privileged reading; a viewer for staff; a guard on the events table; the restore and backup-removal tools record who ran them and why | ADM-009 | M |
 | **Commercial settings.** A staff screen for prices in place of a command; one-off bundles; quotas and access rules as versioned settings instead of constants; a price carried to a template's next edition | ADM-006 | L |
@@ -304,6 +304,17 @@ live payments, real customer data or a real message.
    already in the repository's public history, which cannot be rewritten (section 1). The
    repository is public by the owner's decision 0006. The site itself still never serves a premium
    text without a purchase (DOC-004), which phase 1's previews row tests.
+6. **The reviewer's record** (decision 0016, [design](reviewer-record.md)), decided on 25 November
+   2026. The proposal is built as written, and its points for the owner are taken as follows:
+   - the reviewer stays the owner's to name and grant;
+   - the reviewer role excludes the content role, emergency grants included;
+   - a reviewer confirms or rejects, always with why, and a corrected case is a new corpus version;
+   - one role covers the three corpora;
+   - a confirmation claims only that a case's expected outcome follows from its cited sources, in the
+     proposal's words, which the owner confirms.
+
+   Reason: the three suites cannot count a case until something records a person's decision, and every
+   answer is the proposal's own. Nothing here names a reviewer or accepts a case.
 
 ## Order
 

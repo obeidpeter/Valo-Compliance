@@ -200,6 +200,47 @@ const privacyCase = {
 } as const;
 
 /** Synthetic answers, each checked against the contract's schema, keyed by method and API path. */
+/** A corpus of synthetic acceptance cases as the reviewer's page reads it (decision 0016, slice 1). */
+function acceptanceCases(corpus: string) {
+  const prefix =
+    { editorial: "EVAL-EDP-C", checker: "CHK-CAND-SYNTH-", customer_ai: "CAI-CAND-SYNTH-" }[corpus] ??
+    "SYNTH-";
+  return api.ListAcceptanceCasesResponse.parse({
+    corpus,
+    claim:
+      "This confirms that the case's expected outcome follows from its cited sources. It is not legal, tax or regulatory advice unless the reviewer is engaged to give that.",
+    cases: [
+      {
+        id: `${prefix}001`,
+        hash: "a".repeat(64),
+        title: "Synthetic case: a misquoted citation in a held template",
+        expected: ["decision: hold", "Name the misquoted citation and hold the template."],
+        critical: ["The template is published with the misquoted citation."],
+        sources: ["SYNTH-SOURCE-01", "EDP-010"],
+        decision: {
+          answer: "confirmed",
+          reason: "The cited excerpt shows the quotation differs from its source.",
+          reviewer: "user_synthetic_reviewer",
+          createdAt: at(12),
+        },
+        decisions: 2,
+      },
+      {
+        id: `${prefix}002`,
+        hash: "b".repeat(64),
+        title: "Synthetic case: a source not checked for over a day",
+        expected: ["decision: hold", "Hold the guide until its source is checked again."],
+        critical: ["The guide is published on a source not checked for over a day."],
+        sources: ["SYNTH-SOURCE-02"],
+        decision: null,
+        decisions: 0,
+      },
+    ],
+    confirmed: 1,
+    rejected: 0,
+  });
+}
+
 const answers: Record<string, unknown> = {
   // The workspace's support requests page (WRK-001) lists the customer's own requests.
   "GET /workspace/support-cases": api.ListCustomerSupportCasesResponse.parse({
@@ -904,6 +945,9 @@ const answers: Record<string, unknown> = {
     total: 1,
     pageSize: 20,
   }),
+  // The reviewer's record (decision 0016, docs/architecture/reviewer-record.md, slice 1): each corpus
+  // with a case confirmed after an earlier decision, and one without a decision.
+  "GET /admin/acceptance-cases": (query: URLSearchParams) => acceptanceCases(query.get("corpus") ?? ""),
 };
 
 const answer: Api = async (route, method, path, query) => {
@@ -973,6 +1017,7 @@ const SIGNED_IN: { path: string; title: string; area?: string }[] = [
   { path: "/staff", title: "Staff operations", area: "finance" },
   { path: "/staff", title: "Staff operations", area: "system" },
   { path: "/staff/privacy", title: "Privacy request operations" },
+  { path: "/staff/acceptance", title: "Acceptance cases" },
 ];
 
 test("on a phone, each signed-in screen names itself in the page title, fits 360 and 320 pixels, moves keyboard focus only to visible outlined elements and has no automated WCAG 2.2 AA failure", async () => {
@@ -1093,6 +1138,7 @@ test("a signed-in screen whose data fails to load shows an alert with a retry bu
     "/workspace/privacy",
     "/staff",
     "/staff/privacy",
+    "/staff/acceptance",
   ]) {
     let failing = true;
     const { page, unknown, errors, close } = await phone(path, async (route, method, apiPath, query) => {
@@ -5031,6 +5077,94 @@ test("review work on a held template asks for its next candidate, and says where
     // While the worker has it, the row offers no second request.
     await expect(waiting.getByRole("button")).toHaveCount(0);
     assert.deepEqual(sent, ["/admin/source-review/00000000-0000-4000-8000-00000000c004/prepare"]);
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
+
+test("an acceptance reviewer reads a corpus's cases with what a confirmation claims, and records a decision with why, bound to the case's words", async () => {
+  const sent: unknown[] = [];
+  const deciding: Api = async (route, method, path, query) => {
+    if (method === "POST" && path === "/admin/acceptance-cases/decisions") {
+      const body = route.request().postDataJSON() as { reason: string };
+      sent.push(body);
+      const listed = acceptanceCases("checker");
+      listed.cases[1] = {
+        ...listed.cases[1]!,
+        decision: {
+          answer: "rejected",
+          reason: body.reason,
+          reviewer: "user_synthetic_reviewer",
+          createdAt: at(14),
+        },
+        decisions: 1,
+      };
+      await route.fulfill({
+        status: 201,
+        contentType: "application/json",
+        body: JSON.stringify(api.RecordAcceptanceDecisionResponse.parse({ ...listed, rejected: 1 })),
+      });
+    } else await answer(route, method, path, query);
+  };
+  const { page, unknown, errors, close } = await phone("/staff/acceptance", deciding);
+  try {
+    await ready(page);
+    await expect(page.getByTestId("text-acceptance-claim")).toHaveText(
+      /It is not legal, tax or regulatory advice unless the reviewer is engaged to give that\./,
+    );
+    await expect(page.getByTestId("text-acceptance-tally")).toHaveText(
+      "1 confirmed, 0 rejected and 1 without a decision, of 2 cases.",
+    );
+    const decided = page.getByTestId("acceptance-decision-EVAL-EDP-C001");
+    await expect(decided).toContainText("Confirmed by user_synthetic_reviewer on");
+    await expect(decided).toContainText("· 1 earlier decision");
+    await page.getByTestId("tab-acceptance-checker").click();
+    const scenario = page.getByTestId("acceptance-case-CHK-CAND-SYNTH-002");
+    await expect(scenario).toContainText("No decision on these words yet.");
+    await expect(scenario).toContainText("Hold the guide until its source is checked again.");
+    await expect(scenario).toContainText("The guide is published on a source not checked for over a day.");
+    await expect(scenario).toContainText("SYNTH-SOURCE-02");
+    await scenario.getByRole("button", { name: "Record a decision" }).click();
+    const form = page.getByTestId("form-acceptance-CHK-CAND-SYNTH-002");
+    const save = form.getByRole("button", { name: "Save the decision" });
+    await expect(save).toBeDisabled();
+    await form.getByRole("radio", { name: /^Reject/ }).check();
+    const why = form.getByRole("textbox", { name: "Why" });
+    await expect(why).toHaveAccessibleDescription(/in 20 to 2,000 characters/);
+    await why.fill("The scenario's expected result leaves out the exception in the cited section.");
+    // While a decision is started, the other sets and the other cases wait.
+    await expect(page.getByTestId("tab-acceptance-editorial")).toBeDisabled();
+    await expect(
+      page
+        .getByTestId("acceptance-case-CHK-CAND-SYNTH-001")
+        .getByRole("button", { name: "Record a decision" }),
+    ).toBeDisabled();
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "the acceptance cases with a decision started"), []);
+    // The check ends on a 320-pixel screen; the phone is 360 pixels wide again for the rest.
+    await page.setViewportSize({ width: 360, height: 640 });
+    await save.click();
+    const saved = page.getByRole("status").filter({ hasText: "Recorded" });
+    await expect(saved).toHaveText("Recorded: you rejected the expected outcome of CHK-CAND-SYNTH-002.");
+    await expect(saved).toBeFocused();
+    await expect(page.getByTestId("acceptance-decision-CHK-CAND-SYNTH-002")).toContainText(
+      "Rejected by user_synthetic_reviewer on",
+    );
+    await expect(page.getByTestId("text-acceptance-tally")).toHaveText(
+      "1 confirmed, 1 rejected and 0 without a decision, of 2 cases.",
+    );
+    assert.deepEqual(sent, [
+      {
+        corpus: "checker",
+        caseId: "CHK-CAND-SYNTH-002",
+        caseHash: "b".repeat(64),
+        answer: "rejected",
+        reason: "The scenario's expected result leaves out the exception in the cited section.",
+      },
+    ]);
+    await expect(page.getByTestId("tab-acceptance-editorial")).toBeEnabled();
     assert.deepEqual(errors, []);
     assert.deepEqual(unknown, []);
   } finally {

@@ -6,6 +6,14 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './acceptanceCase';
+export * from './acceptanceCaseDecision';
+export * from './acceptanceCaseDecisionAnswer';
+export * from './acceptanceCases';
+export * from './acceptanceCasesCorpus';
+export * from './acceptanceDecision';
+export * from './acceptanceDecisionAnswer';
+export * from './acceptanceDecisionCorpus';
 export * from './accessSupportAck';
 export * from './accessSupportAckDelivery';
 export * from './accessSupportInput';
@@ -168,6 +176,8 @@ export * from './inventoryOverlap';
 export * from './libraryExport';
 export * from './libraryExportFormat';
 export * from './libraryTemplateVersion';
+export * from './listAcceptanceCasesCorpus';
+export * from './listAcceptanceCasesParams';
 export * from './listContentEscalationsParams';
 export * from './listCustomerSupportCasesParams';
 export * from './listManualLibraryKind';

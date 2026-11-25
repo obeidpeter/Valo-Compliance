@@ -15,4 +15,5 @@ export const StaffRoleChangeInputRole = {
   finance: 'finance',
   system: 'system',
   privacy: 'privacy',
+  reviewer: 'reviewer',
 } as const;
