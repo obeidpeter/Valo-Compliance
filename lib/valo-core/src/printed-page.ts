@@ -120,6 +120,26 @@ export type PrintedBlock = {
   level?: 2 | 3 | undefined;
   headerRows?: 0 | 1 | undefined;
 };
+/** The tables a document's amounts make (money.ts), on a typed document with its financial details:
+ * the items with their totals, and the summary. Their first row names their columns. */
+const TOTALS_TABLES = new Set(["financial-items-v1", "financial-summary-v1"]);
+/** The tables made from a form's questions (v1): its own tables, and the totals its answers make. */
+const QUESTION_TABLE = new RegExp(`^${GUIDED_PREFIX}[^:]+:(table|calc):`);
+/**
+ * Whether a table prints its first row as a heading row, repeated at the top of each page (EDT-006).
+ * A form's table (v2) and a customer's own table say so (`headerRows: 1`). A table made from questions
+ * and the totals tables say nothing, but their first row is always their column names, so the page
+ * reads the heading from the table's kind: no saved document changes.
+ */
+export function printsHeadingRow(
+  block: { id: string; type: string; headerRows?: 0 | 1 | undefined },
+  content: { financialInput?: unknown },
+) {
+  if (block.type !== "table") return false;
+  if (block.headerRows === 1) return true;
+  if (block.id.startsWith(GUIDED_PREFIX)) return QUESTION_TABLE.test(block.id);
+  return content.financialInput !== undefined && TOTALS_TABLES.has(block.id);
+}
 /** A document made from a form, v1's questions or v2's filled wording, prints only its note among its
  * fields: the names and dates are in its own text. */
 export const madeFromForm = (blocks: readonly { id: string }[]) =>
@@ -137,7 +157,7 @@ export type PrintedField = { name: string; value: string; supplied: boolean };
  * A document's printed page: the notice, the title, the line under it, the fields with their names
  * and the blocks. The Word file, the PDF, the editor's preview and "Copy text" each draw this, and
  * add no text of their own (docs/architecture/editor.md, EDT-002). A list prints no blank line, and a
- * list with no line left prints nothing.
+ * list with no line left prints nothing. A table that prints its first row as a heading row says so.
  */
 export function printedPage(
   document: PrintedDocument,
@@ -146,6 +166,8 @@ export function printedPage(
 ) {
   const { title, content } = document;
   const blocks = guidedRenderableBlocks(content).flatMap((block): PrintedBlock[] => {
+    if (block.type === "table")
+      return [printsHeadingRow(block, content) ? { ...block, headerRows: 1 } : block];
     if (block.type !== "list") return [block];
     const lines = block.text.split("\n").filter((line) => line.trim());
     return lines.length ? [{ ...block, text: lines.join("\n") }] : [];

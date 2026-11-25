@@ -10,7 +10,12 @@ import {
   printedPageText,
   printedPageWords,
 } from "@workspace/valo-core/printed-page";
-import { printedPageSamples, questionsSample, typedSample } from "@workspace/valo-core/printed-page-samples";
+import {
+  headingRowSamples,
+  printedPageSamples,
+  questionsSample,
+  typedSample,
+} from "@workspace/valo-core/printed-page-samples";
 import { finishedFileState } from "@/lib/api";
 import { formatDocumentPlainText } from "@/lib/guided-prefill";
 import { DocPreview } from "./document-preview";
@@ -96,4 +101,24 @@ test('"Copy text" is the page as plain text: the notice, the title and its versi
   const copied = formatDocumentPlainText(invoice.title, invoice.content as CanonicalDocument, 1);
   assert.doesNotMatch(copied, /^Issued by:/m);
   assert.match(copied, /^Notes: /m);
+});
+
+// EDT-006 (docs/architecture/editor.md, slice 2): the preview shows a table's heading row as the files
+// print it, as column headings, for each kind of table that has one.
+test("the preview prints a table's heading row as its column headings, for each kind of table that has one, and a table without the mark as rows", () => {
+  for (const [name, sample, tableId, heading] of headingRowSamples(3)) {
+    const page = pageOf(sample, 7);
+    const index = page.blocks.findIndex((block) => block.id === tableId);
+    const html = renderToStaticMarkup(
+      <DocPreview title={sample.title} content={sample.content as CanonicalDocument} revision={7} />,
+    );
+    const start = html.indexOf(`aria-label="Document table ${index + 1}"`);
+    assert.ok(index >= 0 && start >= 0, `the table of ${name}`);
+    const shown = html.slice(start, html.indexOf("</table>", start));
+    const columns = [...shown.matchAll(/<th scope="col"[^>]*>([^<]*)<\/th>/g)].map((match) =>
+      decoded(match[1]!),
+    );
+    assert.deepEqual(columns, heading ? page.blocks[index]!.rows[0] : [], `the column headings of ${name}`);
+    assert.equal(shown.includes("<thead>"), heading, `the heading row of ${name}`);
+  }
 });

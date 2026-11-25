@@ -26,6 +26,6 @@ export interface DocumentBlock {
   rows: string[][];
   /** A heading's level. Only a form document (forms v2) has headings. */
   level?: DocumentBlockLevel;
-  /** A table's first row is its header, repeated on each page. Only a form document's tables have one. */
+  /** A table's first row is its heading row, repeated at the top of each page. Only a table has one. */
   headerRows?: DocumentBlockHeaderRows;
 }

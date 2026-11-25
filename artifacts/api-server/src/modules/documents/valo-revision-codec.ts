@@ -8,7 +8,8 @@ export function serializeRevision(input: CanonicalDocument): string {
   const m = input.content.financialInput;
   const c = input.content;
   // A form document (forms v2) holds parts V1 never had: its answers, chosen passages, headings and
-  // header rows. It is hashed as V2, so no V1 hash changes.
+  // header rows. So does a typed document whose table has a heading row. Each is hashed as V2, so no
+  // V1 hash changes.
   const formDocument =
     c.formAnswers !== undefined ||
     c.selectedClauses.length > 0 ||

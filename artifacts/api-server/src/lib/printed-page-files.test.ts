@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { promisify } from "node:util";
 import { strFromU8, unzipSync } from "fflate";
 import { printedPage, printedPageWords } from "@workspace/valo-core/printed-page";
-import { printedPageSamples } from "@workspace/valo-core/printed-page-samples";
+import { headingRowSamples, printedPageSamples } from "@workspace/valo-core/printed-page-samples";
 import { closeRenderer, renderDocument } from "./valo-render";
 
 // EDT-002 (docs/architecture/editor.md, slice 1): a document's Word file and its PDF print, word for
@@ -44,19 +44,102 @@ test("a document's Word file and PDF print its page word for word, for each kind
         await writeFile(path, await renderDocument(sample, "pdf", 7, mode));
         const text = (await promisify(execFile)("pdftotext", ["-raw", path, "-"], { maxBuffer: 1 << 24 }))
           .stdout;
-        // Each page's furniture is left out: the notice above it and its number below, and a list's
-        // bullet marks, which the PDF draws as text.
+        // Each page's furniture is left out: the notice above it and its number below, a list's bullet
+        // marks, which the PDF draws as text, and a table's heading row where it repeats at the top of
+        // a page the table runs onto (slice 2). The page's words hold that row once.
         const notice = letters(page.notice);
-        const printed = letters(text.replace(/Valo · \d+ \/ \d+/g, " ").replace(/•/g, " "));
-        assert.equal(
-          printed.split(notice).join(""),
-          expected.split(notice).join(""),
-          `the PDF of a document ${name}, ${mode}`,
+        const furniture = (each: string) =>
+          letters(each.replace(/Valo · \d+ \/ \d+/g, " ").replace(/•/g, " "));
+        const headings = page.blocks.flatMap((block) =>
+          block.type === "table" && block.headerRows === 1 ? [letters(block.rows[0]!.join(" "))] : [],
         );
+        const pages = text.split("\f").filter((each) => each.trim());
+        let read = "";
+        for (const each of pages) {
+          const rest = furniture(each).split(notice).join("");
+          const repeated = headings.find((heading) => read.includes(heading) && rest.startsWith(heading));
+          read += repeated ? rest.slice(repeated.length) : rest;
+        }
+        assert.equal(read, expected.split(notice).join(""), `the PDF of a document ${name}, ${mode}`);
         // The notice is on every page as well as above the title.
-        const pages = text.split("\f").filter((each) => each.trim()).length;
-        assert.equal(printed.split(notice).length - 1, pages + 1, `the PDF's notices, ${name}, ${mode}`);
+        assert.equal(
+          furniture(text).split(notice).length - 1,
+          pages.length + 1,
+          `the PDF's notices, ${name}, ${mode}`,
+        );
       }
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+    await closeRenderer();
+  }
+});
+
+// EDT-006 (docs/architecture/editor.md, slice 2): a table that prints its first row as a heading row
+// repeats it at the top of each page the table runs onto, in the PDF, and the Word file marks that
+// row, and only that row, to repeat. A customer's table without the mark prints its first row once.
+test("a table's heading row prints at the top of every page the table runs onto, and Word marks only that row to repeat, for each kind of table that has one", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "valo-heading-rows-"));
+  try {
+    for (const [name, sample, tableId, heading] of headingRowSamples()) {
+      const page = printedPage(sample, 7);
+      const table = page.blocks.find((block) => block.id === tableId);
+      assert.ok(table?.type === "table" && table.rows.length === 41, `the 40-row table of ${name}`);
+      assert.equal(table.headerRows === 1, heading, `the page marks the heading row of ${name}`);
+
+      const xml = strFromU8(unzipSync(await renderDocument(sample, "docx", 7))["word/document.xml"]!);
+      const tables = page.blocks.filter((block) => block.type === "table" && block.rows.length);
+      const wordTables = xml
+        .split("<w:tbl>")
+        .slice(1)
+        .map((each) => each.slice(0, each.indexOf("</w:tbl>")));
+      assert.equal(wordTables.length, tables.length, `the Word tables of ${name}`);
+      wordTables.forEach((each, index) => {
+        const rows = each.split(/<w:tr[ >]/).slice(1);
+        assert.deepEqual(
+          rows.map((row) => row.includes("<w:tblHeader/>")),
+          rows.map((_, row) => row === 0 && tables[index]!.headerRows === 1),
+          `the Word rows marked to repeat in table ${index + 1} of ${name}`,
+        );
+      });
+
+      const path = join(directory, "page.pdf");
+      await writeFile(path, await renderDocument(sample, "pdf", 7));
+      const text = (await promisify(execFile)("pdftotext", ["-raw", path, "-"], { maxBuffer: 1 << 24 }))
+        .stdout;
+      // Each page's text without its furniture: the notice above it and its number below.
+      const notice = letters(page.notice);
+      const pages = text
+        .split("\f")
+        .filter((each) => each.trim())
+        .map((each) =>
+          letters(each.replace(/Valo · \d+ \/ \d+/g, " "))
+            .split(notice)
+            .join(""),
+        );
+      const headingRow = letters(table.rows[0]!.join(" "));
+      const bodyRows = table.rows.slice(1).map((row) => letters(row.join(" ")));
+      const withRows = pages.flatMap((each, index) =>
+        bodyRows.some((row) => each.includes(row)) ? [index] : [],
+      );
+      assert.ok(withRows.length >= 2, `the table of ${name} runs over several pages`);
+      withRows.forEach((index, n) => {
+        const each = pages[index]!;
+        const first = Math.min(...bodyRows.map((row) => each.indexOf(row)).filter((at) => at >= 0));
+        if (n === 0)
+          assert.ok(each.slice(0, first).endsWith(headingRow), `the first row above the table of ${name}`);
+        else
+          assert.equal(
+            each.slice(0, first),
+            heading ? headingRow : "",
+            `what page ${index + 1} of ${name} prints above the table's rows`,
+          );
+      });
+      assert.equal(
+        pages.join("").split(headingRow).length - 1,
+        heading ? withRows.length : 1,
+        `how many times the PDF of ${name} prints the first row`,
+      );
+    }
   } finally {
     await rm(directory, { recursive: true, force: true });
     await closeRenderer();

@@ -349,25 +349,26 @@ test("document text that tries to fetch a URL, read a local file or run script d
 });
 
 // Forms v2, slice 3 (docs/architecture/forms-v2.md): the renderer prints a heading and a table's
-// header row for a form that fills a template's own wording. The twelve v1 forms print exactly as
-// before: each one's HTML is pinned here, with the RENDER_VERSION it prints under. A change to how one
-// of them prints changes its hash, and must come with a new RENDER_VERSION. Version 6 left them
-// unchanged: their lists have no blank line.
+// header row for a form that fills a template's own wording. Each of the twelve v1 forms' HTML is
+// pinned here, with the RENDER_VERSION it prints under. A change to how one of them prints changes its
+// hash, and must come with a new RENDER_VERSION. Version 6 left them unchanged: their lists have no
+// blank line. Version 7 prints the first row of their tables and of their totals as a heading row
+// (docs/architecture/editor.md), so the eight with a table changed; the four without one did not.
 const PRINTED_V1_HTML: Record<string, string> = {
-  "TPL-01": "6d7ad99ca365abc00e73bc260f4f52eedc6ee4f873a654aa1550295842b31457",
-  "TPL-02": "8271b9b2673d2ce1ef9ade8b6ff3df8e6d7806e992d52db68ee544753dd96ff3",
+  "TPL-01": "6af1dcbd5232b133cd92063c3616762f72b1618a08cb2b4dd19a7e02a84504ea",
+  "TPL-02": "aa8805cc9eaa5f9c2be7722a3d262bce1f05ef46acc036a0430a66f0d69c3e6d",
   "TPL-03": "628932ddbf8679db605b1b5f4dfe5bcdf954337988805771008604f85afe23e6",
-  "TPL-04": "e1e91d72324bc3f0231cc0ce3ed8c2ed92c7cc762822c476df54130f430c91a3",
-  "TPL-05": "17da6256697ece9ae27ebed99caf515977a263b2decbb6c1c3d93274b07987c2",
-  "TPL-08": "97e67ff0991b2bea1dbeb1735b829e2abc417f5a201409deab861a31c0884a86",
-  "TPL-12": "f9de4863bb4286c3c050b1a0ac615ba6e800e56ffbc1d3dd558aeec4551b8dda",
-  "TPL-13": "255621e26642a431f9ffa90b246f224f69eaab896f9b56dad9594cc236e2c95d",
-  "TPL-14": "48fbc8de726b32b59e684863ef708dfeeb0cf25396e4cdb1defe019bb9005af4",
+  "TPL-04": "c38bf7b93cdef277a987cf9e573b5a6cae6b1e11d7ea85ecc7372dcbdf09996c",
+  "TPL-05": "5360e934c43eaf025f070e97ff868c96c11e502f1eb2e482c780731c470a5338",
+  "TPL-08": "f3f1cd497431114e674ef93377c77eb8d468fb1e30bdc3f48ac8737b0d68eacd",
+  "TPL-12": "cc0386fada6301119ea45db6f3a2a7679c2143570f882cdd2e8e7db6caf52374",
+  "TPL-13": "9518c629af262a25ca3a6b9103e7e41feff266f1781ba37db5f08429a4617b65",
+  "TPL-14": "1480394edfc7e3ff5e6d2bb5b3df485c64e41ce0349a85cc75e3d40ae51797c3",
   "TPL-15": "5854a68cc8cf39f87779d6d78d6449030704db8a8892a1f98881346deb68a666",
   "TPL-16": "2c7be59fd584c9849d2e2c8a05bf190228f3eaf32b2f2e5b82fc742e4ccfa114",
   "TPL-17": "7901009a98cc109edd89781463ed9164e48dd2e5d51d4a991b3ba767dc88ef72",
 };
-test("the twelve forms' printed HTML is unchanged by the form layout's headings and header rows", () => {
+test("the twelve question forms' printed HTML is pinned with the render version it prints under", () => {
   for (const id of GUIDED_TEMPLATE_IDS) {
     const html = controlledHtml(
       { title: GUIDED_SPECS_V1[id].title, content: compileGuidedContent(completeGuidedTestData(id)) },
@@ -375,7 +376,7 @@ test("the twelve forms' printed HTML is unchanged by the form layout's headings 
     );
     assert.equal(createHash("sha256").update(html).digest("hex"), PRINTED_V1_HTML[id], id);
   }
-  assert.equal(RENDER_VERSION, "manual-draft-6");
+  assert.equal(RENDER_VERSION, "manual-draft-7");
 });
 test("a form's headings print as headings and its table's header row repeats on each page, in HTML and Word, with every text escaped", async () => {
   const blocks: PrintedBlock[] = [

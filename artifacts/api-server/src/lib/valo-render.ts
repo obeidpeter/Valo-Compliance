@@ -45,8 +45,10 @@ export {
  * a guided document prints an amount in naira under its question's name, without "kobo". Version 5:
  * a customer's own document says "Saved version", names its fields as the editor does, prints a
  * date with the month as a word, and carries the draft notice below. Version 6: a list prints no blank line, as the
- * editor's preview does (docs/architecture/editor.md). */
-export const RENDER_VERSION = "manual-draft-6";
+ * editor's preview does (docs/architecture/editor.md). Version 7: a table made from questions, a totals
+ * table and a customer's table marked so print their first row as a heading row, repeated at the top of
+ * each page. */
+export const RENDER_VERSION = "manual-draft-7";
 export const exportMime = {
   docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   pdf: "application/pdf",
