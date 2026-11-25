@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { ManualLibraryHoldRecord } from './manualLibraryHoldRecord';
 import type { OwnerGuidanceItemLive } from './ownerGuidanceItemLive';
 import type { OwnerGuidanceItemState } from './ownerGuidanceItemState';
 import type { PublicSourceReference } from './publicSourceReference';
@@ -28,4 +29,6 @@ export interface OwnerGuidanceItem {
      * @nullable
      */
   previousRelease: number | null;
+  /** The hold a Content editor placed on the published version, while it is not lifted, or null. Only the owner lifts it (docs/architecture/library-holds.md, slice 2). */
+  libraryHold: ManualLibraryHoldRecord | null;
 }

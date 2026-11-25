@@ -470,6 +470,13 @@
       "when": 1795614330821,
       "tag": "20261125134530_manual_reach",
       "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1795615327557,
+      "tag": "20261125140207_manual_holds",
+      "breakpoints": true
     }
   ]
 }

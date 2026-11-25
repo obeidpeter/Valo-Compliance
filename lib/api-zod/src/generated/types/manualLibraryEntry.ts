@@ -18,4 +18,6 @@ export interface ManualLibraryEntry {
   /** @nullable */
   industry: string | null;
   review?: ManualLibraryReviewDate;
+  /** Whether the published version is held by a Content editor (docs/architecture/library-holds.md, slice 2). Held entries are listed first. */
+  held: boolean;
 }

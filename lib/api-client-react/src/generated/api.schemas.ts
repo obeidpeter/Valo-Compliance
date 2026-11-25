@@ -2011,6 +2011,17 @@ export const OwnerGuidanceItemState = {
   replaced: 'replaced',
 } as const;
 
+/**
+ * A hold on a published library version: why, who placed it, when, and how many workspaces its template reached then.
+ */
+export interface ManualLibraryHoldRecord {
+  reason: string;
+  placedBy: string;
+  placedAt: string;
+  /** @minimum 0 */
+  workspaces: number;
+}
+
 export type OwnerGuidanceItemLive = {
   version: number;
   digest: string;
@@ -2035,6 +2046,8 @@ export interface OwnerGuidanceItem {
      * @nullable
      */
   previousRelease: number | null;
+  /** The hold a Content editor placed on the published version, while it is not lifted, or null. Only the owner lifts it (docs/architecture/library-holds.md, slice 2). */
+  libraryHold: ManualLibraryHoldRecord | null;
 }
 
 export interface OwnerGuidancePage {
@@ -2064,6 +2077,19 @@ export interface OwnerGuidanceDecision {
      * @maxLength 1000
      */
   change?: string;
+}
+
+export interface OwnerGuidanceHoldLift {
+  /** @minimum 1 */
+  version: number;
+  /** @pattern ^[a-f0-9]{64}$ */
+  digest: string;
+  /**
+     * Why the hold is lifted, in 20 to 1,000 characters.
+     * @minLength 20
+     * @maxLength 1000
+     */
+  reason: string;
 }
 
 export type OwnerGuidanceReceiptState = typeof OwnerGuidanceReceiptState[keyof typeof OwnerGuidanceReceiptState];
@@ -2239,6 +2265,8 @@ export interface ManualLibraryEntry {
   /** @nullable */
   industry: string | null;
   review?: ManualLibraryReviewDate;
+  /** Whether the published version is held by a Content editor (docs/architecture/library-holds.md, slice 2). Held entries are listed first. */
+  held: boolean;
 }
 
 export interface ManualLibraryReview {
@@ -2415,6 +2443,8 @@ export interface ManualLibraryRevision {
      * @nullable
      */
   told: number | null;
+  /** The hold on the entry's published version, while it is not lifted, or null. */
+  hold: ManualLibraryHoldRecord | null;
 }
 
 export type ManualLibraryDraftKind = typeof ManualLibraryDraftKind[keyof typeof ManualLibraryDraftKind];
@@ -2530,6 +2560,28 @@ export interface ManualLibraryAction {
      * @maxLength 1000
      */
   change?: string;
+}
+
+export type ManualLibraryHoldAction = typeof ManualLibraryHoldAction[keyof typeof ManualLibraryHoldAction];
+
+
+export const ManualLibraryHoldAction = {
+  hold: 'hold',
+  lift: 'lift',
+} as const;
+
+export interface ManualLibraryHold {
+  action: ManualLibraryHoldAction;
+  /** @minimum 1 */
+  version: number;
+  /** @pattern ^[0-9a-f]{64}$ */
+  digest: string;
+  /**
+     * Why the published version is held, or why its hold is lifted, in 20 to 1,000 characters. Staff see it; customers are not told of a hold.
+     * @minLength 20
+     * @maxLength 1000
+     */
+  reason: string;
 }
 
 export interface BuildStatus {

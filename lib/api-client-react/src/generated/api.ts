@@ -97,12 +97,14 @@ import type {
   ListWorkspaceDataExportsParams,
   ManualLibraryAction,
   ManualLibraryDraft,
+  ManualLibraryHold,
   ManualLibraryPage,
   ManualLibraryReview,
   ManualLibraryReviewDate,
   ManualLibraryRevision,
   OwnerGuidanceCheck,
   OwnerGuidanceDecision,
+  OwnerGuidanceHoldLift,
   OwnerGuidancePage,
   OwnerGuidanceReceipt,
   OwnerGuidanceRevision,
@@ -6435,6 +6437,93 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(getDecideOwnerGuidanceMutationOptions(options), queryClient);
     }
 
+export const getLiftOwnerGuidanceHoldUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/owner-guidance/${encodeURIComponent(String(id))}/hold-lifts`
+}
+
+/**
+ * The development owner lifts the hold a Content editor placed on a published regulatory guide, with why (docs/architecture/library-holds.md, slice 2). Only the owner lifts it, as only the owner releases one (decision 0018).
+ */
+export const liftOwnerGuidanceHold = async (id: string,
+    ownerGuidanceHoldLift: OwnerGuidanceHoldLift, options?: Parameters<typeof customFetch>[1]): Promise<OwnerGuidanceReceipt> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<OwnerGuidanceReceipt>(getLiftOwnerGuidanceHoldUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ownerGuidanceHoldLift)
+  }
+);}
+
+
+
+
+
+export const getLiftOwnerGuidanceHoldMutationKey = () => ['liftOwnerGuidanceHold'] as const;
+
+export const getLiftOwnerGuidanceHoldMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof liftOwnerGuidanceHold>>, TError,LiftOwnerGuidanceHoldMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof liftOwnerGuidanceHold>>, TError,LiftOwnerGuidanceHoldMutationVariables, TContext> => {
+
+const mutationKey = getLiftOwnerGuidanceHoldMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof liftOwnerGuidanceHold>>, LiftOwnerGuidanceHoldMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  liftOwnerGuidanceHold(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LiftOwnerGuidanceHoldMutationResult = NonNullable<Awaited<ReturnType<typeof liftOwnerGuidanceHold>>>
+    export type LiftOwnerGuidanceHoldMutationBody = BodyType<OwnerGuidanceHoldLift>
+    export type LiftOwnerGuidanceHoldMutationError = ErrorType<void>
+    export type LiftOwnerGuidanceHoldMutationVariables = {id: string;data: BodyType<OwnerGuidanceHoldLift>}
+
+    /** The development owner lifts the hold a Content editor placed on a published regulatory guide, with why (docs/architecture/library-holds.md, slice 2). Only the owner lifts it, as only the owner releases one (decision 0018). */
+export const useLiftOwnerGuidanceHold = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof liftOwnerGuidanceHold>>, TError,LiftOwnerGuidanceHoldMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof liftOwnerGuidanceHold>>,
+        TError,
+        LiftOwnerGuidanceHoldMutationVariables,
+        TContext
+      > => {
+      return useMutation(getLiftOwnerGuidanceHoldMutationOptions(options), queryClient);
+    }
+
 export const getListManualLibraryUrl = (params?: ListManualLibraryParams,) => {
   const normalizedParams = new URLSearchParams();
 
@@ -7057,6 +7146,93 @@ export const useRecordManualLibraryReview = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getRecordManualLibraryReviewMutationOptions(options), queryClient);
+    }
+
+export const getHoldManualLibraryEntryUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/manual-library/${encodeURIComponent(String(id))}/holds`
+}
+
+/**
+ * A Content editor holds the published version of an entry short of a withdrawal, or lifts its hold, with why (docs/architecture/library-holds.md, slice 2). A held version leaves new use as an overdue one does, while what customers have stays. Only the owner lifts a regulatory guide's hold, from the owner's panel.
+ */
+export const holdManualLibraryEntry = async (id: string,
+    manualLibraryHold: ManualLibraryHold, options?: Parameters<typeof customFetch>[1]): Promise<ManualLibraryRevision> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ManualLibraryRevision>(getHoldManualLibraryEntryUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(manualLibraryHold)
+  }
+);}
+
+
+
+
+
+export const getHoldManualLibraryEntryMutationKey = () => ['holdManualLibraryEntry'] as const;
+
+export const getHoldManualLibraryEntryMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof holdManualLibraryEntry>>, TError,HoldManualLibraryEntryMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof holdManualLibraryEntry>>, TError,HoldManualLibraryEntryMutationVariables, TContext> => {
+
+const mutationKey = getHoldManualLibraryEntryMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof holdManualLibraryEntry>>, HoldManualLibraryEntryMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  holdManualLibraryEntry(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type HoldManualLibraryEntryMutationResult = NonNullable<Awaited<ReturnType<typeof holdManualLibraryEntry>>>
+    export type HoldManualLibraryEntryMutationBody = BodyType<ManualLibraryHold>
+    export type HoldManualLibraryEntryMutationError = ErrorType<void>
+    export type HoldManualLibraryEntryMutationVariables = {id: string;data: BodyType<ManualLibraryHold>}
+
+    /** A Content editor holds the published version of an entry short of a withdrawal, or lifts its hold, with why (docs/architecture/library-holds.md, slice 2). A held version leaves new use as an overdue one does, while what customers have stays. Only the owner lifts a regulatory guide's hold, from the owner's panel. */
+export const useHoldManualLibraryEntry = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof holdManualLibraryEntry>>, TError,HoldManualLibraryEntryMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof holdManualLibraryEntry>>,
+        TError,
+        HoldManualLibraryEntryMutationVariables,
+        TContext
+      > => {
+      return useMutation(getHoldManualLibraryEntryMutationOptions(options), queryClient);
     }
 
 export const getPreviewManualLibraryFileUrl = (id: string,

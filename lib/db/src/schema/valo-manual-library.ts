@@ -206,6 +206,52 @@ export const valoManualChanges = pgTable(
   (t) => [check("valo_manual_change_note", sql`char_length(${t.note}) BETWEEN 20 AND 1000`)],
 );
 /**
+ * A hold on the published version of a staff-library entry, short of a withdrawal
+ * (docs/architecture/library-holds.md, slice 2, ADM-007): the version leaves new use as an overdue one does,
+ * while what customers already have stays. Placed by an active Content editor, or by the development owner
+ * for a regulatory guide, with why; the database dates it and counts the workspaces it touched, and never
+ * changes it. A hold ends only by its lifting, a record of its own.
+ */
+export const valoManualHolds = pgTable(
+  "valo_manual_holds",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    edition: uuid("edition").notNull(),
+    reason: text("reason").notNull(),
+    placedBy: text("placed_by").notNull(),
+    placedAt: timestamp("placed_at", { withTimezone: true }).notNull().defaultNow(),
+    workspaces: integer("workspaces").notNull().default(0),
+  },
+  (t) => [
+    foreignKey({
+      name: "valo_manual_hold_edition_fk",
+      columns: [t.edition],
+      foreignColumns: [valoManualLibrary.id],
+    }),
+    index("valo_manual_hold_edition").on(t.edition, t.placedAt),
+    check(
+      "valo_manual_hold_record",
+      sql`char_length(${t.reason}) BETWEEN 20 AND 1000 AND ${t.workspaces} >= 0`,
+    ),
+  ],
+);
+/**
+ * The lifting of a hold: who lifted it, when and why. A Content editor lifts a hold on any entry but a
+ * regulatory guide, whose hold only the development owner lifts. Recorded once and never changed.
+ */
+export const valoManualHoldLifts = pgTable(
+  "valo_manual_hold_lifts",
+  {
+    hold: uuid("hold")
+      .primaryKey()
+      .references(() => valoManualHolds.id),
+    reason: text("reason").notNull(),
+    liftedBy: text("lifted_by").notNull(),
+    liftedAt: timestamp("lifted_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [check("valo_manual_hold_lift_reason", sql`char_length(${t.reason}) BETWEEN 20 AND 1000`)],
+);
+/**
  * A Content editor's review of a published staff-library entry: that they re-read it and it needs no
  * change (docs/architecture/guidance-currency.md, slice 2). An entry other than a regulatory guide is due
  * for review 90 days after it was published or last reviewed, and is held from new use once overdue. The

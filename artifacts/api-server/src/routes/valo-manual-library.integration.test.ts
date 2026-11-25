@@ -16,6 +16,7 @@ import {
 import { exercisePremiumPriceCommand } from "../test-support/premium-price-command";
 import { exerciseOverduePremiumTemplate } from "../test-support/manual-overdue-premium";
 import { exerciseWithdrawalReach } from "../test-support/manual-withdrawal-reach";
+import { exerciseLibraryHolds } from "../test-support/manual-holds";
 import {
   changeNote,
   libraryAction,
@@ -517,6 +518,11 @@ test(
       "a template's published edition shows staff whom its withdrawal will tell, its buyers and the workspaces that made documents from it, and its notices then reach exactly those",
       () => exerciseWithdrawalReach(call, editor),
     );
+    // A hold short of a withdrawal (docs/architecture/library-holds.md, slice 2).
+    await t.test(
+      "a Content editor holds a published version short of a withdrawal, which then leaves new use while what customers have stays, and lifts it",
+      () => exerciseLibraryHolds(call, editor),
+    );
     await t.test("one published introduction per industry and no implied regulatory evidence", async () => {
       const id = randomUUID(),
         second = randomUUID(),
@@ -958,6 +964,41 @@ test(
           await expect(guidesPage.page.getByTestId("text-change")).toHaveText(
             /^Updated on \d{1,2} [A-Z][a-z]{2} \d{4}\. What changed: It now says to keep a copy of the invoice too\.$/,
           );
+          // A hold short of a withdrawal (docs/architecture/library-holds.md, slice 2): asked why, it takes
+          // the guide off the site and marks its entry in the list, and the guide is back once it is lifted.
+          await page.getByRole("button", { name: "Hold this version" }).click();
+          const holdForm = page.getByRole("form", { name: "Hold the published version" });
+          await expect(holdForm.getByRole("button", { name: "Hold this version" })).toBeDisabled();
+          await holdForm
+            .getByLabel("Why is this version held?")
+            .fill("Synthetic: held while a reader's report on it is checked.");
+          await holdForm.getByRole("button", { name: "Hold this version" }).click();
+          await expect(
+            page.getByText(
+              "Held. Customers cannot find, download or buy this version until the hold is lifted.",
+              { exact: true },
+            ),
+          ).toBeVisible();
+          await expect(preview.getByTestId("text-held")).toContainText("Version 2 is held since");
+          await expect(
+            page.getByRole("button").filter({ hasText: title }).getByTestId("text-list-held"),
+          ).toHaveText("Held");
+          await guidesPage.page.reload();
+          await expect(guidesPage.page.getByText("This guide is not available")).toBeVisible();
+          await page.getByRole("button", { name: "Lift the hold" }).click();
+          const liftForm = page.getByRole("form", { name: "Lift the hold" });
+          await liftForm
+            .getByLabel("Why is the hold lifted?")
+            .fill("Synthetic: the report was checked and needs no change.");
+          await liftForm.getByRole("button", { name: "Lift the hold" }).click();
+          await expect(
+            page.getByText("Hold lifted. Customers can find, download and buy this version again.", {
+              exact: true,
+            }),
+          ).toBeVisible();
+          await expect(preview.getByTestId("text-held")).toHaveCount(0);
+          await guidesPage.page.reload();
+          await expect(guidesPage.page.getByTestId("text-change")).toBeVisible();
           // A withdrawal says why, for the customers who bought or used the version
           // (docs/architecture/editions.md, slice 3); "Keep it" withdraws nothing.
           await page.getByRole("button", { name: "Withdraw live version" }).click();
@@ -1325,7 +1366,9 @@ test(
           ...input("template", "Synthetic library copy"),
           body: "Synthetic opening paragraph.\n\nItem | Quantity\nSynthetic item | 2\n\nSynthetic closing paragraph.",
         });
-        await releaseOf(otherId, input("template", "Synthetic library suggestion"));
+        // Suggestions are ranked, then ordered by title, six at most. This one's title comes first, so the
+        // templates other steps leave released cannot push it out of the six.
+        await releaseOf(otherId, input("template", "A synthetic library suggestion"));
         const { bytes } = wordFromText("Synthetic premium checklist", "Only a buyer reads this sentence.");
         const premium = await releaseOf(premiumId, {
           ...input("premium_template", "Synthetic library premium checklist"),

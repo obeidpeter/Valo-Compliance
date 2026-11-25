@@ -85,6 +85,26 @@ Slice 1:
   reached, the screen shows none and the withdrawal form says what it said before. Withdrawals and
   their notices work either way.
 
+Slice 2:
+- A hold is placed only on an entry's published version, which has at most one hold not yet lifted. Once
+  lifted, it can be held again. An active Content editor holds any entry, and the development owner may
+  hold a regulatory guide too. The database dates the hold and counts the workspaces it touched itself,
+  from slice 1's function.
+- A Content editor lifts any hold but a regulatory guide's, which only the development owner lifts, on
+  the owner's panel. The lifting is a record of its own, dated by the database. Neither record is ever
+  changed or removed.
+- A held version leaves the public pages and lists, regulatory guides included, a free template's
+  download, saving and suggestions, copying, starting a form, the premium offers, new orders and the
+  owner's price command, as an overdue one does. A buyer's file and purchases, and documents already made,
+  stay. Every other entry stays available.
+- Releasing a corrected version is another way out of a hold: the new version is not held, and the hold
+  stays on the record of the version it replaced. A held version can also be withdrawn, which tells its
+  customers as before.
+- The staff list marks a held entry "Held" and lists it first. The open entry says since when the version
+  is held and why. Customers are not told.
+- A database the migration has not reached holds nothing. The readers then apply the review rule alone,
+  and before the reviews migration, neither.
+
 ## What does not change
 
 - Who may release which entry (decision 0018), and the reviewed route's holds.

@@ -327,9 +327,12 @@ const FOCUSED = `(() => {
  *
  * The round runs with motion reduced, which turns the site's smooth scrolling off, so each element
  * is measured where it comes to rest and not on its way there. The page stays that way afterwards.
+ * A smooth scroll begun before, such as the one that brought a field the test has just filled into
+ * view, is still on its way when motion is reduced, so the round starts once the page is at rest.
  */
 export async function tabbing(page: Page, key: "Tab" | "Shift+Tab" = "Tab") {
   await page.emulateMedia({ reducedMotion: "reduce" });
+  await atRest(page);
   const stops: Stop[] = [];
   await page.evaluate("window.tabbed = new WeakSet()");
   for (let step = 0; step < 80; step++) {

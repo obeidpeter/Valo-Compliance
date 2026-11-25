@@ -3,6 +3,7 @@ import {
   actOnManualLibrary,
   getManualLibraryRevision,
   recordManualLibraryReview,
+  holdManualLibraryEntry,
   previewManualLibraryFile,
   saveManualLibraryDraft,
   useGetPublicCoverage,
@@ -26,6 +27,17 @@ import {
 } from "@/lib/library-review";
 import { changeHint, changeLabel } from "@/lib/library-change";
 import { reachLine, toldLine, withdrawalHelp } from "@/lib/library-reach";
+import {
+  heldLine,
+  heldMark,
+  heldMessage,
+  holdHint,
+  holdLabel,
+  liftHint,
+  liftLabel,
+  liftedMessage,
+  ownerLiftsWords,
+} from "@/lib/library-holds";
 import { FormTextOutline } from "./form-text-outline";
 import { RelatedGuidesPicker } from "./related-guides-picker";
 import { PlainText } from "./resource-parts";
@@ -176,6 +188,9 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
   // A review of the published version records that it was re-read and needs no change.
   const [reviewing, setReviewing] = useState(false);
   const [reviewNote, setReviewNote] = useState("");
+  // A hold on the published version, being placed or lifted (docs/architecture/library-holds.md, slice 2).
+  const [holding, setHolding] = useState<"hold" | "lift" | null>(null);
+  const [holdReason, setHoldReason] = useState("");
   const [reason, setReason] = useState("");
   // A version that follows an earlier release says what changed before it is published
   // (docs/architecture/guidance-currency.md, slice 3).
@@ -195,6 +210,7 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
   function load(row: ManualLibraryRevision | null) {
     setSnapshot(row);
     setReviewing(false);
+    setHolding(null);
     setForm(
       row
         ? {
@@ -299,6 +315,18 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
     setReviewing(false);
     await list.refetch();
     setMessage(reviewRecorded(next.due));
+  }
+  async function changeHold(action: "hold" | "lift") {
+    if (!snapshot?.live) return;
+    const row = await holdManualLibraryEntry(form.itemId, {
+      action,
+      version: snapshot.live.version,
+      digest: snapshot.live.digest,
+      reason: holdReason.trim(),
+    });
+    load(row);
+    await list.refetch();
+    setMessage(action === "hold" ? heldMessage : liftedMessage);
   }
   async function previewFile() {
     if (!snapshot?.fileFormat) return;
@@ -454,6 +482,14 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
                   >
                     <span className="block font-medium">{row.title}</span>
                     {kinds[row.kind]} · {row.state} · v{row.version}
+                    {row.held && (
+                      <span
+                        className="block text-xs font-medium text-destructive"
+                        data-testid="text-list-held"
+                      >
+                        {heldMark}
+                      </span>
+                    )}
                     {row.review && (
                       <span
                         className={
@@ -931,6 +967,86 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
                       className="btn btn-ghost btn-sm"
                       disabled={busy}
                       onClick={() => setReviewing(false)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
+              {snapshot.live && snapshot.hold && (
+                <p className="mt-4 text-sm font-medium text-destructive" data-testid="text-held">
+                  {heldLine(snapshot.live.version, snapshot.hold)}
+                </p>
+              )}
+              {snapshot.live && !holding && (
+                <div className="mt-4 flex flex-wrap items-center gap-3">
+                  {!snapshot.hold ? (
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm"
+                      disabled={busy || dirty}
+                      onClick={() => {
+                        setHoldReason("");
+                        setHolding("hold");
+                      }}
+                    >
+                      Hold this version
+                    </button>
+                  ) : snapshot.kind === "regulatory_article" ? (
+                    <p className="text-sm text-muted-foreground">{ownerLiftsWords}</p>
+                  ) : (
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm"
+                      disabled={busy || dirty}
+                      onClick={() => {
+                        setHoldReason("");
+                        setHolding("lift");
+                      }}
+                    >
+                      Lift the hold
+                    </button>
+                  )}
+                </div>
+              )}
+              {snapshot.live && holding && (
+                <form
+                  className="mt-4 grid gap-2"
+                  aria-label={holding === "hold" ? "Hold the published version" : "Lift the hold"}
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    void work(() => changeHold(holding));
+                  }}
+                >
+                  <label className="text-sm font-medium" htmlFor="manual-hold-reason">
+                    {holding === "hold" ? holdLabel : liftLabel}
+                  </label>
+                  <p id="manual-hold-reason-help" className="text-sm text-muted-foreground">
+                    {holding === "hold" ? holdHint : liftHint}
+                  </p>
+                  <textarea
+                    id="manual-hold-reason"
+                    className="field min-h-24"
+                    aria-describedby="manual-hold-reason-help"
+                    minLength={20}
+                    maxLength={1000}
+                    required
+                    value={holdReason}
+                    onChange={(e) => setHoldReason(e.target.value)}
+                  />
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      type="submit"
+                      className="btn btn-primary btn-sm"
+                      disabled={busy || holdReason.trim().length < 20}
+                    >
+                      {holding === "hold" ? "Hold this version" : "Lift the hold"}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm"
+                      disabled={busy}
+                      onClick={() => setHolding(null)}
                     >
                       Cancel
                     </button>

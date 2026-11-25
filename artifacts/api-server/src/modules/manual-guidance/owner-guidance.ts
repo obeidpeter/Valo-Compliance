@@ -1,6 +1,10 @@
 import { and, desc, eq, getTableColumns, inArray, isNotNull, sql } from "drizzle-orm";
 import { sha256 } from "@workspace/valo-core";
-import { DecideOwnerGuidanceBody, RefreshOwnerGuidanceBody } from "@workspace/api-zod";
+import {
+  DecideOwnerGuidanceBody,
+  LiftOwnerGuidanceHoldBody,
+  RefreshOwnerGuidanceBody,
+} from "@workspace/api-zod";
 import { registeredManualGuidance, checkManualRegulatorySources } from "./regulatory-evidence";
 import { guidancePolicy } from "../publication";
 import type { db, valoManualRegulatoryChecks } from "@workspace/db";
@@ -59,7 +63,7 @@ export function listOwnerGuidance(actor: StaffActor, page: number) {
       .orderBy(c.candidateId, desc(c.checkedAt), desc(c.id));
     const live = entries.length
       ? await tx
-          .select({ itemId: t.itemId, version: t.version, digest: t.digest })
+          .select({ id: t.id, itemId: t.itemId, version: t.version, digest: t.digest })
           .from(t)
           .where(
             and(
@@ -87,6 +91,13 @@ export function listOwnerGuidance(actor: StaffActor, page: number) {
             ),
           )
       : [];
+    // The holds Content editors placed on the published guides, which only the owner lifts
+    // (docs/architecture/library-holds.md, slice 2).
+    const { holdRecord, holdsReady, openHold } = await import("../manual-library");
+    const libraryHolds = new Map<string, ReturnType<typeof holdRecord>>();
+    if (live.length && (await holdsReady(tx)))
+      for (const released of live)
+        libraryHolds.set(released.itemId, holdRecord(await openHold(tx, released.id)));
     return {
       hasMore: rows.length > 50,
       items: entries.map((row) => {
@@ -104,6 +115,7 @@ export function listOwnerGuidance(actor: StaffActor, page: number) {
           sources: (check?.sources ?? []).map(({ url, title, locator }) => ({ url, title, locator })),
           live: released ? { version: released.version, digest: released.digest } : null,
           previousRelease: earlier.length ? Math.max(...earlier) : null,
+          libraryHold: libraryHolds.get(row.itemId) ?? null,
         };
       }),
     };
@@ -221,5 +233,31 @@ export function decideOwnerGuidance(actor: StaffActor, itemId: string, body: unk
       })
       .where(eq(t.id, target.id));
     return { itemId, version: target.version, state: "published" as const };
+  });
+}
+/**
+ * The development owner lifts the hold a Content editor placed on a published regulatory guide, with why
+ * (docs/architecture/library-holds.md, slice 2). Only the owner lifts it, as only the owner releases one
+ * (decision 0018); the database refuses anyone else, and never changes the lifting.
+ */
+export async function liftOwnerGuidanceHold(actor: StaffActor, itemId: string, body: unknown) {
+  const input = LiftOwnerGuidanceHoldBody.strict().parse(body);
+  const reason = input.reason.trim();
+  if (reason.length < 20 || reason.length > 1000)
+    throw new ValoProblem(422, "Say why the hold is lifted, in 20 to 1,000 characters.");
+  return asOwner(actor, async (tx) => {
+    const { valoManualLibrary: t, valoManualHoldLifts } = await import("@workspace/db");
+    const { holdsReady, openHold } = await import("../manual-library");
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${itemId},811))`);
+    const [published] = await tx
+      .select({ id: t.id, version: t.version, digest: t.digest })
+      .from(t)
+      .where(and(eq(t.itemId, itemId), eq(t.kind, "regulatory_article"), eq(t.state, "published")));
+    if (!published || published.version !== input.version || published.digest !== input.digest)
+      throw conflict();
+    const hold = (await holdsReady(tx)) ? await openHold(tx, published.id) : null;
+    if (!hold) throw new ValoProblem(409, "This guide is not held.");
+    await tx.insert(valoManualHoldLifts).values({ hold: hold.id, reason, liftedBy: actor.identityId });
+    return { itemId, version: published.version, state: "published" as const };
   });
 }
