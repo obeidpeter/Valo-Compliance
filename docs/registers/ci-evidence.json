@@ -461,7 +461,7 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/routes/valo-manual-library.integration.test.ts",
       "test": "manual publishing through staff HTTP routes and public readers",
-      "proves": "A regulatory article saved without whom it applies to is refused release by the database, the owner's panel shows a version's record with its text and refuses to sign one that does not say it even on a passing source check, a saved record joins the version's digest and never changes, and the retained guides are filed with their drafts' records."
+      "proves": "A regulatory article saved without whom it applies to is refused release by the database, the owner's panel shows a version's record with its text and refuses to sign one that does not say it even on a passing source check, a saved record joins the version's digest and never changes, and the retained guides are filed with their drafts' records; a signed guide's page then shows its record, names each source's issuer and start date, and links a related template only while it is released."
     },
     {
       "requirement": "CMP-001",
@@ -476,6 +476,27 @@
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
       "test": "the owner's panel shows a guide's record with its text, and offers no sign-off until it says whom it applies to",
       "proves": "On a phone, the owner's panel shows a draft's record with its text, offers no sign-off while the version does not say whom it applies to and offers it once it does, with no automated WCAG 2.2 AA failure."
+    },
+    {
+      "requirement": "CMP-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/catalogue/valo-catalogue.test.ts",
+      "test": "a regulatory guide's page shows its record, its released related templates and its sources' issuers and dates",
+      "proves": "A released regulatory guide's page gives whom it applies to and what to do and keep as signed, links only its related templates that are released, names each source's issuer and start date where its check kept them, and a guide released before its record was kept gives none of it."
+    },
+    {
+      "requirement": "CMP-001",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/guidance-record.test.ts",
+      "test": "a guide's page says whom it is for, and who issued each source and when its text took effect",
+      "proves": "The guide's page heads its record \"Who this is for\" and \"What to do and keep\", and says who issued each source and the day its text took effect on a Lagos clock."
+    },
+    {
+      "requirement": "CMP-001",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-server-pages.test.ts",
+      "test": "a staff-library guide released with its record says whom it is for, what to do and keep, its related templates and each source's issuer and start date, in the server's HTML",
+      "proves": "The server-rendered page of a guide released with its record says whom it is for in place of the fixed scope, what to do and keep, links its related template, and names a source's issuer and start date, and on a phone it hydrates without a mismatch and has no automated WCAG 2.2 AA failure."
     },
     {
       "requirement": "CMP-008",

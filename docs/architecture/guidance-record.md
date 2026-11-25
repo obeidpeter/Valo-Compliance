@@ -104,6 +104,20 @@ Slice 1:
 - The public pages read none of this yet: slice 2 shows it. A database the migration has not reached
   keeps its public pages as before, while the staff library and the owner's panel ask for the migration.
 
+Slice 2:
+- A released guide's page shows the record of the version the owner signed: "Who this is for" in place of
+  the fixed "What it covers", then "What to do and keep" where the version has it, and the fixed limits
+  as before. A guide released before its record was kept shows "What it covers" as before.
+- "Related templates" links each template the record names that is released now, as the staff library
+  files it by its registered title, and leaves out one that is not. A template withdrawn later leaves the
+  list on the next page view.
+- Each source in the page's list says who issued it and, for an Act or a regulator's document, the day
+  its text took effect, from the check the version was released on. A web page has no such day, and a
+  check made before slice 1 has neither. The dates are written on a Lagos clock, as the site's are.
+- The disclosure of how the guide was released stays as it was: on the owner's sign-off after a check
+  of its official sources, with no independent professional review.
+- A database the migration has not reached shows its guides' pages as before.
+
 ## What does not change
 
 - The text, its claim map and the owner's source check, and which guides can be released.
