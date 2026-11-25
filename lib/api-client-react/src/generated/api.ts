@@ -152,6 +152,8 @@ import type {
   SourceRegister,
   SourceRegisterAddition,
   SourceRegisterRevision,
+  SourceReviewNote,
+  SourceReviewQueue,
   StaffOperations,
   StaffRoleAdministration,
   StaffRoleChangeInput,
@@ -5594,6 +5596,412 @@ export function useGetEditorialRecord<TData = Awaited<ReturnType<typeof getEdito
 
 
 
+
+export const getListSourceReviewUrl = () => {
+
+
+
+
+  return `/api/admin/source-review`
+}
+
+/**
+ * The open rows of review work oldest first, each with the version held, why, since when, what opened it, who is accountable and what was checked on it, and the rows closed lately with how they closed (docs/architecture/source-register.md, slice 3). Development only.
+ * @summary Review work with its owner, for content staff
+ */
+export const listSourceReview = async ( options?: Parameters<typeof customFetch>[1]): Promise<SourceReviewQueue> => {
+
+  return customFetch<SourceReviewQueue>(getListSourceReviewUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListSourceReviewQueryKey = () => {
+    return [
+    "listSourceReview"
+    ] as const;
+    }
+
+
+export const getListSourceReviewQueryOptions = <TData = Awaited<ReturnType<typeof listSourceReview>>, TError = ErrorType<void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSourceReview>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListSourceReviewQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listSourceReview>>> = ({ signal }) => listSourceReview({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listSourceReview>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListSourceReviewQueryResult = NonNullable<Awaited<ReturnType<typeof listSourceReview>>>
+export type ListSourceReviewQueryError = ErrorType<void>
+
+
+/**
+ * The open rows of review work oldest first, each with the version held, why, since when, what opened it, who is accountable and what was checked on it, and the rows closed lately with how they closed (docs/architecture/source-register.md, slice 3). Development only.
+ * @summary Review work with its owner, for content staff
+ */
+export function useListSourceReview<TData = Awaited<ReturnType<typeof listSourceReview>>, TError = ErrorType<void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSourceReview>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listSourceReview>>,
+          TError,
+          Awaited<ReturnType<typeof listSourceReview>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * The open rows of review work oldest first, each with the version held, why, since when, what opened it, who is accountable and what was checked on it, and the rows closed lately with how they closed (docs/architecture/source-register.md, slice 3). Development only.
+ * @summary Review work with its owner, for content staff
+ */
+export function useListSourceReview<TData = Awaited<ReturnType<typeof listSourceReview>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSourceReview>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listSourceReview>>,
+          TError,
+          Awaited<ReturnType<typeof listSourceReview>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * The open rows of review work oldest first, each with the version held, why, since when, what opened it, who is accountable and what was checked on it, and the rows closed lately with how they closed (docs/architecture/source-register.md, slice 3). Development only.
+ * @summary Review work with its owner, for content staff
+ */
+export function useListSourceReview<TData = Awaited<ReturnType<typeof listSourceReview>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSourceReview>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * The open rows of review work oldest first, each with the version held, why, since when, what opened it, who is accountable and what was checked on it, and the rows closed lately with how they closed (docs/architecture/source-register.md, slice 3). Development only.
+ * @summary Review work with its owner, for content staff
+ */
+export function useListSourceReview<TData = Awaited<ReturnType<typeof listSourceReview>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSourceReview>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListSourceReviewQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getNoteSourceReviewUrl = (workId: string,) => {
+
+
+
+
+  return `/api/admin/source-review/${encodeURIComponent(String(workId))}/notes`
+}
+
+/**
+ * A Content editor's note of what was checked, recorded on an open row and never changed or removed. It closes nothing: a row closes when a later release replaces its version or the version is withdrawn.
+ * @summary Record what was checked on open review work
+ */
+export const noteSourceReview = async (workId: string,
+    sourceReviewNote: SourceReviewNote, options?: Parameters<typeof customFetch>[1]): Promise<SourceReviewQueue> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<SourceReviewQueue>(getNoteSourceReviewUrl(workId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(sourceReviewNote)
+  }
+);}
+
+
+
+
+
+export const getNoteSourceReviewMutationKey = () => ['noteSourceReview'] as const;
+
+export const getNoteSourceReviewMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof noteSourceReview>>, TError,NoteSourceReviewMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof noteSourceReview>>, TError,NoteSourceReviewMutationVariables, TContext> => {
+
+const mutationKey = getNoteSourceReviewMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof noteSourceReview>>, NoteSourceReviewMutationVariables> = (props) => {
+          const {workId,data} = props ?? {};
+
+          return  noteSourceReview(workId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type NoteSourceReviewMutationResult = NonNullable<Awaited<ReturnType<typeof noteSourceReview>>>
+    export type NoteSourceReviewMutationBody = BodyType<SourceReviewNote>
+    export type NoteSourceReviewMutationError = ErrorType<void>
+    export type NoteSourceReviewMutationVariables = {workId: string;data: BodyType<SourceReviewNote>}
+
+    /**
+ * A Content editor's note of what was checked, recorded on an open row and never changed or removed. It closes nothing: a row closes when a later release replaces its version or the version is withdrawn.
+ * @summary Record what was checked on open review work
+ */
+export const useNoteSourceReview = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof noteSourceReview>>, TError,NoteSourceReviewMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof noteSourceReview>>,
+        TError,
+        NoteSourceReviewMutationVariables,
+        TContext
+      > => {
+      return useMutation(getNoteSourceReviewMutationOptions(options), queryClient);
+    }
+
+export const getListOwnerReviewWorkUrl = () => {
+
+
+
+
+  return `/api/admin/owner-rules/review-work`
+}
+
+/**
+ * The open rows of review work on the rules the owner signed, oldest first, and those closed lately (docs/architecture/source-register.md, slice 3). Development only.
+ * @summary Review work on the rules the development owner signed
+ */
+export const listOwnerReviewWork = async ( options?: Parameters<typeof customFetch>[1]): Promise<SourceReviewQueue> => {
+
+  return customFetch<SourceReviewQueue>(getListOwnerReviewWorkUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListOwnerReviewWorkQueryKey = () => {
+    return [
+    "listOwnerReviewWork"
+    ] as const;
+    }
+
+
+export const getListOwnerReviewWorkQueryOptions = <TData = Awaited<ReturnType<typeof listOwnerReviewWork>>, TError = ErrorType<void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOwnerReviewWork>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListOwnerReviewWorkQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listOwnerReviewWork>>> = ({ signal }) => listOwnerReviewWork({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listOwnerReviewWork>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListOwnerReviewWorkQueryResult = NonNullable<Awaited<ReturnType<typeof listOwnerReviewWork>>>
+export type ListOwnerReviewWorkQueryError = ErrorType<void>
+
+
+/**
+ * The open rows of review work on the rules the owner signed, oldest first, and those closed lately (docs/architecture/source-register.md, slice 3). Development only.
+ * @summary Review work on the rules the development owner signed
+ */
+export function useListOwnerReviewWork<TData = Awaited<ReturnType<typeof listOwnerReviewWork>>, TError = ErrorType<void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOwnerReviewWork>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listOwnerReviewWork>>,
+          TError,
+          Awaited<ReturnType<typeof listOwnerReviewWork>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * The open rows of review work on the rules the owner signed, oldest first, and those closed lately (docs/architecture/source-register.md, slice 3). Development only.
+ * @summary Review work on the rules the development owner signed
+ */
+export function useListOwnerReviewWork<TData = Awaited<ReturnType<typeof listOwnerReviewWork>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOwnerReviewWork>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listOwnerReviewWork>>,
+          TError,
+          Awaited<ReturnType<typeof listOwnerReviewWork>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * The open rows of review work on the rules the owner signed, oldest first, and those closed lately (docs/architecture/source-register.md, slice 3). Development only.
+ * @summary Review work on the rules the development owner signed
+ */
+export function useListOwnerReviewWork<TData = Awaited<ReturnType<typeof listOwnerReviewWork>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOwnerReviewWork>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * The open rows of review work on the rules the owner signed, oldest first, and those closed lately (docs/architecture/source-register.md, slice 3). Development only.
+ * @summary Review work on the rules the development owner signed
+ */
+export function useListOwnerReviewWork<TData = Awaited<ReturnType<typeof listOwnerReviewWork>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOwnerReviewWork>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListOwnerReviewWorkQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getNoteOwnerReviewWorkUrl = (workId: string,) => {
+
+
+
+
+  return `/api/admin/owner-rules/review-work/${encodeURIComponent(String(workId))}/notes`
+}
+
+/**
+ * @summary Record what the owner checked on review work of a rule the owner signed
+ */
+export const noteOwnerReviewWork = async (workId: string,
+    sourceReviewNote: SourceReviewNote, options?: Parameters<typeof customFetch>[1]): Promise<SourceReviewQueue> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<SourceReviewQueue>(getNoteOwnerReviewWorkUrl(workId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(sourceReviewNote)
+  }
+);}
+
+
+
+
+
+export const getNoteOwnerReviewWorkMutationKey = () => ['noteOwnerReviewWork'] as const;
+
+export const getNoteOwnerReviewWorkMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof noteOwnerReviewWork>>, TError,NoteOwnerReviewWorkMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof noteOwnerReviewWork>>, TError,NoteOwnerReviewWorkMutationVariables, TContext> => {
+
+const mutationKey = getNoteOwnerReviewWorkMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof noteOwnerReviewWork>>, NoteOwnerReviewWorkMutationVariables> = (props) => {
+          const {workId,data} = props ?? {};
+
+          return  noteOwnerReviewWork(workId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type NoteOwnerReviewWorkMutationResult = NonNullable<Awaited<ReturnType<typeof noteOwnerReviewWork>>>
+    export type NoteOwnerReviewWorkMutationBody = BodyType<SourceReviewNote>
+    export type NoteOwnerReviewWorkMutationError = ErrorType<void>
+    export type NoteOwnerReviewWorkMutationVariables = {workId: string;data: BodyType<SourceReviewNote>}
+
+    /** @summary Record what the owner checked on review work of a rule the owner signed */
+export const useNoteOwnerReviewWork = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof noteOwnerReviewWork>>, TError,NoteOwnerReviewWorkMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof noteOwnerReviewWork>>,
+        TError,
+        NoteOwnerReviewWorkMutationVariables,
+        TContext
+      > => {
+      return useMutation(getNoteOwnerReviewWorkMutationOptions(options), queryClient);
+    }
 
 export const getListOwnerRulesUrl = () => {
 

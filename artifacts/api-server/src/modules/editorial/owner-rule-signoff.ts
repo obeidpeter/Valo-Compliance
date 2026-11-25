@@ -19,10 +19,15 @@ import {
 } from "@workspace/valo-core";
 import {
   bindVerifiedSources,
+  closeSupersededReviewWork,
+  closeWithdrawnReviewWork,
   currentSourceCaptures,
   lockSourceState,
   readSourceText,
   registerSourceWatch,
+  addReviewNote,
+  reviewNoteText,
+  reviewWorkQueue,
   sourceWatchStates,
   verifyReleasedSources,
   type CurrentSourceCapture,
@@ -625,6 +630,8 @@ async function signOwnerRule(
         .set({ status: "superseded" })
         .where(and(eq(r.ruleId, ruleId), eq(r.status, "published"), ne(r.id, id)))
         .returning({ version: r.version });
+      // The release settles the review work of the rule's earlier versions (source-register.md, slice 3).
+      await closeSupersededReviewWork(tx, "rule", ruleId, version, id);
       return {
         ruleId,
         version,
@@ -677,7 +684,30 @@ function withdrawOwnerRule(
         });
         await tx.update(r).set({ status: "withdrawn" }).where(eq(r.id, row.id));
       }
+      // A withdrawn version never returns, so its review work closes (source-register.md, slice 3).
+      await closeWithdrawnReviewWork(tx, "rule", row.id);
       return { ruleId, version: input.version, state: "withdrawn" as const, superseded: [] };
+    },
+    refusal,
+  );
+}
+
+/** The review work on the rules the owner signed, open and closed lately
+ * (docs/architecture/source-register.md, slice 3). */
+export function listOwnerReviewWork(actor: StaffActor) {
+  return asDevelopmentOwner(actor, (tx) => reviewWorkQueue(tx, { ownerOnly: true }), refusal);
+}
+
+/** The owner records what was checked on open review work of a rule the owner signed. */
+export function noteOwnerReviewWork(actor: StaffActor, workId: string, value: unknown) {
+  const note = reviewNoteText(value);
+  return asDevelopmentOwner(
+    actor,
+    async (tx) => {
+      if (!(await reviewWorkQueue(tx, { ownerOnly: true })).open.some((row) => row.id === workId))
+        throw new ValoProblem(404, "This review work is not on a rule you signed.");
+      await addReviewNote(tx, workId, note, actor.identityId);
+      return reviewWorkQueue(tx, { ownerOnly: true });
     },
     refusal,
   );

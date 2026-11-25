@@ -64,6 +64,40 @@ export async function impactSourceDependants(
   values(${randomUUID()}::uuid,${sourceId},${key},${reason},${newSnapshotId}::uuid,${newSnapshotId && !watch?.failure_code ? String(watch?.last_raw_hash) : null}) on conflict(dedupe_key) do nothing`);
 }
 /**
+ * Closes the open review work a later release settles (docs/architecture/source-register.md, slice 3):
+ * the rows of the rule's or template's versions before the one released, which names the release.
+ */
+export async function closeSupersededReviewWork(
+  tx: SourceTx,
+  kind: SourceTarget,
+  key: string,
+  version: number,
+  replacementId: string,
+) {
+  await tx.execute(sql`update valo_source_review_work w set status='superseded_by_eligible_version',
+    replacement_kind=${kind},replacement_id=${replacementId}::uuid,completed_at=now()
+    from valo_source_impacts i where w.impact_id=i.id and w.status='awaiting_authorized_review'
+    and i.target_kind=${kind} and i.target_key=${key} and i.target_version<${version}`);
+}
+/**
+ * Closes the open review work of a version that is withdrawn: it never returns, so nothing is left to
+ * review on it (docs/architecture/source-register.md, slice 3). The close runs in a savepoint: on a
+ * database the review migration has not reached, the status check refuses `withdrawn`, and the
+ * withdrawal itself must still go through, so its work stays open until the migration is applied.
+ */
+export async function closeWithdrawnReviewWork(tx: SourceTx, kind: SourceTarget, id: string) {
+  try {
+    await tx.transaction((savepoint) =>
+      savepoint.execute(sql`update valo_source_review_work w set status='withdrawn',completed_at=now()
+        from valo_source_impacts i where w.impact_id=i.id and w.status='awaiting_authorized_review'
+        and i.target_kind=${kind} and i.target_id=${id}::uuid`),
+    );
+  } catch (error) {
+    const e = error as { cause?: { code?: string }; code?: string };
+    if ((e.cause ?? e).code !== "23514") throw error;
+  }
+}
+/**
  * Holds what rests on a source the register retired (docs/architecture/source-register.md, slice 2),
  * as a changed source's dependants are held: every version bound to it that is not held yet. A source
  * nothing watched has nothing bound to it. Call it under the source-state lock, in the transaction

@@ -3,7 +3,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { allSourceLeads } from "@workspace/valo-core";
 import { lockSourceState, sourceTime, type SourceReader, type SourceTx } from "./valo-source-state";
-import { recordSourceImpact } from "./valo-source-corrections";
+import { closeWithdrawnReviewWork, recordSourceImpact } from "./valo-source-corrections";
 import { registerSourceWatch } from "./valo-source-monitor";
 import { ValoProblem } from "../../platform/valo-problem";
 import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
@@ -268,6 +268,9 @@ export async function actOnSourceControls(actor: SourceStaffActor, raw: unknown)
         action: input.action === "withdraw_version" ? "withdraw" : "hold",
         dedupe: `staff:${input.requestKey}`,
       });
+      // A withdrawn version never returns, so its review work closes as withdrawn
+      // (docs/architecture/source-register.md, slice 3). A hold leaves it open.
+      if (input.action === "withdraw_version") await closeWithdrawnReviewWork(tx, input.kind, input.id);
       // The source impact is an append-only effective hold even for immutable
       // candidates or rules. No status/manifest/review receipt is manufactured.
       current = {

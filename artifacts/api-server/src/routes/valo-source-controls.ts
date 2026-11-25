@@ -15,6 +15,12 @@ import {
   FileSourceRegisterResponse,
   ReviseSourceRegisterEntryParams,
   ReviseSourceRegisterEntryResponse,
+  ListSourceReviewResponse,
+  NoteSourceReviewParams,
+  NoteSourceReviewResponse,
+  ListOwnerReviewWorkResponse,
+  NoteOwnerReviewWorkParams,
+  NoteOwnerReviewWorkResponse,
 } from "@workspace/api-zod";
 import { sameOriginMutation } from "../middlewares/valo-identity";
 import { verifiedStaffSession } from "./valo-customer-access";
@@ -22,9 +28,17 @@ import {
   sourceControls,
   actOnSourceControls,
   correctionNotices,
+  listSourceReview,
+  noteSourceReview,
   type SourceStaffActor,
 } from "../modules/sources";
-import { decideOwnerRule, listOwnerRules, watchOwnerRuleSources } from "../modules/editorial";
+import {
+  decideOwnerRule,
+  listOwnerReviewWork,
+  listOwnerRules,
+  noteOwnerReviewWork,
+  watchOwnerRuleSources,
+} from "../modules/editorial";
 import {
   addSourceEntry,
   fileRepositorySources,
@@ -84,9 +98,31 @@ export function createSourceControlsRouter(
       ReviseSourceRegisterEntryResponse.parse(await reviseSourceEntry(actor, params.data.sourceId, req.body)),
     );
   });
+  // Review work with its owner (docs/architecture/source-register.md, slice 3).
+  router.get("/admin/source-review", async (req, res) => {
+    res.json(ListSourceReviewResponse.parse(await listSourceReview(await authenticate(req))));
+  });
+  router.post("/admin/source-review/:workId/notes", sameOriginMutation, async (req, res) => {
+    const actor = await authenticate(req);
+    // A malformed id names no review work, whoever asks.
+    const params = NoteSourceReviewParams.safeParse(req.params);
+    if (!params.success) throw new ValoProblem(404, "This review work is not in the queue.");
+    res.json(NoteSourceReviewResponse.parse(await noteSourceReview(actor, params.data.workId, req.body)));
+  });
   // Requirements-checker rules on the development owner's sign-off (decision 0020).
   const owner = (req: Request, locals: Record<string, unknown>) =>
     (locals.verifiedStaff as SourceStaffActor | undefined) ?? authenticate(req);
+  router.get("/admin/owner-rules/review-work", async (req, res) => {
+    res.json(ListOwnerReviewWorkResponse.parse(await listOwnerReviewWork(await owner(req, res.locals))));
+  });
+  router.post("/admin/owner-rules/review-work/:workId/notes", sameOriginMutation, async (req, res) => {
+    const actor = await owner(req, res.locals);
+    const params = NoteOwnerReviewWorkParams.safeParse(req.params);
+    if (!params.success) throw new ValoProblem(404, "This review work is not on a rule you signed.");
+    res.json(
+      NoteOwnerReviewWorkResponse.parse(await noteOwnerReviewWork(actor, params.data.workId, req.body)),
+    );
+  });
   router.get("/admin/owner-rules", async (req, res) => {
     res.json(ListOwnerRulesResponse.parse(await listOwnerRules(await owner(req, res.locals))));
   });

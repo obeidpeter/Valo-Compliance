@@ -8,7 +8,13 @@ import {
   type RuleReleasePlan,
   type RuleScenario,
 } from "@workspace/valo-core";
-import { bindVerifiedSources, verifyReleasedSources, readSourceText, lockSourceState } from "../sources";
+import {
+  bindVerifiedSources,
+  closeSupersededReviewWork,
+  verifyReleasedSources,
+  readSourceText,
+  lockSourceState,
+} from "../sources";
 import { currentAssessmentDate, releasedRegistry, ruleReleaseEligible } from "../rules";
 import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
 
@@ -191,6 +197,8 @@ export async function applyStoredRuleRelease(
         recordedBy: RULE_RELEASE_COMMAND,
       });
     }
+    // The release settles the review work of the rule's earlier versions (source-register.md, slice 3).
+    await closeSupersededReviewWork(tx, "rule", rule.id, rule.version, id);
     return tx
       .update(valoRuleReleases)
       .set({ status: "superseded" })

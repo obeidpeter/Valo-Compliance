@@ -124,10 +124,32 @@ export const valoSourceReviewWork = pgTable(
     completedAt: timestamp("completed_at", { withTimezone: true }),
   },
   (t) => [
+    // A row closes when a later release replaces its version, or when its version is withdrawn
+    // (docs/architecture/source-register.md, slice 3).
     check(
       "valo_source_review_work_status_check",
-      sql`${t.status} IN ('awaiting_authorized_review', 'superseded_by_eligible_version')`,
+      sql`${t.status} IN ('awaiting_authorized_review', 'superseded_by_eligible_version', 'withdrawn')`,
     ),
+  ],
+);
+/**
+ * What was checked on an open row of review work, as the person accountable for it recorded it
+ * (docs/architecture/source-register.md, slice 3). A note is never changed or removed.
+ */
+export const valoSourceReviewNotes = pgTable(
+  "valo_source_review_notes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    workId: uuid("work_id")
+      .notNull()
+      .references(() => valoSourceReviewWork.id),
+    note: text("note").notNull(),
+    recordedBy: text("recorded_by").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("valo_source_review_notes_work").on(t.workId, t.createdAt),
+    check("valo_source_review_notes_note", sql`length(${t.note}) BETWEEN 20 AND 1000`),
   ],
 );
 export const valoSourceDependencyJobs = pgTable(

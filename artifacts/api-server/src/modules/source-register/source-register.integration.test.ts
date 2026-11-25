@@ -381,6 +381,9 @@ test(
         }),
       );
       assert.ok(left.watch?.stoppedAt);
+      // The holds made here are processed to the end, as the worker would, so the steps after this one
+      // find no pending work of this test's in the queue they process.
+      for (let n = 0; n < 200 && (await corrections.processSourceImpact()); n++);
     }
   },
 );

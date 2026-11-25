@@ -1565,6 +1565,102 @@ export interface SourceControlWatch {
   stoppedAt: string | null;
 }
 
+export interface SourceReviewNote {
+  /**
+     * What was checked, in 20 to 1,000 characters.
+     * @maxLength 1000
+     */
+  note: string;
+}
+
+export type SourceReviewItemTargetKind = typeof SourceReviewItemTargetKind[keyof typeof SourceReviewItemTargetKind];
+
+
+export const SourceReviewItemTargetKind = {
+  content: 'content',
+  rule: 'rule',
+} as const;
+
+export type SourceReviewItemOpener = typeof SourceReviewItemOpener[keyof typeof SourceReviewItemOpener];
+
+
+export const SourceReviewItemOpener = {
+  daily_check: 'daily_check',
+  check_overdue: 'check_overdue',
+  source_retired: 'source_retired',
+  staff: 'staff',
+  review_due: 'review_due',
+  lifecycle: 'lifecycle',
+  publisher: 'publisher',
+  derived: 'derived',
+  other: 'other',
+} as const;
+
+/**
+ * A Content editor, or the development owner for a rule the owner signed.
+ */
+export type SourceReviewItemAccountable = typeof SourceReviewItemAccountable[keyof typeof SourceReviewItemAccountable];
+
+
+export const SourceReviewItemAccountable = {
+  content: 'content',
+  owner: 'owner',
+} as const;
+
+export type SourceReviewItemNotesItem = {
+  note: string;
+  recordedBy: string;
+  createdAt: string;
+};
+
+export interface SourceReviewItem {
+  id: string;
+  targetKind: SourceReviewItemTargetKind;
+  targetKey: string;
+  targetVersion: number;
+  reason: string;
+  /** @nullable */
+  sourceId: string | null;
+  openedBy: string;
+  opener: SourceReviewItemOpener;
+  /** A Content editor, or the development owner for a rule the owner signed. */
+  accountable: SourceReviewItemAccountable;
+  createdAt: string;
+  notes: SourceReviewItemNotesItem[];
+}
+
+export type SourceReviewClosedTargetKind = typeof SourceReviewClosedTargetKind[keyof typeof SourceReviewClosedTargetKind];
+
+
+export const SourceReviewClosedTargetKind = {
+  content: 'content',
+  rule: 'rule',
+} as const;
+
+export type SourceReviewClosedOutcome = typeof SourceReviewClosedOutcome[keyof typeof SourceReviewClosedOutcome];
+
+
+export const SourceReviewClosedOutcome = {
+  superseded: 'superseded',
+  withdrawn: 'withdrawn',
+} as const;
+
+export interface SourceReviewClosed {
+  id: string;
+  targetKind: SourceReviewClosedTargetKind;
+  targetKey: string;
+  targetVersion: number;
+  reason: string;
+  outcome: SourceReviewClosedOutcome;
+  /** @nullable */
+  completedAt: string | null;
+}
+
+export interface SourceReviewQueue {
+  open: SourceReviewItem[];
+  closed: SourceReviewClosed[];
+}
+
 export interface SourceControlReview {
   id: string;
   status: string;

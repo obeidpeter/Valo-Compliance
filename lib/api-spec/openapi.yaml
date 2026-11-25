@@ -769,6 +769,71 @@ paths:
         "401": { description: Sign-in required }
         "403": { description: Active content role and recent MFA required }
         "404": { description: No such version }
+  /admin/source-review:
+    get:
+      operationId: listSourceReview
+      tags: [staff]
+      summary: Review work with its owner, for content staff
+      description: >-
+        The open rows of review work oldest first, each with the version held, why, since when, what
+        opened it, who is accountable and what was checked on it, and the rows closed lately with how
+        they closed (docs/architecture/source-register.md, slice 3). Development only.
+      responses:
+        '200': { description: 'The queue. Nothing is published or sent.', content: { application/json: { schema: { $ref: '#/components/schemas/SourceReviewQueue' } } } }
+        '401': { description: Sign-in required }
+        '403': { description: An active Content editor with recent MFA is required }
+        '503': { description: The review migration has not been applied }
+  /admin/source-review/{workId}/notes:
+    post:
+      operationId: noteSourceReview
+      tags: [staff]
+      summary: Record what was checked on open review work
+      description: >-
+        A Content editor's note of what was checked, recorded on an open row and never changed or
+        removed. It closes nothing: a row closes when a later release replaces its version or the
+        version is withdrawn.
+      parameters:
+        - { name: workId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/SourceReviewNote' } } }
+      responses:
+        '200': { description: 'The queue with the note.', content: { application/json: { schema: { $ref: '#/components/schemas/SourceReviewQueue' } } } }
+        '401': { description: Sign-in required }
+        '403': { description: An active Content editor with recent MFA is required }
+        '404': { description: The review work is not in the queue }
+        '409': { description: The review work has closed }
+        '422': { description: What was checked is missing or too long }
+  /admin/owner-rules/review-work:
+    get:
+      operationId: listOwnerReviewWork
+      tags: [staff]
+      summary: Review work on the rules the development owner signed
+      description: >-
+        The open rows of review work on the rules the owner signed, oldest first, and those closed
+        lately (docs/architecture/source-register.md, slice 3). Development only.
+      responses:
+        '200': { description: 'The owner''s queue.', content: { application/json: { schema: { $ref: '#/components/schemas/SourceReviewQueue' } } } }
+        '401': { description: Sign-in required }
+        '403': { description: 'Only the development owner, with recent verification' }
+        '503': { description: The review migration has not been applied }
+  /admin/owner-rules/review-work/{workId}/notes:
+    post:
+      operationId: noteOwnerReviewWork
+      tags: [staff]
+      summary: Record what the owner checked on review work of a rule the owner signed
+      parameters:
+        - { name: workId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/SourceReviewNote' } } }
+      responses:
+        '200': { description: 'The owner''s queue with the note.', content: { application/json: { schema: { $ref: '#/components/schemas/SourceReviewQueue' } } } }
+        '401': { description: Sign-in required }
+        '403': { description: 'Only the development owner, with recent verification' }
+        '404': { description: The review work is not on a rule the owner signed }
+        '409': { description: The review work has closed }
+        '422': { description: What was checked is missing or too long }
   /admin/owner-rules:
     get:
       operationId: listOwnerRules
@@ -2804,6 +2869,52 @@ components:
     SourceControlResult: {"type": "object", "required": ["auditId", "replayed", "result"], "properties": {"auditId": {"type": "string", "format": "uuid"}, "replayed": {"type": "boolean"}, "result": {"type": "object", "additionalProperties": true}}}
     SourceControlVersion: {"type": "object", "required": ["kind", "id", "key", "version", "status", "reviewBy", "safetyHeld"], "properties": {"kind": {"type": "string", "enum": ["content", "rule"]}, "id": {"type": "string", "format": "uuid"}, "key": {"type": "string"}, "version": {"type": "integer"}, "status": {"type": "string"}, "reviewBy": {"type": ["string", "null"]}, "safetyHeld": {"type": "boolean"}}}
     SourceControlWatch: {"type": "object", "required": ["sourceId", "url", "risk", "checkedAt", "failureCode", "nextCheckAt", "stoppedAt"], "properties": {"sourceId": {"type": "string"}, "url": {"type": "string"}, "risk": {"type": "string"}, "checkedAt": {"type": ["string", "null"]}, "failureCode": {"type": ["string", "null"]}, "nextCheckAt": {"type": "string", "format": "date-time"}, "stoppedAt": {"type": ["string", "null"], "description": "When the daily check stopped because the source register retired the source."}}}
+    SourceReviewNote:
+      type: object
+      required: [note]
+      additionalProperties: false
+      properties:
+        note: { type: string, maxLength: 1000, description: 'What was checked, in 20 to 1,000 characters.' }
+    SourceReviewItem:
+      type: object
+      required: [id, targetKind, targetKey, targetVersion, reason, sourceId, openedBy, opener, accountable, createdAt, notes]
+      properties:
+        id: { type: string }
+        targetKind: { type: string, enum: [content, rule] }
+        targetKey: { type: string }
+        targetVersion: { type: integer }
+        reason: { type: string }
+        sourceId: { type: [string, 'null'] }
+        openedBy: { type: string }
+        opener: { type: string, enum: [daily_check, check_overdue, source_retired, staff, review_due, lifecycle, publisher, derived, other] }
+        accountable: { type: string, enum: [content, owner], description: 'A Content editor, or the development owner for a rule the owner signed.' }
+        createdAt: { type: string }
+        notes:
+          type: array
+          items:
+            type: object
+            required: [note, recordedBy, createdAt]
+            properties:
+              note: { type: string }
+              recordedBy: { type: string }
+              createdAt: { type: string }
+    SourceReviewClosed:
+      type: object
+      required: [id, targetKind, targetKey, targetVersion, reason, outcome, completedAt]
+      properties:
+        id: { type: string }
+        targetKind: { type: string, enum: [content, rule] }
+        targetKey: { type: string }
+        targetVersion: { type: integer }
+        reason: { type: string }
+        outcome: { type: string, enum: [superseded, withdrawn] }
+        completedAt: { type: [string, 'null'] }
+    SourceReviewQueue:
+      type: object
+      required: [open, closed]
+      properties:
+        open: { type: array, items: { $ref: '#/components/schemas/SourceReviewItem' } }
+        closed: { type: array, items: { $ref: '#/components/schemas/SourceReviewClosed' } }
     SourceControlReview: {"type": "object", "required": ["id", "status", "targetKind", "targetKey", "targetVersion", "reason", "createdAt"], "properties": {"id": {"type": "string", "format": "uuid"}, "status": {"type": "string"}, "targetKind": {"type": "string"}, "targetKey": {"type": "string"}, "targetVersion": {"type": "integer"}, "reason": {"type": "string"}, "createdAt": {"type": "string", "format": "date-time"}}}
     SourceControlService: {"type": "object", "required": ["key", "enabled", "reason", "updatedAt"], "properties": {"key": {"type": "string"}, "enabled": {"type": "boolean"}, "reason": {"type": "string"}, "updatedAt": {"type": "string", "format": "date-time"}}}
     SourceControlChoice: {"type": "object", "required": ["id", "title"], "properties": {"id": {"type": "string"}, "title": {"type": "string"}}}
