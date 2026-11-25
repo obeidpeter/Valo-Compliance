@@ -166,6 +166,27 @@ that tests a hold meets it like this:
 - **What it does not do:** it sends nothing to a model and reserves no budget, and no package lets
   this lane's work be admitted yet (slice 2b).
 
+**Slice 2b: the route to a run.**
+- **A package of its own.** A finite allocation package can name the checker-challenge preparer. It
+  admits the challenges of the frozen scenarios and nothing else, and no other package admits them.
+  Its holds say each answer challenges a scenario's expected result, accepts nothing and is not
+  professional review. The owner's approval command prepares one with `--checker-challenges`;
+  approving it is the owner's decision to spend.
+- **Prepared, admitted and run as the editorial cases are.** The runner prepares one released rule's
+  challenges with `--prepare-checker-challenge <rule id>` into a private report, and admission reads
+  it unchanged. Its `--execute` rebuilds the admitted manifest from the release at its own moment,
+  checks every binding again, and runs each challenge as its own approved work.
+- **Each answer is kept as it came.** A completed answer is kept in its strict schema, and a failed
+  or invalid one as a failure, each as a private record that accepts nothing. A work already run is
+  not sent again, and nothing is sent once its release is withdrawn.
+- **The 80 against the signed rules.** `pnpm --filter @workspace/api-server valo:checker-corpus` runs
+  the corpus against the rule versions a database releases, as the check admits them, and prints
+  which give the expected result, which do not beside the record of differences, and which rules
+  have no released version. It reads only.
+- **Still the owner's:** running the challenge needs the owner's approval of a checker-challenge
+  package, which spends on the provider. Once it has run, a person decides on each answer (decision
+  0016); no answer changes the corpus or accepts RUL-008.
+
 ## Slices
 
 | # | Slice | Requirements |
