@@ -407,6 +407,20 @@
       "when": 1795564902085,
       "tag": "20261125000142_library_saves_and_copies",
       "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1795567987591,
+      "tag": "20261125005307_document_editions",
+      "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1795568787450,
+      "tag": "20261125010627_edition_purchases",
+      "breakpoints": true
     }
   ]
 }

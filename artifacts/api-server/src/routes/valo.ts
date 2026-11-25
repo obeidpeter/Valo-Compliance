@@ -45,7 +45,8 @@ import {
   createPrivacyRequesterRouter,
 } from "./valo-customer-access";
 import { commerceRouter } from "./valo-commerce";
-import { savedTemplateList, saveTemplate, unsaveTemplate } from "../modules/catalogue";
+import { listDocumentEditions, savedTemplateList, saveTemplate, unsaveTemplate } from "../modules/catalogue";
+import { ListDocumentEditionsResponse } from "@workspace/api-zod";
 import { publicDiscovery } from "../modules/catalogue";
 import { setting } from "../platform/settings";
 import { supportCustomerRouter, supportOperationsRouter } from "./valo-support-lifecycle";
@@ -202,6 +203,12 @@ router.get("/workspace/documents", async (_req, res) => {
 });
 router.post("/workspace/documents", async (req, res) => {
   res.status(201).json(await createDocument(res.locals.valoActor, req.body));
+});
+// Where the template edition behind each of the workspace's documents stands, for those whose edition
+// was replaced or withdrawn (docs/architecture/editions.md).
+router.get("/workspace/document-editions", async (_req, res) => {
+  res.set("Cache-Control", "private, no-store");
+  res.json(ListDocumentEditionsResponse.parse(await listDocumentEditions(res.locals.valoActor)));
 });
 router.get("/workspace/documents/:id", async (req, res) => {
   res.json(await getDocument(res.locals.valoActor, z.string().uuid().parse(req.params.id)));

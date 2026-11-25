@@ -765,14 +765,25 @@ export interface CommerceOrder {
   disputeStatus: string | null;
 }
 
+/**
+ * Present when the edition bought was replaced: the download is the template's released edition, which the purchase carries to at no further charge (docs/architecture/editions.md).
+ */
+export type OwnedCheckoutDownloadCarried = {
+  boughtVersion: number;
+  version: number;
+};
+
 export interface OwnedCheckoutDownload {
   offerId: string;
-  edition: string;
   title: string;
-  /** Same-origin file path that rechecks the purchased edition on every download. */
+  /** The edition bought. */
+  edition: string;
+  /** Same-origin file path that rechecks the purchase on every download. */
   downloadPath: string;
   /** Optional same-origin PDF file path for multi-format reviewed editions. */
   pdfDownloadPath?: string;
+  /** Present when the edition bought was replaced: the download is the template's released edition, which the purchase carries to at no further charge (docs/architecture/editions.md). */
+  carried?: OwnedCheckoutDownloadCarried;
 }
 
 export interface CustomerPurchases {
@@ -1292,6 +1303,52 @@ export interface DocumentFormText {
   editionVersion: number;
   title: string;
   formText: string;
+}
+
+/**
+ * Replaced: a later edition is released now. Withdrawn: the edition, or the later one that replaced it, was withdrawn and none is released since.
+ */
+export type DocumentEditionState = typeof DocumentEditionState[keyof typeof DocumentEditionState];
+
+
+export const DocumentEditionState = {
+  replaced: 'replaced',
+  withdrawn: 'withdrawn',
+} as const;
+
+/**
+ * The template's released edition, when a later one replaced the document's.
+ */
+export type DocumentEditionCurrent = {
+  version: number;
+  href: string;
+} | null;
+
+export interface DocumentEdition {
+  documentId: string;
+  /** The template's title in the edition the document was made from. */
+  title: string;
+  /** The version of the edition the document was made from. */
+  version: number;
+  /** Replaced: a later edition is released now. Withdrawn: the edition, or the later one that replaced it, was withdrawn and none is released since. */
+  state: DocumentEditionState;
+  /**
+     * When the later edition was released, or when the template was withdrawn, where that is recorded.
+     * @nullable
+     */
+  since: string | null;
+  /**
+     * Why the template was withdrawn, where a reason was recorded.
+     * @nullable
+     */
+  reason: string | null;
+  /** The template's released edition, when a later one replaced the document's. */
+  current: DocumentEditionCurrent;
+}
+
+export interface DocumentEditions {
+  /** @maxItems 200 */
+  items: DocumentEdition[];
 }
 
 export type SourceControlAction = {

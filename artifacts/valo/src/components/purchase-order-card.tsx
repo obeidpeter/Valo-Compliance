@@ -105,6 +105,13 @@ export function OrderCard({
           This edition is no longer available to download. Your saved receipt stays here.
         </p>
       )}
+      {order.status === "verified_success" && download?.carried && (
+        // A purchase carries to the template's new edition (docs/architecture/editions.md).
+        <p className="my-3 text-sm text-muted-foreground" data-testid="order-download-carried">
+          You bought version {download.carried.boughtVersion}. Version {download.carried.version} is yours at
+          no further charge, and the download below is that version.
+        </p>
+      )}
       <div className="flex flex-wrap gap-3">
         {download && order.status === "verified_success" && (
           <>

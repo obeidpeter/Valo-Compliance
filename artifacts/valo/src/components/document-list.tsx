@@ -25,6 +25,7 @@ import {
   type BusinessDocument,
 } from "@workspace/api-client-react";
 import { EmptyState, ErrorState, Skel } from "@/components/states";
+import { editionMark, useDocumentEditions } from "@/components/document-edition";
 import { describeError, missingFields } from "@/lib/api";
 import { anotherFormLike, anotherLike } from "@/lib/document-copy";
 import {
@@ -64,6 +65,8 @@ export function DocumentList({
   const qc = useQueryClient();
   const [, setLocation] = useLocation();
   const docs = useListDocuments({ query: { enabled, queryKey: getListDocumentsQueryKey() } });
+  // Documents whose template edition was replaced or withdrawn (docs/architecture/editions.md).
+  const editions = useDocumentEditions(enabled);
   const exportsList = useListWorkspaceExports({
     query: { enabled: enabled && searchable, queryKey: getListWorkspaceExportsQueryKey() },
   });
@@ -311,6 +314,14 @@ export function DocumentList({
                           <span>Draft</span>
                           <span>Version {d.revision}</span>
                           <span>Saved {formatDateTime(d.updatedAt)}</span>
+                          {editions.has(d.id) && (
+                            <span
+                              className="font-medium text-foreground"
+                              data-testid={"text-doc-edition-" + d.id}
+                            >
+                              {editionMark(editions.get(d.id)!)}
+                            </span>
+                          )}
                         </span>
                         {miss > 0 && (
                           <span className="pill pill-ochre mt-2 inline-flex sm:hidden">

@@ -1350,10 +1350,14 @@ export const GetCustomerPurchasesResponse = zod.object({
 })),
   "ownedDownloads": zod.array(zod.object({
   "offerId": zod.uuid(),
-  "edition": zod.uuid(),
   "title": zod.string(),
-  "downloadPath": zod.string().describe('Same-origin file path that rechecks the purchased edition on every download.'),
-  "pdfDownloadPath": zod.string().optional().describe('Optional same-origin PDF file path for multi-format reviewed editions.')
+  "edition": zod.uuid().describe('The edition bought.'),
+  "downloadPath": zod.string().describe('Same-origin file path that rechecks the purchase on every download.'),
+  "pdfDownloadPath": zod.string().optional().describe('Optional same-origin PDF file path for multi-format reviewed editions.'),
+  "carried": zod.object({
+  "boughtVersion": zod.int(),
+  "version": zod.int()
+}).optional().describe('Present when the edition bought was replaced: the download is the template\'s released edition, which the purchase carries to at no further charge (docs/architecture/editions.md).')
 })).describe('Downloads for the signed-in workspace\'s currently released purchases, indexed by current or past approved offer.')
 })
 
@@ -3137,6 +3141,29 @@ export const SaveDocumentResponse = zod.object({
   "edition": zod.uuid(),
   "digest": zod.string().regex(saveDocumentResponseFormOneDigestRegExp)
 }).describe('The form a document was started with: its version, the released edition whose form text it fills, and that text\'s SHA-256. It never changes.'),zod.null()])
+})
+
+
+/**
+ * The workspace's documents whose template edition was replaced by a later release or withdrawn, with where it stands now (docs/architecture/editions.md). A document made from no template, or from its template's current edition, is not listed. The documents themselves never change.
+ */
+export const listDocumentEditionsResponseItemsMax = 200;
+
+
+
+export const ListDocumentEditionsResponse = zod.object({
+  "items": zod.array(zod.object({
+  "documentId": zod.uuid(),
+  "title": zod.string().describe('The template\'s title in the edition the document was made from.'),
+  "version": zod.int().describe('The version of the edition the document was made from.'),
+  "state": zod.enum(['replaced', 'withdrawn']).describe('Replaced: a later edition is released now. Withdrawn: the edition, or the later one that replaced it, was withdrawn and none is released since.'),
+  "since": zod.coerce.date().nullable().describe('When the later edition was released, or when the template was withdrawn, where that is recorded.'),
+  "reason": zod.string().nullable().describe('Why the template was withdrawn, where a reason was recorded.'),
+  "current": zod.union([zod.object({
+  "version": zod.int(),
+  "href": zod.string()
+}),zod.null()]).describe('The template\'s released edition, when a later one replaced the document\'s.')
+})).max(listDocumentEditionsResponseItemsMax)
 })
 
 

@@ -268,10 +268,18 @@ schemas:
     required: [offerId, edition, title, downloadPath]
     properties:
       offerId: { type: string, format: uuid }
-      edition: { type: string, format: uuid }
       title: { type: string }
-      downloadPath: { type: string, description: Same-origin file path that rechecks the purchased edition on every download. }
+      edition: { type: string, format: uuid, description: The edition bought. }
+      downloadPath: { type: string, description: Same-origin file path that rechecks the purchase on every download. }
       pdfDownloadPath: { type: string, description: Optional same-origin PDF file path for multi-format reviewed editions. }
+      carried:
+        type: object
+        additionalProperties: false
+        required: [boughtVersion, version]
+        description: "Present when the edition bought was replaced: the download is the template's released edition, which the purchase carries to at no further charge (docs/architecture/editions.md)."
+        properties:
+          boughtVersion: { type: integer }
+          version: { type: integer }
   CommerceOrderInput:
     type: object
     required: [priceId, acceptedLicenceVersion, requestKey]

@@ -350,21 +350,40 @@ export async function exercisePremiumManualTemplate(call: Call, editor: string) 
     await (await call("/public/templates/manual-" + itemId)).json(),
   );
   assert.equal(replacement.id, next.id);
-  assert.deepEqual(await checkoutFiles(other), []);
+  // The purchase carries to the new edition at no further charge (docs/architecture/editions.md,
+  // delegated decision 3): the buyer's purchases list the new edition's file under the edition bought,
+  // and say what it carries to.
+  const carriedFiles = await checkoutFiles(other);
+  assert.ok(carriedFiles.length > 0);
+  for (const carriedFile of carriedFiles) {
+    assert.equal(carriedFile.edition, first.id);
+    assert.equal(
+      carriedFile.downloadPath,
+      "/api/workspace/manual-premium-templates/" + next.id + "/download",
+    );
+    assert.deepEqual(carriedFile.carried, { boughtVersion: 1, version: 2 });
+  }
   assert.equal(replacement.offer, undefined);
   const replacedCard = await libraryCard();
   assert.equal(replacedCard?.id, next.id);
   assert.equal(replacedCard.amountKobo, undefined);
   assert.equal(replacedCard.priceId, undefined);
   assert.equal(replacedCard.freeDownloadPath, undefined);
-  assert.deepEqual(await owned(other), [first.id]);
+  // The template counts as the buyer's, in both editions.
+  assert.deepEqual(await owned(other), [first.id, next.id].sort());
   assert.notEqual(replacedCard.id, first.id);
   assert.equal(await productVisible(), false);
+  // The reversed purchase carries nothing, and the edition bought closes to new downloads; the new
+  // edition downloads for the buyer.
   assert.equal((await download(first.id, reader)).status, 403);
   assert.equal((await download(next.id, reader)).status, 403);
   assert.equal((await download(first.id, other)).status, 403);
-  assert.equal((await download(next.id, other)).status, 403);
+  const carriedDownload = await download(next.id, other);
+  assert.equal(carriedDownload.status, 200);
+  assert.equal(carriedDownload.headers.get("cache-control"), "private, no-store");
   await readRevision(await act("withdraw", next));
+  // Withdrawn, the new edition closes too.
+  assert.equal((await download(next.id, other)).status, 403);
   assert.equal(await libraryCard(), undefined);
   assert.equal((await call("/public/templates/manual-" + itemId)).status, 404);
 }
@@ -528,6 +547,48 @@ export async function exercisePremiumFormDocument(call: Call, editor: string) {
     saved.content.blocks.some((block) => block.text === "Dear Synthetic Candidate,"),
     "the answers fill the letter's own words",
   );
+  // A new edition of the offer letter with its wording carries the purchase at no further charge
+  // (docs/architecture/editions.md, slice 2): the form starts from the new edition, under the order
+  // for the first, and the document already made keeps its edition and its wording.
+  const nextResponse = await call(
+    formed.path + "/drafts",
+    {
+      kind: "premium_template",
+      title: "Offer letter",
+      body: "Public description of the synthetic offer letter.",
+      industry: null,
+      requestId: randomUUID(),
+      baseVersion: 1,
+      fileMode: "keep",
+      formText,
+      ...templateDetails,
+    },
+    editor,
+  );
+  assert.equal(nextResponse.status, 200);
+  const nextEdition = GetManualLibraryRevisionResponse.parse(await nextResponse.json());
+  const nextPublished = await call(
+    formed.path + "/actions",
+    { action: "publish", version: nextEdition.version, digest: nextEdition.digest },
+    editor,
+  );
+  assert.equal(nextPublished.status, 200);
+  // The cleanup below withdraws the item's released edition, which is now the second.
+  formed.revision = nextEdition;
+  assert.deepEqual(await startable(buyer), [{ templateId: "TPL-17", editionVersion: 2 }]);
+  const carriedForm = GetDocumentResponse.parse(await start(buyer));
+  assert.deepEqual(carriedForm.form, { version: 2, edition: nextEdition.id, digest: sha256(formText) });
+  assert.equal(
+    (
+      await db
+        .select({ formOrder: valoDocuments.formOrder })
+        .from(valoDocuments)
+        .where(eq(valoDocuments.id, carriedForm.id))
+    )[0]?.formOrder,
+    second.order.id,
+  );
+  assert.deepEqual(made.form?.edition, (await inScope(buyer, () => getDocumentForm(buyer, made.id))).edition);
+  assert.deepEqual(await startable(stranger), []);
   // Reversed, the edition with form text starts no new form: the live edition still held without
   // one starts the questions-only form, and with no purchase left the business is told to buy first.
   await settleVerifiedOrder(second.order.id, { ...second.verified, status: "reversed" });
