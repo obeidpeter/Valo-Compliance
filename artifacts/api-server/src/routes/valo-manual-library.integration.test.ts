@@ -342,15 +342,28 @@ test(
         sql`select reason, recorded_by from valo_manual_withdrawals where edition = ${r2.id}`,
       );
       assert.deepEqual(recorded.rows, [{ reason: withdrawalReason, recorded_by: editor }]);
+      // The database's refusal is the query error's cause.
+      const keepsReason = (error: Error) =>
+        /A withdrawal keeps the reason it was given/.test(
+          String((error as { cause?: Error }).cause?.message ?? error.message),
+        );
       await assert.rejects(
         db.execute(
           sql`update valo_manual_withdrawals set reason = ${"x".repeat(30)} where edition = ${r2.id}`,
         ),
-        /A withdrawal keeps the reason it was given/,
+        keepsReason,
       );
       await assert.rejects(
         db.execute(sql`delete from valo_manual_withdrawals where edition = ${r2.id}`),
-        /A withdrawal keeps the reason it was given/,
+        keepsReason,
+      );
+      assert.deepEqual(
+        (
+          await db.execute<{ reason: string; recorded_by: string }>(
+            sql`select reason, recorded_by from valo_manual_withdrawals where edition = ${r2.id}`,
+          )
+        ).rows,
+        [{ reason: withdrawalReason, recorded_by: editor }],
       );
       assert.equal((await call("/public/resources/manual-" + id)).status, 404);
       assert.equal((await act(id, "publish", r2)).status, 409);
