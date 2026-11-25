@@ -54,11 +54,12 @@ try {
   await page.getByTestId("list-review").waitFor();
   await page
     .getByTestId("list-review")
-    .getByRole("button", { name: /^Edit / })
+    .getByRole("button", { name: /^Change / })
     .first()
     .click();
-  await page.waitForFunction(() => document.activeElement?.id === "checker-step");
-  report.checks.push("Review Edit returns to its question and moves focus.");
+  // The first question listed is how the business is set up; the focus moves to its first answer.
+  await page.waitForFunction(() => document.activeElement?.id === "legalForm");
+  report.checks.push("Review Change returns to its question and moves focus.");
   await page.keyboard.press("Tab");
   report.keyboardFocus = await page.evaluate(() => {
     const e = document.activeElement,

@@ -13,7 +13,7 @@ import {
   type Api,
 } from "../test-support/app-in-browser";
 import { oldWordsIn } from "../test-support/old-words";
-import { answer } from "../test-support/public-answers";
+import { answer, rulesInUse } from "../test-support/public-answers";
 
 /**
  * NFR-006: "WCAG 2.2 AA target across critical flows; keyboard, visible focus, screen-reader labels,
@@ -132,12 +132,17 @@ const noAids = api.ListOperationalRecommendationsResponse.parse({
   heldTemplates: 0,
 });
 
-/** Answers the requirements check with the synthetic result, keeping what the page sent to be checked. */
-function checking() {
+/** No rule in use: the check asks only its own questions. */
+const noRules = api.ListCheckerRulesInUseResponse.parse({ asOfDate: "2026-11-18", rules: [] });
+
+/** Answers the requirements check with the synthetic result, keeping what the page sent to be checked.
+ * By default one synthetic rule of each kind is in use. */
+function checking(rules: unknown = rulesInUse) {
   const sent: { facts: Record<string, unknown> }[] = [];
   const respond: Api = async (route, method, path, query) => {
     const json = (body: unknown) =>
       route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
+    if (method === "GET" && path === "/checker/questions") return json(rules);
     if (method === "POST" && path === "/checker/preview") {
       sent.push(route.request().postDataJSON() as { facts: Record<string, unknown> });
       return json(noResult);
@@ -167,7 +172,8 @@ async function ticked(page: Page) {
 // RUL-002: "Represent unknown, unanswered and not-applicable separately from false/zero."
 // RUL-001: "irrelevant questions are skipped, progress is clear, and the user can return to previous answers."
 test("the requirements check chooses no answer for a visitor: every question starts with nothing chosen, 'I do not know', 'Skip for now' and 'Not applicable' show only once chosen, an emptied box is untouched again, a step is ticked only when its questions are dealt with, and what is sent keeps each apart from 'No' and zero", async () => {
-  const { sent, respond } = checking();
+  // The check's own questions alone: the rules' questions are checked on their own below.
+  const { sent, respond } = checking(noRules);
   const { page, unknown, errors, close } = await app.phone("/checker", respond);
   try {
     await ready(page);
@@ -253,8 +259,8 @@ test("the requirements check chooses no answer for a visitor: every question sta
     assert.equal(await read("Operates from premises"), "Not answered");
     assert.equal(await read("Employees"), "12");
     assert.equal(await read("Turnover band"), "I do not know");
-    await page.getByRole("button", { name: "Edit Employees", exact: true }).click();
-    await expect(step).toBeFocused();
+    await page.getByRole("button", { name: "Change Employees", exact: true }).click();
+    await expect(page.getByTestId("input-employees")).toBeFocused();
     await expect(page.getByTestId("input-employees")).toHaveValue("12");
 
     await page.getByTestId("button-step-5").click();
@@ -467,6 +473,75 @@ test("what the business does and its kinds of product are chosen from fixed list
   }
 });
 
+// RUL-001: "irrelevant questions are skipped, progress is clear, and the user can return to previous answers."
+test("progress counts the questions asked now, the rules' among them, and a step is ticked once every question it asks is dealt with; the review lists every question asked, a filled answer saying where it came from, each with a link back to it; and a result's still-unanswered questions link back too", async () => {
+  const { respond } = checking();
+  const unansweredResult = api.PreviewAssessmentResponse.parse({ ...noResult, unanswered: ["employees"] });
+  const withUnanswered: Api = async (route, method, path, query) =>
+    method === "POST" && path === "/checker/preview"
+      ? route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify(unansweredResult),
+        })
+      : respond(route, method, path, query);
+  const { page, unknown, errors, close } = await app.phone("/checker", withUnanswered);
+  try {
+    await ready(page);
+    const count = async () => {
+      const text = ((await page.getByTestId("status-checker-progress").textContent()) ?? "").trim();
+      const found = /^(\d+) of (\d+) questions answered$/.exec(text);
+      assert.ok(found, text);
+      return [Number(found[1]), Number(found[2])] as const;
+    };
+    const [none, total] = await count();
+    assert.equal(none, 0);
+    // A limited company fills what the company return's records describe, which counts as answered.
+    await choose(page, "radio-legalForm-limited_company");
+    assert.equal((await count())[0], 2, "the answer and the records it fills");
+    // Registered with the CAC, it was incorporated in Nigeria: that is filled too, and opens the
+    // company's status and accounting period, so more questions are asked.
+    await choose(page, "radio-registrationStatus-registered");
+    assert.deepEqual(await count(), [4, total + 3]);
+    // The step is ticked only once the rule's questions in it are dealt with too.
+    assert.deepEqual(await ticked(page), []);
+    await choose(page, "radio-rich-tax-companyStatus-active");
+    await choose(page, "radio-rich-tax-accountingPeriodStart-unknown");
+    await choose(page, "radio-rich-tax-accountingPeriodEnd-unanswered");
+    assert.deepEqual(await ticked(page), [0]);
+
+    // The review lists the questions asked, a filled one with where it came from, and none skipped.
+    await page.getByTestId("button-step-5").click();
+    const review = page.getByTestId("list-review");
+    const row = (label: string) =>
+      review.locator(`xpath=.//dt[normalize-space()="${label}"]/following-sibling::dd[1]`);
+    await expect(row("What do the entity’s formation records describe?")).toContainText("Company");
+    await expect(row("What do the entity’s formation records describe?")).toContainText(
+      "From your answer to ‘How is the business set up?’.",
+    );
+    await expect(row("What is the entity’s current operating status?")).toHaveText("Operating");
+    await expect(row("Was the entity incorporated as a company?")).toHaveCount(0);
+    await expect(row("Local government area")).toHaveCount(0);
+    // Its link moves to the question's place.
+    await review
+      .getByRole("button", { name: "Change What do the entity’s formation records describe?", exact: true })
+      .click();
+    await expect(page.locator("#rich-tax-legalForm-state")).toBeFocused();
+
+    // A result's still-unanswered question links back to it.
+    await page.getByTestId("button-step-5").click();
+    await page.getByTestId("button-run").click();
+    await page.getByTestId("assessment-result").waitFor();
+    await page.getByRole("button", { name: "Answer Employees", exact: true }).click();
+    await expect(page.locator("#checker-step")).toHaveAttribute("aria-label", "Size and turnover");
+    await expect(page.getByTestId("input-employees")).toBeFocused();
+    assert.deepEqual(unknown, [], "every API call the page made has a test answer");
+    assert.deepEqual(errors, []);
+  } finally {
+    await close();
+  }
+});
+
 test("when the rules the check uses cannot be loaded, the steps that would ask their questions say so, and the check still runs on its own questions", async () => {
   const { sent, respond } = checking();
   const failing: Api = async (route, method, path, query) =>
@@ -584,9 +659,12 @@ test("on a phone, every step of the requirements check, its review, its results 
     await page.getByTestId("select-state").selectOption("Lagos");
     await expect(page.getByTestId("input-lga")).toHaveCount(1);
     // And one that ticks a step whose place in the list of steps is past the screen's edge, where
-    // the tick's hidden words must not widen the page.
+    // the tick's hidden words must not widen the page. The step asks the personal-data rule's
+    // questions too, so "I do not know" deals with those the answers open.
     await page.getByTestId("button-step-4").click();
     await choose(page, "radio-personalData-yes");
+    for (const question of ["section3Exception", "processingPurpose", "controllerRole"])
+      await choose(page, `radio-rich-privacy-${question}-unknown`);
     assert.deepEqual(await ticked(page), [4]);
     for (let index = 0; index < 6; index++) {
       await page.getByTestId(`button-step-${index}`).click();
