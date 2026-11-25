@@ -26,7 +26,12 @@ import { guidancePolicy } from "./guidance-policy";
 import { originalFormSchema, formMarkdown } from "./operational-authoring-contract";
 import { operationalMechanicalChecks } from "./operational-mechanical";
 import { recheckOperationalExports } from "./operational-export-inspection";
-import { lockSourceState, recordSourceImpact, bindReleasedSources } from "../sources";
+import {
+  bindReleasedSources,
+  closeWithdrawnReviewWork,
+  lockSourceState,
+  recordSourceImpact,
+} from "../sources";
 import { publicationCheckTime } from "./operational-restrictions";
 import { finalOperationalPublicationCheck } from "./publication-final-check";
 type PublicationTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -356,6 +361,8 @@ export async function withdrawOperationalVersion(id: string, reason: string) {
       action: "withdraw",
       dedupe: `publisher-withdraw:${id}`,
     });
+    // A withdrawn version never returns, so its review work closes (source-register.md, slice 3).
+    await closeWithdrawnReviewWork(tx, "content", id);
     await tx.execute(sql`SET LOCAL ROLE valo_content_publisher_dev`);
     const [row] = await tx
       .select()

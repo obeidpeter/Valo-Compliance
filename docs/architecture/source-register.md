@@ -164,6 +164,39 @@ Slice 2, second part (adding sources):
   bindings, the guides' claim maps and the rules still read only the leads kept in the repository. A
   guide or rule can cite such a source only once it is added to those leads.
 
+Slice 3:
+- Each open row of review work names who is accountable for it. A Content editor is accountable for a
+  template or guide, and for a rule released on the reviewed route. The development owner is accountable
+  for a rule version the owner signed, which a sign-off on record shows. The queue works this out when
+  it is read, so nothing more is stored per row.
+- The Content area's queue lists the open rows oldest first, up to 100. Each gives the version held,
+  why, since when, what opened it, who is accountable, and what was checked. It replaces the source
+  controls' list of the 50 newest rows. What opens a row:
+  - the daily check of a source;
+  - an overdue check;
+  - a retired source;
+  - a staff hold;
+  - a passed review date;
+  - the editorial lifecycle;
+  - the publisher's withdrawal;
+  - a hold on what a rule rests on.
+- The 20 rows closed lately follow, each saying how it closed. The owner has a queue of their own in the
+  System area: the rows of the rules the owner signed.
+- A Content editor records what was checked on an open row, and the owner does the same on the rows of
+  the rules the owner signed. A note is 20 to 1,000 characters, and the database takes one only on open
+  work, from an active Content editor or the development owner (`valo_guard_source_review_note`). It
+  dates each note and never changes or removes one. A note closes nothing.
+- A row closes in one of two ways, and says which:
+  - a later release replaces its version, naming the release. This now holds for rules too, on the
+    reviewed route and on the owner's sign-off;
+  - its version is withdrawn, by staff, by the publisher or by the owner.
+- Work already settled closes when the migration (`20261125174829_source_review_owners`) is applied: on
+  a rule version a later release replaced, and on a version withdrawn.
+- Closing review work releases nothing. A held version still needs a new version through the gates.
+- The source controls' database step sorts its files, so the review test runs after the source
+  controls' test. It and the register's retirement test process the holds they make to the end, as the
+  worker would, so no step after them finds their work pending.
+
 ## What does not change
 
 - The daily check's rule for calling a source changed, the impacts and what they hold, the notices,

@@ -4128,6 +4128,165 @@ export const GetEditorialRecordResponse = zod.object({
 
 
 /**
+ * The open rows of review work oldest first, each with the version held, why, since when, what opened it, who is accountable and what was checked on it, and the rows closed lately with how they closed (docs/architecture/source-register.md, slice 3). Development only.
+ * @summary Review work with its owner, for content staff
+ */
+export const ListSourceReviewResponse = zod.object({
+  "open": zod.array(zod.object({
+  "id": zod.string(),
+  "targetKind": zod.enum(['content', 'rule']),
+  "targetKey": zod.string(),
+  "targetVersion": zod.int(),
+  "reason": zod.string(),
+  "sourceId": zod.string().nullable(),
+  "openedBy": zod.string(),
+  "opener": zod.enum(['daily_check', 'check_overdue', 'source_retired', 'staff', 'review_due', 'lifecycle', 'publisher', 'derived', 'other']),
+  "accountable": zod.enum(['content', 'owner']).describe('A Content editor, or the development owner for a rule the owner signed.'),
+  "createdAt": zod.string(),
+  "notes": zod.array(zod.object({
+  "note": zod.string(),
+  "recordedBy": zod.string(),
+  "createdAt": zod.string()
+}))
+})),
+  "closed": zod.array(zod.object({
+  "id": zod.string(),
+  "targetKind": zod.enum(['content', 'rule']),
+  "targetKey": zod.string(),
+  "targetVersion": zod.int(),
+  "reason": zod.string(),
+  "outcome": zod.enum(['superseded', 'withdrawn']),
+  "completedAt": zod.string().nullable()
+}))
+})
+
+
+/**
+ * A Content editor's note of what was checked, recorded on an open row and never changed or removed. It closes nothing: a row closes when a later release replaces its version or the version is withdrawn.
+ * @summary Record what was checked on open review work
+ */
+export const NoteSourceReviewParams = zod.object({
+  "workId": zod.uuid()
+})
+
+export const noteSourceReviewBodyNoteMax = 1000;
+
+
+
+export const NoteSourceReviewBody = zod.object({
+  "note": zod.string().max(noteSourceReviewBodyNoteMax).describe('What was checked, in 20 to 1,000 characters.')
+})
+
+export const NoteSourceReviewResponse = zod.object({
+  "open": zod.array(zod.object({
+  "id": zod.string(),
+  "targetKind": zod.enum(['content', 'rule']),
+  "targetKey": zod.string(),
+  "targetVersion": zod.int(),
+  "reason": zod.string(),
+  "sourceId": zod.string().nullable(),
+  "openedBy": zod.string(),
+  "opener": zod.enum(['daily_check', 'check_overdue', 'source_retired', 'staff', 'review_due', 'lifecycle', 'publisher', 'derived', 'other']),
+  "accountable": zod.enum(['content', 'owner']).describe('A Content editor, or the development owner for a rule the owner signed.'),
+  "createdAt": zod.string(),
+  "notes": zod.array(zod.object({
+  "note": zod.string(),
+  "recordedBy": zod.string(),
+  "createdAt": zod.string()
+}))
+})),
+  "closed": zod.array(zod.object({
+  "id": zod.string(),
+  "targetKind": zod.enum(['content', 'rule']),
+  "targetKey": zod.string(),
+  "targetVersion": zod.int(),
+  "reason": zod.string(),
+  "outcome": zod.enum(['superseded', 'withdrawn']),
+  "completedAt": zod.string().nullable()
+}))
+})
+
+
+/**
+ * The open rows of review work on the rules the owner signed, oldest first, and those closed lately (docs/architecture/source-register.md, slice 3). Development only.
+ * @summary Review work on the rules the development owner signed
+ */
+export const ListOwnerReviewWorkResponse = zod.object({
+  "open": zod.array(zod.object({
+  "id": zod.string(),
+  "targetKind": zod.enum(['content', 'rule']),
+  "targetKey": zod.string(),
+  "targetVersion": zod.int(),
+  "reason": zod.string(),
+  "sourceId": zod.string().nullable(),
+  "openedBy": zod.string(),
+  "opener": zod.enum(['daily_check', 'check_overdue', 'source_retired', 'staff', 'review_due', 'lifecycle', 'publisher', 'derived', 'other']),
+  "accountable": zod.enum(['content', 'owner']).describe('A Content editor, or the development owner for a rule the owner signed.'),
+  "createdAt": zod.string(),
+  "notes": zod.array(zod.object({
+  "note": zod.string(),
+  "recordedBy": zod.string(),
+  "createdAt": zod.string()
+}))
+})),
+  "closed": zod.array(zod.object({
+  "id": zod.string(),
+  "targetKind": zod.enum(['content', 'rule']),
+  "targetKey": zod.string(),
+  "targetVersion": zod.int(),
+  "reason": zod.string(),
+  "outcome": zod.enum(['superseded', 'withdrawn']),
+  "completedAt": zod.string().nullable()
+}))
+})
+
+
+/**
+ * @summary Record what the owner checked on review work of a rule the owner signed
+ */
+export const NoteOwnerReviewWorkParams = zod.object({
+  "workId": zod.uuid()
+})
+
+export const noteOwnerReviewWorkBodyNoteMax = 1000;
+
+
+
+export const NoteOwnerReviewWorkBody = zod.object({
+  "note": zod.string().max(noteOwnerReviewWorkBodyNoteMax).describe('What was checked, in 20 to 1,000 characters.')
+})
+
+export const NoteOwnerReviewWorkResponse = zod.object({
+  "open": zod.array(zod.object({
+  "id": zod.string(),
+  "targetKind": zod.enum(['content', 'rule']),
+  "targetKey": zod.string(),
+  "targetVersion": zod.int(),
+  "reason": zod.string(),
+  "sourceId": zod.string().nullable(),
+  "openedBy": zod.string(),
+  "opener": zod.enum(['daily_check', 'check_overdue', 'source_retired', 'staff', 'review_due', 'lifecycle', 'publisher', 'derived', 'other']),
+  "accountable": zod.enum(['content', 'owner']).describe('A Content editor, or the development owner for a rule the owner signed.'),
+  "createdAt": zod.string(),
+  "notes": zod.array(zod.object({
+  "note": zod.string(),
+  "recordedBy": zod.string(),
+  "createdAt": zod.string()
+}))
+})),
+  "closed": zod.array(zod.object({
+  "id": zod.string(),
+  "targetKind": zod.enum(['content', 'rule']),
+  "targetKey": zod.string(),
+  "targetVersion": zod.int(),
+  "reason": zod.string(),
+  "outcome": zod.enum(['superseded', 'withdrawn']),
+  "completedAt": zod.string().nullable()
+}))
+})
+
+
+/**
  * Each rule as the owner would sign it now: what it tells a customer, its sources and their checks, its scenarios, how many saved results it would change, and what holds it. Read-only.
  * @summary Requirements-checker rules prepared for the development owner's sign-off (decision 0020)
  */
