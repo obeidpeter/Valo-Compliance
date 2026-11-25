@@ -41,6 +41,7 @@ import {
 } from "@/lib/guided-prefill";
 import { cn } from "@/lib/utils";
 import { Breadcrumbs } from "@/components/breadcrumbs";
+import { DocumentEditionNotice, useDocumentEditions } from "@/components/document-edition";
 import { DocumentExports } from "@/components/document-exports";
 import { BlockEditor, SaveIndicator, type SaveState } from "@/components/document-editor-blocks";
 import { DocPreview } from "@/components/document-preview";
@@ -78,6 +79,8 @@ const ser = (s: Snapshot) => JSON.stringify(s);
 export default function DocumentEditor({ id }: { id: string }) {
   const qc = useQueryClient();
   const doc = useGetDocument(id, { query: { enabled: !!id, queryKey: getGetDocumentQueryKey(id) } });
+  // Where the template edition this document was made from stands now (docs/architecture/editions.md).
+  const editions = useDocumentEditions(!!id);
   const revs = useListDocumentRevisions(id, {
     query: { enabled: !!id && doc.isSuccess, queryKey: getListDocumentRevisionsQueryKey(id) },
   });
@@ -748,6 +751,7 @@ export default function DocumentEditor({ id }: { id: string }) {
         </div>
       )}
 
+      <DocumentEditionNotice edition={editions.get(id)} />
       {state === "conflict" && (
         <Notice
           className="mt-5"

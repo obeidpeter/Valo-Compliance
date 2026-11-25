@@ -58,6 +58,7 @@ import type {
   DisputeInformationInput,
   DisputeInformationList,
   DisputeIntentInput,
+  DocumentEditions,
   DocumentFormText,
   DocumentInput,
   DocumentUpdate,
@@ -4256,6 +4257,107 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       > => {
       return useMutation(getSaveDocumentMutationOptions(options), queryClient);
     }
+
+export const getListDocumentEditionsUrl = () => {
+
+
+
+
+  return `/api/workspace/document-editions`
+}
+
+/**
+ * The workspace's documents whose template edition was replaced by a later release or withdrawn, with where it stands now (docs/architecture/editions.md). A document made from no template, or from its template's current edition, is not listed. The documents themselves never change.
+ */
+export const listDocumentEditions = async ( options?: Parameters<typeof customFetch>[1]): Promise<DocumentEditions> => {
+
+  return customFetch<DocumentEditions>(getListDocumentEditionsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListDocumentEditionsQueryKey = () => {
+    return [
+    "listDocumentEditions"
+    ] as const;
+    }
+
+
+export const getListDocumentEditionsQueryOptions = <TData = Awaited<ReturnType<typeof listDocumentEditions>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listDocumentEditions>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListDocumentEditionsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listDocumentEditions>>> = ({ signal }) => listDocumentEditions({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listDocumentEditions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListDocumentEditionsQueryResult = NonNullable<Awaited<ReturnType<typeof listDocumentEditions>>>
+export type ListDocumentEditionsQueryError = ErrorType<AuthErrorResponse | QuotaErrorResponse>
+
+
+/** The workspace's documents whose template edition was replaced by a later release or withdrawn, with where it stands now (docs/architecture/editions.md). A document made from no template, or from its template's current edition, is not listed. The documents themselves never change. */
+export function useListDocumentEditions<TData = Awaited<ReturnType<typeof listDocumentEditions>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listDocumentEditions>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listDocumentEditions>>,
+          TError,
+          Awaited<ReturnType<typeof listDocumentEditions>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** The workspace's documents whose template edition was replaced by a later release or withdrawn, with where it stands now (docs/architecture/editions.md). A document made from no template, or from its template's current edition, is not listed. The documents themselves never change. */
+export function useListDocumentEditions<TData = Awaited<ReturnType<typeof listDocumentEditions>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listDocumentEditions>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listDocumentEditions>>,
+          TError,
+          Awaited<ReturnType<typeof listDocumentEditions>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** The workspace's documents whose template edition was replaced by a later release or withdrawn, with where it stands now (docs/architecture/editions.md). A document made from no template, or from its template's current edition, is not listed. The documents themselves never change. */
+export function useListDocumentEditions<TData = Awaited<ReturnType<typeof listDocumentEditions>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listDocumentEditions>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** The workspace's documents whose template edition was replaced by a later release or withdrawn, with where it stands now (docs/architecture/editions.md). A document made from no template, or from its template's current edition, is not listed. The documents themselves never change. */
+export function useListDocumentEditions<TData = Awaited<ReturnType<typeof listDocumentEditions>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listDocumentEditions>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListDocumentEditionsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getListFormTemplatesUrl = () => {
 

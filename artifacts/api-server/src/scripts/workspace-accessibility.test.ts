@@ -215,6 +215,21 @@ const answers: Record<string, unknown> = {
     documentCount: 1,
   }),
   [`GET /workspace/documents`]: api.ListDocumentsResponse.parse([document(3)]),
+  // The document's template has a newer version, so the editor and the list show their notice and mark
+  // (docs/architecture/editions.md).
+  [`GET /workspace/document-editions`]: api.ListDocumentEditionsResponse.parse({
+    items: [
+      {
+        documentId: DOCUMENT,
+        title: "Synthetic invoice",
+        version: 1,
+        state: "replaced",
+        since: "2026-11-25T09:00:00.000Z",
+        reason: null,
+        current: { version: 2, href: "/library/manual-00000000-0000-4000-8000-00000000a201" },
+      },
+    ],
+  }),
   // No template's wording is released for its form: every document starts with its questions.
   [`GET /workspace/form-templates`]: api.ListFormTemplatesResponse.parse({
     templates: [],

@@ -1294,6 +1294,52 @@ export interface DocumentFormText {
   formText: string;
 }
 
+/**
+ * Replaced: a later edition is released now. Withdrawn: the edition, or the later one that replaced it, was withdrawn and none is released since.
+ */
+export type DocumentEditionState = typeof DocumentEditionState[keyof typeof DocumentEditionState];
+
+
+export const DocumentEditionState = {
+  replaced: 'replaced',
+  withdrawn: 'withdrawn',
+} as const;
+
+/**
+ * The template's released edition, when a later one replaced the document's.
+ */
+export type DocumentEditionCurrent = {
+  version: number;
+  href: string;
+} | null;
+
+export interface DocumentEdition {
+  documentId: string;
+  /** The template's title in the edition the document was made from. */
+  title: string;
+  /** The version of the edition the document was made from. */
+  version: number;
+  /** Replaced: a later edition is released now. Withdrawn: the edition, or the later one that replaced it, was withdrawn and none is released since. */
+  state: DocumentEditionState;
+  /**
+     * When the later edition was released, or when the template was withdrawn, where that is recorded.
+     * @nullable
+     */
+  since: string | null;
+  /**
+     * Why the template was withdrawn, where a reason was recorded.
+     * @nullable
+     */
+  reason: string | null;
+  /** The template's released edition, when a later one replaced the document's. */
+  current: DocumentEditionCurrent;
+}
+
+export interface DocumentEditions {
+  /** @maxItems 200 */
+  items: DocumentEdition[];
+}
+
 export type SourceControlAction = {
   requestKey: string;
   /**

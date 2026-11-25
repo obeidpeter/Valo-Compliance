@@ -68,6 +68,19 @@ paths:
         "404": { $ref: "#/components/responses/AuthError" }
         "409": { $ref: "#/components/responses/AuthError" }
         "429": { $ref: "#/components/responses/WriteLimit" }
+  /workspace/document-editions:
+    get:
+      operationId: listDocumentEditions
+      description: "The workspace's documents whose template edition was replaced by a later release or withdrawn, with where it stands now (docs/architecture/editions.md). A document made from no template, or from its template's current edition, is not listed. The documents themselves never change."
+      responses:
+        "200":
+          description: The documents whose template edition was replaced or withdrawn
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DocumentEditions" }
+        "401": { $ref: "#/components/responses/AuthError" }
+        "403": { $ref: "#/components/responses/AuthError" }
+        "429": { $ref: "#/components/responses/QuotaError" }
   /workspace/form-templates:
     get:
       operationId: listFormTemplates
@@ -185,3 +198,36 @@ schemas:
       editionVersion: { type: integer }
       title: { type: string }
       formText: { type: string }
+  DocumentEditions:
+    type: object
+    additionalProperties: false
+    required: [items]
+    properties:
+      items: { type: array, maxItems: 200, items: { $ref: "#/components/schemas/DocumentEdition" } }
+  DocumentEdition:
+    type: object
+    additionalProperties: false
+    required: [documentId, title, version, state, since, reason, current]
+    properties:
+      documentId: { type: string, format: uuid }
+      title: { type: string, description: "The template's title in the edition the document was made from." }
+      version: { type: integer, description: "The version of the edition the document was made from." }
+      state:
+        type: string
+        enum: [replaced, withdrawn]
+        description: "Replaced: a later edition is released now. Withdrawn: the edition, or the later one that replaced it, was withdrawn and none is released since."
+      since:
+        type: [string, "null"]
+        format: date-time
+        description: "When the later edition was released, or when the template was withdrawn, where that is recorded."
+      reason: { type: [string, "null"], description: "Why the template was withdrawn, where a reason was recorded." }
+      current:
+        description: "The template's released edition, when a later one replaced the document's."
+        anyOf:
+          - type: object
+            additionalProperties: false
+            required: [version, href]
+            properties:
+              version: { type: integer }
+              href: { type: string }
+          - { type: "null" }

@@ -8,4 +8,5 @@ export * from "./valo-catalogue";
 export * from "./valo-public-discovery";
 export * from "./valo-released-content";
 export * from "./valo-saved-templates";
+export { listDocumentEditions } from "./document-editions";
 export { activeTemplatePrices, isFreeBaselineTemplate } from "./template-prices";

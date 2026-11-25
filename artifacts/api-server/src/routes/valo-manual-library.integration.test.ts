@@ -28,6 +28,7 @@ import {
   ListSavedTemplatesResponse,
   LoadRetainedDraftsResponse,
   CreateTemplateDraftResponse,
+  ListDocumentEditionsResponse,
 } from "@workspace/api-zod";
 import { registeredManualGuidance } from "../modules/manual-guidance/regulatory-evidence";
 
@@ -1124,6 +1125,67 @@ test(
         // Removing it removes it.
         await savedList(() => unsaveTemplate(reader, "manual-" + freeId));
         assert.ok(!(await savedList()).items.some((item) => item.templateId === "manual-" + freeId));
+      },
+    );
+    // docs/architecture/editions.md, slice 1: a document says where the template edition it was made
+    // from stands, read in the workspace's scope as its request reads it.
+    await t.test(
+      "a copied document says when its template's edition is replaced by a later release and when the template is withdrawn",
+      async () => {
+        const { resolveWorkspace } = await import("../modules/workspaces");
+        const { createReleasedTemplateDraft, listDocumentEditions } = await import("../modules/catalogue");
+        const { runInWorkspaceScope } = await import("@workspace/db");
+        const reader = await resolveWorkspace("synthetic-edition-reader-" + randomUUID()),
+          stranger = await resolveWorkspace("synthetic-edition-stranger-" + randomUUID());
+        const editions = async (actor = reader) =>
+          ListDocumentEditionsResponse.parse(
+            await runInWorkspaceScope(actor.workspaceId, () => listDocumentEditions(actor)),
+          ).items;
+        const itemId = randomUUID();
+        const first = await revision(
+          await act(
+            itemId,
+            "publish",
+            await revision(await draft(itemId, input("template", "Synthetic edition register"))),
+          ),
+        );
+        const copy = await runInWorkspaceScope(reader.workspaceId, () =>
+          createReleasedTemplateDraft(reader, first.id),
+        );
+        // Made from the template's release: nothing to say.
+        assert.equal(
+          (await editions()).find((e) => e.documentId === copy.id),
+          undefined,
+        );
+        // A later version released: the copy's edition reads replaced, with the new version and its page.
+        const second = await revision(
+          await act(
+            itemId,
+            "publish",
+            await revision(
+              await draft(itemId, { ...input("template", "Synthetic edition register"), baseVersion: 1 }),
+            ),
+          ),
+        );
+        const replaced = (await editions()).find((e) => e.documentId === copy.id);
+        assert.equal(replaced?.state, "replaced");
+        assert.equal(replaced?.title, "Synthetic edition register");
+        assert.equal(replaced?.version, 1);
+        assert.deepEqual(replaced?.current, { version: 2, href: "/library/manual-" + itemId });
+        assert.ok(replaced?.since);
+        // The later version withdrawn: the template is withdrawn now, and the copy itself is unchanged.
+        await revision(await act(itemId, "withdraw", second));
+        const withdrawn = (await editions()).find((e) => e.documentId === copy.id);
+        assert.equal(withdrawn?.state, "withdrawn");
+        assert.equal(withdrawn?.current, null);
+        assert.ok(withdrawn?.since);
+        const { valoDocuments } = await import("@workspace/db");
+        assert.equal(
+          (await db.select().from(valoDocuments).where(eq(valoDocuments.id, copy.id)))[0]?.libraryEdition,
+          first.id,
+        );
+        // Another workspace sees nothing of it.
+        assert.deepEqual(await editions(stranger), []);
       },
     );
     // Last, so that the editions it releases are not found by title when the retained drafts are filed.
