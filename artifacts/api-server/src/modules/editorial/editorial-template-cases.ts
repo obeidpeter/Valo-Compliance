@@ -45,6 +45,8 @@ export type TemplateCaseOutcome = {
   decision?: "published" | "held";
   criticalFalsePublication?: boolean;
   reasons?: string[];
+  /** A held version's two reviews, as its bundle keeps them. */
+  reviews?: { role: "factual" | "challenge"; model: string; verdict: "pass" | "hold"; findings: string[] }[];
 };
 export function templateCaseOutcome(
   caseId: TemplateEvaluationCaseId,
@@ -80,12 +82,20 @@ export function templateCaseOutcome(
           reasons: atPublication.reasons,
         };
   }
+  // The two reviews go with the reasons, so the reviewer who decides whether the hold is a real unmet
+  // gate reads what each review said (docs/architecture/reviewer-record.md, slice 2).
   if (latest.status === "held")
     return {
       ...saved,
       status: "needs_evaluator_decision",
       decision: "held",
       reasons: evaluatePublication(bundle).reasons,
+      reviews: bundle.reviews.map(({ role, model, verdict, findings }) => ({
+        role,
+        model,
+        verdict,
+        findings,
+      })),
     };
   return { ...saved, status: "blocked", reason: "reviewed_pair_outcome_pending" };
 }

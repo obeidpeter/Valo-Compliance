@@ -7,16 +7,23 @@ import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
  * requirements check against the rule versions this database releases, as the check's own registry
  * admits them, and prints how many give the corpus's expected result, which do not, and which rules
  * have no released version. With --out it also writes the whole report, never over an existing file.
- * Development only. It reads and writes nothing in the database, calls no model and accepts nothing.
+ * Development only. It calls no model and accepts nothing. It reads the database's released rules and
+ * writes nothing there, unless --keep-for-review=<operator> asks it to keep the run for an independent
+ * reviewer (docs/architecture/reviewer-record.md, slice 2), with each scenario whose result differs.
  *
- *   tsx src/scripts/checker-corpus-run.ts [--out <report.json>]
+ *   tsx src/scripts/checker-corpus-run.ts [--out <report.json>] [--keep-for-review=<operator>]
  */
 async function main() {
   assertDevelopmentRuntime();
   const args = process.argv.slice(2);
-  const out = args[0] === "--out" ? args[1] : undefined;
-  if ((args.length && !out) || args.length > 2)
-    throw new Error("usage: checker-corpus-run.ts [--out <report.json>]");
+  let out: string | undefined, keepFor: string | undefined;
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i]!;
+    if (arg === "--out" && args[i + 1] && out === undefined) out = args[++i];
+    else if (arg.startsWith("--keep-for-review=") && keepFor === undefined)
+      keepFor = arg.slice("--keep-for-review=".length);
+    else throw new Error("usage: checker-corpus-run.ts [--out <report.json>] [--keep-for-review=<operator>]");
+  }
   const [
     { db, pool },
     { CHECKER_CORPUS_PATH, corpusDifferences, releasedRegistry, runCorpusAgainstReleased },
@@ -47,6 +54,25 @@ async function main() {
     };
     if (out) await writeFile(out, `${JSON.stringify({ summary, runs }, null, 2)}\n`, { flag: "wx" });
     process.stdout.write(`${JSON.stringify(summary, null, 2)}\n`);
+    if (keepFor) {
+      const { checkerKeptCases, corpusCases, keepAcceptanceRun } =
+        await import("../modules/acceptance-review");
+      const kept = await keepAcceptanceRun({
+        corpus: "checker",
+        operator: keepFor,
+        summary: [
+          `The live check on the rules this database releases, evaluated at ${summary.evaluatedAt}.`,
+          `Released rules: ${summary.releasedRules.join(", ") || "none"}.`,
+          `${summary.matchingExpected} of the ${summary.run} scenarios run give the corpus's expected result; ${summary.cases - summary.run} have no released rule.`,
+        ],
+        cases: checkerKeptCases(
+          runs,
+          new Map(corpusCases("checker").map((item) => [item.id, item.hash])),
+          corpusDifferences,
+        ),
+      });
+      process.stdout.write(`${JSON.stringify({ keptForReview: kept })}\n`);
+    }
   } finally {
     await pool.end();
   }

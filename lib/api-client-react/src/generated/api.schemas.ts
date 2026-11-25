@@ -445,6 +445,122 @@ export interface AcceptanceCases {
   rejected: number;
 }
 
+export type AcceptanceRunDecisionCorpus = typeof AcceptanceRunDecisionCorpus[keyof typeof AcceptanceRunDecisionCorpus];
+
+
+export const AcceptanceRunDecisionCorpus = {
+  editorial: 'editorial',
+  checker: 'checker',
+  customer_ai: 'customer_ai',
+} as const;
+
+export type AcceptanceRunDecisionAnswer = typeof AcceptanceRunDecisionAnswer[keyof typeof AcceptanceRunDecisionAnswer];
+
+
+export const AcceptanceRunDecisionAnswer = {
+  met: 'met',
+  not_met: 'not_met',
+} as const;
+
+export interface AcceptanceRunDecision {
+  corpus: AcceptanceRunDecisionCorpus;
+  runId: string;
+  /** @pattern ^[A-Z0-9][A-Z0-9-]{2,63}$ */
+  caseId: string;
+  /** @pattern ^[a-f0-9]{64}$ */
+  caseHash: string;
+  /**
+     * The hash of the case as kept in the run, as the reviewer read it.
+     * @pattern ^[a-f0-9]{64}$
+     */
+  resultHash: string;
+  answer: AcceptanceRunDecisionAnswer;
+  /**
+     * Why, in 20 to 2,000 characters.
+     * @maxLength 2000
+     */
+  reason: string;
+}
+
+export interface AcceptanceRunSection {
+  heading: string;
+  lines: string[];
+}
+
+export type AcceptanceRunCaseDecisionAnswer = typeof AcceptanceRunCaseDecisionAnswer[keyof typeof AcceptanceRunCaseDecisionAnswer];
+
+
+export const AcceptanceRunCaseDecisionAnswer = {
+  met: 'met',
+  not_met: 'not_met',
+} as const;
+
+export interface AcceptanceRunCaseDecision {
+  answer: AcceptanceRunCaseDecisionAnswer;
+  reason: string;
+  /** The reviewer's staff identity. */
+  reviewer: string;
+  createdAt: string;
+}
+
+export interface AcceptanceRunCase {
+  caseId: string;
+  caseHash: string;
+  title: string;
+  /** The suite's own status for the case. */
+  status: string;
+  /** @nullable */
+  reason: string | null;
+  /** What the run left for a reviewer, or null when it left nothing to judge. */
+  sections: AcceptanceRunSection[] | null;
+  /** The hash of the case as kept. */
+  resultHash: string;
+  /** Whether the case as kept is of the corpus's current words. */
+  current: boolean;
+  /** The latest decision on the case as kept, or null. */
+  decision: AcceptanceRunCaseDecision | null;
+  /** @minimum 0 */
+  decisions: number;
+}
+
+export interface AcceptanceRunStatus {
+  status: string;
+  /** @minimum 0 */
+  count: number;
+}
+
+export interface AcceptanceRun {
+  id: string;
+  keptBy: string;
+  createdAt: string;
+  resultsHash: string;
+  summary: string[];
+  /** @minimum 0 */
+  cases: number;
+  statuses: AcceptanceRunStatus[];
+  /** The cases the run left for a reviewer. */
+  left: AcceptanceRunCase[];
+  /** @minimum 0 */
+  met: number;
+  /** @minimum 0 */
+  notMet: number;
+}
+
+export type AcceptanceRunViewCorpus = typeof AcceptanceRunViewCorpus[keyof typeof AcceptanceRunViewCorpus];
+
+
+export const AcceptanceRunViewCorpus = {
+  editorial: 'editorial',
+  checker: 'checker',
+  customer_ai: 'customer_ai',
+} as const;
+
+export interface AcceptanceRunView {
+  corpus: AcceptanceRunViewCorpus;
+  /** The latest kept run, or null when none is kept. */
+  run: AcceptanceRun | null;
+}
+
 export type CustomerAIInputTone = typeof CustomerAIInputTone[keyof typeof CustomerAIInputTone];
 
 
@@ -5206,6 +5322,19 @@ export type ListAcceptanceCasesCorpus = typeof ListAcceptanceCasesCorpus[keyof t
 
 
 export const ListAcceptanceCasesCorpus = {
+  editorial: 'editorial',
+  checker: 'checker',
+  customer_ai: 'customer_ai',
+} as const;
+
+export type ListAcceptanceRunParams = {
+  corpus: ListAcceptanceRunCorpus;
+};
+
+export type ListAcceptanceRunCorpus = typeof ListAcceptanceRunCorpus[keyof typeof ListAcceptanceRunCorpus];
+
+
+export const ListAcceptanceRunCorpus = {
   editorial: 'editorial',
   checker: 'checker',
   customer_ai: 'customer_ai',

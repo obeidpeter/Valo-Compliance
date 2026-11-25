@@ -96,6 +96,137 @@ export const RecordAcceptanceDecisionResponse = zod.object({
 })
 
 
+/**
+ * For an active reviewer with recent MFA only. A suite's command keeps a run: every case with the suite's status for it, and for each case the suite cannot score itself, what the reviewer reads. A decision on a run holds only for the case as kept. Nothing here accepts a case or a requirement. Development only.
+ * @summary The latest run of a corpus's suite kept for a reviewer, with what it left for a reviewer
+ */
+export const ListAcceptanceRunQueryParams = zod.object({
+  "corpus": zod.enum(['editorial', 'checker', 'customer_ai'])
+})
+
+export const listAcceptanceRunResponseRunOneCasesMin = 0;
+
+export const listAcceptanceRunResponseRunOneStatusesItemCountMin = 0;
+
+export const listAcceptanceRunResponseRunOneLeftItemDecisionsMin = 0;
+
+export const listAcceptanceRunResponseRunOneMetMin = 0;
+
+export const listAcceptanceRunResponseRunOneNotMetMin = 0;
+
+
+
+export const ListAcceptanceRunResponse = zod.object({
+  "corpus": zod.enum(['editorial', 'checker', 'customer_ai']),
+  "run": zod.union([zod.object({
+  "id": zod.string(),
+  "keptBy": zod.string(),
+  "createdAt": zod.string(),
+  "resultsHash": zod.string(),
+  "summary": zod.array(zod.string()),
+  "cases": zod.int().min(listAcceptanceRunResponseRunOneCasesMin),
+  "statuses": zod.array(zod.object({
+  "status": zod.string(),
+  "count": zod.int().min(listAcceptanceRunResponseRunOneStatusesItemCountMin)
+})),
+  "left": zod.array(zod.object({
+  "caseId": zod.string(),
+  "caseHash": zod.string(),
+  "title": zod.string(),
+  "status": zod.string().describe('The suite\'s own status for the case.'),
+  "reason": zod.string().nullable(),
+  "sections": zod.union([zod.array(zod.object({
+  "heading": zod.string(),
+  "lines": zod.array(zod.string())
+})),zod.null()]).describe('What the run left for a reviewer, or null when it left nothing to judge.'),
+  "resultHash": zod.string().describe('The hash of the case as kept.'),
+  "current": zod.boolean().describe('Whether the case as kept is of the corpus\'s current words.'),
+  "decision": zod.union([zod.object({
+  "answer": zod.enum(['met', 'not_met']),
+  "reason": zod.string(),
+  "reviewer": zod.string().describe('The reviewer\'s staff identity.'),
+  "createdAt": zod.string()
+}),zod.null()]).describe('The latest decision on the case as kept, or null.'),
+  "decisions": zod.int().min(listAcceptanceRunResponseRunOneLeftItemDecisionsMin)
+})).describe('The cases the run left for a reviewer.'),
+  "met": zod.int().min(listAcceptanceRunResponseRunOneMetMin),
+  "notMet": zod.int().min(listAcceptanceRunResponseRunOneNotMetMin)
+}),zod.null()]).describe('The latest kept run, or null when none is kept.')
+})
+
+
+/**
+ * One decision, kept for good: met or not met, with why, bound to the run and the hash of the case as the reviewer read it. A case the run left nothing on, or a hash that is not the case as kept, is refused.
+ * @summary Record whether a kept run met a case, for the case as kept
+ */
+export const recordAcceptanceRunDecisionBodyCaseIdRegExp = new RegExp('^[A-Z0-9][A-Z0-9-]{2,63}$');
+export const recordAcceptanceRunDecisionBodyCaseHashRegExp = new RegExp('^[a-f0-9]{64}$');
+export const recordAcceptanceRunDecisionBodyResultHashRegExp = new RegExp('^[a-f0-9]{64}$');
+export const recordAcceptanceRunDecisionBodyReasonMax = 2000;
+
+
+
+export const RecordAcceptanceRunDecisionBody = zod.object({
+  "corpus": zod.enum(['editorial', 'checker', 'customer_ai']),
+  "runId": zod.uuid(),
+  "caseId": zod.string().regex(recordAcceptanceRunDecisionBodyCaseIdRegExp),
+  "caseHash": zod.string().regex(recordAcceptanceRunDecisionBodyCaseHashRegExp),
+  "resultHash": zod.string().regex(recordAcceptanceRunDecisionBodyResultHashRegExp).describe('The hash of the case as kept in the run, as the reviewer read it.'),
+  "answer": zod.enum(['met', 'not_met']),
+  "reason": zod.string().max(recordAcceptanceRunDecisionBodyReasonMax).describe('Why, in 20 to 2,000 characters.')
+})
+
+export const recordAcceptanceRunDecisionResponseRunOneCasesMin = 0;
+
+export const recordAcceptanceRunDecisionResponseRunOneStatusesItemCountMin = 0;
+
+export const recordAcceptanceRunDecisionResponseRunOneLeftItemDecisionsMin = 0;
+
+export const recordAcceptanceRunDecisionResponseRunOneMetMin = 0;
+
+export const recordAcceptanceRunDecisionResponseRunOneNotMetMin = 0;
+
+
+
+export const RecordAcceptanceRunDecisionResponse = zod.object({
+  "corpus": zod.enum(['editorial', 'checker', 'customer_ai']),
+  "run": zod.union([zod.object({
+  "id": zod.string(),
+  "keptBy": zod.string(),
+  "createdAt": zod.string(),
+  "resultsHash": zod.string(),
+  "summary": zod.array(zod.string()),
+  "cases": zod.int().min(recordAcceptanceRunDecisionResponseRunOneCasesMin),
+  "statuses": zod.array(zod.object({
+  "status": zod.string(),
+  "count": zod.int().min(recordAcceptanceRunDecisionResponseRunOneStatusesItemCountMin)
+})),
+  "left": zod.array(zod.object({
+  "caseId": zod.string(),
+  "caseHash": zod.string(),
+  "title": zod.string(),
+  "status": zod.string().describe('The suite\'s own status for the case.'),
+  "reason": zod.string().nullable(),
+  "sections": zod.union([zod.array(zod.object({
+  "heading": zod.string(),
+  "lines": zod.array(zod.string())
+})),zod.null()]).describe('What the run left for a reviewer, or null when it left nothing to judge.'),
+  "resultHash": zod.string().describe('The hash of the case as kept.'),
+  "current": zod.boolean().describe('Whether the case as kept is of the corpus\'s current words.'),
+  "decision": zod.union([zod.object({
+  "answer": zod.enum(['met', 'not_met']),
+  "reason": zod.string(),
+  "reviewer": zod.string().describe('The reviewer\'s staff identity.'),
+  "createdAt": zod.string()
+}),zod.null()]).describe('The latest decision on the case as kept, or null.'),
+  "decisions": zod.int().min(recordAcceptanceRunDecisionResponseRunOneLeftItemDecisionsMin)
+})).describe('The cases the run left for a reviewer.'),
+  "met": zod.int().min(recordAcceptanceRunDecisionResponseRunOneMetMin),
+  "notMet": zod.int().min(recordAcceptanceRunDecisionResponseRunOneNotMetMin)
+}),zod.null()]).describe('The latest kept run, or null when none is kept.')
+})
+
+
 export const createCustomerAIDraftBodyIssuerNameMax = 160;
 
 export const createCustomerAIDraftBodyRecipientNameMax = 160;

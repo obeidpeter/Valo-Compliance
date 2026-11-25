@@ -255,6 +255,12 @@ test("a template case counts only a reviewed version, and a published one must s
   const held = templateCaseOutcome("EVAL-EDP-C001", [saved({ status: "held" }, rebind(forged))]);
   assert.equal(held.status, "needs_evaluator_decision");
   assert.ok(held.reasons?.includes("review_not_clear:challenge"));
+  // The reviewer reads what each of the two reviews said.
+  assert.deepEqual(
+    held.reviews?.map((r) => r.role),
+    ["factual", "challenge"],
+  );
+  assert.ok(held.reviews?.every((r) => typeof r.verdict === "string" && Array.isArray(r.findings)));
   // Saved but stopped before its outcome; and the latest reviewed version is the one read.
   assert.equal(
     templateCaseOutcome("EVAL-EDP-C001", [saved({ status: "candidate" })]).reason,
