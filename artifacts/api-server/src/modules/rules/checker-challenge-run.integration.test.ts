@@ -176,12 +176,39 @@ test(
       ).rows[0]!.results as Record<string, unknown>;
       assert.deepEqual(Object.keys(results).sort(), manifest.works.map((w) => w.key).sort());
 
-      // A work already run is not run again, and once the release is withdrawn none is sent at all.
+      // A work already answered is not sent again: while its answer is fresh, the dispatcher hands
+      // back the one it retained, and the record says nothing went out.
       const again = await run();
-      assert.ok(again.every((a) => a.outcome === "failed"));
-      assert.equal(received.length, 20);
+      assert.equal(received.length, 20, "nothing is sent for a work already answered");
+      assert.deepEqual(
+        again.map((a) => [a.outcome, a.providerResponseId]),
+        answers.map((a) => ["completed", a.providerResponseId]),
+      );
+      assert.equal(kept.length, 40);
+      assert.ok(
+        kept
+          .slice(20)
+          .every((r) => r.kind === "checker-challenge-answer-v1" && r.outboundAttempted === false),
+      );
+
+      // Once the release is withdrawn, no admitted challenge of it passes its binding check, so
+      // none is sent or answered from what was retained, and none can be prepared.
       await signed.withdraw("Synthetic withdrawal so no challenge of this release runs again.");
       withdrawn = true;
+      const afterWithdrawal = await run();
+      assert.equal(received.length, 20, "nothing is sent once the release is withdrawn");
+      assert.ok(afterWithdrawal.every((a) => a.outcome === "failed" && a.providerResponseId === null));
+      assert.equal(kept.length, 60);
+      assert.ok(
+        kept
+          .slice(40)
+          .every(
+            (r) =>
+              r.kind === "checker-challenge-failure-v1" &&
+              r.code === "CANDIDATE_UNAVAILABLE_OR_STALE" &&
+              r.outboundAttempted === false,
+          ),
+      );
       await assert.rejects(prepareCheckerChallengeManifest(ruleId, { packageId }), /RELEASE_UNAVAILABLE/);
       assert.equal(received.length, 20);
     } finally {

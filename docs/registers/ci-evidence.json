@@ -2687,7 +2687,7 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/rules/checker-challenge-run.integration.test.ts",
       "test": "the challenges of a released rule's scenarios are admitted under a checker-challenge package, run one approved work at a time and kept as answers that accept nothing, and none runs once the release is withdrawn",
-      "proves": "Under a synthetic owner approval of a checker-challenge package in an isolated ledger, a released rule's 20 challenge requests are admitted, each sent once through the real dispatcher to a local stand-in destination and kept as an answer that accepts nothing, a work already run is not sent again, and nothing is sent once the release is withdrawn; it does not show a run against the provider."
+      "proves": "Under a synthetic owner approval of a checker-challenge package in an isolated ledger, a released rule's 20 challenge requests are admitted, each sent once through the real dispatcher to a local stand-in destination and kept as an answer that accepts nothing; run again, nothing is sent and each answer is the one kept; once the release is withdrawn, each is refused at its binding check and nothing is sent; it does not show a run against the provider."
     },
     {
       "requirement": "RUL-009",

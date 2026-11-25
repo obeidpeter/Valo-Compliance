@@ -178,7 +178,8 @@ that tests a hold meets it like this:
   checks every binding again, and runs each challenge as its own approved work.
 - **Each answer is kept as it came.** A completed answer is kept in its strict schema, and a failed
   or invalid one as a failure, each as a private record that accepts nothing. A work already run is
-  not sent again, and nothing is sent once its release is withdrawn.
+  not sent again: while its answer is fresh, the dispatcher hands back the one it kept, and the record
+  says nothing went out. Once its release is withdrawn, nothing is sent and nothing kept is handed back.
 - **The 80 against the signed rules.** `pnpm --filter @workspace/api-server valo:checker-corpus` runs
   the corpus against the rule versions a database releases, as the check admits them, and prints
   which give the expected result, which do not beside the record of differences, and which rules

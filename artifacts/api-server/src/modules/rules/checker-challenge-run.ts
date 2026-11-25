@@ -16,7 +16,9 @@ type Put = typeof putPublicationArtifact;
  * RUL-008 (docs/architecture/checker-scenarios.md, slice 2b): runs an admitted manifest of challenge
  * requests, one approved work at a time through the dispatcher's own authorization (withApprovedInferenceWork),
  * and keeps each answer, or its failure, as a private record. A failed or invalid attempt is recorded
- * as it happened, never replaced by an invented answer. The records accept nothing: an AI challenge
+ * as it happened, never replaced by an invented answer. A work already answered is not sent again:
+ * while its answer is fresh the dispatcher hands back the one it retained, and the record says nothing
+ * went out (outboundAttempted false). The records accept nothing: an AI challenge
  * of an expected result is not professional review, and the corpus's expected results stay as they
  * are until a person decides on each (decision 0016).
  */
