@@ -2,6 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   editorMissingScope,
+  pageHeadings,
+  sourceLine,
   ownerMissingScope,
   recordFiled,
   recordStates,
@@ -36,4 +38,28 @@ test("a regulatory guide's record is typed, listed and asked for in plain words"
     "Filed the record of 2 regulatory guides as a new draft version. Each is private until the owner signs it.",
   );
   assert.match(recordStates.unwritten, /A Content editor writes it/);
+});
+
+// CMP-001 (docs/architecture/guidance-record.md, slice 2): the guide's page says whom it is for and names
+// each source's issuing body and the day its text took effect, on a Lagos clock.
+test("a guide's page says whom it is for, and who issued each source and when its text took effect", () => {
+  assert.deepEqual(pageHeadings, {
+    appliesTo: "Who this is for",
+    actionEvidence: "What to do and keep",
+    relatedTemplates: "Related templates",
+  });
+  assert.equal(
+    sourceLine({
+      issuingBody: "Nigeria Data Protection Commission",
+      effectiveFrom: "2023-06-12T00:00:00+01:00",
+    }),
+    "Issued by Nigeria Data Protection Commission, in effect from 12 Jun 2023",
+  );
+  // 23:30 UTC on 31 July is 1 August in Lagos.
+  assert.equal(sourceLine({ effectiveFrom: "1971-07-31T23:30:00Z" }), "In effect from 1 Aug 1971");
+  assert.equal(
+    sourceLine({ issuingBody: "Corporate Affairs Commission" }),
+    "Issued by Corporate Affairs Commission",
+  );
+  assert.equal(sourceLine({}), null);
 });

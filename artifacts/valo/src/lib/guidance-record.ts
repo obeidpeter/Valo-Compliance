@@ -1,3 +1,5 @@
+import { formatDay } from "./format";
+
 /**
  * The staff and owner screens' words for a regulatory guide's record (docs/architecture/guidance-record.md,
  * CMP-001): whom it applies to, what to do and keep, and its related templates. A guide is published only
@@ -56,3 +58,24 @@ export const recordStates = {
   proposed: "Who it applies to: in its draft, not filed yet",
   unwritten: "Who it applies to: not in its draft. A Content editor writes it before the owner can sign.",
 } as const;
+
+/**
+ * The guide's page (docs/architecture/guidance-record.md, slice 2): its record as the owner signed it,
+ * in place of the fixed "What it covers", and each source with the body that issued it and the day its
+ * text took effect, where the source check the guide was released on kept them.
+ */
+export const pageHeadings = {
+  appliesTo: "Who this is for",
+  actionEvidence: "What to do and keep",
+  relatedTemplates: "Related templates",
+} as const;
+export const relatedTemplatesHint = "Templates you can use with this guide.";
+export function sourceLine(source: { issuingBody?: string | undefined; effectiveFrom?: string | undefined }) {
+  const parts = [
+    source.issuingBody && `Issued by ${source.issuingBody}`,
+    source.effectiveFrom && `in effect from ${formatDay(source.effectiveFrom)}`,
+  ].filter(Boolean);
+  if (!parts.length) return null;
+  const line = parts.join(", ");
+  return line.charAt(0).toUpperCase() + line.slice(1);
+}
