@@ -3453,6 +3453,34 @@
       "proves": "A Content editor's withdrawal takes a released practical guide off the public site, whose page then answers 404, and the withdrawn version cannot be published again. The test does not show a recorded reason or the customers affected."
     },
     {
+      "requirement": "ADM-007",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/editorial/owner-rule-signoff.integration.test.ts",
+      "test": "the development owner watches a prepared rule's sources, signs the exact version shown, supersedes it and withdraws it",
+      "proves": "When the development owner replaces a signed rule version or withdraws one, each is refused without a reason of at least 20 characters once trimmed, and is then recorded with its reason, the owner, and the workspaces, saved results and tasks made under the old version."
+    },
+    {
+      "requirement": "ADM-007",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/editorial/valo-rule-release.integration.test.ts",
+      "test": "a rule version is released only after its plan, source check and confirmation, and replaces the one before",
+      "proves": "A rule version released on the reviewed route that replaces another is refused without what changed, in at least 20 characters once trimmed, and is recorded with that reason and the command that made it."
+    },
+    {
+      "requirement": "ADM-007",
+      "job": "foundation",
+      "file": "lib/db/scripts/phase1-migrations.test.mjs",
+      "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
+      "proves": "After the rule changes migration, PostgreSQL refuses to move a released rule version to superseded or withdrawn without a record written in the same transaction, sets the record's time and its counts of affected workspaces, saved results and live tasks itself, and refuses any change to a record."
+    },
+    {
+      "requirement": "ADM-007",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "the owner's panel asks what changed before a version replaces a released one, and why before a withdrawal, and sends each reason with the decision",
+      "proves": "In a browser, the owner's panel will not sign a version that replaces a released one until what changed is given in 20 characters or more, nor withdraw one until why is given, sends each reason with the decision, and has no automated WCAG 2.2 AA failure."
+    },
+    {
       "requirement": "AI-001",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai.integration.test.ts",
@@ -3843,6 +3871,13 @@
       "file": "artifacts/valo/src/components/edition-notices.test.tsx",
       "test": "the workspace's home lists its unread notices, each with a way to mark it read, and nothing when there are none",
       "proves": "The workspace's home lists its notices of replaced and withdrawn template versions, each with a button to mark it read and a link to Purchases where the purchase carries, and shows nothing when there are none."
+    },
+    {
+      "requirement": "EDP-011",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/editorial/owner-rule-signoff.integration.test.ts",
+      "test": "the development owner watches a prepared rule's sources, signs the exact version shown, supersedes it and withdraws it",
+      "proves": "Replacing or withdrawing a signed rule version logs the change, with its reason, who made it and whom it affected, in the transaction that makes it."
     },
     {
       "requirement": "EDT-010",
