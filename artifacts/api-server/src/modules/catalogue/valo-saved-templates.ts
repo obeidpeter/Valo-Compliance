@@ -16,6 +16,8 @@ import {
   projectReleasedCatalogue,
 } from "./valo-released-content";
 import { recommendTemplates } from "./valo-catalogue";
+import { manualCatalogue } from "./manual-presentation";
+import { liveLibraryTemplates } from "../manual-library";
 import { developmentPublicationOnly } from "../publication";
 import { singleRow } from "../../platform/rows";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -42,12 +44,16 @@ async function owner(tx: Tx, actor: WorkspaceActor, lock = true) {
 }
 export async function savedTemplateList(actor: WorkspaceActor) {
   const { db, valoProfileVersions, valoSavedTemplates } = await import("@workspace/db");
-  const current = projectReleasedCatalogue(await liveReleasedVersions());
-  const currentByTemplate = new Map(
-    current.filter((i) => i.type === "template").map((i) => [i.templateId, i]),
-  );
+  const reviewed = projectReleasedCatalogue(await liveReleasedVersions());
   return db.transaction(async (tx) => {
     const w = await owner(tx, actor, false);
+    // The staff library's released templates too, read through its owner's function: each is saved
+    // under its address name, which stays the same from version to version
+    // (docs/architecture/library-entries.md, slice 2).
+    const current = [...reviewed, ...(await liveLibraryTemplates(tx)).map(manualCatalogue)];
+    const currentByTemplate = new Map(
+      current.filter((i) => i.type === "template").map((i) => [i.templateId, i]),
+    );
     const saved = await tx
       .select()
       .from(valoSavedTemplates)
@@ -136,6 +142,14 @@ async function keepSavedTemplate(
 export async function saveTemplate(actor: WorkspaceActor, releaseId: string) {
   const { db } = await import("@workspace/db");
   developmentPublicationOnly();
+  // A staff-library template is saved by its release, under its address name.
+  const library = await db.transaction(async (tx) => {
+    const row = (await liveLibraryTemplates(tx)).find((entry) => entry.id === releaseId);
+    if (!row) return false;
+    await keepSavedTemplate(tx, actor, { templateId: row.slug, title: row.title, version: row.version });
+    return true;
+  });
+  if (library) return savedTemplateList(actor);
   const release = await checkReleaseEvidence(releaseId);
   await db.transaction(async (tx) => {
     const row = await lockedLiveVersion(tx, release);

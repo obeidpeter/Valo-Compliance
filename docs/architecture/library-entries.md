@@ -111,17 +111,26 @@ one stays in the list, marked unavailable, with the title it had (DOC-009's acce
 suggestions draw on the staff library's templates as well, by the same rules: first an activity in the
 business profile, then a category the customer saved.
 
+A customer request cannot read the staff library's table. So it reads the released templates through
+a function that runs as the table's owner and returns what the library lists of each, never a draft,
+a file or form text. Only the workspace's scoped role may call it, as with the forms' editions.
+
 ### 5. A copy in the workspace
 
 A free library template's page offers "Make my own copy", as a reviewed one's does. The copy is a
 document typed from the release's text: each paragraph is a block, and a run of lines with cells
 separated by a bar is a table. The document records the release it was copied from, in a new column
-(`library_edition`), as a reviewed copy records its version. The business library shows that release
-beside the document's files (DOC-005). The copy is the customer's own work. A later release or a
-withdrawal never changes it (DOC-007, EDT-010).
+(`library_edition`), as a reviewed copy records its version. The business library names that release
+beside the document's files, by the title it was released under (DOC-005). The copy is the
+customer's own work. A later release or a withdrawal never changes it (DOC-007, EDT-010).
 
 A text too long for a document is not copied: more than 100 blocks, or a block over 8,000 characters.
 The page then says that the template is available as its Word file only.
+
+A database guard records the release only from a released free template, when the document is
+written, and never changes it. Two more owner's functions give the scoped role what a copy needs: a
+released free template's text, and the release each of the workspace's copies came from, for the
+business library.
 
 The staff library holds only a premium template's public description. Its whole text is in its Word
 file. So a premium library template offers no copy. Its page says that it comes as a Word file, as
@@ -141,8 +150,10 @@ and 3, each in commits of its own.
 | # | Slice | Requirements |
 | --- | --- | --- |
 | 1 | The details and the statement. A migration adds the five columns and the guard's release check, with its upgrade test and runbook. Then the staff screen's inputs, the proposals for the 40 retained drafts with their test, and the API and template page. Database tests: a release without its details is refused; the details cannot change once saved; a withdrawn related guide drops from the page. A browser test of the staff screen's new inputs. | DOC-001, DOC-003, DOC-006, EDP-008 |
-| 2 | Saving and suggestions for library templates. A database test of saving, listing, withdrawal and removal, and a browser test of the save button on a library template's page. | DOC-009 |
-| 3 | The copy. A migration adds `valo_documents.library_edition`, with its upgrade test and runbook. Then the copy route, the page's button and the business library's link. Database tests: a copy records its release, stays the customer's after a withdrawal, and is refused for a withdrawn release; a premium release offers none. | DOC-005, DOC-007, EDT-010 |
+| 2 | Saving and suggestions for library templates, with the function that reads the released templates for the scoped role. A database test of saving, listing, withdrawal and removal, and a render test of the save button on a library template's page. | DOC-009 |
+| 3 | The copy. The column `valo_documents.library_edition`, its guard, and the functions for a copy's text and the business library. Then the copy route, the page's button and the business library's link. Database tests: a copy records its release, stays the customer's after a withdrawal, and is refused for a withdrawn release; a premium release offers none. | DOC-005, DOC-007, EDT-010 |
+
+Slices 2 and 3 share one migration, with its upgrade test and runbook.
 
 ## The owner's points
 

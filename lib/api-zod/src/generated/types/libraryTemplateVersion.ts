@@ -9,5 +9,7 @@
 export interface LibraryTemplateVersion {
   versionId: string;
   templateId: string;
+  /** The title a staff-library template was released under, for a document copied from it. */
+  title?: string;
   version: number;
 }

@@ -63,6 +63,22 @@ test("the business library lists each ready export with its revision, its downlo
   assert.ok(html.includes("2 ready"), html);
 });
 
+test("a document copied from a staff-library template names the template by the title it was released under", () => {
+  // docs/architecture/library-entries.md, slice 3: the release's address name means nothing to a reader.
+  const copied: LibraryExport = {
+    ...fromTemplate,
+    template: {
+      versionId: "00000000-0000-4000-8000-00000000b002",
+      templateId: "manual-00000000-0000-4000-8000-00000000a002",
+      title: "Synthetic library copy",
+      version: 1,
+    },
+  };
+  const html = render([copied]);
+  assert.ok(html.includes("Copied from the template “Synthetic library copy”, version 1"), html);
+  assert.ok(!html.includes("manual-00000000"), html);
+});
+
 test("an empty business library says no export is ready yet", () => {
   const html = render([]);
   assert.ok(html.includes("No files yet."), html);

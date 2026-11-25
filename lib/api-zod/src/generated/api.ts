@@ -3983,6 +3983,7 @@ export const ListWorkspaceExportsResponseItem = zod.object({
   "template": zod.union([zod.object({
   "versionId": zod.uuid(),
   "templateId": zod.string(),
+  "title": zod.string().optional().describe('The title a staff-library template was released under, for a document copied from it.'),
   "version": zod.int()
 }),zod.null()])
 })

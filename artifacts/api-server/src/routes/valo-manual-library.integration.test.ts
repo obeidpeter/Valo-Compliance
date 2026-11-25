@@ -25,7 +25,9 @@ import {
   ListManualLibraryResponse,
   ListPublicCatalogueResponse,
   ListRetainedDraftsResponse,
+  ListSavedTemplatesResponse,
   LoadRetainedDraftsResponse,
+  CreateTemplateDraftResponse,
 } from "@workspace/api-zod";
 import { registeredManualGuidance } from "../modules/manual-guidance/regulatory-evidence";
 
@@ -1024,6 +1026,104 @@ test(
           [],
         );
         assert.deepEqual(await publicLists(), shownBefore);
+      },
+    );
+    // docs/architecture/library-entries.md, slices 2 and 3: a workspace saves a library template and is
+    // suggested others, and copies a free one into a document that keeps the release it came from. Each
+    // call runs in the reader's workspace scope, as its request runs; the routes only pass it on, and the
+    // same-origin check in front of them has a test of its own.
+    await t.test(
+      "a workspace saves a library template, is suggested others, and copies a free one into a document that keeps its release",
+      async () => {
+        const { resolveWorkspace } = await import("../modules/workspaces");
+        const { createReleasedTemplateDraft, savedTemplateList, saveTemplate, unsaveTemplate } =
+          await import("../modules/catalogue");
+        const { runInWorkspaceScope } = await import("@workspace/db");
+        const reader = await resolveWorkspace("synthetic-library-reader-" + randomUUID());
+        const asReader = <T>(work: () => Promise<T>) => runInWorkspaceScope(reader.workspaceId, work);
+        const savedList = async (work: () => Promise<unknown> = () => savedTemplateList(reader)) =>
+          ListSavedTemplatesResponse.parse(await asReader(work));
+        const refused = (status: number) => (error: unknown) =>
+          (error as { status?: number }).status === status;
+        const releaseOf = async (id: string, value: Record<string, unknown>) =>
+          revision(await act(id, "publish", await revision(await draft(id, value))));
+        const freeId = randomUUID(),
+          otherId = randomUUID(),
+          premiumId = randomUUID();
+        const free = await releaseOf(freeId, {
+          ...input("template", "Synthetic library copy"),
+          body: "Synthetic opening paragraph.\n\nItem | Quantity\nSynthetic item | 2\n\nSynthetic closing paragraph.",
+        });
+        await releaseOf(otherId, input("template", "Synthetic library suggestion"));
+        const { bytes } = wordFromText("Synthetic premium checklist", "Only a buyer reads this sentence.");
+        const premium = await releaseOf(premiumId, {
+          ...input("premium_template", "Synthetic library premium checklist"),
+          body: "A synthetic premium checklist's public description.",
+          fileMode: "upload",
+          upload: { format: "docx", base64: bytes.toString("base64") },
+        });
+        // Saved, a library template is kept under its address name, and the others are suggested.
+        const saved = await savedList(() => saveTemplate(reader, free.id));
+        const entry = saved.items.find((item) => item.templateId === "manual-" + freeId);
+        assert.equal(entry?.title, "Synthetic library copy");
+        assert.equal(entry?.available, true);
+        assert.equal(entry?.current?.href, "/library/manual-" + freeId);
+        assert.ok(saved.recommendations.some((item) => item.templateId === "manual-" + otherId));
+        assert.ok(!saved.recommendations.some((item) => item.templateId === "manual-" + freeId));
+        // Saving again saves nothing more.
+        await savedList(() => saveTemplate(reader, free.id));
+        assert.equal(
+          (await savedList()).items.filter((item) => item.templateId === "manual-" + freeId).length,
+          1,
+        );
+        // A free one is copied from its released text: each paragraph a block, the bar lines a table.
+        const copy = CreateTemplateDraftResponse.parse(
+          await asReader(() => createReleasedTemplateDraft(reader, free.id)),
+        );
+        assert.equal(copy.title, "Synthetic library copy");
+        assert.deepEqual(
+          copy.content.blocks.map((block) => [block.type, block.text, block.rows]),
+          [
+            ["paragraph", "Synthetic opening paragraph.", []],
+            [
+              "table",
+              "",
+              [
+                ["Item", "Quantity"],
+                ["Synthetic item", "2"],
+              ],
+            ],
+            ["paragraph", "Synthetic closing paragraph.", []],
+          ],
+        );
+        const { valoDocuments } = await import("@workspace/db");
+        const recorded = async () =>
+          (
+            await db
+              .select({ edition: valoDocuments.libraryEdition })
+              .from(valoDocuments)
+              .where(eq(valoDocuments.id, copy.id))
+          )[0]?.edition;
+        assert.equal(await recorded(), free.id);
+        // A premium one keeps its text in its file, so it has no copy here.
+        await assert.rejects(
+          asReader(() => createReleasedTemplateDraft(reader, premium.id)),
+          refused(404),
+        );
+        // Withdrawn, the saved entry stays with the title it had, no copy can be made, and the copy
+        // already made keeps its release.
+        await revision(await act(freeId, "withdraw", free));
+        const after = (await savedList()).items.find((item) => item.templateId === "manual-" + freeId);
+        assert.equal(after?.available, false);
+        assert.equal(after?.title, "Synthetic library copy");
+        await assert.rejects(
+          asReader(() => createReleasedTemplateDraft(reader, free.id)),
+          refused(404),
+        );
+        assert.equal(await recorded(), free.id);
+        // Removing it removes it.
+        await savedList(() => unsaveTemplate(reader, "manual-" + freeId));
+        assert.ok(!(await savedList()).items.some((item) => item.templateId === "manual-" + freeId));
       },
     );
     // Last, so that the editions it releases are not found by title when the retained drafts are filed.

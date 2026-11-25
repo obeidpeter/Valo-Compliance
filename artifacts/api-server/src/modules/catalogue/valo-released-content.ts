@@ -30,7 +30,8 @@ import {
 } from "./valo-catalogue";
 import { setting } from "../../platform/settings";
 import { lockSourceState, sourceTargetAllowed } from "../sources";
-import { isManualTemplate, releasedManualEntries } from "../manual-library";
+import { freeLibraryEdition, isManualTemplate, releasedManualEntries } from "../manual-library";
+import { libraryCopy } from "./library-copy";
 import { manualCatalogue, manualResource, manualResourceKind, manualTemplate } from "./manual-presentation";
 import { releasedDocumentText, sampleFieldsPreview, templatePreview } from "./template-preview";
 import {
@@ -479,6 +480,21 @@ export async function requirePurchaseForPricedMaster(
 export async function createReleasedTemplateDraft(actor: WorkspaceActor, id: string) {
   const { db, valoDocuments } = await import("@workspace/db");
   developmentPublicationOnly();
+  // A free staff-library template is copied from its released text, and the document records the
+  // release (docs/architecture/library-entries.md, slice 3). A premium one keeps its text in its file.
+  const copied = await db.transaction(async (tx) => {
+    const edition = await freeLibraryEdition(tx, id);
+    if (!edition) return null;
+    await authorizeWorkspaceWrite(tx, actor);
+    const copy = libraryCopy(edition.title, edition.body);
+    if (!copy)
+      throw new ValoProblem(
+        422,
+        "This template is too long to copy into a document here. Download its Word file instead.",
+      );
+    return createDocumentInTransaction(tx, actor, copy, "manual", edition.edition);
+  });
+  if (copied) return getDocument(actor, copied);
   const release = await checkReleaseEvidence(id);
   const documentId = await db.transaction(async (tx) => {
     const row = await lockedLiveVersion(tx, release);

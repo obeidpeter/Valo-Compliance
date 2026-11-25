@@ -2,7 +2,7 @@ import { reconcileExportOrphans } from "./valo-export-recovery";
 import { checkFormContent, savedVersionGaps, serializeRevision } from "../documents";
 import { documentComplete } from "@workspace/valo-core/document-completeness";
 import { randomUUID } from "node:crypto";
-import { and, eq, gt, isNull, ne, or, desc } from "drizzle-orm";
+import { and, eq, gt, isNull, ne, or, desc, sql } from "drizzle-orm";
 import {
   db,
   runInWorkspaceScope,
@@ -150,6 +150,24 @@ export async function listExports(
   }
   return rows.map(({ job, asset }) => publicJob(job, asset));
 }
+/** The staff-library release each of the workspace's copied documents came from, by document. A
+ * customer request cannot read the editorial table, so this reads them through its owner's function
+ * (docs/architecture/library-entries.md, slice 3). A withdrawn or replaced release is still named: the
+ * copy stays its owner's. */
+async function libraryCopies() {
+  const { rows } = await db.execute<{
+    document: string;
+    edition: string;
+    slug: string;
+    title: string;
+    version: number;
+  }>(sql`select document, edition, slug, title, version from public.valo_workspace_library_editions()`);
+  return new Map(rows.map((row) => [row.document, row]));
+}
+/** A copied document's library release, as the business library names a template version, with the
+ * title it was released under: its address name means nothing to a reader. */
+const copyTemplate = (copy: { edition: string; slug: string; title: string; version: number } | undefined) =>
+  copy ? { versionId: copy.edition, templateId: copy.slug, title: copy.title, version: copy.version } : null;
 /** The business library (DOC-005): the workspace's newest ready exports, each with the saved
  * revision it was made from and the template version its document came from. A document keeps
  * that link through every later revision, and whether or not the version is still released. Only
@@ -193,6 +211,9 @@ export async function listWorkspaceExports(actor: WorkspaceActor) {
     )
     .orderBy(desc(valoFileAssets.createdAt))
     .limit(50);
+  // A document copied from a staff-library template names the release it came from
+  // (docs/architecture/library-entries.md, slice 3).
+  const copies = rows.some((row) => !row.templateVersionId) ? await libraryCopies() : new Map();
   return rows
     .filter(({ asset }) => !exportIsExpired(asset, now.getTime()))
     .map(({ job, asset, title, templateVersionId, templateId, templateVersion }) => ({
@@ -209,7 +230,7 @@ export async function listWorkspaceExports(actor: WorkspaceActor) {
       template:
         templateVersionId && templateId && templateVersion
           ? { versionId: templateVersionId, templateId, version: templateVersion }
-          : null,
+          : copyTemplate(copies.get(job.documentId)),
     }));
 }
 export async function requestExport(actor: WorkspaceActor, documentId: string, key: string, raw: unknown) {
