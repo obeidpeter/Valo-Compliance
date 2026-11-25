@@ -541,8 +541,6 @@ async function signOwnerRule(
   const { passagesFrom, records } = evidenceOf(options);
   const { db, valoRuleOwnerSignoffs, valoRuleReleases: r } = await import("@workspace/db");
   const stored = await storedVersions([ruleId]);
-  if (!input.reason && stored.some((s) => s.ruleId === ruleId && s.status === "published"))
-    throw new ValoProblem(422, replacementReasonNeeded);
   const version = nextVersion(stored, ruleId);
   const { policy } = await guidancePolicy();
   const captures = await currentSourceCaptures(unique(candidate.sources.map((s) => s.leadId)), now, {
@@ -561,6 +559,10 @@ async function signOwnerRule(
     throw new ValoProblem(409, "The rule or its sources changed. Reopen it before signing.");
   if (holds.length || evidence.decision !== "eligible" || plan.decision !== "ready")
     throw new ValoProblem(409, "This rule is held. " + holds.join(" "));
+  // Asked only once the version is the next one and nothing holds it, so a version already signed
+  // or a changed rule is refused as such, not for want of a reason.
+  if (!input.reason && stored.some((s) => s.ruleId === ruleId && s.status === "published"))
+    throw new ValoProblem(422, replacementReasonNeeded);
   const captured = await verifyReleasedSources(db, prepared.bundle, prepared.snapshotIds, now, readText);
   return asDevelopmentOwner(
     actor,
