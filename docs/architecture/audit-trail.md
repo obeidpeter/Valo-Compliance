@@ -50,7 +50,7 @@ broken.
 
 ## The slices
 
-1. **Guards** (this change): the two unguarded histories, TRUNCATE on every history, and the object of each
+1. **Guards** (built): the two unguarded histories, TRUNCATE on every history, and the object of each
    staff read.
 2. **Operator actions**: the restore and backup-removal tools record who ran them, on what, and why, in
    the operator's journal. The reviewed publisher's operator is the reviewed route's row (Phase 3): it
@@ -60,8 +60,9 @@ broken.
    - an attempt to change a history, refused by its guard, becomes a security signal and an alert
      (built);
    - privileged reading above a threshold raises an alert (built);
-   - a periodic integrity check finds a history row that is gone or changed, however that happened.
-4. **A staff viewer** for the histories that have none.
+   - a periodic integrity check finds a history row that is gone or changed, however that happened
+     (built).
+4. **A staff viewer** for the histories that have none (built).
 5. **Later, with Phase 8's migration login**: the histories owned by a role the application login cannot
    use, so that it can no longer disable their guards.
 
@@ -251,6 +252,56 @@ development default, not a reviewed threshold, under the security/privacy incide
   - every table whose rows a trigger guards against deletion keeps a digest.
 - The index and digest migrations have their upgrade checks.
 
+## Slice 4: the staff viewer
+
+The System area has an audit history panel. It shows the four histories that had no staff screen (gap 6)
+and the hourly counts, one at a time, newest first, fifty to a page.
+
+| Choice | History | What an entry shows |
+| --- | --- | --- |
+| Staff reads | `valo_staff_access_audit` | Who read, in which area, what they read and why |
+| Safety controls | `valo_safety_control_audit` | Who, the area and the action, the target and the reason |
+| Price changes | `valo_price_changes` | The database login that made it, what it did (created, closed or deleted) and the price's id |
+| Refund changes | `valo_refund_transitions` | Who, the refund's new status and the refund's id; never the reason |
+| History counts | `valo_history_checks` | Each hourly count, and the histories it found no longer matching their digests |
+
+- **Who may read it.** Only a current permanent system assignment with fresh MFA, the authority that
+  administers staff roles. Break-glass access, the other staff roles and a session without fresh MFA are
+  refused, and a refused read records nothing.
+- **Each read is recorded first.** Before anything is read, the page's read is written to the access
+  history:
+  - area `system`;
+  - object `audit_history:<kind>`;
+  - reason "Read page N of the <kind> history".
+
+  So reading the histories shows in the history of reads, and counts towards heavy privileged reading.
+- **What it never shows.** A refund's reason may hold a customer's own words, so it stays with finance.
+- **Nothing in it changes a history.** The endpoint only reads, apart from its own access row. A longer
+  text than the page carries ends in an ellipsis, and the row itself keeps all of it.
+
+**Tests.**
+- **Each history's entries** (unit):
+  - a refund's reason never reaches the page;
+  - a count says plainly what it found;
+  - a price change says what it did in words;
+  - long text is cut to the contract's limits, and every entry fits the contract.
+- **On a real database, in the staff roles step:**
+  - Finance staff, break-glass access, an identity with no assignment, a session without fresh MFA and a
+    verification over 30 seconds old are refused, and leave no row.
+  - An unknown history, page or field is refused.
+  - A read is recorded before the page is read, naming the history and the page.
+  - Pages run newest first, fifty to a page.
+  - Every history's page fits the contract on the real tables, after a real hourly count.
+  - No refund's reason is shown.
+  - Reading adds one row to the access history for each history read, and changes no other history.
+- **Over HTTP:** the route answers only a fresh staff session, is never cached, and refuses an unknown
+  history with 422.
+- **In the browser, on a phone:**
+  - the panel shows one history at a time;
+  - it pages through it, and starts another history at its first page;
+  - it has no automated WCAG 2.2 AA failure.
+
 ## What comes next
 
-Slice 4, the staff viewer.
+Slice 5 waits on Phase 8's migration login: the histories owned by a role the application login cannot
+use, so that it can no longer disable their guards.
