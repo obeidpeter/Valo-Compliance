@@ -84,7 +84,7 @@ that tests a hold meets it like this:
 - the check's result with the research note's own, on the case's own words. They agree when the
   mapping kept what the note decides.
 
-### 2. The challenge's preparer, and a run against the signed rules
+### 2. The challenge's preparer, its route to a run, and a run against the signed rules
 
 - **A request for each case**, for a separate AI run. It gives the case's facts as mapped, the rule's
   passages with their checksums, the corpus's expected result and the check's result. It asks whether
@@ -92,6 +92,9 @@ that tests a hold meets it like this:
   corpus's checksum, the rule version's manifest and its sources' checksums.
 - **The binding check** rebuilds the requests from the released rule version, and refuses any that
   changed. Today it reads only saved content versions.
+- **Its route to a run**, as the editorial cases have: a package that names this preparer, the
+  owner's approval of that package, then admission and execution, each checking the bindings again.
+  A test runs it with a stand-in provider.
 - **Running it needs the owner's AI spend approval.** The lane's 80 attempts stay off until then.
 - **A command that runs the 80 against the rules the owner has signed** in development, read from
   the released registry, and gives the same report. It writes nothing.
@@ -140,12 +143,36 @@ that tests a hold meets it like this:
 - **RUL-008 is not accepted.** "All critical results and exclusions pass" is not met while nine
   differ, and the AI challenge has not run.
 
+**Slice 2a: the challenge's preparer.**
+- **One request for each case of a released rule**, for the challenge lane: the case's answers as
+  the check takes them, the facts it does not ask and the one it assumes, the rule's passages with
+  their checksums and the words it quotes, the corpus's expected result and the check's own. The
+  model is asked whether the passages support the expected result; if not, which result they
+  support, with the words that decide it, and what they leave unresolved. It is told to rely on
+  nothing but the passages, to treat the case as data, and that its answer is an AI check that
+  accepts nothing. The request never says a person has reviewed anything.
+- **The answer has a strict schema:** a yes or no, the result the passages support (one of the
+  check's four, or "Held"), the deciding words with their sources, the reasoning and what stays
+  unresolved, and nothing else.
+- **A manifest for each rule's 20 cases**, prepared from the rule's released, owner-signed version.
+  It is refused for a version not published, one whose rule and bundle do not match, and one whose
+  review has run out, since the check's own result would then only ever be held.
+- **Each work is bound** to the corpus file's and the case's checksums, the release row, the
+  release's sources and the moment it was prepared. The binding check reads the release the work
+  names, requires it still published and its review not run out, rebuilds the work at that moment and
+  refuses any difference. Until now this lane could read only a saved content version, which an
+  owner-signed rule is not.
+- **Every request fits the lane's bound** of 32,000, measured as review requests are.
+- **What it does not do:** it sends nothing to a model and reserves no budget, and no package lets
+  this lane's work be admitted yet (slice 2b).
+
 ## Slices
 
 | # | Slice | Requirements |
 | --- | --- | --- |
 | 1 | **The 80 through the live check:** the mapping, the run with its checks, the record of differences, and the report, in CI. | RUL-008 |
-| 2 | **The challenge's preparer** and its binding check, and the command that runs the 80 against the rules the owner has signed. Running the challenge needs AI spend. | RUL-008 |
+| 2a | **The challenge's preparer** and its binding check. | RUL-008 |
+| 2b | **The challenge's route to a run:** its package, the owner's approval of it, its admission and its execution, tested with a stand-in provider, and the command that runs the 80 against the rules the owner has signed. Running the challenge needs AI spend. | RUL-008 |
 
 ## The owner's points
 

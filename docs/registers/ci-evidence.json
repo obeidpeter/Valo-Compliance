@@ -2662,6 +2662,20 @@
       "proves": "The live check gives the corpus's expected result for 71 of the 80 scenarios and, for each of the other nine, exactly the result recorded with whose result it is and why; it does not show that those nine pass."
     },
     {
+      "requirement": "RUL-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/checker-challenge.test.ts",
+      "test": "each of the 80 corpus cases gets one challenge request for the lane, bound to its case, its rule's release and sources, the corpus file and the moment it was prepared",
+      "proves": "Each of the 80 frozen scenarios gets exactly one request for the separate AI run that challenges its expected result, bound to the scenario's checksum, its rule's release and sources, the corpus file and the moment it was prepared; it does not show that the run was made."
+    },
+    {
+      "requirement": "RUL-008",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/rules/checker-challenge.integration.test.ts",
+      "test": "a challenge work binds only to the owner-signed release it names, at its own moment: a changed request, case, source set or release, a missing clock and a withdrawn release are refused",
+      "proves": "With the business-name rule released on a synthetic owner's sign-off, its 20 challenge requests pass the work binding check, while a changed request, case, source set, clock or release is refused, and once the release is withdrawn none binds and none can be prepared."
+    },
+    {
       "requirement": "RUL-009",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/sources/valo-source-controls.integration.test.ts",
