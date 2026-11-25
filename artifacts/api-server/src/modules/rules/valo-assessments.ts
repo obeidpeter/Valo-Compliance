@@ -400,7 +400,9 @@ export async function assessmentRow(tx: WorkspaceTx, actor: WorkspaceActor, id: 
 export async function getAssessment(actor: WorkspaceActor, id: string) {
   return workspaceReadTransaction(actor, async (tx) => {
     const saved = serializeAssessment(await assessmentRow(tx, actor, id));
-    return { ...saved, ruleChanges: await savedRuleChanges(tx, actor, saved.result.items) };
+    // A result none of whose rules changed is read exactly as it was saved.
+    const ruleChanges = await savedRuleChanges(tx, actor, saved.result.items);
+    return ruleChanges.length ? { ...saved, ruleChanges } : saved;
   });
 }
 /**

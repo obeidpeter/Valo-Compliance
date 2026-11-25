@@ -19,6 +19,6 @@ export interface RuleChange {
   replacementVersion: number | null;
   /** What changed, or why it was withdrawn, as the person who made the change wrote it. */
   reason: string;
-  /** When the version was replaced or withdrawn. */
-  changedAt: Date;
+  /** When the version was replaced or withdrawn, as an ISO 8601 time. */
+  changedAt: string;
 }

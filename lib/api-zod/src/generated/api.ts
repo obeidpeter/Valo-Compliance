@@ -6577,8 +6577,8 @@ export const ListAssessmentsResponseItem = zod.object({
   "kind": zod.enum(['replaced', 'withdrawn']),
   "replacementVersion": zod.int().nullable().describe('The version that replaced it, for a replaced version.'),
   "reason": zod.string().describe('What changed, or why it was withdrawn, as the person who made the change wrote it.'),
-  "changedAt": zod.coerce.date().describe('When the version was replaced or withdrawn.')
-})).max(listAssessmentsResponseRuleChangesMax).optional().describe('When the saved result is read on its own, each change since to a rule version it lists, from the workspace\'s rule notices (docs/architecture/rule-changes.md, slice 3). The result itself is unchanged.')
+  "changedAt": zod.string().describe('When the version was replaced or withdrawn, as an ISO 8601 time.')
+})).max(listAssessmentsResponseRuleChangesMax).optional().describe('When the saved result is read on its own, each change since to a rule version it lists, from the workspace\'s rule notices (docs/architecture/rule-changes.md, slice 3). Absent when none of its rule versions changed. The result itself is unchanged.')
 })
 export const ListAssessmentsResponse = zod.array(ListAssessmentsResponseItem)
 
@@ -7448,8 +7448,8 @@ export const CreateAssessmentResponse = zod.object({
   "kind": zod.enum(['replaced', 'withdrawn']),
   "replacementVersion": zod.int().nullable().describe('The version that replaced it, for a replaced version.'),
   "reason": zod.string().describe('What changed, or why it was withdrawn, as the person who made the change wrote it.'),
-  "changedAt": zod.coerce.date().describe('When the version was replaced or withdrawn.')
-})).max(createAssessmentResponseRuleChangesMax).optional().describe('When the saved result is read on its own, each change since to a rule version it lists, from the workspace\'s rule notices (docs/architecture/rule-changes.md, slice 3). The result itself is unchanged.')
+  "changedAt": zod.string().describe('When the version was replaced or withdrawn, as an ISO 8601 time.')
+})).max(createAssessmentResponseRuleChangesMax).optional().describe('When the saved result is read on its own, each change since to a rule version it lists, from the workspace\'s rule notices (docs/architecture/rule-changes.md, slice 3). Absent when none of its rule versions changed. The result itself is unchanged.')
 })
 
 
@@ -7923,8 +7923,8 @@ export const GetAssessmentResponse = zod.object({
   "kind": zod.enum(['replaced', 'withdrawn']),
   "replacementVersion": zod.int().nullable().describe('The version that replaced it, for a replaced version.'),
   "reason": zod.string().describe('What changed, or why it was withdrawn, as the person who made the change wrote it.'),
-  "changedAt": zod.coerce.date().describe('When the version was replaced or withdrawn.')
-})).max(getAssessmentResponseRuleChangesMax).optional().describe('When the saved result is read on its own, each change since to a rule version it lists, from the workspace\'s rule notices (docs/architecture/rule-changes.md, slice 3). The result itself is unchanged.')
+  "changedAt": zod.string().describe('When the version was replaced or withdrawn, as an ISO 8601 time.')
+})).max(getAssessmentResponseRuleChangesMax).optional().describe('When the saved result is read on its own, each change since to a rule version it lists, from the workspace\'s rule notices (docs/architecture/rule-changes.md, slice 3). Absent when none of its rule versions changed. The result itself is unchanged.')
 })
 
 
@@ -8644,7 +8644,7 @@ export const ListTasksPageResponse = zod.object({
   "kind": zod.enum(['replaced', 'withdrawn']),
   "replacementVersion": zod.int().nullable().describe('The version that replaced it, for a replaced version.'),
   "reason": zod.string().describe('What changed, or why it was withdrawn, as the person who made the change wrote it.'),
-  "changedAt": zod.coerce.date().describe('When the version was replaced or withdrawn.')
+  "changedAt": zod.string().describe('When the version was replaced or withdrawn, as an ISO 8601 time.')
 }).optional().describe('For a task marked for review because the rule version it was made from was replaced or withdrawn, that change, from the workspace\'s rule notices (docs/architecture/rule-changes.md, slice 3). Absent otherwise.'),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
@@ -8675,7 +8675,7 @@ export const ListTasksResponseItem = zod.object({
   "kind": zod.enum(['replaced', 'withdrawn']),
   "replacementVersion": zod.int().nullable().describe('The version that replaced it, for a replaced version.'),
   "reason": zod.string().describe('What changed, or why it was withdrawn, as the person who made the change wrote it.'),
-  "changedAt": zod.coerce.date().describe('When the version was replaced or withdrawn.')
+  "changedAt": zod.string().describe('When the version was replaced or withdrawn, as an ISO 8601 time.')
 }).optional().describe('For a task marked for review because the rule version it was made from was replaced or withdrawn, that change, from the workspace\'s rule notices (docs/architecture/rule-changes.md, slice 3). Absent otherwise.'),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
@@ -8718,7 +8718,7 @@ export const CreateTaskResponse = zod.object({
   "kind": zod.enum(['replaced', 'withdrawn']),
   "replacementVersion": zod.int().nullable().describe('The version that replaced it, for a replaced version.'),
   "reason": zod.string().describe('What changed, or why it was withdrawn, as the person who made the change wrote it.'),
-  "changedAt": zod.coerce.date().describe('When the version was replaced or withdrawn.')
+  "changedAt": zod.string().describe('When the version was replaced or withdrawn, as an ISO 8601 time.')
 }).optional().describe('For a task marked for review because the rule version it was made from was replaced or withdrawn, that change, from the workspace\'s rule notices (docs/architecture/rule-changes.md, slice 3). Absent otherwise.'),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
@@ -8763,7 +8763,7 @@ export const UpdateTaskResponse = zod.object({
   "kind": zod.enum(['replaced', 'withdrawn']),
   "replacementVersion": zod.int().nullable().describe('The version that replaced it, for a replaced version.'),
   "reason": zod.string().describe('What changed, or why it was withdrawn, as the person who made the change wrote it.'),
-  "changedAt": zod.coerce.date().describe('When the version was replaced or withdrawn.')
+  "changedAt": zod.string().describe('When the version was replaced or withdrawn, as an ISO 8601 time.')
 }).optional().describe('For a task marked for review because the rule version it was made from was replaced or withdrawn, that change, from the workspace\'s rule notices (docs/architecture/rule-changes.md, slice 3). Absent otherwise.'),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
