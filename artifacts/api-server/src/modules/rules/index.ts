@@ -19,5 +19,11 @@ export {
   rebuildCheckerChallengeManifest,
   type CheckerChallengeVerdict,
 } from "./checker-challenge";
-export { executeCheckerChallenges } from "./checker-challenge-run";
+/** Loads the challenge runner, and the managed inference it calls, only when challenges run: the
+ * customer path and its tests read this module without either. */
+export async function executeCheckerChallenges(
+  ...args: Parameters<typeof import("./checker-challenge-run").executeCheckerChallenges>
+) {
+  return (await import("./checker-challenge-run")).executeCheckerChallenges(...args);
+}
 export { corpusDifferences, runCorpusAgainstReleased } from "./checker-corpus";
