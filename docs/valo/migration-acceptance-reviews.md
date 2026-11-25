@@ -19,8 +19,8 @@ database yet.
   person at once are taken one after the other, so both cannot pass.
 - It changes no row and no grant. The scoped role gets nothing on the new table.
 
-Until the migration is applied, the acceptance cases page answers "Apply the acceptance review migration
-before recording decisions.", and the staff roles screen cannot grant the reviewer role.
+Until the migration is applied, no one can hold the reviewer role: the database refuses a grant of it,
+and the acceptance cases page tells every account that it does not have the reviewer role.
 
 The Replit development database has no Drizzle ledger. Follow the existing procedure in
 [phase1-migration-plan.md](phase1-migration-plan.md):
