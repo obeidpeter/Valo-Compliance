@@ -143,6 +143,20 @@ Sending notices by email waits for a sender and the owner's decision on messages
 - **The owner's panel now says** the businesses that used the old version are told what the owner
   writes.
 
+**Slice 3: the saved result's marks.**
+- **The marks come from the workspace's own notices**, read or not. The database wrote one for the
+  workspace when a version its saved result lists changed, so no other record is read and no customer
+  request reads the change records.
+- **The saved result's page says, above the result,** "A rule in this result has changed since it was
+  saved" (or how many have), "This result is kept as it was saved. Each changed rule says what changed
+  below it.", and offers "Check again".
+- **Under the changed rule**, beside its tasks: "Version 2 of this rule was published on 25 Nov 2026.
+  What changed: …", or "This rule was withdrawn on 25 Nov 2026. Why: …".
+- **A task marked for review says the same**, under "Linked rule changed. Review this task.", when its
+  rule version's change is known.
+- **The saved result is read unchanged**: its checksum is checked as before, and the changes come
+  beside it, not inside it.
+
 ## Slices
 
 | # | Slice | Requirements |

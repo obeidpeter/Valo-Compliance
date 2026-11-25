@@ -562,6 +562,27 @@
       "proves": "The home's list of rule notices, rendered on the server, shows each changed rule's notice under “Changes to requirements you checked” with “Check again” linking to the requirements check and a button to mark it read, and shows nothing when there are none."
     },
     {
+      "requirement": "CMP-005",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/editorial/owner-rule-signoff.integration.test.ts",
+      "test": "the development owner watches a prepared rule's sources, signs the exact version shown, supersedes it and withdraws it",
+      "proves": "After the development owner replaces a signed rule version, the customer's saved result is read with the same checksum and with the change to the version it lists, and the customer's task made from it carries the same change."
+    },
+    {
+      "requirement": "CMP-005",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/result-words.test.ts",
+      "test": "a changed rule's mark gives the new version or the withdrawal, its date and the reason given",
+      "proves": "A changed rule's mark reads “Version 2 of this rule was published on 25 Nov 2026. What changed: …” or “This rule was withdrawn on 25 Nov 2026. Why: …”, with the reason given trimmed."
+    },
+    {
+      "requirement": "CMP-005",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "a saved result whose rule changed since says so above it and under that rule, with the date and the reason, and offers to check again",
+      "proves": "In a browser, a saved result whose rule changed since it was saved says so above the result and under that rule, with the date and the reason, offers to check again, still shows the result as saved, and has no automated WCAG 2.2 AA failure."
+    },
+    {
       "requirement": "SEC-008",
       "job": "postgres",
       "file": "artifacts/api-server/src/lib/valo-security-signals.integration.test.ts",
