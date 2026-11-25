@@ -1147,7 +1147,7 @@
       "job": "foundation",
       "file": "lib/db/scripts/phase1-migrations.test.mjs",
       "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
-      "proves": "The staff access object migration keeps every access row, marking the earlier ones unrecorded, and refuses a new row that does not name what it read. The audit history guards migration keeps every row; the database then refuses any change to a workspace's activity, and its removal except by a verified deletion request at its activity step or with a synthetic workspace; it refuses removing a privacy case's history from a real workspace, and lets a row change only as an erasure replaces its reason with the projection it recorded; and it refuses TRUNCATE on every table whose rows a trigger guards against deletion, and on a cascade that would reach one."
+      "proves": "The staff access object migration keeps every access row, marking the earlier ones unrecorded, and refuses a new row that does not name what it read. The audit history guards migration keeps every row; the database then refuses any change to a workspace's activity, and its removal except by a verified deletion request at its activity step or with a synthetic workspace; it refuses removing a privacy case's history from a real workspace, and lets a row change only as an erasure replaces its reason with the projection it recorded; and it refuses TRUNCATE on every table whose rows a trigger guards against deletion, and on a cascade that would reach one. The history digest migrations start each history's digest from the rows it holds, keep it true through a customer's write in another time zone and a removal a guard allows, find a change made in replica mode and a digest trigger switched off, refuse a direct change to a digest or a kept count, and give every table whose rows a trigger guards against deletion a digest."
     },
     {
       "requirement": "ADM-009",
@@ -1183,6 +1183,20 @@
       "file": "artifacts/api-server/src/platform/http-logging.test.ts",
       "test": "a database guard's refusal is answered as a failure, counted as a security signal and logged by the guard's name alone",
       "proves": "Over real HTTP, a request a database guard refused is answered as an unexpected failure and counted as a guard_refusal security signal, a check constraint's refusal is not, and the log names only the guard, never its message or the query."
+    },
+    {
+      "requirement": "ADM-009",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/operations/valo-operations.test.ts",
+      "test": "a history whose digest no longer matches its rows raises an alert, and no recent count makes its probe unavailable",
+      "proves": "With stubbed readings, a latest count that found every digest matching raises nothing, one mismatch raises an alert under the security/privacy incident runbook, no count under two hours old makes the probe unavailable, and the alerts resolve when the count matches again."
+    },
+    {
+      "requirement": "ADM-009",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/operations/valo-history-digests.integration.test.ts",
+      "test": "the hourly count keeps what it found once an hour, the alert reads the latest count, and a kept count never changes",
+      "proves": "On the real database the worker's count keeps which histories it found mismatched, a second count within the hour keeps nothing, the alert's reading is the latest count's number of mismatches, and a kept count cannot be removed."
     },
     {
       "requirement": "AI-001",

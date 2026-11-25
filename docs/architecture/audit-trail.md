@@ -187,7 +187,7 @@ these Python tests, so they are named here rather than cited.
 
 ## Slice 3: the alerts
 
-Two of the three alerts are built. Each is a reading in the worker's operations sample, raised above a
+The three alerts are built. Each is a reading in the worker's operations sample, raised above a
 development default, not a reviewed threshold, under the security/privacy incident runbook.
 
 - **A guard's refusal** (`GUARD_REFUSALS_DETECTED`, above zero in ten minutes).
@@ -207,23 +207,50 @@ development default, not a reviewed threshold, under the security/privacy incide
   - More than a hundred raise it. Reading one list again and again counts once, so a page that
     refreshes does not raise it.
   - An index on the access history's time keeps the reading cheap.
-- **Not built yet: a change outside the application.** Someone with the owning login can disable a
-  guard, or change rows in a session the application never sees. Finding that needs a fingerprint of
-  each history row, checked on a schedule. The check has to know which changes are allowed:
-  - an erasure's redactions and removals;
-  - a synthetic workspace's cleanup;
-  - the rows an erasure removes with a workspace.
-
-  It is the next part of this slice.
+- **A change outside the application: the history digests.** Someone with the owning login can disable
+  a guard, or change rows in a session the application never sees. So the database keeps a digest of
+  every history as it is written, and a scheduled count compares it with the rows themselves.
+  - **The digest.** For each history, in sixteen shards, the number of rows and the sum of a hash of each
+    row (`valo_history_digests`).
+    - A trigger after every insert, update and delete adds the new row's hash and takes away the old
+      row's, in the same transaction.
+    - So every change the guards allow keeps the digest true: an erasure's redactions and removals, a
+      synthetic workspace's cleanup, a status that moves on.
+    - The row's hash is read in UTC, so the session's time zone cannot change it.
+    - Only that trigger may change a digest; a direct change, or TRUNCATE, is refused.
+    - The trigger runs as its owner, so a customer's write keeps the digest true without the customer
+      role holding any privilege on it.
+  - **The count.** Once an hour the worker recounts every history in one snapshot and records which
+    digests no longer match (`valo_history_checks`, itself append-only).
+    - A change made with the triggers off leaves its history's digest behind, and so does a session in
+      replica mode.
+    - A history whose digest trigger is missing or switched off is counted as a mismatch at once.
+    - `HISTORY_INTEGRITY_DETECTED` is raised while the latest count found any mismatch.
+    - Its probe is unavailable when no count is under two hours old.
+    - The worker asks every minute, as its other tasks do, and counts only when no count is under 55
+      minutes old.
+  - **The rule.** Every table whose rows a trigger guards against deletion keeps a digest, as it refuses
+    TRUNCATE; the migration test checks this on the whole schema.
+  - **What it cannot show.** The owning login could change a row and its digest together. Only slice 5,
+    an owner the application cannot act as, closes that.
 
 **Tests.**
-- The two alerts are raised and resolved on stubbed readings.
+- The three alerts are raised and resolved on stubbed readings. An integrity reading with no recent
+  count makes its probe unavailable.
 - The handler counts a guard's refusal, and not a check constraint's, a key's or a timeout's. It logs
   only the guard's name.
 - The real refusal of a change to a privacy case's history is read as that guard's.
-- Both readings run on a real database.
-- The index migration has its upgrade check.
+- The readings run on a real database. The hourly count keeps what it found once an hour, the alert
+  reads the latest count, and a kept count cannot be removed.
+- The migration test, on a fresh cluster:
+  - each digest starts from the rows already held;
+  - a customer's write in another time zone, and a removal a guard allows, keep it true;
+  - a change made in replica mode is found, and matches again once put back;
+  - a digest trigger switched off is found;
+  - a digest cannot be changed or removed directly, and a kept count cannot be changed;
+  - every table whose rows a trigger guards against deletion keeps a digest.
+- The index and digest migrations have their upgrade checks.
 
 ## What comes next
 
-The rest of slice 3: the fingerprint check of every history row. Then slice 4, the staff viewer.
+Slice 4, the staff viewer.

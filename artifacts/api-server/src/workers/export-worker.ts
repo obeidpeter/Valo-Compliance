@@ -36,6 +36,7 @@ import {
   recordWorkerHeartbeat,
   collectOperationalSample,
   recordOperationalAlerts,
+  countHistories,
 } from "../modules/operations";
 import { assertRecoveryEffectsAllowed } from "../platform/valo-recovery-effects";
 import {
@@ -66,6 +67,7 @@ const runOperationalJob = operationalJobRunner(
     paymentReconciliation: () => reconcilePayments(),
     guidance: () => checkDueGuidance(),
     preparations: () => prepareRequestedCandidates(),
+    historyIntegrity: () => countHistories(),
   },
   (domain, healthy) => {
     operationalHealth.set(domain, healthy);

@@ -74,6 +74,7 @@ test("internal probes measure failures independently and persist/deduplicate/rec
       ...securityQueries,
       readinessQueries.guardRefusals,
       readinessQueries.privilegedReading,
+      readinessQueries.historyIntegrity,
     ]);
     const failures = await collectOperationalSample(async (sql) => {
       if (sql === readinessQueries.database) throw Error("SYNTHETIC_PRIVATE_DB_ERROR");
@@ -338,6 +339,55 @@ test("a database guard's refusal and heavy privileged reading raise their own al
     ]);
     // They resolve when the readings return to normal.
     assert.deepEqual((await recordOperationalAlerts(await sample({}), dir)).active, []);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { recursive: true, force: true });
+    if (old === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = old;
+  }
+});
+
+// ADM-009: a change made outside the application, found by the hourly count of the histories.
+test("a history whose digest no longer matches its rows raises an alert, and no recent count makes its probe unavailable", async () => {
+  const old = process.env.NODE_ENV;
+  process.env.NODE_ENV = "development";
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => {
+    throw Error("EXTERNAL_MESSAGES_FORBIDDEN");
+  };
+  const dir = await mkdtemp(join(tmpdir(), "valo-ops-digests-"));
+  const worker = new WorkerHealth();
+  worker.finish(worker.begin()!, true);
+  try {
+    await recordWorkerHeartbeat(worker.snapshot(), dir);
+    const sample = (mismatched: number) =>
+      collectOperationalSample(
+        async (sql) => ({
+          rows: [
+            {
+              value:
+                sql === readinessQueries.database
+                  ? 1
+                  : sql === readinessQueries.historyIntegrity
+                    ? mismatched
+                    : 0,
+            },
+          ],
+        }),
+        dir,
+      );
+    const owner = { runbook: "Security/privacy incident", accountable: "Incident lead + privacy owner" };
+    // The latest count found every digest matching.
+    assert.deepEqual((await recordOperationalAlerts(await sample(0), dir)).active, []);
+    // It found one that does not.
+    assert.deepEqual((await recordOperationalAlerts(await sample(1), dir)).owners, [
+      { code: "HISTORY_INTEGRITY_DETECTED", ...owner },
+    ]);
+    // No count is under two hours old: the reading is unavailable, which is an alert of its own.
+    assert.deepEqual((await recordOperationalAlerts(await sample(-1), dir)).owners, [
+      { code: "HISTORY_INTEGRITY_PROBE_UNAVAILABLE", ...owner },
+    ]);
+    assert.deepEqual((await recordOperationalAlerts(await sample(0), dir)).active, []);
   } finally {
     globalThis.fetch = originalFetch;
     await rm(dir, { recursive: true, force: true });
