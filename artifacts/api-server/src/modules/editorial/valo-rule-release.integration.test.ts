@@ -2,11 +2,16 @@ import assert from "node:assert/strict";
 import { createHash, randomUUID } from "node:crypto";
 import { test } from "node:test";
 import { eq, sql } from "drizzle-orm";
-import { db, valoRuleReleases } from "@workspace/db";
+import { db, valoRuleChanges, valoRuleReleases } from "@workspace/db";
 import { allSourceLeads, assess, checkerFactsSchema, restoredRuleVersion } from "@workspace/valo-core";
 import { syntheticRuleRelease } from "../../test-support/synthetic-rule-release";
 import { currentAssessmentDate, releasedRegistry } from "../rules/valo-assessments";
-import { applyStoredRuleRelease, planStoredRuleRelease, type RuleReleaseRequest } from "./valo-rule-release";
+import {
+  applyStoredRuleRelease,
+  planStoredRuleRelease,
+  RULE_RELEASE_COMMAND,
+  type RuleReleaseRequest,
+} from "./valo-rule-release";
 import { registerSourceWatch } from "../sources/valo-source-monitor";
 
 const sha256 = (value: string) => createHash("sha256").update(value).digest("hex");
@@ -135,14 +140,33 @@ test(
     (unreviewed.bundle as { reviews: { verdict: string }[] }).reviews[1]!.verdict = "hold";
     assert.ok((await planStoredRuleRelease(unreviewed, now)).reasons.includes("release_not_admissible"));
     // Stored text that lacks a quoted passage stops the release before its transaction.
-    const second = request(2, condition("premises", "yes"), "More information needed");
+    const changedWhy = "Synthetic change: version 2 asks about the premises instead.";
+    const second = {
+      ...request(2, condition("premises", "yes"), "More information needed"),
+      reason: changedWhy,
+    };
     await assert.rejects(
       applyStoredRuleRelease(second, hashOf(second), { now, readText: async () => "Different stored text." }),
       /SOURCE_PASSAGE_SNAPSHOT_MISMATCH/,
     );
+    // A version that replaces a released one says what changed (docs/architecture/rule-changes.md):
+    // without that, or with fewer than 20 characters once trimmed, it is refused.
+    const { reason: _unexplained, ...unexplained } = second;
+    await assert.rejects(
+      applyStoredRuleRelease(unexplained, hashOf(second), { now, readText }),
+      /RULE_RELEASE_REASON_REQUIRED/,
+    );
+    await assert.rejects(
+      applyStoredRuleRelease({ ...second, reason: "      Too short.      " }, hashOf(second), {
+        now,
+        readText,
+      }),
+      /RULE_RELEASE_REASON_REQUIRED/,
+    );
     assert.deepEqual(await stored(), [[1, "published"]]);
 
-    // Version 2 replaces version 1: the checker never holds two versions of one rule.
+    // Version 2 replaces version 1: the checker never holds two versions of one rule. The change is
+    // recorded with its reason and the command that made it.
     assert.deepEqual(
       (await applyStoredRuleRelease(second, hashOf(second), { now, readText })).superseded,
       [1],
@@ -152,11 +176,24 @@ test(
       [2, "published"],
     ]);
     assert.equal(await checkerSays(), "More information needed");
+    const changes = async () =>
+      (
+        await db
+          .select()
+          .from(valoRuleChanges)
+          .where(eq(valoRuleChanges.ruleId, ruleId))
+          .orderBy(valoRuleChanges.version)
+      ).map((c) => [c.version, c.kind, c.replacementVersion, c.reason, c.recordedBy]);
+    assert.deepEqual(await changes(), [[1, "replaced", 2, changedWhy, RULE_RELEASE_COMMAND]]);
 
     // Restoring version 1 releases its content again as version 3, through the same path.
     const history = [first.rule, second.rule] as Parameters<typeof restoredRuleVersion>[0];
     assert.deepEqual(restoredRuleVersion(history, ruleId, 1).condition, condition("legalForm", "company"));
-    const restored = request(3, condition("legalForm", "company"), "Likely relevant");
+    const restoredWhy = "Synthetic restore: version 1's condition is released again as version 3.";
+    const restored = {
+      ...request(3, condition("legalForm", "company"), "Likely relevant"),
+      reason: restoredWhy,
+    };
     assert.deepEqual(
       (await applyStoredRuleRelease(restored, hashOf(restored), { now, readText })).superseded,
       [2],
@@ -167,6 +204,10 @@ test(
       [3, "published"],
     ]);
     assert.equal(await checkerSays(), "Likely relevant");
+    assert.deepEqual(await changes(), [
+      [1, "replaced", 2, changedWhy, RULE_RELEASE_COMMAND],
+      [2, "replaced", 3, restoredWhy, RULE_RELEASE_COMMAND],
+    ]);
     // A stale version number is refused.
     await assert.rejects(
       applyStoredRuleRelease(second, hashOf(second), { now, readText }),

@@ -20,7 +20,53 @@ export type RuleReleaseRequest = {
   scenarios: RuleScenario[];
   /** For each bundle source, the retained capture its passages are checked against. */
   snapshotIds: Record<string, string>;
+  /** What changed in this version, of 20 to 1,000 characters, when it replaces a released one. The
+   * businesses that saved a result or made a task under the old version are told it
+   * (docs/architecture/rule-changes.md). */
+  reason?: string;
 };
+
+/** Who the reviewed route's release command records as making a change: it runs on the server with
+ * no signed-in identity, so it names itself. */
+export const RULE_RELEASE_COMMAND = "operator:rule-release";
+
+/** A rule change's reason as both routes record it: trimmed, and of 20 to 1,000 characters. Null when
+ * none is given or it is too short once trimmed. */
+export function ruleChangeReason(reason: string | undefined) {
+  const trimmed = reason?.trim() ?? "";
+  return trimmed.length >= 20 && trimmed.length <= 1000 ? trimmed : null;
+}
+
+/**
+ * Records why each of a rule's released versions is leaving the requirements check, in the
+ * transaction that then supersedes or withdraws it (docs/architecture/rule-changes.md, slice 1). The
+ * database counts, as each record is written, the workspaces, saved results and tasks made under that
+ * version, and refuses the status change without its record.
+ */
+export async function recordRuleChanges(
+  tx: Pick<typeof db, "insert">,
+  change: {
+    ruleId: string;
+    versions: readonly number[];
+    kind: "replaced" | "withdrawn";
+    replacementVersion?: number;
+    reason: string;
+    recordedBy: string;
+  },
+) {
+  if (!change.versions.length) return;
+  const { valoRuleChanges } = await import("@workspace/db");
+  await tx.insert(valoRuleChanges).values(
+    change.versions.map((version) => ({
+      ruleId: change.ruleId,
+      version,
+      kind: change.kind,
+      replacementVersion: change.kind === "replaced" ? change.replacementVersion! : null,
+      reason: change.reason,
+      recordedBy: change.recordedBy,
+    })),
+  );
+}
 
 type Reader = Pick<typeof db, "execute">;
 const latestStoredVersion = async (reader: Reader, ruleId: string) =>
@@ -101,6 +147,15 @@ export async function applyStoredRuleRelease(
   if (plan.decision !== "ready") throw new Error(`RULE_RELEASE_BLOCKED:${plan.reasons.join(",")}`);
   const rule = ruleSchema.parse(request.rule);
   if (confirmedManifestHash !== rule.manifestHash) throw new Error("RULE_RELEASE_NOT_CONFIRMED");
+  // A version that replaces a released one says what changed (docs/architecture/rule-changes.md).
+  const reason = ruleChangeReason(request.reason);
+  const releasedNow = async (reader: Reader) =>
+    (
+      await reader.execute<{ version: number }>(
+        sql`select version from valo_rule_releases where rule_id=${rule.id} and status='published' order by version`,
+      )
+    ).rows.map((row) => Number(row.version));
+  if (!reason && (await releasedNow(db)).length) throw new Error("RULE_RELEASE_REASON_REQUIRED");
   const captures = await verifyReleasedSources(
     db,
     request.bundle,
@@ -124,6 +179,18 @@ export async function applyStoredRuleRelease(
       publishedAt: now,
     });
     await bindVerifiedSources(tx, "rule", id, request.bundle, captures, now);
+    const replaced = (await releasedNow(tx)).filter((version) => version !== rule.version);
+    if (replaced.length) {
+      if (!reason) throw new Error("RULE_RELEASE_REASON_REQUIRED");
+      await recordRuleChanges(tx, {
+        ruleId: rule.id,
+        versions: replaced,
+        kind: "replaced",
+        replacementVersion: rule.version,
+        reason,
+        recordedBy: RULE_RELEASE_COMMAND,
+      });
+    }
     return tx
       .update(valoRuleReleases)
       .set({ status: "superseded" })

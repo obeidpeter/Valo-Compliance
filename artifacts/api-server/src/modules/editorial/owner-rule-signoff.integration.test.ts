@@ -5,6 +5,7 @@ import { and, eq, sql } from "drizzle-orm";
 import {
   db,
   valoEvents,
+  valoRuleChanges,
   valoRuleOwnerSignoffs,
   valoRuleReleases,
   valoStaffAssignments,
@@ -414,17 +415,58 @@ test(
         ).length;
       assert.equal(await reviewEvents(), 0);
 
-      // A second version supersedes the first, so the checker never holds two.
+      // A second version supersedes the first, so the checker never holds two. It says what changed
+      // (docs/architecture/rule-changes.md): without that, or with fewer than 20 characters once
+      // trimmed, it is refused and nothing is released.
       [item] = await list();
       assert.equal(item!.version, 2);
       assert.deepEqual(item!.live, { version: 1, manifestHash: first.manifestHash });
       const second = item!;
-      assert.deepEqual(await decideOwnerRule(actor(owner), ruleId, sign(second), options), {
-        ruleId,
-        version: 2,
-        state: "published",
-        superseded: [1],
+      const changes = () =>
+        db
+          .select({
+            version: valoRuleChanges.version,
+            kind: valoRuleChanges.kind,
+            replacementVersion: valoRuleChanges.replacementVersion,
+            reason: valoRuleChanges.reason,
+            recordedBy: valoRuleChanges.recordedBy,
+            workspaces: valoRuleChanges.workspaces,
+            results: valoRuleChanges.results,
+            tasks: valoRuleChanges.tasks,
+          })
+          .from(valoRuleChanges)
+          .where(eq(valoRuleChanges.ruleId, ruleId))
+          .orderBy(valoRuleChanges.version);
+      await assert.rejects(decideOwnerRule(actor(owner), ruleId, sign(second), options), refused(422));
+      await assert.rejects(
+        decideOwnerRule(actor(owner), ruleId, sign(second, { reason: "   Too short.            " }), options),
+        refused(422),
+      );
+      assert.deepEqual(await checkerSays(), {
+        versions: [1],
+        label: "Likely relevant",
+        notice: ownerRuleDisclosure,
       });
+      assert.deepEqual(await changes(), []);
+      const changedWhy = "Synthetic change: the second version restates the synthetic provision.";
+      assert.deepEqual(
+        await decideOwnerRule(actor(owner), ruleId, sign(second, { reason: `  ${changedWhy}  ` }), options),
+        { ruleId, version: 2, state: "published", superseded: [1] },
+      );
+      // The change is recorded with its reason, who made it and whom it affected: the one workspace,
+      // with its saved result and its task made under version 1.
+      assert.deepEqual(await changes(), [
+        {
+          version: 1,
+          kind: "replaced",
+          replacementVersion: 2,
+          reason: changedWhy,
+          recordedBy: owner,
+          workspaces: 1,
+          results: 1,
+          tasks: 1,
+        },
+      ]);
       assert.deepEqual(await checkerSays(), {
         versions: [2],
         label: "Likely relevant",
@@ -450,15 +492,25 @@ test(
       await listTasks(customer);
       assert.equal(await reviewEvents(), 1);
 
-      // Withdrawal takes the released version out of the checker at once; a superseded version and a
-      // changed manifest are refused, and asking again changes nothing.
-      const withdraw = (version: number, manifestHash: string) => ({
+      // Withdrawal takes the released version out of the checker at once, with its reason; a
+      // superseded version and a changed manifest are refused, and asking again changes nothing.
+      const withdrawnWhy = "Synthetic withdrawal: the synthetic provision no longer applies.";
+      const withdraw = (
+        version: number,
+        manifestHash: string,
+        reason: string | undefined = withdrawnWhy,
+      ) => ({
         action: "withdraw",
         version,
         manifestHash,
         confirmedChecks: [],
         confirmed: true,
+        ...(reason !== undefined && { reason }),
       });
+      await assert.rejects(
+        decideOwnerRule(actor(owner), ruleId, withdraw(2, second.manifestHash, undefined), options),
+        refused(422),
+      );
       await assert.rejects(
         decideOwnerRule(actor(owner), ruleId, withdraw(1, first.manifestHash), options),
         refused(409),
@@ -481,6 +533,19 @@ test(
         withdrawn,
       );
       assert.deepEqual(await checkerSays(), { versions: [], label: undefined, notice: undefined });
+      // Recorded once: no workspace saved a result or made a task under version 2.
+      assert.deepEqual((await changes()).slice(1), [
+        {
+          version: 2,
+          kind: "withdrawn",
+          replacementVersion: null,
+          reason: withdrawnWhy,
+          recordedBy: owner,
+          workspaces: 0,
+          results: 0,
+          tasks: 0,
+        },
+      ]);
       [item] = await list();
       assert.equal(item!.version, 3);
       assert.equal(item!.live, null);

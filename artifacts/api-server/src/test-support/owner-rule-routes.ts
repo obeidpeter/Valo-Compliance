@@ -94,6 +94,12 @@ export async function exerciseOwnerRuleRoutes(call: Call, editor: string) {
     assert.equal((await decide(encodeURIComponent("not a rule!"), decision)).status, 404);
     assert.equal((await decide("synthetic-not-prepared", { ...decision, confirmed: false })).status, 422);
     assert.equal((await decide("synthetic-not-prepared", { ...decision, action: "publish" })).status, 422);
+    // A reason, when given, is 20 to 1,000 characters (docs/architecture/rule-changes.md).
+    assert.equal((await decide("synthetic-not-prepared", { ...decision, reason: "Too short." })).status, 422);
+    assert.equal(
+      (await decide("synthetic-not-prepared", { ...decision, reason: "x".repeat(1001) })).status,
+      422,
+    );
 
     const watch = (rule: string, body: unknown, actor = owner, extra: Record<string, string> = {}) =>
       call(`${path}/${rule}/source-watches`, body, actor, extra);
