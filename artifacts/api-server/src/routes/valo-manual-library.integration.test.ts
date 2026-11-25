@@ -874,7 +874,13 @@ test(
             .getByLabel("Why is it withdrawn?")
             .fill("A synthetic reason for the browser withdrawal.");
           await withdrawal.getByRole("button", { name: "Withdraw this version" }).click();
-          await expect(preview).toContainText("withdrawn");
+          // The form's own question says "withdrawn", so the public page is read again only once the
+          // screen says the withdrawal was saved and the preview shows the withdrawn version.
+          await expect(
+            page.getByText("Withdrawn. Readers can no longer open this version.", { exact: true }),
+          ).toBeVisible();
+          await expect(preview).toContainText("Saved preview · version 1 · withdrawn");
+          await expect(withdrawal).toHaveCount(0);
           await publicPage.page.reload();
           await expect(publicPage.page.getByTestId("link-industries")).toBeVisible();
           await expect(publicPage.page.getByRole("heading", { name: title })).toHaveCount(0);
