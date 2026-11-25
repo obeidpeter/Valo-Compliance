@@ -239,3 +239,96 @@ test("a kept case's hash is of the case as kept, so any change to what a reviewe
   );
   assert.notEqual(hashedKeptCase({ ...kept, status: "blocked" }).resultHash, hashed.resultHash);
 });
+
+test("with the rubric, a customer case no test fails is left for a reviewer with what the app answered and each check; a failed one is kept with nothing to judge", () => {
+  const customer = corpusCases("customer_ai", read);
+  const rubric = (critical: boolean) => ({
+    critical,
+    sections: [
+      { heading: "AI-008's absolute conditions", lines: ["met: Nothing was sent to the AI provider."] },
+      {
+        heading: "Expected: Ask for agreed unit price.",
+        lines: ["met: The app stops and asks for lineItems."],
+      },
+      {
+        heading: "Expected: Offer manual editing.",
+        lines: ["The suite has no test for this: judge it from the answer."],
+      },
+    ],
+  });
+  const answer = {
+    title: "Invoice",
+    content: { fields: { issuerName: "Synthetic Supplier", notes: "" }, blocks: [] },
+    limitations: ["This is your private business draft."],
+  };
+  const [stopped, refused, failed, quiet, blocked] = customerKeptCases(
+    [
+      {
+        caseID: customer[6]!.id,
+        caseHash: customer[6]!.hash,
+        status: "needs_evaluator_decision",
+        reason: "No test of the suite fails; the reviewer decides whether the answer meets its rubric.",
+        previewId: "preview-1",
+        previewStatus: "needs_information",
+        numericChecks: [{ key: "subtotal", expected: "₦0.00", actualKobo: "0", pass: true }],
+        rubric: rubric(false),
+      },
+      {
+        caseID: customer[9]!.id,
+        caseHash: customer[9]!.hash,
+        status: "needs_evaluator_decision",
+        reason: "No test of the suite fails.",
+        rubric: rubric(false),
+      },
+      {
+        caseID: customer[10]!.id,
+        caseHash: customer[10]!.hash,
+        status: "rubric_failed",
+        reason: "1 of the suite's tests are not met.",
+        previewId: "preview-1",
+        rubric: rubric(true),
+      },
+      {
+        caseID: customer[11]!.id,
+        caseHash: customer[11]!.hash,
+        status: "rubric_failed",
+        rubric: rubric(false),
+      },
+      {
+        caseID: customer[2]!.id,
+        caseHash: customer[2]!.hash,
+        status: "blocked",
+        reason: "The suite's binding does not give the app: lines[0].unit.",
+        rubric: rubric(false),
+      },
+    ],
+    new Map([["preview-1", answer]]),
+  );
+  // A stop is judged too, from the draft the app kept; the rubric's checks take the numeric checks' place.
+  assert.deepEqual(
+    stopped!.review!.sections.map((s) => s.heading),
+    [
+      "The answer",
+      "Its limitations",
+      "AI-008's absolute conditions",
+      "Expected: Ask for agreed unit price.",
+      "Expected: Offer manual editing.",
+    ],
+  );
+  // A refused input has no draft: the reviewer reads the refusal in the checks.
+  assert.deepEqual(
+    refused!.review!.sections.map((s) => s.heading),
+    [
+      "AI-008's absolute conditions",
+      "Expected: Ask for agreed unit price.",
+      "Expected: Offer manual editing.",
+    ],
+  );
+  // A failed case counts for nothing, so it leaves nothing to judge; a critical one is marked.
+  assert.deepEqual([failed!.review, failed!.critical, failed!.status], [null, true, "rubric_failed"]);
+  assert.ok(!("critical" in quiet!) && quiet!.review === null);
+  assert.deepEqual(
+    [blocked!.review, blocked!.reason],
+    [null, "The suite's binding does not give the app: lines[0].unit."],
+  );
+});

@@ -28,7 +28,9 @@ async function main() {
     ),
   );
   const record = sourceReport.results.find((r: { caseID: string }) => r.caseID === "CAI-CAND-QUO-01");
-  assert.equal(record.status, "provider_generation_pass_with_declared_synthetic_followup");
+  // The suite scores QUO-01 with its rubric: no test of it fails, and its answer waits for the reviewer.
+  assert.equal(record.status, "needs_evaluator_decision");
+  assert.equal(record.previewStatus, "ready");
   const [row] = await db.select().from(valoAIDrafts).where(eq(valoAIDrafts.id, record.previewId));
   assert.ok(row);
   assert.equal(row.status, "ready");
