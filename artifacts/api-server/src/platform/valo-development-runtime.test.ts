@@ -100,6 +100,8 @@ test("actual export entries and worker startup reject before database, queue or 
     ["sources", "export const reconcileSourceMonitoring=async()=>{globalThis.guardEffects.services++};"],
     // It reaches a published guide's daily source check through the manual guidance module's index.
     ["manual-guidance", "export const checkDueGuidance=async()=>{globalThis.guardEffects.services++};"],
+    // It prepares the candidates staff ask for from review work through the editorial module's index.
+    ["editorial", "export const prepareRequestedCandidates=async()=>{globalThis.guardEffects.services++};"],
     [
       "valo-operations",
       `const hit=async()=>{globalThis.guardEffects.services++;};
