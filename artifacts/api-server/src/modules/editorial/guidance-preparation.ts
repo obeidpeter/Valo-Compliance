@@ -1,5 +1,4 @@
 import { randomUUID } from "node:crypto";
-import { readFile } from "node:fs/promises";
 import { eq, sql } from "drizzle-orm";
 import { renderDocument } from "../../lib/valo-render";
 import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
@@ -25,6 +24,7 @@ import {
   type ReleaseAttestations,
 } from "../publication";
 import { currentSourceCaptures } from "../sources";
+import { termsFile, termsInHand, type TermsCopy } from "./terms-copy";
 
 /** A guide's page address: its title in lower case, words joined by hyphens. */
 export const guideSlug = (title: string) =>
@@ -54,15 +54,27 @@ export const guideSlug = (title: string) =>
 export async function prepareGuideCandidateRelease(
   id: string,
   snapshotPath: string,
-  options: { captures?: readonly GuideCapture[]; now?: Date } = {},
+  options: GuidePreparationOptions = {},
 ) {
+  return prepareGuide(id, termsFile(snapshotPath), options);
+}
+/** The same, with the provider-terms copy given as a value rather than a file. */
+export async function prepareGuideCandidate(
+  id: string,
+  terms: unknown,
+  options: GuidePreparationOptions = {},
+) {
+  return prepareGuide(id, termsInHand(terms), options);
+}
+type GuidePreparationOptions = { captures?: readonly GuideCapture[]; now?: Date };
+async function prepareGuide(id: string, terms: TermsCopy, options: GuidePreparationOptions) {
   assertDevelopmentRuntime();
   developmentPublicationOnly();
   if (!mappedGuideIds.includes(id)) throw Error("GUIDE_CLAIM_MAP_MISSING");
   const { db, valoContentVersions, valoPublicationPolicies, valoPreparedCandidates } =
     await import("@workspace/db");
   const now = options.now ?? new Date();
-  const snapshot = JSON.parse(await readFile(snapshotPath, "utf8"));
+  const snapshot = await terms();
   if (
     snapshot.kind !== "official_provider_terms_snapshot" ||
     !Array.isArray(snapshot.pages) ||

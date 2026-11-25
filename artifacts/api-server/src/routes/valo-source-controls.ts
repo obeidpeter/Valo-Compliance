@@ -18,6 +18,8 @@ import {
   ListSourceReviewResponse,
   NoteSourceReviewParams,
   NoteSourceReviewResponse,
+  PrepareSourceReviewParams,
+  PrepareSourceReviewResponse,
   ListOwnerReviewWorkResponse,
   NoteOwnerReviewWorkParams,
   NoteOwnerReviewWorkResponse,
@@ -37,6 +39,8 @@ import {
   listOwnerReviewWork,
   listOwnerRules,
   noteOwnerReviewWork,
+  requestReviewPreparation,
+  reviewPreparable,
   watchOwnerRuleSources,
 } from "../modules/editorial";
 import {
@@ -98,16 +102,28 @@ export function createSourceControlsRouter(
       ReviseSourceRegisterEntryResponse.parse(await reviseSourceEntry(actor, params.data.sourceId, req.body)),
     );
   });
-  // Review work with its owner (docs/architecture/source-register.md, slice 3).
+  // Review work with its owner (docs/architecture/source-register.md, slice 3), and a candidate prepared
+  // from it (slice 4). The queue marks the rows a preparer can run on.
+  const preparable = { preparable: reviewPreparable };
   router.get("/admin/source-review", async (req, res) => {
-    res.json(ListSourceReviewResponse.parse(await listSourceReview(await authenticate(req))));
+    res.json(ListSourceReviewResponse.parse(await listSourceReview(await authenticate(req), preparable)));
   });
   router.post("/admin/source-review/:workId/notes", sameOriginMutation, async (req, res) => {
     const actor = await authenticate(req);
     // A malformed id names no review work, whoever asks.
     const params = NoteSourceReviewParams.safeParse(req.params);
     if (!params.success) throw new ValoProblem(404, "This review work is not in the queue.");
-    res.json(NoteSourceReviewResponse.parse(await noteSourceReview(actor, params.data.workId, req.body)));
+    res.json(
+      NoteSourceReviewResponse.parse(await noteSourceReview(actor, params.data.workId, req.body, preparable)),
+    );
+  });
+  router.post("/admin/source-review/:workId/prepare", sameOriginMutation, async (req, res) => {
+    const actor = await authenticate(req);
+    const params = PrepareSourceReviewParams.safeParse(req.params);
+    if (!params.success) throw new ValoProblem(404, "This review work is not in the queue.");
+    res
+      .status(202)
+      .json(PrepareSourceReviewResponse.parse(await requestReviewPreparation(actor, params.data.workId)));
   });
   // Requirements-checker rules on the development owner's sign-off (decision 0020).
   const owner = (req: Request, locals: Record<string, unknown>) =>

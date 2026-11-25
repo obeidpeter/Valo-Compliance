@@ -267,7 +267,10 @@ The editorial code is three modules, each depending only on the ones after it:
   and it loads no AI code.
 - `modules/editorial` holds the AI pipeline and its model adapter, operational authoring and review,
   release preparation, the editorial lifecycle with its dispatch and sandbox, evaluation evidence
-  and the rule release command.
+  and the rule release command. It also prepares a candidate a Content editor asks for from review
+  work ([the source register](source-register.md), slice 4): the review queue lives in
+  `modules/sources`, which cannot import the preparers, so it takes from here which templates and
+  guides a preparer serves.
 
 Importing a module's index loads every file it re-exports, so these modules load the database
 client only inside the functions that query it, as `modules/ai` does. Code and tests that need one

@@ -27,5 +27,6 @@ export * from "./operational-review";
 export * from "./pipeline";
 export * from "./pipeline-contract";
 export * from "./review-meter";
+export * from "./review-preparation";
 export * from "./valo-rule-release";
 export * from "./owner-rule-signoff";

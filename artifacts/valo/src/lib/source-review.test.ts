@@ -1,6 +1,16 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { accountableLine, closedLine, heldLine, noteLine, openerLine } from "./source-review";
+import {
+  accountableLine,
+  askedMessage,
+  closedLine,
+  heldLine,
+  noteLine,
+  openerLine,
+  preparationLine,
+  preparing,
+  reasonsLine,
+} from "./source-review";
 
 // ADM-008 and CMP-007 (docs/architecture/source-register.md, slice 3): the words for review work with its
 // owner, on a Lagos clock.
@@ -51,5 +61,59 @@ test("review work says what it holds since when, what opened it, who is accounta
   assert.equal(
     closedLine({ targetKey: "TPL-16", targetVersion: 2, outcome: "withdrawn", completedAt: null }),
     "TPL-16, version 2: closed, withdrawn",
+  );
+});
+
+// ADM-003 and CMP-007 (docs/architecture/source-register.md, slice 4): where a request to prepare a
+// candidate from review work stands, on a Lagos clock.
+test("a preparation says whether the worker has it, what came of it, and that the candidate's reviews wait for the owner's allocation", () => {
+  const asked = {
+    requestedBy: "synthetic-editor",
+    requestedAt: "2026-11-25T08:00:00Z",
+    completedAt: null,
+    candidateVersion: null,
+    reasons: [],
+  };
+  const done = { ...asked, completedAt: "2026-11-25T09:30:00Z", candidateVersion: 3 };
+  assert.equal(
+    preparationLine({ ...asked, status: "pending" }),
+    "A new candidate waits for the worker, asked by synthetic-editor on 25 Nov 2026, 09:00.",
+  );
+  assert.equal(
+    preparationLine({ ...asked, status: "running" }),
+    "A new candidate is being prepared, asked by synthetic-editor on 25 Nov 2026, 09:00.",
+  );
+  assert.equal(
+    preparationLine({ ...done, status: "prepared" }),
+    'Version 3 was prepared on 25 Nov 2026, 10:30. It waits for its two reviews, under "Templates and guides awaiting their reviews"; they run only under an AI allocation the owner approves.',
+  );
+  assert.equal(
+    preparationLine({ ...done, status: "held" }),
+    "Version 3 failed a check on 25 Nov 2026, 10:30 and was saved as held.",
+  );
+  assert.equal(
+    preparationLine({ ...done, status: "not_ready" }),
+    "Version 3 was not ready on 25 Nov 2026, 10:30, so nothing was kept.",
+  );
+  assert.equal(
+    preparationLine({ ...done, candidateVersion: null, status: "failed" }),
+    "The preparation stopped on 25 Nov 2026, 10:30, so nothing was kept.",
+  );
+  assert.equal(
+    preparationLine({ ...done, candidateVersion: null, status: "closed" }),
+    "The review work closed before a candidate was prepared.",
+  );
+  assert.equal(preparing({ ...asked, status: "pending" }), true);
+  assert.equal(preparing({ ...asked, status: "running" }), true);
+  assert.equal(preparing({ ...done, status: "prepared" }), false);
+  assert.equal(preparing(null), false);
+  assert.equal(
+    reasonsLine(["PROVIDER_TERMS_SENTENCE_MISSING", "missing_evidence:GUD-03-C2"]),
+    "What the checks named: PROVIDER_TERMS_SENTENCE_MISSING, missing_evidence:GUD-03-C2.",
+  );
+  assert.equal(reasonsLine([]), "");
+  assert.equal(
+    askedMessage({ targetKey: "TPL-10", targetVersion: 1 }),
+    "Asked for a new candidate of TPL-10, after version 1. The worker prepares it next.",
   );
 });

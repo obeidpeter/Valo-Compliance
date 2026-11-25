@@ -9,6 +9,7 @@ import type { SourceReviewItemAccountable } from './sourceReviewItemAccountable'
 import type { SourceReviewItemNotesItem } from './sourceReviewItemNotesItem';
 import type { SourceReviewItemOpener } from './sourceReviewItemOpener';
 import type { SourceReviewItemTargetKind } from './sourceReviewItemTargetKind';
+import type { SourceReviewPreparation } from './sourceReviewPreparation';
 
 export interface SourceReviewItem {
   id: string;
@@ -24,4 +25,8 @@ export interface SourceReviewItem {
   accountable: SourceReviewItemAccountable;
   createdAt: string;
   notes: SourceReviewItemNotesItem[];
+  /** Whether a new candidate can be asked for from this row: a template or guide that has a preparer (slice 4). */
+  preparable: boolean;
+  /** The latest request to prepare a candidate from this row, or null. */
+  preparation: SourceReviewPreparation | null;
 }

@@ -804,6 +804,28 @@ paths:
         '404': { description: The review work is not in the queue }
         '409': { description: The review work has closed }
         '422': { description: What was checked is missing or too long }
+  /admin/source-review/{workId}/prepare:
+    post:
+      operationId: prepareSourceReview
+      tags: [staff]
+      summary: Ask for the next candidate of a held template or guide from its review work
+      description: >-
+        A Content editor asks, from an open row on a held template or guide that has a preparer, for its
+        next candidate (docs/architecture/source-register.md, slice 4). The worker takes a fresh copy of
+        the AI provider's terms and runs the preparer the template's or guide's command runs, with its
+        mechanical checks, and the row then says what came of it. A candidate that passes waits for its
+        two reviews, which run only under an AI allocation the owner approves. Nothing is sent or
+        published. Development only.
+      parameters:
+        - { name: workId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '202': { description: 'The queue, with the request waiting for the worker.', content: { application/json: { schema: { $ref: '#/components/schemas/SourceReviewQueue' } } } }
+        '401': { description: Sign-in required }
+        '403': { description: An active Content editor with recent MFA is required }
+        '404': { description: The review work is not in the queue }
+        '409': { description: 'The review work has closed, or a candidate is already being prepared from it' }
+        '422': { description: The row is not on a template or guide that has a preparer }
+        '503': { description: The review preparation migration has not been applied }
   /admin/owner-rules/review-work:
     get:
       operationId: listOwnerReviewWork
@@ -2877,7 +2899,7 @@ components:
         note: { type: string, maxLength: 1000, description: 'What was checked, in 20 to 1,000 characters.' }
     SourceReviewItem:
       type: object
-      required: [id, targetKind, targetKey, targetVersion, reason, sourceId, openedBy, opener, accountable, createdAt, notes]
+      required: [id, targetKind, targetKey, targetVersion, reason, sourceId, openedBy, opener, accountable, createdAt, notes, preparable, preparation]
       properties:
         id: { type: string }
         targetKind: { type: string, enum: [content, rule] }
@@ -2898,6 +2920,25 @@ components:
               note: { type: string }
               recordedBy: { type: string }
               createdAt: { type: string }
+        preparable: { type: boolean, description: 'Whether a new candidate can be asked for from this row: a template or guide that has a preparer (slice 4).' }
+        preparation: { description: 'The latest request to prepare a candidate from this row, or null.', anyOf: [{ $ref: '#/components/schemas/SourceReviewPreparation' }, { type: 'null' }] }
+    SourceReviewPreparation:
+      type: object
+      required: [status, requestedBy, requestedAt, completedAt, candidateVersion, reasons]
+      properties:
+        status:
+          type: string
+          enum: [pending, running, prepared, held, not_ready, failed, closed]
+          description: >-
+            pending and running: the worker has it. prepared: the candidate waits for its two reviews. held:
+            a template's candidate failed a check and was saved as a held version. not_ready: a guide's
+            candidate was not ready, and nothing was kept. failed: the preparation stopped, and nothing was
+            kept. closed: the review work closed before the request ran.
+        requestedBy: { type: string }
+        requestedAt: { type: string }
+        completedAt: { type: [string, 'null'] }
+        candidateVersion: { type: [integer, 'null'], description: 'The version the candidate was prepared as.' }
+        reasons: { type: array, items: { type: string }, description: 'What the checks named, or the code the preparation stopped with.' }
     SourceReviewClosed:
       type: object
       required: [id, targetKind, targetKey, targetVersion, reason, outcome, completedAt]

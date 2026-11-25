@@ -442,6 +442,8 @@ export * from './sourceReviewItemNotesItem';
 export * from './sourceReviewItemOpener';
 export * from './sourceReviewItemTargetKind';
 export * from './sourceReviewNote';
+export * from './sourceReviewPreparation';
+export * from './sourceReviewPreparationStatus';
 export * from './sourceReviewQueue';
 export * from './staffOperations';
 export * from './staffOperationsArea';

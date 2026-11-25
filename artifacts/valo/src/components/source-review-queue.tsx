@@ -5,6 +5,7 @@ import {
   getListSourceReviewQueryKey,
   noteOwnerReviewWork,
   noteSourceReview,
+  prepareSourceReview,
   useListOwnerReviewWork,
   useListSourceReview,
   type SourceReviewItem,
@@ -12,6 +13,7 @@ import {
 import { describeError } from "@/lib/describe-error";
 import {
   accountableLine,
+  askedMessage,
   closedHeading,
   closedLine,
   emptyQueue,
@@ -22,8 +24,14 @@ import {
   noteLine,
   openerLine,
   ownerQueueHeading,
+  prepareAgainButton,
+  prepareButton,
+  prepareHint,
+  preparationLine,
+  preparing,
   queueHeading,
   queueIntro,
+  reasonsLine,
 } from "@/lib/source-review";
 import { ErrorState } from "./states";
 
@@ -105,6 +113,62 @@ function NoteForm({
 }
 
 /**
+ * Where the latest request to prepare a candidate from a row stands, and, on a row with a preparer, the
+ * button that asks for one (docs/architecture/source-register.md, slice 4). The worker prepares it; the
+ * candidate's reviews wait for an AI allocation the owner approves.
+ */
+function Preparation({
+  item,
+  hintId,
+  onAsked,
+}: {
+  item: SourceReviewItem;
+  hintId: string;
+  onAsked: (message: string) => void;
+}) {
+  const client = useQueryClient();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const latest = item.preparation;
+  async function ask() {
+    setBusy(true);
+    setError("");
+    try {
+      client.setQueryData(getListSourceReviewQueryKey(), await prepareSourceReview(item.id));
+      onAsked(askedMessage(item));
+    } catch (e) {
+      setError(describeError(e).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <div className="mt-2 grid gap-1" data-testid={"preparation-" + item.id}>
+      {latest && <p>{preparationLine(latest)}</p>}
+      {latest && latest.reasons.length > 0 && (
+        <p className="text-muted-foreground">{reasonsLine(latest.reasons)}</p>
+      )}
+      {item.preparable && !preparing(latest) && (
+        <button
+          type="button"
+          className="btn btn-secondary btn-sm justify-self-start"
+          aria-describedby={hintId}
+          disabled={busy}
+          onClick={() => void ask()}
+        >
+          {busy ? "Asking…" : latest ? prepareAgainButton : prepareButton}
+        </button>
+      )}
+      {error && (
+        <p className="text-sm text-destructive" role="alert">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/**
  * Review work with its owner (docs/architecture/source-register.md, slice 3): the open rows oldest first,
  * each with the version held, why, since when, what opened it, who is accountable and what was checked,
  * and the rows closed lately. Content staff see every row; the development owner, the rows of the rules
@@ -117,12 +181,18 @@ export function ReviewQueue({ mode }: { mode: "content" | "owner" }) {
   const [open, setOpen] = useState("");
   const [message, setMessage] = useState("");
   const headingId = `review-queue-${mode}`;
+  const hintId = `review-queue-${mode}-prepare-hint`;
   return (
     <section className="surface mt-8 p-5 sm:p-7" aria-labelledby={headingId}>
       <h2 className="font-display text-2xl" id={headingId}>
         {mode === "owner" ? ownerQueueHeading : queueHeading}
       </h2>
       <p className="mt-2 max-w-3xl text-sm text-muted-foreground">{queueIntro}</p>
+      {mode === "content" && (
+        <p className="mt-2 max-w-3xl text-sm text-muted-foreground" id={hintId}>
+          {prepareHint}
+        </p>
+      )}
       {queue.isError ? (
         <ErrorState error={queue.error} onRetry={() => void queue.refetch()} />
       ) : !queue.data ? (
@@ -150,6 +220,16 @@ export function ReviewQueue({ mode }: { mode: "content" | "owner" }) {
                   <p className="mt-1">{item.reason}</p>
                   <p className="text-muted-foreground">{openerLine(item.opener, item.sourceId)}</p>
                   <p className="text-muted-foreground">{accountableLine(item.accountable)}</p>
+                  {(item.preparable || item.preparation) && (
+                    <Preparation
+                      item={item}
+                      hintId={hintId}
+                      onAsked={(asked) => {
+                        setOpen("");
+                        setMessage(asked);
+                      }}
+                    />
+                  )}
                   {item.notes.length > 0 && (
                     <ul className="mt-2 grid gap-1">
                       {item.notes.map((note, index) => (

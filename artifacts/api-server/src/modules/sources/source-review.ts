@@ -40,8 +40,51 @@ export function reviewOpener(dedupe: string): ReviewOpener {
 const ownerSigned = sql`exists(select 1 from valo_rule_owner_signoffs s
   where i.target_kind='rule' and s.rule_id=i.target_key and s.version=i.target_version)`;
 
+/** Where a request to prepare a candidate from a row stands (slice 4). */
+export type ReviewPreparationStatus =
+  "pending" | "running" | "prepared" | "held" | "not_ready" | "failed" | "closed";
+export type ReviewQueueOptions = {
+  ownerOnly?: boolean;
+  /** Whether a held template or guide has a preparer a row can run. Known to the editorial module. */
+  preparable?: (templateId: string) => boolean;
+};
+
+/**
+ * The latest request to prepare a candidate from each of these rows. A database the review preparation
+ * migration has not reached has none, and then no row can be prepared from.
+ */
+async function latestPreparations(tx: SourceReader, ids: string[]) {
+  const [table] = (
+    await tx.execute(sql`select to_regclass('public.valo_source_review_preparations') is not null as present`)
+  ).rows;
+  if (!table?.present) return null;
+  const rows = ids.length
+    ? (
+        await tx.execute(sql`select distinct on (work_id) work_id,status,requested_by,requested_at,completed_at,
+          candidate_version,reasons from valo_source_review_preparations where work_id in (${sql.join(
+            ids.map((id) => sql`${id}::uuid`),
+            sql`,`,
+          )}) order by work_id,requested_at desc,id desc`)
+      ).rows
+    : [];
+  const iso = (value: unknown) => new Date(sourceTime(value)).toISOString();
+  return new Map(
+    rows.map((row) => [
+      String(row.work_id),
+      {
+        status: String(row.status) as ReviewPreparationStatus,
+        requestedBy: String(row.requested_by),
+        requestedAt: iso(row.requested_at),
+        completedAt: row.completed_at ? iso(row.completed_at) : null,
+        candidateVersion: row.candidate_version === null ? null : Number(row.candidate_version),
+        reasons: Array.isArray(row.reasons) ? row.reasons.map(String) : [],
+      },
+    ]),
+  );
+}
+
 /** The queue, or only the rows of the rules the owner signed. */
-export async function reviewWorkQueue(tx: SourceReader, options: { ownerOnly?: boolean } = {}) {
+export async function reviewWorkQueue(tx: SourceReader, options: ReviewQueueOptions = {}) {
   const only = options.ownerOnly ? sql`and ${ownerSigned}` : sql``;
   const open = (
     await tx.execute(sql`select w.id,w.created_at,i.target_kind,i.target_key,i.target_version,i.reason,i.source_id,
@@ -59,6 +102,7 @@ export async function reviewWorkQueue(tx: SourceReader, options: { ownerOnly?: b
           )}) order by created_at,id`)
       ).rows
     : [];
+  const preparations = await latestPreparations(tx, ids);
   const closed = (
     await tx.execute(sql`select w.id,w.status,w.completed_at,i.target_kind,i.target_key,i.target_version,i.reason
       from valo_source_review_work w join valo_source_impacts i on i.id=w.impact_id
@@ -87,6 +131,12 @@ export async function reviewWorkQueue(tx: SourceReader, options: { ownerOnly?: b
           recordedBy: String(note.recorded_by),
           createdAt: iso(note.created_at),
         })),
+      // Only a template or guide with a preparer, on a database that keeps the requests.
+      preparable:
+        preparations !== null &&
+        row.target_kind === "content" &&
+        (options.preparable?.(String(row.target_key)) ?? false),
+      preparation: preparations?.get(String(row.id)) ?? null,
     })),
     closed: closed.map((row) => ({
       id: String(row.id),
@@ -139,15 +189,23 @@ async function asContentEditor<T>(actor: SourceStaffActor, work: (tx: SourceTx) 
 }
 
 /** The queue, for an active Content editor. */
-export function listSourceReview(actor: SourceStaffActor) {
-  return asContentEditor(actor, (tx) => reviewWorkQueue(tx));
+export function listSourceReview(
+  actor: SourceStaffActor,
+  options: Omit<ReviewQueueOptions, "ownerOnly"> = {},
+) {
+  return asContentEditor(actor, (tx) => reviewWorkQueue(tx, options));
 }
 
 /** A Content editor records what was checked on an open row. */
-export function noteSourceReview(actor: SourceStaffActor, workId: string, value: unknown) {
+export function noteSourceReview(
+  actor: SourceStaffActor,
+  workId: string,
+  value: unknown,
+  options: Omit<ReviewQueueOptions, "ownerOnly"> = {},
+) {
   const note = reviewNoteText(value);
   return asContentEditor(actor, async (tx) => {
     await addReviewNote(tx, workId, note, actor.identityId);
-    return reviewWorkQueue(tx);
+    return reviewWorkQueue(tx, options);
   });
 }

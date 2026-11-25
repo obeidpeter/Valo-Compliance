@@ -1,6 +1,7 @@
 import { initializeApplicationRuntime, verifyRehearsalDatabase } from "../platform/valo-runtime-activation";
 import { reconcileSourceMonitoring } from "../modules/sources";
 import { checkDueGuidance } from "../modules/manual-guidance";
+import { prepareRequestedCandidates } from "../modules/editorial";
 import { z } from "zod";
 import {
   closePrivacyErasureLocks,
@@ -64,6 +65,7 @@ const runOperationalJob = operationalJobRunner(
     disputeActions: () => reconcileDisputeActions(),
     paymentReconciliation: () => reconcilePayments(),
     guidance: () => checkDueGuidance(),
+    preparations: () => prepareRequestedCandidates(),
   },
   (domain, healthy) => {
     operationalHealth.set(domain, healthy);

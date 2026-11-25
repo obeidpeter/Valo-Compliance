@@ -4147,7 +4147,16 @@ export const ListSourceReviewResponse = zod.object({
   "note": zod.string(),
   "recordedBy": zod.string(),
   "createdAt": zod.string()
-}))
+})),
+  "preparable": zod.boolean().describe('Whether a new candidate can be asked for from this row: a template or guide that has a preparer (slice 4).'),
+  "preparation": zod.union([zod.object({
+  "status": zod.enum(['pending', 'running', 'prepared', 'held', 'not_ready', 'failed', 'closed']).describe('pending and running: the worker has it. prepared: the candidate waits for its two reviews. held: a template\'s candidate failed a check and was saved as a held version. not_ready: a guide\'s candidate was not ready, and nothing was kept. failed: the preparation stopped, and nothing was kept. closed: the review work closed before the request ran.'),
+  "requestedBy": zod.string(),
+  "requestedAt": zod.string(),
+  "completedAt": zod.string().nullable(),
+  "candidateVersion": zod.int().nullable().describe('The version the candidate was prepared as.'),
+  "reasons": zod.array(zod.string()).describe('What the checks named, or the code the preparation stopped with.')
+}),zod.null()]).describe('The latest request to prepare a candidate from this row, or null.')
 })),
   "closed": zod.array(zod.object({
   "id": zod.string(),
@@ -4193,7 +4202,63 @@ export const NoteSourceReviewResponse = zod.object({
   "note": zod.string(),
   "recordedBy": zod.string(),
   "createdAt": zod.string()
+})),
+  "preparable": zod.boolean().describe('Whether a new candidate can be asked for from this row: a template or guide that has a preparer (slice 4).'),
+  "preparation": zod.union([zod.object({
+  "status": zod.enum(['pending', 'running', 'prepared', 'held', 'not_ready', 'failed', 'closed']).describe('pending and running: the worker has it. prepared: the candidate waits for its two reviews. held: a template\'s candidate failed a check and was saved as a held version. not_ready: a guide\'s candidate was not ready, and nothing was kept. failed: the preparation stopped, and nothing was kept. closed: the review work closed before the request ran.'),
+  "requestedBy": zod.string(),
+  "requestedAt": zod.string(),
+  "completedAt": zod.string().nullable(),
+  "candidateVersion": zod.int().nullable().describe('The version the candidate was prepared as.'),
+  "reasons": zod.array(zod.string()).describe('What the checks named, or the code the preparation stopped with.')
+}),zod.null()]).describe('The latest request to prepare a candidate from this row, or null.')
+})),
+  "closed": zod.array(zod.object({
+  "id": zod.string(),
+  "targetKind": zod.enum(['content', 'rule']),
+  "targetKey": zod.string(),
+  "targetVersion": zod.int(),
+  "reason": zod.string(),
+  "outcome": zod.enum(['superseded', 'withdrawn']),
+  "completedAt": zod.string().nullable()
 }))
+})
+
+
+/**
+ * A Content editor asks, from an open row on a held template or guide that has a preparer, for its next candidate (docs/architecture/source-register.md, slice 4). The worker takes a fresh copy of the AI provider's terms and runs the preparer the template's or guide's command runs, with its mechanical checks, and the row then says what came of it. A candidate that passes waits for its two reviews, which run only under an AI allocation the owner approves. Nothing is sent or published. Development only.
+ * @summary Ask for the next candidate of a held template or guide from its review work
+ */
+export const PrepareSourceReviewParams = zod.object({
+  "workId": zod.uuid()
+})
+
+export const PrepareSourceReviewResponse = zod.object({
+  "open": zod.array(zod.object({
+  "id": zod.string(),
+  "targetKind": zod.enum(['content', 'rule']),
+  "targetKey": zod.string(),
+  "targetVersion": zod.int(),
+  "reason": zod.string(),
+  "sourceId": zod.string().nullable(),
+  "openedBy": zod.string(),
+  "opener": zod.enum(['daily_check', 'check_overdue', 'source_retired', 'staff', 'review_due', 'lifecycle', 'publisher', 'derived', 'other']),
+  "accountable": zod.enum(['content', 'owner']).describe('A Content editor, or the development owner for a rule the owner signed.'),
+  "createdAt": zod.string(),
+  "notes": zod.array(zod.object({
+  "note": zod.string(),
+  "recordedBy": zod.string(),
+  "createdAt": zod.string()
+})),
+  "preparable": zod.boolean().describe('Whether a new candidate can be asked for from this row: a template or guide that has a preparer (slice 4).'),
+  "preparation": zod.union([zod.object({
+  "status": zod.enum(['pending', 'running', 'prepared', 'held', 'not_ready', 'failed', 'closed']).describe('pending and running: the worker has it. prepared: the candidate waits for its two reviews. held: a template\'s candidate failed a check and was saved as a held version. not_ready: a guide\'s candidate was not ready, and nothing was kept. failed: the preparation stopped, and nothing was kept. closed: the review work closed before the request ran.'),
+  "requestedBy": zod.string(),
+  "requestedAt": zod.string(),
+  "completedAt": zod.string().nullable(),
+  "candidateVersion": zod.int().nullable().describe('The version the candidate was prepared as.'),
+  "reasons": zod.array(zod.string()).describe('What the checks named, or the code the preparation stopped with.')
+}),zod.null()]).describe('The latest request to prepare a candidate from this row, or null.')
 })),
   "closed": zod.array(zod.object({
   "id": zod.string(),
@@ -4227,7 +4292,16 @@ export const ListOwnerReviewWorkResponse = zod.object({
   "note": zod.string(),
   "recordedBy": zod.string(),
   "createdAt": zod.string()
-}))
+})),
+  "preparable": zod.boolean().describe('Whether a new candidate can be asked for from this row: a template or guide that has a preparer (slice 4).'),
+  "preparation": zod.union([zod.object({
+  "status": zod.enum(['pending', 'running', 'prepared', 'held', 'not_ready', 'failed', 'closed']).describe('pending and running: the worker has it. prepared: the candidate waits for its two reviews. held: a template\'s candidate failed a check and was saved as a held version. not_ready: a guide\'s candidate was not ready, and nothing was kept. failed: the preparation stopped, and nothing was kept. closed: the review work closed before the request ran.'),
+  "requestedBy": zod.string(),
+  "requestedAt": zod.string(),
+  "completedAt": zod.string().nullable(),
+  "candidateVersion": zod.int().nullable().describe('The version the candidate was prepared as.'),
+  "reasons": zod.array(zod.string()).describe('What the checks named, or the code the preparation stopped with.')
+}),zod.null()]).describe('The latest request to prepare a candidate from this row, or null.')
 })),
   "closed": zod.array(zod.object({
   "id": zod.string(),
@@ -4272,7 +4346,16 @@ export const NoteOwnerReviewWorkResponse = zod.object({
   "note": zod.string(),
   "recordedBy": zod.string(),
   "createdAt": zod.string()
-}))
+})),
+  "preparable": zod.boolean().describe('Whether a new candidate can be asked for from this row: a template or guide that has a preparer (slice 4).'),
+  "preparation": zod.union([zod.object({
+  "status": zod.enum(['pending', 'running', 'prepared', 'held', 'not_ready', 'failed', 'closed']).describe('pending and running: the worker has it. prepared: the candidate waits for its two reviews. held: a template\'s candidate failed a check and was saved as a held version. not_ready: a guide\'s candidate was not ready, and nothing was kept. failed: the preparation stopped, and nothing was kept. closed: the review work closed before the request ran.'),
+  "requestedBy": zod.string(),
+  "requestedAt": zod.string(),
+  "completedAt": zod.string().nullable(),
+  "candidateVersion": zod.int().nullable().describe('The version the candidate was prepared as.'),
+  "reasons": zod.array(zod.string()).describe('What the checks named, or the code the preparation stopped with.')
+}),zod.null()]).describe('The latest request to prepare a candidate from this row, or null.')
 })),
   "closed": zod.array(zod.object({
   "id": zod.string(),

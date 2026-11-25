@@ -17,6 +17,8 @@ export const OPERATIONAL_DOMAINS = [
   "paymentReconciliation",
   // A published regulatory guide's daily source check (docs/architecture/guidance-currency.md).
   "guidance",
+  // A candidate a Content editor asked for from review work (docs/architecture/source-register.md, slice 4).
+  "preparations",
 ] as const;
 export type OperationalDomain = (typeof OPERATIONAL_DOMAINS)[number];
 /**

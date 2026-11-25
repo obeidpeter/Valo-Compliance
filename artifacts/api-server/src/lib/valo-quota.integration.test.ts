@@ -17,6 +17,13 @@ test(
     );
     try {
       await t.test("concurrent callers cannot exceed one shared database cap", async () => {
+        // The quota counts in windows of one database-clock minute. Start well inside one, so the
+        // twenty calls and the refused call after them fall in the same window.
+        const [clock] = (
+          await db.execute(sql`select extract(second from statement_timestamp())::float8 as second`)
+        ).rows;
+        const second = Number(clock?.second);
+        if (second > 50) await new Promise((resolve) => setTimeout(resolve, (61 - second) * 1000));
         const results = await Promise.all(
           Array.from({ length: 20 }, () => consumeQuota("customer-ai", keys[0]!, 5)),
         );
@@ -33,7 +40,13 @@ test(
           .from(valoRateBuckets)
           .where(inArray(valoRateBuckets.subjectHash, [keys[0]!]));
         assert.equal(persisted[0]!.usedCount, 5);
-        assert.equal((await consumeQuota("customer-ai", keys[0]!, 5)).allowed, false);
+        const refused = await consumeQuota("customer-ai", keys[0]!, 5);
+        assert.equal(
+          refused.resetAt.toISOString(),
+          results[0]!.resetAt.toISOString(),
+          "the call after the cap falls in the same window",
+        );
+        assert.equal(refused.allowed, false);
       });
       await t.test("another subject and operation have independent allowances", async () => {
         assert.equal((await consumeQuota("customer-ai", keys[1]!, 5)).allowed, true);
