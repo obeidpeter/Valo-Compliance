@@ -235,7 +235,7 @@ export function AIDraftPreview({ id }: { id: string }) {
                     type="button"
                     className="btn btn-ghost btn-sm"
                     onClick={async () => {
-                      const plain = formatDocumentPlainText(title.trim() || TASK_LABEL[p.task], content);
+                      const plain = formatDocumentPlainText(title.trim() || TASK_LABEL[p.task], content, 1);
                       try {
                         await navigator.clipboard.writeText(plain);
                         setCopiedText(true);

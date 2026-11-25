@@ -96,7 +96,7 @@ three, is released only when the owner signs it.
 | **Library templates as full entries.** A template released from the staff library has a title, text and file only. Give it what the reviewed route's entries have: saving, recommendations, "make my own copy" in the workspace, what it is for, what it needs, its limits, related guidance, and a statement of how it was written and checked (the wording is the owner's to approve). The design, with its slices, is [library-entries.md](library-entries.md) | DOC-001, DOC-003, DOC-006, DOC-009, EDP-008 | M |
 | **Editions** ([design](editions.md)). Warn when a newer edition exists. When an edition is replaced or withdrawn, tell the people who bought or used it, with what they can do. What a buyer keeps is [delegated decision 3](#decisions-made-under-the-owners-delegation) | DOC-007, EDT-010, EDP-011, PAY-009 | M |
 | **Previews.** A real preview for each template instead of two generic lines; a free library template shows a preview, not its whole text; a test that no built page holds premium text | DOC-004 | S to M |
-| The editor: a lock on a template's fixed wording; a check that the preview and the files say the same; a check that Word opens the file; table headings repeated across pages | EDT-002, EDT-003, EDT-006 | M |
+| **The editor** ([design](editor.md)): a lock on a template's fixed wording; a check that the preview and the files say the same; a check that Word opens the file; table headings repeated across pages | EDT-002, EDT-003, EDT-006 | M |
 
 ### Phase 2: a requirements check people can complete
 

@@ -350,8 +350,9 @@ test("document text that tries to fetch a URL, read a local file or run script d
 
 // Forms v2, slice 3 (docs/architecture/forms-v2.md): the renderer prints a heading and a table's
 // header row for a form that fills a template's own wording. The twelve v1 forms print exactly as
-// before, so RENDER_VERSION is unchanged: each one's HTML is pinned here. A change to how one of
-// them prints changes its hash, and must come with a new RENDER_VERSION.
+// before: each one's HTML is pinned here, with the RENDER_VERSION it prints under. A change to how one
+// of them prints changes its hash, and must come with a new RENDER_VERSION. Version 6 left them
+// unchanged: their lists have no blank line.
 const PRINTED_V1_HTML: Record<string, string> = {
   "TPL-01": "6d7ad99ca365abc00e73bc260f4f52eedc6ee4f873a654aa1550295842b31457",
   "TPL-02": "8271b9b2673d2ce1ef9ade8b6ff3df8e6d7806e992d52db68ee544753dd96ff3",
@@ -374,7 +375,7 @@ test("the twelve forms' printed HTML is unchanged by the form layout's headings 
     );
     assert.equal(createHash("sha256").update(html).digest("hex"), PRINTED_V1_HTML[id], id);
   }
-  assert.equal(RENDER_VERSION, "manual-draft-5");
+  assert.equal(RENDER_VERSION, "manual-draft-6");
 });
 test("a form's headings print as headings and its table's header row repeats on each page, in HTML and Word, with every text escaped", async () => {
   const blocks: PrintedBlock[] = [
