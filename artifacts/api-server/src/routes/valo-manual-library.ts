@@ -122,7 +122,7 @@ export function createManualLibraryRouter(
       ),
     );
   });
-  router.post("/admin/manual-library/:id/reviews", sameOriginMutation, async (req, res) => {
+  router.post("/admin/manual-library/:id/editorial-reviews", sameOriginMutation, async (req, res) => {
     res.json(
       RecordManualLibraryReviewResponse.parse(
         await recordManualReview(res.locals.manualEditor, uuid.parse(req.params.id), req.body),

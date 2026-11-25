@@ -417,14 +417,18 @@ test(
         assert.equal((await fetchFile()).status, 404);
 
         // A review needs the published version and a note, and comes from a Content editor only.
-        const review = (body: unknown, actor = editor) => call(item(overdue) + "/reviews", body, actor);
+        const review = (body: unknown, actor = editor) =>
+          call(item(overdue) + "/editorial-reviews", body, actor);
         const note =
           "Synthetic: re-read the template against its purpose and limits, and it needs no change.";
         const current = { version: overdueDraft.version, digest: overdueDraft.digest };
         assert.equal((await review({ ...current, digest: "0".repeat(64), note })).status, 409);
         assert.equal((await review({ ...current, note: "Too short." })).status, 422);
         assert.equal((await review({ ...current, note }, "synthetic-reader")).status, 403);
-        assert.equal((await call(item(randomUUID()) + "/reviews", { ...current, note })).status, 404);
+        assert.equal(
+          (await call(item(randomUUID()) + "/editorial-reviews", { ...current, note })).status,
+          404,
+        );
         // Reviewed, it is shown and downloaded again, and its next review is due 90 days on.
         const recorded = RecordManualLibraryReviewResponse.parse(
           await ok(await review({ ...current, note })),

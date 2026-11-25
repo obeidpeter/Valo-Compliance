@@ -163,7 +163,7 @@ export async function exerciseOverduePremiumTemplate(call: Call, editor: string)
 
   // Reviewed, it is shown, offered and ordered again.
   const reviewed = await call(
-    path + "/reviews",
+    path + "/editorial-reviews",
     {
       version: edition.version,
       digest: edition.digest,

@@ -6977,7 +6977,7 @@ export const getRecordManualLibraryReviewUrl = (id: string,) => {
 
 
 
-  return `/api/admin/manual-library/${encodeURIComponent(String(id))}/reviews`
+  return `/api/admin/manual-library/${encodeURIComponent(String(id))}/editorial-reviews`
 }
 
 /**
