@@ -309,24 +309,20 @@ export function missingQuestions(f: CheckerFacts) {
   return factNames.filter((k) => !checkerQuestion(k)?.optional && isAsked(f, k) && stillToGive(f[k]));
 }
 
-/** Server supplies the immutable, trusted registry. HTTP callers cannot supply rules or fixtureMode. */
-export function assess(
-  facts: CheckerFacts,
-  rules: ReleasedRule[],
+/**
+ * The release checks each rule version must pass before the check uses it, by its `id@version`: the
+ * reason it is held, or null when it is in use. A rule is held unless it is published, trusted,
+ * freshly checked, in its effective period, the only such version of its rule, and bound to this
+ * build's calculation.
+ */
+function releaseHolds(
+  rules: readonly ReleasedRule[],
   asOfDate: string,
   evaluatedAt: Date,
-  options: { fixtureMode?: boolean; trustedManifestHashes?: ReadonlySet<string> } = {},
-) {
-  const f = checkerFactsSchema.parse(facts);
-  z.string().date().parse(asOfDate);
-  const day = new Date(evaluatedAt.getTime() + 3600000).toISOString().slice(0, 10);
-  if (asOfDate > day) throw new Error("Future assessments are not supported");
-  const items: RuleItem[] = [],
-    held: { ruleId: string; reason: string }[] = [];
-  const eligibility: Record<string, string> = {};
-  const parsedRules = rules.map((r) => ruleSchema.parse(r));
+  options: { fixtureMode?: boolean; trustedManifestHashes?: ReadonlySet<string> },
+): Map<string, string | null> {
   const activeCounts = new Map<string, number>();
-  for (const r of parsedRules) {
+  for (const r of rules) {
     if (
       r.status === "published" &&
       r.validFrom <= asOfDate &&
@@ -339,9 +335,8 @@ export function assess(
     )
       activeCounts.set(r.id, (activeCounts.get(r.id) ?? 0) + 1);
   }
-  for (const raw of [...parsedRules].sort((a, b) => a.id.localeCompare(b.id) || a.version - b.version)) {
-    const r = ruleSchema.parse(raw),
-      key = `${r.id}@${r.version}`;
+  const holds = new Map<string, string | null>();
+  for (const r of rules) {
     let hold = r.status !== "published" ? "Rule is not released" : null;
     if (r.provenance === "synthetic_fixture" && !options.fixtureMode)
       hold = "Synthetic fixture is not Nigerian publication evidence";
@@ -358,6 +353,32 @@ export function assess(
       hold = "Conflicting released versions require editorial resolution";
     if (r.evaluator && !sourceFamilyBindingMatches(r.evaluator))
       hold = "The released evaluator version does not match this implementation";
+    holds.set(`${r.id}@${r.version}`, hold);
+  }
+  return holds;
+}
+
+/** Server supplies the immutable, trusted registry. HTTP callers cannot supply rules or fixtureMode. */
+export function assess(
+  facts: CheckerFacts,
+  rules: ReleasedRule[],
+  asOfDate: string,
+  evaluatedAt: Date,
+  options: { fixtureMode?: boolean; trustedManifestHashes?: ReadonlySet<string> } = {},
+) {
+  const f = checkerFactsSchema.parse(facts);
+  z.string().date().parse(asOfDate);
+  const day = new Date(evaluatedAt.getTime() + 3600000).toISOString().slice(0, 10);
+  if (asOfDate > day) throw new Error("Future assessments are not supported");
+  const items: RuleItem[] = [],
+    held: { ruleId: string; reason: string }[] = [];
+  const eligibility: Record<string, string> = {};
+  const parsedRules = rules.map((r) => ruleSchema.parse(r));
+  const holds = releaseHolds(parsedRules, asOfDate, evaluatedAt, options);
+  for (const raw of [...parsedRules].sort((a, b) => a.id.localeCompare(b.id) || a.version - b.version)) {
+    const r = ruleSchema.parse(raw),
+      key = `${r.id}@${r.version}`;
+    const hold = holds.get(key) ?? null;
     eligibility[key] = hold ?? "eligible";
     if (hold) {
       held.push({ ruleId: r.id, reason: hold });
