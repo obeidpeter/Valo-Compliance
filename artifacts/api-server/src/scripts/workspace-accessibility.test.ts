@@ -4097,6 +4097,80 @@ test("undo and redo step back and forward through the editor's changes, with the
   }
 });
 
+// docs/architecture/library-holds.md, slice 2 (ADM-007): a Content editor's hold on a published regulatory
+// guide shows on the owner's panel, which alone lifts it, and only with why.
+test("the owner's panel shows a Content editor's hold on a published guide and lifts it only with why", async () => {
+  const shown = (answers["GET /admin/owner-guidance"] as { items: Record<string, unknown>[] }).items[0]!;
+  const published = { ...shown, state: "published", live: { version: 1, digest: "a".repeat(64) } };
+  const hold = {
+    reason: "Synthetic: held while a reader's report on the filing period is checked.",
+    placedBy: "synthetic-content-editor",
+    placedAt: "2026-11-25T09:00:00.000Z",
+    workspaces: 0,
+  };
+  let listed = api.ListOwnerGuidanceResponse.parse({
+    items: [{ ...published, libraryHold: hold }],
+    hasMore: false,
+  });
+  const sent: unknown[] = [];
+  const lifting: Api = async (route, method, path, query) => {
+    if (method === "GET" && path === "/admin/owner-guidance")
+      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(listed) });
+    else if (method === "POST" && path === `/admin/owner-guidance/${String(shown.itemId)}/hold-lifts`) {
+      sent.push(route.request().postDataJSON());
+      listed = api.ListOwnerGuidanceResponse.parse({
+        items: [{ ...published, libraryHold: null }],
+        hasMore: false,
+      });
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(
+          api.LiftOwnerGuidanceHoldResponse.parse({ itemId: shown.itemId, version: 1, state: "published" }),
+        ),
+      });
+    } else await answer(route, method, path, query);
+  };
+  const { page, unknown, errors, close } = await phone("/staff", lifting);
+  try {
+    await ready(page);
+    await page.getByTestId("tab-staff-system").click();
+    const panel = page.getByRole("region", { name: "Regulatory source sign-off" });
+    await panel.getByLabel("Regulatory draft").selectOption(String(shown.itemId));
+    await expect(panel.getByTestId("text-owner-held")).toHaveText(
+      "Version 1 is held since 25 Nov 2026: Synthetic: held while a reader's report on the filing period is checked. Customers cannot find, download or buy it. What they already have is unchanged.",
+    );
+    // Lifting waits for why, in 20 characters or more.
+    const lift = panel.getByRole("button", { name: "Lift the hold" });
+    const why = panel.getByLabel("Why is the hold lifted?");
+    await expect(lift).toBeDisabled();
+    await why.fill("Too short.");
+    await expect(lift).toBeDisabled();
+    await why.fill("  Synthetic: the filing period was checked and is right.  ");
+    await expect(lift).toBeEnabled();
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "the owner's panel with a held guide"), []);
+    // The check ends on a 320-pixel screen; the phone is 360 pixels wide again for the lift.
+    await page.setViewportSize({ width: 360, height: 640 });
+    await lift.click();
+    await expect(panel.getByRole("status")).toHaveText(
+      "Hold lifted. Customers can find, download and buy this version again.",
+    );
+    await expect(panel.getByTestId("text-owner-held")).toHaveCount(0);
+    assert.deepEqual(sent, [
+      {
+        version: 1,
+        digest: "a".repeat(64),
+        reason: "Synthetic: the filing period was checked and is right.",
+      },
+    ]);
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
+
 // docs/architecture/rule-changes.md, slice 1 (ADM-007, EDP-011): a version that replaces a released
 // one says what changed, and a withdrawal says why, and the reason goes with the owner's decision.
 test("the owner's panel asks what changed before a version replaces a released one, and why before a withdrawal, and sends each reason with the decision", async () => {
