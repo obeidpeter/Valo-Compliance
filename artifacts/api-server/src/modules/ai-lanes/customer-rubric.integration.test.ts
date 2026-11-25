@@ -2,8 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
-import { eq, inArray } from "drizzle-orm";
-import { ZodError } from "zod";
+import { inArray } from "drizzle-orm";
 
 // AI-008 (docs/architecture/drafting-rubric.md): every drafting case the rubric scores, put through the
 // app's own drafting service, and the draft the app kept, or its refusal, scored with the case's rubric. A
@@ -21,13 +20,26 @@ test(
       providerCalls++;
       throw Error("REAL_PROVIDER_FORBIDDEN");
     };
-    // As in the controls' test: only the approval predicate is supplied, so that the app reaches its
-    // organizer, and the managed transport fails the test if anything reaches for it.
+    const refused = () => {
+      providerCalls++;
+      throw Error("REAL_PROVIDER_FORBIDDEN");
+    };
+    // As in the controls' test: only the approval predicate holds, so that the app reaches its
+    // organizer, and everything else of the managed transport fails the test if anything reaches for
+    // it. Every export is replaced, because the suite's own path loads the whole lanes module.
     t.mock.module(new URL("../ai/managed-inference.ts", import.meta.url).href, {
       namedExports: {
         hasApprovedInferenceContext: () => true,
+        hasApprovedInferencePairContext: () => false,
+        managedInferenceLane: (fallback: unknown) => fallback,
         managedCompletion: forbidden,
         withApprovedInferenceAttempt: forbidden,
+        withApprovedInferenceWork: forbidden,
+        withApprovedInferencePair: forbidden,
+        withApprovedInferenceRole: forbidden,
+        withBoundInferenceDispatcher: refused,
+        provideFiniteWorkBindings: refused,
+        assertManagedInferenceAvailable: refused,
         InferenceHeld: class extends Error {},
       },
     });
@@ -42,17 +54,13 @@ test(
       valoWorkspaces,
     } = await import("@workspace/db");
     const { resolveWorkspace } = await import("../workspaces");
-    const { createCustomerAIDraft } = await import("./valo-customer-ai");
     const { organizeCustomerDraft } = await import("./valo-customer-ai-model");
     const { customerProviderPayload, hashAI } = await import("./valo-customer-ai-domain");
     const { bindCustomerCase } = await import("./valo-customer-case-binding");
     const { customerRubric, rubricFollowup, scoreCustomerCase } = await import("./customer-rubric");
+    // The suite gives a case to the app the same way.
+    const { runCustomerRubricCase } = await import("../../scripts/customer-rubric-run");
     type Score = ReturnType<typeof scoreCustomerCase>;
-    type Outcome = Parameters<typeof scoreCustomerCase>[1] extends infer R
-      ? R extends { outcome: infer O }
-        ? O
-        : never
-      : never;
     const corpus = JSON.parse(
       await readFile(
         new URL("../../../../../docs/evaluation-candidates/customer-ai.json", import.meta.url),
@@ -64,83 +72,32 @@ test(
       scores = new Map<string, Score>();
     const oldFetch = globalThis.fetch;
     globalThis.fetch = forbidden as typeof fetch;
-    const out = process.stdout.write.bind(process.stdout),
-      err = process.stderr.write.bind(process.stderr);
     try {
       for (const c of corpus.cases) {
         if (customerRubric[c.caseID]!.run === "control") continue;
-        const followup = rubricFollowup(c),
-          bound = bindCustomerCase(c, followup);
+        const bound = bindCustomerCase(c, rubricFollowup(c));
         const actor = await resolveWorkspace(`synthetic-customer-rubric-${run}-${c.caseID.toLowerCase()}`);
         workspaces.push(actor.workspaceId);
-        // Every routine line the run writes while the app handles the case is kept, to be read.
-        const logged: string[] = [];
-        const capture =
-          (write: typeof out) =>
-          (chunk: unknown, ...rest: unknown[]) => {
-            logged.push(String(chunk));
-            return (write as (...a: unknown[]) => boolean)(chunk, ...rest);
-          };
-        process.stdout.write = capture(out) as typeof process.stdout.write;
-        process.stderr.write = capture(err) as typeof process.stderr.write;
-        let outcome: Outcome;
-        try {
-          if (!bound.input) {
-            try {
-              await createCustomerAIDraft(actor, bound.submitted, forbidden);
-              assert.fail(`${c.caseID}: the app accepted an input its own checks refuse`);
-            } catch (error) {
-              if (!(error instanceof ZodError)) throw error;
-              outcome = {
-                kind: "refused",
-                issues: error.issues.map((issue) => ({ path: issue.path.join("."), message: issue.message })),
+        let sent: unknown = null;
+        const caseRun = await runCustomerRubricCase(actor, c, {
+          organize: (input) =>
+            organizeCustomerDraft(input, async (payload) => {
+              sent = payload;
+              const indexes = input.contextLines.map((_, i) => i),
+                sections = [];
+              for (let i = 0; i < indexes.length; i += 6)
+                sections.push({ heading: "notes", lineIndexes: indexes.slice(i, i + 6) });
+              const opening = input.task === "payment_reminder" ? "outstanding_record" : "please_review";
+              return {
+                id: `stand-in-${c.caseID}`,
+                model: "stand-in-not-a-provider",
+                choices: [{ message: { content: JSON.stringify({ opening, sections }) } }],
               };
-            }
-          } else {
-            let sent: unknown = null;
-            const preview = await createCustomerAIDraft(
-              actor,
-              { ...bound.input, idempotencyKey: randomUUID() },
-              (input) =>
-                organizeCustomerDraft(input, async (payload) => {
-                  sent = payload;
-                  const indexes = input.contextLines.map((_, i) => i),
-                    sections = [];
-                  for (let i = 0; i < indexes.length; i += 6)
-                    sections.push({ heading: "notes", lineIndexes: indexes.slice(i, i + 6) });
-                  const opening = input.task === "payment_reminder" ? "outstanding_record" : "please_review";
-                  return {
-                    id: `stand-in-${c.caseID}`,
-                    model: "stand-in-not-a-provider",
-                    choices: [{ message: { content: JSON.stringify({ opening, sections }) } }],
-                  };
-                }),
-            );
-            if (sent !== null)
-              assert.equal(hashAI(sent), hashAI(customerProviderPayload(bound.input)), c.caseID);
-            const [row] = await db.select().from(valoAIDrafts).where(eq(valoAIDrafts.id, preview.id));
-            const events = await db.select().from(valoEvents).where(eq(valoEvents.entityId, preview.id));
-            logged.push(...events.map((event) => JSON.stringify(event)));
-            outcome = {
-              kind: "stored",
-              draft: {
-                id: row!.id,
-                status: row!.status,
-                preview: row!.preview as typeof preview,
-                plan: row!.plan as never,
-                providerCalls: row!.providerCalls ?? 0,
-                providerInputHash: row!.providerInputHash,
-                inputHash: row!.inputHash,
-                acceptedDocumentId: row!.acceptedDocumentId,
-              },
-              events: events.map((event) => event.action),
-            };
-          }
-        } finally {
-          process.stdout.write = out as typeof process.stdout.write;
-          process.stderr.write = err as typeof process.stderr.write;
-        }
-        scores.set(c.caseID, scoreCustomerCase(c, { followup, outcome: { ...outcome!, telemetry: logged } }));
+            }),
+        });
+        if (sent !== null)
+          assert.equal(hashAI(sent), hashAI(customerProviderPayload(bound.input!)), c.caseID);
+        scores.set(c.caseID, scoreCustomerCase(c, caseRun));
       }
     } finally {
       globalThis.fetch = oldFetch;
