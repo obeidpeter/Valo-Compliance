@@ -125,8 +125,15 @@ What is left of them is the owner's, as each design's points for the owner say:
 ([#268](https://github.com/obeidpeter/Valo-Compliance/pull/268) to
 [#271](https://github.com/obeidpeter/Valo-Compliance/pull/271)), apart from one part that waits on
 the owner. The local government area stays free text until a usable official copy of its list can
-be read; the design's fifth point for the owner asks for one. The results are built in the four
-slices of [their design](results.md).
+be read; the design's fifth point for the owner asks for one.
+
+**The results were done on 25 November 2026**
+([#272](https://github.com/obeidpeter/Valo-Compliance/pull/272) to
+[#275](https://github.com/obeidpeter/Valo-Compliance/pull/275)), apart from one part. A rule released
+on the reviewed route shows when it was AI reviewed only as the day it was published: the route's
+review records hold no time of their own ([the design's third point for the owner](results.md#the-owners-points)).
+The other new words, the prepared rules' official pages and any fee or deadline they record are the
+owner's to confirm. The rule changes are built in the three slices of [their design](rule-changes.md).
 
 | What is left | Requirements | Size |
 | --- | --- | --- |
