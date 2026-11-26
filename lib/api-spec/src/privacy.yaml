@@ -338,10 +338,18 @@ schemas:
     required: [expectedVersion, action, reason]
     properties:
       expectedVersion: { type: integer, minimum: 1 }
-      action: { type: string, enum: [claim, request_information, hold, release_hold, reject, prepare_export, record_correction, start_erasure, resume_erasure] }
+      action: { type: string, enum: [claim, request_information, hold, release_hold, reject, prepare_export, record_correction, start_erasure, resume_erasure, record_step, complete] }
       reason: { type: string, minLength: 10, maxLength: 1000 }
       profileVersionId: { type: string, format: uuid }
       acknowledgement: { type: boolean }
+      system:
+        type: string
+        description: For record_step, the outside step recorded. The reason is its words, which the person who asked reads.
+        enum: [private_files, managed_identity, external_processors, retention_and_recovery]
+      outcome:
+        type: string
+        description: For record_step, whether the step was carried out and confirmed, or was not needed.
+        enum: [confirmed, not_applicable]
   CustomerAccount:
     type: object
     required: [workspaceId, privacyRequests]

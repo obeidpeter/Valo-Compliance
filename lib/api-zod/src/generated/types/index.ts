@@ -331,6 +331,8 @@ export * from './privacyRequestInputKind';
 export * from './privacyRequestRecord';
 export * from './privacyStaffAction';
 export * from './privacyStaffActionAction';
+export * from './privacyStaffActionOutcome';
+export * from './privacyStaffActionSystem';
 export * from './profile';
 export * from './profileInput';
 export * from './profileLegalForm';

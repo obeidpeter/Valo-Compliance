@@ -21,7 +21,90 @@ export async function processPrivacyAction(actor: PrivacyStaffActor, id: string,
   if (input.action === "record_correction") return recordPrivacyCorrection(actor, id, input);
   if (input.action === "start_erasure" || input.action === "resume_erasure")
     return processPrivacyErasure(actor, id, input);
+  if (input.action === "record_step") return recordPrivacyStep(actor, id, input);
+  if (input.action === "complete") return completePrivacyRequest(actor, id, input);
   return simpleStaffPrivacyAction(actor, id, input);
+}
+
+/** The steps carried out outside Valo's own rows, which staff record from what they did there. */
+const OUTSIDE_STEPS: ReadonlySet<string> = new Set([
+  "private_files",
+  "managed_identity",
+  "external_processors",
+  "retention_and_recovery",
+]);
+
+/** What a finished request says of itself; each step's own words say what was done there. */
+const FINISHED_SCOPE = "This request is done. Each step says what was done there, or why it was not needed.";
+
+/** A partly done request, read for its own staff member to finish (docs/architecture/privacy-requests.md, part 2). */
+async function partlyDoneRequest(
+  tx: Parameters<typeof readPrivacyCase>[0],
+  actor: PrivacyStaffActor,
+  id: string,
+  expectedVersion: number,
+) {
+  await requirePrivacyStaff(tx, actor);
+  const row = await readPrivacyCase(tx, id);
+  assertPrivacyVersion(row.version, expectedVersion);
+  if (row.status !== "partially_fulfilled")
+    throw new ValoProblem(
+      409,
+      "Only a partly done request has outside steps to record or can be marked done.",
+    );
+  if (row.assignedIdentityId !== actor.identityId)
+    throw new ValoProblem(403, "This case is assigned to another privacy operator.");
+  return row;
+}
+
+/** Records one outside step as confirmed or not needed (PRV-003). Its words are the reason, which the
+ * person who asked reads as that step's outcome. A step can be recorded again until the request is done. */
+async function recordPrivacyStep(
+  actor: PrivacyStaffActor,
+  id: string,
+  input: ReturnType<typeof ActOnStaffPrivacyCaseBody.parse>,
+) {
+  const { system, outcome } = input;
+  if (!system || !OUTSIDE_STEPS.has(system) || !outcome)
+    throw new ValoProblem(422, "Name the outside step, and whether it was confirmed or not needed.");
+  const words = input.reason.trim();
+  return db.transaction(async (tx) => {
+    let row = await partlyDoneRequest(tx, actor, id, input.expectedVersion);
+    row = await privacyChange(
+      tx,
+      row,
+      { identityId: actor.identityId, type: "staff" },
+      "step_recorded",
+      words,
+      {
+        steps: row.steps.map((step) =>
+          step.system === system ? { ...step, status: outcome, detail: words } : step,
+        ),
+      },
+    );
+    return privacyDetail(tx, row);
+  });
+}
+
+/** Marks a partly done request done, once every step is confirmed or not needed and the first two are
+ * confirmed (`assertPrivacyCompletion`, which `privacyChange` applies). Nothing changes it after. */
+async function completePrivacyRequest(
+  actor: PrivacyStaffActor,
+  id: string,
+  input: ReturnType<typeof ActOnStaffPrivacyCaseBody.parse>,
+) {
+  return db.transaction(async (tx) => {
+    let row = await partlyDoneRequest(tx, actor, id, input.expectedVersion);
+    row = await privacyChange(
+      tx,
+      row,
+      { identityId: actor.identityId, type: "staff" },
+      "request_completed",
+      input.reason.trim(),
+      { status: "fulfilled", resultScope: FINISHED_SCOPE },
+    );
+    return privacyDetail(tx, row);
+  });
 }
 async function preparePrivacyExport(
   actor: PrivacyStaffActor,
