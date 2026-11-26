@@ -71,7 +71,7 @@ The requirements, verbatim from the specification:
 
 ### Part 5: erasure
 
-- A workspace's erasure removes its edition notices, as it removes its other rows.
+- A workspace's erasure removes its edition notices, and its rule notices, as it removes its other rows.
 
 ## What does not change
 
@@ -88,7 +88,7 @@ Each slice is its own pull request.
 | 2 | **The notice.** Part 2: the privacy page from the inventory, with its version, and its browser test. | PRV-001, PRO-002 | Built |
 | 3 | **The notice where data is collected.** Part 3, with a migration for the version each record keeps. | PRV-001, PRO-002 | Not started |
 | 4 | **Consents.** Part 4, with a migration for the consent history and its upgrade test. | PRO-002 | Not started |
-| 5 | **Erasure.** Part 5, with a database test. | PRV-003 | Not started |
+| 5 | **Erasure.** Part 5, with a database test. | PRV-003 | Built |
 
 ## Settled while building it
 
@@ -125,6 +125,23 @@ Each slice is its own pull request.
   It now says the files Valo keeps for download are kept at Valo only until that date, and a copy a
   person has saved stays theirs. The customer wording check reads the inventory and the notice from now
   on.
+
+### Slice 5: erasure
+
+- **Two kinds of notice, not one.** Comparing the inventory's tables with the erasure's code showed that
+  erasure removed neither a workspace's edition notices nor its rule notices (the notices that a
+  requirements-check rule's version it relied on was replaced or withdrawn). It removes both now.
+- **Appended phases.** The erasure works through a fixed list of phases, one at a time, and records how
+  far it has got. The two new phases come after every earlier one, so each earlier phase keeps its
+  place: an erasure under way finishes them at its end, and a finished erasure is not reopened. A
+  replay of an erasure after a restore runs them too.
+- **The database test** gives each of two workspaces one notice of each kind, erases one workspace, and
+  finds that workspace's notices gone and the other's kept. Its replay check calls the replay once for
+  each phase the erasure has, rather than a fixed number of times.
+- **What it does not reach.** A purchase is kept after an erasure, as a financial record. If the
+  template it bought is later replaced or withdrawn, a notice to the erased workspace is written again.
+  It names the template, its version and how many of the workspace's documents it concerns, not the
+  person. A replay after a restore removes it; nothing else does yet.
 
 ## The owner's points
 
