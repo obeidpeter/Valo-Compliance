@@ -125,6 +125,13 @@ Rules that apply now:
   publishes an entry only for an active Content editor, and a regulatory article only for the
   development owner, from another account than the editor's and on a source check of that exact
   text under a day old.
+- A content version or a prepared candidate is added only on drafting's own connection (`drafterDb`,
+  `VALO_DRAFTER_DATABASE_URL`): the database adds one only in a session that logged in as
+  `valo_drafter_login`, which may become the drafter role and nothing else. Only the three drafting
+  paths and the check that drafting can log in use that connection; the `drafter-connection`
+  repository rule enforces this. Never give the login another privilege or membership outside a
+  reviewed migration, and never give its connection string to the API. Tests add synthetic content
+  through `test-support/drafted-content.ts`.
 - A requirements-check rule's version is released on the reviewed route (`applyStoredRuleRelease`)
   or, in development, on the owner's sign-off (decision 0020, `modules/editorial/owner-rule-signoff.ts`).
   The rule table's trigger, `valo_guard_owner_signed_rule`, refuses an owner-signed release unless
