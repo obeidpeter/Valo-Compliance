@@ -782,7 +782,7 @@ test(
       () => exercisePremiumPriceCommand(call, editor),
     );
     await t.test(
-      "only the recently verified development owner previews and records a premium template's price, and an earlier order keeps its terms",
+      "only the recently verified development owner previews and records a premium template's price, an earlier order keeps its terms, and a price that carries is recorded for each next edition as it is released",
       () => exerciseOwnerPriceRoutes(call, editor),
     );
     await t.test(

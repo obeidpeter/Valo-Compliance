@@ -23,6 +23,9 @@ type Call = (
  * only the recently verified development owner, from Valo's own pages, previews and records a
  * published premium template's price; recording needs the preview's checksum of exactly those terms;
  * and an order made at the earlier price keeps its amount and terms after the owner's next price.
+ * Slice 2: a price that carries is recorded for each next edition as a Content editor releases it,
+ * with the same terms and approval reference, and the price in effect then closes; one that does not
+ * carry leaves the new edition unpriced.
  */
 export async function exerciseOwnerPriceRoutes(call: Call, editor: string) {
   const {
@@ -96,13 +99,14 @@ export async function exerciseOwnerPriceRoutes(call: Call, editor: string) {
     assert.equal(published.status, 200);
 
     const path = "/admin/owner-prices";
-    const terms = (change: Record<string, string> = {}) => ({
+    const terms = (change: Record<string, string | boolean> = {}) => ({
       edition: edition.id,
       amount: "2500.00",
       licenceVersion: "synthetic-owner-1",
       licenceText,
       taxTreatment: "Synthetic tax treatment",
       from: "now",
+      carries: false,
       ...change,
     });
     const record = (body: object, who = owner) => call(path, body, who);
@@ -143,6 +147,7 @@ export async function exerciseOwnerPriceRoutes(call: Call, editor: string) {
       licenceText,
       taxTreatment: "Synthetic tax treatment",
       from: "now",
+      carries: false,
     });
     assert.deepEqual(
       await db.select().from(valoPrices).where(eq(valoPrices.contentVersionId, edition.id)),
@@ -221,6 +226,164 @@ export async function exerciseOwnerPriceRoutes(call: Call, editor: string) {
       (await priced())?.prices.map((price) => price.priceId),
       [second.priceId],
     );
+
+    // Slice 2: a price carried to the template's next edition. A Content editor releases the next one.
+    const pricesOf = async (wanted: string) =>
+      ListOwnerPricesResponse.parse(await (await call(path, undefined, owner)).json()).items.find(
+        (item) => item.edition === wanted,
+      )?.prices;
+    const release = async (baseVersion: number) => {
+      const next = await call(
+        "/admin/manual-library/" + itemId + "/drafts",
+        {
+          kind: "premium_template",
+          title,
+          body: "Public description of the synthetic owner-priced agreement.",
+          industry: null,
+          requestId: randomUUID(),
+          baseVersion,
+          fileMode: "keep",
+          ...templateDetails,
+        },
+        editor,
+      );
+      assert.equal(next.status, 200);
+      const revision = GetManualLibraryRevisionResponse.parse(await next.json());
+      const done = await call(
+        "/admin/manual-library/" + itemId + "/actions",
+        libraryAction("publish", revision),
+        editor,
+      );
+      assert.equal(done.status, 200);
+      return revision.id;
+    };
+    // The price on sale does not carry, so the next edition has none until the owner records one.
+    const v2 = await release(1);
+    assert.deepEqual(await pricesOf(v2), []);
+    // The owner's choice is part of the terms: the same terms that do not carry have another checksum.
+    const carryTerms = terms({
+      edition: v2,
+      amount: "3500.00",
+      licenceVersion: "synthetic-owner-3",
+      carries: true,
+    });
+    const carryPreview = PreviewOwnerPriceResponse.parse(
+      await (await call(path + "/previews", carryTerms, owner)).json(),
+    );
+    assert.equal(carryPreview.terms.carries, true);
+    const notCarrying = PreviewOwnerPriceResponse.parse(
+      await (await call(path + "/previews", { ...carryTerms, carries: false }, owner)).json(),
+    );
+    assert.notEqual(notCarrying.checksum, carryPreview.checksum);
+    assert.equal(
+      (
+        await record({
+          ...carryTerms,
+          reference: "synthetic-owner-approval-3",
+          confirm: notCarrying.checksum,
+        })
+      ).status,
+      409,
+    );
+    const carryingResponse = await record({
+      ...carryTerms,
+      reference: "synthetic-owner-approval-3",
+      confirm: carryPreview.checksum,
+    });
+    assert.equal(carryingResponse.status, 200);
+    const carrying = RecordOwnerPriceResponse.parse(await carryingResponse.json());
+    const carryBuyer = await resolveWorkspace("synthetic-owner-price-carry-buyer-" + id);
+    const carryOrder = await runInWorkspaceScope(carryBuyer.workspaceId, () =>
+      createOrder(carryBuyer, {
+        priceId: carrying.priceId,
+        acceptedLicenceVersion: "synthetic-owner-3",
+        requestKey: randomUUID(),
+      }),
+    );
+    // The next release records the price for its edition, carried from the one on sale, which closes then.
+    const v3 = await release(2);
+    const carried = (await pricesOf(v3)) ?? [];
+    assert.deepEqual(
+      carried.map((price) => [
+        price.amountKobo,
+        price.licenceVersion,
+        price.taxTreatment,
+        price.carriesToLaterEditions,
+        price.carriedFrom,
+      ]),
+      [[350000, "synthetic-owner-3", "Synthetic tax treatment", true, carrying.priceId]],
+    );
+    const [carriedRow] = await db.select().from(valoPrices).where(eq(valoPrices.id, carried[0]!.priceId));
+    assert.equal(carriedRow?.licenceText, licenceText);
+    // The owner's approval is carried as it was written; carriedFrom names the price it came from.
+    const approvedBy = `synthetic-owner-approval-3 (approved by the development owner, ${owner})`;
+    assert.equal(carriedRow?.approvalReference, approvedBy);
+    const [ended] = await db.select().from(valoPrices).where(eq(valoPrices.id, carrying.priceId));
+    assert.equal(ended?.approvalReference, approvedBy);
+    assert.equal(+ended!.effectiveTo!, +carriedRow!.effectiveFrom);
+    // ADM-006: the order made at the earlier edition's price keeps its price, amount, licence and edition.
+    const [keptCarry] = await db.select().from(valoOrders).where(eq(valoOrders.id, carryOrder.id));
+    assert.deepEqual(
+      [
+        keptCarry?.priceId,
+        keptCarry?.amountKobo,
+        keptCarry?.line.licenceVersion,
+        keptCarry?.line.contentVersionId,
+      ],
+      [carrying.priceId, 350000, "synthetic-owner-3", v2],
+    );
+    // A later release carries the copy, never the original again, and the change log keeps each one.
+    const v4 = await release(3);
+    const carriedAgain = (await pricesOf(v4)) ?? [];
+    assert.deepEqual(
+      carriedAgain.map((price) => price.carriedFrom),
+      [carried[0]!.priceId],
+    );
+    const [againRow] = await db.select().from(valoPrices).where(eq(valoPrices.id, carriedAgain[0]!.priceId));
+    assert.equal(againRow?.approvalReference, approvedBy);
+    const logged = await db
+      .select({ action: valoPriceChanges.action })
+      .from(valoPriceChanges)
+      .where(eq(valoPriceChanges.priceId, carried[0]!.priceId))
+      .orderBy(asc(valoPriceChanges.changedAt), asc(valoPriceChanges.id));
+    assert.deepEqual(
+      logged.map((change) => change.action),
+      ["created", "closed"],
+    );
+    // A price the owner schedules for the edition on sale carries from its own start, and the price on
+    // sale until then carries with the end it already has. Neither is closed again.
+    const onSale = carriedAgain[0]!;
+    const startsLater = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const scheduledTerms = terms({
+      edition: v4,
+      amount: "4000.00",
+      licenceVersion: "synthetic-owner-4",
+      from: startsLater.toISOString(),
+      carries: true,
+    });
+    const scheduledPreview = PreviewOwnerPriceResponse.parse(
+      await (await call(path + "/previews", scheduledTerms, owner)).json(),
+    );
+    const scheduledResponse = await record({
+      ...scheduledTerms,
+      reference: "synthetic-owner-approval-4",
+      confirm: scheduledPreview.checksum,
+    });
+    assert.equal(scheduledResponse.status, 200);
+    const scheduled = RecordOwnerPriceResponse.parse(await scheduledResponse.json());
+    assert.deepEqual(scheduled.closed, [{ priceId: onSale.priceId, amountKobo: 350000 }]);
+    const v5 = await release(4);
+    const fifth = (await pricesOf(v5)) ?? [];
+    assert.deepEqual(
+      fifth.map((price) => [price.amountKobo, price.carriedFrom, price.effectiveTo && +price.effectiveTo]),
+      [
+        [350000, onSale.priceId, +startsLater],
+        [400000, scheduled.priceId, null],
+      ],
+    );
+    assert.equal(+fifth[1]!.effectiveFrom, +startsLater);
+    const [stillEnding] = await db.select().from(valoPrices).where(eq(valoPrices.id, onSale.priceId));
+    assert.equal(+stillEnding!.effectiveTo!, +startsLater);
   } finally {
     for (const identity of [owner, system])
       await db.update(roles).set({ active: false }).where(eq(roles.identityId, identity));

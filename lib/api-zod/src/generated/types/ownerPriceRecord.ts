@@ -7,6 +7,7 @@
  */
 
 export interface OwnerPriceRecord {
+  carries: boolean;
   edition: string;
   /** @pattern ^\d{1,8}(\.\d{2})?$ */
   amount: string;

@@ -47,14 +47,23 @@ test("a price's terms are checked before anything is read or written", () => {
     licenceText: licence,
     taxTreatment: "Synthetic tax treatment",
     from: "now",
+    carries: false,
   });
   assert.equal(premiumPriceTerms({ ...base, from: undefined }).from, "now");
+  // Whether a price carries to the template's later editions: yes or no from the command, or a boolean.
+  for (const [given, carries] of [
+    [true, true],
+    ["yes", true],
+    [false, false],
+    ["no", false],
+  ] as const)
+    assert.equal(premiumPriceTerms({ ...base, carries: given }).carries, carries, String(given));
   assert.equal(premiumPriceTerms({ ...base, licenceText: `\n${licence}\n` }).licenceText, licence);
   assert.equal(
     premiumPriceTerms({ ...base, from: "2026-12-01T00:00:00+01:00" }).from,
     "2026-12-01T00:00:00+01:00",
   );
-  const refused: [Partial<typeof base> | { [key: string]: undefined }, RegExp][] = [
+  const refused: [Partial<typeof base & { carries: string }> | { [key: string]: undefined }, RegExp][] = [
     [{ edition: "TPL-13" }, /edition ID/],
     [{ edition: undefined }, /edition ID/],
     [{ licenceVersion: "premium 1" }, /licence version/],
@@ -65,6 +74,7 @@ test("a price's terms are checked before anything is read or written", () => {
     // A time without its offset could be read in two ways.
     [{ from: "2026-12-01T00:00:00" }, /start/],
     [{ amount: "1,500" }, /naira/],
+    [{ carries: "maybe" }, /later editions/],
   ];
   for (const [change, message] of refused)
     assert.throws(() => premiumPriceTerms({ ...base, ...change }), message, JSON.stringify(change));
@@ -81,6 +91,7 @@ test("the checksum the owner confirms changes with every figure and word of a pr
     { licenceText: `${licence} More.` },
     { taxTreatment: "Other synthetic treatment" },
     { from: "2026-12-01T00:00:00+01:00" },
+    { carries: true },
   ])
     assert.notEqual(
       premiumPriceTermsId(premiumPriceTerms({ ...base, ...change })),

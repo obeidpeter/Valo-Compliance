@@ -27,6 +27,7 @@ export function OwnerPrices() {
   const [taxTreatment, setTaxTreatment] = useState("");
   const [startsNow, setStartsNow] = useState(true);
   const [startsAt, setStartsAt] = useState("");
+  const [carries, setCarries] = useState(false);
   const [reference, setReference] = useState("");
   const [preview, setPreview] = useState<OwnerPricePreview | null>(null);
   const [busy, setBusy] = useState(false);
@@ -47,6 +48,7 @@ export function OwnerPrices() {
     licenceText: licenceText.trim(),
     taxTreatment: taxTreatment.trim(),
     from: startsNow ? "now" : lagosClockTime(startsAt),
+    carries,
   });
   async function act(run: () => Promise<void>) {
     setBusy(true);
@@ -113,6 +115,8 @@ export function OwnerPrices() {
                         {formatNaira(price.amountKobo)} from {formatDateTime(price.effectiveFrom)}
                         {price.effectiveTo ? ` to ${formatDateTime(price.effectiveTo)}` : ""} · licence{" "}
                         {price.licenceVersion} · {price.taxTreatment}
+                        {price.carriedFrom ? " · carried from an earlier edition" : ""}
+                        {price.carriesToLaterEditions ? " · carries to later editions" : ""}
                       </li>
                     ))}
                   </ul>
@@ -231,6 +235,19 @@ export function OwnerPrices() {
                 </div>
               )}
             </fieldset>
+            <label className="flex items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                className="mt-1"
+                checked={carries}
+                onChange={(e) => edit(setCarries)(e.target.checked)}
+                disabled={busy}
+              />
+              <span>
+                Carry this price to the template's later editions. Each time a Content editor releases its
+                next edition, the same price, licence and tax treatment are recorded for it.
+              </span>
+            </label>
             <button
               type="button"
               className="btn btn-secondary"
@@ -260,6 +277,12 @@ export function OwnerPrices() {
                   <dt className="font-semibold">Starts</dt>
                   <dd>
                     {preview.terms.from === "now" ? "When you record it" : formatDateTime(preview.terms.from)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="font-semibold">Later editions</dt>
+                  <dd>
+                    {preview.terms.carries ? "Carries to each one as it is released" : "Does not carry"}
                   </dd>
                 </div>
                 <div>

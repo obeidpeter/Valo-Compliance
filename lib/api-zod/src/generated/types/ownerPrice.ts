@@ -15,4 +15,10 @@ export interface OwnerPrice {
   effectiveFrom: Date;
   /** @nullable */
   effectiveTo: Date | null;
+  carriesToLaterEditions: boolean;
+  /**
+     * The price this one was carried from, at its edition's release
+     * @nullable
+     */
+  carriedFrom: string | null;
 }

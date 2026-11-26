@@ -1070,6 +1070,8 @@ const answers: Record<string, unknown> = {
             taxTreatment: "Synthetic tax treatment",
             effectiveFrom: at(21),
             effectiveTo: null,
+            carriesToLaterEditions: false,
+            carriedFrom: null,
           },
         ],
       },
@@ -5602,7 +5604,7 @@ test("the owner's price screen previews a price's exact terms and records only w
     recorded: unknown[] = [];
   const pricing: Api = async (route, method, path, query) => {
     if (method === "POST" && path === "/admin/owner-prices/previews") {
-      const body = route.request().postDataJSON() as Record<string, string>;
+      const body = route.request().postDataJSON() as Record<string, string> & { carries: boolean };
       previews.push(body);
       await route.fulfill({
         status: 200,
@@ -5617,6 +5619,7 @@ test("the owner's price screen previews a price's exact terms and records only w
               licenceText: body.licenceText,
               taxTreatment: body.taxTreatment,
               from: body.from,
+              carries: body.carries,
             },
             checksum,
           }),
@@ -5655,9 +5658,11 @@ test("the owner's price screen previews a price's exact terms and records only w
     await panel.getByLabel("Licence version, such as premium-1").fill("synthetic-premium-2");
     await panel.getByLabel("Licence text").fill("Synthetic licence for one business's own use only.");
     await panel.getByLabel("Tax treatment, on one line").fill("Synthetic tax treatment");
+    await panel.getByRole("checkbox", { name: /Carry this price to the template's later editions/ }).check();
     await preview.click();
     const shown = panel.getByTestId("owner-price-preview");
     await expect(shown).toContainText("Amount₦3,000.00");
+    await expect(shown).toContainText("Later editionsCarries to each one as it is released");
     await expect(shown).toContainText(checksum);
     // A changed term asks for a new preview: recording confirms only the terms previewed.
     await panel.getByLabel("Amount in naira, such as 1500 or 1500.00").fill("3000.50");
@@ -5683,6 +5688,7 @@ test("the owner's price screen previews a price's exact terms and records only w
       licenceText: "Synthetic licence for one business's own use only.",
       taxTreatment: "Synthetic tax treatment",
       from: "now",
+      carries: true,
     };
     // Two previews of the same terms: the changed amount was never previewed.
     assert.deepEqual(previews, [terms, terms]);

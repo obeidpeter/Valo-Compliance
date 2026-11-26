@@ -2132,7 +2132,9 @@ export const ListOwnerPricesResponse = zod.object({
   "licenceVersion": zod.string(),
   "taxTreatment": zod.string(),
   "effectiveFrom": zod.coerce.date(),
-  "effectiveTo": zod.coerce.date().nullable()
+  "effectiveTo": zod.coerce.date().nullable(),
+  "carriesToLaterEditions": zod.boolean(),
+  "carriedFrom": zod.uuid().nullable().describe('The price this one was carried from, at its edition\'s release')
 })).max(listOwnerPricesResponseItemsItemPricesMax).describe('The open price and any scheduled to start, earliest first.')
 })).max(listOwnerPricesResponseItemsMax)
 })
@@ -2160,6 +2162,7 @@ export const recordOwnerPriceBodyConfirmRegExp = new RegExp('^[0-9a-f]{64}$');
 
 
 export const RecordOwnerPriceBody = zod.object({
+  "carries": zod.boolean(),
   "edition": zod.uuid(),
   "amount": zod.string().regex(recordOwnerPriceBodyAmountRegExp),
   "licenceVersion": zod.string().regex(recordOwnerPriceBodyLicenceVersionRegExp),
@@ -2207,6 +2210,7 @@ export const previewOwnerPriceBodyFromMax = 40;
 
 
 export const PreviewOwnerPriceBody = zod.object({
+  "carries": zod.boolean().describe('Whether the price is recorded for each later edition of the template as it is released'),
   "edition": zod.uuid(),
   "amount": zod.string().regex(previewOwnerPriceBodyAmountRegExp).describe('The amount in naira, such as 1500 or 1500.00'),
   "licenceVersion": zod.string().regex(previewOwnerPriceBodyLicenceVersionRegExp),
@@ -2222,6 +2226,7 @@ export const previewOwnerPriceResponseChecksumRegExp = new RegExp('^[0-9a-f]{64}
 export const PreviewOwnerPriceResponse = zod.object({
   "title": zod.string(),
   "terms": zod.object({
+  "carries": zod.boolean(),
   "edition": zod.uuid(),
   "amountKobo": zod.int().min(1),
   "licenceVersion": zod.string(),

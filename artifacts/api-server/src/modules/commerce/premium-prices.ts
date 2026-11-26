@@ -33,6 +33,11 @@ export type PremiumPriceTerms = {
   taxTreatment: string;
   /** "now", or an ISO 8601 time with its offset. */
   from: string;
+  /**
+   * Whether these terms carry to the template's later editions: at each release of its next edition, the
+   * price is recorded for it with the same terms (docs/architecture/commercial-settings.md, slice 2).
+   */
+  carries: boolean;
 };
 
 const oneLine = (value: string, min: number, max: number) =>
@@ -57,6 +62,8 @@ export function premiumPriceTerms(input: {
   licenceText: string | undefined;
   taxTreatment: string | undefined;
   from?: string | undefined;
+  /** true or "yes" carries to later editions; false, "no" or nothing does not. */
+  carries?: boolean | string | undefined;
 }): PremiumPriceTerms {
   const edition = input.edition ?? "";
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(edition))
@@ -85,6 +92,9 @@ export function premiumPriceTerms(input: {
       422,
       "Give the start as now, or as a time with its offset, such as 2026-12-01T00:00:00+01:00.",
     );
+  const carries = input.carries ?? false;
+  if (![true, false, "yes", "no"].includes(carries))
+    throw new ValoProblem(422, "Say whether the price carries to the template's later editions: yes or no.");
   return {
     edition,
     amountKobo: nairaToKobo(input.amount ?? ""),
@@ -92,6 +102,7 @@ export function premiumPriceTerms(input: {
     licenceText,
     taxTreatment,
     from,
+    carries: carries === true || carries === "yes",
   };
 }
 
@@ -101,13 +112,14 @@ export function premiumPriceTermsId(terms: PremiumPriceTerms) {
   return createHash("sha256")
     .update(
       JSON.stringify([
-        "valo-premium-price-v1",
+        "valo-premium-price-v2",
         terms.edition,
         terms.amountKobo,
         terms.licenceVersion,
         terms.licenceText,
         terms.taxTreatment,
         terms.from,
+        terms.carries,
       ]),
     )
     .digest("hex");
@@ -140,6 +152,8 @@ export async function premiumPriceStatus() {
           taxTreatment: p.taxTreatment,
           effectiveFrom: p.effectiveFrom,
           effectiveTo: p.effectiveTo,
+          carriesToLaterEditions: p.carriesToLaterEditions,
+          carriedFrom: p.carriedFrom,
         })
         .from(p)
         .where(
@@ -237,6 +251,7 @@ export async function recordPremiumPriceIn(tx: Tx, terms: PremiumPriceTerms, app
       taxTreatment: terms.taxTreatment,
       approvalReference: `${reference} (approved by ${approvedBy})`,
       effectiveFrom: start,
+      carriesToLaterEditions: terms.carries,
     })
     .returning({ effectiveFrom: p.effectiveFrom });
   return {
