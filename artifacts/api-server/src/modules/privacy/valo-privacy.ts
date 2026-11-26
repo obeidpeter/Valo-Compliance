@@ -566,6 +566,8 @@ export async function simpleStaffPrivacyAction(actor: PrivacyStaffActor, id: str
       claim: "assigned",
       request_information: "needs_information",
       hold: "held",
+      // A released request returns to where it was. One whose workspace step is confirmed (a
+      // prepared data download, a recorded correction) is partly done, not merely assigned.
       release_hold:
         row.erasurePhase !== "not_started"
           ? row.erasurePhase === "application_erased"
@@ -573,9 +575,11 @@ export async function simpleStaffPrivacyAction(actor: PrivacyStaffActor, id: str
             : "in_progress"
           : !row.verifiedAt
             ? "awaiting_verification"
-            : row.assignedIdentityId
-              ? "assigned"
-              : "verified",
+            : row.steps.some((step) => step.system === "application" && step.status === "confirmed")
+              ? "partially_fulfilled"
+              : row.assignedIdentityId
+                ? "assigned"
+                : "verified",
       reject: "rejected",
     }[input.action as "claim"];
     if (!status) throw new ValoProblem(422, "This operation must use its dedicated processing service.");
