@@ -10,8 +10,8 @@ import { LONG_MARKUP, MARK, SHORT_MARKUP } from "../test-support/hostile-markup"
  * as a page a browser would run (docs/architecture/hostile-input.md, part 3).
  *
  * Every operation in the contract is sent hostile markup and SQL text in each of its path's values, in
- * its query and, for a change, in its body's keys and values, from the site's own page and signed in, so
- * that it reaches the route's own checks. Every answer must be JSON or empty, never HTML; carry the
+ * its query and, for a change, in its body's keys and values, from the site's own page and, where it
+ * needs an account, signed in, so that it reaches the route's own checks. Every answer must be JSON or empty, never HTML; carry the
  * headers that stop a browser reading it as another type or framing it; be kept from shared caches when
  * it is private; and be no failure of the server's own. An address the API does not have, a malformed
  * body and an oversized one are answered the same way, as are refusals before any route is reached.
@@ -88,6 +88,11 @@ test(
     const previousOrigin = process.env.VALO_TRUSTED_ORIGIN;
     process.env.VALO_TRUSTED_ORIGIN = base;
     const switches = () => db.select().from(valoSafetySwitches).orderBy(valoSafetySwitches.key);
+    // A read made signed out counts against the limit of the address it comes from, 60 a minute, and
+    // every test in the database job reads from this machine. So this test's reads made signed out come
+    // as a visitor of its own, as the web server's page renders do (middlewares/valo-quota.ts): it
+    // neither waits on the reads of the tests before it nor uses up those of the tests after it.
+    const visitor = { "X-Forwarded-For": "192.0.2.80" };
 
     type Answer = { status: number; type: string; text: string; headers: Headers };
     const send = async (path: string, init: RequestInit & { headers?: Record<string, string> } = {}) => {
@@ -152,7 +157,7 @@ test(
               headers: {
                 Origin: base,
                 "Sec-Fetch-Site": "same-origin",
-                ...(account ? { [identityHeader]: account } : {}),
+                ...(account ? { [identityHeader]: account } : change ? {} : visitor),
                 ...(change ? { "Content-Type": OWN_MEDIA_TYPES[operation.key] ?? "application/json" } : {}),
               },
               ...(change
@@ -178,7 +183,10 @@ test(
       await t.test("answers that no route gives carry the headers, in JSON", async () => {
         const json = { "Content-Type": "application/json", Origin: base, [identityHeader]: customer };
         const answers: [string, Answer][] = [
-          ["an address the API does not have", await send(`/${encodeURIComponent(SHORT_MARKUP)}`)],
+          [
+            "an address the API does not have",
+            await send(`/${encodeURIComponent(SHORT_MARKUP)}`, { headers: visitor }),
+          ],
           [
             "a malformed body",
             await send("/workspace/documents", { method: "POST", headers: json, body: `{"${MARK}":` }),
@@ -267,7 +275,7 @@ test(
               }),
             ],
             ["a search", await send("/admin/manual-library?q=%00", { headers: { [identityHeader]: staff } })],
-            ["a public search", await send("/public/catalogue?q=Synthetic%00")],
+            ["a public search", await send("/public/catalogue?q=Synthetic%00", { headers: visitor })],
             [
               "an address",
               await send("/workspace/documents/%00", { headers: { [identityHeader]: customer } }),
@@ -285,7 +293,9 @@ test(
           // The catalogue's search reads words, letters and digits only, so SQL text finds only what holds
           // its words. Punctuation alone is no search, and lists everything, as an empty one does.
           const catalogue = async (q: string) =>
-            JSON.parse((await send(`/public/catalogue?q=${encodeURIComponent(q)}`)).text) as {
+            JSON.parse(
+              (await send(`/public/catalogue?q=${encodeURIComponent(q)}`, { headers: visitor })).text,
+            ) as {
               total: number;
             };
           const everything = (await catalogue("")).total;
