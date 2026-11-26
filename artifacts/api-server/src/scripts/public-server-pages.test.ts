@@ -330,11 +330,18 @@ test("the web server renders a page the same for every visitor and reads the API
     authorization: "Bearer synthetic-bearer-token",
     "x-forwarded-for": "203.0.113.10, 198.51.100.7",
   };
-  /** The page's HTML with its response's own nonce, wherever it appears, replaced. */
+  /** Where one piece of the page's streamed data ends and the next begins, once the nonce is replaced. */
+  const joint = '"])</script><script nonce="response-nonce">self.__next_f.push([1,"';
+  /** The page's HTML with its response's own nonce, wherever it appears, replaced. The page's data
+   * comes in pieces, each in a script of its own, and a piece can end in the middle of the nonce, as
+   * one does in /pricing's data. So the pieces are joined, and a nonce that was split is replaced too. */
   const page = async (path: string, headers: Record<string, string> = {}) => {
     const response = await fetch(web.origin + path, { headers });
     const nonce = /'nonce-([^']+)'/.exec(response.headers.get("content-security-policy") ?? "")![1]!;
-    return (await response.text()).replaceAll(nonce, "response-nonce");
+    return (await response.text())
+      .replaceAll(nonce, "response-nonce")
+      .replaceAll(joint, "")
+      .replaceAll(nonce, "response-nonce");
   };
   const before = web.api.requests.length;
   for (const path of SERVER_PAGES)
