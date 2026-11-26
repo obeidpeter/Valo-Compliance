@@ -102,6 +102,33 @@ The requirements, verbatim from the specification:
 - **A software bill of materials** made from the lockfile on each merge and kept with the run.
 - **The image check** finds no `.git` in either image.
 
+Built (slice 4), with a note of the time frames and the bill
+([dependency advisories](../valo/dependency-advisories.md)):
+- **Owners and dates** (`scripts/src/valo/security-reports.ts`):
+  - the owner of a record is a role the specification names, the Engineering lead or the Security
+    lead;
+  - a reviewed exception names its owner and is reviewed again within 30 days of its review. The
+    design gave no bound; 30 days is a development default, as the others are;
+  - a moderate or low advisory is recorded in a list of its own, at its severity, with its owner, the
+    day it was recorded and the day to fix it by.
+- **What the merge check refuses:**
+  - an advisory not recorded, or recorded at another severity;
+  - a record without its owner, with a malformed date, made after the day of the check, or ending
+    beyond its time frame;
+  - a record past its date, even once the audit no longer reports the advisory, so a fixed one's
+    record is removed.
+
+  Both lists are empty: the audit reports no advisory of any severity.
+- **The weekly run:** on Mondays at 05:41 UTC the workflow runs its two scan jobs, and its other jobs
+  skip a scheduled run. A test reads the workflow and keeps it so.
+- **The bill:** the dependency job makes a CycloneDX bill of materials from the lockfile and keeps it
+  with the run.
+  - It lists every package with its registry address, checksum and dependencies, and whether it is
+    needed at run time.
+  - A package from anywhere but the registry, or without a checksum, stops it.
+- **The image check** lists every file in each image and finds no `.git`, `.svn` or `.hg`. It must find
+  the image's own files first, so it cannot pass by reading nothing.
+
 ### Part 4: code rules
 
 - Strict equality in the linter, with comparisons to null allowed (the only loose comparisons today).
@@ -170,10 +197,13 @@ The requirements, verbatim from the specification:
 | 2 | Part 1's rotation runbook and the logins' rehearsal | Built |
 | 3a | Part 4, and Part 5's policy, headers, content types, folders and TRACE | Built |
 | 3b | Part 5's storage redirects, the staff upload's refusals and the token made for another site | Built |
-| 4 | Part 3: advisories, the scheduled scan, the bill of materials and the image check | Not built |
+| 4 | Part 3: advisories, the scheduled scan, the bill of materials and the image check | Built |
 | 5 | Part 2: limits as settings | Not built |
 
 ## The owner's points
 
-1. **Time frames for lower-severity advisories**: 30 days for moderate and 90 for low are proposed.
-2. **The scheduled scan** runs once the workflow reaches `main`.
+1. **Time frames for advisories**: 30 days for moderate and 90 for low are proposed, and a reviewed
+   critical or high exception is reviewed again within 30 days.
+2. **The scheduled scan** runs once the workflow reaches `main`. So do Dependabot's weekly update
+   proposals, which GitHub also reads from `main`.
+3. **A time frame for routine updates**, when no advisory needs one, is not set.

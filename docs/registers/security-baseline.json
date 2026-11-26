@@ -3014,15 +3014,21 @@
     {
       "id": "v5.0.0-13.4.1",
       "level": 1,
-      "status": "untested",
+      "status": "met",
       "bears_on": [
         "SEC-002"
       ],
-      "control": "The images are built without the repository's .git folder.",
+      "control": "The images are built without the repository's .git folder, and the image check lists every file in each image and finds no .git, .svn or .hg in either.",
       "code": [
-        ".dockerignore"
+        ".dockerignore",
+        "scripts/ops/check-container-images.sh"
       ],
-      "gap": "No check reads the built image."
+      "checks": [
+        {
+          "job": "container-images",
+          "step": "Build the API and web images and prove PDF rendering, refusal without configuration, web headers and no source control metadata"
+        }
+      ]
     },
     {
       "id": "v5.0.0-13.4.2",
@@ -3303,8 +3309,9 @@
       "bears_on": [
         "SEC-007"
       ],
-      "control": "Every merge fails on a high or critical advisory, unless it is reviewed for the one part of the dependency tree it reaches.",
+      "control": "A note sets how long an advisory may stay, by its severity, and every merge holds the dependencies to it: a high or critical advisory blocks unless it is reviewed for the one part of the dependency tree it reaches, owned and reviewed again within 30 days; a moderate one must be recorded with its owner and fixed within 30 days, and a low one within 90.",
       "code": [
+        "docs/valo/dependency-advisories.md",
         "scripts/src/valo/security-reports.ts"
       ],
       "tests": [
@@ -3315,28 +3322,46 @@
         {
           "file": "scripts/src/valo/security-reports.test.ts",
           "test": "a reviewed advisory passes only within its reviewed subtree"
+        },
+        {
+          "file": "scripts/src/valo/security-reports.test.ts",
+          "test": "a reviewed advisory names its owner and is reviewed again within 30 days, or it blocks the merge (SEC-007)"
+        },
+        {
+          "file": "scripts/src/valo/security-reports.test.ts",
+          "test": "a moderate or low advisory blocks the merge unless it is recorded with its owner and fixed within 30 or 90 days (SEC-007)"
         }
       ],
-      "gap": "No document sets time frames for fixing lower advisories or for routine updates."
+      "gap": "No time frame is set for adopting a routine update when no advisory needs it; that is the owner's decision."
     },
     {
       "id": "v5.0.0-15.1.2",
       "level": 2,
-      "status": "partly met",
+      "status": "met",
       "bears_on": [
         "SEC-007"
       ],
-      "control": "The lockfile pins every package to its version and checksum, and CI installs only what it names.",
+      "control": "The lockfile pins every package to its version and checksum, and CI installs only what it names. On each merge CI makes a software bill of materials from it and keeps it with the run: every package with its registry address, checksum and dependencies, and whether it is needed at run time. A package from anywhere but the registry, or without a checksum, stops the bill.",
       "code": [
-        "pnpm-lock.yaml"
+        "pnpm-lock.yaml",
+        "scripts/src/valo/sbom.ts"
       ],
       "tests": [
         {
-          "file": "scripts/src/valo/security-reports.test.ts",
-          "test": "dependency detector fails on a harmless high canary and strips raw descriptions"
+          "file": "scripts/src/valo/sbom.test.ts",
+          "test": "the bill of materials lists every package the lockfile installs, from the registry, with its version and checksum (SEC-007)"
+        },
+        {
+          "file": "scripts/src/valo/sbom.test.ts",
+          "test": "a package from anywhere but the registry, or without a checksum, stops the bill of materials"
         }
       ],
-      "gap": "No software bill of materials is produced."
+      "checks": [
+        {
+          "job": "merge-security",
+          "step": "Make the software bill of materials from the lockfile (SEC-007)"
+        }
+      ]
     },
     {
       "id": "v5.0.0-15.1.3",
@@ -3377,21 +3402,30 @@
       "bears_on": [
         "SEC-007"
       ],
-      "control": "No merge passes with a high or critical advisory open, unless it is reviewed for its part of the tree.",
+      "control": "No merge passes with an advisory past its time frame: a high or critical one blocks unless it is reviewed for its part of the tree, owned and within its review date, and a moderate or low one unless it is recorded, owned and within its 30 or 90 days. The same checks are set to run each week, from the moment the workflow is on main.",
       "code": [
-        "scripts/src/valo/security-reports.ts"
+        "scripts/src/valo/security-reports.ts",
+        ".github/workflows/valo-foundation.yml"
       ],
       "tests": [
         {
           "file": "scripts/src/valo/security-reports.test.ts",
-          "test": "dependency detector fails on a harmless high canary and strips raw descriptions"
+          "test": "a reviewed advisory passes only within its reviewed subtree"
         },
         {
           "file": "scripts/src/valo/security-reports.test.ts",
-          "test": "a reviewed advisory passes only within its reviewed subtree"
+          "test": "a reviewed advisory names its owner and is reviewed again within 30 days, or it blocks the merge (SEC-007)"
+        },
+        {
+          "file": "scripts/src/valo/security-reports.test.ts",
+          "test": "a moderate or low advisory blocks the merge unless it is recorded with its owner and fixed within 30 or 90 days (SEC-007)"
+        },
+        {
+          "file": "scripts/src/valo/scheduled-scan.test.ts",
+          "test": "every week the workflow runs the dependency, secret and static checks, and nothing else (SEC-007)"
         }
       ],
-      "gap": "With no time frames for lower advisories (15.1.1), there is nothing to hold them to."
+      "gap": "The dependencies are held to the time frames for advisories only: no time frame is set for routine updates (15.1.1), and the weekly run waits for the workflow to reach main."
     },
     {
       "id": "v5.0.0-15.2.2",
