@@ -72,6 +72,34 @@
       "proves": "Against real PostgreSQL, the real API and the real web app in a browser without the content security policy, hostile markup saved through the API in a business profile, a document, a template's answers, a task, a support request, a privacy request and a staff answer is shown on each customer and staff screen as the text typed, with no element it tried to make and no script it carried run, while the same markup put into a page as HTML on purpose runs and is caught."
     },
     {
+      "requirement": "SEC-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-reflection.integration.test.ts",
+      "test": "hostile text sent to every operation in the contract comes back only inside JSON with the security headers, fails no route, and stays text in the database and its searches",
+      "proves": "Against real PostgreSQL and the whole API, every operation in the contract, sent hostile markup and SQL text in its path, query and body, answers in JSON or nothing, with nosniff and no framing, kept from shared caches when private and never with a failure of the server's own; an unknown address and a malformed or oversized body are answered the same way; SQL text comes back byte for byte, searches read %, _ and \\ literally, and a NUL character is refused as a detail not taken."
+    },
+    {
+      "requirement": "SEC-003",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-server-pages.test.ts",
+      "test": "hostile markup in a page's address is drawn only as text: the server's HTML holds it escaped, and the page runs none of it (SEC-003)",
+      "proves": "On the compiled web app, the library and services pages given hostile markup in every value of their address hold it only escaped in the server's HTML, and in a browser run none of it and make none of its elements, while the library's search box shows it as text."
+    },
+    {
+      "requirement": "SEC-003",
+      "job": "foundation",
+      "file": "scripts/src/valo/architecture-check.test.ts",
+      "test": "product code puts no text into a page as HTML, and hands a browser HTML only where it is reviewed (SEC-003)",
+      "proves": "The raw-html repository rule fails on assigning innerHTML or outerHTML, insertAdjacentHTML, createContextualFragment, document.write, setContent and srcDoc in product code outside its two reviewed places, and the repository has none."
+    },
+    {
+      "requirement": "SEC-003",
+      "job": "foundation",
+      "file": "scripts/src/valo/architecture-check.test.ts",
+      "test": "product code builds no SQL from text but where it is reviewed, and each review counts its texts (SEC-003)",
+      "proves": "The raw-sql repository rule fails on sql.raw of anything but a fixed string and on a query whose text is a template with substitutions or a joined string, outside reviewed files whose count of such texts must match their review, and the repository has none."
+    },
+    {
       "requirement": "NFR-011",
       "job": "foundation",
       "file": "scripts/src/valo/architecture-check.test.ts",
