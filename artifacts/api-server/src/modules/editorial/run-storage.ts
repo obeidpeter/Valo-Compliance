@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { Client } from "@replit/object-storage";
 import { setting } from "../../platform/settings";
+import { anonymousObjectStatus } from "../../platform/anonymous-object";
 export const hashEditorial = (value: string) => createHash("sha256").update(value).digest("hex");
 function object(id: string) {
   if (!/^[a-f0-9-]{36}$/.test(id)) throw Error("EDITORIAL_STORAGE_INVALID_ID");
@@ -34,10 +35,5 @@ export async function readEditorialRun(id: string, expectedHash: string) {
 export async function probeEditorialPrivate(id: string, expectedHash: string) {
   await readEditorialRun(id, expectedHash);
   const { bucket, name } = object(id);
-  const r = await fetch(
-    `https://storage.googleapis.com/${encodeURIComponent(bucket)}/${name.split("/").map(encodeURIComponent).join("/")}`,
-    { signal: AbortSignal.timeout(10000) },
-  );
-  await r.body?.cancel();
-  return { authorizedChecksumMatched: true, anonymousStatus: r.status };
+  return { authorizedChecksumMatched: true, anonymousStatus: await anonymousObjectStatus(bucket, name) };
 }
