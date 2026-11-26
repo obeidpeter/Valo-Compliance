@@ -26,6 +26,8 @@ import {
   valoExportObjects,
   valoPrivacyMessages,
   valoSavedTemplates,
+  valoRuleNotices,
+  valoEditionNotices,
 } from "@workspace/db";
 import { eq, inArray, sql } from "drizzle-orm";
 import { guardRefusal } from "../../platform/http-errors";
@@ -40,6 +42,7 @@ import {
   privacyChange,
 } from "./valo-privacy";
 import {
+  applicationErasurePhaseCount,
   processPrivacyErasure,
   replayErasureObjects,
   replayErasedApplication,
@@ -84,6 +87,31 @@ test(
       await saveProfile(a, { expectedRevision: 0, profile: syntheticProfile });
       await createDocument(a, syntheticDocument);
       await createDocument(b, syntheticDocument);
+      // A rule's and a template edition's notices to each workspace (docs/architecture/processing-inventory.md,
+      // slice 5): the erasure removes the erased workspace's, and leaves the other's.
+      for (const workspace of [a, b]) {
+        await db.insert(valoRuleNotices).values({
+          workspaceId: workspace.workspaceId,
+          ruleId: "SYNTHETIC-ERASURE-RULE",
+          version: 1,
+          kind: "withdrawn",
+          title: "Synthetic rule",
+          reason: "Synthetic withdrawal for the erasure test.",
+          results: 1,
+          tasks: 0,
+        });
+        await db.insert(valoEditionNotices).values({
+          workspaceId: workspace.workspaceId,
+          route: "library",
+          edition: randomUUID(),
+          kind: "withdrawn",
+          title: "Synthetic template",
+          version: 1,
+          reason: "Synthetic withdrawal for the erasure test.",
+          held: true,
+          documents: 0,
+        });
+      }
       await db.insert(valoSavedTemplates).values(
         Array.from({ length: 101 }, (_, i) => ({
           id: randomUUID(),
@@ -420,10 +448,23 @@ test(
           );
           assert.equal(await remainingSupport(), 0);
           assert.equal(detail.request.status, "partially_fulfilled");
-          for (const table of [valoDocuments, valoDocumentRevisions, valoProfileVersions, valoSavedTemplates])
+          for (const table of [
+            valoDocuments,
+            valoDocumentRevisions,
+            valoProfileVersions,
+            valoSavedTemplates,
+            valoRuleNotices,
+            valoEditionNotices,
+          ])
             assert.equal(
               (await db.select().from(table).where(eq(table.workspaceId, a.workspaceId))).length,
               0,
+            );
+          for (const table of [valoRuleNotices, valoEditionNotices])
+            assert.equal(
+              (await db.select().from(table).where(eq(table.workspaceId, b.workspaceId))).length,
+              1,
+              "the other workspace's notices stay",
             );
           assert.equal(
             (await db.select().from(valoDocuments).where(eq(valoDocuments.workspaceId, b.workspaceId)))
@@ -514,7 +555,8 @@ test(
           await assert.rejects(() => resolveWorkspace(a.identityId), { status: 403 });
           assert.equal((await replayErasureObjects(id, async () => {})).deleted, 4);
           let physical = await replayErasedApplication(id, async () => {});
-          for (let n = 0; n < 25 && physical.remaining; n++)
+          // One phase a call: the replay finishes within one call for each phase.
+          for (let n = 0; n < applicationErasurePhaseCount && physical.remaining; n++)
             physical = await replayErasedApplication(id, async () => {});
           assert.equal(physical.remaining, false);
           assert.equal(
@@ -764,6 +806,8 @@ test(
         valoDocumentRevisions,
         valoDocuments,
         valoProfileVersions,
+        valoRuleNotices,
+        valoEditionNotices,
         valoMemberships,
       ])
         await db.delete(table).where(inArray(table.workspaceId, ids));
