@@ -4064,6 +4064,51 @@ test("privacy staff see each step of a partly done request, and record an outsid
   }
 });
 
+// PRV-003: the staff queue gives each open request the date Valo aims to finish it by, as Valo's own aim
+// and not a time limit set by law (docs/architecture/privacy-requests.md, slice 3).
+test("the staff privacy queue gives each open request the date Valo aims to finish it by, says it is Valo's own aim and not a time limit set by law, and says when it has passed", async () => {
+  const within = { ...privacyCase, aimBy: new Date(Date.UTC(2099, 0, 5, 9)).toISOString() };
+  const past = {
+    ...privacyCase,
+    id: "00000000-0000-4000-8000-00000000b003",
+    reference: "PRV-SYNTH-3",
+    aimBy: at(1),
+  };
+  const done = {
+    ...privacyCase,
+    id: "00000000-0000-4000-8000-00000000b004",
+    reference: "PRV-SYNTH-4",
+    status: "fulfilled",
+    aimBy: null,
+  };
+  const { page, unknown, errors, close } = await phone(
+    "/staff/privacy",
+    except({
+      "GET /admin/privacy-cases": api.ListStaffPrivacyCasesResponse.parse({
+        items: [past, within, done],
+        page: 1,
+        total: 3,
+        pageSize: 20,
+      }),
+    }),
+  );
+  try {
+    await ready(page);
+    const aims = page.getByTestId("text-privacy-aim");
+    await expect(aims).toHaveCount(2);
+    await expect(aims.nth(0)).toHaveText(
+      "Open past 1 Nov 2026, the date Valo aimed to finish it by. That is Valo's own aim, not a time limit set by law.",
+    );
+    await expect(aims.nth(1)).toHaveText(
+      "Valo aims to finish it by 5 Jan 2099. That is Valo's own aim, not a time limit set by law.",
+    );
+    assert.deepEqual((await wcagFailures(page)).failures, []);
+    assert.deepEqual([...unknown, ...errors], []);
+  } finally {
+    await close();
+  }
+});
+
 // A sentence that shows only once a list is empty, or a form is opened, is read here: the tests
 // that read each screen as it opens do not see it.
 test("an empty list of tasks or reminders says what to do next in the customer's words, and the new-task form's hint names a saved result", async () => {

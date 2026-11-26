@@ -6553,7 +6553,8 @@ export const ListPrivacyCasesResponseItem = zod.object({
   "resultAvailable": zod.boolean(),
   "resultScope": zod.string(),
   "createdAt": zod.string(),
-  "updatedAt": zod.string()
+  "updatedAt": zod.string(),
+  "aimBy": zod.string().nullish().describe('In the staff queue only, for a request not yet done, refused or cancelled, the date Valo aims to finish it by. It is Valo\'s own aim, not a time limit set by law.')
 })
 export const ListPrivacyCasesResponse = zod.array(ListPrivacyCasesResponseItem)
 
@@ -6587,7 +6588,8 @@ export const RespondPrivacyCaseResponse = zod.object({
   "resultAvailable": zod.boolean(),
   "resultScope": zod.string(),
   "createdAt": zod.string(),
-  "updatedAt": zod.string()
+  "updatedAt": zod.string(),
+  "aimBy": zod.string().nullish().describe('In the staff queue only, for a request not yet done, refused or cancelled, the date Valo aims to finish it by. It is Valo\'s own aim, not a time limit set by law.')
 }),
   "mayRespond": zod.boolean(),
   "availableActions": zod.array(zod.string()).optional(),
@@ -6629,7 +6631,8 @@ export const GetPrivacyCaseResponse = zod.object({
   "resultAvailable": zod.boolean(),
   "resultScope": zod.string(),
   "createdAt": zod.string(),
-  "updatedAt": zod.string()
+  "updatedAt": zod.string(),
+  "aimBy": zod.string().nullish().describe('In the staff queue only, for a request not yet done, refused or cancelled, the date Valo aims to finish it by. It is Valo\'s own aim, not a time limit set by law.')
 }),
   "mayRespond": zod.boolean(),
   "availableActions": zod.array(zod.string()).optional(),
@@ -6679,7 +6682,8 @@ export const VerifyPrivacyCaseResponse = zod.object({
   "resultAvailable": zod.boolean(),
   "resultScope": zod.string(),
   "createdAt": zod.string(),
-  "updatedAt": zod.string()
+  "updatedAt": zod.string(),
+  "aimBy": zod.string().nullish().describe('In the staff queue only, for a request not yet done, refused or cancelled, the date Valo aims to finish it by. It is Valo\'s own aim, not a time limit set by law.')
 }),
   "mayRespond": zod.boolean(),
   "availableActions": zod.array(zod.string()).optional(),
@@ -6729,7 +6733,8 @@ export const CancelPrivacyCaseResponse = zod.object({
   "resultAvailable": zod.boolean(),
   "resultScope": zod.string(),
   "createdAt": zod.string(),
-  "updatedAt": zod.string()
+  "updatedAt": zod.string(),
+  "aimBy": zod.string().nullish().describe('In the staff queue only, for a request not yet done, refused or cancelled, the date Valo aims to finish it by. It is Valo\'s own aim, not a time limit set by law.')
 }),
   "mayRespond": zod.boolean(),
   "availableActions": zod.array(zod.string()).optional(),
@@ -6782,7 +6787,8 @@ export const ListStaffPrivacyCasesResponse = zod.object({
   "resultAvailable": zod.boolean(),
   "resultScope": zod.string(),
   "createdAt": zod.string(),
-  "updatedAt": zod.string()
+  "updatedAt": zod.string(),
+  "aimBy": zod.string().nullish().describe('In the staff queue only, for a request not yet done, refused or cancelled, the date Valo aims to finish it by. It is Valo\'s own aim, not a time limit set by law.')
 })),
   "page": zod.int(),
   "total": zod.int(),
@@ -6808,7 +6814,8 @@ export const GetStaffPrivacyCaseResponse = zod.object({
   "resultAvailable": zod.boolean(),
   "resultScope": zod.string(),
   "createdAt": zod.string(),
-  "updatedAt": zod.string()
+  "updatedAt": zod.string(),
+  "aimBy": zod.string().nullish().describe('In the staff queue only, for a request not yet done, refused or cancelled, the date Valo aims to finish it by. It is Valo\'s own aim, not a time limit set by law.')
 }),
   "mayRespond": zod.boolean(),
   "availableActions": zod.array(zod.string()).optional(),
@@ -6866,7 +6873,8 @@ export const ActOnStaffPrivacyCaseResponse = zod.object({
   "resultAvailable": zod.boolean(),
   "resultScope": zod.string(),
   "createdAt": zod.string(),
-  "updatedAt": zod.string()
+  "updatedAt": zod.string(),
+  "aimBy": zod.string().nullish().describe('In the staff queue only, for a request not yet done, refused or cancelled, the date Valo aims to finish it by. It is Valo\'s own aim, not a time limit set by law.')
 }),
   "mayRespond": zod.boolean(),
   "availableActions": zod.array(zod.string()).optional(),

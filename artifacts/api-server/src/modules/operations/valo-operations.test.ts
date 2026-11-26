@@ -14,6 +14,7 @@ import {
   readinessQueries,
 } from "./valo-operations";
 import { versionedEvidencePath } from "../../lib/versioned-evidence-path";
+import { PRIVACY_REQUEST_AIM_DAYS } from "../../lib/valo-privacy-state";
 
 const securityQueries = [
   readinessQueries.deniedAccess,
@@ -69,12 +70,14 @@ test("internal probes measure failures independently and persist/deduplicate/rec
   worker.finish(worker.begin()!, true);
   try {
     await recordWorkerHeartbeat(worker.snapshot(), dir);
-    // The security readings are zero here; their alerts have their own tests.
+    // The security readings, and the reading of privacy requests past Valo's own aim, are zero here;
+    // their alerts have their own tests.
     const security = new Set<string>([
       ...securityQueries,
       readinessQueries.guardRefusals,
       readinessQueries.privilegedReading,
       readinessQueries.historyIntegrity,
+      readinessQueries.privacyRequests,
     ]);
     const failures = await collectOperationalSample(async (sql) => {
       if (sql === readinessQueries.database) throw Error("SYNTHETIC_PRIVATE_DB_ERROR");
@@ -388,6 +391,57 @@ test("a history whose digest no longer matches its rows raises an alert, and no 
       { code: "HISTORY_INTEGRITY_PROBE_UNAVAILABLE", ...owner },
     ]);
     assert.deepEqual((await recordOperationalAlerts(await sample(0), dir)).active, []);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { recursive: true, force: true });
+    if (old === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = old;
+  }
+});
+
+// PRV-003 (docs/architecture/privacy-requests.md, slice 3): a privacy request still open after the date
+// Valo aims to finish it by raises an alert under the deletion and recovery runbook. That date is Valo's
+// own aim, not a time limit set by law.
+test("a privacy request open past the date Valo aims to finish it by raises an alert under the deletion and recovery runbook, and a failed reading makes its probe unavailable", async () => {
+  const old = process.env.NODE_ENV;
+  process.env.NODE_ENV = "development";
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => {
+    throw Error("EXTERNAL_MESSAGES_FORBIDDEN");
+  };
+  const dir = await mkdtemp(join(tmpdir(), "valo-ops-privacy-"));
+  const worker = new WorkerHealth();
+  worker.finish(worker.begin()!, true);
+  try {
+    await recordWorkerHeartbeat(worker.snapshot(), dir);
+    const sample = (open: number | "unreadable") =>
+      collectOperationalSample(async (sql) => {
+        if (sql === readinessQueries.privacyRequests && open === "unreadable")
+          throw Error("SYNTHETIC_PROBE_FAILURE");
+        return {
+          rows: [
+            {
+              value:
+                sql === readinessQueries.database ? 1 : sql === readinessQueries.privacyRequests ? open : 0,
+            },
+          ],
+        };
+      }, dir);
+    const owner = { runbook: "Deletion and recovery", accountable: "Engineering + privacy owner" };
+    // Every open request is within Valo's own aim.
+    assert.deepEqual((await recordOperationalAlerts(await sample(0), dir)).active, []);
+    // Two are past it.
+    assert.deepEqual((await recordOperationalAlerts(await sample(2), dir)).owners, [
+      { code: "PRIVACY_REQUESTS_BACKLOG", ...owner },
+    ]);
+    // The reading failed, which is an alert of its own.
+    assert.deepEqual((await recordOperationalAlerts(await sample("unreadable"), dir)).owners, [
+      { code: "PRIVACY_REQUESTS_PROBE_UNAVAILABLE", ...owner },
+    ]);
+    assert.deepEqual((await recordOperationalAlerts(await sample(0), dir)).active, []);
+    // The reading counts requests not yet done, refused or cancelled, made more than Valo's own aim ago.
+    assert.match(readinessQueries.privacyRequests, /status NOT IN \('fulfilled','rejected','cancelled'\)/);
+    assert.ok(readinessQueries.privacyRequests.includes(`interval '${PRIVACY_REQUEST_AIM_DAYS} days'`));
   } finally {
     globalThis.fetch = originalFetch;
     await rm(dir, { recursive: true, force: true });

@@ -38,6 +38,8 @@ import {
   privacyAuditHash,
   privacyAuditEqual,
   privacySnapshotHash,
+  privacyRequestAimBy,
+  terminalPrivacyStatus,
   type PrivacyAuditInput,
   type PrivacyStatus,
 } from "../../lib/valo-privacy-state";
@@ -427,10 +429,18 @@ export async function listStaffPrivacyCases(actor: PrivacyStaffActor, page: numb
     const role = await requirePrivacyStaff(tx, actor),
       pageSize = 20;
     const [total] = await tx.select({ count: sql<number>`count(*)::integer` }).from(valoPrivacyCases);
+    // Open requests first, the oldest first, then the rest, the newest first (docs/architecture/
+    // privacy-requests.md, slice 3).
+    const closed = sql`${valoPrivacyCases.status} IN ('fulfilled', 'rejected', 'cancelled')`;
     const rows = await tx
       .select()
       .from(valoPrivacyCases)
-      .orderBy(desc(valoPrivacyCases.createdAt), desc(valoPrivacyCases.id))
+      .orderBy(
+        closed,
+        sql`CASE WHEN ${closed} THEN NULL ELSE ${valoPrivacyCases.createdAt} END ASC NULLS LAST`,
+        desc(valoPrivacyCases.createdAt),
+        desc(valoPrivacyCases.id),
+      )
       .limit(pageSize)
       .offset((page - 1) * pageSize);
     await tx.insert(valoStaffAccessAudit).values({
@@ -441,7 +451,13 @@ export async function listStaffPrivacyCases(actor: PrivacyStaffActor, page: numb
       object: "privacy_cases",
       reason: "Viewed the privacy request queue; no customer document body was returned.",
     });
-    return { items: rows.map(privacyCaseRecord), page, total: total?.count ?? 0, pageSize };
+    // Each open request carries the date Valo aims to finish it by: Valo's own aim, not a time limit set
+    // by law.
+    const items = rows.map((row) => ({
+      ...privacyCaseRecord(row),
+      aimBy: terminalPrivacyStatus(row.status) ? null : privacyRequestAimBy(row.createdAt).toISOString(),
+    }));
+    return { items, page, total: total?.count ?? 0, pageSize };
   });
 }
 export async function respondPrivacyCase(actor: WorkspaceActor, id: string, raw: unknown) {

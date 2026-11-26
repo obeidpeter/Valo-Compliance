@@ -28,9 +28,12 @@ import { syntheticProfile } from "../../lib/valo-test-fixtures";
 import {
   confirmPrivacyCase,
   createPrivacyCase,
+  listStaffPrivacyCases,
   simpleStaffPrivacyAction,
   staffPrivacyDetail,
 } from "./valo-privacy";
+import { readinessQueries } from "../operations/valo-operations";
+import { PRIVACY_REQUEST_AIM_DAYS, privacyRequestAimBy } from "../../lib/valo-privacy-state";
 import { privacyPreparedResult, processPrivacyAction } from "./valo-privacy-processing";
 import { closePrivacyErasureLocks, processPrivacyErasure } from "./valo-privacy-erasure";
 
@@ -341,5 +344,63 @@ test(
       await privacyPreparedResult(download.actor, download.id),
       "the prepared download is still theirs",
     );
+  },
+);
+
+// PRV-003 (docs/architecture/privacy-requests.md, slice 3): a request still open after the date Valo aims
+// to finish it by is counted by the operations probe and listed first in the staff queue. That date is
+// Valo's own aim, not a time limit set by law.
+test(
+  "a request still open after the date Valo aims to finish it by is counted by the operations probe and listed first in the staff queue with that date, and is not counted once it is cancelled",
+  { skip, timeout: 120000 },
+  async () => {
+    assertSyntheticDatabase();
+    const staff = await privacyStaff();
+    const pastDue = async () => Number((await pool.query(readinessQueries.privacyRequests)).rows[0].value);
+    const before = await pastDue();
+    const actor = await resolveWorkspace(`synthetic-privacy-request-aged-${randomUUID()}`);
+    owners.push(actor.workspaceId);
+    const made = await createPrivacyCase(actor, "synthetic@example.invalid", {
+      kind: "export",
+      idempotencyKey: randomUUID(),
+      message: reason,
+      acknowledgement: true,
+    });
+    const id = made.reference.slice(5);
+    assert.equal(await pastDue(), before, "a new request is within Valo's own aim");
+    /** Moves the request's date by whole days, in the database, as only a test does. */
+    const moved = (days: number) =>
+      pool.query(
+        "UPDATE valo_privacy_cases SET created_at = created_at + make_interval(days => $2) WHERE id = $1",
+        [id, days],
+      );
+    const aimPlusOne = PRIVACY_REQUEST_AIM_DAYS + 1;
+
+    // Made a day more than Valo's own aim ago.
+    await moved(-aimPlusOne);
+    assert.equal(await pastDue(), before + 1);
+    const queue = await listStaffPrivacyCases(staff, 1);
+    assert.equal(queue.items[0]?.id, id, "the oldest open request is listed first");
+    const [row] = await db.select().from(valoPrivacyCases).where(eq(valoPrivacyCases.id, id));
+    assert.equal(queue.items[0]?.aimBy, privacyRequestAimBy(row!.createdAt).toISOString());
+    assert.ok(Date.parse(queue.items[0]!.aimBy!) < Date.now(), "the date has passed");
+    // A request's date is part of its signed history, so a moved date holds the request.
+    await assert.rejects(confirmPrivacyCase(actor, id, { expectedVersion: 1, acknowledgement: true }, true), {
+      status: 409,
+    });
+
+    // Back to its own date, it is cancelled as usual; cancelled, it is not counted, however old.
+    await moved(aimPlusOne);
+    const cancelled = await confirmPrivacyCase(
+      actor,
+      id,
+      { expectedVersion: 1, acknowledgement: true },
+      true,
+    );
+    assert.equal(cancelled.request.status, "cancelled");
+    await moved(-aimPlusOne);
+    assert.equal(await pastDue(), before);
+    const after = await listStaffPrivacyCases(staff, 1);
+    assert.equal(after.items.find((item) => item.id === id)?.aimBy ?? null, null);
   },
 );

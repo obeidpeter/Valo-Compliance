@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { assertApplicationRuntime, runtimeEnvironment } from "../../platform/valo-runtime-activation";
 import { workerReadiness, type WorkerHeartbeat } from "../../platform/valo-worker-health";
 import { quotaPolicy, type QuotaBucket } from "../../lib/valo-quota-policy";
+import { PRIVACY_REQUEST_AIM_DAYS } from "../../lib/valo-privacy-state";
 export const operationsDirectory = resolve("generated-artifacts/valo-operations");
 /** Live windows of the named quota buckets that reached their limit: one caller using all of it. */
 const atQuotaLimit = (buckets: readonly QuotaBucket[]) =>
@@ -23,6 +24,11 @@ export const readinessQueries = {
     JOIN valo_workspace_exports j ON j.id=a.job_id AND j.workspace_id=a.workspace_id
     WHERE (a.status='cleanup' OR j.status IN ('cancelled','expired'))
       AND (a.next_cleanup_at<=now() OR a.cleanup_error_code IS NOT NULL) LIMIT 10001) bounded`,
+  // PRV-003 (docs/architecture/privacy-requests.md, slice 3): privacy requests still open after the date
+  // Valo aims to finish them by. That date is Valo's own aim, not a time limit set by law.
+  privacyRequests: `SELECT count(*)::int AS value FROM (SELECT 1 FROM valo_privacy_cases
+    WHERE status NOT IN ('fulfilled','rejected','cancelled')
+      AND created_at < now() - interval '${PRIVACY_REQUEST_AIM_DAYS} days' LIMIT 10001) bounded`,
   payments: `SELECT count(*)::int AS value FROM (SELECT 1 FROM valo_orders o WHERE o.status='verified_success' AND
     (NOT EXISTS(SELECT 1 FROM valo_entitlements e WHERE e.order_id=o.id AND e.workspace_id=o.workspace_id)
     OR NOT EXISTS(SELECT 1 FROM valo_purchase_outbox r WHERE r.order_id=o.id AND r.workspace_id=o.workspace_id AND r.kind='purchase_receipt')) LIMIT 10001) bounded`,
@@ -77,6 +83,7 @@ export type OperationalSample = {
   cleanup: Metric;
   exportRetention: Metric;
   workspaceCleanup: Metric;
+  privacyRequests: Metric;
   payments: Metric;
   deniedAccess: Metric;
   signatureFailures: Metric;
@@ -93,6 +100,7 @@ export type OperationalSample = {
     cleanup: number;
     exportRetention: number;
     workspaceCleanup: number;
+    privacyRequests: number;
     workerAgeMs: number;
     deniedAccess: number;
     signatureFailures: number;
@@ -183,6 +191,8 @@ export async function collectOperationalSample(
       cleanup: 0,
       exportRetention: 0,
       workspaceCleanup: 0,
+      // Any privacy request still open after the date Valo aims to finish it by.
+      privacyRequests: 0,
       workerAgeMs: 90000,
       // Development defaults, not reviewed thresholds: more than 20 refusals of one address in ten
       // minutes, and any signature failure, role change or caller at a quota limit, raise an alert.
@@ -213,6 +223,7 @@ export const ALERT_RUNBOOKS = {
   CLEANUP: { runbook: "Deletion and recovery", accountable: "Engineering + privacy owner" },
   EXPORT_RETENTION: { runbook: "Deletion and recovery", accountable: "Engineering + privacy owner" },
   WORKSPACE_CLEANUP: { runbook: "Deletion and recovery", accountable: "Engineering + privacy owner" },
+  PRIVACY_REQUESTS: { runbook: "Deletion and recovery", accountable: "Engineering + privacy owner" },
   PAYMENTS: { runbook: "Payment/entitlement failure", accountable: "Finance + engineering" },
   DENIED_ACCESS: { runbook: "Security/privacy incident", accountable: "Incident lead + privacy owner" },
   SIGNATURE_FAILURES: { runbook: "Security/privacy incident", accountable: "Incident lead + privacy owner" },
@@ -303,13 +314,22 @@ async function recordOperationalAlertsLocked(sample: OperationalSample, director
     const active: string[] = [];
     if (sample.database.status !== "ok" || sample.database.value !== 1) active.push("DATABASE_UNAVAILABLE");
     if (sample.worker.status !== "healthy") active.push("WORKER_UNAVAILABLE");
-    for (const name of ["exports", "cleanup", "exportRetention", "workspaceCleanup", "payments"] as const) {
+    for (const name of [
+      "exports",
+      "cleanup",
+      "exportRetention",
+      "workspaceCleanup",
+      "privacyRequests",
+      "payments",
+    ] as const) {
       const code =
         name === "workspaceCleanup"
           ? "WORKSPACE_CLEANUP"
           : name === "exportRetention"
             ? "EXPORT_RETENTION"
-            : name.toUpperCase();
+            : name === "privacyRequests"
+              ? "PRIVACY_REQUESTS"
+              : name.toUpperCase();
       const metric = sample[name];
       if (metric.status !== "ok") active.push(code + "_PROBE_UNAVAILABLE");
       else if (metric.value! > (name === "payments" ? 0 : sample.limits[name]))
