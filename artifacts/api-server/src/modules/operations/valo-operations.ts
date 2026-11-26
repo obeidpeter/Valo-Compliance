@@ -5,6 +5,7 @@ import { assertApplicationRuntime, runtimeEnvironment } from "../../platform/val
 import { workerReadiness, type WorkerHeartbeat } from "../../platform/valo-worker-health";
 import { quotaPolicy, type QuotaBucket } from "../../lib/valo-quota-policy";
 import { PRIVACY_REQUEST_AIM_DAYS } from "../../lib/valo-privacy-state";
+import { COMMERCIAL_SETTINGS } from "../commercial-settings";
 export const operationsDirectory = resolve("generated-artifacts/valo-operations");
 /** Live windows of the named quota buckets that reached their limit: one caller using all of it. */
 const atQuotaLimit = (buckets: readonly QuotaBucket[]) =>
@@ -85,6 +86,32 @@ export const readinessQueries = {
     "refund-create-day",
   ]),
   aiActivity: atQuotaLimit(["customer-ai"]),
+  // docs/architecture/alerts.md, part 2 (SEC-005, SEC-008): money, the drafting assistant's use and
+  // whole-workspace copies, of every workspace together, over the last hour. Checkouts begun, and what
+  // they come to in whole naira:
+  checkouts: `SELECT count(*)::int AS value FROM (SELECT 1 FROM valo_orders
+    WHERE created_at > now() - interval '1 hour' LIMIT 10001) bounded`,
+  checkoutAmount: `SELECT (COALESCE(sum(amount_kobo), 0) / 100)::bigint AS value FROM valo_orders
+    WHERE created_at > now() - interval '1 hour'`,
+  // Refunds asked for, and what the refunds authorised come to in whole naira:
+  refunds: `SELECT count(*)::int AS value FROM (SELECT 1 FROM valo_refund_requests
+    WHERE created_at > now() - interval '1 hour' LIMIT 10001) bounded`,
+  refundAmount: `SELECT (COALESCE(sum(amount_kobo), 0) / 100)::bigint AS value FROM valo_refund_requests
+    WHERE authorised_at > now() - interval '1 hour'`,
+  // How much of the drafting assistant's daily allowance in all the drafts of the last hour used, in
+  // hundredths of it: the owner's setting in effect, or its default. With no allowance, any draft is all.
+  aiSpend: `SELECT (CASE WHEN allowance <= 0 THEN (CASE WHEN used > 0 THEN 100 ELSE 0 END)
+      ELSE floor(100 * used::numeric / allowance) END)::int AS value
+    FROM (SELECT (SELECT count(*) FROM valo_ai_drafts WHERE budget_reserved
+        AND created_at > now() - interval '1 hour') AS used,
+      COALESCE((public.valo_commercial_setting('drafting_daily_in_all'))::int,
+        ${COMMERCIAL_SETTINGS.drafting_daily_in_all.defaultValue}) AS allowance) spend`,
+  // Whole-workspace data downloads asked for, and copies of a workspace's data prepared by privacy staff
+  // for an export request:
+  workspaceDownloads: `SELECT count(*)::int AS value FROM (SELECT 1 FROM valo_workspace_exports
+    WHERE created_at > now() - interval '1 hour' LIMIT 10001) bounded`,
+  staffCopies: `SELECT count(*)::int AS value FROM (SELECT 1 FROM valo_privacy_events
+    WHERE action='application_export_prepared' AND created_at > now() - interval '1 hour' LIMIT 10001) bounded`,
   // ADM-009 (docs/architecture/audit-trail.md). Application requests a database guard refused in ten
   // minutes: the application never sends a change a guard refuses, so each is a fault or an attempt to
   // change a history.
@@ -110,6 +137,13 @@ const SECURITY_METRICS = [
   ["bulkExports", "BULK_EXPORTS"],
   ["paymentActivity", "PAYMENT_ACTIVITY"],
   ["aiActivity", "AI_ACTIVITY"],
+  ["checkouts", "CHECKOUTS"],
+  ["checkoutAmount", "CHECKOUT_AMOUNT"],
+  ["refunds", "REFUNDS"],
+  ["refundAmount", "REFUND_AMOUNT"],
+  ["aiSpend", "AI_SPEND"],
+  ["workspaceDownloads", "WORKSPACE_DOWNLOADS"],
+  ["staffCopies", "STAFF_COPIES"],
   ["guardRefusals", "GUARD_REFUSALS"],
   ["privilegedReading", "PRIVILEGED_READING"],
   ["historyIntegrity", "HISTORY_INTEGRITY"],
@@ -143,6 +177,13 @@ export type OperationalSample = {
   bulkExports: Metric;
   paymentActivity: Metric;
   aiActivity: Metric;
+  checkouts: Metric;
+  checkoutAmount: Metric;
+  refunds: Metric;
+  refundAmount: Metric;
+  aiSpend: Metric;
+  workspaceDownloads: Metric;
+  staffCopies: Metric;
   guardRefusals: Metric;
   privilegedReading: Metric;
   historyIntegrity: Metric;
@@ -167,6 +208,13 @@ export type OperationalSample = {
     bulkExports: number;
     paymentActivity: number;
     aiActivity: number;
+    checkouts: number;
+    checkoutAmount: number;
+    refunds: number;
+    refundAmount: number;
+    aiSpend: number;
+    workspaceDownloads: number;
+    staffCopies: number;
     guardRefusals: number;
     privilegedReading: number;
     historyIntegrity: number;
@@ -273,6 +321,18 @@ export async function collectOperationalSample(
       bulkExports: 0,
       paymentActivity: 0,
       aiActivity: 0,
+      // Development defaults too, against no measured traffic (docs/architecture/alerts.md, part 2): in an
+      // hour, more than fifty checkouts begun or a million naira; more than five refunds asked for or a
+      // hundred thousand naira authorised; more than a quarter of the drafting assistant's daily
+      // allowance; more than ten whole-workspace downloads asked for; and more than five copies of a
+      // workspace's data prepared by privacy staff raise an alert.
+      checkouts: 50,
+      checkoutAmount: 1_000_000,
+      refunds: 5,
+      refundAmount: 100_000,
+      aiSpend: 25,
+      workspaceDownloads: 10,
+      staffCopies: 5,
       // Development defaults too: any refusal by a database guard, and a staff member reading more than
       // a hundred distinct records or lists in an hour, raise an alert.
       guardRefusals: 0,
@@ -309,6 +369,13 @@ export const ALERT_RUNBOOKS = {
   BULK_EXPORTS: { runbook: "Security/privacy incident", accountable: "Incident lead + privacy owner" },
   PAYMENT_ACTIVITY: { runbook: "Payment/entitlement failure", accountable: "Finance + engineering" },
   AI_ACTIVITY: { runbook: "Security/privacy incident", accountable: "Incident lead + privacy owner" },
+  CHECKOUTS: { runbook: "Payment/entitlement failure", accountable: "Finance + engineering" },
+  CHECKOUT_AMOUNT: { runbook: "Payment/entitlement failure", accountable: "Finance + engineering" },
+  REFUNDS: { runbook: "Payment/entitlement failure", accountable: "Finance + engineering" },
+  REFUND_AMOUNT: { runbook: "Payment/entitlement failure", accountable: "Finance + engineering" },
+  AI_SPEND: { runbook: "Security/privacy incident", accountable: "Incident lead + privacy owner" },
+  WORKSPACE_DOWNLOADS: { runbook: "Security/privacy incident", accountable: "Incident lead + privacy owner" },
+  STAFF_COPIES: { runbook: "Security/privacy incident", accountable: "Incident lead + privacy owner" },
   GUARD_REFUSALS: { runbook: "Security/privacy incident", accountable: "Incident lead + privacy owner" },
   PRIVILEGED_READING: { runbook: "Security/privacy incident", accountable: "Incident lead + privacy owner" },
   HISTORY_INTEGRITY: { runbook: "Security/privacy incident", accountable: "Incident lead + privacy owner" },
@@ -373,6 +440,29 @@ export const ALERT_WORDS = {
     raised: "A caller reached the drafting assistant's limit",
     reading: "the drafting assistant's limit",
   },
+  CHECKOUTS: { raised: "More checkouts began in the last hour than usual", reading: "checkouts begun" },
+  CHECKOUT_AMOUNT: {
+    raised: "Checkouts begun in the last hour came to more than usual, in naira",
+    reading: "what checkouts came to",
+  },
+  REFUNDS: { raised: "More refunds were asked for in the last hour than usual", reading: "refund requests" },
+  REFUND_AMOUNT: {
+    raised: "Refunds authorised in the last hour came to more than usual, in naira",
+    reading: "what refunds came to",
+  },
+  AI_SPEND: {
+    raised:
+      "The drafting assistant used more of its daily allowance in the last hour than usual, in hundredths of it",
+    reading: "the drafting assistant's use",
+  },
+  WORKSPACE_DOWNLOADS: {
+    raised: "More whole-workspace downloads were asked for in the last hour than usual",
+    reading: "requests for whole-workspace downloads",
+  },
+  STAFF_COPIES: {
+    raised: "Privacy staff prepared more copies of a workspace's data in the last hour than usual",
+    reading: "staff copies of workspace data",
+  },
   GUARD_REFUSALS: {
     raised: "The database refused a change to a record it protects",
     reading: "the database's refusals",
@@ -413,6 +503,13 @@ const SUBJECT_READINGS: Partial<
   BULK_EXPORTS: "bulkExports",
   PAYMENT_ACTIVITY: "paymentActivity",
   AI_ACTIVITY: "aiActivity",
+  CHECKOUTS: "checkouts",
+  CHECKOUT_AMOUNT: "checkoutAmount",
+  REFUNDS: "refunds",
+  REFUND_AMOUNT: "refundAmount",
+  AI_SPEND: "aiSpend",
+  WORKSPACE_DOWNLOADS: "workspaceDownloads",
+  STAFF_COPIES: "staffCopies",
   GUARD_REFUSALS: "guardRefusals",
   PRIVILEGED_READING: "privilegedReading",
   HISTORY_INTEGRITY: "historyIntegrity",
