@@ -4,11 +4,14 @@ import { z } from "zod";
 import { digest } from "@workspace/valo-core";
 import { putPublicationArtifact, originalFormSchema, formMarkdown } from "../publication";
 export async function recordOriginalAuthoring() {
-  const { db } = await import("@workspace/db");
+  const { drafterDb } = await import("@workspace/db");
   assertManagedInferenceAvailable();
   const prompt =
     "Write five short original paragraphs for a blank optional inventory-record form. No copying or quoting any document. Purpose and optional operational instructions for register details, item/unit/location records, stock receipts/issues/adjustments, and physical counts/discrepancies. No invented user facts, names, quantities, computed values, laws, duties, tax, fees, legal validity, ownership assurance, safety certification, provider rights or platform capability statements. Keep instructions optional internal business practice, not legal requirements. Do not introduce a formula or mandatory retention period. All actual facts will be blank fields supplied separately. Return the exact JSON schema.";
-  await db.transaction(async (tx) => {
+  // Recorded on drafting's own connection, as the drafter role: the database records a drafting attempt
+  // from no other (docs/architecture/service-logins.md).
+  await drafterDb().transaction(async (tx) => {
+    await tx.execute(sql`SET LOCAL ROLE valo_content_drafter_dev`);
     await tx.execute(sql`select pg_advisory_xact_lock(747105)`);
     const r = await tx.execute(
       sql`select count(*)::int as total from valo_publication_ai_attempts where role='draft' and created_at >= date_trunc('day',now())`,

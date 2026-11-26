@@ -510,6 +510,265 @@ test(
 );
 
 /**
+ * Review's own login (docs/architecture/service-logins.md, part 2; SEC-006). The database records and
+ * updates an AI review's attempt only in a session that logged in as valo_reviewer_login, and a drafting
+ * attempt only in one that logged in as valo_drafter_login; no attempt is removed. Every attempt the
+ * database accepts here is rolled back.
+ */
+test(
+  "an AI review's attempt is recorded only by the review login, a drafting attempt only by the drafting login, and none is removed",
+  { skip: process.env.VALO_RUN_DB_TESTS !== "synthetic-development-only", timeout: 60_000 },
+  async (t) => {
+    assert.equal(process.env.NODE_ENV, "development");
+    assert.ok(!process.env.REPLIT_DEPLOYMENT);
+    assert.ok(["localhost", "127.0.0.1", "[::1]"].includes(new URL(process.env.DATABASE_URL!).hostname));
+    const { db, drafterLogin, reviewerLogin, REVIEWER_LOGIN_ROLE, REVIEWER_LOGIN_UNAVAILABLE_CODE } =
+      await import("@workspace/db");
+    const { assertReviewerCanLogIn } = await import("../editorial/operational-review");
+    const { default: pg } = await import("pg");
+
+    const candidate = `synthetic-attempt-${randomUUID()}`,
+      request = `synthetic-request-${randomUUID()}`;
+    const left = async () =>
+      Number(
+        (
+          await db.execute(
+            sql`select count(*)::int as n from valo_publication_ai_attempts where candidate_hash=${candidate}`,
+          )
+        ).rows[0]!.n,
+      );
+    const asRole = (role: string | null, query: ReturnType<typeof sql>) =>
+      db.transaction(async (tx) => {
+        if (role) await tx.execute(sql.raw(`set local role ${role}`));
+        return tx.execute(query);
+      });
+    const needsReviewer = databaseError(
+      /review attempt is recorded only by a session that logged in as valo_reviewer_login/,
+    );
+    const needsDrafter = databaseError(
+      /drafting attempt is recorded only by a session that logged in as valo_drafter_login/,
+    );
+    const reviewAttempt = sql`insert into valo_publication_ai_attempts(candidate_hash,role,request_hash,request_meter,outcome)
+      values(${candidate},'factual',${request},'{}'::jsonb,'reserved')`;
+    const draftAttempt = sql`insert into valo_publication_ai_attempts(candidate_hash,role) values(${candidate},'draft')`;
+
+    await t.test(
+      "the application's own login records no attempt, as itself or as either service's role",
+      async () => {
+        await assert.rejects(asRole(null, reviewAttempt), needsReviewer);
+        await assert.rejects(asRole("valo_content_reviewer_dev", reviewAttempt), needsReviewer);
+        await assert.rejects(asRole(null, draftAttempt), needsDrafter);
+        await assert.rejects(asRole("valo_content_drafter_dev", draftAttempt), needsDrafter);
+        assert.equal(await left(), 0);
+      },
+    );
+
+    // One session that logged in as each login, as review and drafting do.
+    const application = process.env.DATABASE_URL!,
+      configured = reviewerLogin.connectionString(process.env.VALO_REVIEWER_DATABASE_URL, application);
+    const reviewer = new pg.Client({ connectionString: configured });
+    const drafter = new pg.Client({
+      connectionString: drafterLogin.connectionString(process.env.VALO_DRAFTER_DATABASE_URL, application),
+    });
+    await reviewer.connect();
+    t.after(() => reviewer.end());
+    await drafter.connect();
+    t.after(() => drafter.end());
+    const addReview = {
+      text: `insert into valo_publication_ai_attempts(candidate_hash,role,request_hash,request_meter,outcome)
+        values($1,'challenge',$2,'{}'::jsonb,'reserved') returning id`,
+      values: [candidate, request],
+    };
+    const addDraft = {
+      text: "insert into valo_publication_ai_attempts(candidate_hash,role) values($1,'draft') returning id",
+      values: [candidate],
+    };
+    const refusedIn = async (
+      client: InstanceType<typeof pg.Client>,
+      query: string | { text: string; values: unknown[] },
+      message?: RegExp,
+    ) => {
+      await client.query("SAVEPOINT attempt");
+      await assert.rejects(
+        client.query(query),
+        (error: { code?: string; message?: string }) =>
+          error.code === "42501" && (!message || message.test(String(error.message))),
+        typeof query === "string" ? query : query.text,
+      );
+      await client.query("ROLLBACK TO SAVEPOINT attempt");
+    };
+
+    await t.test("the review login holds nothing itself and can become only the reviewer", async () => {
+      const who = await reviewer.query("select session_user as login, current_user as acting");
+      assert.deepEqual(who.rows[0], { login: REVIEWER_LOGIN_ROLE, acting: REVIEWER_LOGIN_ROLE });
+      const role = await reviewer.query(
+        "select rolcanlogin, rolsuper, rolinherit, rolcreaterole, rolcreatedb, rolbypassrls from pg_roles where rolname=$1",
+        [REVIEWER_LOGIN_ROLE],
+      );
+      assert.deepEqual(role.rows[0], {
+        rolcanlogin: true,
+        rolsuper: false,
+        rolinherit: false,
+        rolcreaterole: false,
+        rolcreatedb: false,
+        rolbypassrls: false,
+      });
+      const memberships = await reviewer.query(
+        "select r.rolname from pg_auth_members m join pg_roles r on r.oid=m.roleid join pg_roles u on u.oid=m.member where u.rolname=$1",
+        [REVIEWER_LOGIN_ROLE],
+      );
+      assert.deepEqual(
+        memberships.rows.map((r) => r.rolname),
+        ["valo_content_reviewer_dev"],
+      );
+      await reviewer.query("BEGIN");
+      try {
+        // As itself it records and reads nothing.
+        await refusedIn(reviewer, addReview);
+        await refusedIn(reviewer, "select id from valo_documents limit 1");
+        // It cannot become the drafter, the publisher or the customer scope.
+        for (const other of [
+          "valo_content_drafter_dev",
+          "valo_content_publisher_dev",
+          "valo_workspace_scope",
+        ])
+          await refusedIn(reviewer, `set local role ${other}`);
+      } finally {
+        await reviewer.query("ROLLBACK");
+      }
+    });
+
+    await t.test(
+      "as the reviewer role it records a review's attempt and how it went, and nothing else",
+      async () => {
+        await reviewer.query("BEGIN");
+        try {
+          await reviewer.query("set local role valo_content_reviewer_dev");
+          const id = (await reviewer.query(addReview)).rows[0]?.id;
+          assert.ok(id, "the database accepts the review login");
+          await reviewer.query(
+            "update valo_publication_ai_attempts set outcome='response_received', provider_response_id='synthetic-response', input_tokens=1, output_tokens=1 where id=$1",
+            [id],
+          );
+          await reviewer.query(
+            "update valo_publication_ai_attempts set outcome='completed', completed_at=now() where id=$1",
+            [id],
+          );
+          // Not a drafting attempt, and not another column of the attempt.
+          await refusedIn(reviewer, addDraft, /valo_drafter_login/);
+          await refusedIn(reviewer, {
+            text: "update valo_publication_ai_attempts set role='draft' where id=$1",
+            values: [id],
+          });
+          await refusedIn(reviewer, {
+            text: "delete from valo_publication_ai_attempts where id=$1",
+            values: [id],
+          });
+          // No content, no customer data, no release and no policy.
+          for (const text of [
+            "select id from valo_documents limit 1",
+            `insert into valo_content_versions(id,template_id,version,slug,policy_id,candidate_hash,bundle,attestations,review_by) select gen_random_uuid(),template_id,version+1000,slug||'-x',policy_id,candidate_hash,bundle,attestations,review_by from valo_content_versions limit 1`,
+            "update valo_content_versions set status='published' where false",
+            "update valo_publication_policies set hash=hash where false",
+          ])
+            await refusedIn(reviewer, text);
+        } finally {
+          // Nothing stays: the attempt was synthetic.
+          await reviewer.query("ROLLBACK");
+        }
+        assert.equal(await left(), 0);
+      },
+    );
+
+    await t.test("as the drafter role, drafting records its own attempt and no review's", async () => {
+      await drafter.query("BEGIN");
+      try {
+        await drafter.query("set local role valo_content_drafter_dev");
+        const id = (await drafter.query(addDraft)).rows[0]?.id;
+        assert.ok(id, "the database accepts the drafting login");
+        // Drafting cannot record a review of what it drafted, or change how an attempt went. A review's
+        // attempt needs columns the drafter role may not write; one written with only the columns it
+        // may write is refused by the database's check of the login.
+        await refusedIn(drafter, addReview, /permission denied/);
+        await refusedIn(
+          drafter,
+          {
+            text: "insert into valo_publication_ai_attempts(candidate_hash,role) values($1,'factual')",
+            values: [candidate],
+          },
+          /valo_reviewer_login/,
+        );
+        await refusedIn(drafter, {
+          text: "update valo_publication_ai_attempts set outcome='completed' where id=$1",
+          values: [id],
+        });
+      } finally {
+        await drafter.query("ROLLBACK");
+      }
+      assert.equal(await left(), 0);
+    });
+
+    await t.test("the application's own login neither changes nor removes a review's attempt", async () => {
+      // One transaction on the application's connection: it becomes the review login to record an
+      // attempt, as only the test cluster's owner can, then returns to its own login.
+      const outcome = await db
+        .transaction(async (tx) => {
+          await tx.execute(sql`SET LOCAL SESSION AUTHORIZATION valo_reviewer_login`);
+          await tx.execute(sql`SET LOCAL ROLE valo_content_reviewer_dev`);
+          await tx.execute(reviewAttempt);
+          await tx.execute(sql`SET LOCAL SESSION AUTHORIZATION DEFAULT`);
+          await assert.rejects(
+            tx.transaction((sp) =>
+              sp.execute(
+                sql`update valo_publication_ai_attempts set outcome='completed' where candidate_hash=${candidate}`,
+              ),
+            ),
+            needsReviewer,
+          );
+          await assert.rejects(
+            tx.transaction((sp) =>
+              sp.execute(sql`delete from valo_publication_ai_attempts where candidate_hash=${candidate}`),
+            ),
+            databaseError(/An AI attempt is never removed/),
+          );
+          throw Error("ROLLED_BACK");
+        })
+        .catch((error: Error) => error.message);
+      assert.equal(outcome, "ROLLED_BACK");
+      assert.equal(await left(), 0);
+    });
+
+    await t.test("the check before reviews are paid for finds the review login in use", async () => {
+      await assertReviewerCanLogIn();
+    });
+
+    await t.test(
+      "a review connection that is missing, or leads elsewhere, is refused before it is used",
+      () => {
+        const unavailable = (run: () => unknown) =>
+          assert.throws(run, (error: { code?: string }) => error.code === REVIEWER_LOGIN_UNAVAILABLE_CODE);
+        unavailable(() => reviewerLogin.connectionString(undefined, application));
+        unavailable(() => reviewerLogin.connectionString("", application));
+        // The application's own login, drafting's and the publisher's are not review's.
+        unavailable(() => reviewerLogin.connectionString(application, application));
+        for (const name of ["valo_drafter_login", "valo_publisher_login"]) {
+          const other = new URL(configured);
+          other.username = name;
+          unavailable(() => reviewerLogin.connectionString(other.href, application));
+        }
+        const another = new URL(configured);
+        another.pathname = "/another_database";
+        unavailable(() => reviewerLogin.connectionString(another.href, application));
+        const elsewhere = new URL(configured);
+        elsewhere.port = "6543";
+        unavailable(() => reviewerLogin.connectionString(elsewhere.href, application));
+        unavailable(() => reviewerLogin.connectionString(configured, undefined));
+      },
+    );
+  },
+);
+
+/**
  * A guide says what the law requires, so the publisher releases it only under the guidance policy
  * (decision 0017, point 1). Nothing here is published: each attempt is refused at the policy or held
  * by the gate, and the candidates are synthetic rows built from the retained drafts.

@@ -3,8 +3,8 @@ import pg from "pg";
 /**
  * A service's own database login (docs/architecture/service-logins.md): it may become one content role
  * and holds nothing itself, and the database lets that service's work happen only in a session that
- * logged in as it. The publisher's login (publisher-login.ts) came first; drafting's follows the same
- * shape, here.
+ * logged in as it. The publisher's login (publisher-login.ts) came first; drafting's and review's follow
+ * the same shape, here.
  */
 type ServiceLogin = {
   /** The login's role name, which its connection string must log in as. */
@@ -87,4 +87,19 @@ export const drafterLogin = serviceLogin({
   setting: "VALO_DRAFTER_DATABASE_URL",
   unavailableCode: DRAFTER_LOGIN_UNAVAILABLE_CODE,
   service: "drafting",
+});
+
+/**
+ * The database login review connects as (VALO_REVIEWER_DATABASE_URL). It may become the reviewer role
+ * and holds nothing itself. The database records a review's attempt only in a session that logged in as
+ * this role (migration reviewer_login), so neither the application's own connection nor drafting's can
+ * record or change one.
+ */
+export const REVIEWER_LOGIN_ROLE = "valo_reviewer_login";
+export const REVIEWER_LOGIN_UNAVAILABLE_CODE = "VALO_REVIEWER_LOGIN_UNAVAILABLE";
+export const reviewerLogin = serviceLogin({
+  role: REVIEWER_LOGIN_ROLE,
+  setting: "VALO_REVIEWER_DATABASE_URL",
+  unavailableCode: REVIEWER_LOGIN_UNAVAILABLE_CODE,
+  service: "review",
 });

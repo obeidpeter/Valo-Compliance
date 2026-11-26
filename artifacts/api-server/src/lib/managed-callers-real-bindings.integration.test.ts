@@ -97,7 +97,11 @@ test(
       sharedBefore = await sharedFingerprint();
       await database.pool.query(`CREATE SCHEMA "${schema}"`);
       assert.equal((await scoped.query("SELECT current_schema() AS name")).rows[0].name, schema);
-      for (const role of ["valo_content_drafter_dev", "valo_content_publisher_dev"]) {
+      for (const role of [
+        "valo_content_drafter_dev",
+        "valo_content_reviewer_dev",
+        "valo_content_publisher_dev",
+      ]) {
         if (!(await database.pool.query("SELECT 1 FROM pg_roles WHERE rolname=$1", [role])).rowCount) {
           if (process.env.CI !== "true") throw Error("FIXTURE_ROLES_REQUIRE_EPHEMERAL_CI_DATABASE");
           await database.pool.query(`CREATE ROLE "${role}" NOLOGIN`);
@@ -173,6 +177,16 @@ test(
       await scoped.query(
         `ALTER TABLE "${schema}".valo_publication_ai_attempts ALTER COLUMN id SET DEFAULT nextval('"${schema}".fixture_attempt_ids')`,
       );
+      // The reviews record their attempts as the reviewer role, with what migration reviewer_login grants it.
+      await scoped.query(`GRANT USAGE ON SCHEMA "${schema}" TO valo_content_reviewer_dev`);
+      await scoped.query(
+        `GRANT SELECT, INSERT (candidate_hash, role, request_hash, request_meter, outcome),
+          UPDATE (outcome, provider_response_id, input_tokens, output_tokens, error_code, completed_at)
+          ON "${schema}".valo_publication_ai_attempts TO valo_content_reviewer_dev`,
+      );
+      await scoped.query(
+        `GRANT USAGE ON SEQUENCE "${schema}".fixture_attempt_ids TO valo_content_reviewer_dev`,
+      );
       const auditType = await scoped.query(
         "SELECT data_type FROM information_schema.columns WHERE table_schema=$1 AND table_name='valo_publication_audit' AND column_name='id'",
         [schema],
@@ -198,14 +212,16 @@ test(
         );
       await copyDatabaseFunctions(scoped, schema, INFERENCE_LEDGER_FUNCTIONS);
       // The fixture schema's copied tables carry no triggers, and the application is pointed at
-      // them through this one pool: drafting and the release run on it too, not on the real drafting
-      // and publisher logins. The check that drafting can log in finds drafting on this schema.
+      // them through this one pool: drafting, the reviews' records and the release run on it too, not on
+      // the real drafting, review and publisher logins. The check that drafting can log in finds
+      // drafting on this schema.
       t.mock.module("@workspace/db", {
         namedExports: {
           ...database,
           db: drizzle(scoped),
           pool: scoped,
           drafterDb: () => drizzle(scoped),
+          reviewerDb: () => drizzle(scoped),
           publisherDb: () => drizzle(scoped),
         },
       });

@@ -12,7 +12,7 @@ import {
   type ScopeKey,
 } from "./workspace-scope";
 import { endPublisherPool, publisherPool } from "./publisher-login";
-import { drafterLogin } from "./service-login";
+import { drafterLogin, reviewerLogin } from "./service-login";
 
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL must be set. Did you forget to provision a database?");
@@ -107,6 +107,7 @@ class ValoPool extends pg.Pool {
     await this.#customer?.end();
     await endPublisherPool();
     await drafterLogin.end();
+    await reviewerLogin.end();
     return super.end();
   }
 
@@ -202,6 +203,11 @@ export const publisherDb = () => drizzle(publisherPool(), { schema });
  * content version or a prepared candidate runs here (docs/architecture/service-logins.md).
  */
 export const drafterDb = () => drizzle(drafterLogin.pool(), { schema });
+/**
+ * The database as review sees it: connections that logged in as the review login. Only recording an AI
+ * review's attempt runs here (docs/architecture/service-logins.md).
+ */
+export const reviewerDb = () => drizzle(reviewerLogin.pool(), { schema });
 export { schema };
 export {
   runInWorkspaceScope,
@@ -216,6 +222,13 @@ export {
   PUBLISHER_LOGIN_UNAVAILABLE_CODE,
   publisherConnectionString,
 } from "./publisher-login";
-export { DRAFTER_LOGIN_ROLE, DRAFTER_LOGIN_UNAVAILABLE_CODE, drafterLogin } from "./service-login";
+export {
+  DRAFTER_LOGIN_ROLE,
+  DRAFTER_LOGIN_UNAVAILABLE_CODE,
+  drafterLogin,
+  REVIEWER_LOGIN_ROLE,
+  REVIEWER_LOGIN_UNAVAILABLE_CODE,
+  reviewerLogin,
+} from "./service-login";
 
 export * from "./schema";

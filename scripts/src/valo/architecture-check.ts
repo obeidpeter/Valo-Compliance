@@ -16,6 +16,7 @@ import ts from "typescript";
  * - inference-bindings: see inferenceBindingViolations.
  * - publisher-connection: see publisherConnectionViolations.
  * - drafter-connection: see drafterConnectionViolations.
+ * - reviewer-connection: see reviewerConnectionViolations.
  * - module-boundary: see moduleBoundaryViolations.
  * - public-server: see publicServerViolations.
  * - web-formatting: see webFormattingViolations.
@@ -354,42 +355,84 @@ export function publisherConnectionReport(root = repositoryRoot): string[] {
 
 /**
  * The files that may name drafting's own database connection: the three drafting paths
- * (docs/architecture/service-logins.md, part 1), and the check that drafting can log in.
+ * (docs/architecture/service-logins.md, part 1), the check that drafting can log in, and the record of
+ * drafting's own AI attempt.
  */
 export const DRAFTER_CONNECTION_ENTRIES = [
   "artifacts/api-server/src/modules/ai-lanes/inference-reviewed-publication.ts",
   "artifacts/api-server/src/modules/editorial/guidance-preparation.ts",
+  "artifacts/api-server/src/modules/editorial/operational-authoring.ts",
   "artifacts/api-server/src/modules/editorial/operational-preparation.ts",
   "artifacts/api-server/src/modules/publication/drafting-login.ts",
 ];
 
-/**
- * drafter-connection (docs/architecture/service-logins.md, part 1; SEC-006): the database adds a content
- * version or a prepared candidate only in a session that logged in as the drafting login. `drafterDb`
- * and `drafterLogin` open such a session, so they may be named only by the drafting paths and the check
- * that drafting can log in. Any other code that reached for them could add content past the preparers'
- * checks. Tests and their fixtures may name them, to stand in for them, to add synthetic content or to
- * check the boundary.
- */
-export function drafterConnectionViolations(path: string, text: string): string[] {
-  if (!/\.tsx?$/.test(path) || /\.test\.tsx?$/.test(path) || !/\bdrafter(?:Db|Login)\b/.test(text)) return [];
-  if (DRAFTER_CONNECTION_ENTRIES.includes(path)) return [];
+/** The one file that records an AI review's attempt, on review's own database connection (part 2). */
+export const REVIEWER_CONNECTION_ENTRIES = [
+  "artifacts/api-server/src/modules/editorial/operational-review.ts",
+];
+
+/** Reports each naming of a service login's connection outside the files that may use it. */
+function serviceConnectionViolations(
+  path: string,
+  text: string,
+  service: { rule: string; names: readonly string[]; entries: readonly string[]; message: string },
+): string[] {
+  if (!/\.tsx?$/.test(path) || /\.test\.tsx?$/.test(path) || !service.names.some((n) => text.includes(n)))
+    return [];
+  if (service.entries.includes(path)) return [];
   const source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
   const violations: string[] = [];
   const visit = (node: ts.Node) => {
-    if (ts.isIdentifier(node) && (node.text === "drafterDb" || node.text === "drafterLogin"))
-      violations.push(
-        `${path}:${lineOf(source, node.getStart(source))} drafter-connection only the drafting paths may use drafting's database connection`,
-      );
+    if (ts.isIdentifier(node) && service.names.includes(node.text))
+      violations.push(`${path}:${lineOf(source, node.getStart(source))} ${service.rule} ${service.message}`);
     ts.forEachChild(node, visit);
   };
   visit(source);
   return violations;
 }
 
+/**
+ * drafter-connection (docs/architecture/service-logins.md, part 1; SEC-006): the database adds a content
+ * version or a prepared candidate, and records a drafting attempt, only in a session that logged in as
+ * the drafting login. `drafterDb` and `drafterLogin` open such a session, so they may be named only by
+ * the drafting paths and the check that drafting can log in. Any other code that reached for them could
+ * add content past the preparers' checks. Tests and their fixtures may name them, to stand in for them,
+ * to add synthetic content or to check the boundary.
+ */
+export function drafterConnectionViolations(path: string, text: string): string[] {
+  return serviceConnectionViolations(path, text, {
+    rule: "drafter-connection",
+    names: ["drafterDb", "drafterLogin"],
+    entries: DRAFTER_CONNECTION_ENTRIES,
+    message: "only the drafting paths may use drafting's database connection",
+  });
+}
+
 export function drafterConnectionReport(root = repositoryRoot): string[] {
   return sourceFiles(join(root, "artifacts/api-server/src"), isProductSource).flatMap((file) =>
     drafterConnectionViolations(posixRelative(root, file), readFileSync(file, "utf8")),
+  );
+}
+
+/**
+ * reviewer-connection (docs/architecture/service-logins.md, part 2; SEC-006): the database records and
+ * updates an AI review's attempt only in a session that logged in as the review login. `reviewerDb` and
+ * `reviewerLogin` open such a session, so they may be named only by the code that records a review's
+ * attempt. Any other code that reached for them could record a review that was never run. Tests may
+ * name them, to stand in for them or to check the boundary.
+ */
+export function reviewerConnectionViolations(path: string, text: string): string[] {
+  return serviceConnectionViolations(path, text, {
+    rule: "reviewer-connection",
+    names: ["reviewerDb", "reviewerLogin"],
+    entries: REVIEWER_CONNECTION_ENTRIES,
+    message: "only the review's record may use review's database connection",
+  });
+}
+
+export function reviewerConnectionReport(root = repositoryRoot): string[] {
+  return sourceFiles(join(root, "artifacts/api-server/src"), isProductSource).flatMap((file) =>
+    reviewerConnectionViolations(posixRelative(root, file), readFileSync(file, "utf8")),
   );
 }
 
@@ -914,6 +957,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1
     ...inferenceBindingReport(),
     ...publisherConnectionReport(),
     ...drafterConnectionReport(),
+    ...reviewerConnectionReport(),
     ...moduleBoundaryViolations(),
     ...publicServerViolations(),
     ...webFormattingReport(),
