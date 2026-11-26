@@ -219,6 +219,21 @@ test("actual export entries and worker startup reject before database, queue or 
           assert.deepEqual(JSON.parse(record[1]!), zero);
         }
       });
+    // In development the worker would otherwise go on to its queue: a request limit outside its bounds
+    // (docs/architecture/small-hardening.md, part 2) stops it first, with nothing touched.
+    await t.test("a request limit outside its bounds stops the worker before any effect (SEC-005)", () => {
+      const child = spawnSync(process.execPath, [join(dir, "worker.mjs")], {
+        env: { NODE_ENV: "development", VALO_LIMIT_CUSTOMER_AI: "10001" },
+        encoding: "utf8",
+        timeout: 10000,
+      });
+      assert.equal(child.error, undefined);
+      assert.equal(child.status, 1, child.stderr.slice(0, 1000));
+      assert.match(child.stderr, /RequestLimitSettingInvalid: VALO_LIMIT_CUSTOMER_AI/);
+      const record = child.stdout.match(/GUARD_EFFECTS:(\{[^\n]+\})/);
+      assert.ok(record, child.stderr);
+      assert.deepEqual(JSON.parse(record[1]!), zero);
+    });
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

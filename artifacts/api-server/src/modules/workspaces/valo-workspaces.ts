@@ -4,7 +4,8 @@ import type { db } from "@workspace/db";
 import { sha256 } from "@workspace/valo-core";
 import { privacyNotice } from "@workspace/valo-core/privacy-notice";
 import { profileInput } from "../../lib/valo-validation";
-import { consumeQuota, quotaPolicy, quotaSubjectHash } from "../../lib/valo-quota";
+import { consumeQuota, quotaLimit, quotaSubjectHash } from "../../lib/valo-quota";
+import type { QuotaBucket } from "../../lib/valo-quota-policy";
 import { setting } from "../../platform/settings";
 import { ValoProblem } from "../../platform/valo-problem";
 import { privacyIdentityHashes } from "../../lib/valo-privacy-keys";
@@ -66,8 +67,8 @@ export async function limitWorkspaceWrite(
 ) {
   const key = quotaSubjectHash(setting("SESSION_SECRET"), "user", actor.identityId);
   for (const window of ["minute", "day"] as const) {
-    const bucket = `${operation}-write${window === "day" ? "-day" : ""}` as keyof typeof quotaPolicy;
-    const q = await consumeQuota(bucket, key, quotaPolicy[bucket], window, tx);
+    const bucket = `${operation}-write${window === "day" ? "-day" : ""}` as QuotaBucket;
+    const q = await consumeQuota(bucket, key, quotaLimit(bucket), window, tx);
     if (!q.allowed)
       throw new ValoProblem(
         429,

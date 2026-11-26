@@ -5,6 +5,45 @@ import { inArray, sql } from "drizzle-orm";
 import { db, pool, valoRateBuckets } from "@workspace/db";
 import { consumeQuota, purgeExpiredQuotaBuckets } from "./valo-quota";
 
+// Before the next test, which ends the pool.
+test(
+  "a ceiling set by its setting is the one a request meets, in the database's count (SEC-005)",
+  { skip: process.env.VALO_RUN_DB_TESTS !== "synthetic-development-only" },
+  async () => {
+    const key = createHash("sha256").update(`synthetic-quota-setting-${randomUUID()}`).digest("hex");
+    const before = process.env.VALO_LIMIT_EXPORT_CREATE;
+    process.env.VALO_LIMIT_EXPORT_CREATE = "2";
+    try {
+      // Start well inside a database-clock minute, so the three calls fall in one window.
+      const [clock] = (
+        await db.execute(sql`select extract(second from statement_timestamp())::float8 as second`)
+      ).rows;
+      const second = Number(clock?.second);
+      if (second > 50) await new Promise((resolve) => setTimeout(resolve, (61 - second) * 1000));
+      // No ceiling is passed: consumeQuota reads it from the setting, in place of today's ten.
+      const decisions = [];
+      for (let call = 0; call < 3; call++) decisions.push(await consumeQuota("export-create", key));
+      assert.deepEqual(
+        decisions.map((d) => [d.allowed, d.limit]),
+        [
+          [true, 2],
+          [true, 2],
+          [false, 2],
+        ],
+      );
+      const [row] = await db
+        .select()
+        .from(valoRateBuckets)
+        .where(inArray(valoRateBuckets.subjectHash, [key]));
+      assert.equal(row?.usedCount, 2);
+    } finally {
+      if (before === undefined) delete process.env.VALO_LIMIT_EXPORT_CREATE;
+      else process.env.VALO_LIMIT_EXPORT_CREATE = before;
+      await db.delete(valoRateBuckets).where(inArray(valoRateBuckets.subjectHash, [key]));
+    }
+  },
+);
+
 test(
   "synthetic PostgreSQL quotas are atomic, durable and scoped",
   {

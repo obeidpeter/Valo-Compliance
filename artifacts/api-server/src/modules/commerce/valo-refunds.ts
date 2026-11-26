@@ -16,7 +16,7 @@ import {
 import { RequestCommerceRefundBody, DecideFinanceRefundBody } from "@workspace/api-zod";
 import { authorizeWorkspaceWrite, type WorkspaceActor } from "../workspaces";
 import { ValoProblem } from "../../platform/valo-problem";
-import { consumeQuota, quotaSubjectHash } from "../../lib/valo-quota";
+import { consumeQuota, quotaLimit, quotaSubjectHash } from "../../lib/valo-quota";
 import {
   refundProvider,
   assertRefundMatch,
@@ -166,17 +166,11 @@ export async function requestOrderRefund(actor: WorkspaceActor, id: string, raw:
       return { reference: old.id, status: old.status };
     }
     const subject = quotaSubjectHash(setting("SESSION_SECRET"), "user", actor.identityId);
-    for (const [window, max] of [
-      ["minute", 10],
-      ["day", 50],
+    for (const [bucket, window] of [
+      ["refund-create", "minute"],
+      ["refund-create-day", "day"],
     ] as const) {
-      const q = await consumeQuota(
-        window === "day" ? "refund-create-day" : "refund-create",
-        subject,
-        max,
-        window,
-        tx,
-      );
+      const q = await consumeQuota(bucket, subject, quotaLimit(bucket), window, tx);
       if (!q.allowed)
         throw new ValoProblem(
           429,

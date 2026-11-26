@@ -4,6 +4,7 @@ import { logger } from "./platform/logger";
 import { setting } from "./platform/settings";
 import { startRequestCountWriter } from "./modules/operations";
 import { logConnectionFailures } from "./platform/database-failures";
+import { requestLimits } from "./lib/valo-quota-policy";
 
 const rawPort = setting("PORT");
 
@@ -17,6 +18,8 @@ if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
+// Each request limit is a setting: a value outside its bounds stops the API here, before it serves (SEC-005).
+requestLimits();
 // A database connection that fails while idle is logged, and the API carries on.
 logConnectionFailures(logger);
 await initializeApplicationRuntime();

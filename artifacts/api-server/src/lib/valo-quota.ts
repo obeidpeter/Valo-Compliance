@@ -1,14 +1,14 @@
 import { sql } from "drizzle-orm";
 import type { db } from "@workspace/db";
 import { logger } from "../platform/logger";
-import { quotaPolicy, type QuotaBucket, type QuotaDecision } from "./valo-quota-policy";
-export { quotaPolicy, quotaSubjectHash } from "./valo-quota-policy";
+import { quotaLimit, quotaPolicy, type QuotaBucket, type QuotaDecision } from "./valo-quota-policy";
+export { quotaLimit, quotaPolicy, quotaSubjectHash } from "./valo-quota-policy";
 
 /** One DB-clock window across processes; no per-process in-memory fallback. */
 export async function consumeQuota(
   bucket: QuotaBucket,
   subjectHash: string,
-  limit: number = quotaPolicy[bucket],
+  limit: number = quotaLimit(bucket),
   window: "minute" | "day" = "minute",
   executor?: Pick<typeof db, "execute">,
 ): Promise<QuotaDecision> {

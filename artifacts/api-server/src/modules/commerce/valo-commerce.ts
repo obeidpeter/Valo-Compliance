@@ -21,7 +21,7 @@ import { activeTemplatePrices, isFreeBaselineTemplate, liveOperationalVersions }
 import { authorizeWorkspaceRead, authorizeWorkspaceWrite, type WorkspaceActor } from "../workspaces";
 import { commercialSettingChoice } from "../commercial-settings";
 import { ValoProblem } from "../../platform/valo-problem";
-import { consumeQuota, quotaPolicy, quotaSubjectHash } from "../../lib/valo-quota";
+import { consumeQuota, quotaLimit, quotaSubjectHash } from "../../lib/valo-quota";
 import {
   assertOrderMatch,
   paystack,
@@ -62,7 +62,7 @@ async function limit(tx: Tx, actor: WorkspaceActor) {
     ["checkout-create", "minute"],
     ["checkout-create-day", "day"],
   ] as const) {
-    const q = await consumeQuota(bucket, hash, quotaPolicy[bucket], window, tx);
+    const q = await consumeQuota(bucket, hash, quotaLimit(bucket), window, tx);
     if (!q.allowed)
       throw new ValoProblem(
         429,
