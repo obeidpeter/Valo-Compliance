@@ -6,6 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { PrivacyStaffActionAction } from './privacyStaffActionAction';
+import type { PrivacyStaffActionOutcome } from './privacyStaffActionOutcome';
+import type { PrivacyStaffActionSystem } from './privacyStaffActionSystem';
 
 export interface PrivacyStaffAction {
   /** @minimum 1 */
@@ -18,4 +20,8 @@ export interface PrivacyStaffAction {
   reason: string;
   profileVersionId?: string;
   acknowledgement?: boolean;
+  /** For record_step, the outside step recorded. The reason is its words, which the person who asked reads. */
+  system?: PrivacyStaffActionSystem;
+  /** For record_step, whether the step was carried out and confirmed, or was not needed. */
+  outcome?: PrivacyStaffActionOutcome;
 }

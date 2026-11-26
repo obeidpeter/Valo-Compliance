@@ -4216,6 +4216,27 @@
       "proves": "On a disposable database, a synthetic data download request that was prepared and a correction request that was recorded are each held and released, and each comes back partly done with its steps as they were and the download's prepared result kept, while a request held before anything was done comes back to its staff member."
     },
     {
+      "requirement": "PRV-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/privacy/valo-privacy-requests.integration.test.ts",
+      "test": "a test request traverses every step: a synthetic deletion is confirmed, claimed and erased, its four outside steps are recorded by its own staff member, and it is marked done, after which nothing changes it",
+      "proves": "On a disposable database, a synthetic deletion request is confirmed by its owner, claimed, erased, has its four outside steps recorded by its own staff member and is marked done, after which no step, completion or hold is accepted; another staff member's record, a step that is not an outside step and a step without an outcome are refused, as is marking it done while a step is held."
+    },
+    {
+      "requirement": "PRV-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/privacy/valo-privacy-requests.integration.test.ts",
+      "test": "a partly done data download is marked done once its outside steps are recorded, and its prepared result stays the person's to fetch",
+      "proves": "On a disposable database, a synthetic data download request whose four outside steps are recorded as not needed is marked done, and its owner can still fetch the prepared result."
+    },
+    {
+      "requirement": "PRV-003",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "privacy staff see each step of a partly done request, and record an outside step with its outcome and the words the person who asked reads",
+      "proves": "On an emulated phone with stand-in answers, the staff privacy screen lists each of a partly done request's six steps, offers the four outside steps and both outcomes, says that the person who asked reads the words, has no automated WCAG 2.2 AA failure with the form open, and sends the chosen step, outcome and words."
+    },
+    {
       "requirement": "EDT-002",
       "job": "postgres",
       "file": "artifacts/api-server/src/scripts/tester-tasks.integration.test.ts",

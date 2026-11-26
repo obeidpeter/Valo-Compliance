@@ -19,4 +19,6 @@ export const PrivacyStaffActionAction = {
   record_correction: 'record_correction',
   start_erasure: 'start_erasure',
   resume_erasure: 'resume_erasure',
+  record_step: 'record_step',
+  complete: 'complete',
 } as const;

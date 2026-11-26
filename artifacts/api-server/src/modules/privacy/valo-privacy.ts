@@ -502,6 +502,8 @@ export function availablePrivacyActions(row: PrivacyRow, identityId: string) {
     | "record_correction"
     | "start_erasure"
     | "resume_erasure"
+    | "record_step"
+    | "complete"
   )[] = [];
   if (row.assignedIdentityId && row.assignedIdentityId !== identityId) return actions;
   const can = (next: PrivacyStatus) => {
@@ -512,12 +514,25 @@ export function availablePrivacyActions(row: PrivacyRow, identityId: string) {
       return false;
     }
   };
+  /** A partly done request's own staff member records its outside steps, and marks it done once every
+   * step passes the completion check (docs/architecture/privacy-requests.md, part 2). */
+  const finishing = () => {
+    if (row.status !== "partially_fulfilled" || row.assignedIdentityId !== identityId) return;
+    actions.push("record_step");
+    try {
+      assertPrivacyCompletion(row.steps);
+      actions.push("complete");
+    } catch {
+      /* A step is still held or failed, so the request cannot be marked done yet. */
+    }
+  };
   if (can("held")) actions.push("hold");
   if (row.erasurePhase !== "not_started") {
     if (row.status === "held") actions.push("release_hold");
     else if (can("needs_information")) actions.push("request_information");
     if (["assigned", "in_progress", "failed", "partially_fulfilled"].includes(row.status))
       actions.push("resume_erasure");
+    finishing();
     return actions;
   }
   if (can("needs_information")) actions.push("request_information");
@@ -535,6 +550,7 @@ export function availablePrivacyActions(row: PrivacyRow, identityId: string) {
       /* Development erasure is not an available production operation. */
     }
   }
+  finishing();
   return actions;
 }
 export async function staffPrivacyDetail(actor: PrivacyStaffActor, id: string) {

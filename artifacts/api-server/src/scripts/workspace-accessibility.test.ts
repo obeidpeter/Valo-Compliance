@@ -3972,6 +3972,98 @@ test("a privacy request reads in words: its kind, its state, each step and who d
   }
 });
 
+// PRV-003: privacy staff record each outside step of a partly done request with the words the person who
+// asked reads, after seeing every step's outcome (docs/architecture/privacy-requests.md, slice 2).
+test("privacy staff see each step of a partly done request, and record an outside step with its outcome and the words the person who asked reads", async () => {
+  const partly = { ...privacyCase, status: "partially_fulfilled", version: 5, assigned: true };
+  const step = (system: string, status: string) => ({
+    system,
+    status,
+    detail: `Synthetic ${system} detail.`,
+  });
+  const detail = {
+    request: partly,
+    mayRespond: false,
+    messages: [],
+    events: [
+      {
+        sequence: 5,
+        action: "application_export_prepared",
+        actorType: "staff",
+        reason: "Synthetic reason.",
+        createdAt: at(17),
+      },
+    ],
+    steps: [
+      step("identity_verification", "confirmed"),
+      step("application", "confirmed"),
+      step("private_files", "held"),
+      step("managed_identity", "held"),
+      step("external_processors", "held"),
+      step("retention_and_recovery", "held"),
+    ],
+    availableActions: ["hold", "record_step"],
+  };
+  const sent: unknown[] = [];
+  const how: Api = async (route, method, path, query) => {
+    if (method === "POST" && path === `/admin/privacy-cases/${partly.id}/action`) {
+      sent.push(route.request().postDataJSON());
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(api.ActOnStaffPrivacyCaseResponse.parse(detail)),
+      });
+    } else
+      await except({
+        "GET /admin/privacy-cases": api.ListStaffPrivacyCasesResponse.parse({
+          items: [partly],
+          page: 1,
+          total: 1,
+          pageSize: 20,
+        }),
+        [`GET /admin/privacy-cases/${partly.id}`]: api.GetStaffPrivacyCaseResponse.parse(detail),
+      })(route, method, path, query);
+  };
+  const { page, unknown, errors, close } = await phone("/staff/privacy", how);
+  try {
+    await ready(page);
+    await page.getByRole("button", { name: "Open operations" }).click();
+    const steps = page.getByTestId("list-privacy-steps");
+    await expect(steps.locator("li")).toHaveCount(6);
+    await expect(steps).toContainText("Your sign-in account: On hold");
+    await page.getByTestId("select-privacy-action").selectOption("record_step");
+    const choice = page.getByTestId("select-privacy-step");
+    assert.deepEqual(await choice.locator("option").allInnerTexts(), [
+      "Your files",
+      "Your sign-in account",
+      "Other services Valo uses",
+      "Records Valo must keep, and backups",
+    ]);
+    await choice.selectOption("managed_identity");
+    await page.getByTestId("radio-privacy-outcome-not_applicable").check();
+    await expect(page.getByTestId("text-privacy-step-words")).toContainText(
+      "The person who asked reads what you write below as this step's outcome.",
+    );
+    assert.deepEqual((await wcagFailures(page)).failures, []);
+    const words = page.getByTestId("input-privacy-reason");
+    await expect(page.getByText("What was done, where and when", { exact: true })).toBeVisible();
+    await words.fill("Synthetic: nothing was held at the sign-in service.");
+    await page.getByRole("button", { name: "Apply recorded operation" }).click();
+    await expect.poll(() => sent.length).toBe(1);
+    assert.deepEqual(sent[0], {
+      expectedVersion: 5,
+      action: "record_step",
+      reason: "Synthetic: nothing was held at the sign-in service.",
+      system: "managed_identity",
+      outcome: "not_applicable",
+      acknowledgement: false,
+    });
+    assert.deepEqual([...unknown, ...errors], []);
+  } finally {
+    await close();
+  }
+});
+
 // A sentence that shows only once a list is empty, or a form is opened, is read here: the tests
 // that read each screen as it opens do not see it.
 test("an empty list of tasks or reminders says what to do next in the customer's words, and the new-task form's hint names a saved result", async () => {

@@ -4048,6 +4048,32 @@ export const PrivacyStaffActionAction = {
   record_correction: 'record_correction',
   start_erasure: 'start_erasure',
   resume_erasure: 'resume_erasure',
+  record_step: 'record_step',
+  complete: 'complete',
+} as const;
+
+/**
+ * For record_step, the outside step recorded. The reason is its words, which the person who asked reads.
+ */
+export type PrivacyStaffActionSystem = typeof PrivacyStaffActionSystem[keyof typeof PrivacyStaffActionSystem];
+
+
+export const PrivacyStaffActionSystem = {
+  private_files: 'private_files',
+  managed_identity: 'managed_identity',
+  external_processors: 'external_processors',
+  retention_and_recovery: 'retention_and_recovery',
+} as const;
+
+/**
+ * For record_step, whether the step was carried out and confirmed, or was not needed.
+ */
+export type PrivacyStaffActionOutcome = typeof PrivacyStaffActionOutcome[keyof typeof PrivacyStaffActionOutcome];
+
+
+export const PrivacyStaffActionOutcome = {
+  confirmed: 'confirmed',
+  not_applicable: 'not_applicable',
 } as const;
 
 export interface PrivacyStaffAction {
@@ -4061,6 +4087,10 @@ export interface PrivacyStaffAction {
   reason: string;
   profileVersionId?: string;
   acknowledgement?: boolean;
+  /** For record_step, the outside step recorded. The reason is its words, which the person who asked reads. */
+  system?: PrivacyStaffActionSystem;
+  /** For record_step, whether the step was carried out and confirmed, or was not needed. */
+  outcome?: PrivacyStaffActionOutcome;
 }
 
 export interface PrivacyRequestRecord {

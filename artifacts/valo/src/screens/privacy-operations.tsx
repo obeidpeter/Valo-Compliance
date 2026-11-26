@@ -7,10 +7,13 @@ import {
   type PrivacyCase,
   type PrivacyCaseDetail,
   type PrivacyStaffAction,
+  type PrivacyStaffActionOutcome,
+  type PrivacyStaffActionSystem,
 } from "@workspace/api-client-react";
 import { ErrorState } from "@/components/states";
 import { useUnsavedNavigation } from "@/lib/use-unsaved-navigation";
 import { formatDateTime } from "@/lib/format";
+import { privacyStepStatusWords, privacyStepWords } from "@/lib/privacy-words";
 const actions: { value: PrivacyStaffAction["action"]; label: string }[] = [
   { value: "claim", label: "Claim verified request" },
   { value: "request_information", label: "Request more information" },
@@ -21,7 +24,17 @@ const actions: { value: PrivacyStaffAction["action"]; label: string }[] = [
   { value: "record_correction", label: "Record an actual corrected profile revision" },
   { value: "start_erasure", label: "Start synthetic development content erasure" },
   { value: "resume_erasure", label: "Resume synthetic development content erasure" },
+  { value: "record_step", label: "Record an outside step" },
+  { value: "complete", label: "Mark the request done" },
 ];
+/** The steps carried out outside Valo's own rows, which staff record (docs/architecture/privacy-requests.md). */
+const outsideSteps: PrivacyStaffActionSystem[] = [
+  "private_files",
+  "managed_identity",
+  "external_processors",
+  "retention_and_recovery",
+];
+const outcomes: PrivacyStaffActionOutcome[] = ["confirmed", "not_applicable"];
 export default function PrivacyOperations() {
   const [page, setPage] = useState(1),
     [selected, setSelected] = useState<PrivacyCase | null>(null),
@@ -29,7 +42,9 @@ export default function PrivacyOperations() {
   const [action, setAction] = useState<PrivacyStaffAction["action"]>("claim"),
     [reason, setReason] = useState(""),
     [profileVersionId, setProfile] = useState(""),
-    [ack, setAck] = useState(false);
+    [ack, setAck] = useState(false),
+    [system, setSystem] = useState<PrivacyStaffActionSystem>("private_files"),
+    [outcome, setOutcome] = useState<PrivacyStaffActionOutcome>("confirmed");
   const dirty = !!reason.trim() || !!profileVersionId.trim() || ack;
   const nav = useUnsavedNavigation(() => dirty),
     dialog = useRef<HTMLDialogElement>(null);
@@ -91,6 +106,7 @@ export default function PrivacyOperations() {
         action: activeAction,
         reason: reason.trim(),
         ...(profileVersionId.trim() ? { profileVersionId: profileVersionId.trim() } : {}),
+        ...(activeAction === "record_step" ? { system, outcome } : {}),
         acknowledgement: ack,
       },
     });
@@ -199,6 +215,16 @@ export default function PrivacyOperations() {
               </p>
               <p className="whitespace-pre-wrap break-words">{inspection.request.message}</p>
               <p>{inspection.request.resultScope}</p>
+              <ul className="grid gap-2" aria-label="Steps of this request" data-testid="list-privacy-steps">
+                {inspection.steps.map((step) => (
+                  <li key={step.system}>
+                    <strong>
+                      {privacyStepWords(step.system)}: {privacyStepStatusWords(step.status)}
+                    </strong>
+                    <p className="whitespace-pre-wrap break-words">{step.detail}</p>
+                  </li>
+                ))}
+              </ul>
               <ol className="grid gap-2" aria-label="Case history">
                 {inspection.events.map((e) => (
                   <li key={e.sequence}>
@@ -224,6 +250,7 @@ export default function PrivacyOperations() {
               value={activeAction ?? ""}
               onChange={(e) => setAction(e.target.value as PrivacyStaffAction["action"])}
               disabled={mutation.isPending || !offered.length || inspected.isError}
+              data-testid="select-privacy-action"
             >
               {!offered.length && <option value="">No operation currently available</option>}
               {offered.map((a) => (
@@ -233,8 +260,57 @@ export default function PrivacyOperations() {
               ))}
             </select>
           </label>
+          {activeAction === "record_step" && (
+            <div className="grid gap-3 text-sm">
+              <label className="grid gap-2">
+                Step
+                <select
+                  className="field"
+                  value={system}
+                  onChange={(e) => setSystem(e.target.value as PrivacyStaffActionSystem)}
+                  disabled={mutation.isPending}
+                  data-testid="select-privacy-step"
+                >
+                  {outsideSteps.map((name) => (
+                    <option key={name} value={name}>
+                      {privacyStepWords(name)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <fieldset className="grid gap-2">
+                <legend>Outcome</legend>
+                {outcomes.map((value) => (
+                  <label key={value} className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="privacy-step-outcome"
+                      value={value}
+                      checked={outcome === value}
+                      onChange={() => setOutcome(value)}
+                      disabled={mutation.isPending}
+                      data-testid={`radio-privacy-outcome-${value}`}
+                    />
+                    {privacyStepStatusWords(value)}
+                  </label>
+                ))}
+              </fieldset>
+              <p className="rounded-xl bg-secondary p-3" data-testid="text-privacy-step-words">
+                The person who asked reads what you write below as this step's outcome. Say what was done,
+                where and when, or why it was not needed.
+              </p>
+            </div>
+          )}
+          {activeAction === "complete" && (
+            <p className="rounded-xl bg-secondary p-3 text-sm" data-testid="text-privacy-complete">
+              Marking it done tells the person who asked that their request is done. Nothing can change it
+              after.
+            </p>
+          )}
           <label className="grid gap-2 text-sm">
-            Reason, scope and observed evidence
+            {activeAction === "record_step"
+              ? "What was done, where and when"
+              : "Reason, scope and observed evidence"}
             <textarea
               className="field min-h-28"
               value={reason}
@@ -242,6 +318,7 @@ export default function PrivacyOperations() {
               minLength={10}
               maxLength={1000}
               disabled={mutation.isPending}
+              data-testid="input-privacy-reason"
             />
           </label>
           {(activeAction === "start_erasure" || activeAction === "resume_erasure") && (

@@ -6844,10 +6844,12 @@ export const actOnStaffPrivacyCaseBodyReasonMax = 1000;
 
 export const ActOnStaffPrivacyCaseBody = zod.object({
   "expectedVersion": zod.int().min(1),
-  "action": zod.enum(['claim', 'request_information', 'hold', 'release_hold', 'reject', 'prepare_export', 'record_correction', 'start_erasure', 'resume_erasure']),
+  "action": zod.enum(['claim', 'request_information', 'hold', 'release_hold', 'reject', 'prepare_export', 'record_correction', 'start_erasure', 'resume_erasure', 'record_step', 'complete']),
   "reason": zod.string().min(actOnStaffPrivacyCaseBodyReasonMin).max(actOnStaffPrivacyCaseBodyReasonMax),
   "profileVersionId": zod.uuid().optional(),
-  "acknowledgement": zod.boolean().optional()
+  "acknowledgement": zod.boolean().optional(),
+  "system": zod.enum(['private_files', 'managed_identity', 'external_processors', 'retention_and_recovery']).optional().describe('For record_step, the outside step recorded. The reason is its words, which the person who asked reads.'),
+  "outcome": zod.enum(['confirmed', 'not_applicable']).optional().describe('For record_step, whether the step was carried out and confirmed, or was not needed.')
 })
 
 export const ActOnStaffPrivacyCaseResponse = zod.object({
