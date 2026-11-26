@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { and, eq, sql, inArray } from "drizzle-orm";
 import type { db } from "@workspace/db";
 import { sha256 } from "@workspace/valo-core";
+import { privacyNotice } from "@workspace/valo-core/privacy-notice";
 import { profileInput } from "../../lib/valo-validation";
 import { consumeQuota, quotaPolicy, quotaSubjectHash } from "../../lib/valo-quota";
 import { setting } from "../../platform/settings";
@@ -252,7 +253,9 @@ export async function saveProfile(actor: WorkspaceActor, raw: unknown) {
       revision,
       profile: input.profile,
       profileHash: sha256(JSON.stringify(input.profile)),
-      noticeVersion: "development-processing-v1",
+      // The privacy notice in force, which the profile screen links beside the marketing choice
+      // (docs/architecture/processing-inventory.md, slice 3).
+      noticeVersion: privacyNotice().version,
       actorId: actor.identityId,
     });
     await tx

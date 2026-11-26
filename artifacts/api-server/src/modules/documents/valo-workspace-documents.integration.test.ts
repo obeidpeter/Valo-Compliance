@@ -32,6 +32,7 @@ import {
   valoStaffAssignments,
 } from "@workspace/db";
 import { sha256 } from "@workspace/valo-core";
+import { privacyNotice } from "@workspace/valo-core/privacy-notice";
 import { parseFormText } from "@workspace/valo-core/form-text";
 import { formDocumentContent } from "@workspace/valo-core/guided-runtime-v2";
 import { GUIDED_SPECS_V2 } from "@workspace/valo-core/guided-specs-v2";
@@ -81,6 +82,8 @@ test(
           assert.equal(versions.length, 2);
           assert.equal(versions.find((v) => v.revision === 1)!.profile.state, "unknown");
           assert.equal(versions.find((v) => v.revision === 2)!.profile.state, "Bayelsa");
+          // Each version keeps the privacy notice in force when it was saved (processing inventory, slice 3).
+          for (const version of versions) assert.equal(version.noticeVersion, privacyNotice().version);
           assert.equal((await getWorkspace(b)).profile, null);
         },
       );
