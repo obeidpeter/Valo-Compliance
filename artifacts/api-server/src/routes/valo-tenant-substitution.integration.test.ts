@@ -1205,7 +1205,12 @@ test(
           "POST /workspace/data-exports": { body: () => ({ requestKey: randomUUID() }) },
           "POST /workspace/documents": { body: () => syntheticDocument },
           "POST /workspace/orders": {
-            body: () => ({ priceId, acceptedLicenceVersion: "test-only", requestKey: randomUUID() }),
+            body: () => ({
+              priceId,
+              acceptedLicenceVersion: "test-only",
+              acceptedCarriesToLaterEditions: true,
+              requestKey: randomUUID(),
+            }),
           },
           "POST /workspace/privacy-requests": {
             body: () => ({

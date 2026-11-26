@@ -12,4 +12,5 @@ export type OwnerSettingKey = typeof OwnerSettingKey[keyof typeof OwnerSettingKe
 export const OwnerSettingKey = {
   drafting_workspace_daily: 'drafting_workspace_daily',
   drafting_daily_in_all: 'drafting_daily_in_all',
+  purchase_carries_to_later_editions: 'purchase_carries_to_later_editions',
 } as const;

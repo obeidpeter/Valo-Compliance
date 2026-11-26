@@ -13,6 +13,8 @@ export interface CustomerPurchases {
   available: boolean;
   message: string;
   livePaymentsEnabled: boolean;
+  /** The access rule a purchase made now records: whether it carries to its template's later editions at no further charge, or covers only the edition bought, while it stays released (docs/architecture/commercial-settings.md, slice 3b). An order is made only with this rule accepted. */
+  purchaseCarriesToLaterEditions: boolean;
   hasMoreOrders?: boolean;
   orders: CommerceOrder[];
   products: TemplateOffer[];

@@ -10,8 +10,8 @@ import type { OwnerSettingKey } from './ownerSettingKey';
 export interface OwnerSettingTerms {
   key: OwnerSettingKey;
   /**
-     * A whole number, such as 30
-     * @pattern ^\d{1,7}$
+     * A whole number, such as 30, or yes or no
+     * @pattern ^(\d{1,7}|yes|no)$
      */
   value: string;
   /**

@@ -1622,6 +1622,7 @@ export const GetCustomerPurchasesResponse = zod.object({
   "available": zod.boolean(),
   "message": zod.string(),
   "livePaymentsEnabled": zod.boolean(),
+  "purchaseCarriesToLaterEditions": zod.boolean().describe('The access rule a purchase made now records: whether it carries to its template\'s later editions at no further charge, or covers only the edition bought, while it stays released (docs/architecture/commercial-settings.md, slice 3b). An order is made only with this rule accepted.'),
   "hasMoreOrders": zod.boolean().optional(),
   "orders": zod.array(zod.object({
   "id": zod.string(),
@@ -1636,6 +1637,7 @@ export const GetCustomerPurchasesResponse = zod.object({
   "licenceText": zod.string(),
   "taxTreatment": zod.string(),
   "contentVersionId": zod.string(),
+  "carriesToLaterEditions": zod.boolean().describe('The access rule the order recorded when it was made, and keeps: whether the purchase carries to its template\'s later editions. An order made before the rule had a record carries.'),
   "refundStatus": zod.string().nullable(),
   "receiptReference": zod.string().nullable(),
   "refunds": zod.array(zod.object({
@@ -1689,6 +1691,7 @@ export const createCommerceOrderBodyAcceptedLicenceVersionMax = 100;
 export const CreateCommerceOrderBody = zod.object({
   "priceId": zod.uuid(),
   "acceptedLicenceVersion": zod.string().min(1).max(createCommerceOrderBodyAcceptedLicenceVersionMax),
+  "acceptedCarriesToLaterEditions": zod.boolean().describe('The access rule the buyer was shown, which must be the rule in effect when the order is made.'),
   "requestKey": zod.uuid()
 })
 
@@ -1705,6 +1708,7 @@ export const CreateCommerceOrderResponse = zod.object({
   "licenceText": zod.string(),
   "taxTreatment": zod.string(),
   "contentVersionId": zod.string(),
+  "carriesToLaterEditions": zod.boolean().describe('The access rule the order recorded when it was made, and keeps: whether the purchase carries to its template\'s later editions. An order made before the rule had a record carries.'),
   "refundStatus": zod.string().nullable(),
   "receiptReference": zod.string().nullable(),
   "refunds": zod.array(zod.object({
@@ -1764,6 +1768,7 @@ export const RefreshCommerceOrderResponse = zod.object({
   "licenceText": zod.string(),
   "taxTreatment": zod.string(),
   "contentVersionId": zod.string(),
+  "carriesToLaterEditions": zod.boolean().describe('The access rule the order recorded when it was made, and keeps: whether the purchase carries to its template\'s later editions. An order made before the rule had a record carries.'),
   "refundStatus": zod.string().nullable(),
   "receiptReference": zod.string().nullable(),
   "refunds": zod.array(zod.object({
@@ -1806,6 +1811,7 @@ export const GetCommerceReceiptResponse = zod.object({
   "licenceText": zod.string(),
   "taxTreatment": zod.string(),
   "contentVersionId": zod.string(),
+  "carriesToLaterEditions": zod.boolean().describe('The access rule the order recorded when it was made, and keeps: whether the purchase carries to its template\'s later editions. An order made before the rule had a record carries.'),
   "refundStatus": zod.string().nullable(),
   "receiptReference": zod.string().nullable(),
   "refunds": zod.array(zod.object({
@@ -2242,11 +2248,11 @@ export const PreviewOwnerPriceResponse = zod.object({
  * Each commercial setting, with its default and any value in effect or scheduled to start (docs/architecture/commercial-settings.md, slice 3). Read-only. Development only.
  * @summary The commercial settings and their values, for the development owner (ADM-006)
  */
-export const listOwnerSettingsResponseItemsItemDefaultValueMin = 0;
+export const listOwnerSettingsResponseItemsItemDefaultValueMinOne = 0;
 
 export const listOwnerSettingsResponseItemsItemMaxMin = 0;
 
-export const listOwnerSettingsResponseItemsItemValuesItemValueMin = 0;
+export const listOwnerSettingsResponseItemsItemValuesItemValueMinOne = 0;
 
 export const listOwnerSettingsResponseItemsItemValuesMax = 100;
 
@@ -2256,14 +2262,17 @@ export const listOwnerSettingsResponseItemsMax = 20;
 
 export const ListOwnerSettingsResponse = zod.object({
   "items": zod.array(zod.object({
-  "key": zod.enum(['drafting_workspace_daily', 'drafting_daily_in_all']),
+  "key": zod.enum(['drafting_workspace_daily', 'drafting_daily_in_all', 'purchase_carries_to_later_editions']),
+  "kind": zod.enum(['count', 'yes-no']).describe('A whole number, or yes or no'),
   "title": zod.string(),
-  "unit": zod.string(),
-  "defaultValue": zod.int().min(listOwnerSettingsResponseItemsItemDefaultValueMin).describe('The value while no value the owner recorded is in effect'),
-  "max": zod.int().min(listOwnerSettingsResponseItemsItemMaxMin),
+  "unit": zod.string().nullable().describe('What a whole number counts; none for yes or no'),
+  "yes": zod.string().nullable().describe('What yes means; none for a whole number'),
+  "no": zod.string().nullable().describe('What no means; none for a whole number'),
+  "defaultValue": zod.union([zod.int().min(listOwnerSettingsResponseItemsItemDefaultValueMinOne).describe('The value while no value the owner recorded is in effect'),zod.boolean().describe('The value while no value the owner recorded is in effect')]).describe('The value while no value the owner recorded is in effect'),
+  "max": zod.int().min(listOwnerSettingsResponseItemsItemMaxMin).nullable(),
   "values": zod.array(zod.object({
   "settingId": zod.uuid(),
-  "value": zod.int().min(listOwnerSettingsResponseItemsItemValuesItemValueMin),
+  "value": zod.union([zod.int().min(listOwnerSettingsResponseItemsItemValuesItemValueMinOne),zod.boolean()]),
   "effectiveFrom": zod.coerce.date(),
   "effectiveTo": zod.coerce.date().nullable()
 })).max(listOwnerSettingsResponseItemsItemValuesMax).describe('The value in effect and any scheduled to start, earliest first.')
@@ -2275,7 +2284,7 @@ export const ListOwnerSettingsResponse = zod.object({
  * Refused unless `confirm` is the checksum the preview gave for exactly these terms. The setting's open value closes when the new one starts.
  * @summary Record the owner's value of a commercial setting
  */
-export const recordOwnerSettingBodyValueRegExp = new RegExp('^\\d{1,7}$');
+export const recordOwnerSettingBodyValueRegExp = new RegExp('^(\\d{1,7}|yes|no)$');
 export const recordOwnerSettingBodyFromMin = 3;
 export const recordOwnerSettingBodyFromMax = 40;
 
@@ -2286,16 +2295,16 @@ export const recordOwnerSettingBodyConfirmRegExp = new RegExp('^[0-9a-f]{64}$');
 
 
 export const RecordOwnerSettingBody = zod.object({
-  "key": zod.enum(['drafting_workspace_daily', 'drafting_daily_in_all']),
+  "key": zod.enum(['drafting_workspace_daily', 'drafting_daily_in_all', 'purchase_carries_to_later_editions']),
   "value": zod.string().regex(recordOwnerSettingBodyValueRegExp),
   "from": zod.string().min(recordOwnerSettingBodyFromMin).max(recordOwnerSettingBodyFromMax),
   "reference": zod.string().min(recordOwnerSettingBodyReferenceMin).max(recordOwnerSettingBodyReferenceMax).describe('Where the owner\'s approval is written'),
   "confirm": zod.string().regex(recordOwnerSettingBodyConfirmRegExp).describe('The checksum the preview gave')
 })
 
-export const recordOwnerSettingResponseValueMin = 0;
+export const recordOwnerSettingResponseValueMinOne = 0;
 
-export const recordOwnerSettingResponseClosedItemValueMin = 0;
+export const recordOwnerSettingResponseClosedItemValueMinOne = 0;
 
 export const recordOwnerSettingResponseClosedMax = 100;
 
@@ -2303,12 +2312,12 @@ export const recordOwnerSettingResponseClosedMax = 100;
 
 export const RecordOwnerSettingResponse = zod.object({
   "settingId": zod.uuid(),
-  "key": zod.enum(['drafting_workspace_daily', 'drafting_daily_in_all']),
-  "value": zod.int().min(recordOwnerSettingResponseValueMin),
+  "key": zod.enum(['drafting_workspace_daily', 'drafting_daily_in_all', 'purchase_carries_to_later_editions']),
+  "value": zod.union([zod.int().min(recordOwnerSettingResponseValueMinOne),zod.boolean()]),
   "from": zod.coerce.date(),
   "closed": zod.array(zod.object({
   "settingId": zod.uuid(),
-  "value": zod.int().min(recordOwnerSettingResponseClosedItemValueMin)
+  "value": zod.union([zod.int().min(recordOwnerSettingResponseClosedItemValueMinOne),zod.boolean()])
 })).max(recordOwnerSettingResponseClosedMax)
 })
 
@@ -2317,29 +2326,32 @@ export const RecordOwnerSettingResponse = zod.object({
  * Writes nothing.
  * @summary The exact terms of a setting's value and their checksum, which recording confirms
  */
-export const previewOwnerSettingBodyValueRegExp = new RegExp('^\\d{1,7}$');
+export const previewOwnerSettingBodyValueRegExp = new RegExp('^(\\d{1,7}|yes|no)$');
 export const previewOwnerSettingBodyFromMin = 3;
 export const previewOwnerSettingBodyFromMax = 40;
 
 
 
 export const PreviewOwnerSettingBody = zod.object({
-  "key": zod.enum(['drafting_workspace_daily', 'drafting_daily_in_all']),
-  "value": zod.string().regex(previewOwnerSettingBodyValueRegExp).describe('A whole number, such as 30'),
+  "key": zod.enum(['drafting_workspace_daily', 'drafting_daily_in_all', 'purchase_carries_to_later_editions']),
+  "value": zod.string().regex(previewOwnerSettingBodyValueRegExp).describe('A whole number, such as 30, or yes or no'),
   "from": zod.string().min(previewOwnerSettingBodyFromMin).max(previewOwnerSettingBodyFromMax).describe('now, or a time with its offset, such as 2026-12-01T00:00:00+01:00')
 })
 
-export const previewOwnerSettingResponseTermsValueMin = 0;
+export const previewOwnerSettingResponseTermsValueMinOne = 0;
 
 export const previewOwnerSettingResponseChecksumRegExp = new RegExp('^[0-9a-f]{64}$');
 
 
 export const PreviewOwnerSettingResponse = zod.object({
+  "kind": zod.enum(['count', 'yes-no']).describe('A whole number, or yes or no'),
   "title": zod.string(),
-  "unit": zod.string(),
+  "unit": zod.string().nullable(),
+  "yes": zod.string().nullable(),
+  "no": zod.string().nullable(),
   "terms": zod.object({
-  "key": zod.enum(['drafting_workspace_daily', 'drafting_daily_in_all']),
-  "value": zod.int().min(previewOwnerSettingResponseTermsValueMin),
+  "key": zod.enum(['drafting_workspace_daily', 'drafting_daily_in_all', 'purchase_carries_to_later_editions']),
+  "value": zod.union([zod.int().min(previewOwnerSettingResponseTermsValueMinOne),zod.boolean()]),
   "from": zod.string()
 }),
   "checksum": zod.string().regex(previewOwnerSettingResponseChecksumRegExp)
@@ -3744,7 +3756,8 @@ export const ListEditionNoticesResponse = zod.object({
   "kind": zod.enum(['replaced', 'withdrawn']),
   "replacementVersion": zod.int().nullable().describe('The version that replaced it, for a replaced edition.'),
   "reason": zod.string().nullable().describe('Why it was withdrawn, as its editor wrote it for customers.'),
-  "held": zod.boolean().describe('Whether the workspace holds the template through a purchase.'),
+  "held": zod.boolean().describe('Whether the workspace holds the edition through a purchase.'),
+  "carries": zod.boolean().nullable().describe('For a replaced edition the workspace holds: whether its purchase carries to the replacement, under the access rule its order recorded. None otherwise, and on a notice written before orders recorded a rule, when every purchase carried.'),
   "documents": zod.int().min(listEditionNoticesResponseItemsItemDocumentsMin).describe('How many of the workspace\'s documents were made from the edition.'),
   "createdAt": zod.coerce.date().describe('When the edition was replaced or withdrawn.')
 })).max(listEditionNoticesResponseItemsMax)
@@ -3773,7 +3786,8 @@ export const MarkEditionNoticeReadResponse = zod.object({
   "kind": zod.enum(['replaced', 'withdrawn']),
   "replacementVersion": zod.int().nullable().describe('The version that replaced it, for a replaced edition.'),
   "reason": zod.string().nullable().describe('Why it was withdrawn, as its editor wrote it for customers.'),
-  "held": zod.boolean().describe('Whether the workspace holds the template through a purchase.'),
+  "held": zod.boolean().describe('Whether the workspace holds the edition through a purchase.'),
+  "carries": zod.boolean().nullable().describe('For a replaced edition the workspace holds: whether its purchase carries to the replacement, under the access rule its order recorded. None otherwise, and on a notice written before orders recorded a rule, when every purchase carried.'),
   "documents": zod.int().min(markEditionNoticeReadResponseItemsItemDocumentsMin).describe('How many of the workspace\'s documents were made from the edition.'),
   "createdAt": zod.coerce.date().describe('When the edition was replaced or withdrawn.')
 })).max(markEditionNoticeReadResponseItemsMax)

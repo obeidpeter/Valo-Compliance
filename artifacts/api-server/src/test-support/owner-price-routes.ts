@@ -183,6 +183,7 @@ export async function exerciseOwnerPriceRoutes(call: Call, editor: string) {
       createOrder(buyer, {
         priceId: first.priceId,
         acceptedLicenceVersion: "synthetic-owner-1",
+        acceptedCarriesToLaterEditions: true,
         requestKey: randomUUID(),
       }),
     );
@@ -297,6 +298,7 @@ export async function exerciseOwnerPriceRoutes(call: Call, editor: string) {
       createOrder(carryBuyer, {
         priceId: carrying.priceId,
         acceptedLicenceVersion: "synthetic-owner-3",
+        acceptedCarriesToLaterEditions: true,
         requestKey: randomUUID(),
       }),
     );

@@ -6,19 +6,38 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { OwnerSettingKey } from './ownerSettingKey';
+import type { OwnerSettingKind } from './ownerSettingKind';
 import type { OwnerSettingValue } from './ownerSettingValue';
 
 export interface OwnerSetting {
   key: OwnerSettingKey;
+  kind: OwnerSettingKind;
   title: string;
-  unit: string;
+  /**
+     * What a whole number counts; none for yes or no
+     * @nullable
+     */
+  unit: string | null;
+  /**
+     * What yes means; none for a whole number
+     * @nullable
+     */
+  yes: string | null;
+  /**
+     * What no means; none for a whole number
+     * @nullable
+     */
+  no: string | null;
   /**
      * The value while no value the owner recorded is in effect
      * @minimum 0
      */
-  defaultValue: number;
-  /** @minimum 0 */
-  max: number;
+  defaultValue: number | boolean;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  max: number | null;
   /**
      * The value in effect and any scheduled to start, earliest first.
      * @maxItems 100

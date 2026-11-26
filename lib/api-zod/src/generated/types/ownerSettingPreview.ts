@@ -6,10 +6,17 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { OwnerSettingExactTerms } from './ownerSettingExactTerms';
+import type { OwnerSettingKind } from './ownerSettingKind';
 
 export interface OwnerSettingPreview {
+  kind: OwnerSettingKind;
   title: string;
-  unit: string;
+  /** @nullable */
+  unit: string | null;
+  /** @nullable */
+  yes: string | null;
+  /** @nullable */
+  no: string | null;
   terms: OwnerSettingExactTerms;
   /** @pattern ^[0-9a-f]{64}$ */
   checksum: string;

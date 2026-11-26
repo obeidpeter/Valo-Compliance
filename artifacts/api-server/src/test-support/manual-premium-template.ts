@@ -137,6 +137,7 @@ export async function exercisePremiumManualTemplate(call: Call, editor: string) 
       createOrder(holder, {
         priceId,
         acceptedLicenceVersion: "fixture-1",
+        acceptedCarriesToLaterEditions: true,
         requestKey: randomUUID(),
       }),
     );
@@ -522,7 +523,12 @@ export async function exercisePremiumFormDocument(call: Call, editor: string) {
       effectiveFrom: new Date(Date.now() - 1000),
     });
     const order = await inScope(buyer, () =>
-      createOrder(buyer, { priceId, acceptedLicenceVersion: "fixture-1", requestKey: randomUUID() }),
+      createOrder(buyer, {
+        priceId,
+        acceptedLicenceVersion: "fixture-1",
+        acceptedCarriesToLaterEditions: true,
+        requestKey: randomUUID(),
+      }),
     );
     const verified = {
       id: String(Number.parseInt(randomUUID().replaceAll("-", "").slice(0, 12), 16)),

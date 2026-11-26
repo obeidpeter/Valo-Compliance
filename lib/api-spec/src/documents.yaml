@@ -269,7 +269,7 @@ schemas:
   EditionNotice:
     type: object
     additionalProperties: false
-    required: [id, route, title, version, kind, replacementVersion, reason, held, documents, createdAt]
+    required: [id, route, title, version, kind, replacementVersion, reason, held, carries, documents, createdAt]
     properties:
       id: { type: string, format: uuid }
       route: { type: string, enum: [library, reviewed] }
@@ -278,6 +278,9 @@ schemas:
       kind: { type: string, enum: [replaced, withdrawn] }
       replacementVersion: { type: [integer, "null"], description: "The version that replaced it, for a replaced edition." }
       reason: { type: [string, "null"], description: "Why it was withdrawn, as its editor wrote it for customers." }
-      held: { type: boolean, description: "Whether the workspace holds the template through a purchase." }
+      held: { type: boolean, description: "Whether the workspace holds the edition through a purchase." }
+      carries:
+        type: [boolean, "null"]
+        description: "For a replaced edition the workspace holds: whether its purchase carries to the replacement, under the access rule its order recorded. None otherwise, and on a notice written before orders recorded a rule, when every purchase carried."
       documents: { type: integer, minimum: 0, description: "How many of the workspace's documents were made from the edition." }
       createdAt: { type: string, format: date-time, description: "When the edition was replaced or withdrawn." }

@@ -11,6 +11,10 @@ import { eq } from "drizzle-orm";
  * This exercises the purchase check that readReleasedMaster runs inside its
  * transaction. The content version is a held, never-published fixture; no release,
  * review or publication record is created.
+ *
+ * ADM-006 (docs/architecture/commercial-settings.md, slice 3b): a purchase carries to a later
+ * version only under the access rule its order recorded. An order made while the owner's rule
+ * said no reaches only the version it bought. The rule ends as its default, yes.
  */
 test(
   "only the purchasing workspace's active entitlement releases a premium master",
@@ -23,11 +27,28 @@ test(
     const { resolveWorkspace } = await import("../workspaces");
     const { financeHeldFixture } = await import("../commerce/valo-finance-test-fixture");
     const { requirePurchaseForPricedMaster } = await import("./valo-released-content");
+    const {
+      commercialSettingChoice,
+      commercialSettingTerms,
+      commercialSettingTermsId,
+      recordCommercialSettingIn,
+    } = await import("../commercial-settings");
+    const rule = (value: "yes" | "no", reference: string) => {
+      const terms = commercialSettingTerms({ key: "purchase_carries_to_later_editions", value, from: "now" });
+      return db.transaction((tx) =>
+        recordCommercialSettingIn(tx, terms, {
+          approvedBy: "a synthetic owner",
+          reference,
+          confirm: commercialSettingTermsId(terms),
+        }),
+      );
+    };
     try {
       const tag = randomUUID();
-      const [purchaser, other] = await Promise.all([
+      const [purchaser, other, onlyBought] = await Promise.all([
         resolveWorkspace(`synthetic-entitlement-purchaser-${tag}`),
         resolveWorkspace(`synthetic-entitlement-other-${tag}`),
+        resolveWorkspace(`synthetic-entitlement-only-bought-${tag}`),
       ]);
       const held = await financeHeldFixture();
       assert.doesNotMatch(held.templateId, /^TPL-(0[1-9]|1[0-2])$/, "the fixture is not a free baseline");
@@ -69,10 +90,44 @@ test(
         orderId,
         contentVersionId: held.id,
       });
+      // An order made while the owner's rule says no records that it covers only the version bought.
+      await rule("no", "synthetic-entitlement-rule-no");
+      const onlyOrderId = randomUUID();
+      await db.insert(valoOrders).values({
+        id: onlyOrderId,
+        workspaceId: onlyBought.workspaceId,
+        requestedBy: onlyBought.identityId,
+        requestKey: randomUUID(),
+        priceId,
+        reference: "valo-test-" + onlyOrderId,
+        amountKobo: 10000,
+        status: "verified_success",
+        providerTransactionId: String(Number.parseInt(randomUUID().replaceAll("-", "").slice(0, 12), 16)),
+        line: {
+          title: "Controlled purchase of this version only",
+          contentVersionId: held.id,
+          licenceVersion: "test-only",
+          licenceText: "No live commercial approval.",
+          taxTreatment: "No tax claim.",
+        },
+      });
+      await rule("yes", "synthetic-entitlement-rule-yes");
+      await db.insert(valoEntitlements).values({
+        id: randomUUID(),
+        workspaceId: onlyBought.workspaceId,
+        orderId: onlyOrderId,
+        contentVersionId: held.id,
+      });
+      const [onlyRecorded] = await db
+        .select({ rule: valoOrders.carriesToLaterEditions })
+        .from(valoOrders)
+        .where(eq(valoOrders.id, onlyOrderId));
+      assert.equal(onlyRecorded?.rule, false, "the order recorded the rule in effect when it was made");
       const release = (actor: typeof purchaser) =>
         db.transaction((tx) => requirePurchaseForPricedMaster(tx, actor, held));
 
       await release(purchaser);
+      await release(onlyBought);
       await assert.rejects(release(other), { status: 403 }, "another workspace's purchase grants nothing");
       // A purchase of one version carries to a later version of the same template at no further
       // charge, though the later one has no price of its own (docs/architecture/editions.md, slice 2).
@@ -99,10 +154,18 @@ test(
         db.transaction((tx) => requirePurchaseForPricedMaster(tx, actor, later!));
       await releaseLater(purchaser);
       await assert.rejects(releaseLater(other), { status: 403 }, "a carried purchase stays its workspace's");
+      await assert.rejects(
+        releaseLater(onlyBought),
+        { status: 403 },
+        "a purchase whose order covers only the version bought does not carry, after the rule says yes again",
+      );
       await db.update(valoEntitlements).set({ status: "suspended" }).where(eq(valoEntitlements.id, grantId));
       await assert.rejects(release(purchaser), { status: 403 }, "a suspended purchase grants nothing");
       await assert.rejects(releaseLater(purchaser), { status: 403 }, "a suspended purchase carries nothing");
     } finally {
+      // The rule ends as its default whatever failed above.
+      if (!(await db.transaction((tx) => commercialSettingChoice(tx, "purchase_carries_to_later_editions"))))
+        await rule("yes", "synthetic-entitlement-rule-restore");
       await pool.end();
     }
   },

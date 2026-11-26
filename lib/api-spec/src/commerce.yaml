@@ -478,17 +478,24 @@ schemas:
         items: { $ref: "#/components/schemas/OwnerSetting" }
   OwnerSettingKey:
     type: string
-    enum: [drafting_workspace_daily, drafting_daily_in_all]
+    enum: [drafting_workspace_daily, drafting_daily_in_all, purchase_carries_to_later_editions]
+  OwnerSettingKind:
+    type: string
+    description: A whole number, or yes or no
+    enum: [count, yes-no]
   OwnerSetting:
     type: object
     additionalProperties: false
-    required: [key, title, unit, defaultValue, max, values]
+    required: [key, kind, title, unit, yes, no, defaultValue, max, values]
     properties:
       key: { $ref: "#/components/schemas/OwnerSettingKey" }
+      kind: { $ref: "#/components/schemas/OwnerSettingKind" }
       title: { type: string }
-      unit: { type: string }
-      defaultValue: { type: integer, minimum: 0, description: "The value while no value the owner recorded is in effect" }
-      max: { type: integer, minimum: 0 }
+      unit: { type: [string, "null"], description: "What a whole number counts; none for yes or no" }
+      yes: { type: [string, "null"], description: "What yes means; none for a whole number" }
+      no: { type: [string, "null"], description: "What no means; none for a whole number" }
+      defaultValue: { type: [integer, boolean], minimum: 0, description: "The value while no value the owner recorded is in effect" }
+      max: { type: [integer, "null"], minimum: 0 }
       values:
         description: The value in effect and any scheduled to start, earliest first.
         type: array
@@ -500,7 +507,7 @@ schemas:
     required: [settingId, value, effectiveFrom, effectiveTo]
     properties:
       settingId: { type: string, format: uuid }
-      value: { type: integer, minimum: 0 }
+      value: { type: [integer, boolean], minimum: 0 }
       effectiveFrom: { type: string, format: date-time }
       effectiveTo: { type: [string, "null"], format: date-time }
   OwnerSettingTerms:
@@ -509,7 +516,7 @@ schemas:
     required: [key, value, from]
     properties:
       key: { $ref: "#/components/schemas/OwnerSettingKey" }
-      value: { type: string, pattern: "^\\d{1,7}$", description: "A whole number, such as 30" }
+      value: { type: string, pattern: "^(\\d{1,7}|yes|no)$", description: "A whole number, such as 30, or yes or no" }
       from: { type: string, minLength: 3, maxLength: 40, description: "now, or a time with its offset, such as 2026-12-01T00:00:00+01:00" }
   OwnerSettingExactTerms:
     type: object
@@ -517,15 +524,18 @@ schemas:
     required: [key, value, from]
     properties:
       key: { $ref: "#/components/schemas/OwnerSettingKey" }
-      value: { type: integer, minimum: 0 }
+      value: { type: [integer, boolean], minimum: 0 }
       from: { type: string }
   OwnerSettingPreview:
     type: object
     additionalProperties: false
-    required: [title, unit, terms, checksum]
+    required: [kind, title, unit, yes, no, terms, checksum]
     properties:
+      kind: { $ref: "#/components/schemas/OwnerSettingKind" }
       title: { type: string }
-      unit: { type: string }
+      unit: { type: [string, "null"] }
+      yes: { type: [string, "null"] }
+      no: { type: [string, "null"] }
       terms: { $ref: "#/components/schemas/OwnerSettingExactTerms" }
       checksum: { type: string, pattern: "^[0-9a-f]{64}$" }
   OwnerSettingRecord:
@@ -534,7 +544,7 @@ schemas:
     required: [key, value, from, reference, confirm]
     properties:
       key: { $ref: "#/components/schemas/OwnerSettingKey" }
-      value: { type: string, pattern: "^\\d{1,7}$" }
+      value: { type: string, pattern: "^(\\d{1,7}|yes|no)$" }
       from: { type: string, minLength: 3, maxLength: 40 }
       reference: { type: string, minLength: 3, maxLength: 160, description: Where the owner's approval is written }
       confirm: { type: string, pattern: "^[0-9a-f]{64}$", description: The checksum the preview gave }
@@ -545,7 +555,7 @@ schemas:
     properties:
       settingId: { type: string, format: uuid }
       key: { $ref: "#/components/schemas/OwnerSettingKey" }
-      value: { type: integer, minimum: 0 }
+      value: { type: [integer, boolean], minimum: 0 }
       from: { type: string, format: date-time }
       closed:
         type: array
@@ -556,14 +566,17 @@ schemas:
           required: [settingId, value]
           properties:
             settingId: { type: string, format: uuid }
-            value: { type: integer, minimum: 0 }
+            value: { type: [integer, boolean], minimum: 0 }
   CustomerPurchases:
     type: object
-    required: [available, message, orders, products, ownedDownloads, livePaymentsEnabled]
+    required: [available, message, orders, products, ownedDownloads, livePaymentsEnabled, purchaseCarriesToLaterEditions]
     properties:
       available: { type: boolean }
       message: { type: string }
       livePaymentsEnabled: { type: boolean }
+      purchaseCarriesToLaterEditions:
+        type: boolean
+        description: "The access rule a purchase made now records: whether it carries to its template's later editions at no further charge, or covers only the edition bought, while it stays released (docs/architecture/commercial-settings.md, slice 3b). An order is made only with this rule accepted."
       hasMoreOrders: { type: boolean }
       orders: { type: array, items: { $ref: "#/components/schemas/CommerceOrder" } }
       products:
@@ -592,10 +605,13 @@ schemas:
           version: { type: integer }
   CommerceOrderInput:
     type: object
-    required: [priceId, acceptedLicenceVersion, requestKey]
+    required: [priceId, acceptedLicenceVersion, acceptedCarriesToLaterEditions, requestKey]
     properties:
       priceId: { type: string, format: uuid }
       acceptedLicenceVersion: { type: string, minLength: 1, maxLength: 100 }
+      acceptedCarriesToLaterEditions:
+        type: boolean
+        description: The access rule the buyer was shown, which must be the rule in effect when the order is made.
       requestKey: { type: string, format: uuid }
   CommerceRefundInput:
     type: object
@@ -714,7 +730,7 @@ schemas:
     properties: {}
   CommerceOrder:
     type: object
-    required: [id, reference, title, amountKobo, currency, status, createdAt, lastCheckedAt, licenceVersion, licenceText, taxTreatment, contentVersionId, refundStatus, receiptReference, refunds, refundableKobo, refundedKobo, refundPolicy, disputeStatus]
+    required: [id, reference, title, amountKobo, currency, status, createdAt, lastCheckedAt, licenceVersion, licenceText, taxTreatment, contentVersionId, carriesToLaterEditions, refundStatus, receiptReference, refunds, refundableKobo, refundedKobo, refundPolicy, disputeStatus]
     properties:
       id: { type: string }
       reference: { type: string }
@@ -728,6 +744,9 @@ schemas:
       licenceText: { type: string }
       taxTreatment: { type: string }
       contentVersionId: { type: string }
+      carriesToLaterEditions:
+        type: boolean
+        description: "The access rule the order recorded when it was made, and keeps: whether the purchase carries to its template's later editions. An order made before the rule had a record carries."
       refundStatus: { type: string, nullable: true }
       receiptReference: { type: string, nullable: true }
       refunds: { type: array, items: { $ref: "#/components/schemas/RefundRecord" } }

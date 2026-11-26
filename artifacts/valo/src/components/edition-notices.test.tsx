@@ -18,6 +18,7 @@ const replaced: EditionNotice = {
   replacementVersion: 2,
   reason: null,
   held: true,
+  carries: true,
   documents: 2,
   createdAt: "2026-11-25T09:00:00.000Z",
 };
@@ -28,6 +29,7 @@ const withdrawn: EditionNotice = {
   kind: "withdrawn",
   replacementVersion: null,
   reason: "A synthetic reason a customer can read",
+  carries: null,
   documents: 1,
   createdAt: "2026-11-26T09:00:00.000Z",
 };
@@ -52,7 +54,19 @@ test("a notice names the template, its version and what happened, says what it m
   });
   // A workspace that only used the version hears nothing of a purchase, and one that only holds the
   // template hears nothing of documents.
-  assert.deepEqual(editionNoticeWords({ ...replaced, held: false, documents: 1 }).lines, [
+  // A purchase whose order recorded that it covers only the edition bought is told the replacement is not
+  // included (docs/architecture/commercial-settings.md, slice 3b). A notice written before orders recorded
+  // a rule says nothing of it, and every purchase then carried.
+  assert.deepEqual(editionNoticeWords({ ...replaced, carries: false }).lines, [
+    "Your purchase covers version 1 only: version 2 is not included, and version 1 can no longer be downloaded.",
+    "Your 2 documents made from version 1 are unchanged.",
+    "Files you already downloaded are not affected.",
+  ]);
+  assert.deepEqual(
+    editionNoticeWords({ ...replaced, carries: null }).lines,
+    editionNoticeWords(replaced).lines,
+  );
+  assert.deepEqual(editionNoticeWords({ ...replaced, held: false, carries: null, documents: 1 }).lines, [
     "Your document made from version 1 is unchanged.",
     "Files you already downloaded are not affected.",
   ]);

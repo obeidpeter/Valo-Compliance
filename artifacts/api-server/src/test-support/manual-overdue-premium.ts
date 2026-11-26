@@ -79,7 +79,12 @@ export async function exerciseOverduePremiumTemplate(call: Call, editor: string)
     );
   const order = (holder: typeof buyer) =>
     runInWorkspaceScope(holder.workspaceId, () =>
-      createOrder(holder, { priceId, acceptedLicenceVersion: "fixture-1", requestKey: randomUUID() }),
+      createOrder(holder, {
+        priceId,
+        acceptedLicenceVersion: "fixture-1",
+        acceptedCarriesToLaterEditions: true,
+        requestKey: randomUUID(),
+      }),
     );
   const card = async () => {
     const response = await call(

@@ -27,6 +27,7 @@ export async function listEditionNotices(actor: WorkspaceActor) {
         replacementVersion: row.replacementVersion,
         reason: row.reason,
         held: row.held,
+        carries: row.carries,
         documents: row.documents,
         createdAt: row.createdAt.toISOString(),
       })),

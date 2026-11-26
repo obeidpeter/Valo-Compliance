@@ -161,7 +161,12 @@ export async function exerciseLibraryHolds(call: Call, editor: string) {
     );
   const order = () =>
     runInWorkspaceScope(shopper.workspaceId, () =>
-      createOrder(shopper, { priceId, acceptedLicenceVersion: "fixture-1", requestKey: randomUUID() }),
+      createOrder(shopper, {
+        priceId,
+        acceptedLicenceVersion: "fixture-1",
+        acceptedCarriesToLaterEditions: true,
+        requestKey: randomUUID(),
+      }),
     );
   const priced = () => {
     const terms = premiumPriceTerms({

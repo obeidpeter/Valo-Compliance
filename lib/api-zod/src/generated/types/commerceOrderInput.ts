@@ -13,5 +13,7 @@ export interface CommerceOrderInput {
      * @maxLength 100
      */
   acceptedLicenceVersion: string;
+  /** The access rule the buyer was shown, which must be the rule in effect when the order is made. */
+  acceptedCarriesToLaterEditions: boolean;
   requestKey: string;
 }

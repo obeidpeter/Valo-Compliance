@@ -10,6 +10,6 @@ import type { OwnerSettingKey } from './ownerSettingKey';
 export interface OwnerSettingExactTerms {
   key: OwnerSettingKey;
   /** @minimum 0 */
-  value: number;
+  value: number | boolean;
   from: string;
 }

@@ -9,7 +9,7 @@
 export interface OwnerSettingValue {
   settingId: string;
   /** @minimum 0 */
-  value: number;
+  value: number | boolean;
   effectiveFrom: Date;
   /** @nullable */
   effectiveTo: Date | null;

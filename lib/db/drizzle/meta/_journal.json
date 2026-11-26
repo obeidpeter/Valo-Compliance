@@ -603,6 +603,20 @@
       "when": 1795654459931,
       "tag": "20261126005419_commercial_setting_guards",
       "breakpoints": true
+    },
+    {
+      "idx": 86,
+      "version": "7",
+      "when": 1795657745813,
+      "tag": "20261126014905_order_access_rule",
+      "breakpoints": true
+    },
+    {
+      "idx": 87,
+      "version": "7",
+      "when": 1795657751872,
+      "tag": "20261126014911_order_access_rule_guards",
+      "breakpoints": true
     }
   ]
 }

@@ -41,6 +41,8 @@ function PurchaseHistoryContent() {
     [error, setError] = useState<string | null>(null);
   const [keys] = useState(() => new Map<string, string>());
   const offers = q.data?.products ?? [];
+  // The access rule a purchase made now records; the order is made only with it accepted.
+  const carries = q.data?.purchaseCarriesToLaterEditions ?? true;
   const ownedFiles = q.data?.ownedDownloads ?? [];
   const downloads = new Map(ownedFiles.map((file) => [file.offerId, file]));
   const editionDownloads = new Map(ownedFiles.map((file) => [file.edition, file]));
@@ -110,6 +112,12 @@ function PurchaseHistoryContent() {
                       {p.title} · {formatNaira(p.amountKobo)}
                     </h3>
                     <p className="my-2 text-sm">{p.taxTreatment}</p>
+                    {/* The access rule a purchase made now records (ADM-006). */}
+                    <p className="my-2 text-sm" data-testid="product-later-editions">
+                      {carries
+                        ? "Later editions of this template are included at no further charge."
+                        : "This purchase covers this edition only, while it stays released: a later edition is not included."}
+                    </p>
                     <details className="text-sm">
                       <summary className="cursor-pointer py-2">Licence · {p.licenceVersion}</summary>
                       <p className="whitespace-pre-wrap">{p.licenceText}</p>
@@ -130,11 +138,12 @@ function PurchaseHistoryContent() {
                           setBusy(true);
                           setError(null);
                           try {
-                            const keyId = `${p.id}:${p.licenceVersion}`;
+                            const keyId = `${p.id}:${p.licenceVersion}:${carries}`;
                             if (!keys.has(keyId)) keys.set(keyId, randomUuid());
                             await createCommerceOrder({
                               priceId: p.id,
                               acceptedLicenceVersion: p.licenceVersion,
+                              acceptedCarriesToLaterEditions: carries,
                               requestKey: keys.get(keyId)!,
                             });
                             keys.delete(keyId);

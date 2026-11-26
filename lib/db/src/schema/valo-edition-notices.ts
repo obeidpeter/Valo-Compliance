@@ -34,6 +34,13 @@ export const valoEditionNotices = pgTable(
     replacementVersion: integer("replacement_version"),
     reason: text("reason"),
     held: boolean("held").notNull(),
+    /**
+     * For a replacement's notice to a workspace that holds the edition: whether its purchase carries to
+     * the replacement, under the access rule each order recorded (docs/architecture/commercial-settings.md,
+     * slice 3b). None on any other notice, and on a notice written before orders recorded a rule, when
+     * every purchase carried.
+     */
+    carries: boolean("carries"),
     documents: integer("documents").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     readAt: timestamp("read_at", { withTimezone: true }),
@@ -45,6 +52,7 @@ export const valoEditionNotices = pgTable(
       "valo_edition_notice_shape",
       sql`${t.route} IN ('library', 'reviewed') AND ${t.kind} IN ('replaced', 'withdrawn') AND ${t.documents} >= 0 AND (${t.held} OR ${t.documents} > 0) AND ((${t.kind} = 'replaced') = (${t.replacementVersion} IS NOT NULL)) AND (${t.reason} IS NULL OR ${t.kind} = 'withdrawn' OR ${t.route} = 'library')`,
     ),
+    check("valo_edition_notice_carries", sql`${t.carries} IS NULL OR (${t.kind} = 'replaced' AND ${t.held})`),
     workspaceRowPolicy(t.workspaceId),
   ],
 );

@@ -1,10 +1,10 @@
 import { PreviewOwnerSettingBody, RecordOwnerSettingBody } from "@workspace/api-zod";
 import { asDevelopmentOwner, type StaffActor } from "../staff";
 import {
-  COMMERCIAL_SETTINGS,
   commercialSettingStatus,
   commercialSettingTerms,
   commercialSettingTermsId,
+  commercialSettingWords,
   recordCommercialSettingIn,
 } from "../commercial-settings";
 
@@ -27,8 +27,7 @@ export async function ownerSettings(actor: StaffActor) {
 export async function previewOwnerSetting(actor: StaffActor, raw: unknown) {
   const terms = commercialSettingTerms(PreviewOwnerSettingBody.strict().parse(raw));
   await asDevelopmentOwner(actor, async () => undefined, refusal);
-  const { title, unit } = COMMERCIAL_SETTINGS[terms.key];
-  return { title, unit, terms, checksum: commercialSettingTermsId(terms) };
+  return { ...commercialSettingWords(terms.key), terms, checksum: commercialSettingTermsId(terms) };
 }
 
 /**
