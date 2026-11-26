@@ -3497,7 +3497,7 @@
       "bears_on": [
         "SEC-008"
       ],
-      "control": "The API and the worker log only to their output, and alerts are written to a file on the worker.",
+      "control": "The API and the worker log only to their output; the worker writes alerts to a file on its disk and copies them to the database's alert journal.",
       "code": [
         "artifacts/api-server/src/platform/logger.ts",
         "artifacts/api-server/src/modules/operations"
