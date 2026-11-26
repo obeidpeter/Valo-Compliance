@@ -2,6 +2,7 @@ import { StaffRoleAdministration } from "@/components/staff-role-administration"
 import { AuditHistory } from "@/components/audit-history";
 import { OwnerRegulatoryGuidance } from "@/components/owner-regulatory-guidance";
 import { OwnerCheckerRules } from "@/components/owner-checker-rules";
+import { OwnerReviewedGuides } from "@/components/owner-reviewed-guides";
 import { OwnerPrices } from "@/components/owner-prices";
 import { OwnerBundles } from "@/components/owner-bundles";
 import { OwnerSettings } from "@/components/owner-settings";
@@ -191,6 +192,7 @@ export default function StaffPage() {
             {area === "content" && <SourceRegister />}
             {area === "system" && <OwnerRegulatoryGuidance />}
             {area === "system" && <OwnerCheckerRules />}
+            {area === "system" && <OwnerReviewedGuides />}
             {area === "system" && <OwnerPrices />}
             {area === "system" && <OwnerBundles />}
             {area === "system" && <OwnerSettings />}

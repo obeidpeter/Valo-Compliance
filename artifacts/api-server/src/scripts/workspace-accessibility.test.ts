@@ -999,6 +999,8 @@ const answers: Record<string, unknown> = {
     ],
     hasMore: false,
   }),
+  // docs/architecture/reviewed-route.md, slice 2b: no guide awaits its reviews unless a test lists one.
+  "GET /admin/reviewed-guides": api.ListReviewedGuidesResponse.parse({ items: [] }),
   [`GET /admin/owner-rules`]: api.ListOwnerRulesResponse.parse({
     items: [
       {
@@ -5784,6 +5786,141 @@ test("the owner's rule panel lists the reported problems with the versions the o
     ]);
     await settled(page);
     assert.deepEqual(await phoneProblems(page, "the owner's rule panel with reported problems"), []);
+    assert.deepEqual([...new Set(unknown)], []);
+    assert.deepEqual(errors, []);
+  } finally {
+    await close();
+  }
+});
+
+// docs/architecture/reviewed-route.md, slice 2b (EDP-002, EDP-004, ADM-005): the development owner reads a
+// prepared guide's whole text, each sentence with the passage it rests on and where each source's copy
+// stands, and confirms the check of that exact guide. A guide that something holds offers no check.
+test("the owner's guide panel shows a prepared guide's text, passages and sources, and records the check of that exact guide only when nothing holds it", async () => {
+  const source = {
+    id: "SYNTH-ACT-1",
+    title: "Synthetic Act, section 1",
+    url: "https://example.test/synthetic-act",
+    passage: "Every synthetic business shall keep a synthetic register.",
+    checkedAt: at(25),
+    state: "holds" as const,
+  };
+  const guide = {
+    versionId: "00000000-0000-4000-8000-0000000b0001",
+    guideId: "GUD-02",
+    title: "Synthetic guide to keeping a register",
+    version: 1,
+    candidateHash: "c".repeat(64),
+    preparedAt: at(25),
+    reviewBy: at(29),
+    saved: false,
+    text: ["A synthetic business keeps a synthetic register.", "What it covers: a synthetic scope."],
+    claims: [
+      {
+        text: "A synthetic business keeps a synthetic register.",
+        kind: "source_statement" as const,
+        sourceId: source.id,
+        locator: "section 1",
+        quote: "shall keep a synthetic register",
+        held: false,
+      },
+    ],
+    sources: [source],
+    holds: [],
+    lastCheck: null,
+  };
+  const held = {
+    ...guide,
+    versionId: "00000000-0000-4000-8000-0000000b0002",
+    guideId: "GUD-03",
+    title: "Synthetic guide whose source is stale",
+    candidateHash: "d".repeat(64),
+    sources: [{ ...source, state: "not_current" as const }],
+    holds: [
+      "The copy of Synthetic Act, section 1 was not checked within the last day, or its last check failed. Wait for the daily source check, then check again.",
+    ],
+  };
+  const before = api.ListReviewedGuidesResponse.parse({ items: [guide, held] });
+  const after = api.ListReviewedGuidesResponse.parse({
+    items: [{ ...guide, lastCheck: { checkedAt: at(26), countsUntil: at(27), counts: true } }, held],
+  });
+  const sent: unknown[] = [];
+  let checked = false;
+  const owning: Api = async (route, method, path, query) => {
+    if (method === "GET" && path === "/admin/reviewed-guides")
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(checked ? after : before),
+      });
+    else if (method === "POST" && path === `/admin/reviewed-guides/${guide.versionId}/checks`) {
+      sent.push(route.request().postDataJSON());
+      checked = true;
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(
+          api.CheckReviewedGuideResponse.parse({
+            versionId: guide.versionId,
+            guide: guide.guideId,
+            version: 1,
+            candidateHash: guide.candidateHash,
+            checkedAt: at(26),
+            sources: 1,
+          }),
+        ),
+      });
+    } else await answer(route, method, path, query);
+  };
+  const { page, unknown, errors, close } = await phone("/staff", owning);
+  try {
+    await ready(page);
+    await page.getByTestId("tab-staff-system").click();
+    const panel = page.getByRole("region", { name: "Guides on the reviewed route" });
+    const confirmation = panel.getByLabel(/I have read this guide's whole text/);
+    // A guide that something holds says what, and offers no check.
+    await panel.getByLabel("Prepared guide").selectOption(held.versionId);
+    await expect(panel.getByTestId("list-reviewed-guide-holds")).toContainText(
+      "was not checked within the last day, or its last check failed",
+    );
+    await expect(panel).toContainText(
+      "Its copy was not checked within the last day, or the last check failed.",
+    );
+    await expect(confirmation).toBeDisabled();
+    await expect(panel.getByRole("button", { name: "Confirm my check of GUD-03" })).toBeDisabled();
+    // A guide that nothing holds: its text, its sentence with the passage it rests on, and its source.
+    await panel.getByLabel("Prepared guide").selectOption(guide.versionId);
+    await expect(panel.getByTestId("text-reviewed-guide-last-check")).toHaveText(
+      "You have not checked this guide's sources yet.",
+    );
+    await expect(panel).toContainText(
+      "What the law says. Synthetic Act, section 1, section 1: “shall keep a synthetic register”",
+    );
+    await expect(panel).toContainText(
+      "The daily source check last read it 25 Nov 2026, 10:00. Its copy holds the passage and every quotation from it.",
+    );
+    await expect(panel).toContainText("Nothing holds it.");
+    await panel.getByText("Its whole text").click();
+    await expect(panel).toContainText("What it covers: a synthetic scope.");
+    const confirm = panel.getByRole("button", { name: "Confirm my check of GUD-02" });
+    await expect(confirm).toBeDisabled();
+    await confirmation.check();
+    await expect(confirm).toBeEnabled();
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "the owner's guide panel"), []);
+    // The check ends on a 320-pixel screen; the phone is 360 pixels wide again for the next.
+    await page.setViewportSize({ width: 360, height: 640 });
+    // The check is of the exact guide shown, by its checksum.
+    await confirm.click();
+    await expect(panel.getByRole("status")).toContainText(
+      "Your check of Synthetic guide to keeping a register is recorded, 26 Nov 2026, 10:00.",
+    );
+    await expect(panel.getByTestId("text-reviewed-guide-last-check")).toHaveText(
+      "You checked its sources 26 Nov 2026, 10:00. Its reviews can be admitted, and the guide released, until 27 Nov 2026, 10:00.",
+    );
+    assert.deepEqual(sent, [{ confirmCandidateHash: "c".repeat(64) }]);
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "the owner's guide panel after a check"), []);
     assert.deepEqual([...new Set(unknown)], []);
     assert.deepEqual(errors, []);
   } finally {

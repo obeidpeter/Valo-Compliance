@@ -84,7 +84,7 @@
     "test:valo-publication": "tsx --test src/modules/publication/operational-publication.integration.test.ts",
     "test:valo-editorial-proof": "tsx --test src/modules/editorial/pipeline-proof.integration.test.ts",
     "test:valo-customer-journey": "tsx src/scripts/p0-customer-journey.ts",
-    "test:valo-sources": "tsx --test src/modules/sources/source-controls.test.ts src/modules/sources/business-name-evidence.test.ts src/modules/sources/listed-page.test.ts src/modules/sources/registered-source.test.ts",
+    "test:valo-sources": "tsx --test src/modules/sources/source-controls.test.ts src/modules/sources/business-name-evidence.test.ts src/modules/sources/listed-page.test.ts src/modules/sources/registered-source.test.ts src/modules/sources/source-inspection.test.ts",
     "test:valo-source-db": "tsx --test src/modules/sources/source-store.integration.test.ts",
     "queue:apply-development": "tsx src/scripts/queue-migration.ts apply-development",
     "test:valo-erasure-controls": "node --import tsx --test src/modules/privacy/valo-erasure-seal.test.ts src/modules/privacy/valo-erasure-lock.test.ts src/modules/privacy/valo-erasure-inventory-cache.test.ts src/modules/privacy/valo-erasure-replay-cursor.test.ts src/lib/valo-dispute-replay-compatibility.test.ts",

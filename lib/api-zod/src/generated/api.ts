@@ -5323,6 +5323,81 @@ export const DecideOwnerRuleResponse = zod.object({
 })
 
 
+/**
+ * Each prepared guide awaiting its reviews, newest first, with its whole text, each claim with the passage it rests on, where each of its sources' copies stands now, what holds it, and the owner's latest check of it (docs/architecture/reviewed-route.md, part 2). Read-only. Development only.
+ * @summary Guides on the reviewed route awaiting the development owner's check of their sources
+ */
+
+export const listReviewedGuidesResponseItemsItemCandidateHashRegExp = new RegExp('^[a-f0-9]{64}$');
+
+
+export const ListReviewedGuidesResponse = zod.object({
+  "items": zod.array(zod.object({
+  "versionId": zod.uuid(),
+  "guideId": zod.string(),
+  "title": zod.string(),
+  "version": zod.int().min(1),
+  "candidateHash": zod.string().regex(listReviewedGuidesResponseItemsItemCandidateHashRegExp).describe('The checksum of the exact guide shown. The owner\'s check confirms it.'),
+  "preparedAt": zod.coerce.date(),
+  "reviewBy": zod.coerce.date(),
+  "saved": zod.boolean().describe('Whether its reviews have run and the guide is saved, waiting for a current check before its release.'),
+  "text": zod.array(zod.string()).describe('The guide\'s whole text, part by part, as its page and files print it.'),
+  "claims": zod.array(zod.object({
+  "text": zod.string().describe('The guide\'s sentence.'),
+  "kind": zod.enum(['source_statement', 'interpretation', 'optional_practice']),
+  "sourceId": zod.string(),
+  "locator": zod.string().describe('Where in its source the quoted words are.'),
+  "quote": zod.string(),
+  "held": zod.boolean().describe('Whether today\'s copy of its source lacks the words it quotes.')
+})),
+  "sources": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "url": zod.string(),
+  "passage": zod.string().describe('The source\'s words the guide rests on.'),
+  "checkedAt": zod.coerce.date().nullable().describe('When the daily source check last read the source\'s address, if it has.'),
+  "state": zod.enum(['holds', 'no_copy', 'changed', 'not_current', 'unreadable', 'passage_missing', 'quote_missing']).describe('Where the copy this guide is bound to stands now.')
+})),
+  "holds": zod.array(zod.string()).describe('What stops the owner checking it now, in plain words. Empty when nothing does.'),
+  "lastCheck": zod.union([zod.object({
+  "checkedAt": zod.coerce.date(),
+  "countsUntil": zod.coerce.date(),
+  "counts": zod.boolean().describe('Whether the check still admits the guide\'s reviews and its release.')
+}),zod.null()])
+}))
+})
+
+
+/**
+ * The owner confirms the guide they read by its candidate's checksum. Its sources are checked again against today's copies, and the check is recorded only if every one holds. A guide's reviews are admitted, and the guide released, only within a day of such a check. Nothing is reviewed or released here.
+ * @summary Record the development owner's check of a prepared guide's official sources
+ */
+export const CheckReviewedGuideParams = zod.object({
+  "versionId": zod.uuid()
+})
+
+export const checkReviewedGuideBodyConfirmCandidateHashRegExp = new RegExp('^[a-f0-9]{64}$');
+
+
+export const CheckReviewedGuideBody = zod.object({
+  "confirmCandidateHash": zod.string().regex(checkReviewedGuideBodyConfirmCandidateHashRegExp)
+})
+
+
+export const checkReviewedGuideResponseCandidateHashRegExp = new RegExp('^[a-f0-9]{64}$');
+
+
+
+export const CheckReviewedGuideResponse = zod.object({
+  "versionId": zod.uuid(),
+  "guide": zod.string(),
+  "version": zod.int().min(1),
+  "candidateHash": zod.string().regex(checkReviewedGuideResponseCandidateHashRegExp),
+  "checkedAt": zod.coerce.date(),
+  "sources": zod.int().min(1)
+})
+
+
 export const getCorrectionNoticesQueryPageDefault = 1;
 export const getCorrectionNoticesQueryPageMax = 10000;
 
