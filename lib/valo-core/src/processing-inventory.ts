@@ -110,7 +110,7 @@ export const processingInventory: readonly ProcessingActivity[] = [
     staff: null,
     services: ["Replit"],
     retention:
-      "Kept while your account is open, until you delete them. Downloaded files are removed after their retention date. A verified deletion request removes them.",
+      "Kept while your account is open, until you delete them. The Word and PDF files Valo makes for you to download are kept at Valo only until their retention date; a copy you have saved stays yours. A verified deletion request removes your documents from Valo.",
     consent: null,
     tables: [
       "valo_documents",
@@ -262,7 +262,7 @@ export const processingInventory: readonly ProcessingActivity[] = [
     staff: "Privacy staff, who handle each request.",
     services: ["Replit"],
     retention:
-      "The download is removed after its retention date. A minimal record of each erasure is kept to show it happened, until the owner decides how long.",
+      "The data download prepared for you is kept at Valo only until its retention date; a copy you have saved stays yours. A minimal record of each erasure is kept to show it happened, until the owner decides how long.",
     consent: null,
     tables: [
       "valo_privacy_cases",

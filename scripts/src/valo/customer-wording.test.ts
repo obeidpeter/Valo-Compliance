@@ -22,8 +22,11 @@ function sourceFiles(directory: string, extensions: RegExp): string[] {
   return found.sort();
 }
 
-// The web app and the API code whose words reach customers (not its scripts or editorial tools).
+// The web app and the API code whose words reach customers (not its scripts or editorial tools), and
+// the processing inventory and privacy notice, whose words the privacy page shows.
 const customerText = () => [
+  "lib/valo-core/src/processing-inventory.ts",
+  "lib/valo-core/src/privacy-notice.ts",
   ...sourceFiles("artifacts/valo/src", /\.tsx?$/),
   ...sourceFiles("artifacts/valo/app", /\.tsx?$/),
   ...sourceFiles("artifacts/api-server/src/lib", /\.ts$/),

@@ -82,16 +82,54 @@ The requirements, verbatim from the specification:
 
 Each slice is its own pull request.
 
-| # | Slice | Requirements |
-| --- | --- | --- |
-| 1 | **The inventory.** This design, part 1, and its tests against the database schema and the processor review. | PRV-001 |
-| 2 | **The notice.** Part 2: the privacy page from the inventory, with its version, and its browser test. | PRV-001, PRO-002 |
-| 3 | **The notice where data is collected.** Part 3, with a migration for the version each record keeps. | PRV-001, PRO-002 |
-| 4 | **Consents.** Part 4, with a migration for the consent history and its upgrade test. | PRO-002 |
-| 5 | **Erasure.** Part 5, with a database test. | PRV-003 |
+| # | Slice | Requirements | State |
+| --- | --- | --- | --- |
+| 1 | **The inventory.** This design, part 1, and its tests against the database schema and the processor review. | PRV-001 | Built |
+| 2 | **The notice.** Part 2: the privacy page from the inventory, with its version, and its browser test. | PRV-001, PRO-002 | Built |
+| 3 | **The notice where data is collected.** Part 3, with a migration for the version each record keeps. | PRV-001, PRO-002 | Not started |
+| 4 | **Consents.** Part 4, with a migration for the consent history and its upgrade test. | PRO-002 | Not started |
+| 5 | **Erasure.** Part 5, with a database test. | PRV-003 | Not started |
+
+## Settled while building it
+
+### Slice 1: the inventory
+
+- **Staff tables.** The test's check for columns that name a person found three tables that record a
+  member of staff (the publication audit, source impacts and source review preparations), which the
+  first draft had listed as holding no personal data. They belong to the staff activity.
+- **Recipients.** An activity names only the services that may receive personal data. The processor
+  review says Healthchecks.io and GitHub receive no customer data, and the test fails when an activity
+  names either.
+- **Support's retention.** A verified deletion request replaces the words of a person's support
+  messages and keeps the case and its record, as erasure does.
+
+### Slice 2: the notice
+
+- **Where it lives.** `lib/valo-core/src/privacy-notice.ts` makes the notice from the inventory
+  (`buildPrivacyNotice`), so the privacy page and, from slice 3, the API read the same words. The page
+  (`artifacts/valo/app/(public)/privacy/page.tsx`) only lays them out.
+- **What it shows.** For each activity: its purpose, what it holds, whom it is about, its proposed
+  lawful basis and why, who at Valo reads it, the outside services it reaches, and how long it is kept.
+  What the service needs comes first. What a person may choose comes after it, each with how they
+  choose it, and marketing messages are a choice of their own there: off unless turned on in the
+  business profile, and none sent. Then the outside services, with what is not yet checked about them,
+  the backups, and where a person downloads, corrects or deletes their data, or asks without signing in.
+- **Its version.** The SHA-256 of the notice's content as JSON, so that any change to a word changes it.
+  The page shows its first twelve characters. Slice 3 keeps the whole version with each record.
+- **Draft until approved.** `privacyNoticeApproval` is empty, so the page says the notice is a draft,
+  not approved by the privacy owner, not reviewed by a privacy professional and not legal advice. Only
+  the privacy owner sets it, to the exact version they approve; a later change to any word makes the
+  notice a draft again.
+- **Words about downloads.** The inventory said downloaded files are removed after their retention
+  date. Shown to a customer, that could read as taking back a copy they saved, which EDT-010 forbids.
+  It now says the files Valo keeps for download are kept at Valo only until that date, and a copy a
+  person has saved stays theirs. The customer wording check reads the inventory and the notice from now
+  on.
 
 ## The owner's points
 
 1. Each lawful basis, recipient and retention period the inventory proposes.
-2. The notice's exact wording, approved by its checksum.
+2. The notice's exact wording, approved by its version (`privacyNoticeApproval`).
 3. The regions, retention and contracts the processor review lists as not verified.
+4. Whether the notice should name a way to complain to the Nigeria Data Protection Commission. The draft
+   names none: no official source for it has been checked here.

@@ -3026,6 +3026,41 @@
       "proves": "In the processing inventory, an activity rests on consent exactly when it names the consent that starts it; accounts, documents, orders, the drafting assistant and support each have an activity with its purpose, basis, data, subjects, retention and tables."
     },
     {
+      "requirement": "PRV-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/privacy/privacy-notice.test.ts",
+      "test": "the notice shows each activity of the processing inventory once, what the service needs apart from what a person may choose",
+      "proves": "The privacy notice is made from the processing inventory: it shows each activity once, with its purpose, proposed lawful basis, data, retention and outside services, and lists the activities that rest on consent apart from those the service needs."
+    },
+    {
+      "requirement": "PRV-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/privacy/privacy-notice.test.ts",
+      "test": "the notice says it is a draft until the privacy owner's approval names its exact version",
+      "proves": "The privacy notice says it is a draft and not legal advice, no approval of it is recorded, and an approval counts only when it names the notice's exact version."
+    },
+    {
+      "requirement": "PRO-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/privacy/privacy-notice.test.ts",
+      "test": "what a person may choose is off until they turn it on, saying no changes nothing else, and marketing is a choice of its own",
+      "proves": "The privacy notice says each optional choice is off until a person turns it on and that saying no changes nothing else they can do, and sets marketing messages apart as a choice of their own, off unless turned on in the business profile."
+    },
+    {
+      "requirement": "PRO-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/privacy/privacy-notice.test.ts",
+      "test": "the notice's version is the checksum of every word it shows, and changes when any of them does",
+      "proves": "The privacy notice's version is the SHA-256 of every word it shows and changes when any word changes; recording the version a person was shown is not built yet."
+    },
+    {
+      "requirement": "PRV-001",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-server-pages.test.ts",
+      "test": "the privacy page shows each activity of the processing inventory, what the service needs apart from what a visitor may choose, says it is a draft and gives its version, in the server's HTML",
+      "proves": "On the compiled web server, the privacy page's HTML shows every activity of the processing inventory with its title, purpose, data and retention, the needed ones apart from the optional ones and marketing, the draft notice, the version and the links for download, correction, deletion and help without signing in."
+    },
+    {
       "requirement": "PRV-003",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/privacy/valo-privacy-erasure.integration.test.ts",
