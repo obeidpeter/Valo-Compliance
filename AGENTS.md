@@ -128,10 +128,18 @@ Rules that apply now:
 - A content version or a prepared candidate is added only on drafting's own connection (`drafterDb`,
   `VALO_DRAFTER_DATABASE_URL`): the database adds one only in a session that logged in as
   `valo_drafter_login`, which may become the drafter role and nothing else. Only the three drafting
-  paths and the check that drafting can log in use that connection; the `drafter-connection`
-  repository rule enforces this. Never give the login another privilege or membership outside a
-  reviewed migration, and never give its connection string to the API. Tests add synthetic content
-  through `test-support/drafted-content.ts`.
+  paths, TPL-07's recorded drafting attempt and the check that drafting can log in use that
+  connection; the `drafter-connection` repository rule enforces this. Never give the login another
+  privilege or membership outside a reviewed migration, and never give its connection string to the
+  API. Tests add synthetic content through `test-support/drafted-content.ts`.
+- An AI review's attempt (`valo_publication_ai_attempts`) is recorded only on review's own connection
+  (`reviewerDb`, `VALO_REVIEWER_DATABASE_URL`): the database records or updates a review's attempt only
+  in a session that logged in as `valo_reviewer_login`, which may become the reviewer role and nothing
+  else, and a drafting attempt only in one that logged in as `valo_drafter_login`. No attempt is
+  removed. Only the review's record (`modules/editorial/operational-review.ts`) and its login check use
+  that connection; the `reviewer-connection` repository rule enforces this. Never give the login
+  another privilege or membership outside a reviewed migration, and never give its connection string
+  to the API or the worker.
 - A requirements-check rule's version is released on the reviewed route (`applyStoredRuleRelease`)
   or, in development, on the owner's sign-off (decision 0020, `modules/editorial/owner-rule-signoff.ts`).
   The rule table's trigger, `valo_guard_owner_signed_rule`, refuses an owner-signed release unless
