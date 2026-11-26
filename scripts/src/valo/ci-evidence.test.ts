@@ -10,6 +10,7 @@ import {
   evidenceByRequirement,
   generatedTestNames,
   jobProblems,
+  namedOnlyAsSubtest,
   readCitations,
   readTestRecords,
   workflowProblems,
@@ -165,6 +166,37 @@ test("a test name built from a template is accepted only when it fits the templa
   assert.match(
     citationProblems([{ ...scenario, test: "RULE-EVAL-026 unknown workforce" }])[0]!,
     /names no test exactly like this/,
+  );
+});
+
+// The job's check finds a citation by the top-level name of each test that ran (citationResult), so a
+// citation of a subtest passes nowhere: it is refused here, before any job runs.
+test("a citation naming a subtest is refused, since the job's check reads only top-level names", () => {
+  const source = [
+    'test("the whole proof", async (t) => {',
+    '  await t.test("one part of it", async () => {});',
+    "  await t.test(",
+    "    'another part',",
+    "    async () => {},",
+    "  );",
+    "});",
+    'test("one part of it, also on its own", () => {});',
+  ].join("\n");
+  assert.equal(namedOnlyAsSubtest(source, "one part of it"), true);
+  assert.equal(namedOnlyAsSubtest(source, "another part"), true);
+  assert.equal(namedOnlyAsSubtest(source, "the whole proof"), false);
+  assert.equal(namedOnlyAsSubtest(source, "one part of it, also on its own"), false);
+  // In this repository: a database test's part is refused, and its top-level test is accepted.
+  const part = cite(
+    "artifacts/api-server/src/modules/tasks/valo-requirements.integration.test.ts",
+    "dispatch checks opt-out before any adapter invocation",
+  );
+  assert.match(citationProblems([part])[0]!, /names this as a subtest; cite its top-level test/);
+  assert.deepEqual(
+    citationProblems([
+      { ...part, test: "development saved assessments, task isolation, concurrency and reminder outbox" },
+    ]),
+    [],
   );
 });
 
