@@ -129,10 +129,14 @@ record describes. That is deliberate: someone has to read the new file and write
      again, at no cost, and the command is run again. A guide that fails a gate is saved and held. The
      publisher and the database ask for the check again at release.
 
-  The owner will make the check in Staff → System → **Guides on the reviewed route**, the reviewed
-  route's slice 2b. Until that panel is built, nothing records a real check, so no guide's reviews are
-  admitted. The two migrations are not applied to the Replit development database
-  ([how to apply them](migration-reviewed-guide-checks.md)).
+  The owner makes the check in Staff → System → **Guides on the reviewed route**. It lists each
+  prepared guide awaiting its reviews with its whole text, each sentence with the passage it rests on,
+  where each source's copy stands today and what holds it. **Check official sources again** reads
+  them again. When nothing holds the guide, the owner confirms the check of that exact guide, and
+  the panel shows until when it counts. No real check has been made: the two migrations are not
+  applied to the Replit development database
+  ([how to apply them](migration-reviewed-guide-checks.md)), and until they are the panel says so and
+  records nothing.
 
   A test shows the route for GUD-02, in a disposable copy of the database with made-up approvals and
   a stand-in for the model. The guide is prepared from a stored capture and its pair planned. Before
