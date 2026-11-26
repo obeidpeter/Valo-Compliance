@@ -196,6 +196,17 @@ export function TicketFormInner({
             {consentErr}
           </p>
         )}
+        <p className="mt-2 text-sm text-muted-foreground">
+          Read{" "}
+          <Link
+            href="/privacy"
+            className="font-medium text-primary underline underline-offset-2"
+            data-testid="link-support-privacy"
+          >
+            what Valo does with your data
+          </Link>{" "}
+          before you save this request.
+        </p>
       </div>
       {err && (
         <p

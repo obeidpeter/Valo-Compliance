@@ -87,7 +87,7 @@ Each slice is its own pull request.
 | 1 | **The inventory.** This design, part 1, and its tests against the database schema and the processor review. | PRV-001 | Built |
 | 2 | **The notice.** Part 2: the privacy page from the inventory, with its version, and its browser test. | PRV-001, PRO-002 | Built |
 | 3a | **The notice at the business profile.** Part 3 for the profile, whose versions already keep a notice version. | PRV-001, PRO-002 | Built |
-| 3b | **The notice at sign-up, a support request and the drafting assistant.** Part 3 for the rest, with a migration for the version each record keeps. | PRV-001, PRO-002 | Not started |
+| 3b | **The notice at sign-up, a support request, the drafting assistant and the contact forms.** Part 3's links for the rest. Each record keeps the version of its own words, not the notice's (below). | PRV-001 | Built |
 | 4 | **Consents.** Part 4, with a migration for the consent history and its upgrade test. | PRO-002 | Built |
 | 5 | **Erasure.** Part 5, with a database test. | PRV-003 | Built |
 
@@ -116,7 +116,8 @@ Each slice is its own pull request.
   business profile, and none sent. Then the outside services, with what is not yet checked about them,
   the backups, and where a person downloads, corrects or deletes their data, or asks without signing in.
 - **Its version.** The SHA-256 of the notice's content as JSON, so that any change to a word changes it.
-  The page shows its first twelve characters. Slice 3 keeps the whole version with each record.
+  The page shows its first twelve characters. Slice 3a keeps the whole version with each business
+  profile version, and slice 4 with each change to a choice.
 - **Draft until approved.** `privacyNoticeApproval` is empty, so the page says the notice is a draft,
   not approved by the privacy owner, not reviewed by a privacy professional and not legal advice. Only
   the privacy owner sets it, to the exact version they approve; a later change to any word makes the
@@ -138,8 +139,40 @@ Each slice is its own pull request.
   showing its words, so the record keeps the version the server holds when it saves. A notice changed
   between opening the screen and saving would be recorded as the newer one.
 - **Left for slice 3b.** Sign-up, a support request and the drafting assistant's agreement keep no
-  notice version yet; their tables need a column, and so a migration. The contact form's records keep
-  their own fixed label, `development-access-support-1`, which this slice does not change.
+  notice version; their tables would need a column, and so a migration. The contact form's records keep
+  their own fixed label, `development-access-support-1`, which this slice does not change. Slice 3b
+  links the notice at each of them and leaves the version out (below).
+
+### Slice 3b: the notice at sign-up, a support request, the drafting assistant and the contact forms
+
+- **Where the notice is linked.**
+  - The sign-up page links it before an account is created.
+  - The support request form, which is also the services page's enquiry form, links it below its
+    sharing choice.
+  - The drafting assistant links it below its agreement.
+  - The contact form and Trouble signing in, which anyone can write to without an account, link it
+    before the message is saved.
+
+  Each link sits outside its choice's label, so following it ticks nothing.
+- **What each record keeps.**
+  - A support request keeps its sharing choice and the version of that choice's words
+    (`service-sharing-v1`).
+  - Each draft from the assistant keeps, in its prompt version, the version of the assistant's own
+    notice (`customer-ai-development-notice-v2`).
+  - A message from the contact form or Trouble signing in keeps its fixed label
+    (`development-access-support-1`).
+  - Sign-up keeps no version at Valo: the sign-in service keeps the account, and Valo makes the
+    workspace at the first sign-in. The business profile's first save keeps the notice's version
+    (slice 3a).
+- **The notice's own version is not kept on these records.** Part 3 proposed it. It is left out for
+  two reasons:
+  - A person is not asked to agree to the notice: it says what Valo does, and each choice in it is
+    asked for where it is made, with the version of its own words.
+  - Keeping it would need a new column on the workspace, the support request and the draft, and so a
+    migration on the path that makes each. Until the Replit development database had it, each first
+    sign-in, support request and draft would fail.
+
+  The owner can ask for it (the owner's point 5).
 
 ### Slice 4: consents with their history
 
@@ -182,3 +215,6 @@ Each slice is its own pull request.
 3. The regions, retention and contracts the processor review lists as not verified.
 4. Whether the notice should name a way to complain to the Nigeria Data Protection Commission. The draft
    names none: no official source for it has been checked here.
+5. Whether the records made at sign-up, a support request and the drafting assistant should also keep
+   the notice's version. Each keeps the version of its own words; keeping the notice's too needs a
+   migration on each path that makes them (slice 3b).

@@ -330,11 +330,18 @@ test("the web server renders a page the same for every visitor and reads the API
     authorization: "Bearer synthetic-bearer-token",
     "x-forwarded-for": "203.0.113.10, 198.51.100.7",
   };
-  /** The page's HTML with its response's own nonce, wherever it appears, replaced. */
+  /** Where one piece of the page's streamed data ends and the next begins, once the nonce is replaced. */
+  const joint = '"])</script><script nonce="response-nonce">self.__next_f.push([1,"';
+  /** The page's HTML with its response's own nonce, wherever it appears, replaced. The page's data
+   * comes in pieces, each in a script of its own, and a piece can end in the middle of the nonce, as
+   * one does in /pricing's data. So the pieces are joined, and a nonce that was split is replaced too. */
   const page = async (path: string, headers: Record<string, string> = {}) => {
     const response = await fetch(web.origin + path, { headers });
     const nonce = /'nonce-([^']+)'/.exec(response.headers.get("content-security-policy") ?? "")![1]!;
-    return (await response.text()).replaceAll(nonce, "response-nonce");
+    return (await response.text())
+      .replaceAll(nonce, "response-nonce")
+      .replaceAll(joint, "")
+      .replaceAll(nonce, "response-nonce");
   };
   const before = web.api.requests.length;
   for (const path of SERVER_PAGES)
@@ -1103,6 +1110,19 @@ test("the privacy page shows each activity of the processing inventory, what the
   ] as const)
     assert.match(main, new RegExp(`<a[^>]*href="${href}"[^>]*>${label}</a>`), `${label} is a link`);
   assert.match(main, /<a[^>]*href="\/contact"[^>]*>Contact us/);
+});
+
+// PRV-001: the privacy notice is linked where data is collected (docs/architecture/processing-inventory.md,
+// slice 3b). The contact form is written without an account, so its link is in the server's HTML.
+test("the contact form links what Valo does with your data before a message is saved, in the server's HTML", async () => {
+  const html = await (await fetch(web.origin + "/contact")).text();
+  const main = html.slice(html.search(/<main/), html.indexOf("</main>"));
+  const form = main.slice(main.indexOf('data-testid="form-access-support"'), main.indexOf("</form>"));
+  assert.ok(form.length > 0, "the contact form is in the server's HTML");
+  const link = form.match(/<a\b[^>]*data-testid="link-access-privacy"[^>]*>([^<]*)<\/a>/);
+  assert.ok(link, "the form links the notice");
+  assert.match(link[0], /href="\/privacy"/);
+  assert.equal(link[1], "what Valo does with your data");
 });
 
 // The specification's 2026 update (docs/specification/essential-business-documents.txt): "The

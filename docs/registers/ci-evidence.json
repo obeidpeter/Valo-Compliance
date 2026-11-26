@@ -3061,6 +3061,27 @@
       "proves": "On the compiled web server, the privacy page's HTML shows every activity of the processing inventory with its title, purpose, data and retention, the needed ones apart from the optional ones and marketing, the draft notice, the version and the links for download, correction, deletion and help without signing in."
     },
     {
+      "requirement": "PRV-001",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "the support form and the drafting assistant link the privacy notice beside the choice each asks for",
+      "proves": "On an emulated phone with stand-in answers, the support request form and the drafting assistant each link the privacy notice next to the choice they ask for, outside that choice's label, so following the link ticks nothing."
+    },
+    {
+      "requirement": "PRV-001",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-screens-accessibility.test.ts",
+      "test": "before an account is created or a message is saved, the sign-up page and the trouble-signing-in form link what Valo does with your data",
+      "proves": "In a browser with stand-in answers, the sign-up page and the trouble-signing-in form each link the privacy notice."
+    },
+    {
+      "requirement": "PRV-001",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-server-pages.test.ts",
+      "test": "the contact form links what Valo does with your data before a message is saved, in the server's HTML",
+      "proves": "On the compiled web server, the contact form in the page's HTML links the privacy notice before any script runs."
+    },
+    {
       "requirement": "PRO-002",
       "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
