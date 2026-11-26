@@ -14,6 +14,12 @@ import {
   inferenceBindingReport,
   inferenceBindingViolations,
   PUBLISHER_CONNECTION_ENTRY,
+  RAW_HTML_ENTRIES,
+  RAW_SQL_ENTRIES,
+  rawHtmlReport,
+  rawHtmlViolations,
+  rawSqlReport,
+  rawSqlViolations,
   publisherConnectionReport,
   publisherConnectionViolations,
   moduleBoundaryViolations,
@@ -326,6 +332,67 @@ test("only a migration names the function that reseeds a history's digest", () =
   );
   // The migrations are SQL, outside the product source the rule reads; the repository keeps the rule.
   assert.deepEqual(historyReseedReport(), []);
+});
+
+test("product code puts no text into a page as HTML, and hands a browser HTML only where it is reviewed (SEC-003)", () => {
+  const screen = "artifacts/valo/src/screens/example.tsx";
+  for (const [code, what] of [
+    ["element.innerHTML = note;", "innerHTML"],
+    ["element.outerHTML += note;", "outerHTML"],
+    ['element.insertAdjacentHTML("beforeend", note);', "insertAdjacentHTML()"],
+    ["const part = range.createContextualFragment(note);", "createContextualFragment()"],
+    ["document.write(note);", "document.write()"],
+    ["document.writeln(note);", "document.writeln()"],
+    ["await page.setContent(note);", "setContent()"],
+    ['const frame = <iframe title="x" sandbox="" srcDoc={note} />;', "srcDoc"],
+  ] as const) {
+    const flagged = rawHtmlViolations(screen, code + "\n");
+    assert.equal(flagged.length, 1, code);
+    assert.ok(flagged[0]!.startsWith(`${screen}:1 raw-html ${what} `), flagged[0]);
+  }
+  // Text drawn as text, a state setter that happens to share a name, and reading HTML are not sinks.
+  assert.deepEqual(
+    rawHtmlViolations(
+      screen,
+      "const a = <p>{note}</p>; setContent(next); const b = element.innerHTML; element.textContent = note;\n",
+    ),
+    [],
+  );
+  // A reviewed file may hand a browser HTML, and the repository keeps the rule.
+  const renderer = Object.keys(RAW_HTML_ENTRIES)[0]!;
+  assert.deepEqual(rawHtmlViolations(renderer, "await page.setContent(html);\n"), []);
+  assert.deepEqual(rawHtmlReport(), []);
+});
+
+test("product code builds no SQL from text but where it is reviewed, and each review counts its texts (SEC-003)", () => {
+  const route = "artifacts/api-server/src/modules/documents/example.ts";
+  for (const [code, what] of [
+    ["await db.execute(sql.raw(`DELETE FROM ${table}`));", "sql.raw()"],
+    ["await db.execute(sql.raw(text));", "sql.raw()"],
+    ["await pool.query(`SELECT * FROM valo_tasks WHERE title = '${title}'`);", "a query built from text"],
+    ['await client.query("SELECT * FROM " + table, []);', "a query built from text"],
+  ] as const) {
+    const flagged = rawSqlViolations(route, code + "\n");
+    assert.equal(flagged.length, 1, code);
+    assert.ok(flagged[0]!.startsWith(`${route}:1 raw-sql ${what} `), flagged[0]);
+  }
+  // Values passed as parameters, through Drizzle's sql template or a fixed text, build no SQL.
+  assert.deepEqual(
+    rawSqlViolations(
+      route,
+      'await db.execute(sql`SELECT * FROM valo_tasks WHERE title = ${title}`);\nawait pool.query("SELECT 1 WHERE $1", [x]);\nawait db.execute(sql.raw("SET LOCAL statement_timeout = 1000"));\n',
+    ),
+    [],
+  );
+  // A reviewed file passes with as many texts as its review gives, and fails with another number.
+  const [reviewed, entry] = Object.entries(RAW_SQL_ENTRIES).find(([, e]) => e.texts === 1)!;
+  const one = "await pool.query(`SELECT count(*) FROM ${table}`);\n";
+  assert.deepEqual(rawSqlViolations(reviewed, one), []);
+  assert.equal(entry.texts, 1);
+  assert.deepEqual(rawSqlViolations(reviewed, one + one), [
+    `${reviewed} raw-sql builds 2 SQL text(s) while it runs; its review lists 1, so review the change`,
+  ]);
+  assert.deepEqual(rawSqlReport(), []);
 });
 
 test("the repository has no silent catches, no import cycles and no unreviewed binding checks", () => {
