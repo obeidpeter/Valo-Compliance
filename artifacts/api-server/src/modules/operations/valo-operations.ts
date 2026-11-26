@@ -63,6 +63,18 @@ export const readinessQueries = {
     GROUP BY subject_hash) per_subject`,
   signatureFailures: `SELECT COALESCE(sum(count), 0)::int AS value FROM valo_security_signals
     WHERE kind='signature_failure' AND window_started_at > now() - interval '10 minutes'`,
+  // docs/architecture/alerts.md, part 2 (SEC-005): abuse spread over many callers, each under its own
+  // limit. Refusals of every address together in ten minutes:
+  spreadRefusals: `SELECT COALESCE(sum(count), 0)::int AS value FROM valo_security_signals
+    WHERE kind='denied_access' AND window_started_at > now() - interval '10 minutes'`,
+  // How many callers, by keyed address, a limit refused (429) in ten minutes:
+  limitedCallers: `SELECT count(DISTINCT subject_hash)::int AS value FROM valo_security_signals
+    WHERE kind='limit_refusal' AND window_started_at > now() - interval '10 minutes'`,
+  // The security baseline, v5.0.0-16.3.3: the refused input of the address that sent the most in ten
+  // minutes (400, 413, 415 or 422).
+  refusedInput: `SELECT COALESCE(max(total), 0)::int AS value FROM (SELECT sum(count) AS total
+    FROM valo_security_signals WHERE kind='refused_input' AND window_started_at > now() - interval '10 minutes'
+    GROUP BY subject_hash) per_subject`,
   roleChanges:
     "SELECT count(*)::int AS value FROM (SELECT 1 FROM valo_staff_role_changes WHERE created_at > now() - interval '1 hour' LIMIT 10001) bounded",
   bulkExports: atQuotaLimit(["export-create"]),
@@ -91,6 +103,9 @@ export const readinessQueries = {
 const SECURITY_METRICS = [
   ["deniedAccess", "DENIED_ACCESS"],
   ["signatureFailures", "SIGNATURE_FAILURES"],
+  ["spreadRefusals", "SPREAD_REFUSALS"],
+  ["limitedCallers", "LIMITED_CALLERS"],
+  ["refusedInput", "REFUSED_INPUT"],
   ["roleChanges", "ROLE_CHANGES"],
   ["bulkExports", "BULK_EXPORTS"],
   ["paymentActivity", "PAYMENT_ACTIVITY"],
@@ -121,6 +136,9 @@ export type OperationalSample = {
   requestTime: Metric;
   deniedAccess: Metric;
   signatureFailures: Metric;
+  spreadRefusals: Metric;
+  limitedCallers: Metric;
+  refusedInput: Metric;
   roleChanges: Metric;
   bulkExports: Metric;
   paymentActivity: Metric;
@@ -142,6 +160,9 @@ export type OperationalSample = {
     requestTime: number;
     deniedAccess: number;
     signatureFailures: number;
+    spreadRefusals: number;
+    limitedCallers: number;
+    refusedInput: number;
     roleChanges: number;
     bulkExports: number;
     paymentActivity: number;
@@ -242,6 +263,12 @@ export async function collectOperationalSample(
       // minutes, and any signature failure, role change or caller at a quota limit, raise an alert.
       deniedAccess: 20,
       signatureFailures: 0,
+      // Development defaults too (docs/architecture/alerts.md, part 2): more than a hundred refusals of
+      // every address together in ten minutes, more than ten callers refused by a limit, and more than
+      // twenty refused inputs from one address, raise an alert.
+      spreadRefusals: 100,
+      limitedCallers: 10,
+      refusedInput: 20,
       roleChanges: 0,
       bulkExports: 0,
       paymentActivity: 0,
@@ -275,6 +302,9 @@ export const ALERT_RUNBOOKS = {
   REQUEST_TIME: { runbook: "Site/database unavailable", accountable: "Engineering lead" },
   DENIED_ACCESS: { runbook: "Security/privacy incident", accountable: "Incident lead + privacy owner" },
   SIGNATURE_FAILURES: { runbook: "Security/privacy incident", accountable: "Incident lead + privacy owner" },
+  SPREAD_REFUSALS: { runbook: "Security/privacy incident", accountable: "Incident lead + privacy owner" },
+  LIMITED_CALLERS: { runbook: "Security/privacy incident", accountable: "Incident lead + privacy owner" },
+  REFUSED_INPUT: { runbook: "Security/privacy incident", accountable: "Incident lead + privacy owner" },
   ROLE_CHANGES: { runbook: "Security/privacy incident", accountable: "Incident lead + privacy owner" },
   BULK_EXPORTS: { runbook: "Security/privacy incident", accountable: "Incident lead + privacy owner" },
   PAYMENT_ACTIVITY: { runbook: "Payment/entitlement failure", accountable: "Finance + engineering" },
@@ -327,6 +357,15 @@ export const ALERT_WORDS = {
     raised: "A message from the payment provider failed its signature check",
     reading: "the payment provider's signatures",
   },
+  SPREAD_REFUSALS: {
+    raised: "Requests from many addresses together are being refused",
+    reading: "refused requests from every address",
+  },
+  LIMITED_CALLERS: { raised: "Many callers were refused by a limit", reading: "callers refused by a limit" },
+  REFUSED_INPUT: {
+    raised: "One address is sending input Valo refuses, again and again",
+    reading: "refused input",
+  },
   ROLE_CHANGES: { raised: "A staff role was changed in the last hour", reading: "staff role changes" },
   BULK_EXPORTS: { raised: "A caller reached the export limit", reading: "the export limit" },
   PAYMENT_ACTIVITY: { raised: "A caller reached a payment limit", reading: "the payment limits" },
@@ -367,6 +406,9 @@ const SUBJECT_READINGS: Partial<
   REQUEST_TIME: "requestTime",
   DENIED_ACCESS: "deniedAccess",
   SIGNATURE_FAILURES: "signatureFailures",
+  SPREAD_REFUSALS: "spreadRefusals",
+  LIMITED_CALLERS: "limitedCallers",
+  REFUSED_INPUT: "refusedInput",
   ROLE_CHANGES: "roleChanges",
   BULK_EXPORTS: "bulkExports",
   PAYMENT_ACTIVITY: "paymentActivity",

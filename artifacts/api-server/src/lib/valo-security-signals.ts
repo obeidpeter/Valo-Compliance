@@ -3,8 +3,19 @@ import { sql } from "drizzle-orm";
 import { currentWorkspaceScope, db } from "@workspace/db";
 import { logger } from "../platform/logger";
 
-/** SEC-008: the security events counted for the internal alerts (valo-operations.ts). */
-export const SECURITY_SIGNAL_KINDS = ["denied_access", "signature_failure", "guard_refusal"] as const;
+/**
+ * SEC-008: the security events counted for the internal alerts (valo-operations.ts): a refusal of access,
+ * a payment message failing its signature check, a database guard's refusal, a refusal by a limit (SEC-005)
+ * and a refusal of a request's input (the security baseline, v5.0.0-16.3.3). The table takes these kinds
+ * and no others (`valo_security_signals_kind_check`).
+ */
+export const SECURITY_SIGNAL_KINDS = [
+  "denied_access",
+  "signature_failure",
+  "guard_refusal",
+  "limit_refusal",
+  "refused_input",
+] as const;
 export type SecuritySignalKind = (typeof SECURITY_SIGNAL_KINDS)[number];
 
 /**
