@@ -489,7 +489,7 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/routes/valo-manual-library.integration.test.ts",
       "test": "manual publishing through staff HTTP routes and public readers",
-      "proves": "Over HTTP only the recently verified development owner, from Valo's own pages, previews and records a published premium template's price; recording needs the preview's checksum of exactly those terms and names the owner's own sign-in as the approval's author; and an order made at the earlier price keeps its amount, licence and tax treatment after the owner's next price, which closes the earlier one once while the change log keeps both; and a price the owner marks as carrying is recorded for each next edition as a Content editor releases it, with the same terms and approval reference, while an order made at the earlier edition's price keeps its price, amount, licence and edition."
+      "proves": "Over HTTP only the recently verified development owner, from Valo's own pages, previews and records a published premium template's price; recording needs the preview's checksum of exactly those terms and names the owner's own sign-in as the approval's author; and an order made at the earlier price keeps its amount, licence and tax treatment after the owner's next price, which closes the earlier one once while the change log keeps both; and a price the owner marks as carrying is recorded for each next edition as a Content editor releases it, with the same terms and approval reference, while an order made at the earlier edition's price keeps its price, amount, licence and edition; and the owner records a commercial setting's value the same way, which closes the setting's open value when it starts while the change log keeps both, and which a customer request reads in effect."
     },
     {
       "requirement": "ADM-006",
@@ -503,7 +503,14 @@
       "job": "foundation",
       "file": "lib/db/scripts/phase1-migrations.test.mjs",
       "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
-      "proves": "The price carries migration keeps every row and every price's terms, records that each price held before it carries to no later edition and was carried from none, reseeds the prices' history digest so that it still matches, and refuses a carried price that does not carry on; the carry migration keeps every row, its trigger is defined to run only when an edition of a premium template is released, and the customer role cannot run its function."
+      "proves": "The price carries migration keeps every row and every price's terms, records that each price held before it carries to no later edition and was carried from none, reseeds the prices' history digest so that it still matches, and refuses a carried price that does not carry on; the carry migration keeps every row, its trigger is defined to run only when an edition of a premium template is released, and the customer role cannot run its function. The commercial settings migrations keep every row; a setting's value never changes in place or is removed, closes once from now or later, and is logged in an append-only change log; neither table can be emptied; and a customer request reads the value in effect through a function, never the tables."
+    },
+    {
+      "requirement": "ADM-006",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "the owner's settings panel previews a value's exact terms and records only what was previewed",
+      "proves": "On a phone, the owner's settings panel lists each commercial setting with its values or its default, previews a value's exact terms and checksum, asks for a new preview when the value changes, records only the previewed terms with their checksum, and has no automated WCAG 2.2 AA failure."
     },
     {
       "requirement": "NFR-010",

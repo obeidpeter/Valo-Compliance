@@ -58,7 +58,8 @@ terms wait on the owner's refund policy.
    carries to the template's later editions, and the choice is part of the checksum. When the next
    edition is released, a price that carries is recorded for it, with the same terms and a link to the
    price it came from, and the earlier edition's price closes.
-3. **Quotas and the access rule as versioned settings.** A setting is a row with a value, effective
+3. **Quotas and the access rule as versioned settings** (the settings and the drafting allowances
+   built). A setting is a row with a value, effective
    dates and the owner's approval, versioned as prices are, with an append-only change log. The
    drafting assistant's two daily allowances and the later-editions rule are its first keys. Each
    order records the access rule it was bought under.
@@ -194,6 +195,55 @@ takes no payment, and no sample price is carried into production.
   carried-editions function reads each order's own record. An order made before the rule had a record
   carries, as every purchase did when it was made.
 
+It is built in two parts: 3a, the settings and the drafting assistant's two daily allowances (built), and
+3b, the access rule that each order records.
+
+**Slice 3a: how it is built.**
+- Migration `commercial_settings` adds `valo_commercial_settings` and its change log,
+  `valo_commercial_setting_changes`. At most one value of a setting has no end, and a value is a whole
+  number, none below nought, of a setting the code lists.
+- Migration `commercial_setting_guards`:
+  - a value never changes in place and is never removed; it closes once, from now or later;
+  - each insert and close is logged, and the log is append-only;
+  - neither table can be emptied, and both keep a history digest (audit trail). They are new, so their
+    digests start empty.
+- A customer request reads a setting only through `valo_commercial_setting(key)`, which returns the
+  value in effect now and nothing else. The customer role has no privilege on either table.
+- The settings, their defaults and the most each accepts are in `modules/commercial-settings`, which
+  loads no database client when it is imported. Each most is ten times today's allowance: 300 drafts a
+  day for each workspace and 1,200 in all.
+- The drafting assistant reads both allowances in the transaction that reserves a draft, and in the
+  usage it shows. A recorded value applies to every request from its start.
+- `GET /admin/owner-settings`, `POST /admin/owner-settings/previews` and `POST /admin/owner-settings`
+  work as the price screen's routes do: only the recently verified development owner, from Valo's own
+  pages; a preview of the exact terms and their checksum; a recording given that checksum, with the
+  owner's own sign-in as the approval's author. The System area shows the panel below the prices.
+- Spending on the AI provider stays bounded by the approved inference budget (decision 0008), which no
+  setting changes: a higher allowance only lets more drafts be asked for.
+
+**Slice 3a: tests.**
+- **Unit:** each setting with its default and its most; a value is a whole number up to the most; the
+  start is now or a time with its offset; the checksum changes with each term, and with nothing else.
+- **On the migrations:** both keep every row and add the tables empty; a value outside the check is
+  refused; one value at most has no end; a value never changes in place and is never removed, and
+  closes once, from now or later; a scheduled value is not in effect before it starts; the change log
+  holds each insert and close and is append-only; neither table can be emptied; the customer role reads
+  a value through the function and neither table; both digests match their rows.
+- **Over HTTP, in the staff library's database test:**
+  - a Content editor, a system operator who is not the owner, and the owner without fresh MFA are
+    refused;
+  - a write from another site, a malformed or far larger value, and an unlisted setting are refused;
+  - a preview gives the exact terms and their checksum, and writes nothing;
+  - a recording whose terms differ from the checksum's is refused, and so is one by another operator;
+  - the recorded value names the owner's sign-in as the approval's author, and a customer request reads
+    it in effect;
+  - the owner's next value closes it once, the change log keeps both, and the request reads the new one;
+  - a value scheduled to start later is listed with its start, and one that would start before it is
+    refused.
+- **In the browser, on a phone:** the panel lists each setting with its values or its default, previews
+  a value's exact terms and checksum, asks for a new preview when the value changes, records only the
+  terms previewed, and has no automated WCAG 2.2 AA failure.
+
 ## Slice 4: one-off bundles
 
 - **A bundle** is a named, curated set of two or more premium templates, sold once at one price. A
@@ -211,4 +261,4 @@ takes no payment, and no sample price is carried into production.
 
 ## What comes next
 
-Slice 3, quotas and the access rule as versioned settings.
+Slice 3b, the access rule that each order records.
