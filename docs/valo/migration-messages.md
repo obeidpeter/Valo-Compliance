@@ -24,7 +24,11 @@ the table first:
   is owed, as today. No message is recorded for it, and none is sent for it later;
 - the worker's `messages` task finds nothing to do;
 - a workspace's data download lists no messages, and an erasure has none to remove;
-- pausing messages on the staff screen still sets the pause, and counts none waiting.
+- pausing messages on the staff screen still sets the pause, and counts none waiting;
+- the workspace's Messages page lists no message, and each receipt on the purchases screen says that
+  nothing was emailed about it;
+- the two readings of messages, waiting and failed, cannot be taken, so the alert list shows
+  `MESSAGES_PROBE_UNAVAILABLE` and `FAILED_MESSAGES_PROBE_UNAVAILABLE` until the migrations are applied.
 
 **No message reaches anyone.** The only sender is a stand-in that sends nothing, and it is off unless
 `VALO_MESSAGE_SENDER=stand-in` is set for the worker. Unset, each message waits as `held`, with the reason
