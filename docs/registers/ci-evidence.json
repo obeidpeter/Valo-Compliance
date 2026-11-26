@@ -3868,6 +3868,41 @@
     {
       "requirement": "SEC-007",
       "job": "foundation",
+      "file": "scripts/src/valo/security-reports.test.ts",
+      "test": "a reviewed advisory names its owner and is reviewed again within 30 days, or it blocks the merge (SEC-007)",
+      "proves": "A reviewed high-severity advisory is set aside only while its record names one of the two owning roles and a review date at most 30 days after its review, made on or before the day of the check and not yet passed: without an owner or a valid date, reviewed again later than 30 days on, or the day after its review date, it keeps the dependency summary blocked, even once the audit no longer reports it."
+    },
+    {
+      "requirement": "SEC-007",
+      "job": "foundation",
+      "file": "scripts/src/valo/security-reports.test.ts",
+      "test": "a moderate or low advisory blocks the merge unless it is recorded with its owner and fixed within 30 or 90 days (SEC-007)",
+      "proves": "A moderate or low advisory the audit reports keeps the dependency summary blocked unless a record of it at its own severity names an owning role and a date to fix it by at most 30 days (moderate) or 90 days (low) after it was recorded and not yet passed; totals no record accounts for block too, and an informational advisory does not."
+    },
+    {
+      "requirement": "SEC-007",
+      "job": "foundation",
+      "file": "scripts/src/valo/sbom.test.ts",
+      "test": "the bill of materials lists every package the lockfile installs, from the registry, with its version and checksum (SEC-007)",
+      "proves": "Made from the repository's lockfile, the CycloneDX bill of materials lists each of its packages once under its npm package URL with the lockfile's own SHA-512 checksum in hexadecimal and what it depends on, marks what the API needs at run time as required and development-only tools as excluded, and names the commit and the lockfile's SHA-256."
+    },
+    {
+      "requirement": "SEC-007",
+      "job": "foundation",
+      "file": "scripts/src/valo/sbom.test.ts",
+      "test": "a package from anywhere but the registry, or without a checksum, stops the bill of materials",
+      "proves": "A lockfile package resolved from a tarball address or a git repository, one with no checksum or only an unknown kind of checksum, or a lockfile of another version, makes the bill of materials fail instead of listing it."
+    },
+    {
+      "requirement": "SEC-007",
+      "job": "foundation",
+      "file": "scripts/src/valo/scheduled-scan.test.ts",
+      "test": "every week the workflow runs the dependency, secret and static checks, and nothing else (SEC-007)",
+      "proves": "The workflow is scheduled once a week, its dependency-and-secret and static jobs run on every trigger while each other job skips a scheduled run, and the dependency job makes the bill of materials and keeps it with the run."
+    },
+    {
+      "requirement": "SEC-007",
+      "job": "foundation",
       "file": "scripts/src/valo/merge-static.test.ts",
       "test": "static driver keeps an honest sanitized outcome: finding",
       "proves": "With a stand-in scanner that detects its canary and reports one finding in the repository, the static security check fails with a non-zero exit and records the finding's rule, file, line and severity, while the scanner's message and matched code appear in neither its result file nor its output."

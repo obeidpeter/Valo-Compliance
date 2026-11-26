@@ -151,13 +151,26 @@ Slice 3b added:
   and no call to the provider, a session token made for another site, or for none, signs no one in
   (9.2.3).
 
+Slice 4 added:
+- **Time frames for advisories**, in a note of their own
+  ([dependency advisories](../valo/dependency-advisories.md)), held on every merge.
+  - A reviewed critical or high exception names its owner and is reviewed again within 30 days.
+  - A moderate advisory must be recorded with its owner and fixed within 30 days, and a low one within
+    90.
+  - A record past its date blocks the merge (15.1.1 and 15.2.1, still partly met: no time frame is set
+    for routine updates).
+- **A software bill of materials** from the lockfile on each merge, kept with the run; a package from
+  anywhere but the registry, or without a checksum, stops it (15.1.2).
+- **The image check** lists every file in both images and finds no source control metadata (13.4.1).
+- **A weekly run** of the scans, which starts once the workflow reaches `main`.
+
 ## What the map finds
 
 | Status | Requirements |
 | --- | --- |
-| met | 76 |
-| partly met | 33 |
-| untested | 14 |
+| met | 78 |
+| partly met | 32 |
+| untested | 13 |
 | not met | 3 |
 | not applicable | 63 |
 | identity provider | 54 |
@@ -178,9 +191,8 @@ Slice 3b added:
   a network allowlist and the database's transport.
 
 What is left falls to the plan's later rows and to the launch:
-- **Small hardening** (Phase 7): HSTS on static files and subdomains once the domain is known; a
-  check of the built image for `.git`; time frames and an owner for advisories; a software bill of
-  materials.
+- **Small hardening** (Phase 7): HSTS on static files and subdomains once the domain is known; and
+  a time frame for routine updates outside advisories, which is the owner's.
 - **Alerts that reach a person** (Phase 7): logs to a system of their own, which waits for the owner.
   Each request's log line now names its route (16.2.1), refused input is counted as a security event
   (16.3.3), and the log inventory lists what is logged, where it goes, for whom and for how long, with a
