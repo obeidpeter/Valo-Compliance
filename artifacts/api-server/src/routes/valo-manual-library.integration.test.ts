@@ -15,9 +15,11 @@ import {
 } from "../test-support/manual-premium-template";
 import { exercisePremiumPriceCommand } from "../test-support/premium-price-command";
 import { exerciseOwnerPriceRoutes } from "../test-support/owner-price-routes";
+import { exerciseOwnerBundleRoutes } from "../test-support/owner-bundle-routes";
 import { exerciseOwnerSettingRoutes } from "../test-support/owner-setting-routes";
 import { exerciseOrderAccessRule } from "../test-support/order-access-rule";
 import { createOwnerPriceRouter } from "./valo-owner-prices";
+import { createOwnerBundleRouter } from "./valo-owner-bundles";
 import { createOwnerSettingRouter } from "./valo-owner-settings";
 import { exerciseOverduePremiumTemplate } from "../test-support/manual-overdue-premium";
 import { exerciseWithdrawalReach } from "../test-support/manual-withdrawal-reach";
@@ -208,6 +210,7 @@ test(
     );
     app.use(createSourceControlsRouter(authenticate));
     app.use(createOwnerPriceRouter(authenticate));
+    app.use(createOwnerBundleRouter(authenticate));
     app.use(createOwnerSettingRouter(authenticate));
     app.use(makeSupportOperationsRouter(authenticate));
     app.use(publicRouter);
@@ -788,6 +791,10 @@ test(
     await t.test(
       "only the recently verified development owner previews and records a premium template's price, an earlier order keeps its terms, and a price that carries is recorded for each next edition as it is released",
       () => exerciseOwnerPriceRoutes(call, editor),
+    );
+    await t.test(
+      "only the recently verified development owner previews and records a bundle of released premium templates, whose next version closes the open one when it starts",
+      () => exerciseOwnerBundleRoutes(call, editor),
     );
     await t.test(
       "only the recently verified development owner previews and records a commercial setting's value, which closes the open one when it starts and which a customer request reads in effect",

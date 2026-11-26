@@ -1141,6 +1141,181 @@ export interface OwnerPriceRecorded {
   closed: OwnerPriceRecordedClosedItem[];
 }
 
+export interface OwnerBundleVersion {
+  bundleId: string;
+  /** The bundle's name across its versions */
+  bundle: string;
+  title: string;
+  /**
+     * The staff library items it holds.
+     * @minItems 2
+     * @maxItems 10
+     */
+  items: string[];
+  /** @minimum 1 */
+  amountKobo: number;
+  licenceVersion: string;
+  taxTreatment: string;
+  effectiveFrom: string;
+  /** @nullable */
+  effectiveTo: string | null;
+}
+
+export interface OwnerBundleTemplate {
+  /** The staff library item */
+  item: string;
+  /** The title of its latest release */
+  title: string;
+  /** Whether that release is on sale now: not held and not overdue for its review */
+  onSale: boolean;
+}
+
+export interface OwnerBundlePage {
+  /**
+     * Each bundle's open version and any scheduled to start, by bundle and then earliest first.
+     * @maxItems 500
+     */
+  versions: OwnerBundleVersion[];
+  /**
+     * The premium templates of the staff library that have been released, by title.
+     * @maxItems 500
+     */
+  templates: OwnerBundleTemplate[];
+}
+
+export interface OwnerBundleTerms {
+  /**
+     * The bundle's name, such as starter-pack; an existing name records its next version
+     * @pattern ^[a-z0-9][a-z0-9-]{1,62}$
+     */
+  bundle: string;
+  /**
+     * @minLength 3
+     * @maxLength 120
+     */
+  title: string;
+  /**
+     * The staff library's premium templates it holds, two to ten.
+     * @minItems 2
+     * @maxItems 10
+     */
+  items: string[];
+  /**
+     * The amount in naira, such as 1500 or 1500.00
+     * @pattern ^\d{1,8}(\.\d{2})?$
+     */
+  amount: string;
+  /** @pattern ^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$ */
+  licenceVersion: string;
+  /**
+     * @minLength 20
+     * @maxLength 20000
+     */
+  licenceText: string;
+  /**
+     * @minLength 3
+     * @maxLength 300
+     */
+  taxTreatment: string;
+  /**
+     * now, or a time with its offset, such as 2026-12-01T00:00:00+01:00
+     * @minLength 3
+     * @maxLength 40
+     */
+  from: string;
+}
+
+export interface OwnerBundleExactTerms {
+  bundle: string;
+  title: string;
+  /**
+     * The templates it holds, in order of their IDs.
+     * @minItems 2
+     * @maxItems 10
+     */
+  items: string[];
+  /** @minimum 1 */
+  amountKobo: number;
+  licenceVersion: string;
+  licenceText: string;
+  taxTreatment: string;
+  from: string;
+}
+
+export interface OwnerBundlePreview {
+  /**
+     * The templates the terms name, by title.
+     * @minItems 2
+     * @maxItems 10
+     */
+  templates: OwnerBundleTemplate[];
+  terms: OwnerBundleExactTerms;
+  /** @pattern ^[0-9a-f]{64}$ */
+  checksum: string;
+}
+
+export interface OwnerBundleRecord {
+  /** @pattern ^[a-z0-9][a-z0-9-]{1,62}$ */
+  bundle: string;
+  /**
+     * @minLength 3
+     * @maxLength 120
+     */
+  title: string;
+  /**
+     * @minItems 2
+     * @maxItems 10
+     */
+  items: string[];
+  /** @pattern ^\d{1,8}(\.\d{2})?$ */
+  amount: string;
+  /** @pattern ^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$ */
+  licenceVersion: string;
+  /**
+     * @minLength 20
+     * @maxLength 20000
+     */
+  licenceText: string;
+  /**
+     * @minLength 3
+     * @maxLength 300
+     */
+  taxTreatment: string;
+  /**
+     * @minLength 3
+     * @maxLength 40
+     */
+  from: string;
+  /**
+     * Where the owner's approval is written
+     * @minLength 3
+     * @maxLength 160
+     */
+  reference: string;
+  /**
+     * The checksum the preview gave
+     * @pattern ^[0-9a-f]{64}$
+     */
+  confirm: string;
+}
+
+export type OwnerBundleRecordedClosedItem = {
+  bundleId: string;
+  /** @minimum 1 */
+  amountKobo: number;
+};
+
+export interface OwnerBundleRecorded {
+  bundleId: string;
+  bundle: string;
+  title: string;
+  /** @minimum 1 */
+  amountKobo: number;
+  from: string;
+  /** @maxItems 100 */
+  closed: OwnerBundleRecordedClosedItem[];
+}
+
 export type OwnerSettingKey = typeof OwnerSettingKey[keyof typeof OwnerSettingKey];
 
 

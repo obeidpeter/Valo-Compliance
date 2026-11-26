@@ -3,6 +3,7 @@ import { AuditHistory } from "@/components/audit-history";
 import { OwnerRegulatoryGuidance } from "@/components/owner-regulatory-guidance";
 import { OwnerCheckerRules } from "@/components/owner-checker-rules";
 import { OwnerPrices } from "@/components/owner-prices";
+import { OwnerBundles } from "@/components/owner-bundles";
 import { OwnerSettings } from "@/components/owner-settings";
 import { MfaVerification } from "@/components/mfa-verification";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -191,6 +192,7 @@ export default function StaffPage() {
             {area === "system" && <OwnerRegulatoryGuidance />}
             {area === "system" && <OwnerCheckerRules />}
             {area === "system" && <OwnerPrices />}
+            {area === "system" && <OwnerBundles />}
             {area === "system" && <OwnerSettings />}
             {area === "system" && <ReviewQueue mode="owner" />}
             {area === "content" && <ContentEscalations onDirtyChange={setContentDirty} />}

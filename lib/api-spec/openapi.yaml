@@ -588,6 +588,66 @@ paths:
         "403": { description: "Only the development owner, with recent verification" }
         "409": { description: The template cannot be priced now }
         "422": { description: A term is missing or malformed }
+  /admin/owner-bundles:
+    get:
+      operationId: listOwnerBundles
+      tags: [staff]
+      summary: The bundles and the premium templates a bundle may hold, for the development owner (ADM-006)
+      description: >-
+        Each bundle's open version and any version scheduled to start, and each premium template of the
+        staff library that has been released (docs/architecture/commercial-settings.md, slice 4b).
+        Read-only. Development only.
+      responses:
+        "200":
+          description: The bundles' versions and the templates.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OwnerBundlePage" }
+        "401": { description: Sign-in required }
+        "403": { description: "Only the development owner, with recent verification" }
+    post:
+      operationId: recordOwnerBundle
+      tags: [staff]
+      summary: Record the owner's version of a bundle of premium templates
+      description: >-
+        Refused unless `confirm` is the checksum the preview gave for exactly these terms. The bundle's open
+        version closes when the new one starts. Recording takes no payment.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/OwnerBundleRecord" }
+      responses:
+        "200":
+          description: The version recorded, and the versions it closed.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OwnerBundleRecorded" }
+        "401": { description: Sign-in required }
+        "403": { description: "Only the development owner, with recent verification" }
+        "409": { description: "A template cannot be in a bundle, the version cannot start then, or the checksum is not of these terms" }
+        "422": { description: A term is missing or malformed }
+  /admin/owner-bundles/previews:
+    post:
+      operationId: previewOwnerBundle
+      tags: [staff]
+      summary: The exact terms of a bundle's version, its templates and their checksum, which recording confirms
+      description: Writes nothing.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/OwnerBundleTerms" }
+      responses:
+        "200":
+          description: The exact terms, the templates they name and their checksum.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OwnerBundlePreview" }
+        "401": { description: Sign-in required }
+        "403": { description: "Only the development owner, with recent verification" }
+        "409": { description: A template cannot be in a bundle }
+        "422": { description: A term is missing or malformed }
   /admin/owner-settings:
     get:
       operationId: listOwnerSettings
@@ -2783,6 +2843,136 @@ components:
             required: [priceId, amountKobo]
             properties:
               priceId: { type: string, format: uuid }
+              amountKobo: { type: integer, minimum: 1 }
+    OwnerBundlePage:
+      type: object
+      additionalProperties: false
+      required: [versions, templates]
+      properties:
+        versions:
+          description: Each bundle's open version and any scheduled to start, by bundle and then earliest first.
+          type: array
+          maxItems: 500
+          items: { $ref: "#/components/schemas/OwnerBundleVersion" }
+        templates:
+          description: The premium templates of the staff library that have been released, by title.
+          type: array
+          maxItems: 500
+          items: { $ref: "#/components/schemas/OwnerBundleTemplate" }
+    OwnerBundleTemplate:
+      type: object
+      additionalProperties: false
+      required: [item, title, onSale]
+      properties:
+        item: { type: string, format: uuid, description: The staff library item }
+        title: { type: string, description: The title of its latest release }
+        onSale: { type: boolean, description: "Whether that release is on sale now: not held and not overdue for its review" }
+    OwnerBundleVersion:
+      type: object
+      additionalProperties: false
+      required: [bundleId, bundle, title, items, amountKobo, licenceVersion, taxTreatment, effectiveFrom, effectiveTo]
+      properties:
+        bundleId: { type: string, format: uuid }
+        bundle: { type: string, description: "The bundle's name across its versions" }
+        title: { type: string }
+        items:
+          description: The staff library items it holds.
+          type: array
+          minItems: 2
+          maxItems: 10
+          items: { type: string, format: uuid }
+        amountKobo: { type: integer, minimum: 1 }
+        licenceVersion: { type: string }
+        taxTreatment: { type: string }
+        effectiveFrom: { type: string, format: date-time }
+        effectiveTo: { type: [string, "null"], format: date-time }
+    OwnerBundleTerms:
+      type: object
+      additionalProperties: false
+      required: [bundle, title, items, amount, licenceVersion, licenceText, taxTreatment, from]
+      properties:
+        bundle: { type: string, pattern: "^[a-z0-9][a-z0-9-]{1,62}$", description: "The bundle's name, such as starter-pack; an existing name records its next version" }
+        title: { type: string, minLength: 3, maxLength: 120 }
+        items:
+          description: The staff library's premium templates it holds, two to ten.
+          type: array
+          minItems: 2
+          maxItems: 10
+          items: { type: string, format: uuid }
+        amount: { type: string, pattern: "^\\d{1,8}(\\.\\d{2})?$", description: "The amount in naira, such as 1500 or 1500.00" }
+        licenceVersion: { type: string, pattern: "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" }
+        licenceText: { type: string, minLength: 20, maxLength: 20000 }
+        taxTreatment: { type: string, minLength: 3, maxLength: 300 }
+        from: { type: string, minLength: 3, maxLength: 40, description: "now, or a time with its offset, such as 2026-12-01T00:00:00+01:00" }
+    OwnerBundleExactTerms:
+      type: object
+      additionalProperties: false
+      required: [bundle, title, items, amountKobo, licenceVersion, licenceText, taxTreatment, from]
+      properties:
+        bundle: { type: string }
+        title: { type: string }
+        items:
+          description: The templates it holds, in order of their IDs.
+          type: array
+          minItems: 2
+          maxItems: 10
+          items: { type: string, format: uuid }
+        amountKobo: { type: integer, minimum: 1 }
+        licenceVersion: { type: string }
+        licenceText: { type: string }
+        taxTreatment: { type: string }
+        from: { type: string }
+    OwnerBundlePreview:
+      type: object
+      additionalProperties: false
+      required: [templates, terms, checksum]
+      properties:
+        templates:
+          description: The templates the terms name, by title.
+          type: array
+          minItems: 2
+          maxItems: 10
+          items: { $ref: "#/components/schemas/OwnerBundleTemplate" }
+        terms: { $ref: "#/components/schemas/OwnerBundleExactTerms" }
+        checksum: { type: string, pattern: "^[0-9a-f]{64}$" }
+    OwnerBundleRecord:
+      type: object
+      additionalProperties: false
+      required: [bundle, title, items, amount, licenceVersion, licenceText, taxTreatment, from, reference, confirm]
+      properties:
+        bundle: { type: string, pattern: "^[a-z0-9][a-z0-9-]{1,62}$" }
+        title: { type: string, minLength: 3, maxLength: 120 }
+        items:
+          type: array
+          minItems: 2
+          maxItems: 10
+          items: { type: string, format: uuid }
+        amount: { type: string, pattern: "^\\d{1,8}(\\.\\d{2})?$" }
+        licenceVersion: { type: string, pattern: "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" }
+        licenceText: { type: string, minLength: 20, maxLength: 20000 }
+        taxTreatment: { type: string, minLength: 3, maxLength: 300 }
+        from: { type: string, minLength: 3, maxLength: 40 }
+        reference: { type: string, minLength: 3, maxLength: 160, description: Where the owner's approval is written }
+        confirm: { type: string, pattern: "^[0-9a-f]{64}$", description: The checksum the preview gave }
+    OwnerBundleRecorded:
+      type: object
+      additionalProperties: false
+      required: [bundleId, bundle, title, amountKobo, from, closed]
+      properties:
+        bundleId: { type: string, format: uuid }
+        bundle: { type: string }
+        title: { type: string }
+        amountKobo: { type: integer, minimum: 1 }
+        from: { type: string, format: date-time }
+        closed:
+          type: array
+          maxItems: 100
+          items:
+            type: object
+            additionalProperties: false
+            required: [bundleId, amountKobo]
+            properties:
+              bundleId: { type: string, format: uuid }
               amountKobo: { type: integer, minimum: 1 }
     OwnerSettingPage:
       type: object

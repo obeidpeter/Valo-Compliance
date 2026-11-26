@@ -2245,6 +2245,165 @@ export const PreviewOwnerPriceResponse = zod.object({
 
 
 /**
+ * Each bundle's open version and any version scheduled to start, and each premium template of the staff library that has been released (docs/architecture/commercial-settings.md, slice 4b). Read-only. Development only.
+ * @summary The bundles and the premium templates a bundle may hold, for the development owner (ADM-006)
+ */
+export const listOwnerBundlesResponseVersionsItemItemsMin = 2;
+export const listOwnerBundlesResponseVersionsItemItemsMax = 10;
+
+
+export const listOwnerBundlesResponseVersionsMax = 500;
+
+export const listOwnerBundlesResponseTemplatesMax = 500;
+
+
+
+export const ListOwnerBundlesResponse = zod.object({
+  "versions": zod.array(zod.object({
+  "bundleId": zod.uuid(),
+  "bundle": zod.string().describe('The bundle\'s name across its versions'),
+  "title": zod.string(),
+  "items": zod.array(zod.uuid()).min(listOwnerBundlesResponseVersionsItemItemsMin).max(listOwnerBundlesResponseVersionsItemItemsMax).describe('The staff library items it holds.'),
+  "amountKobo": zod.int().min(1),
+  "licenceVersion": zod.string(),
+  "taxTreatment": zod.string(),
+  "effectiveFrom": zod.coerce.date(),
+  "effectiveTo": zod.coerce.date().nullable()
+})).max(listOwnerBundlesResponseVersionsMax).describe('Each bundle\'s open version and any scheduled to start, by bundle and then earliest first.'),
+  "templates": zod.array(zod.object({
+  "item": zod.uuid().describe('The staff library item'),
+  "title": zod.string().describe('The title of its latest release'),
+  "onSale": zod.boolean().describe('Whether that release is on sale now: not held and not overdue for its review')
+})).max(listOwnerBundlesResponseTemplatesMax).describe('The premium templates of the staff library that have been released, by title.')
+})
+
+
+/**
+ * Refused unless `confirm` is the checksum the preview gave for exactly these terms. The bundle's open version closes when the new one starts. Recording takes no payment.
+ * @summary Record the owner's version of a bundle of premium templates
+ */
+export const recordOwnerBundleBodyBundleRegExp = new RegExp('^[a-z0-9][a-z0-9-]{1,62}$');
+export const recordOwnerBundleBodyTitleMin = 3;
+export const recordOwnerBundleBodyTitleMax = 120;
+
+export const recordOwnerBundleBodyItemsMin = 2;
+export const recordOwnerBundleBodyItemsMax = 10;
+
+export const recordOwnerBundleBodyAmountRegExp = new RegExp('^\\d{1,8}(\\.\\d{2})?$');
+export const recordOwnerBundleBodyLicenceVersionRegExp = new RegExp('^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$');
+export const recordOwnerBundleBodyLicenceTextMin = 20;
+export const recordOwnerBundleBodyLicenceTextMax = 20000;
+
+export const recordOwnerBundleBodyTaxTreatmentMin = 3;
+export const recordOwnerBundleBodyTaxTreatmentMax = 300;
+
+export const recordOwnerBundleBodyFromMin = 3;
+export const recordOwnerBundleBodyFromMax = 40;
+
+export const recordOwnerBundleBodyReferenceMin = 3;
+export const recordOwnerBundleBodyReferenceMax = 160;
+
+export const recordOwnerBundleBodyConfirmRegExp = new RegExp('^[0-9a-f]{64}$');
+
+
+export const RecordOwnerBundleBody = zod.object({
+  "bundle": zod.string().regex(recordOwnerBundleBodyBundleRegExp),
+  "title": zod.string().min(recordOwnerBundleBodyTitleMin).max(recordOwnerBundleBodyTitleMax),
+  "items": zod.array(zod.uuid()).min(recordOwnerBundleBodyItemsMin).max(recordOwnerBundleBodyItemsMax),
+  "amount": zod.string().regex(recordOwnerBundleBodyAmountRegExp),
+  "licenceVersion": zod.string().regex(recordOwnerBundleBodyLicenceVersionRegExp),
+  "licenceText": zod.string().min(recordOwnerBundleBodyLicenceTextMin).max(recordOwnerBundleBodyLicenceTextMax),
+  "taxTreatment": zod.string().min(recordOwnerBundleBodyTaxTreatmentMin).max(recordOwnerBundleBodyTaxTreatmentMax),
+  "from": zod.string().min(recordOwnerBundleBodyFromMin).max(recordOwnerBundleBodyFromMax),
+  "reference": zod.string().min(recordOwnerBundleBodyReferenceMin).max(recordOwnerBundleBodyReferenceMax).describe('Where the owner\'s approval is written'),
+  "confirm": zod.string().regex(recordOwnerBundleBodyConfirmRegExp).describe('The checksum the preview gave')
+})
+
+
+
+export const recordOwnerBundleResponseClosedMax = 100;
+
+
+
+export const RecordOwnerBundleResponse = zod.object({
+  "bundleId": zod.uuid(),
+  "bundle": zod.string(),
+  "title": zod.string(),
+  "amountKobo": zod.int().min(1),
+  "from": zod.coerce.date(),
+  "closed": zod.array(zod.object({
+  "bundleId": zod.uuid(),
+  "amountKobo": zod.int().min(1)
+})).max(recordOwnerBundleResponseClosedMax)
+})
+
+
+/**
+ * Writes nothing.
+ * @summary The exact terms of a bundle's version, its templates and their checksum, which recording confirms
+ */
+export const previewOwnerBundleBodyBundleRegExp = new RegExp('^[a-z0-9][a-z0-9-]{1,62}$');
+export const previewOwnerBundleBodyTitleMin = 3;
+export const previewOwnerBundleBodyTitleMax = 120;
+
+export const previewOwnerBundleBodyItemsMin = 2;
+export const previewOwnerBundleBodyItemsMax = 10;
+
+export const previewOwnerBundleBodyAmountRegExp = new RegExp('^\\d{1,8}(\\.\\d{2})?$');
+export const previewOwnerBundleBodyLicenceVersionRegExp = new RegExp('^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$');
+export const previewOwnerBundleBodyLicenceTextMin = 20;
+export const previewOwnerBundleBodyLicenceTextMax = 20000;
+
+export const previewOwnerBundleBodyTaxTreatmentMin = 3;
+export const previewOwnerBundleBodyTaxTreatmentMax = 300;
+
+export const previewOwnerBundleBodyFromMin = 3;
+export const previewOwnerBundleBodyFromMax = 40;
+
+
+
+export const PreviewOwnerBundleBody = zod.object({
+  "bundle": zod.string().regex(previewOwnerBundleBodyBundleRegExp).describe('The bundle\'s name, such as starter-pack; an existing name records its next version'),
+  "title": zod.string().min(previewOwnerBundleBodyTitleMin).max(previewOwnerBundleBodyTitleMax),
+  "items": zod.array(zod.uuid()).min(previewOwnerBundleBodyItemsMin).max(previewOwnerBundleBodyItemsMax).describe('The staff library\'s premium templates it holds, two to ten.'),
+  "amount": zod.string().regex(previewOwnerBundleBodyAmountRegExp).describe('The amount in naira, such as 1500 or 1500.00'),
+  "licenceVersion": zod.string().regex(previewOwnerBundleBodyLicenceVersionRegExp),
+  "licenceText": zod.string().min(previewOwnerBundleBodyLicenceTextMin).max(previewOwnerBundleBodyLicenceTextMax),
+  "taxTreatment": zod.string().min(previewOwnerBundleBodyTaxTreatmentMin).max(previewOwnerBundleBodyTaxTreatmentMax),
+  "from": zod.string().min(previewOwnerBundleBodyFromMin).max(previewOwnerBundleBodyFromMax).describe('now, or a time with its offset, such as 2026-12-01T00:00:00+01:00')
+})
+
+export const previewOwnerBundleResponseTemplatesMin = 2;
+export const previewOwnerBundleResponseTemplatesMax = 10;
+
+export const previewOwnerBundleResponseTermsItemsMin = 2;
+export const previewOwnerBundleResponseTermsItemsMax = 10;
+
+
+export const previewOwnerBundleResponseChecksumRegExp = new RegExp('^[0-9a-f]{64}$');
+
+
+export const PreviewOwnerBundleResponse = zod.object({
+  "templates": zod.array(zod.object({
+  "item": zod.uuid().describe('The staff library item'),
+  "title": zod.string().describe('The title of its latest release'),
+  "onSale": zod.boolean().describe('Whether that release is on sale now: not held and not overdue for its review')
+})).min(previewOwnerBundleResponseTemplatesMin).max(previewOwnerBundleResponseTemplatesMax).describe('The templates the terms name, by title.'),
+  "terms": zod.object({
+  "bundle": zod.string(),
+  "title": zod.string(),
+  "items": zod.array(zod.uuid()).min(previewOwnerBundleResponseTermsItemsMin).max(previewOwnerBundleResponseTermsItemsMax).describe('The templates it holds, in order of their IDs.'),
+  "amountKobo": zod.int().min(1),
+  "licenceVersion": zod.string(),
+  "licenceText": zod.string(),
+  "taxTreatment": zod.string(),
+  "from": zod.string()
+}),
+  "checksum": zod.string().regex(previewOwnerBundleResponseChecksumRegExp)
+})
+
+
+/**
  * Each commercial setting, with its default and any value in effect or scheduled to start (docs/architecture/commercial-settings.md, slice 3). Read-only. Development only.
  * @summary The commercial settings and their values, for the development owner (ADM-006)
  */

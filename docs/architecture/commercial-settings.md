@@ -318,16 +318,34 @@ and 3b, the access rule that each order records.
   orders. Its upgrade check shows the readers call it and read no price of their own, and that it holds
   for the edition and licence an order names and nothing else; the staff library's, the entitlement and
   the commerce tests, unchanged, show each reader behaves as before.
-- **4b, versioned bundles and the owner's screen.**
-  - `valo_bundles` holds a bundle's versions: a name that stays the same across them, a title, its
-    templates, two to ten premium templates from the staff library, each named by its item, so a bundle
-    outlives its templates' editions; the amount, licence, tax treatment, the owner's approval reference and
-    effective dates. It is versioned as prices are: a version never changes in place, the next one closes
-    it when it starts, once, an append-only change log keeps both, and the table keeps a history digest.
-    The staff library's premium templates are the only ones the owner prices (slice 1), so they are the
-    only ones a bundle holds.
-  - The owner records a version on the System area's screen, after a preview of the exact terms and their
-    checksum, as for a price. An item that is not a premium template of the staff library is refused.
+- **4b, versioned bundles and the owner's screen** (built).
+  - Migration `bundles` adds `valo_bundles`, a bundle's versions: its name, which stays the same across
+    them, in lower-case letters, digits and dashes; a title; the templates it holds, two to ten, each
+    named by its staff library item, so a bundle outlives its templates' editions; and the amount,
+    licence, tax treatment, the owner's approval reference and effective dates. At most one version of a
+    bundle has no end. Its change log is `valo_bundle_changes`.
+  - Migration `bundle_guards`:
+    - a version holds each template once, and each is a premium template of the staff library that has
+      been released. An item's kind is fixed by its first draft and a release is never removed, so what
+      the insert checks stays true. The staff library's premium templates are the only ones the owner
+      prices (slice 1), so they are the only ones a bundle holds;
+    - a version never changes in place and is never removed; it closes once, from now or later;
+    - each insert and close is logged, and the log is append-only;
+    - neither table can be emptied, and both keep a history digest (audit trail). They are new, so their
+      digests start empty.
+
+    The customer role has no privilege on either table; buying a bundle (4c) grants what checkout reads.
+  - A bundle's terms, their checksum and their recording are in `modules/commerce/bundles.ts`. The
+    templates are kept in one order, so the same choice gives the same checksum whatever order they were
+    chosen in. Recording takes the bundle's own lock; refuses a start in the past, one before a version
+    already scheduled, and one before the end the open version already has; and closes the open version
+    when the new one starts.
+  - `GET /admin/owner-bundles`, `POST /admin/owner-bundles/previews` and `POST /admin/owner-bundles` work
+    as the price screen's routes do: only the recently verified development owner, from Valo's own pages;
+    a preview of the exact terms, the templates they name and their checksum; a recording given that
+    checksum, with the owner's own sign-in as the approval's author. The System area shows the panel below
+    the prices. It lists each bundle's open and scheduled versions and the premium templates a bundle may
+    hold, each marked when it is not on sale now, and says that checkout does not offer bundles yet.
 - **4c, buying a bundle.**
   - Checkout offers a bundle's open version while each of its templates has a released edition that is
     not held and not overdue. The buyer sees the templates it includes, its licence and tax treatment, and
@@ -342,6 +360,35 @@ and 3b, the access rule that each order records.
   - A refund or a dispute covers the whole order, so its entitlements end together; drafts made from them
     stay the customer's (EDT-010). The receipt lists each edition.
 
+**Slice 4b: tests.**
+- **Unit:** a bundle's name, title, two to ten templates each once, amount, licence, tax treatment and
+  start are checked, and anything else is refused; the templates are kept in one order; the checksum
+  changes with each term and template, and not with the order the templates were chosen in.
+- **On the migrations, tracked and unjournalled:** both keep every row and add the tables empty; a
+  version holds two to ten templates, each once, each a released premium template of the staff library,
+  and a free template, a guide, a premium draft never released or an unknown item is refused; the name,
+  amount and approval are checked; one version at most has no end; a version never changes in place, its
+  templates included, and is never removed, and closes once, from now or later; the change log holds each
+  insert and close with the templates, and is append-only; neither table can be emptied; the customer
+  role reads neither; both digests match their rows.
+- **Over HTTP, in the staff library's database test:**
+  - a Content editor, a system operator who is not the owner, and the owner without fresh MFA are
+    refused;
+  - the templates listed are the premium ones released, each on sale;
+  - a write from another site and a malformed term are refused, and a free template, a premium draft
+    never released or an unknown item is refused as one a bundle cannot hold;
+  - a preview gives the exact terms, the templates they name and their checksum, and writes nothing;
+  - a recording whose terms differ from the checksum's is refused, and so is one by another operator;
+    the same templates chosen in another order are the same terms;
+  - the recorded version names the owner's sign-in as the approval's author;
+  - the next version closes it once, the earlier one keeps its terms, and the change log keeps both;
+  - a version scheduled to start later closes the one in effect then, and one that would start before
+    it, or in the past, is refused.
+- **In the browser, on a phone:** the panel lists each bundle's versions and the templates they hold,
+  asks for two templates before a preview, previews the exact terms and checksum, asks for a new preview
+  when the choice of templates changes, records only the terms previewed, and has no automated WCAG 2.2
+  AA failure.
+
 ## What comes next
 
-Slice 4b, versioned bundles and the owner's screen for them.
+Slice 4c, buying a bundle.
