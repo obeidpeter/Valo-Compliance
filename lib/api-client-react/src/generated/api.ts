@@ -111,6 +111,11 @@ import type {
   ManualLibraryReview,
   ManualLibraryReviewDate,
   ManualLibraryRevision,
+  OwnerBundlePage,
+  OwnerBundlePreview,
+  OwnerBundleRecord,
+  OwnerBundleRecorded,
+  OwnerBundleTerms,
   OwnerGuidanceCheck,
   OwnerGuidanceDecision,
   OwnerGuidanceHoldLift,
@@ -3673,6 +3678,300 @@ export const usePreviewOwnerPrice = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getPreviewOwnerPriceMutationOptions(options), queryClient);
+    }
+
+export const getListOwnerBundlesUrl = () => {
+
+
+
+
+  return `/api/admin/owner-bundles`
+}
+
+/**
+ * Each bundle's open version and any version scheduled to start, and each premium template of the staff library that has been released (docs/architecture/commercial-settings.md, slice 4b). Read-only. Development only.
+ * @summary The bundles and the premium templates a bundle may hold, for the development owner (ADM-006)
+ */
+export const listOwnerBundles = async ( options?: Parameters<typeof customFetch>[1]): Promise<OwnerBundlePage> => {
+
+  return customFetch<OwnerBundlePage>(getListOwnerBundlesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListOwnerBundlesQueryKey = () => {
+    return [
+    "listOwnerBundles"
+    ] as const;
+    }
+
+
+export const getListOwnerBundlesQueryOptions = <TData = Awaited<ReturnType<typeof listOwnerBundles>>, TError = ErrorType<void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOwnerBundles>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListOwnerBundlesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listOwnerBundles>>> = ({ signal }) => listOwnerBundles({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listOwnerBundles>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListOwnerBundlesQueryResult = NonNullable<Awaited<ReturnType<typeof listOwnerBundles>>>
+export type ListOwnerBundlesQueryError = ErrorType<void>
+
+
+/**
+ * Each bundle's open version and any version scheduled to start, and each premium template of the staff library that has been released (docs/architecture/commercial-settings.md, slice 4b). Read-only. Development only.
+ * @summary The bundles and the premium templates a bundle may hold, for the development owner (ADM-006)
+ */
+export function useListOwnerBundles<TData = Awaited<ReturnType<typeof listOwnerBundles>>, TError = ErrorType<void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOwnerBundles>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listOwnerBundles>>,
+          TError,
+          Awaited<ReturnType<typeof listOwnerBundles>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Each bundle's open version and any version scheduled to start, and each premium template of the staff library that has been released (docs/architecture/commercial-settings.md, slice 4b). Read-only. Development only.
+ * @summary The bundles and the premium templates a bundle may hold, for the development owner (ADM-006)
+ */
+export function useListOwnerBundles<TData = Awaited<ReturnType<typeof listOwnerBundles>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOwnerBundles>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listOwnerBundles>>,
+          TError,
+          Awaited<ReturnType<typeof listOwnerBundles>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Each bundle's open version and any version scheduled to start, and each premium template of the staff library that has been released (docs/architecture/commercial-settings.md, slice 4b). Read-only. Development only.
+ * @summary The bundles and the premium templates a bundle may hold, for the development owner (ADM-006)
+ */
+export function useListOwnerBundles<TData = Awaited<ReturnType<typeof listOwnerBundles>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOwnerBundles>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Each bundle's open version and any version scheduled to start, and each premium template of the staff library that has been released (docs/architecture/commercial-settings.md, slice 4b). Read-only. Development only.
+ * @summary The bundles and the premium templates a bundle may hold, for the development owner (ADM-006)
+ */
+export function useListOwnerBundles<TData = Awaited<ReturnType<typeof listOwnerBundles>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOwnerBundles>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListOwnerBundlesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getRecordOwnerBundleUrl = () => {
+
+
+
+
+  return `/api/admin/owner-bundles`
+}
+
+/**
+ * Refused unless `confirm` is the checksum the preview gave for exactly these terms. The bundle's open version closes when the new one starts. Recording takes no payment.
+ * @summary Record the owner's version of a bundle of premium templates
+ */
+export const recordOwnerBundle = async (ownerBundleRecord: OwnerBundleRecord, options?: Parameters<typeof customFetch>[1]): Promise<OwnerBundleRecorded> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<OwnerBundleRecorded>(getRecordOwnerBundleUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ownerBundleRecord)
+  }
+);}
+
+
+
+
+
+export const getRecordOwnerBundleMutationKey = () => ['recordOwnerBundle'] as const;
+
+export const getRecordOwnerBundleMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordOwnerBundle>>, TError,RecordOwnerBundleMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof recordOwnerBundle>>, TError,RecordOwnerBundleMutationVariables, TContext> => {
+
+const mutationKey = getRecordOwnerBundleMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recordOwnerBundle>>, RecordOwnerBundleMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  recordOwnerBundle(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RecordOwnerBundleMutationResult = NonNullable<Awaited<ReturnType<typeof recordOwnerBundle>>>
+    export type RecordOwnerBundleMutationBody = BodyType<OwnerBundleRecord>
+    export type RecordOwnerBundleMutationError = ErrorType<void>
+    export type RecordOwnerBundleMutationVariables = {data: BodyType<OwnerBundleRecord>}
+
+    /**
+ * Refused unless `confirm` is the checksum the preview gave for exactly these terms. The bundle's open version closes when the new one starts. Recording takes no payment.
+ * @summary Record the owner's version of a bundle of premium templates
+ */
+export const useRecordOwnerBundle = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordOwnerBundle>>, TError,RecordOwnerBundleMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof recordOwnerBundle>>,
+        TError,
+        RecordOwnerBundleMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRecordOwnerBundleMutationOptions(options), queryClient);
+    }
+
+export const getPreviewOwnerBundleUrl = () => {
+
+
+
+
+  return `/api/admin/owner-bundles/previews`
+}
+
+/**
+ * Writes nothing.
+ * @summary The exact terms of a bundle's version, its templates and their checksum, which recording confirms
+ */
+export const previewOwnerBundle = async (ownerBundleTerms: OwnerBundleTerms, options?: Parameters<typeof customFetch>[1]): Promise<OwnerBundlePreview> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<OwnerBundlePreview>(getPreviewOwnerBundleUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ownerBundleTerms)
+  }
+);}
+
+
+
+
+
+export const getPreviewOwnerBundleMutationKey = () => ['previewOwnerBundle'] as const;
+
+export const getPreviewOwnerBundleMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof previewOwnerBundle>>, TError,PreviewOwnerBundleMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof previewOwnerBundle>>, TError,PreviewOwnerBundleMutationVariables, TContext> => {
+
+const mutationKey = getPreviewOwnerBundleMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof previewOwnerBundle>>, PreviewOwnerBundleMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  previewOwnerBundle(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PreviewOwnerBundleMutationResult = NonNullable<Awaited<ReturnType<typeof previewOwnerBundle>>>
+    export type PreviewOwnerBundleMutationBody = BodyType<OwnerBundleTerms>
+    export type PreviewOwnerBundleMutationError = ErrorType<void>
+    export type PreviewOwnerBundleMutationVariables = {data: BodyType<OwnerBundleTerms>}
+
+    /**
+ * Writes nothing.
+ * @summary The exact terms of a bundle's version, its templates and their checksum, which recording confirms
+ */
+export const usePreviewOwnerBundle = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof previewOwnerBundle>>, TError,PreviewOwnerBundleMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof previewOwnerBundle>>,
+        TError,
+        PreviewOwnerBundleMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPreviewOwnerBundleMutationOptions(options), queryClient);
     }
 
 export const getListOwnerSettingsUrl = () => {

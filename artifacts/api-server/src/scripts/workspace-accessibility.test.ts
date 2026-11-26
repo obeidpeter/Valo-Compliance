@@ -1081,6 +1081,28 @@ const answers: Record<string, unknown> = {
       },
     ],
   }),
+  // The owner's bundles (docs/architecture/commercial-settings.md, slice 4b): one bundle's version in
+  // effect, holding two of the three released premium templates, one of which is not on sale now.
+  "GET /admin/owner-bundles": api.ListOwnerBundlesResponse.parse({
+    versions: [
+      {
+        bundleId: "00000000-0000-4000-8000-00000000e001",
+        bundle: "synthetic-starter",
+        title: "Synthetic starter bundle",
+        items: ["00000000-0000-4000-8000-00000000b002", "00000000-0000-4000-8000-00000000e002"],
+        amountKobo: 400000,
+        licenceVersion: "synthetic-bundle-1",
+        taxTreatment: "Synthetic tax treatment",
+        effectiveFrom: at(21),
+        effectiveTo: null,
+      },
+    ],
+    templates: [
+      { item: "00000000-0000-4000-8000-00000000b002", title: "Synthetic priced agreement", onSale: true },
+      { item: "00000000-0000-4000-8000-00000000e002", title: "Synthetic second agreement", onSale: false },
+      { item: "00000000-0000-4000-8000-00000000e003", title: "Synthetic third agreement", onSale: true },
+    ],
+  }),
   "GET /admin/owner-settings": api.ListOwnerSettingsResponse.parse({
     items: [
       {
@@ -5758,6 +5780,134 @@ test("the owner's price screen previews a price's exact terms and records only w
     // Two previews of the same terms: the changed amount was never previewed.
     assert.deepEqual(previews, [terms, terms]);
     assert.deepEqual(recorded, [{ ...terms, reference: "synthetic-owner-approval-2", confirm: checksum }]);
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
+
+// ADM-006 (docs/architecture/commercial-settings.md, slice 4b): the owner chooses a bundle's premium templates,
+// previews its exact terms and checksum, and records exactly those terms.
+test("the owner's bundle panel previews a bundle's exact terms and records only what was previewed", async () => {
+  const checksum = "e".repeat(64);
+  const previews: unknown[] = [],
+    recorded: unknown[] = [];
+  const titles: Record<string, string> = {
+    "00000000-0000-4000-8000-00000000b002": "Synthetic priced agreement",
+    "00000000-0000-4000-8000-00000000e002": "Synthetic second agreement",
+    "00000000-0000-4000-8000-00000000e003": "Synthetic third agreement",
+  };
+  const bundling: Api = async (route, method, path, query) => {
+    if (method === "POST" && path === "/admin/owner-bundles/previews") {
+      const body = route.request().postDataJSON() as Record<string, string> & { items: string[] };
+      previews.push(body);
+      const items = [...body.items].sort();
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(
+          api.PreviewOwnerBundleResponse.parse({
+            templates: items.map((item) => ({
+              item,
+              title: titles[item],
+              onSale: item !== "00000000-0000-4000-8000-00000000e002",
+            })),
+            terms: {
+              bundle: body.bundle,
+              title: body.title,
+              items,
+              amountKobo: Math.round(Number(body.amount) * 100),
+              licenceVersion: body.licenceVersion,
+              licenceText: body.licenceText,
+              taxTreatment: body.taxTreatment,
+              from: body.from,
+            },
+            checksum,
+          }),
+        ),
+      });
+    } else if (method === "POST" && path === "/admin/owner-bundles") {
+      recorded.push(route.request().postDataJSON());
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(
+          api.RecordOwnerBundleResponse.parse({
+            bundleId: "00000000-0000-4000-8000-00000000e004",
+            bundle: "synthetic-starter",
+            title: "Synthetic starter bundle, second",
+            amountKobo: 450000,
+            from: at(25),
+            closed: [{ bundleId: "00000000-0000-4000-8000-00000000e001", amountKobo: 400000 }],
+          }),
+        ),
+      });
+    } else await answer(route, method, path, query);
+  };
+  const { page, unknown, errors, close } = await phone("/staff", bundling);
+  try {
+    await ready(page);
+    await page.getByTestId("tab-staff-system").click();
+    const panel = page.getByRole("region", { name: "Bundles of premium templates" });
+    const bundles = panel.getByRole("list", { name: "Bundles", exact: true });
+    await expect(bundles).toContainText(
+      "₦4,000.00 from 21 Nov 2026, 10:00 · licence synthetic-bundle-1 · Synthetic tax treatment",
+    );
+    await expect(bundles).toContainText("Holds: Synthetic priced agreement; Synthetic second agreement");
+    const preview = panel.getByRole("button", { name: "Preview the exact terms" });
+    await expect(preview).toBeDisabled();
+    await panel.getByLabel(/^Bundle name, such as starter-pack/).fill("synthetic-starter");
+    await panel.getByLabel("Title, on one line").fill("Synthetic starter bundle, second");
+    await panel.getByRole("checkbox", { name: "Synthetic third agreement" }).check();
+    await panel.getByLabel("Amount in naira, such as 1500 or 1500.00").fill("4500.00");
+    await panel.getByLabel("Licence version, such as bundle-1").fill("synthetic-bundle-2");
+    await panel.getByLabel("Licence text").fill("Synthetic licence for one business's own use only.");
+    await panel.getByLabel("Tax treatment, on one line").fill("Synthetic tax treatment");
+    // One template is not a bundle.
+    await expect(preview).toBeDisabled();
+    await panel.getByRole("checkbox", { name: "Synthetic priced agreement" }).check();
+    const unsold = panel.getByRole("checkbox", { name: "Synthetic second agreement · not on sale now" });
+    await expect(unsold).not.toBeChecked();
+    await preview.click();
+    const shown = panel.getByTestId("owner-bundle-preview");
+    await expect(shown).toContainText("Amount₦4,500.00");
+    await expect(
+      shown.getByRole("list", { name: "Templates in this bundle" }).getByRole("listitem"),
+    ).toHaveText(["Synthetic priced agreement", "Synthetic third agreement"]);
+    await expect(shown).toContainText(checksum);
+    // A changed choice of templates asks for a new preview: recording confirms only the terms previewed.
+    await unsold.check();
+    await expect(shown).toHaveCount(0);
+    await unsold.uncheck();
+    await preview.click();
+    const record = panel.getByRole("button", { name: "Record this bundle" });
+    await expect(record).toBeDisabled();
+    await panel
+      .getByLabel("Where your approval is written, such as a decision's reference")
+      .fill("synthetic-owner-bundle-approval-2");
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "the owner's bundle panel with a preview"), []);
+    await page.setViewportSize({ width: 360, height: 640 });
+    await record.click();
+    await expect(panel.getByRole("status")).toHaveText(
+      "Bundle recorded: Synthetic starter bundle, second at ₦4,500.00, from 25 Nov 2026, 10:00. Its earlier version closes then.",
+    );
+    const terms = {
+      bundle: "synthetic-starter",
+      title: "Synthetic starter bundle, second",
+      items: ["00000000-0000-4000-8000-00000000e003", "00000000-0000-4000-8000-00000000b002"],
+      amount: "4500.00",
+      licenceVersion: "synthetic-bundle-2",
+      licenceText: "Synthetic licence for one business's own use only.",
+      taxTreatment: "Synthetic tax treatment",
+      from: "now",
+    };
+    // Two previews of the same terms: the choice with the second agreement was never previewed.
+    assert.deepEqual(previews, [terms, terms]);
+    assert.deepEqual(recorded, [
+      { ...terms, reference: "synthetic-owner-bundle-approval-2", confirm: checksum },
+    ]);
     assert.deepEqual(errors, []);
     assert.deepEqual(unknown, []);
   } finally {

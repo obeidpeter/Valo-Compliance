@@ -14,6 +14,8 @@ export * from "./valo-payment-disputes";
 export * from "./valo-paystack-contract";
 export * from "./premium-prices";
 export * from "./owner-prices";
+export * from "./bundles";
+export * from "./owner-bundles";
 export * from "./owner-settings";
 export * from "./valo-receipt-recovery-report";
 export * from "./valo-refunds";

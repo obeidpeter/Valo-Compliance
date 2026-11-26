@@ -100,6 +100,70 @@ export const valoPriceChanges = pgTable(
     ),
   ],
 );
+/**
+ * ADM-006 (docs/architecture/commercial-settings.md, slice 4b): a bundle's versions. A bundle is a named,
+ * curated set of the staff library's premium templates, sold once at one price. Each version names its
+ * bundle, its title, the templates it holds (two to ten, each by its library item, so a bundle outlives its
+ * templates' editions) and the owner's amount, licence, tax treatment and approval reference, with
+ * effective dates. There is no seed bundle: until the owner records one, none exists. A version never
+ * changes in place: the next one closes it when it starts, once, and the change log keeps both (migration
+ * bundle_guards). A version is never removed.
+ */
+export const valoBundles = pgTable(
+  "valo_bundles",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    /** The bundle's name across its versions. */
+    bundleKey: text("bundle_key").notNull(),
+    title: text("title").notNull(),
+    /** The staff library items it holds, each a premium template, in order of their IDs. */
+    items: uuid("items").array().notNull(),
+    amountKobo: integer("amount_kobo").notNull(),
+    currency: text("currency").notNull().default("NGN"),
+    licenceVersion: text("licence_version").notNull(),
+    licenceText: text("licence_text").notNull(),
+    taxTreatment: text("tax_treatment").notNull(),
+    approvalReference: text("approval_reference").notNull(),
+    effectiveFrom: timestamp("effective_from", { withTimezone: true }).notNull(),
+    effectiveTo: timestamp("effective_to", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    // At most one version of a bundle has no end: the one in effect, or the one scheduled last.
+    uniqueIndex("valo_bundles_open_unique")
+      .on(t.bundleKey)
+      .where(sql`${t.effectiveTo} IS NULL`),
+    check("valo_bundles_key_check", sql`${t.bundleKey} ~ '^[a-z0-9][a-z0-9-]{1,62}$'`),
+    check("valo_bundles_title_check", sql`length(${t.title}) BETWEEN 3 AND 120`),
+    // Each item once, and each a premium template of the staff library: the guards migration's trigger.
+    check("valo_bundles_items_check", sql`cardinality(${t.items}) BETWEEN 2 AND 10`),
+    check("valo_bundles_amount_kobo_check", sql`${t.amountKobo} > 0`),
+    check("valo_bundles_currency_check", sql`${t.currency} = 'NGN'`),
+    check("valo_bundles_approval_reference_check", sql`length(${t.approvalReference}) > 0`),
+    check("valo_bundles_check", sql`${t.effectiveTo} IS NULL OR ${t.effectiveTo} > ${t.effectiveFrom}`),
+  ],
+);
+/**
+ * ADM-006: every insert and close of a bundle's version, written by the triggers on valo_bundles
+ * (migration bundle_guards). Rows here are never updated or removed.
+ */
+export const valoBundleChanges = pgTable(
+  "valo_bundle_changes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    bundleId: uuid("bundle_id").notNull(),
+    action: text("action").notNull(),
+    bundle: jsonb("bundle").notNull().$type<Record<string, unknown>>(),
+    changedBy: text("changed_by")
+      .notNull()
+      .default(sql`current_user`),
+    changedAt: timestamp("changed_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("valo_bundle_changes_bundle_idx").on(t.bundleId, t.changedAt),
+    check("valo_bundle_changes_action_check", sql`${t.action} IN ('created', 'closed')`),
+  ],
+);
 export const valoOrders = pgTable(
   "valo_orders",
   {
