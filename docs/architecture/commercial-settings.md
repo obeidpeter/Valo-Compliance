@@ -58,8 +58,7 @@ terms wait on the owner's refund policy.
    carries to the template's later editions, and the choice is part of the checksum. When the next
    edition is released, a price that carries is recorded for it, with the same terms and a link to the
    price it came from, and the earlier edition's price closes.
-3. **Quotas and the access rule as versioned settings** (the settings and the drafting allowances
-   built). A setting is a row with a value, effective
+3. **Quotas and the access rule as versioned settings** (built). A setting is a row with a value, effective
    dates and the owner's approval, versioned as prices are, with an append-only change log. The
    drafting assistant's two daily allowances and the later-editions rule are its first keys. Each
    order records the access rule it was bought under.
@@ -195,8 +194,8 @@ takes no payment, and no sample price is carried into production.
   carried-editions function reads each order's own record. An order made before the rule had a record
   carries, as every purchase did when it was made.
 
-It is built in two parts: 3a, the settings and the drafting assistant's two daily allowances (built), and
-3b, the access rule that each order records.
+It is built in two parts, both built: 3a, the settings and the drafting assistant's two daily allowances,
+and 3b, the access rule that each order records.
 
 **Slice 3a: how it is built.**
 - Migration `commercial_settings` adds `valo_commercial_settings` and its change log,
@@ -244,6 +243,55 @@ It is built in two parts: 3a, the settings and the drafting assistant's two dail
   a value's exact terms and checksum, asks for a new preview when the value changes, records only the
   terms previewed, and has no automated WCAG 2.2 AA failure.
 
+**Slice 3b: how it is built.**
+- **The rule** is the setting `purchase_carries_to_later_editions`, yes or no, and yes by default. Yes: a
+  purchase carries to its template's later editions, at no further charge. No: a purchase covers only the
+  edition bought, while it stays released. The owner's panel shows the two answers as a choice, and
+  previews and records one as it does a count. Migration `order_access_rule` lets a setting's value be yes
+  or no for this key only.
+- **Each order records it.** Migration `order_access_rule` adds `valo_orders.carries_to_later_editions`.
+  Every order made before it holds none, and carries, as every purchase did when it was made. Migration
+  `order_access_rule_guards` adds a trigger: a new order records the rule in effect when it is made, and
+  any other value is refused. Nothing changes the rule an order recorded.
+- **The buyer sees it and accepts it.** The purchases screen says, for each template on sale, whether
+  later editions are included. An order is made only with the rule its buyer was shown
+  (`acceptedCarriesToLaterEditions`, as the licence is accepted), and is refused if the owner's rule has
+  changed since. Checkout reads the rule under the setting's lock, shared, so a value the owner is
+  recording waits for the order, or the order for it. Each order on the screen shows the rule it recorded.
+- **What a purchase reaches.** Each reader that carries a purchase to a later edition reads the order's own
+  rule: on the staff library, the purchased file, whether a workspace holds a template, a premium form's
+  edition, a document's form check and the list of carried editions; on the reviewed route, the purchase
+  check of a priced version, the owned editions and the purchases screen's downloads. A purchase that does
+  not carry reaches only the edition it bought, and only while that edition is released.
+- **What a buyer is told.** A workspace holds an edition when it bought it, or bought an earlier one under
+  an order that carries. Who an edition's withdrawal reaches, and its notices, count only those. A
+  replacement's notice records whether the workspace's purchase carries to the replacement. If it does
+  not, the notice says the purchase covers the earlier version only, the replacement is not included, and
+  the earlier version can no longer be downloaded.
+
+**Slice 3b: tests.**
+- **Unit:** the rule is yes or no, anything else is refused; its reader gives the answer in effect or the
+  default, refuses anything but a yes or a no, and for an order takes the setting's lock before it reads;
+  the notice and the order card say what each rule means.
+- **On the migrations, tracked and unjournalled:** both keep every row, and every order held before them
+  records no rule; a setting's value for the rule is yes or no, and a count stays a whole number; only a
+  replacement's notice to a workspace that holds the edition says whether its purchase carries; a new order
+  records the rule in effect, refuses any other, and keeps it, while its other changes go through; and each
+  reader of a carried purchase, and each writer of an edition's notices, reads the order's own rule.
+- **Over HTTP, in the staff library's database test:**
+  - while the rule is yes, the purchases screen says so and a purchase records that it carries;
+  - once the owner's rule says no, the screen says so, an order that accepts the earlier rule is refused,
+    and a new purchase records that it does not carry; each order shows its own rule;
+  - at the next edition's release, only the purchase that carries reaches it, the replaced edition is no
+    longer released to the other, and each buyer's notice says whether its purchase carries;
+  - **ADM-006:** after the owner's rule says yes again, the order made under no keeps its rule and still
+    does not reach the new edition, while a purchase made then carries;
+  - nothing changes the rule an order recorded.
+- **On the reviewed route, in the entitlement test:** an order recorded under no releases the version it
+  bought and not a later one, after the rule says yes again, while a purchase made under yes carries.
+- **In the browser, on a phone:** checkout says whether later editions are included before the licence is
+  accepted, and each order shows the rule it recorded.
+
 ## Slice 4: one-off bundles
 
 - **A bundle** is a named, curated set of two or more premium templates, sold once at one price. A
@@ -261,4 +309,4 @@ It is built in two parts: 3a, the settings and the drafting assistant's two dail
 
 ## What comes next
 
-Slice 3b, the access rule that each order records.
+Slice 4, one-off bundles.
