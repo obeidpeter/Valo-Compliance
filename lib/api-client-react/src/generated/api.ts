@@ -144,6 +144,10 @@ import type {
   PrivacyCase,
   PrivacyCaseConfirmation,
   PrivacyCaseDetail,
+  PrivacyHold,
+  PrivacyHoldInput,
+  PrivacyHoldList,
+  PrivacyHoldRelease,
   PrivacyInformation,
   PrivacyRequestInput,
   PrivacyStaffAction,
@@ -11742,6 +11746,265 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getActOnStaffPrivacyCaseMutationOptions(options), queryClient);
+    }
+
+export const getListPrivacyHoldsUrl = () => {
+
+
+
+
+  return `/api/admin/privacy-holds`
+}
+
+export const listPrivacyHolds = async ( options?: Parameters<typeof customFetch>[1]): Promise<PrivacyHoldList> => {
+
+  return customFetch<PrivacyHoldList>(getListPrivacyHoldsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPrivacyHoldsQueryKey = () => {
+    return [
+    "listPrivacyHolds"
+    ] as const;
+    }
+
+
+export const getListPrivacyHoldsQueryOptions = <TData = Awaited<ReturnType<typeof listPrivacyHolds>>, TError = ErrorType<AuthErrorResponse>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPrivacyHolds>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPrivacyHoldsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPrivacyHolds>>> = ({ signal }) => listPrivacyHolds({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPrivacyHolds>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListPrivacyHoldsQueryResult = NonNullable<Awaited<ReturnType<typeof listPrivacyHolds>>>
+export type ListPrivacyHoldsQueryError = ErrorType<AuthErrorResponse>
+
+
+export function useListPrivacyHolds<TData = Awaited<ReturnType<typeof listPrivacyHolds>>, TError = ErrorType<AuthErrorResponse>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPrivacyHolds>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPrivacyHolds>>,
+          TError,
+          Awaited<ReturnType<typeof listPrivacyHolds>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPrivacyHolds<TData = Awaited<ReturnType<typeof listPrivacyHolds>>, TError = ErrorType<AuthErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPrivacyHolds>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPrivacyHolds>>,
+          TError,
+          Awaited<ReturnType<typeof listPrivacyHolds>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPrivacyHolds<TData = Awaited<ReturnType<typeof listPrivacyHolds>>, TError = ErrorType<AuthErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPrivacyHolds>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPrivacyHolds<TData = Awaited<ReturnType<typeof listPrivacyHolds>>, TError = ErrorType<AuthErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPrivacyHolds>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListPrivacyHoldsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getPlacePrivacyHoldUrl = () => {
+
+
+
+
+  return `/api/admin/privacy-holds`
+}
+
+export const placePrivacyHold = async (privacyHoldInput: PrivacyHoldInput, options?: Parameters<typeof customFetch>[1]): Promise<PrivacyHold> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<PrivacyHold>(getPlacePrivacyHoldUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(privacyHoldInput)
+  }
+);}
+
+
+
+
+
+export const getPlacePrivacyHoldMutationKey = () => ['placePrivacyHold'] as const;
+
+export const getPlacePrivacyHoldMutationOptions = <TError = ErrorType<AuthErrorResponse | ConflictErrorResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof placePrivacyHold>>, TError,PlacePrivacyHoldMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof placePrivacyHold>>, TError,PlacePrivacyHoldMutationVariables, TContext> => {
+
+const mutationKey = getPlacePrivacyHoldMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof placePrivacyHold>>, PlacePrivacyHoldMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  placePrivacyHold(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PlacePrivacyHoldMutationResult = NonNullable<Awaited<ReturnType<typeof placePrivacyHold>>>
+    export type PlacePrivacyHoldMutationBody = BodyType<PrivacyHoldInput>
+    export type PlacePrivacyHoldMutationError = ErrorType<AuthErrorResponse | ConflictErrorResponse | void>
+    export type PlacePrivacyHoldMutationVariables = {data: BodyType<PrivacyHoldInput>}
+
+    export const usePlacePrivacyHold = <TError = ErrorType<AuthErrorResponse | ConflictErrorResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof placePrivacyHold>>, TError,PlacePrivacyHoldMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof placePrivacyHold>>,
+        TError,
+        PlacePrivacyHoldMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPlacePrivacyHoldMutationOptions(options), queryClient);
+    }
+
+export const getReleasePrivacyHoldUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/privacy-holds/${encodeURIComponent(String(id))}/release`
+}
+
+export const releasePrivacyHold = async (id: string,
+    privacyHoldRelease: PrivacyHoldRelease, options?: Parameters<typeof customFetch>[1]): Promise<PrivacyHold> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<PrivacyHold>(getReleasePrivacyHoldUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(privacyHoldRelease)
+  }
+);}
+
+
+
+
+
+export const getReleasePrivacyHoldMutationKey = () => ['releasePrivacyHold'] as const;
+
+export const getReleasePrivacyHoldMutationOptions = <TError = ErrorType<AuthErrorResponse | ConflictErrorResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof releasePrivacyHold>>, TError,ReleasePrivacyHoldMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof releasePrivacyHold>>, TError,ReleasePrivacyHoldMutationVariables, TContext> => {
+
+const mutationKey = getReleasePrivacyHoldMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof releasePrivacyHold>>, ReleasePrivacyHoldMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  releasePrivacyHold(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReleasePrivacyHoldMutationResult = NonNullable<Awaited<ReturnType<typeof releasePrivacyHold>>>
+    export type ReleasePrivacyHoldMutationBody = BodyType<PrivacyHoldRelease>
+    export type ReleasePrivacyHoldMutationError = ErrorType<AuthErrorResponse | ConflictErrorResponse | void>
+    export type ReleasePrivacyHoldMutationVariables = {id: string;data: BodyType<PrivacyHoldRelease>}
+
+    export const useReleasePrivacyHold = <TError = ErrorType<AuthErrorResponse | ConflictErrorResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof releasePrivacyHold>>, TError,ReleasePrivacyHoldMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof releasePrivacyHold>>,
+        TError,
+        ReleasePrivacyHoldMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReleasePrivacyHoldMutationOptions(options), queryClient);
     }
 
 export const getPreviewAssessmentUrl = () => {

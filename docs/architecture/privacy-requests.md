@@ -86,7 +86,7 @@ Each slice is its own pull request.
 | 1 | **A hold returns a request to where it was.** Part 1, with a database test. | PRV-003 | Built |
 | 2 | **The outside steps and "Done".** Part 2: two staff actions, the staff screen, and the database test of a request through every step. | PRV-003 | Built |
 | 3 | **Age, target and alert.** Part 3: the target the owner sets, the queue's order and the alert. | PRV-003 | Built |
-| 4 | **A hold of its own.** Part 4, with a migration, its checks in the erasure and the removal of downloads, and the staff screen. | PRV-003 | Not started |
+| 4 | **A hold of its own.** Part 4, with a migration, its checks in the erasure and the removal of downloads, and the staff screen. | PRV-003 | Built |
 
 ## Settled while building it
 
@@ -153,6 +153,50 @@ Each slice is its own pull request.
   staff queue listing it first with that date, the request held while its date is moved, and, once it is
   cancelled, no longer counted. A unit test raises the alert and the unavailable reading. A phone
   browser test reads the queue's words before and after the date.
+
+### Slice 4: a hold of its own
+
+- **The record.** `valo_privacy_holds` keeps each hold: the workspace, why it is held, who placed it and
+  when, and once it is released, who released it, when and why. The database keeps a hold for good: its
+  one change is its release, once, and a row is removed only with a synthetic test identity's workspace.
+  The table cannot be emptied, it keeps a history digest (ADM-009), and a workspace has at most one
+  standing hold.
+- **What it stops.** Valo's own deletion of the workspace's data, at each of its checks:
+  - an erasure does not start, and one under way stops at its next step: each file it deletes and each
+    batch of rows is checked first. It goes on where it stopped once the hold is released;
+  - the repeated cleanup of a finished erasure stops too;
+  - the removal of old downloads and other private files stops, as the one check they all pass
+    (`privateCleanupAuthority`) refuses while the hold stands. A person who asks for an expired file again
+    is told "This file cannot be made again for now, as Valo is keeping this workspace's files as they
+    are. Your saved document is safe.", and not why.
+
+  A deletion already past its check when a hold is placed may finish; the next one stops. The person's
+  own changes in their workspace go on.
+- **Who sees it.** Privacy staff, on the privacy screen: each hold, the standing ones first, with its
+  reason and whether they placed it. A request whose workspace is held says so, and its erasure is not
+  offered. Customer requests have no privilege on the table: the reviewed database function
+  `valo_workspace_under_hold` tells one only whether its own workspace is held, never why, and no for
+  any other workspace. The privacy notice lists a hold among the data kept for privacy requests.
+- **Who releases it.** Another member of privacy staff than the one who placed it, with a reason: the
+  design's proposal, until the owner decides (the owner's point 3). The application checks it, so the
+  owner's decision can change it without a migration.
+- **A database update first.** Until the two migrations are applied, nothing is held, the screen says
+  so, and placing or releasing a hold is refused
+  ([runbook](../valo/migration-privacy-holds.md)).
+- **The tests.**
+  - A database test holds a synthetic deletion request's workspace. The cleanup check refuses, and the
+    erasure is neither offered nor started and changes nothing. The member who placed the hold cannot
+    release it; another does, once. A hold placed while the erasure runs stops it at its next step; once
+    released, the erasure finishes. The repeated cleanup of the finished erasure stops under a third hold
+    and goes on once it is released. All three holds are kept, each with who placed and released it.
+  - The export retention test keeps an expired file and refuses to make it again while the workspace is
+    held, and removes it once the hold is released.
+  - An HTTP test places, lists and releases a hold through its routes, and refuses other staff roles, a
+    hostile origin, a second standing hold, and a release by the member who placed it.
+  - The migration tests check the table, its guards, its digest and the database function, inside a
+    customer's own scope and outside it.
+  - A phone browser test reads the holds on the staff screen, holds the open request's workspace and
+    releases another member's hold, with no automated WCAG 2.2 AA failure.
 
 ## The owner's points
 

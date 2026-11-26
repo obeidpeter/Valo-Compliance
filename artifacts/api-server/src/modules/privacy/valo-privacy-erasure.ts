@@ -38,6 +38,7 @@ import { cancelUnsentDisputeWork } from "../commerce";
 import { retireWorkspaceExports, workspaceExportScratch } from "./valo-workspace-export-jobs";
 import { copyPhases, erasePrivateCopyPhase, fencePrivateCopies } from "./valo-private-copy-inventory";
 import { erasureProgressReason } from "./valo-privacy-redactions";
+import { assertWorkspaceNotHeld } from "./valo-workspace-hold";
 import { assertPrivacyVersion } from "../../lib/valo-privacy-state";
 import {
   readPrivacyCase,
@@ -367,6 +368,8 @@ async function processErasure(actor: PrivacyStaffActor, id: string, input: Input
     await requirePrivacyStaff(tx, actor);
     let row = await readPrivacyCase(tx, id);
     assertProcessing(row, actor, input.expectedVersion);
+    // A hold of its own on the workspace stops the erasure (docs/architecture/privacy-requests.md, slice 4).
+    await assertWorkspaceNotHeld(tx, row.workspaceId);
     await privacySigner(tx);
     if (input.acknowledgement !== true)
       throw new ValoProblem(
@@ -479,6 +482,7 @@ async function processErasure(actor: PrivacyStaffActor, id: string, input: Input
       await db.transaction(async (tx) => {
         await requirePrivacyStaff(tx, actor);
         assertProcessing(await readPrivacyCase(tx, id), actor, start.version);
+        await assertWorkspaceNotHeld(tx, start.workspaceId);
         const { seal } = await readTombstone(tx, id);
         await privacySigner(tx);
         if (erasureSealHash(seal) !== expected) throw Error("ERASURE_SEAL_CHANGED");
@@ -498,6 +502,7 @@ async function processErasure(actor: PrivacyStaffActor, id: string, input: Input
     await requirePrivacyStaff(tx, actor);
     let row = await readPrivacyCase(tx, id);
     assertProcessing(row, actor, start.version);
+    await assertWorkspaceNotHeld(tx, row.workspaceId);
     const journal = await readTombstone(tx, id);
     await privacySigner(tx);
     let next = start.phase,
@@ -666,6 +671,7 @@ async function persistReplay(t: Tombstone, input: Omit<ReplayState, "keyVersion"
 async function replay(caseId: string, mode: ReplayState["mode"], remove: DeleteObject) {
   let { t, state, candidates } = await db.transaction(async (tx) => {
     const ready = await replayReady(tx, caseId, "cached");
+    await assertWorkspaceNotHeld(tx, ready.t.workspaceId);
     let state = ready.t.replayState ? await progressOf(tx, ready.t.replayState, ready.seal) : null;
     if (state && state.phase !== "done" && state.mode !== mode)
       throw new ValoProblem(409, "Another recovery mode has unfinished recorded progress.");
@@ -698,6 +704,7 @@ async function replay(caseId: string, mode: ReplayState["mode"], remove: DeleteO
     for (const object of candidates) {
       await db.transaction(async (tx) => {
         const now = await replayReady(tx, caseId, "cached");
+        await assertWorkspaceNotHeld(tx, t.workspaceId);
         if (erasureSealHash(now.seal) !== state.sealHash) throw Error("ERASURE_SEAL_CHANGED");
         assertErasureLocatorScope(t.workspaceId, object.object_key);
       });
@@ -733,6 +740,7 @@ async function replay(caseId: string, mode: ReplayState["mode"], remove: DeleteO
     const phase = state.phase;
     await db.transaction(async (tx) => {
       const now = await replayReady(tx, caseId, "cached");
+      await assertWorkspaceNotHeld(tx, t.workspaceId);
       const persisted = await progressOf(tx, now.t.replayState, now.seal);
       if (persisted.mac !== state.mac) throw new ValoProblem(409, "Recovery progress changed.");
       // One bounded application section; no object inventory rescan/redelete.

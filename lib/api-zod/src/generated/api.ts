@@ -6593,6 +6593,7 @@ export const RespondPrivacyCaseResponse = zod.object({
 }),
   "mayRespond": zod.boolean(),
   "availableActions": zod.array(zod.string()).optional(),
+  "workspaceHeld": zod.boolean().optional().describe('In the staff view only, whether a hold of its own stands on the request\'s workspace. While it does, Valo\'s own deletion of the workspace\'s data stops, and the erasure is not offered.'),
   "messages": zod.array(zod.object({
   "id": zod.uuid(),
   "body": zod.string(),
@@ -6636,6 +6637,7 @@ export const GetPrivacyCaseResponse = zod.object({
 }),
   "mayRespond": zod.boolean(),
   "availableActions": zod.array(zod.string()).optional(),
+  "workspaceHeld": zod.boolean().optional().describe('In the staff view only, whether a hold of its own stands on the request\'s workspace. While it does, Valo\'s own deletion of the workspace\'s data stops, and the erasure is not offered.'),
   "messages": zod.array(zod.object({
   "id": zod.uuid(),
   "body": zod.string(),
@@ -6687,6 +6689,7 @@ export const VerifyPrivacyCaseResponse = zod.object({
 }),
   "mayRespond": zod.boolean(),
   "availableActions": zod.array(zod.string()).optional(),
+  "workspaceHeld": zod.boolean().optional().describe('In the staff view only, whether a hold of its own stands on the request\'s workspace. While it does, Valo\'s own deletion of the workspace\'s data stops, and the erasure is not offered.'),
   "messages": zod.array(zod.object({
   "id": zod.uuid(),
   "body": zod.string(),
@@ -6738,6 +6741,7 @@ export const CancelPrivacyCaseResponse = zod.object({
 }),
   "mayRespond": zod.boolean(),
   "availableActions": zod.array(zod.string()).optional(),
+  "workspaceHeld": zod.boolean().optional().describe('In the staff view only, whether a hold of its own stands on the request\'s workspace. While it does, Valo\'s own deletion of the workspace\'s data stops, and the erasure is not offered.'),
   "messages": zod.array(zod.object({
   "id": zod.uuid(),
   "body": zod.string(),
@@ -6819,6 +6823,7 @@ export const GetStaffPrivacyCaseResponse = zod.object({
 }),
   "mayRespond": zod.boolean(),
   "availableActions": zod.array(zod.string()).optional(),
+  "workspaceHeld": zod.boolean().optional().describe('In the staff view only, whether a hold of its own stands on the request\'s workspace. While it does, Valo\'s own deletion of the workspace\'s data stops, and the erasure is not offered.'),
   "messages": zod.array(zod.object({
   "id": zod.uuid(),
   "body": zod.string(),
@@ -6878,6 +6883,7 @@ export const ActOnStaffPrivacyCaseResponse = zod.object({
 }),
   "mayRespond": zod.boolean(),
   "availableActions": zod.array(zod.string()).optional(),
+  "workspaceHeld": zod.boolean().optional().describe('In the staff view only, whether a hold of its own stands on the request\'s workspace. While it does, Valo\'s own deletion of the workspace\'s data stops, and the erasure is not offered.'),
   "messages": zod.array(zod.object({
   "id": zod.uuid(),
   "body": zod.string(),
@@ -6896,6 +6902,71 @@ export const ActOnStaffPrivacyCaseResponse = zod.object({
   "detail": zod.string()
 }))
 })
+
+
+export const ListPrivacyHoldsResponse = zod.object({
+  "ready": zod.boolean().describe('Whether the privacy holds migrations have reached this database. Until they have, nothing is held and no hold can be placed.'),
+  "items": zod.array(zod.object({
+  "id": zod.uuid(),
+  "workspaceId": zod.uuid(),
+  "reason": zod.string(),
+  "placedAt": zod.string(),
+  "placedByYou": zod.boolean(),
+  "released": zod.boolean(),
+  "releasedAt": zod.string().nullable(),
+  "releaseReason": zod.string().nullable(),
+  "releasedByYou": zod.boolean()
+}).describe('A hold of its own on a workspace, apart from any privacy request. Privacy staff see it; the person whose workspace is held is not shown its reason.'))
+})
+
+
+export const placePrivacyHoldBodyReasonMin = 10;
+export const placePrivacyHoldBodyReasonMax = 1000;
+
+
+
+export const PlacePrivacyHoldBody = zod.object({
+  "workspaceId": zod.uuid(),
+  "reason": zod.string().min(placePrivacyHoldBodyReasonMin).max(placePrivacyHoldBodyReasonMax)
+})
+
+export const PlacePrivacyHoldResponse = zod.object({
+  "id": zod.uuid(),
+  "workspaceId": zod.uuid(),
+  "reason": zod.string(),
+  "placedAt": zod.string(),
+  "placedByYou": zod.boolean(),
+  "released": zod.boolean(),
+  "releasedAt": zod.string().nullable(),
+  "releaseReason": zod.string().nullable(),
+  "releasedByYou": zod.boolean()
+}).describe('A hold of its own on a workspace, apart from any privacy request. Privacy staff see it; the person whose workspace is held is not shown its reason.')
+
+
+export const ReleasePrivacyHoldParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const releasePrivacyHoldBodyReasonMin = 10;
+export const releasePrivacyHoldBodyReasonMax = 1000;
+
+
+
+export const ReleasePrivacyHoldBody = zod.object({
+  "reason": zod.string().min(releasePrivacyHoldBodyReasonMin).max(releasePrivacyHoldBodyReasonMax)
+})
+
+export const ReleasePrivacyHoldResponse = zod.object({
+  "id": zod.uuid(),
+  "workspaceId": zod.uuid(),
+  "reason": zod.string(),
+  "placedAt": zod.string(),
+  "placedByYou": zod.boolean(),
+  "released": zod.boolean(),
+  "releasedAt": zod.string().nullable(),
+  "releaseReason": zod.string().nullable(),
+  "releasedByYou": zod.boolean()
+}).describe('A hold of its own on a workspace, apart from any privacy request. Privacy staff see it; the person whose workspace is held is not shown its reason.')
 
 
 export const previewAssessmentBodyFactsRichBusinessNameTrueSurnameOneMax = 300;

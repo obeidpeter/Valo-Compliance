@@ -14,6 +14,8 @@ export interface PrivacyCaseDetail {
   request: PrivacyCase;
   mayRespond: boolean;
   availableActions?: string[];
+  /** In the staff view only, whether a hold of its own stands on the request's workspace. While it does, Valo's own deletion of the workspace's data stops, and the erasure is not offered. */
+  workspaceHeld?: boolean;
   messages: PrivacyCaseDetailMessagesItem[];
   events: PrivacyCaseDetailEventsItem[];
   steps: PrivacyCaseDetailStepsItem[];

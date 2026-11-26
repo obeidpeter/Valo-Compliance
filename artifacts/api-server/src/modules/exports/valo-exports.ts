@@ -355,7 +355,9 @@ export async function retryExport(actor: WorkspaceActor, id: string) {
     if (regenerate && !cleanup.allowed)
       throw new ValoProblem(
         409,
-        "This file cannot be made again while a privacy request is being reviewed. Your saved document is safe.",
+        cleanup.workspaceHeld
+          ? "This file cannot be made again for now, as Valo is keeping this workspace's files as they are. Your saved document is safe."
+          : "This file cannot be made again while a privacy request is being reviewed. Your saved document is safe.",
       );
     if (job.status === "ready" && asset && exportIsExpired(asset)) await retireExpiredExport(tx, job, asset);
     if (job.status !== "failed" && !regenerate) return;

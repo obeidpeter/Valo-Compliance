@@ -44,6 +44,7 @@ export * from "./valo-editorial-runs";
 export * from "./valo-assessments";
 export * from "./valo-tasks";
 export * from "./valo-consent-changes";
+export * from "./valo-privacy-holds";
 export * from "./valo-reminder-preferences";
 export * from "./valo-reminder-outbox";
 export * from "./valo-rule-releases";

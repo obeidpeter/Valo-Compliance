@@ -258,12 +258,13 @@ export const processingInventory: readonly ProcessingActivity[] = [
       "your request, its messages and its steps",
       "the download prepared for you",
       "a minimal record that an erasure took place",
+      "a hold privacy staff may place on your workspace, with why, which stops Valo's own deletion of its data while it stands",
     ],
     subjects: ["account holders"],
     staff: "Privacy staff, who handle each request.",
     services: ["Replit"],
     retention:
-      "The data download prepared for you is kept at Valo only until its retention date; a copy you have saved stays yours. A minimal record of each erasure is kept to show it happened, until the owner decides how long.",
+      "The data download prepared for you is kept at Valo only until its retention date; a copy you have saved stays yours. A minimal record of each erasure is kept to show it happened, until the owner decides how long. A hold on your workspace is kept, with who placed and released it, when and why, until the owner decides how long.",
     consent: null,
     tables: [
       "valo_privacy_cases",
@@ -273,6 +274,7 @@ export const processingInventory: readonly ProcessingActivity[] = [
       "valo_privacy_erasure_objects",
       "valo_workspace_exports",
       "valo_workspace_export_attempts",
+      "valo_privacy_holds",
     ],
   },
   {

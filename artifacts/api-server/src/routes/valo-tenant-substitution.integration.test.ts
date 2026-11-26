@@ -281,6 +281,10 @@ const PRIVATE_TABLES: Record<string, { cases: readonly string[] } | { reason: st
     reason: "Erasure bookkeeping the server keeps; no customer request names one.",
   },
   valo_privacy_events: { cases: ["GET /workspace/privacy-cases/{id}"] },
+  valo_privacy_holds: {
+    reason:
+      "Holds privacy staff place on a workspace; customer requests have no privilege on them and learn only whether their own workspace is held, through valo_workspace_under_hold.",
+  },
   valo_privacy_messages: {
     cases: ["GET /workspace/privacy-cases/{id}", "POST /workspace/privacy-cases/{id}/respond"],
   },

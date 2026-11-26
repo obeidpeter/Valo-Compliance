@@ -4258,6 +4258,27 @@
       "proves": "On an emulated phone with stand-in answers, the staff privacy queue gives each open request the date Valo aims to finish it by, says that it is Valo's own aim and not a time limit set by law, says when the date has passed, gives a finished request none, and has no automated WCAG 2.2 AA failure."
     },
     {
+      "requirement": "PRV-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/privacy/valo-privacy-requests.integration.test.ts",
+      "test": "a hold of its own on a workspace stops its erasure from starting or going on, and the removal of its files, until another member of privacy staff releases it",
+      "proves": "On a disposable database, a hold of its own on a synthetic workspace makes the private-file cleanup check refuse, keeps its erasure from being offered or started, stops an erasure under way at its next step and the repeated cleanup of a finished one, is released only by another member of privacy staff, once, and is kept with who placed and released it."
+    },
+    {
+      "requirement": "PRV-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-privacy-http.integration.test.ts",
+      "test": "actual HTTP routes place, list and release a hold of its own on a workspace, for privacy staff alone and from the trusted origin",
+      "proves": "Over real HTTP routes on a disposable database, privacy staff place, list and release a hold of its own on a synthetic workspace, while another staff role, a hostile origin, a second standing hold and a release by the member who placed it are refused."
+    },
+    {
+      "requirement": "PRV-003",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "privacy staff see each hold on a workspace and why, release one another member placed, and hold the open request's workspace with a reason the person is not shown",
+      "proves": "On an emulated phone with stand-in answers, the staff privacy screen lists each hold with its reason and who placed it, says that a held request's erasure has stopped, sends a hold of the open request's workspace and the release of another member's hold with their reasons, and has no automated WCAG 2.2 AA failure."
+    },
+    {
       "requirement": "EDT-002",
       "job": "postgres",
       "file": "artifacts/api-server/src/scripts/tester-tasks.integration.test.ts",

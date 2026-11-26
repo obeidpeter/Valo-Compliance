@@ -199,6 +199,20 @@ const privacyCase = {
   updatedAt: at(15),
 } as const;
 
+/** A standing hold of its own on the workspace, placed by another member of privacy staff
+ * (docs/architecture/privacy-requests.md, slice 4). */
+const privacyHold = {
+  id: "00000000-0000-4000-8000-00000000c101",
+  workspaceId: WORKSPACE,
+  reason: "Synthetic: an authority asked Valo to keep this workspace's data.",
+  placedAt: at(16),
+  placedByYou: false,
+  released: false,
+  releasedAt: null,
+  releaseReason: null,
+  releasedByYou: false,
+} as const;
+
 /** Synthetic answers, each checked against the contract's schema, keyed by method and API path. */
 /**
  * A page of one history as the System area's audit history reads it (ADM-009,
@@ -1057,6 +1071,8 @@ const answers: Record<string, unknown> = {
     total: 1,
     pageSize: 20,
   }),
+  // The holds of their own on workspaces (docs/architecture/privacy-requests.md, slice 4): one standing.
+  "GET /admin/privacy-holds": api.ListPrivacyHoldsResponse.parse({ ready: true, items: [privacyHold] }),
   // The reviewer's record (decision 0016, docs/architecture/reviewer-record.md, slice 1): each corpus
   // with a case confirmed after an earlier decision, and one without a decision.
   "GET /admin/acceptance-cases": (query: URLSearchParams) => acceptanceCases(query.get("corpus") ?? ""),
@@ -4103,6 +4119,117 @@ test("the staff privacy queue gives each open request the date Valo aims to fini
       "Valo aims to finish it by 5 Jan 2099. That is Valo's own aim, not a time limit set by law.",
     );
     assert.deepEqual((await wcagFailures(page)).failures, []);
+    assert.deepEqual([...unknown, ...errors], []);
+  } finally {
+    await close();
+  }
+});
+
+// PRV-003: a hold of its own on a workspace, apart from any request (docs/architecture/privacy-requests.md,
+// slice 4). Privacy staff place one with a reason, and another member of privacy staff releases it.
+test("privacy staff see each hold on a workspace and why, release one another member placed, and hold the open request's workspace with a reason the person is not shown", async () => {
+  const mine = {
+    ...privacyHold,
+    id: "00000000-0000-4000-8000-00000000c102",
+    workspaceId: "00000000-0000-4000-8000-00000000c201",
+    reason: "Synthetic: placed by you.",
+    placedByYou: true,
+  };
+  const done = {
+    ...privacyHold,
+    id: "00000000-0000-4000-8000-00000000c103",
+    released: true,
+    releasedAt: at(17),
+    releaseReason: "Synthetic: no longer needed.",
+  };
+  const detail = {
+    request: privacyCase,
+    mayRespond: false,
+    messages: [],
+    events: [],
+    steps: [],
+    availableActions: ["hold"],
+    workspaceHeld: true,
+  };
+  const why = "Synthetic: an authority asked Valo to keep this data as it is.",
+    release = "Synthetic: the authority no longer needs the data kept.";
+  const sent: { path: string; body: unknown }[] = [];
+  const how: Api = async (route, method, path, query) => {
+    if (method === "POST" && path.startsWith("/admin/privacy-holds")) {
+      sent.push({ path, body: route.request().postDataJSON() });
+      const reply =
+        path === "/admin/privacy-holds"
+          ? { ...mine, id: "00000000-0000-4000-8000-00000000c104", workspaceId: WORKSPACE, reason: why }
+          : {
+              ...privacyHold,
+              released: true,
+              releasedAt: at(18),
+              releaseReason: release,
+              releasedByYou: true,
+            };
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(api.PlacePrivacyHoldResponse.parse(reply)),
+      });
+    } else
+      await except({
+        "GET /admin/privacy-holds": api.ListPrivacyHoldsResponse.parse({
+          ready: true,
+          items: [privacyHold, mine, done],
+        }),
+        [`GET /admin/privacy-cases/${privacyCase.id}`]: api.GetStaffPrivacyCaseResponse.parse(detail),
+      })(route, method, path, query);
+  };
+  const { page, unknown, errors, close } = await phone("/staff/privacy", how);
+  try {
+    await ready(page);
+    await expect(page.getByTestId("text-privacy-holds-explained")).toContainText(
+      "While it stands, Valo's own deletion of the workspace's data stops",
+    );
+    await expect(page.getByTestId("text-privacy-holds-explained")).toContainText(
+      "The person whose workspace is held is not shown the reason.",
+    );
+    const holds = page.getByTestId("list-privacy-holds").locator("li");
+    await expect(holds).toHaveCount(3);
+    await expect(holds.nth(0)).toContainText("Standing");
+    await expect(holds.nth(0)).toContainText("by another member of privacy staff");
+    await expect(holds.nth(0)).toContainText(privacyHold.reason);
+    await expect(holds.nth(1)).toContainText("Another member of privacy staff releases a hold you placed.");
+    await expect(holds.nth(1).getByRole("button")).toHaveCount(0);
+    await expect(holds.nth(2)).toContainText("Released");
+    await expect(holds.nth(2)).toContainText("Synthetic: no longer needed.");
+    // The open request's workspace is held, so its erasure is not offered.
+    await page.getByRole("button", { name: "Open operations" }).click();
+    await expect(page.getByTestId("text-privacy-workspace-held")).toContainText(
+      "This request's workspace is held. Valo's own deletion of its data has stopped",
+    );
+    // Hold the open request's workspace, with a reason only privacy staff read.
+    await page.getByRole("button", { name: "Use the open request's workspace" }).click();
+    await expect(page.getByTestId("input-privacy-hold-workspace")).toHaveValue(WORKSPACE);
+    await page.getByTestId("input-privacy-hold-reason").fill(why);
+    await expect(
+      page.getByText(
+        "Only privacy staff read this reason. The person whose workspace is held is not shown it.",
+      ),
+    ).toBeVisible();
+    assert.deepEqual((await wcagFailures(page)).failures, []);
+    await page.getByRole("button", { name: "Place the hold" }).click();
+    await expect.poll(() => sent.length).toBe(1);
+    assert.deepEqual(sent[0], {
+      path: "/admin/privacy-holds",
+      body: { workspaceId: WORKSPACE, reason: why },
+    });
+    // Release the one another member placed, with a reason.
+    await page.getByTestId(`button-privacy-hold-release-${privacyHold.id}`).click();
+    await page.getByTestId("input-privacy-hold-release-reason").fill(release);
+    assert.deepEqual((await wcagFailures(page)).failures, []);
+    await page.getByRole("button", { name: "Release the hold" }).click();
+    await expect.poll(() => sent.length).toBe(2);
+    assert.deepEqual(sent[1], {
+      path: `/admin/privacy-holds/${privacyHold.id}/release`,
+      body: { reason: release },
+    });
     assert.deepEqual([...unknown, ...errors], []);
   } finally {
     await close();
