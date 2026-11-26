@@ -1371,7 +1371,7 @@
       "job": "foundation",
       "file": "lib/db/scripts/phase1-migrations.test.mjs",
       "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
-      "proves": "The staff access object migration keeps every access row, marking the earlier ones unrecorded, and refuses a new row that does not name what it read. The audit history guards migration keeps every row; the database then refuses any change to a workspace's activity, and its removal except by a verified deletion request at its activity step or with a synthetic workspace; it refuses removing a privacy case's history from a real workspace, and lets a row change only as an erasure replaces its reason with the projection it recorded; and it refuses TRUNCATE on every table whose rows a trigger guards against deletion, and on a cascade that would reach one. The history digest migrations start each history's digest from the rows it holds, keep it true through a customer's write in another time zone and a removal a guard allows, find a change made in replica mode and a digest trigger switched off, refuse a direct change to a digest or a kept count, and give every table whose rows a trigger guards against deletion a digest. The reseed migration lets a migration that adds a column to a history start its digest again from its rows in the same transaction, with the digest's guard back on, and refuses a table that keeps no digest; after every migration, over rows written before them, each history matches its digest."
+      "proves": "The staff access object migration keeps every access row, marking the earlier ones unrecorded, and refuses a new row that does not name what it read. The audit history guards migration keeps every row; the database then refuses any change to a workspace's activity, and its removal except by a verified deletion request at its activity step or with a synthetic workspace; it refuses removing a privacy case's history from a real workspace, and lets a row change only as an erasure replaces its reason with the projection it recorded; and it refuses TRUNCATE on every table whose rows a trigger guards against deletion, and on a cascade that would reach one. The history digest migrations start each history's digest from the rows it holds, keep it true through a customer's write in another time zone and a removal a guard allows, find a change made in replica mode and a digest trigger switched off, refuse a direct change to a digest or a kept count, and give every table whose rows a trigger guards against deletion a digest. The reseed migration lets a migration that adds a column to a history start its digest again from its rows in the same transaction, with the digest's guard back on, and refuses a table that keeps no digest; after every migration, over rows written before them, each history matches its digest. The history digest changes migrations keep every digest as it was. Before them, two writers that added rows in two shards in opposite orders deadlocked; after them, the same writers finish without waiting, since each write adds its change as a row of its own. Only a history's trigger adds a change, none is altered and the changes cannot be emptied; removing them folds them into the digest's rows without changing a digest; a change made in replica mode is still found after a fold; and a reseed folds its history's changes in first and counts none twice."
     },
     {
       "requirement": "ADM-009",
@@ -1428,6 +1428,13 @@
       "file": "artifacts/api-server/src/modules/operations/valo-history-digests.integration.test.ts",
       "test": "the hourly count keeps what it found once an hour, the alert reads the latest count, and a kept count never changes",
       "proves": "On the real database the worker's count keeps which histories it found mismatched, a second count within the hour keeps nothing, the alert's reading is the latest count's number of mismatches, and a kept count cannot be removed."
+    },
+    {
+      "requirement": "ADM-009",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/operations/valo-history-digests.integration.test.ts",
+      "test": "a write to a history adds its change as a row of its own, and the worker's fold takes it into the digest's rows",
+      "proves": "On the real database, a synthetic workspace's event adds its change to the events' digest as a row of its own, and the worker's fold removes that change, taking it into the digest's rows."
     },
     {
       "requirement": "ADM-009",
@@ -3254,7 +3261,7 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/privacy/valo-privacy-erasure.integration.test.ts",
       "test": "resumable physical development erasure with retained exclusions and replay",
-      "proves": "A synthetic deletion request, run by privacy staff with fresh MFA and an acknowledgement, quarantines the workspace while its document still exists, then removes its documents, revisions, profile versions, saved templates, rule and edition notices and its private files in a controlled local file store, redacts its support and privacy-case text and clears its AI draft content, while another workspace's document and notices stay and the request ends partially fulfilled with the outside-processors step held; and a section of it waits while another erasure's section holds the erasure sections' lock, so two erasures cannot deadlock on the histories' digests."
+      "proves": "A synthetic deletion request, run by privacy staff with fresh MFA and an acknowledgement, quarantines the workspace while its document still exists, then removes its documents, revisions, profile versions, saved templates, rule and edition notices and its private files in a controlled local file store, redacts its support and privacy-case text and clears its AI draft content, while another workspace's document and notices stay and the request ends partially fulfilled with the outside-processors step held."
     },
     {
       "requirement": "PRV-003",

@@ -326,12 +326,17 @@ if (process.argv[2] === "--probe") {
         async () => {
           // The replay writes three tables. The database keeps the digest of each history with its rows
           // (docs/architecture/audit-trail.md, slice 3), so the digests of those it writes change with
-          // them, and every other digest stays as it was.
+          // them, and every other digest stays as it was. A history's digest is its rows and its changes
+          // not yet folded in, together.
           const written = ["valo_file_assets", "valo_export_jobs", "valo_events"];
+          const digestTables = ["valo_history_digests", "valo_history_digest_changes"];
           const otherDigests = async () =>
             (
               await target.query(
-                "SELECT table_name, shard, row_count::text, hash_sum::text FROM valo_history_digests WHERE table_name <> ALL($1) ORDER BY table_name, shard",
+                `SELECT table_name, shard, sum(row_count)::text AS row_count, sum(hash_sum)::text AS hash_sum
+                 FROM (SELECT table_name, shard, row_count, hash_sum FROM valo_history_digests
+                   UNION ALL SELECT table_name, shard, row_count, hash_sum FROM valo_history_digest_changes) d
+                 WHERE table_name <> ALL($1) GROUP BY table_name, shard ORDER BY table_name, shard`,
                 [written],
               )
             ).rows;
@@ -377,7 +382,7 @@ if (process.argv[2] === "--probe") {
           );
           const after = await snapshots(target);
           for (const name of Object.keys(before))
-            if (![...written, "valo_history_digests"].includes(name))
+            if (![...written, ...digestTables].includes(name))
               assert.deepEqual(after[name], before[name], name);
           assert.deepEqual(await otherDigests(), digestsBefore);
           // Each history's digest still matches its rows.

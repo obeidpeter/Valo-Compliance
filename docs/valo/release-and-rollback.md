@@ -286,6 +286,12 @@ own login. An attempt is never removed and the table cannot be emptied. Preparin
 reviews, publishing and reading content do not use the login (see
 `docs/valo/migration-reviewer-login.md`).
 
+A write to a history that ended in a deadlock (`40P01`), on a database without the history digest
+changes migrations, met another writer on its history's digest rows: there each write holds the digest
+row it changed until its transaction ends. Apply the migrations (see
+`docs/valo/migration-history-digest-changes.md`). After them each write adds its change as a row of its
+own, and no write to a history waits on another's digest.
+
 A customer request that answers the generic 503 with error code `42501` in its log
 ran a command `valo_workspace_scope` does not hold: the code started using a table,
 command or column before a migration granted it (`WORKSPACE_SCOPE_PRIVILEGES` in

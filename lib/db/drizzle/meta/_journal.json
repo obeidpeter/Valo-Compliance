@@ -750,6 +750,20 @@
       "when": 1795709055711,
       "tag": "20261126160415_reviewer_login",
       "breakpoints": true
+    },
+    {
+      "idx": 107,
+      "version": "7",
+      "when": 1795715147570,
+      "tag": "20261126174547_history_digest_changes",
+      "breakpoints": true
+    },
+    {
+      "idx": 108,
+      "version": "7",
+      "when": 1795715160391,
+      "tag": "20261126174600_history_digest_change_triggers",
+      "breakpoints": true
     }
   ]
 }

@@ -120,20 +120,6 @@ async function withErasureLock<T>(caseId: string, fn: () => Promise<T>) {
     throw error;
   }
 }
-/** The advisory lock an erasure's sections take in turn; the test that checks a section waits for it names it. */
-export const ERASURE_SECTION_LOCK = "valo:erasure-sections:v1";
-/**
- * Erasures of different cases run at once, each under its own case's lock. One section of an erasure
- * removes or redacts up to a hundred rows of histories, and each of those rows updates one of its
- * history's shared digest rows (ADM-009, docs/architecture/audit-trail.md), in the order the rows come.
- * Two sections at once could each hold a digest row the other then waits for, and the database would
- * end one of them as a deadlock. So a section first waits for any other erasure's section to finish. It
- * takes the lock before anything else in its transaction, so it never waits while holding a row another
- * section needs, and the lock ends with the transaction.
- */
-async function awaitOtherErasureSections(tx: Tx) {
-  await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${ERASURE_SECTION_LOCK}, 0))`);
-}
 async function sealOf(tx: Tx, t: Tombstone) {
   const version = (t.erasureSeal as { keyVersion?: unknown } | null)?.keyVersion;
   if (typeof version !== "string") throw Error("ERASURE_SEAL_INVALID");
@@ -513,7 +499,6 @@ async function processErasure(actor: PrivacyStaffActor, id: string, input: Input
     }
   }
   return db.transaction(async (tx) => {
-    await awaitOtherErasureSections(tx);
     await requirePrivacyStaff(tx, actor);
     let row = await readPrivacyCase(tx, id);
     assertProcessing(row, actor, start.version);
@@ -754,7 +739,6 @@ async function replay(caseId: string, mode: ReplayState["mode"], remove: DeleteO
   if (typeof state.phase === "number") {
     const phase = state.phase;
     await db.transaction(async (tx) => {
-      await awaitOtherErasureSections(tx);
       const now = await replayReady(tx, caseId, "cached");
       await assertWorkspaceNotHeld(tx, t.workspaceId);
       const persisted = await progressOf(tx, now.t.replayState, now.seal);
