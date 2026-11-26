@@ -11,8 +11,9 @@ import { menuProblems, phoneProblems, ready } from "../test-support/app-in-brows
 import { oldWordsIn } from "../test-support/old-words";
 import { industries, industry, items, resources, serverAnswer } from "../test-support/public-answers";
 import { HYDRATION, startWebServer } from "../test-support/web-server";
-import { baselineTemplates } from "@workspace/valo-core";
+import { baselineTemplates, processingInventory } from "@workspace/valo-core";
 import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
+import { privacyNotice } from "@workspace/valo-core/privacy-notice";
 import { readTemplateIntake } from "../modules/publication/operational-intake";
 
 /**
@@ -115,7 +116,7 @@ const HEADINGS: Record<string, string> = {
   "/about": "Documents and guidance for Nigerian small businesses",
   "/help": "Questions and answers",
   "/contact": "Contact us",
-  "/privacy": "How this build handles data",
+  "/privacy": "What Valo does with your data",
   "/pricing": "Prices have not been set",
   "/library": "Documents and guidance",
   "/resources": "Guides",
@@ -1057,6 +1058,51 @@ test("the help page groups its questions by task and answers what a visitor asks
     assert.match(main, new RegExp(`<a[^>]*href="${href}"[^>]*>${label}</a>`), `${label} is a link`);
   // No price is set, so the page names none.
   assert.doesNotMatch(words, /\bfree\b|₦|\bprices?\b/i);
+});
+
+// PRV-001: "the privacy notice reflects actual production processing and optional consent is not
+// bundled with required service terms"; PRO-002: "the user can decline marketing and still use the
+// product". The notice is made from the processing inventory (docs/architecture/processing-inventory.md).
+test("the privacy page shows each activity of the processing inventory, what the service needs apart from what a visitor may choose, says it is a draft and gives its version, in the server's HTML", async () => {
+  const html = await (await fetch(web.origin + "/privacy")).text();
+  const main = html.slice(html.search(/<main/), html.indexOf("</main>"));
+  const at = (id: string) => {
+    const found = main.indexOf(`data-testid="${id}"`);
+    assert.ok(found > 0, id);
+    return found;
+  };
+  const entries = (part: string) =>
+    [...part.matchAll(/data-testid="privacy-entry-([a-z_]+)"/g)].map((m) => m[1]);
+  // What the service needs, then what a visitor may choose, marketing among the choices.
+  assert.deepEqual(
+    entries(main.slice(at("privacy-needed"), at("privacy-optional"))),
+    processingInventory.filter((activity) => activity.basis !== "consent").map((activity) => activity.id),
+  );
+  assert.deepEqual(entries(main.slice(at("privacy-optional"), at("privacy-services"))), [
+    ...processingInventory.filter((activity) => activity.basis === "consent").map((activity) => activity.id),
+    "marketing",
+  ]);
+  const notice = privacyNotice();
+  const words = text(main).replace(/\s+/g, " ");
+  for (const activity of processingInventory)
+    for (const said of [activity.title, activity.purpose, activity.retention, ...activity.data])
+      assert.ok(words.includes(said), `${activity.id}: ${said}`);
+  for (const said of [
+    notice.draft,
+    `Version ${notice.version.slice(0, 12)}`,
+    notice.optional.intro,
+    notice.optional.marketing.text,
+    notice.services.unverified,
+    ...notice.services.items,
+  ])
+    assert.ok(words.includes(said), said);
+  // Where a visitor downloads, corrects or deletes their data, or asks without signing in.
+  for (const [label, href] of [
+    ["Privacy and data", "/workspace/privacy"],
+    ["Trouble signing in", "/account-access"],
+  ] as const)
+    assert.match(main, new RegExp(`<a[^>]*href="${href}"[^>]*>${label}</a>`), `${label} is a link`);
+  assert.match(main, /<a[^>]*href="\/contact"[^>]*>Contact us/);
 });
 
 // The specification's 2026 update (docs/specification/essential-business-documents.txt): "The
