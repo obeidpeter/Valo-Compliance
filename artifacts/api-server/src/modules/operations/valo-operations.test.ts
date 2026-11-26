@@ -74,6 +74,9 @@ test("internal probes measure failures independently and persist/deduplicate/rec
     // reminders, the job queue and the request counts are zero here; their alerts have their own tests.
     const security = new Set<string>([
       ...securityQueries,
+      readinessQueries.spreadRefusals,
+      readinessQueries.limitedCallers,
+      readinessQueries.refusedInput,
       readinessQueries.guardRefusals,
       readinessQueries.privilegedReading,
       readinessQueries.historyIntegrity,
@@ -514,6 +517,78 @@ test("waiting reminders and jobs, and failing or slow requests, raise their own 
       assert.match(readinessQueries[name], /COALESCE\(sum\(requests\), 0\) < 100 THEN 0/);
       assert.match(readinessQueries[name], /interval '10 minutes'/);
     }
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { recursive: true, force: true });
+    if (old === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = old;
+  }
+});
+
+// SEC-005: "distributed abuse and financial-cost spikes trigger alerts"; and the security baseline's
+// v5.0.0-16.3.3, refused input recorded as a security event (docs/architecture/alerts.md, part 2).
+test("refusals spread over many addresses, callers refused by a limit and one address's refused input raise their own alerts, past their limits only", async () => {
+  const old = process.env.NODE_ENV;
+  process.env.NODE_ENV = "development";
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => {
+    throw Error("EXTERNAL_MESSAGES_FORBIDDEN");
+  };
+  const dir = await mkdtemp(join(tmpdir(), "valo-ops-spread-"));
+  const worker = new WorkerHealth();
+  worker.finish(worker.begin()!, true);
+  try {
+    await recordWorkerHeartbeat(worker.snapshot(), dir);
+    type Readings = Partial<Record<"spreadRefusals" | "limitedCallers" | "refusedInput", number>>;
+    const sample = (readings: Readings, unreadable?: keyof Readings) =>
+      collectOperationalSample(async (sql) => {
+        if (unreadable && sql === readinessQueries[unreadable]) throw Error("SYNTHETIC_PROBE_FAILURE");
+        const named = (Object.keys(readings) as (keyof Readings)[]).find(
+          (name) => readinessQueries[name] === sql,
+        );
+        return {
+          rows: [{ value: sql === readinessQueries.database ? 1 : named ? readings[named] : 0 }],
+        };
+      }, dir);
+    const security = { runbook: "Security/privacy incident", accountable: "Incident lead + privacy owner" };
+    // At their limits: a hundred refusals of every address together, ten callers refused by a limit, and
+    // twenty refused inputs from one address, all in ten minutes.
+    assert.deepEqual(
+      (
+        await recordOperationalAlerts(
+          await sample({ spreadRefusals: 100, limitedCallers: 10, refusedInput: 20 }),
+          dir,
+        )
+      ).active,
+      [],
+    );
+    // One more of each.
+    const raised = await recordOperationalAlerts(
+      await sample({ spreadRefusals: 101, limitedCallers: 11, refusedInput: 21 }),
+      dir,
+    );
+    assert.deepEqual(raised.owners, [
+      { code: "SPREAD_REFUSALS_DETECTED", ...security },
+      { code: "LIMITED_CALLERS_DETECTED", ...security },
+      { code: "REFUSED_INPUT_DETECTED", ...security },
+    ]);
+    // A reading that cannot be taken is an alert of its own.
+    assert.deepEqual((await recordOperationalAlerts(await sample({}, "limitedCallers"), dir)).owners, [
+      { code: "LIMITED_CALLERS_PROBE_UNAVAILABLE", ...security },
+    ]);
+    assert.deepEqual((await recordOperationalAlerts(await sample({}), dir)).active, []);
+    // The readings: refusals of access of every address together, the callers refused by a limit counted
+    // once each, and the refused input of the address that sent the most, all over the last ten minutes.
+    assert.match(readinessQueries.spreadRefusals, /sum\(count\)/);
+    assert.match(readinessQueries.spreadRefusals, /kind='denied_access'/);
+    assert.doesNotMatch(readinessQueries.spreadRefusals, /GROUP BY/);
+    assert.match(readinessQueries.limitedCallers, /count\(DISTINCT subject_hash\)/);
+    assert.match(readinessQueries.limitedCallers, /kind='limit_refusal'/);
+    assert.match(readinessQueries.refusedInput, /max\(total\)/);
+    assert.match(readinessQueries.refusedInput, /kind='refused_input'/);
+    assert.match(readinessQueries.refusedInput, /GROUP BY subject_hash/);
+    for (const name of ["spreadRefusals", "limitedCallers", "refusedInput"] as const)
+      assert.match(readinessQueries[name], /interval '10 minutes'/);
   } finally {
     globalThis.fetch = originalFetch;
     await rm(dir, { recursive: true, force: true });

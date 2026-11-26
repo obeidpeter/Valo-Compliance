@@ -23,7 +23,7 @@ export const valoSecuritySignals = pgTable(
     index("valo_security_signals_expiry_idx").on(t.expiresAt),
     check(
       "valo_security_signals_kind_check",
-      sql`${t.kind} IN ('denied_access', 'signature_failure', 'guard_refusal')`,
+      sql`${t.kind} IN ('denied_access', 'signature_failure', 'guard_refusal', 'limit_refusal', 'refused_input')`,
     ),
     check("valo_security_signals_count_check", sql`${t.count} > 0`),
     check("valo_security_signals_subject_hash_check", sql`${t.subjectHash} ~ '^[a-f0-9]{64}$'`),

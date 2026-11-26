@@ -76,8 +76,27 @@ input recorded as a security event."
 - **Abuse spread over many callers** (SEC-005): refusals of every address together in ten minutes, and
   how many callers a limit refused in ten minutes. A refusal by a limit (429) is counted as a security
   signal of its own, by keyed caller, as refusals of access are now.
+  - Built: each 429 is counted as `limit_refusal`. `SPREAD_REFUSALS_DETECTED` when refusals of access
+    of every address together come to more than a hundred in ten minutes, and `LIMITED_CALLERS_DETECTED`
+    when a limit refused more than ten callers in ten minutes, each caller counted once however often it
+    was refused. One address refused more than twenty times still raises `DENIED_ACCESS_DETECTED`.
 - **Refused input** (the security baseline, v5.0.0-16.3.3): an answer refusing a request's input (422)
   is counted by keyed caller, and one caller sending much refused input raises an alert.
+  - Built: each answer refusing a request's input is counted as `refused_input`: a body that is not
+    JSON (400), too large or too complex (413), compressed (415), or details not accepted (422).
+    `REFUSED_INPUT_DETECTED` when one address sent more than twenty in ten minutes.
+- **Who a refusal is counted for.** A page the web server renders on this machine passes on its
+  visitor's address, and each refusal is counted for that visitor, as the read limit counts it; before,
+  every page render's refusal would have counted as the web server's. Every other request is counted
+  for the address it came from.
+- **What a count costs.** Each counted refusal is one write after its answer is sent, into one row per
+  address, kind and minute, as the read limit's own count is one write per read. A flood of refusals
+  from one address therefore writes as often as it is refused; a ceiling for each address and minute
+  can follow if that ever matters more than the count.
+- All three alerts fall to the security/privacy incident runbook, and their limits are development
+  defaults. **One migration** lets the security signals table take the two new kinds; the Replit
+  development database takes it by hand ([runbook](../valo/migration-security-signal-kinds.md)), and until
+  it does, those refusals are answered as before and their counts are refused and logged.
 - **Money and AI spend** (SEC-005, SEC-008): checkouts and refunds of all workspaces together in an
   hour, by count and amount, and the AI budget's spend in an hour against its allowance.
 - **Whole-workspace downloads** (SEC-008's bulk exports): data downloads of whole workspaces, and staff
@@ -142,7 +161,8 @@ input recorded as a security event."
 | --- | --- | --- |
 | 1 | Part 1: the journal, the copy from the file, and the System area's list | Built |
 | 2 | Part 3: request counts, failure and time alerts, more backlogs, the route in each request's log | Built |
-| 3 | Part 2: spread-out abuse, refused input, money and AI spend, whole-workspace downloads | Not built |
+| 3a | Part 2: spread-out abuse and refused input | Built |
+| 3b | Part 2: money and AI spend, whole-workspace downloads and staff copies | Not built |
 | 4 | Part 4: the log inventory, and the security baseline updated | Not built |
 
 ## The owner's points

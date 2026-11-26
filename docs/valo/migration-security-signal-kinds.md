@@ -43,3 +43,36 @@ The Replit development database has no Drizzle ledger. Follow the existing proce
 To roll back, remove the rows of the kind `guard_refusal` (they are counts only, and expire within a day
 anyway), then put back the check that names the first two kinds. Guard refusals are then not counted
 again.
+
+## Refusals by a limit and refused input
+
+`20261126142600_security_signal_limits_and_input` lets the table take two more kinds
+([alerts that reach a person](../architecture/alerts.md), part 2). It needs the migration above first.
+It has not been applied to the Replit development database yet.
+
+- The API counts each refusal by a limit (429) as `limit_refusal`, and each answer refusing a request's
+  input (400, 413, 415 or 422) as `refused_input`, for `LIMITED_CALLERS_DETECTED` and
+  `REFUSED_INPUT_DETECTED`.
+- It replaces the kind check with one that takes the five kinds. It changes no row.
+
+**Without this migration, those two kinds are not counted.** Each such answer is given as before, and
+its count is refused and logged as `security_signal.failed`; the two alerts stay clear.
+`SPREAD_REFUSALS_DETECTED` reads refusals of access, which the table already takes.
+
+1. Confirm the database is at the migration above: the check from its step 1 names `guard_refusal`.
+2. Pause writes and the worker. Take a fresh encrypted backup.
+3. Apply the file inside a transaction, from the repository root:
+
+   ```sh
+   PGOPTIONS='-c lock_timeout=5s -c statement_timeout=60s' \
+   psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 --single-transaction \
+     -f lib/db/drizzle/20261126142600_security_signal_limits_and_input.sql
+   ```
+
+4. Check that the check names `limit_refusal` and `refused_input` too, and that
+   `SELECT has_table_privilege('valo_workspace_scope', 'valo_security_signals', 'INSERT')` is still false.
+5. Record the target, commit, file hash, operator, result and time outside customer logs.
+   Do not add rows to `drizzle.__drizzle_migrations`.
+6. Start the API and the worker again.
+
+To roll back, remove the rows of the two kinds, then put back the check that names three.

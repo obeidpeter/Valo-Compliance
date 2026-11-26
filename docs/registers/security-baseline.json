@@ -3602,13 +3602,14 @@
     {
       "id": "v5.0.0-16.3.3",
       "level": 2,
-      "status": "partly met",
+      "status": "met",
       "bears_on": [
         "SEC-008"
       ],
-      "control": "Changes from other sites, refusals, signature failures and refusals by a limit are recorded for the security alerts.",
+      "control": "Changes from other sites, refusals of access, signature failures, refusals by a limit and refused input are counted by keyed address and kind for the security alerts, which read them.",
       "code": [
-        "artifacts/api-server/src/lib/valo-security-signals.ts"
+        "artifacts/api-server/src/lib/valo-security-signals.ts",
+        "artifacts/api-server/src/middlewares/valo-security-signals.ts"
       ],
       "tests": [
         {
@@ -3622,9 +3623,16 @@
         {
           "file": "artifacts/api-server/src/modules/operations/valo-operations.test.ts",
           "test": "security signals raise their own alerts, owned by the security and payment runbooks"
+        },
+        {
+          "file": "artifacts/api-server/src/middlewares/valo-security-signals.test.ts",
+          "test": "each refusal is counted as its kind, by the keyed address of the caller, a page render's visitor included"
+        },
+        {
+          "file": "artifacts/api-server/src/lib/valo-security-signals.integration.test.ts",
+          "test": "refusals spread over many addresses, callers refused by a limit and one address's refused input are read from the last ten minutes of the real table"
         }
-      ],
-      "gap": "A refused input, answered 422, is not recorded as a security event."
+      ]
     },
     {
       "id": "v5.0.0-16.3.4",

@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { test } from "node:test";
 import express from "express";
 import { sql } from "drizzle-orm";
-import { currentWorkspaceScope, db, runInWorkspaceScope } from "@workspace/db";
+import { currentWorkspaceScope, db, pool, runInWorkspaceScope } from "@workspace/db";
 import { Writable } from "node:stream";
 import { securitySignals } from "../middlewares/valo-security-signals";
 import { readinessQueries } from "../modules/operations/valo-operations";
@@ -34,7 +34,10 @@ test(
     app.use(securitySignals({ subject: () => subject }));
     app.get("/ok", (_req, res) => void res.json({ ok: true }));
     app.get("/missing", (_req, res) => void res.status(404).json({}));
+    // A refusal by a limit, and answers refusing a request's input, are counted as kinds of their own.
     app.get("/limited", (_req, res) => void res.status(429).json({}));
+    app.get("/not-accepted", (_req, res) => void res.status(422).json({}));
+    app.get("/not-json", (_req, res) => void res.status(400).json({}));
     app.get("/refused", (_req, res) => void res.status(401).json({}));
     app.get("/forbidden", (_req, res) => void res.status(403).json({}));
     // A customer request refused inside its workspace scope is still counted on the application's
@@ -61,12 +64,23 @@ test(
         )
       ).rows;
     try {
-      for (const path of ["/ok", "/missing", "/limited", "/refused", "/forbidden", "/forbidden-in-scope"])
+      for (const path of [
+        "/ok",
+        "/missing",
+        "/limited",
+        "/not-accepted",
+        "/not-json",
+        "/refused",
+        "/forbidden",
+        "/forbidden-in-scope",
+      ])
         await (await fetch(base + path)).body?.cancel();
       await (await fetch(base + "/webhook", { method: "POST" })).body?.cancel();
       // Counting happens after each response is sent, so wait for it.
       const expected = [
         { kind: "denied_access", n: 3 },
+        { kind: "limit_refusal", n: 1 },
+        { kind: "refused_input", n: 2 },
         { kind: "signature_failure", n: 1 },
       ];
       for (let i = 0; i < 50 && JSON.stringify(await counts()) !== JSON.stringify(expected); i++)
@@ -79,6 +93,9 @@ test(
     // The probe's readings see them.
     assert.ok((await reading(readinessQueries.deniedAccess)) >= 3);
     assert.ok((await reading(readinessQueries.signatureFailures)) >= 1);
+    assert.ok((await reading(readinessQueries.spreadRefusals)) >= 3);
+    assert.ok((await reading(readinessQueries.limitedCallers)) >= 1);
+    assert.ok((await reading(readinessQueries.refusedInput)) >= 2);
     // A caller at a quota limit is read as bulk exports, unusual payment activity or unusual AI use.
     for (const [bucket, limit, query, window] of [
       ["export-create", 10, readinessQueries.bulkExports, "minute"],
@@ -203,5 +220,61 @@ test(
     // Every kind the API counts is one the table takes.
     for (const kind of SECURITY_SIGNAL_KINDS)
       await recordSecuritySignal(kind, hashOf(`synthetic-${randomUUID()}`));
+  },
+);
+
+// SEC-005: "distributed abuse and financial-cost spikes trigger alerts"; and the security baseline's
+// v5.0.0-16.3.3 (docs/architecture/alerts.md, part 2).
+test(
+  "refusals spread over many addresses, callers refused by a limit and one address's refused input are read from the last ten minutes of the real table",
+  { skip: process.env.VALO_RUN_DB_TESTS !== "synthetic-development-only", timeout: 30000 },
+  async () => {
+    // One transaction, rolled back: its clock stands still, so no other test's signal leaves the ten
+    // minutes between the two readings, and none of these signals stays for the tests after it.
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      const read = async (query: string) => Number((await client.query(query)).rows[0]!.value);
+      const readings = async () => ({
+        spread: await read(readinessQueries.spreadRefusals),
+        most: await read(readinessQueries.deniedAccess),
+        limited: await read(readinessQueries.limitedCallers),
+        input: await read(readinessQueries.refusedInput),
+      });
+      const fresh = () => hashOf(`synthetic-${randomUUID()}`);
+      /** `count` signals of `kind` from `subject`, in the minute `ago` minutes before this one. */
+      const signal = (kind: string, subject: string, count: number, ago = 0) =>
+        client.query(
+          `insert into valo_security_signals(kind, subject_hash, window_started_at, count, expires_at)
+           values($1, $2, date_trunc('minute', now()) - make_interval(mins => $4), $3,
+             date_trunc('minute', now()) - make_interval(mins => $4) + interval '1 day')`,
+          [kind, subject, count, ago],
+        );
+      const before = await readings();
+      // Five addresses, each refused 15 times, stay under the one-address limit (20) and add 75 together.
+      for (let n = 0; n < 5; n++) await signal("denied_access", fresh(), 15);
+      // Twelve callers refused by a limit; one of them in two minutes counts once.
+      const twice = fresh();
+      await signal("limit_refusal", twice, 3);
+      await signal("limit_refusal", twice, 1, 4);
+      for (let n = 0; n < 11; n++) await signal("limit_refusal", fresh(), 1);
+      // One address sends 25 refused inputs over two minutes; another sends 10.
+      const sender = fresh();
+      await signal("refused_input", sender, 20);
+      await signal("refused_input", sender, 5, 2);
+      await signal("refused_input", fresh(), 10);
+      // Older than ten minutes, none of these is read.
+      await signal("denied_access", fresh(), 500, 11);
+      await signal("limit_refusal", fresh(), 1, 11);
+      await signal("refused_input", sender, 500, 11);
+      const after = await readings();
+      assert.equal(after.spread, before.spread + 75);
+      assert.equal(after.most, Math.max(before.most, 15));
+      assert.equal(after.limited, before.limited + 12);
+      assert.equal(after.input, Math.max(before.input, 25));
+    } finally {
+      await client.query("ROLLBACK");
+      client.release();
+    }
   },
 );

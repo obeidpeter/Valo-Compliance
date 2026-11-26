@@ -199,8 +199,15 @@ checks, which are not provisioned yet.
 | `WORKSPACE_CLEANUP_BACKLOG` | Any workspace export attempt overdue for cleanup or with a cleanup error | Internal operations sample |
 | `PAYMENTS_BACKLOG` | Any verified payment without its entitlement or receipt | Internal operations sample |
 | `PRIVACY_REQUESTS_BACKLOG` | Any privacy request still open 14 days after it was made: the date Valo aims to finish it by, Valo's own aim and not a time limit set by law | Internal operations sample (PRV-003) |
+| `REMINDERS_BACKLOG` | Any reminder email still pending fifteen minutes past its time | Internal operations sample (NFR-010) |
+| `JOB_QUEUE_BACKLOG` | Any scheduled job still waiting ten minutes past its start | Internal operations sample (NFR-010) |
+| `REQUEST_FAILURES_DETECTED` | More than 10 in 1,000 of the API's requests failed unexpectedly in the last ten minutes, once there are a hundred requests or more | Internal operations sample (NFR-003) |
+| `REQUEST_TIME_DETECTED` | 95 in 100 of the API's requests in the last ten minutes did not all finish within a second, once there are a hundred requests or more | Internal operations sample (NFR-003) |
 | `DENIED_ACCESS_DETECTED` | One hashed address was refused (401 or 403) more than 20 times in ten minutes | Internal operations sample (SEC-008) |
 | `SIGNATURE_FAILURES_DETECTED` | Any payment webhook signature was rejected in the last ten minutes | Internal operations sample (SEC-008) |
+| `SPREAD_REFUSALS_DETECTED` | Every hashed address together was refused (401 or 403) more than 100 times in ten minutes | Internal operations sample (SEC-005) |
+| `LIMITED_CALLERS_DETECTED` | A limit refused (429) more than 10 hashed addresses in ten minutes | Internal operations sample (SEC-005) |
+| `REFUSED_INPUT_DETECTED` | One hashed address sent more than 20 requests whose input was refused (400, 413, 415 or 422) in ten minutes | Internal operations sample (SEC-008) |
 | `ROLE_CHANGES_DETECTED` | Any staff role was granted or revoked in the last hour | Internal operations sample (SEC-008) |
 | `BULK_EXPORTS_DETECTED` | Any caller used its whole export quota window | Internal operations sample (SEC-008) |
 | `PAYMENT_ACTIVITY_DETECTED` | Any caller used its whole checkout or refund quota window | Internal operations sample (SEC-008) |
