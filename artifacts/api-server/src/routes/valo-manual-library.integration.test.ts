@@ -15,7 +15,9 @@ import {
 } from "../test-support/manual-premium-template";
 import { exercisePremiumPriceCommand } from "../test-support/premium-price-command";
 import { exerciseOwnerPriceRoutes } from "../test-support/owner-price-routes";
+import { exerciseOwnerSettingRoutes } from "../test-support/owner-setting-routes";
 import { createOwnerPriceRouter } from "./valo-owner-prices";
+import { createOwnerSettingRouter } from "./valo-owner-settings";
 import { exerciseOverduePremiumTemplate } from "../test-support/manual-overdue-premium";
 import { exerciseWithdrawalReach } from "../test-support/manual-withdrawal-reach";
 import { exerciseLibraryHolds } from "../test-support/manual-holds";
@@ -205,6 +207,7 @@ test(
     );
     app.use(createSourceControlsRouter(authenticate));
     app.use(createOwnerPriceRouter(authenticate));
+    app.use(createOwnerSettingRouter(authenticate));
     app.use(makeSupportOperationsRouter(authenticate));
     app.use(publicRouter);
     app.use((err: Error & { status?: number }, _req: Request, res: Response, _next: NextFunction) =>
@@ -784,6 +787,10 @@ test(
     await t.test(
       "only the recently verified development owner previews and records a premium template's price, an earlier order keeps its terms, and a price that carries is recorded for each next edition as it is released",
       () => exerciseOwnerPriceRoutes(call, editor),
+    );
+    await t.test(
+      "only the recently verified development owner previews and records a commercial setting's value, which closes the open one when it starts and which a customer request reads in effect",
+      () => exerciseOwnerSettingRoutes(call, editor),
     );
     await t.test(
       "only the recently verified development owner reaches the checker rule sign-off routes, and only from Valo's own pages",

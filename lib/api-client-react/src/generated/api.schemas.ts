@@ -1141,6 +1141,114 @@ export interface OwnerPriceRecorded {
   closed: OwnerPriceRecordedClosedItem[];
 }
 
+export type OwnerSettingKey = typeof OwnerSettingKey[keyof typeof OwnerSettingKey];
+
+
+export const OwnerSettingKey = {
+  drafting_workspace_daily: 'drafting_workspace_daily',
+  drafting_daily_in_all: 'drafting_daily_in_all',
+} as const;
+
+export interface OwnerSettingValue {
+  settingId: string;
+  /** @minimum 0 */
+  value: number;
+  effectiveFrom: string;
+  /** @nullable */
+  effectiveTo: string | null;
+}
+
+export interface OwnerSetting {
+  key: OwnerSettingKey;
+  title: string;
+  unit: string;
+  /**
+     * The value while no value the owner recorded is in effect
+     * @minimum 0
+     */
+  defaultValue: number;
+  /** @minimum 0 */
+  max: number;
+  /**
+     * The value in effect and any scheduled to start, earliest first.
+     * @maxItems 100
+     */
+  values: OwnerSettingValue[];
+}
+
+export interface OwnerSettingPage {
+  /** @maxItems 20 */
+  items: OwnerSetting[];
+}
+
+export interface OwnerSettingTerms {
+  key: OwnerSettingKey;
+  /**
+     * A whole number, such as 30
+     * @pattern ^\d{1,7}$
+     */
+  value: string;
+  /**
+     * now, or a time with its offset, such as 2026-12-01T00:00:00+01:00
+     * @minLength 3
+     * @maxLength 40
+     */
+  from: string;
+}
+
+export interface OwnerSettingExactTerms {
+  key: OwnerSettingKey;
+  /** @minimum 0 */
+  value: number;
+  from: string;
+}
+
+export interface OwnerSettingPreview {
+  title: string;
+  unit: string;
+  terms: OwnerSettingExactTerms;
+  /** @pattern ^[0-9a-f]{64}$ */
+  checksum: string;
+}
+
+export interface OwnerSettingRecord {
+  key: OwnerSettingKey;
+  /** @pattern ^\d{1,7}$ */
+  value: string;
+  /**
+     * @minLength 3
+     * @maxLength 40
+     */
+  from: string;
+  /**
+     * Where the owner's approval is written
+     * @minLength 3
+     * @maxLength 160
+     */
+  reference: string;
+  /**
+     * The checksum the preview gave
+     * @pattern ^[0-9a-f]{64}$
+     */
+  confirm: string;
+}
+
+export type OwnerSettingRecordedClosedItem = {
+  settingId: string;
+  /** @minimum 0 */
+  value: number;
+};
+
+export interface OwnerSettingRecorded {
+  settingId: string;
+  key: OwnerSettingKey;
+  /** @minimum 0 */
+  value: number;
+  from: string;
+  /** @maxItems 100 */
+  closed: OwnerSettingRecordedClosedItem[];
+}
+
 export type CommerceOrderStatus = typeof CommerceOrderStatus[keyof typeof CommerceOrderStatus];
 
 

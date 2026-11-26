@@ -127,6 +127,11 @@ import type {
   OwnerRulePage,
   OwnerRuleReceipt,
   OwnerRuleSourceWatch,
+  OwnerSettingPage,
+  OwnerSettingPreview,
+  OwnerSettingRecord,
+  OwnerSettingRecorded,
+  OwnerSettingTerms,
   PaymentConcern,
   PaymentConcernAction,
   PaymentConcernInput,
@@ -3668,6 +3673,300 @@ export const usePreviewOwnerPrice = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getPreviewOwnerPriceMutationOptions(options), queryClient);
+    }
+
+export const getListOwnerSettingsUrl = () => {
+
+
+
+
+  return `/api/admin/owner-settings`
+}
+
+/**
+ * Each commercial setting, with its default and any value in effect or scheduled to start (docs/architecture/commercial-settings.md, slice 3). Read-only. Development only.
+ * @summary The commercial settings and their values, for the development owner (ADM-006)
+ */
+export const listOwnerSettings = async ( options?: Parameters<typeof customFetch>[1]): Promise<OwnerSettingPage> => {
+
+  return customFetch<OwnerSettingPage>(getListOwnerSettingsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListOwnerSettingsQueryKey = () => {
+    return [
+    "listOwnerSettings"
+    ] as const;
+    }
+
+
+export const getListOwnerSettingsQueryOptions = <TData = Awaited<ReturnType<typeof listOwnerSettings>>, TError = ErrorType<void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOwnerSettings>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListOwnerSettingsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listOwnerSettings>>> = ({ signal }) => listOwnerSettings({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listOwnerSettings>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListOwnerSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof listOwnerSettings>>>
+export type ListOwnerSettingsQueryError = ErrorType<void>
+
+
+/**
+ * Each commercial setting, with its default and any value in effect or scheduled to start (docs/architecture/commercial-settings.md, slice 3). Read-only. Development only.
+ * @summary The commercial settings and their values, for the development owner (ADM-006)
+ */
+export function useListOwnerSettings<TData = Awaited<ReturnType<typeof listOwnerSettings>>, TError = ErrorType<void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOwnerSettings>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listOwnerSettings>>,
+          TError,
+          Awaited<ReturnType<typeof listOwnerSettings>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Each commercial setting, with its default and any value in effect or scheduled to start (docs/architecture/commercial-settings.md, slice 3). Read-only. Development only.
+ * @summary The commercial settings and their values, for the development owner (ADM-006)
+ */
+export function useListOwnerSettings<TData = Awaited<ReturnType<typeof listOwnerSettings>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOwnerSettings>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listOwnerSettings>>,
+          TError,
+          Awaited<ReturnType<typeof listOwnerSettings>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Each commercial setting, with its default and any value in effect or scheduled to start (docs/architecture/commercial-settings.md, slice 3). Read-only. Development only.
+ * @summary The commercial settings and their values, for the development owner (ADM-006)
+ */
+export function useListOwnerSettings<TData = Awaited<ReturnType<typeof listOwnerSettings>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOwnerSettings>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Each commercial setting, with its default and any value in effect or scheduled to start (docs/architecture/commercial-settings.md, slice 3). Read-only. Development only.
+ * @summary The commercial settings and their values, for the development owner (ADM-006)
+ */
+export function useListOwnerSettings<TData = Awaited<ReturnType<typeof listOwnerSettings>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOwnerSettings>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListOwnerSettingsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getRecordOwnerSettingUrl = () => {
+
+
+
+
+  return `/api/admin/owner-settings`
+}
+
+/**
+ * Refused unless `confirm` is the checksum the preview gave for exactly these terms. The setting's open value closes when the new one starts.
+ * @summary Record the owner's value of a commercial setting
+ */
+export const recordOwnerSetting = async (ownerSettingRecord: OwnerSettingRecord, options?: Parameters<typeof customFetch>[1]): Promise<OwnerSettingRecorded> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<OwnerSettingRecorded>(getRecordOwnerSettingUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ownerSettingRecord)
+  }
+);}
+
+
+
+
+
+export const getRecordOwnerSettingMutationKey = () => ['recordOwnerSetting'] as const;
+
+export const getRecordOwnerSettingMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordOwnerSetting>>, TError,RecordOwnerSettingMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof recordOwnerSetting>>, TError,RecordOwnerSettingMutationVariables, TContext> => {
+
+const mutationKey = getRecordOwnerSettingMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recordOwnerSetting>>, RecordOwnerSettingMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  recordOwnerSetting(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RecordOwnerSettingMutationResult = NonNullable<Awaited<ReturnType<typeof recordOwnerSetting>>>
+    export type RecordOwnerSettingMutationBody = BodyType<OwnerSettingRecord>
+    export type RecordOwnerSettingMutationError = ErrorType<void>
+    export type RecordOwnerSettingMutationVariables = {data: BodyType<OwnerSettingRecord>}
+
+    /**
+ * Refused unless `confirm` is the checksum the preview gave for exactly these terms. The setting's open value closes when the new one starts.
+ * @summary Record the owner's value of a commercial setting
+ */
+export const useRecordOwnerSetting = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordOwnerSetting>>, TError,RecordOwnerSettingMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof recordOwnerSetting>>,
+        TError,
+        RecordOwnerSettingMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRecordOwnerSettingMutationOptions(options), queryClient);
+    }
+
+export const getPreviewOwnerSettingUrl = () => {
+
+
+
+
+  return `/api/admin/owner-settings/previews`
+}
+
+/**
+ * Writes nothing.
+ * @summary The exact terms of a setting's value and their checksum, which recording confirms
+ */
+export const previewOwnerSetting = async (ownerSettingTerms: OwnerSettingTerms, options?: Parameters<typeof customFetch>[1]): Promise<OwnerSettingPreview> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<OwnerSettingPreview>(getPreviewOwnerSettingUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ownerSettingTerms)
+  }
+);}
+
+
+
+
+
+export const getPreviewOwnerSettingMutationKey = () => ['previewOwnerSetting'] as const;
+
+export const getPreviewOwnerSettingMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof previewOwnerSetting>>, TError,PreviewOwnerSettingMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof previewOwnerSetting>>, TError,PreviewOwnerSettingMutationVariables, TContext> => {
+
+const mutationKey = getPreviewOwnerSettingMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof previewOwnerSetting>>, PreviewOwnerSettingMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  previewOwnerSetting(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PreviewOwnerSettingMutationResult = NonNullable<Awaited<ReturnType<typeof previewOwnerSetting>>>
+    export type PreviewOwnerSettingMutationBody = BodyType<OwnerSettingTerms>
+    export type PreviewOwnerSettingMutationError = ErrorType<void>
+    export type PreviewOwnerSettingMutationVariables = {data: BodyType<OwnerSettingTerms>}
+
+    /**
+ * Writes nothing.
+ * @summary The exact terms of a setting's value and their checksum, which recording confirms
+ */
+export const usePreviewOwnerSetting = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof previewOwnerSetting>>, TError,PreviewOwnerSettingMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof previewOwnerSetting>>,
+        TError,
+        PreviewOwnerSettingMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPreviewOwnerSettingMutationOptions(options), queryClient);
     }
 
 export const getGetWorkspaceDisputesUrl = () => {

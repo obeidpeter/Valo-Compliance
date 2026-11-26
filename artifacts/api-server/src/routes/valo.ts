@@ -72,6 +72,7 @@ import { createManualLibraryRouter, premiumManualTemplateRouter } from "./valo-m
 import { sourceControlsRouter, correctionNoticesRouter } from "./valo-source-controls";
 import { acceptanceReviewRouter } from "./valo-acceptance-review";
 import { ownerPriceRouter } from "./valo-owner-prices";
+import { ownerSettingRouter } from "./valo-owner-settings";
 const router = Router();
 router.use(createSessionVerificationRouter());
 router.use(publicAccessRouter);
@@ -82,6 +83,7 @@ router.use(staffOperationsRouter);
 router.use(sourceControlsRouter);
 router.use(acceptanceReviewRouter);
 router.use(ownerPriceRouter);
+router.use(ownerSettingRouter);
 router.use(supportOperationsRouter);
 router.get("/public/discovery", async (_req, res) => {
   res.set("Cache-Control", "no-store");

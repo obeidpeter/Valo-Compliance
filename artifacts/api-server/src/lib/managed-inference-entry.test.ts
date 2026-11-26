@@ -287,6 +287,10 @@ test("default managed entry and customer organizer use actual finite dispatch an
         const reserved = customerRows.filter((r) => r.budgetReserved).length;
         return { rows: [{ global_today: reserved, identity_last_minute: reserved }] };
       }
+      // The drafting allowances, the owner's commercial settings (docs/architecture/commercial-settings.md,
+      // slice 3): none is recorded here, so each reads its default.
+      if (/^select public\.valo_commercial_setting\(\$1\) as value$/.test(text))
+        return { rows: [{ value: null }] };
       assert.match(text, /pg_advisory_xact_lock/);
       return { rows: [] };
     },

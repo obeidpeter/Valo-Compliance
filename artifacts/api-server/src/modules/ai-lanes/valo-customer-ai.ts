@@ -25,7 +25,7 @@ import { ValoProblem } from "../../platform/valo-problem";
 import { documentInput } from "../../lib/valo-validation";
 import { hasApprovedInferenceContext } from "../ai";
 import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
-const workspaceDailyLimit = 30;
+import { COMMERCIAL_SETTINGS, commercialSettingValue } from "../commercial-settings";
 /** The database schema and the workspace transaction load when a customer AI request runs, not
  * with every reader of this file: both load the database client. */
 async function runtime() {
@@ -35,8 +35,22 @@ async function runtime() {
   ] = await Promise.all([import("@workspace/db"), import("../rules")]);
   return { valoAIDrafts, valoSafetySwitches, workspaceReadTransaction, workspaceTransaction, workspaceEvent };
 }
-/** Customer AI reservations allowed per day across every workspace. */
-export const globalDailyLimit = 120;
+/**
+ * Customer AI reservations allowed per day across every workspace while the owner has recorded no
+ * other value (docs/architecture/commercial-settings.md, slice 3).
+ */
+export const globalDailyLimit = COMMERCIAL_SETTINGS.drafting_daily_in_all.defaultValue;
+/**
+ * The drafting assistant's two daily allowances in effect, in the request's own transaction: the
+ * owner's commercial settings, or their defaults. They limit how many drafts are asked for; spending
+ * stays bounded by the approved inference budget, which they never change.
+ */
+async function allowances(tx: WorkspaceTx) {
+  return {
+    workspaceDailyLimit: await commercialSettingValue(tx, "drafting_workspace_daily"),
+    globalDailyLimit: await commercialSettingValue(tx, "drafting_daily_in_all"),
+  };
+}
 async function enabled(tx: WorkspaceTx, workspaceId: string) {
   if (!hasApprovedInferenceContext("customer")) return false;
   // No customer or model input can enable this; production remains off even if a development switch is copied.
@@ -96,13 +110,14 @@ export function serializeAIPreview(row: typeof AIDrafts.$inferSelect) {
 export async function customerAIUsage(actor: WorkspaceActor) {
   const { workspaceReadTransaction } = await runtime();
   return workspaceReadTransaction(actor, async (tx) => {
-    const b = await budget(tx, actor.workspaceId, actor.identityId);
+    const b = await budget(tx, actor.workspaceId, actor.identityId),
+      limits = await allowances(tx);
     return GetCustomerAIUsageResponse.parse({
       enabled: await enabled(tx, actor.workspaceId),
       workspaceUsed: b.workspaceUsed,
-      workspaceDailyLimit,
+      workspaceDailyLimit: limits.workspaceDailyLimit,
       minuteLimit: 5,
-      globalAvailable: b.globalUsed < globalDailyLimit,
+      globalAvailable: b.globalUsed < limits.globalDailyLimit,
       manualFallbackAvailable: true,
       policyNotice:
         "AI requires an explicitly approved finite development work item and available shared budget. Historical unknown charges are retained separately from any approved additional allowance. Existing daily ceilings and the independent manual editor are unchanged. Provider retention and production use are not approved.",
@@ -136,6 +151,7 @@ export async function createCustomerAIDraft(
     // A single cross-workspace budget lock prevents concurrent reservations exceeding the global cost ceiling.
     await tx.execute(sql`select pg_advisory_xact_lock(760214032)`);
     const b = await budget(tx, actor.workspaceId, actor.identityId),
+      limits = await allowances(tx),
       isEnabled = await enabled(tx, actor.workspaceId);
     const unsupported = unsupportedCustomerInput(input),
       missing = missingCustomerFields(input);
@@ -144,8 +160,8 @@ export async function createCustomerAIDraft(
       !unsupported &&
       !missing.length &&
       b.userMinuteUsed < 5 &&
-      b.workspaceUsed < workspaceDailyLimit &&
-      b.globalUsed < globalDailyLimit;
+      b.workspaceUsed < limits.workspaceDailyLimit &&
+      b.globalUsed < limits.globalDailyLimit;
     const status: CustomerPreview["status"] = unsupported
       ? "unsupported"
       : missing.length

@@ -51,6 +51,7 @@ export * from "./valo-ai-drafts";
 export * from "./valo-publication";
 export * from "./valo-manual-library";
 export * from "./valo-commerce";
+export * from "./valo-commercial-settings";
 
 export * from "./valo-payment-concerns";
 export * from "./valo-workspace-exports";
