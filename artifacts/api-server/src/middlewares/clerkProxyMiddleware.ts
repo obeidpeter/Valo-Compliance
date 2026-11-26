@@ -107,6 +107,9 @@ export function clerkProxy(options: {
   // Content-Encoding is preserved. Length-known responses (e.g. /npm/*
   // assets) and body-less responses stream through without buffering.
   proxy.on("proxyRes", (proxyRes, req, res) => {
+    // The provider's answers keep the provider's own content policy: Valo's, which loads and runs
+    // nothing, is for Valo's own answers (platform/security-headers.ts).
+    res.removeHeader("Content-Security-Policy");
     const headers = { ...proxyRes.headers };
     // Transfer-Encoding/Connection are hop-by-hop (RFC 7230 §6.1).
     delete headers["transfer-encoding"];

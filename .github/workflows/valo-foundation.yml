@@ -249,7 +249,7 @@ jobs:
         run: pnpm --filter @workspace/valo run build
       - name: Check that no file the browser is sent holds a secret (SEC-002, OPS-004)
         run: pnpm --filter @workspace/api-server exec tsx src/scripts/bundle-secrets.ts ../valo
-      - name: Prove compiled frontend enforces unique nonces and blocks injected scripts
+      - name: Prove the compiled frontend's headers, content types, folder and TRACE answers, unique nonces and script blocking
         run: pnpm --filter @workspace/api-server exec tsx src/scripts/frontend-security-browser.ts
       - name: Retain compiled frontend security evidence
         if: always()

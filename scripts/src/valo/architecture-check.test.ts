@@ -29,6 +29,8 @@ import {
   reviewerConnectionReport,
   reviewerConnectionViolations,
   moduleBoundaryViolations,
+  noShellReport,
+  noShellViolations,
   publicServerEntries,
   publicServerViolations,
   silentCatchReport,
@@ -477,6 +479,61 @@ test("product code builds no SQL from text but where it is reviewed, and each re
     `${reviewed} raw-sql builds 2 SQL text(s) while it runs; its review lists 1, so review the change`,
   ]);
   assert.deepEqual(rawSqlReport(), []);
+});
+
+test("product code starts no shell: no exec or execSync from child_process, and no shell option (small hardening, part 4)", () => {
+  const command = "artifacts/api-server/src/scripts/example.ts";
+  for (const [code, what] of [
+    ['import { exec } from "node:child_process";', "exec() from child_process"],
+    ['import { execSync as run } from "child_process";', "execSync() from child_process"],
+    ['import * as processes from "node:child_process";\nprocesses.exec(line);', "exec() from child_process"],
+    [
+      'import processes from "node:child_process";\nprocesses.execSync(line);',
+      "execSync() from child_process",
+    ],
+    ['const { exec } = await import("node:child_process");', "exec() from child_process"],
+    ['const processes = require("child_process");\nprocesses.exec(line);', "exec() from child_process"],
+    ['require("node:child_process").execSync(line);', "execSync() from child_process"],
+    [
+      'import { spawn } from "node:child_process";\nspawn("ls", [folder], { shell: true });',
+      "a shell option",
+    ],
+    [
+      'import { execFile } from "node:child_process";\nexecFile("ls", [], { "shell": "/bin/sh" });',
+      "a shell option",
+    ],
+    [
+      'import { execFile } from "node:child_process";\nconst options = { shell };\nawait promisify(execFile)("ls", [], options);',
+      "a shell option",
+    ],
+  ] as const) {
+    const flagged = noShellViolations(command, code + "\n");
+    assert.equal(flagged.length, 1, code);
+    assert.match(
+      flagged[0]!,
+      new RegExp(`^${command}:\\d+ no-shell ${what.replace(/[()]/g, "\\$&")} `),
+      flagged[0],
+    );
+  }
+  // A program started with its arguments as a list, a local wrapper named exec, and a `shell` key in a
+  // file that starts no process are not shells.
+  assert.deepEqual(
+    noShellViolations(
+      command,
+      'import { execFile, spawn, spawnSync, fork } from "node:child_process";\nconst exec = promisify(execFile);\nawait exec("git", ["status"]);\nspawn(process.execPath, [script], { stdio: "inherit" });\n',
+    ),
+    [],
+  );
+  assert.deepEqual(
+    noShellViolations("artifacts/valo/src/components/example.tsx", 'const a = { shell: "site" };\n'),
+    [],
+  );
+  // Plain JavaScript modules are read too.
+  assert.equal(
+    noShellViolations("lib/db/scripts/example.mjs", 'import { exec } from "node:child_process";\n').length,
+    1,
+  );
+  assert.deepEqual(noShellReport(), []);
 });
 
 test("the repository has no silent catches, no import cycles and no unreviewed binding checks", () => {

@@ -9,6 +9,9 @@ import type { RequestHandler } from "express";
  */
 export const securityHeaders: RequestHandler = (_req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
+  // Nothing the API answers is a page: a browser that opened one would load and run nothing from it,
+  // and no page may frame it.
+  res.setHeader("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'");
   res.setHeader("X-Frame-Options", "DENY");
   res.setHeader("Referrer-Policy", "same-origin");
   // Browsers ignore HSTS on plain HTTP, so this is safe in local development.

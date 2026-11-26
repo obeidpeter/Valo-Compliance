@@ -4,6 +4,7 @@ import { createServer, request, type IncomingHttpHeaders, type Server } from "no
 import type { AddressInfo } from "node:net";
 import express from "express";
 import { CLERK_PROXY_PATH, clerkProxy } from "./clerkProxyMiddleware";
+import { securityHeaders } from "../platform/security-headers";
 
 type Seen = {
   method?: string | undefined;
@@ -61,6 +62,13 @@ function frontendApi(seen: Seen[]) {
         res.writeHead(200, { "content-type": "application/json", "keep-alive": "timeout=99" });
         res.write('{"a":');
         res.end("1}");
+      } else if (req.url?.startsWith("/v1/own-policy")) {
+        res.writeHead(200, {
+          "content-type": "text/plain",
+          "content-length": "6",
+          "content-security-policy": "default-src 'self'",
+        });
+        res.end("policy");
       } else if (req.url?.startsWith("/v1/empty")) {
         res.writeHead(204);
         res.end();
@@ -80,6 +88,8 @@ test("the Clerk proxy forwards only what Clerk should see and returns responses 
   const upstream = frontendApi(seen);
   const upstreamPort = await listen(upstream);
   const app = express();
+  // As in app.ts: the security headers come first, so every answer, the proxy's included, has them.
+  app.use(securityHeaders);
   app.use(
     CLERK_PROXY_PATH,
     clerkProxy({ target: `http://127.0.0.1:${upstreamPort}`, secretKey, siteOrigin }),
@@ -129,6 +139,23 @@ test("the Clerk proxy forwards only what Clerk should see and returns responses 
       assert.notEqual(reply.headers["keep-alive"], "timeout=99");
       seen.splice(0);
     });
+
+    await t.test(
+      "the provider's answers keep Valo's other headers, but the provider's own content policy",
+      async () => {
+        const plain = await send(port, `${CLERK_PROXY_PATH}/v1/sized`);
+        assert.equal(plain.headers["x-content-type-options"], "nosniff");
+        assert.equal(plain.headers["x-frame-options"], "DENY");
+        assert.equal(
+          plain.headers["content-security-policy"],
+          undefined,
+          "Valo's policy is for its own answers",
+        );
+        const own = await send(port, `${CLERK_PROXY_PATH}/v1/own-policy`);
+        assert.equal(own.headers["content-security-policy"], "default-src 'self'");
+        seen.splice(0);
+      },
+    );
 
     await t.test("a response with no body carries no length", async () => {
       const reply = await send(port, `${CLERK_PROXY_PATH}/v1/empty`);

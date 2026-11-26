@@ -46,6 +46,10 @@
     "react/no-danger": "error",
     "react/no-danger-with-children": "error",
 
+    // Strict equality (small hardening, part 4): `==` and `!=` only against null, which also matches
+    // undefined.
+    "eslint/eqeqeq": ["error", "always", { "null": "ignore" }],
+
     // Configured for this codebase.
     "eslint/no-unused-vars": [
       "error",

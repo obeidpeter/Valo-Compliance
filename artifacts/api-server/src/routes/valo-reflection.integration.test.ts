@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
+import { request as httpRequest } from "node:http";
 import type { NextFunction, Request, Response } from "express";
 import { contractOperations } from "../test-support/contract-operations";
 import { LONG_MARKUP, MARK, SHORT_MARKUP } from "../test-support/hostile-markup";
@@ -14,11 +15,11 @@ import { NO_ROWS, changedTables, tableDigests } from "../test-support/table-dige
  * its query, each value twice, and, for a change, in its body's keys and values, from the site's own
  * page and, where it needs an account, signed in, so that it reaches the route's own checks. Every
  * answer must be JSON or empty, never HTML, and name its character set; carry the headers that stop a
- * browser reading it as another type, framing it or sending its address on, and HSTS for a year; be
- * kept from shared caches when it is private; and be no failure of the server's own. No request may
- * change the prototype every object inherits. An address the API does not have, a malformed body and
- * an oversized one are answered the same way, as are refusals before any route is reached, and no read
- * changes anything but the counts reads keep. The security baseline cites these checks by their OWASP
+ * browser reading it as another type, running or loading anything from it, framing it or sending its
+ * address on, and HSTS for a year; be kept from shared caches when it is private; and be no failure of
+ * the server's own. No request may change the prototype every object inherits. An address the API does
+ * not have, a folder, TRACE, a malformed body and an oversized one are answered the same way, as are
+ * refusals before any route is reached, and no read changes anything but the counts reads keep. The security baseline cites these checks by their OWASP
  * ASVS 5.0.0 identifiers (docs/registers/security-baseline.json).
  *
  * Only the identity provider is stood in for. Every account is synthetic, and the database is a
@@ -109,11 +110,41 @@ test(
         headers: reply.headers,
       } satisfies Answer;
     };
+    /** fetch refuses TRACE, so it is sent as a plain request, with a header the answer must not repeat. */
+    const traceProbe = `synthetic-trace-${tag}`;
+    const sendTrace = (path: string) =>
+      new Promise<Answer>((done, failed) => {
+        const sent = httpRequest(
+          `${base}/api${path}`,
+          { method: "TRACE", headers: { "x-valo-trace-probe": traceProbe, ...visitor } },
+          (reply) => {
+            let text = "";
+            reply.setEncoding("utf8");
+            reply.on("data", (chunk: string) => (text += chunk));
+            reply.on("end", () => {
+              const headers = new Headers();
+              for (const [name, value] of Object.entries(reply.headers))
+                if (typeof value === "string") headers.set(name, value);
+              done({
+                status: reply.statusCode ?? 0,
+                type: reply.headers["content-type"] ?? "",
+                text,
+                headers,
+              });
+            });
+          },
+        );
+        sent.on("error", failed);
+        sent.end();
+      });
     /** What is wrong with an answer, if anything. */
     const faults = (where: string, answer: Answer, { privateAnswer = false } = {}) => {
       const found: string[] = [];
       if (answer.headers.get("x-content-type-options") !== "nosniff") found.push(`${where}: no nosniff`);
       if (answer.headers.get("x-frame-options") !== "DENY") found.push(`${where}: may be framed`);
+      // Nothing the API answers is a page (OWASP ASVS 5.0.0 V3.4.3).
+      if (answer.headers.get("content-security-policy") !== "default-src 'none'; frame-ancestors 'none'")
+        found.push(`${where}: no policy that loads and runs nothing`);
       if (answer.headers.get("referrer-policy") !== "same-origin")
         found.push(`${where}: may send its address to another site`);
       // HSTS for at least a year (OWASP ASVS 5.0.0 V3.4.1).
@@ -235,6 +266,10 @@ test(
             "an address the API does not have",
             await send(`/${encodeURIComponent(SHORT_MARKUP)}`, { headers: visitor }),
           ],
+          ["the API's own folder", await send("/", { headers: visitor })],
+          ["a folder", await send("/static/", { headers: visitor })],
+          ["a repository's folder", await send("/.git/", { headers: visitor })],
+          ["TRACE", await sendTrace("/healthz")],
           [
             "a malformed body",
             await send("/workspace/documents", { method: "POST", headers: json, body: `{"${MARK}":` }),
@@ -263,8 +298,13 @@ test(
           assert.ok(!answer.text.includes(MARK), `${where}: the answer repeats what was sent`);
         }
         assert.deepEqual(found, []);
-        assert.equal(answers[0]![1].status, 404);
-        assert.equal((JSON.parse(answers[0]![1].text) as { code: string }).code, "NOT_FOUND");
+        // An address the API does not have, a folder and TRACE are each a JSON 404, never a listing,
+        // and TRACE repeats nothing the request carried.
+        for (const [where, answer] of answers.slice(0, 5)) {
+          assert.equal(answer.status, 404, where);
+          assert.equal((JSON.parse(answer.text) as { code: string }).code, "NOT_FOUND", where);
+        }
+        assert.ok(!answers[4]![1].text.includes(traceProbe), "TRACE repeats what it was sent");
       });
 
       await t.test(
