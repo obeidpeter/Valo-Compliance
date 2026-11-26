@@ -172,16 +172,22 @@
     {
       "id": "v5.0.0-1.2.5",
       "level": 1,
-      "status": "untested",
+      "status": "met",
       "bears_on": [
         "SEC-003"
       ],
-      "control": "Product code starts other programs only with execFile and fork, which pass arguments as a list and start no shell: the PDF reader's tools, LibreOffice's check of a Word file, and the source reader's browser.",
+      "control": "Product code starts other programs only with execFile, spawn and fork, which pass arguments as a list and start no shell: the PDF reader's tools, LibreOffice's check of a Word file, and the source reader's browser. The repository rule no-shell refuses exec and execSync from child_process, and a shell option in any file that starts a program.",
       "code": [
         "artifacts/api-server/src/modules/manual-library/files.ts",
-        "artifacts/api-server/src/modules/sources/source-extract.ts"
+        "artifacts/api-server/src/modules/sources/source-extract.ts",
+        "scripts/src/valo/architecture-check.ts#noShellViolations"
       ],
-      "gap": "No rule stops product code starting a shell; a repository rule like the one for SQL would."
+      "tests": [
+        {
+          "file": "scripts/src/valo/architecture-check.test.ts",
+          "test": "product code starts no shell: no exec or execSync from child_process, and no shell option (small hardening, part 4)"
+        }
+      ]
     },
     {
       "id": "v5.0.0-1.2.6",
@@ -255,7 +261,7 @@
       "checks": [
         {
           "job": "foundation",
-          "step": "Prove compiled frontend enforces unique nonces and blocks injected scripts"
+          "step": "Prove the compiled frontend's headers, content types, folder and TRACE answers, unique nonces and script blocking"
         }
       ]
     },
@@ -892,37 +898,46 @@
     {
       "id": "v5.0.0-3.4.3",
       "level": 2,
-      "status": "partly met",
+      "status": "met",
       "bears_on": [
         "SEC-003"
       ],
-      "control": "Every page carries a policy with a fresh nonce for each response, 'strict-dynamic', object-src 'none' and base-uri 'none', and allows scripts only from Valo's own origin and the identity provider's hosts, with the bot check its sign-up uses.",
+      "control": "Every page carries a policy with a fresh nonce for each response, 'strict-dynamic', object-src 'none' and base-uri 'none', and allows scripts only from Valo's own origin and the identity provider's hosts, with the bot check its sign-up uses. The API's own answers, JSON and files sent as attachments, carry default-src 'none' and frame-ancestors 'none', so a browser that opened one would load and run nothing from it. The identity provider's answers, passed through its proxy, keep the provider's own policy.",
       "code": [
         "artifacts/valo/src/lib/content-security-policy.ts#contentSecurityPolicy",
-        "artifacts/valo/middleware.ts"
+        "artifacts/valo/middleware.ts",
+        "artifacts/api-server/src/platform/security-headers.ts#securityHeaders",
+        "artifacts/api-server/src/middlewares/clerkProxyMiddleware.ts"
       ],
       "tests": [
         {
           "file": "artifacts/valo/src/lib/content-security-policy.test.ts",
           "test": "production denies injected scripts, frames, objects and unconfigured origins while allowing required Clerk resources"
+        },
+        {
+          "file": "artifacts/api-server/src/routes/valo-reflection.integration.test.ts",
+          "test": "hostile text sent to every operation in the contract comes back only inside JSON with the security headers, fails no route, and stays text in the database and its searches"
+        },
+        {
+          "file": "artifacts/api-server/src/middlewares/clerkProxyMiddleware.test.ts",
+          "test": "the Clerk proxy forwards only what Clerk should see and returns responses the edge accepts"
         }
       ],
-      "gap": "The API's answers carry no policy. They are JSON, which runs nothing, but a policy of default-src 'none' would cover them too.",
       "checks": [
         {
           "job": "foundation",
-          "step": "Prove compiled frontend enforces unique nonces and blocks injected scripts"
+          "step": "Prove the compiled frontend's headers, content types, folder and TRACE answers, unique nonces and script blocking"
         }
       ]
     },
     {
       "id": "v5.0.0-3.4.4",
       "level": 2,
-      "status": "partly met",
+      "status": "met",
       "bears_on": [
         "SEC-003"
       ],
-      "control": "The API's answers carry nosniff, and the web app's configuration sets it for every path it serves.",
+      "control": "The API's answers carry nosniff, and the web app's configuration sets it for every path it serves: its pages, the build's scripts and the public folder's files.",
       "code": [
         "artifacts/api-server/src/platform/security-headers.ts#securityHeaders",
         "artifacts/valo/next.config.mjs"
@@ -933,16 +948,21 @@
           "test": "hostile text sent to every operation in the contract comes back only inside JSON with the security headers, fails no route, and stays text in the database and its searches"
         }
       ],
-      "gap": "No test reads nosniff from the web server's answers."
+      "checks": [
+        {
+          "job": "foundation",
+          "step": "Prove the compiled frontend's headers, content types, folder and TRACE answers, unique nonces and script blocking"
+        }
+      ]
     },
     {
       "id": "v5.0.0-3.4.5",
       "level": 2,
-      "status": "partly met",
+      "status": "met",
       "bears_on": [
         "SEC-003"
       ],
-      "control": "The API's answers and the web app's pages carry Referrer-Policy: same-origin, so no address is sent to another site.",
+      "control": "The API's answers and the web app's pages and files carry Referrer-Policy: same-origin, so no address is sent to another site.",
       "code": [
         "artifacts/api-server/src/platform/security-headers.ts#securityHeaders",
         "artifacts/valo/next.config.mjs"
@@ -953,7 +973,12 @@
           "test": "hostile text sent to every operation in the contract comes back only inside JSON with the security headers, fails no route, and stays text in the database and its searches"
         }
       ],
-      "gap": "No test reads the policy from the web server's answers."
+      "checks": [
+        {
+          "job": "foundation",
+          "step": "Prove the compiled frontend's headers, content types, folder and TRACE answers, unique nonces and script blocking"
+        }
+      ]
     },
     {
       "id": "v5.0.0-3.4.6",
@@ -981,7 +1006,7 @@
       "checks": [
         {
           "job": "foundation",
-          "step": "Prove compiled frontend enforces unique nonces and blocks injected scripts"
+          "step": "Prove the compiled frontend's headers, content types, folder and TRACE answers, unique nonces and script blocking"
         }
       ]
     },
@@ -1104,13 +1129,14 @@
     {
       "id": "v5.0.0-4.1.1",
       "level": 1,
-      "status": "partly met",
+      "status": "met",
       "bears_on": [
         "SEC-003"
       ],
-      "control": "The API's answers are JSON with charset=utf-8, and the web server's pages are HTML in UTF-8, as Next.js sets them.",
+      "control": "The API's answers are JSON with charset=utf-8, and the web server's pages are HTML in UTF-8, as Next.js sets them; its scripts and text files name UTF-8 too, and each file is sent with its own type.",
       "code": [
-        "artifacts/api-server/src/app.ts"
+        "artifacts/api-server/src/app.ts",
+        "artifacts/valo/next.config.mjs"
       ],
       "tests": [
         {
@@ -1118,7 +1144,12 @@
           "test": "hostile text sent to every operation in the contract comes back only inside JSON with the security headers, fails no route, and stays text in the database and its searches"
         }
       ],
-      "gap": "No test reads the pages' content type."
+      "checks": [
+        {
+          "job": "foundation",
+          "step": "Prove the compiled frontend's headers, content types, folder and TRACE answers, unique nonces and script blocking"
+        }
+      ]
     },
     {
       "id": "v5.0.0-4.1.2",
@@ -2613,7 +2644,7 @@
       "checks": [
         {
           "job": "foundation",
-          "step": "Prove compiled frontend enforces unique nonces and blocks injected scripts"
+          "step": "Prove the compiled frontend's headers, content types, folder and TRACE answers, unique nonces and script blocking"
         }
       ]
     },
@@ -2986,13 +3017,14 @@
     {
       "id": "v5.0.0-13.4.3",
       "level": 2,
-      "status": "partly met",
+      "status": "met",
       "bears_on": [
         "SEC-003"
       ],
-      "control": "The API answers any address it does not have with a JSON 404, never a listing.",
+      "control": "The API answers any address it does not have, a folder among them, with a JSON 404, never a listing. The web server answers a folder of its build's files as an address it does not have, with the app's own page, which lists none of the folder's files.",
       "code": [
-        "artifacts/api-server/src/platform/http-errors.ts#notFound"
+        "artifacts/api-server/src/platform/http-errors.ts#notFound",
+        "artifacts/valo/next.config.mjs"
       ],
       "tests": [
         {
@@ -3000,20 +3032,37 @@
           "test": "hostile text sent to every operation in the contract comes back only inside JSON with the security headers, fails no route, and stays text in the database and its searches"
         }
       ],
-      "gap": "No test asks the web server for a folder."
+      "checks": [
+        {
+          "job": "foundation",
+          "step": "Prove the compiled frontend's headers, content types, folder and TRACE answers, unique nonces and script blocking"
+        }
+      ]
     },
     {
       "id": "v5.0.0-13.4.4",
       "level": 2,
-      "status": "untested",
+      "status": "met",
       "bears_on": [
         "SEC-003"
       ],
-      "control": "No route answers TRACE: the API treats it as an address it does not have.",
+      "control": "No route answers TRACE. The API treats it as an address it does not have, a JSON 404. The web server refuses it: with 405 for a file, and with its error page, a 500, for a page, since the runtime of Next's middleware does not take the method. Neither repeats anything the request carried.",
       "code": [
-        "artifacts/api-server/src/platform/http-errors.ts#notFound"
+        "artifacts/api-server/src/platform/http-errors.ts#notFound",
+        "artifacts/valo/middleware.ts"
       ],
-      "gap": "No test sends TRACE."
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/routes/valo-reflection.integration.test.ts",
+          "test": "hostile text sent to every operation in the contract comes back only inside JSON with the security headers, fails no route, and stays text in the database and its searches"
+        }
+      ],
+      "checks": [
+        {
+          "job": "foundation",
+          "step": "Prove the compiled frontend's headers, content types, folder and TRACE answers, unique nonces and script blocking"
+        }
+      ]
     },
     {
       "id": "v5.0.0-13.4.5",
@@ -3192,7 +3241,7 @@
       "checks": [
         {
           "job": "foundation",
-          "step": "Prove compiled frontend enforces unique nonces and blocks injected scripts"
+          "step": "Prove the compiled frontend's headers, content types, folder and TRACE answers, unique nonces and script blocking"
         }
       ]
     },
@@ -3457,21 +3506,25 @@
     {
       "id": "v5.0.0-15.3.5",
       "level": 2,
-      "status": "partly met",
+      "status": "met",
       "bears_on": [
         "SEC-003"
       ],
-      "control": "TypeScript's strict checks and the contract's schemas fix each value's type before it is used.",
+      "control": "TypeScript's strict checks and the contract's schemas fix each value's type before it is used, and the linter refuses == and != but against null, which also matches undefined.",
       "code": [
-        "lib/api-zod"
+        "lib/api-zod",
+        ".oxlintrc.json"
       ],
       "tests": [
         {
           "file": "artifacts/api-server/src/lib/valo-validation.test.ts",
           "test": "arbitrary clauses, HTML nodes, network embeds and duplicate IDs are not accepted"
+        },
+        {
+          "file": "scripts/src/valo/security-baseline.test.ts",
+          "test": "the linter CI runs refuses the code the security baseline counts on it to refuse"
         }
-      ],
-      "gap": "The linter does not require strict equality."
+      ]
     },
     {
       "id": "v5.0.0-15.3.6",

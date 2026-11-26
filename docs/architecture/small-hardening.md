@@ -105,15 +105,35 @@ The requirements, verbatim from the specification:
 ### Part 4: code rules
 
 - Strict equality in the linter, with comparisons to null allowed (the only loose comparisons today).
+  Built (slice 3a): `eqeqeq` in `.oxlintrc.json`, and the baseline's linter test requires it.
 - A repository rule against starting a shell: product code may not use `exec` or `execSync`, nor pass
-  `shell` to `spawn` or `execFile`.
+  `shell` to `spawn` or `execFile`. Built (slice 3a): `no-shell` (`scripts/src/valo/architecture-check.ts`)
+  reads the API's, the web app's and the libraries' product code, `scripts/src`, `scripts/ops` and the
+  database scripts, TypeScript and JavaScript modules alike. It refuses `exec` and `execSync` taken
+  from `child_process` by import, `require` or a dynamic import, and, in a file that takes anything
+  from it, any `shell` option, since a call can reach the option through a wrapper such as
+  `promisify`. Nothing in the repository did either.
 
 ### Part 5: HTTP
 
 - The API's answers carry `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'`.
+  Built (slice 3a), and the reflection test requires it of every answer. The identity provider's
+  answers, passed through its proxy, keep the provider's own policy: they are its scripts, its JSON
+  and its redirects, and a policy that runs nothing is not Valo's to set on them. The proxy's test
+  shows both.
 - Tests read the web server's own headers and content types: nosniff, the referrer policy, the policy
-  and the content type of pages and static files.
-- Tests send TRACE, and ask for a folder, of the API and the web server.
+  and the content type of pages and static files. Built (slice 3a), in the compiled frontend's check
+  in the foundation job: every page, a script of the build's, an image and a text file.
+- Tests send TRACE, and ask for a folder, of the API and the web server. Built (slice 3a): the
+  reflection test for the API, and the compiled frontend's check for the web server. What they found:
+  - The API answers TRACE, its own folder and two others with a JSON 404, as an address it does not
+    have, and repeats nothing sent.
+  - The web server sends a folder of its build's files to the same address without the slash, which
+    the app's own page answers, listing none of the folder's files.
+  - The web server answers TRACE with 405 for a file, and with its error page, a 500, for a page: the
+    runtime of Next's middleware refuses the method before Valo's code runs, so the middleware cannot
+    answer it. Neither repeats what was sent. A 405 for pages would take a server in front of Next,
+    of Valo's own or the host's, and is left to the launch.
 - Storage probes refuse redirects. Official sources keep following up to three redirects on their own
   host, over https, with each hop checked: that is intended, and the baseline's wording is corrected.
 - Tests give the staff upload a file over its limits, a file whose content is not its kind, a Word
@@ -134,7 +154,8 @@ The requirements, verbatim from the specification:
 | --- | --- | --- |
 | 1 | Part 1's bundle check | Built |
 | 2 | Part 1's rotation runbook and the logins' rehearsal | Built |
-| 3 | Part 4 and Part 5: the code rules and the HTTP gaps | Not built |
+| 3a | Part 4, and Part 5's policy, headers, content types, folders and TRACE | Built |
+| 3b | Part 5's storage redirects, the staff upload's refusals and the token made for another site | Not built |
 | 4 | Part 3: advisories, the scheduled scan, the bill of materials and the image check | Not built |
 | 5 | Part 2: limits as settings | Not built |
 

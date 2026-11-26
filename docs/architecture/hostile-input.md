@@ -182,7 +182,9 @@ The payloads live in one test-support list. They cover:
   tests them on every change.
 - **No HTML sanitiser**, as Valo has no rich text. A rich text field added later needs one, with tests
   of its own, and the raw-HTML rule makes that a reviewed change.
-- **No content security policy on the API.** It answers JSON, and files sent as attachments.
+- **No content security policy on the API**, at first: it answers JSON, and files sent as
+  attachments. [Small hardening](small-hardening.md) (slice 3a) later gave every answer of its own
+  `default-src 'none'; frame-ancestors 'none'`, which the reflection test requires.
 - **Not an independent assessment.** None of this is one. The requirement's suggested owner is
   "Security / independent assessor".
 
