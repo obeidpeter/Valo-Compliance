@@ -24,13 +24,23 @@ const labels: Record<string, string> = {
   reversed: "Payment reversed — access suspended",
 };
 
+/** A template a bundle's order grants, with its download while the purchase holds it. */
+export type BundleFile = {
+  contentVersionId: string;
+  title: string;
+  download: OwnedCheckoutDownload | undefined;
+};
+
 export function OrderCard({
   order,
   download,
+  bundleFiles,
   changed,
 }: {
   order: CommerceOrder;
   download: OwnedCheckoutDownload | undefined;
+  /** For a bundle's order: each template it grants (docs/architecture/commercial-settings.md, slice 4c). */
+  bundleFiles?: BundleFile[] | undefined;
   changed: () => Promise<unknown>;
 }) {
   const [busy, setBusy] = useState(false),
@@ -90,14 +100,41 @@ export function OrderCard({
           </dd>
         </div>
       </dl>
+      {bundleFiles && (
+        <div className="mt-4 text-sm">
+          <h3 className="font-medium">Templates in this bundle</h3>
+          <ul className="mt-2 space-y-2" aria-label={`Templates in ${order.title}`}>
+            {bundleFiles.map((file) => (
+              <li key={file.contentVersionId} className="flex flex-wrap items-center justify-between gap-2">
+                <span>{file.title}</span>
+                {order.status === "verified_success" &&
+                  (file.download ? (
+                    <a
+                      href={basePath + file.download.downloadPath}
+                      className="btn btn-secondary btn-sm"
+                      aria-label={`Download ${file.title}`}
+                      data-testid="bundle-template-download"
+                    >
+                      <Download className="h-4 w-4" aria-hidden /> Download
+                    </a>
+                  ) : (
+                    <span className="text-muted-foreground">No longer available to download</span>
+                  ))}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       <details className="my-4 text-sm">
         <summary className="cursor-pointer py-2 font-medium">
           Licence at purchase · {order.licenceVersion}
         </summary>
         <p className="whitespace-pre-wrap py-2">{order.licenceText}</p>
-        <p className="text-muted-foreground">
-          Content version: <span className="break-all">{order.contentVersionId}</span>
-        </p>
+        {order.contentVersionId && (
+          <p className="text-muted-foreground">
+            Content version: <span className="break-all">{order.contentVersionId}</span>
+          </p>
+        )}
       </details>
       {order.disputeStatus && (
         <>
@@ -109,7 +146,7 @@ export function OrderCard({
           <CustomerDisputeInformation orderId={order.id} />
         </>
       )}
-      {order.status === "verified_success" && !download && (
+      {order.status === "verified_success" && !bundleFiles && !download && (
         <p className="my-3 text-sm text-muted-foreground" data-testid="order-download-unavailable">
           This edition is no longer available to download. Your saved receipt stays here.
         </p>

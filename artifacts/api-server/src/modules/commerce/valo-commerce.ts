@@ -43,8 +43,11 @@ import {
   assertPayableOrder,
   lockCheckoutWorkspace,
   openEditionOrder,
+  orderEditions,
+  orderLineEditions,
   verifiedEditions,
 } from "./checkout-editions";
+import { bundleForOrder, bundleOffers } from "./bundle-orders";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 const originalReceiptActions = ["payment.verified_success", "payment.synthetic_receipt_recovered"];
 function audit(tx: Tx, workspaceId: string, actorId: string, action: string, id: string) {
@@ -87,7 +90,9 @@ function display(
     licenceVersion: order.line.licenceVersion,
     licenceText: order.line.licenceText,
     taxTreatment: order.line.taxTreatment,
-    contentVersionId: order.line.contentVersionId,
+    // A template's order names its edition; a bundle's order names none of its own, and lists each it grants.
+    contentVersionId: order.line.contentVersionId ?? null,
+    editions: orderLineEditions(order.line),
     // The access rule the order recorded when it was made; one made before the rule had a record carries.
     carriesToLaterEditions: order.carriesToLaterEditions ?? true,
     refundStatus: refunds[0]?.status ?? null,
@@ -256,7 +261,7 @@ export async function ownedTemplateEditions(actor: WorkspaceActor) {
   return [...new Set(owned)].sort();
 }
 export async function purchases(actor: WorkspaceActor) {
-  const { ownedPrices, ...listing } = await db.transaction(async (tx) => {
+  const { ownedPrices, heldEditions, ...listing } = await db.transaction(async (tx) => {
     await authorizeWorkspaceRead(tx, actor);
     const orderRows = await tx
       .select()
@@ -311,12 +316,37 @@ export async function purchases(actor: WorkspaceActor) {
       }
       for (const event of receiptEvents) originalReceipts.add(event.id);
     }
+    // A template a bundle granted that has no price of its own is listed by its edition, with the title its
+    // order copied (docs/architecture/commercial-settings.md, slice 4c).
     const ownedPrices = await tx.execute<OwnedPrice>(sql`
       select p.id as "offerId", p.content_version_id as edition, p.title, owned.carries
       from public.valo_prices p join (${verifiedEditions(actor)}) owned on owned.edition=p.content_version_id
-      where p.effective_from<=now() and length(p.approval_reference)>0 order by p.id`);
+      where p.effective_from<=now() and length(p.approval_reference)>0
+      union all
+      select owned.edition, owned.edition, named.title, owned.carries
+      from (${verifiedEditions(actor)}) owned
+      cross join lateral (
+        select x.granted->>'title' as title
+          from public.valo_entitlements e
+          join public.valo_orders o on o.id = e.order_id and o.workspace_id = e.workspace_id
+          cross join lateral jsonb_array_elements(o.line->'editions') as x(granted)
+         where e.workspace_id = ${actor.workspaceId}::uuid and e.content_version_id = owned.edition
+           and o.bundle_id is not null and x.granted->>'contentVersionId' = owned.edition::text
+         limit 1) named
+      where not exists (
+        select from public.valo_prices p where p.content_version_id = owned.edition
+           and p.effective_from <= now() and length(p.approval_reference) > 0)
+      order by 1`);
+    // The editions the workspace holds, bought or carried to: a bundle that includes one is not offered.
+    const { rows: carried } = await tx.execute<{ edition: string }>(
+      sql`select edition from public.valo_workspace_carried_editions()`,
+    );
     return {
       ownedPrices: ownedPrices.rows,
+      heldEditions: new Set([
+        ...ownedPrices.rows.map((row) => row.edition),
+        ...carried.map((row) => row.edition),
+      ]),
       // The access rule a purchase made now records (slice 3b), which the buyer accepts with the licence.
       purchaseCarriesToLaterEditions: await commercialSettingChoice(tx, "purchase_carries_to_later_editions"),
       available: true,
@@ -336,16 +366,26 @@ export async function purchases(actor: WorkspaceActor) {
   });
   // After the transaction: the catalogue takes its own connections. It holds no tenant data.
   const catalogue = await commercialCatalogue(ownedPrices);
+  const bundles = (await bundleOffers()).filter(
+    (offer) => !offer.templates.some((template) => heldEditions.has(template.edition)),
+  );
   return {
     ...listing,
     products: catalogue.offers.map((offer) => offer.product),
+    bundles,
     ownedDownloads: catalogue.ownedDownloads,
   };
 }
 export async function createOrder(actor: WorkspaceActor, raw: unknown) {
   const input = CreateCommerceOrderBody.strict().parse(raw);
+  // An order buys one template's price or one bundle's version (docs/architecture/commercial-settings.md,
+  // slice 4c).
+  if ((input.priceId === undefined) === (input.bundleId === undefined))
+    throw new ValoProblem(422, "Choose one template or one bundle to buy. No order was created.");
+  if (input.bundleId !== undefined) return createBundleOrder(actor, { ...input, bundleId: input.bundleId });
+  const priceId = input.priceId!;
   // Before the transaction: see commerceProducts.
-  const offer = (await commercialCatalogue()).offers.find((entry) => entry.product.id === input.priceId);
+  const offer = (await commercialCatalogue()).offers.find((entry) => entry.product.id === priceId);
   return db.transaction(async (tx) => {
     await assertSafetyActive(tx, "checkout");
     // Serialize one tenant's idempotency/price selection without trusting browser prices.
@@ -360,7 +400,7 @@ export async function createOrder(actor: WorkspaceActor, raw: unknown) {
     if (old) {
       await authorizeWorkspaceWrite(tx, actor);
       if (
-        old.priceId !== input.priceId ||
+        old.priceId !== priceId ||
         old.line.licenceVersion !== input.acceptedLicenceVersion ||
         (old.carriesToLaterEditions ?? true) !== input.acceptedCarriesToLaterEditions
       )
@@ -370,7 +410,7 @@ export async function createOrder(actor: WorkspaceActor, raw: unknown) {
         );
       return presentOrder(tx, old);
     }
-    const [price] = await tx.select().from(valoPrices).where(eq(valoPrices.id, input.priceId)).for("share");
+    const [price] = await tx.select().from(valoPrices).where(eq(valoPrices.id, priceId)).for("share");
     await authorizeWorkspaceWrite(tx, actor);
     if (
       !price ||
@@ -397,7 +437,10 @@ export async function createOrder(actor: WorkspaceActor, raw: unknown) {
         409,
         "What a purchase includes has changed. Review it before continuing. No order was created.",
       );
-    const existing = await openEditionOrder(tx, actor, price.contentVersionId, price.id);
+    const existing = await openEditionOrder(tx, actor, [price.contentVersionId], {
+      priceId: price.id,
+      bundleId: null,
+    });
     if (existing) {
       if (
         existing.priceId !== price.id ||
@@ -440,6 +483,119 @@ export async function createOrder(actor: WorkspaceActor, raw: unknown) {
     return presentOrder(tx, order);
   });
 }
+/** Whether the workspace already holds any of these editions: bought, or carried to under its order's rule. */
+async function holdsAny(tx: Tx, actor: WorkspaceActor, editions: string[]) {
+  const { rows } = await tx.execute<{ edition: string }>(sql`
+    select owned.edition from (${verifiedEditions(actor)}) owned where owned.edition in ${editions}
+    union all
+    select c.edition from public.valo_workspace_carried_editions() c where c.edition in ${editions}
+    limit 1`);
+  return rows.length > 0;
+}
+/**
+ * A bundle's order (docs/architecture/commercial-settings.md, slice 4c): the bundle version's amount, licence
+ * and tax treatment and, for each of its templates, the released edition it grants, with its title. It is
+ * made under the same locks and checks as a template's order, and refused while the workspace already holds
+ * one of those editions or another order covers one.
+ */
+async function createBundleOrder(
+  actor: WorkspaceActor,
+  input: {
+    bundleId: string;
+    acceptedLicenceVersion: string;
+    acceptedCarriesToLaterEditions: boolean;
+    requestKey: string;
+  },
+) {
+  return db.transaction(async (tx) => {
+    await assertSafetyActive(tx, "checkout");
+    await lockCheckoutWorkspace(tx, actor.workspaceId);
+    const carries = await commercialSettingChoice(tx, "purchase_carries_to_later_editions", { hold: true });
+    const [old] = await tx
+      .select()
+      .from(valoOrders)
+      .where(and(eq(valoOrders.workspaceId, actor.workspaceId), eq(valoOrders.requestKey, input.requestKey)));
+    if (old) {
+      await authorizeWorkspaceWrite(tx, actor);
+      if (
+        old.bundleId !== input.bundleId ||
+        old.line.licenceVersion !== input.acceptedLicenceVersion ||
+        (old.carriesToLaterEditions ?? true) !== input.acceptedCarriesToLaterEditions
+      )
+        throw new ValoProblem(
+          409,
+          "This request key belongs to another choice. Your original order is unchanged.",
+        );
+      return presentOrder(tx, old);
+    }
+    const { version, templates } = await bundleForOrder(tx, input.bundleId);
+    await authorizeWorkspaceWrite(tx, actor);
+    if (input.acceptedLicenceVersion !== version.licenceVersion)
+      throw new ValoProblem(409, "The licence changed. Review the current licence before continuing.");
+    if (input.acceptedCarriesToLaterEditions !== carries)
+      throw new ValoProblem(
+        409,
+        "What a purchase includes has changed. Review it before continuing. No order was created.",
+      );
+    const editions = templates.map((template) => template.edition);
+    if (await holdsAny(tx, actor, editions))
+      throw new ValoProblem(
+        409,
+        "Your workspace already owns a template in this bundle. Check your purchases. No order was created.",
+      );
+    const existing = await openEditionOrder(tx, actor, editions, { priceId: null, bundleId: version.id });
+    if (existing) {
+      if (
+        existing.bundleId !== version.id ||
+        existing.line.licenceVersion !== input.acceptedLicenceVersion ||
+        (existing.carriesToLaterEditions ?? true) !== carries
+      )
+        throw new ValoProblem(
+          409,
+          "An earlier order covers a template in this bundle. Check it in your purchases.",
+        );
+      return presentOrder(tx, existing);
+    }
+    await limit(tx, actor);
+    const id = randomUUID();
+    const order = singleRow(
+      await tx
+        .insert(valoOrders)
+        .values({
+          id,
+          workspaceId: actor.workspaceId,
+          requestedBy: actor.identityId,
+          requestKey: input.requestKey,
+          reference: `valo-test-${id}`,
+          bundleId: version.id,
+          amountKobo: version.amountKobo,
+          currency: version.currency,
+          // The database refuses any rule but the one in effect, which this transaction holds.
+          carriesToLaterEditions: carries,
+          line: {
+            title: version.title,
+            bundle: version.bundleKey,
+            licenceVersion: version.licenceVersion,
+            licenceText: version.licenceText,
+            taxTreatment: version.taxTreatment,
+            editions: templates.map((template) => ({
+              contentVersionId: template.edition,
+              title: template.title,
+            })),
+          },
+        })
+        .returning(),
+    );
+    await audit(tx, actor.workspaceId, actor.identityId, "order.created", id);
+    return presentOrder(tx, order);
+  });
+}
+/** Whether an order's price or bundle is on sale now: a new payment is started only for one. */
+async function stillOnSale(order: typeof valoOrders.$inferSelect) {
+  return order.bundleId
+    ? (await bundleOffers()).some((offer) => offer.id === order.bundleId)
+    : (await commerceProducts()).some((product) => product.id === order.priceId);
+}
 async function ownedOrder(tx: Tx, actor: WorkspaceActor, id: string) {
   const [order] = await tx
     .select()
@@ -454,6 +610,7 @@ export async function startCheckout(actor: WorkspaceActor, id: string, email: st
   // Before the transaction: see commerceProducts. It is read again just before the
   // merchant call, outside any transaction.
   const products = await commerceProducts();
+  const bundles = await bundleOffers();
   const origin = trustedSiteOrigin();
   const order = await db.transaction(async (tx) => {
     await assertSafetyActive(tx, "checkout");
@@ -463,7 +620,11 @@ export async function startCheckout(actor: WorkspaceActor, id: string, email: st
       throw new ValoProblem(409, "This purchase is already verified. Do not pay again.");
     if (order.status === "needs_review" || order.status === "reversed")
       throw new ValoProblem(409, "This order needs staff reconciliation before any new payment.");
-    if (!products.some((p) => p.id === order.priceId))
+    if (
+      !(order.bundleId
+        ? bundles.some((offer) => offer.id === order.bundleId)
+        : products.some((p) => p.id === order.priceId))
+    )
       throw new ValoProblem(
         409,
         "This product is unavailable for new checkout. Your order history and drafts are unchanged.",
@@ -499,7 +660,7 @@ export async function startCheckout(actor: WorkspaceActor, id: string, email: st
   // No membership lock across provider I/O. Stable provider reference prevents
   // a retry from becoming a different order; never mint another reference on error.
   const url = await withSafetyDispatch("checkout", async () => {
-    if (!(await commerceProducts()).some((p) => p.id === order.priceId))
+    if (!(await stillOnSale(order)))
       throw new ValoProblem(409, "This product is no longer available for new checkout.");
     return paystack.initialise(order, email, `${origin}/workspace/purchases`);
   });
@@ -563,14 +724,17 @@ export async function settleVerifiedOrder(id: string, data: VerifiedTransaction,
         .returning(),
     );
     if (status === "verified_success") {
+      // PAY-005: one grant for each edition the order grants, a bundle's for each of its templates, once.
       await tx
         .insert(valoEntitlements)
-        .values({
-          id: randomUUID(),
-          workspaceId: order.workspaceId,
-          orderId: id,
-          contentVersionId: order.line.contentVersionId,
-        })
+        .values(
+          orderEditions(order.line).map((edition) => ({
+            id: randomUUID(),
+            workspaceId: order.workspaceId,
+            orderId: id,
+            contentVersionId: edition,
+          })),
+        )
         .onConflictDoNothing();
       await tx
         .insert(valoPurchaseOutbox)
@@ -632,13 +796,19 @@ async function repairVerifiedFulfilment(
   actorId: string,
   receiptStatus: "pending" | "held_synthetic_recovery" = "pending",
 ) {
-  const [grant] = await tx.select().from(valoEntitlements).where(eq(valoEntitlements.orderId, order.id));
+  const grants = await tx
+    .select({ edition: valoEntitlements.contentVersionId })
+    .from(valoEntitlements)
+    .where(eq(valoEntitlements.orderId, order.id));
+  const missing = orderEditions(order.line).filter(
+    (edition) => !grants.some((grant) => grant.edition === edition),
+  );
   const [receipt] = await tx
     .select()
     .from(valoPurchaseOutbox)
     .where(and(eq(valoPurchaseOutbox.orderId, order.id), eq(valoPurchaseOutbox.kind, "purchase_receipt")));
   let repaired = false;
-  if (!grant) {
+  if (missing.length) {
     const [refund] = await tx
       .select({ id: valoRefundRequests.id })
       .from(valoRefundRequests)
@@ -652,12 +822,14 @@ async function repairVerifiedFulfilment(
     if (!refund && !dispute) {
       await tx
         .insert(valoEntitlements)
-        .values({
-          id: randomUUID(),
-          workspaceId: order.workspaceId,
-          orderId: order.id,
-          contentVersionId: order.line.contentVersionId,
-        })
+        .values(
+          missing.map((edition) => ({
+            id: randomUUID(),
+            workspaceId: order.workspaceId,
+            orderId: order.id,
+            contentVersionId: edition,
+          })),
+        )
         .onConflictDoNothing();
       repaired = true;
     }
@@ -692,16 +864,21 @@ export async function recoverSyntheticPurchaseReceipt(id: string) {
       .select()
       .from(valoWorkspaces)
       .where(eq(valoWorkspaces.id, order.workspaceId));
-    const [grant] = await tx
-      .select()
-      .from(valoEntitlements)
-      .where(
-        and(
-          eq(valoEntitlements.orderId, id),
-          eq(valoEntitlements.workspaceId, order.workspaceId),
-          eq(valoEntitlements.contentVersionId, order.line.contentVersionId),
-        ),
-      );
+    // Retained synthetic fixtures are template orders: a bundle's order names no single edition, and none of
+    // its grants is a matching one.
+    const edition = order.line.contentVersionId;
+    const [grant] = edition
+      ? await tx
+          .select()
+          .from(valoEntitlements)
+          .where(
+            and(
+              eq(valoEntitlements.orderId, id),
+              eq(valoEntitlements.workspaceId, order.workspaceId),
+              eq(valoEntitlements.contentVersionId, edition),
+            ),
+          )
+      : [];
     const blockers = syntheticReceiptBlockers({
       owner: workspace?.ownerIdentityId ?? null,
       requester: order.requestedBy,

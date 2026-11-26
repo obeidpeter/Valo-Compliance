@@ -107,6 +107,7 @@ const REQUEST_FIELD_CASES = [
 /** Identifier fields that name nothing belonging to a workspace, with the reason. */
 const REQUEST_FIELDS_NOT_WORKSPACE_OWNED: Record<string, string> = {
   "POST /workspace/orders body.priceId": "Public price identifier, the same for every workspace.",
+  "POST /workspace/orders body.bundleId": "Public bundle version identifier, the same for every workspace.",
   "POST /workspace/tasks body.ruleId":
     "Rule identifier from the shared released rule registry; a source-linked task also needs the assessment, which has its own case, to contain that rule.",
   "POST /workspace/orders/{id}/dispute-information body.disputeId":

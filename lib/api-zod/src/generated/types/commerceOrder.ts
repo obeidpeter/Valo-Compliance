@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { CommerceOrderEditionsItem } from './commerceOrderEditionsItem';
 import type { CommerceOrderStatus } from './commerceOrderStatus';
 import type { RefundRecord } from './refundRecord';
 
@@ -21,7 +22,17 @@ export interface CommerceOrder {
   licenceVersion: string;
   licenceText: string;
   taxTreatment: string;
-  contentVersionId: string;
+  /**
+     * The edition a template's order buys; none for a bundle's order
+     * @nullable
+     */
+  contentVersionId: string | null;
+  /**
+     * Each edition the order grants, with the title it copied: one for a template's order, one for each of a bundle's templates.
+     * @minItems 1
+     * @maxItems 10
+     */
+  editions: CommerceOrderEditionsItem[];
   /** The access rule the order recorded when it was made, and keeps: whether the purchase carries to its template's later editions. An order made before the rule had a record carries. */
   carriesToLaterEditions: boolean;
   /** @nullable */

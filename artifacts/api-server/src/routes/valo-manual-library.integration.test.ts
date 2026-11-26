@@ -16,6 +16,7 @@ import {
 import { exercisePremiumPriceCommand } from "../test-support/premium-price-command";
 import { exerciseOwnerPriceRoutes } from "../test-support/owner-price-routes";
 import { exerciseOwnerBundleRoutes } from "../test-support/owner-bundle-routes";
+import { exerciseBundlePurchase } from "../test-support/bundle-purchase";
 import { exerciseOwnerSettingRoutes } from "../test-support/owner-setting-routes";
 import { exerciseOrderAccessRule } from "../test-support/order-access-rule";
 import { createOwnerPriceRouter } from "./valo-owner-prices";
@@ -795,6 +796,10 @@ test(
     await t.test(
       "only the recently verified development owner previews and records a bundle of released premium templates, whose next version closes the open one when it starts",
       () => exerciseOwnerBundleRoutes(call, editor),
+    );
+    await t.test(
+      "a bundle is bought once for all its templates, each granted once, and its order keeps its terms after the owner's next version",
+      () => exerciseBundlePurchase(call, editor),
     );
     await t.test(
       "only the recently verified development owner previews and records a commercial setting's value, which closes the open one when it starts and which a customer request reads in effect",

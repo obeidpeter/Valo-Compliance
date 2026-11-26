@@ -1618,6 +1618,14 @@ export const ListOwnedTemplateEditionsResponseItem = zod.uuid()
 export const ListOwnedTemplateEditionsResponse = zod.array(ListOwnedTemplateEditionsResponseItem)
 
 
+export const getCustomerPurchasesResponseOrdersItemEditionsMax = 10;
+
+
+export const getCustomerPurchasesResponseBundlesItemTemplatesMin = 2;
+export const getCustomerPurchasesResponseBundlesItemTemplatesMax = 10;
+
+
+
 export const GetCustomerPurchasesResponse = zod.object({
   "available": zod.boolean(),
   "message": zod.string(),
@@ -1636,7 +1644,11 @@ export const GetCustomerPurchasesResponse = zod.object({
   "licenceVersion": zod.string(),
   "licenceText": zod.string(),
   "taxTreatment": zod.string(),
+  "contentVersionId": zod.string().nullable().describe('The edition a template\'s order buys; none for a bundle\'s order'),
+  "editions": zod.array(zod.object({
   "contentVersionId": zod.string(),
+  "title": zod.string()
+})).min(1).max(getCustomerPurchasesResponseOrdersItemEditionsMax).describe('Each edition the order grants, with the title it copied: one for a template\'s order, one for each of a bundle\'s templates.'),
   "carriesToLaterEditions": zod.boolean().describe('The access rule the order recorded when it was made, and keeps: whether the purchase carries to its template\'s later editions. An order made before the rule had a record carries.'),
   "refundStatus": zod.string().nullable(),
   "receiptReference": zod.string().nullable(),
@@ -1670,6 +1682,20 @@ export const GetCustomerPurchasesResponse = zod.object({
   "licenceText": zod.string(),
   "taxTreatment": zod.string()
 })),
+  "bundles": zod.array(zod.object({
+  "id": zod.uuid().describe('The bundle\'s version on sale, which an order names'),
+  "bundle": zod.string().describe('The bundle\'s name across its versions'),
+  "title": zod.string(),
+  "amountKobo": zod.int().min(1),
+  "currency": zod.string(),
+  "licenceVersion": zod.string(),
+  "licenceText": zod.string(),
+  "taxTreatment": zod.string(),
+  "templates": zod.array(zod.object({
+  "edition": zod.uuid(),
+  "title": zod.string()
+})).min(getCustomerPurchasesResponseBundlesItemTemplatesMin).max(getCustomerPurchasesResponseBundlesItemTemplatesMax).describe('The edition of each of its templates that an order grants, by title.')
+})).describe('The bundles on sale now that hold no template the workspace already owns (docs/architecture/commercial-settings.md, slice 4c).'),
   "ownedDownloads": zod.array(zod.object({
   "offerId": zod.uuid(),
   "title": zod.string(),
@@ -1689,11 +1715,16 @@ export const createCommerceOrderBodyAcceptedLicenceVersionMax = 100;
 
 
 export const CreateCommerceOrderBody = zod.object({
-  "priceId": zod.uuid(),
+  "priceId": zod.uuid().optional(),
+  "bundleId": zod.uuid().optional().describe('The bundle\'s version on sale'),
   "acceptedLicenceVersion": zod.string().min(1).max(createCommerceOrderBodyAcceptedLicenceVersionMax),
   "acceptedCarriesToLaterEditions": zod.boolean().describe('The access rule the buyer was shown, which must be the rule in effect when the order is made.'),
   "requestKey": zod.uuid()
-})
+}).describe('An order buys one template\'s price or one bundle\'s version, and names exactly one of them.')
+
+export const createCommerceOrderResponseEditionsMax = 10;
+
+
 
 export const CreateCommerceOrderResponse = zod.object({
   "id": zod.string(),
@@ -1707,7 +1738,11 @@ export const CreateCommerceOrderResponse = zod.object({
   "licenceVersion": zod.string(),
   "licenceText": zod.string(),
   "taxTreatment": zod.string(),
+  "contentVersionId": zod.string().nullable().describe('The edition a template\'s order buys; none for a bundle\'s order'),
+  "editions": zod.array(zod.object({
   "contentVersionId": zod.string(),
+  "title": zod.string()
+})).min(1).max(createCommerceOrderResponseEditionsMax).describe('Each edition the order grants, with the title it copied: one for a template\'s order, one for each of a bundle\'s templates.'),
   "carriesToLaterEditions": zod.boolean().describe('The access rule the order recorded when it was made, and keeps: whether the purchase carries to its template\'s later editions. An order made before the rule had a record carries.'),
   "refundStatus": zod.string().nullable(),
   "receiptReference": zod.string().nullable(),
@@ -1755,6 +1790,10 @@ export const RefreshCommerceOrderBody = zod.object({
 
 })
 
+export const refreshCommerceOrderResponseEditionsMax = 10;
+
+
+
 export const RefreshCommerceOrderResponse = zod.object({
   "id": zod.string(),
   "reference": zod.string(),
@@ -1767,7 +1806,11 @@ export const RefreshCommerceOrderResponse = zod.object({
   "licenceVersion": zod.string(),
   "licenceText": zod.string(),
   "taxTreatment": zod.string(),
+  "contentVersionId": zod.string().nullable().describe('The edition a template\'s order buys; none for a bundle\'s order'),
+  "editions": zod.array(zod.object({
   "contentVersionId": zod.string(),
+  "title": zod.string()
+})).min(1).max(refreshCommerceOrderResponseEditionsMax).describe('Each edition the order grants, with the title it copied: one for a template\'s order, one for each of a bundle\'s templates.'),
   "carriesToLaterEditions": zod.boolean().describe('The access rule the order recorded when it was made, and keeps: whether the purchase carries to its template\'s later editions. An order made before the rule had a record carries.'),
   "refundStatus": zod.string().nullable(),
   "receiptReference": zod.string().nullable(),
@@ -1798,6 +1841,10 @@ export const GetCommerceReceiptParams = zod.object({
   "id": zod.uuid()
 })
 
+export const getCommerceReceiptResponseOneEditionsMax = 10;
+
+
+
 export const GetCommerceReceiptResponse = zod.object({
   "id": zod.string(),
   "reference": zod.string(),
@@ -1810,7 +1857,11 @@ export const GetCommerceReceiptResponse = zod.object({
   "licenceVersion": zod.string(),
   "licenceText": zod.string(),
   "taxTreatment": zod.string(),
+  "contentVersionId": zod.string().nullable().describe('The edition a template\'s order buys; none for a bundle\'s order'),
+  "editions": zod.array(zod.object({
   "contentVersionId": zod.string(),
+  "title": zod.string()
+})).min(1).max(getCommerceReceiptResponseOneEditionsMax).describe('Each edition the order grants, with the title it copied: one for a template\'s order, one for each of a bundle\'s templates.'),
   "carriesToLaterEditions": zod.boolean().describe('The access rule the order recorded when it was made, and keeps: whether the purchase carries to its template\'s later editions. An order made before the rule had a record carries.'),
   "refundStatus": zod.string().nullable(),
   "receiptReference": zod.string().nullable(),

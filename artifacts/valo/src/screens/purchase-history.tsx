@@ -38,9 +38,12 @@ function PurchaseHistoryContent() {
     });
   const [licences, setLicences] = useState<Record<string, boolean>>({}),
     [busy, setBusy] = useState(false),
-    [error, setError] = useState<string | null>(null);
+    [error, setError] = useState<string | null>(null),
+    [bundleError, setBundleError] = useState<string | null>(null);
   const [keys] = useState(() => new Map<string, string>());
   const offers = q.data?.products ?? [];
+  // Bundles on sale that hold no template the workspace owns (docs/architecture/commercial-settings.md, slice 4c).
+  const bundles = q.data?.bundles ?? [];
   // The access rule a purchase made now records; the order is made only with it accepted.
   const carries = q.data?.purchaseCarriesToLaterEditions ?? true;
   const ownedFiles = q.data?.ownedDownloads ?? [];
@@ -54,6 +57,32 @@ function PurchaseHistoryContent() {
   const products = offers.filter((p) => (directCheckout ? p.id === offerId : !downloads.has(p.id)));
   const selectedDownload = offerId ? downloads.get(offerId) : undefined;
   const refresh = () => qc.invalidateQueries({ queryKey: getGetCustomerPurchasesQueryKey() });
+  /** Saves a test order once for these terms: a retry reuses its request key, so it never makes a second. */
+  async function saveOrder(
+    keyId: string,
+    choice: { priceId: string } | { bundleId: string },
+    licenceVersion: string,
+    failed: (message: string | null) => void,
+  ) {
+    setBusy(true);
+    failed(null);
+    try {
+      if (!keys.has(keyId)) keys.set(keyId, randomUuid());
+      await createCommerceOrder({
+        ...choice,
+        acceptedLicenceVersion: licenceVersion,
+        acceptedCarriesToLaterEditions: carries,
+        requestKey: keys.get(keyId)!,
+      });
+      keys.delete(keyId);
+      await refresh();
+    } catch (e) {
+      failed(describeError(e).message);
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
   return (
     <div className="mx-auto max-w-6xl px-5 py-10 lg:px-8">
       <WorkspaceNav />
@@ -102,7 +131,9 @@ function PurchaseHistoryContent() {
                   ? "This offer is unavailable. Open the template again to see its current price and licence."
                   : offers.length
                     ? "Your workspace owns every template currently on sale."
-                    : "Nothing can be bought yet. A document is listed here once it is published with a price and a licence. The documents you have made, and their files, stay in your workspace."}
+                    : bundles.length
+                      ? "No template is on sale on its own. The bundles below can be bought."
+                      : "Nothing can be bought yet. A document is listed here once it is published with a price and a licence. The documents you have made, and their files, stay in your workspace."}
               </p>
             ) : (
               <ul className={directCheckout ? "max-w-2xl" : "grid gap-4 sm:grid-cols-2"}>
@@ -134,27 +165,12 @@ function PurchaseHistoryContent() {
                       disabled={busy || !licences[p.id]}
                       className="btn btn-primary"
                       onClick={() =>
-                        void (async () => {
-                          setBusy(true);
-                          setError(null);
-                          try {
-                            const keyId = `${p.id}:${p.licenceVersion}:${carries}`;
-                            if (!keys.has(keyId)) keys.set(keyId, randomUuid());
-                            await createCommerceOrder({
-                              priceId: p.id,
-                              acceptedLicenceVersion: p.licenceVersion,
-                              acceptedCarriesToLaterEditions: carries,
-                              requestKey: keys.get(keyId)!,
-                            });
-                            keys.delete(keyId);
-                            await refresh();
-                          } catch (e) {
-                            setError(describeError(e).message);
-                            await refresh();
-                          } finally {
-                            setBusy(false);
-                          }
-                        })()
+                        void saveOrder(
+                          `${p.id}:${p.licenceVersion}:${carries}`,
+                          { priceId: p.id },
+                          p.licenceVersion,
+                          setError,
+                        )
                       }
                     >
                       Save test order
@@ -169,6 +185,68 @@ function PurchaseHistoryContent() {
               </p>
             )}
           </section>
+          {!directCheckout && bundles.length > 0 && (
+            <section className="mb-8" aria-labelledby="bundle-choices">
+              <h2 id="bundle-choices" className="font-display mb-4 text-2xl">
+                Bundles you can buy
+              </h2>
+              <ul className="grid gap-4 sm:grid-cols-2">
+                {bundles.map((b) => (
+                  <li key={b.id} className="rounded-2xl border bg-card p-5" data-testid="bundle-offer">
+                    <h3 className="font-semibold">
+                      {b.title} · {formatNaira(b.amountKobo)}
+                    </h3>
+                    <p className="mt-2 text-sm">
+                      One purchase of these {b.templates.length} premium templates:
+                    </p>
+                    <ul className="list-disc pl-5 text-sm" aria-label={`Templates in ${b.title}`}>
+                      {b.templates.map((template) => (
+                        <li key={template.edition}>{template.title}</li>
+                      ))}
+                    </ul>
+                    <p className="my-2 text-sm">{b.taxTreatment}</p>
+                    {/* The access rule a purchase made now records (ADM-006). */}
+                    <p className="my-2 text-sm" data-testid="bundle-later-editions">
+                      {carries
+                        ? "Later editions of these templates are included at no further charge."
+                        : "This purchase covers these editions only, while they stay released: a later edition is not included."}
+                    </p>
+                    <details className="text-sm">
+                      <summary className="cursor-pointer py-2">Licence · {b.licenceVersion}</summary>
+                      <p className="whitespace-pre-wrap">{b.licenceText}</p>
+                    </details>
+                    <label className="my-3 flex items-start gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={licences["bundle:" + b.id] ?? false}
+                        onChange={(e) => setLicences((s) => ({ ...s, ["bundle:" + b.id]: e.target.checked }))}
+                      />
+                      I accept this version of the licence for this business.
+                    </label>
+                    <button
+                      disabled={busy || !licences["bundle:" + b.id]}
+                      className="btn btn-primary"
+                      onClick={() =>
+                        void saveOrder(
+                          `bundle:${b.id}:${b.licenceVersion}:${carries}`,
+                          { bundleId: b.id },
+                          b.licenceVersion,
+                          setBundleError,
+                        )
+                      }
+                    >
+                      Save test order
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              {bundleError && (
+                <p role="alert" className="mt-3 text-sm text-destructive">
+                  {bundleError}
+                </p>
+              )}
+            </section>
+          )}
           {(!directCheckout || Boolean(q.data?.orders.length)) && (
             <section aria-labelledby="purchase-history">
               <h2 id="purchase-history" className="font-display mb-4 text-2xl">
@@ -193,7 +271,17 @@ function PurchaseHistoryContent() {
                     <OrderCard
                       key={order.id}
                       order={order}
-                      download={editionDownloads.get(order.contentVersionId)}
+                      download={
+                        order.contentVersionId ? editionDownloads.get(order.contentVersionId) : undefined
+                      }
+                      bundleFiles={
+                        order.contentVersionId
+                          ? undefined
+                          : order.editions.map((edition) => ({
+                              ...edition,
+                              download: editionDownloads.get(edition.contentVersionId),
+                            }))
+                      }
                       changed={refresh}
                     />
                   ))}

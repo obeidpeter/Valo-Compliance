@@ -164,6 +164,31 @@ export const valoBundleChanges = pgTable(
     check("valo_bundle_changes_action_check", sql`${t.action} IN ('created', 'closed')`),
   ],
 );
+/**
+ * What an order copies when it is made: one priced edition and its terms, or a bundle's terms and, for each
+ * of its templates, the released edition it grants, with its title (docs/architecture/commercial-settings.md,
+ * slice 4c). The order keeps them after any later price, bundle version or edition.
+ */
+export type ValoOrderLine =
+  | {
+      title: string;
+      contentVersionId: string;
+      licenceVersion: string;
+      licenceText: string;
+      taxTreatment: string;
+      bundle?: undefined;
+      editions?: undefined;
+    }
+  | {
+      title: string;
+      contentVersionId?: undefined;
+      /** The bundle's name. */
+      bundle: string;
+      editions: { contentVersionId: string; title: string }[];
+      licenceVersion: string;
+      licenceText: string;
+      taxTreatment: string;
+    };
 export const valoOrders = pgTable(
   "valo_orders",
   {
@@ -174,18 +199,14 @@ export const valoOrders = pgTable(
     requestedBy: text("requested_by").notNull(),
     reference: text("reference").notNull(),
     requestKey: uuid("request_key").notNull(),
-    priceId: uuid("price_id")
-      .notNull()
-      .references(() => valoPrices.id),
-    line: jsonb("line")
-      .$type<{
-        title: string;
-        contentVersionId: string;
-        licenceVersion: string;
-        licenceText: string;
-        taxTreatment: string;
-      }>()
-      .notNull(),
+    /** The price this order buys, for one template's order. An order names a price or a bundle. */
+    priceId: uuid("price_id").references(() => valoPrices.id),
+    /**
+     * The bundle's version this order buys, for a bundle's order (docs/architecture/commercial-settings.md,
+     * slice 4c).
+     */
+    bundleId: uuid("bundle_id").references(() => valoBundles.id),
+    line: jsonb("line").$type<ValoOrderLine>().notNull(),
     amountKobo: integer("amount_kobo").notNull(),
     currency: text("currency").notNull().default("NGN"),
     status: text("status").notNull().default("created"),
@@ -208,6 +229,7 @@ export const valoOrders = pgTable(
     uniqueIndex("valo_order_provider_transaction_unique").on(t.providerTransactionId),
     index("valo_orders_workspace_created_idx").on(t.workspaceId, t.createdAt),
     check("valo_orders_amount_kobo_check", sql`${t.amountKobo} > 0`),
+    check("valo_orders_offer_check", sql`num_nonnulls(${t.priceId}, ${t.bundleId}) = 1`),
     check("valo_orders_currency_check", sql`${t.currency} = 'NGN'`),
     check(
       "valo_orders_status_check",
@@ -268,7 +290,9 @@ export const valoEntitlements = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    uniqueIndex("valo_entitlement_order_unique").on(t.orderId),
+    // One grant for each edition an order grants: a template's order grants one, a bundle's one for each of
+    // its templates (slice 4c).
+    uniqueIndex("valo_entitlement_order_edition_unique").on(t.orderId, t.contentVersionId),
     index("valo_entitlement_workspace_idx").on(t.workspaceId, t.contentVersionId),
     foreignKey({
       name: "valo_entitlement_order_tenant_fk",
