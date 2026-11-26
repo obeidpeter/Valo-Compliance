@@ -2,6 +2,7 @@ import { StaffRoleAdministration } from "@/components/staff-role-administration"
 import { AuditHistory } from "@/components/audit-history";
 import { OwnerRegulatoryGuidance } from "@/components/owner-regulatory-guidance";
 import { OwnerCheckerRules } from "@/components/owner-checker-rules";
+import { OwnerPrices } from "@/components/owner-prices";
 import { MfaVerification } from "@/components/mfa-verification";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "wouter";
@@ -188,6 +189,7 @@ export default function StaffPage() {
             {area === "content" && <SourceRegister />}
             {area === "system" && <OwnerRegulatoryGuidance />}
             {area === "system" && <OwnerCheckerRules />}
+            {area === "system" && <OwnerPrices />}
             {area === "system" && <ReviewQueue mode="owner" />}
             {area === "content" && <ContentEscalations onDirtyChange={setContentDirty} />}
             {area === "content" && (

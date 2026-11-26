@@ -117,6 +117,11 @@ import type {
   OwnerGuidancePage,
   OwnerGuidanceReceipt,
   OwnerGuidanceRevision,
+  OwnerPricePage,
+  OwnerPricePreview,
+  OwnerPriceRecord,
+  OwnerPriceRecorded,
+  OwnerPriceTerms,
   OwnerRuleDecision,
   OwnerRuleItem,
   OwnerRulePage,
@@ -3369,6 +3374,300 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getReconcileFinanceRefundMutationOptions(options), queryClient);
+    }
+
+export const getListOwnerPricesUrl = () => {
+
+
+
+
+  return `/api/admin/owner-prices`
+}
+
+/**
+ * Each published premium template from the staff library, with its open price and any price scheduled to start (docs/architecture/commercial-settings.md, slice 1). Read-only. Development only.
+ * @summary The published premium templates and their prices, for the development owner (ADM-006)
+ */
+export const listOwnerPrices = async ( options?: Parameters<typeof customFetch>[1]): Promise<OwnerPricePage> => {
+
+  return customFetch<OwnerPricePage>(getListOwnerPricesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListOwnerPricesQueryKey = () => {
+    return [
+    "listOwnerPrices"
+    ] as const;
+    }
+
+
+export const getListOwnerPricesQueryOptions = <TData = Awaited<ReturnType<typeof listOwnerPrices>>, TError = ErrorType<void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOwnerPrices>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListOwnerPricesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listOwnerPrices>>> = ({ signal }) => listOwnerPrices({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listOwnerPrices>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListOwnerPricesQueryResult = NonNullable<Awaited<ReturnType<typeof listOwnerPrices>>>
+export type ListOwnerPricesQueryError = ErrorType<void>
+
+
+/**
+ * Each published premium template from the staff library, with its open price and any price scheduled to start (docs/architecture/commercial-settings.md, slice 1). Read-only. Development only.
+ * @summary The published premium templates and their prices, for the development owner (ADM-006)
+ */
+export function useListOwnerPrices<TData = Awaited<ReturnType<typeof listOwnerPrices>>, TError = ErrorType<void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOwnerPrices>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listOwnerPrices>>,
+          TError,
+          Awaited<ReturnType<typeof listOwnerPrices>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Each published premium template from the staff library, with its open price and any price scheduled to start (docs/architecture/commercial-settings.md, slice 1). Read-only. Development only.
+ * @summary The published premium templates and their prices, for the development owner (ADM-006)
+ */
+export function useListOwnerPrices<TData = Awaited<ReturnType<typeof listOwnerPrices>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOwnerPrices>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listOwnerPrices>>,
+          TError,
+          Awaited<ReturnType<typeof listOwnerPrices>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Each published premium template from the staff library, with its open price and any price scheduled to start (docs/architecture/commercial-settings.md, slice 1). Read-only. Development only.
+ * @summary The published premium templates and their prices, for the development owner (ADM-006)
+ */
+export function useListOwnerPrices<TData = Awaited<ReturnType<typeof listOwnerPrices>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOwnerPrices>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Each published premium template from the staff library, with its open price and any price scheduled to start (docs/architecture/commercial-settings.md, slice 1). Read-only. Development only.
+ * @summary The published premium templates and their prices, for the development owner (ADM-006)
+ */
+export function useListOwnerPrices<TData = Awaited<ReturnType<typeof listOwnerPrices>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOwnerPrices>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListOwnerPricesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getRecordOwnerPriceUrl = () => {
+
+
+
+
+  return `/api/admin/owner-prices`
+}
+
+/**
+ * Refused unless `confirm` is the checksum the preview gave for exactly these terms. The template's open price closes when the new one starts. Recording takes no payment.
+ * @summary Record the owner's price for a published premium template
+ */
+export const recordOwnerPrice = async (ownerPriceRecord: OwnerPriceRecord, options?: Parameters<typeof customFetch>[1]): Promise<OwnerPriceRecorded> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<OwnerPriceRecorded>(getRecordOwnerPriceUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ownerPriceRecord)
+  }
+);}
+
+
+
+
+
+export const getRecordOwnerPriceMutationKey = () => ['recordOwnerPrice'] as const;
+
+export const getRecordOwnerPriceMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordOwnerPrice>>, TError,RecordOwnerPriceMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof recordOwnerPrice>>, TError,RecordOwnerPriceMutationVariables, TContext> => {
+
+const mutationKey = getRecordOwnerPriceMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recordOwnerPrice>>, RecordOwnerPriceMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  recordOwnerPrice(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RecordOwnerPriceMutationResult = NonNullable<Awaited<ReturnType<typeof recordOwnerPrice>>>
+    export type RecordOwnerPriceMutationBody = BodyType<OwnerPriceRecord>
+    export type RecordOwnerPriceMutationError = ErrorType<void>
+    export type RecordOwnerPriceMutationVariables = {data: BodyType<OwnerPriceRecord>}
+
+    /**
+ * Refused unless `confirm` is the checksum the preview gave for exactly these terms. The template's open price closes when the new one starts. Recording takes no payment.
+ * @summary Record the owner's price for a published premium template
+ */
+export const useRecordOwnerPrice = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordOwnerPrice>>, TError,RecordOwnerPriceMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof recordOwnerPrice>>,
+        TError,
+        RecordOwnerPriceMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRecordOwnerPriceMutationOptions(options), queryClient);
+    }
+
+export const getPreviewOwnerPriceUrl = () => {
+
+
+
+
+  return `/api/admin/owner-prices/previews`
+}
+
+/**
+ * Writes nothing.
+ * @summary The exact terms of a price and their checksum, which recording confirms
+ */
+export const previewOwnerPrice = async (ownerPriceTerms: OwnerPriceTerms, options?: Parameters<typeof customFetch>[1]): Promise<OwnerPricePreview> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<OwnerPricePreview>(getPreviewOwnerPriceUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ownerPriceTerms)
+  }
+);}
+
+
+
+
+
+export const getPreviewOwnerPriceMutationKey = () => ['previewOwnerPrice'] as const;
+
+export const getPreviewOwnerPriceMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof previewOwnerPrice>>, TError,PreviewOwnerPriceMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof previewOwnerPrice>>, TError,PreviewOwnerPriceMutationVariables, TContext> => {
+
+const mutationKey = getPreviewOwnerPriceMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof previewOwnerPrice>>, PreviewOwnerPriceMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  previewOwnerPrice(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PreviewOwnerPriceMutationResult = NonNullable<Awaited<ReturnType<typeof previewOwnerPrice>>>
+    export type PreviewOwnerPriceMutationBody = BodyType<OwnerPriceTerms>
+    export type PreviewOwnerPriceMutationError = ErrorType<void>
+    export type PreviewOwnerPriceMutationVariables = {data: BodyType<OwnerPriceTerms>}
+
+    /**
+ * Writes nothing.
+ * @summary The exact terms of a price and their checksum, which recording confirms
+ */
+export const usePreviewOwnerPrice = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof previewOwnerPrice>>, TError,PreviewOwnerPriceMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof previewOwnerPrice>>,
+        TError,
+        PreviewOwnerPriceMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPreviewOwnerPriceMutationOptions(options), queryClient);
     }
 
 export const getGetWorkspaceDisputesUrl = () => {

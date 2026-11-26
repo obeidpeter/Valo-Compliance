@@ -1005,6 +1005,132 @@ export interface FinanceDisputeLink {
   providerId: string;
 }
 
+export interface OwnerPrice {
+  priceId: string;
+  /** @minimum 1 */
+  amountKobo: number;
+  licenceVersion: string;
+  taxTreatment: string;
+  effectiveFrom: string;
+  /** @nullable */
+  effectiveTo: string | null;
+}
+
+export interface OwnerPricedTemplate {
+  edition: string;
+  itemId: string;
+  /** @minimum 1 */
+  version: number;
+  title: string;
+  /** @nullable */
+  publishedAt: string | null;
+  /**
+     * The open price and any scheduled to start, earliest first.
+     * @maxItems 100
+     */
+  prices: OwnerPrice[];
+}
+
+export interface OwnerPricePage {
+  /** @maxItems 500 */
+  items: OwnerPricedTemplate[];
+}
+
+export interface OwnerPriceTerms {
+  edition: string;
+  /**
+     * The amount in naira, such as 1500 or 1500.00
+     * @pattern ^\d{1,8}(\.\d{2})?$
+     */
+  amount: string;
+  /** @pattern ^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$ */
+  licenceVersion: string;
+  /**
+     * @minLength 20
+     * @maxLength 20000
+     */
+  licenceText: string;
+  /**
+     * @minLength 3
+     * @maxLength 300
+     */
+  taxTreatment: string;
+  /**
+     * now, or a time with its offset, such as 2026-12-01T00:00:00+01:00
+     * @minLength 3
+     * @maxLength 40
+     */
+  from: string;
+}
+
+export interface OwnerPriceExactTerms {
+  edition: string;
+  /** @minimum 1 */
+  amountKobo: number;
+  licenceVersion: string;
+  licenceText: string;
+  taxTreatment: string;
+  from: string;
+}
+
+export interface OwnerPricePreview {
+  title: string;
+  terms: OwnerPriceExactTerms;
+  /** @pattern ^[0-9a-f]{64}$ */
+  checksum: string;
+}
+
+export interface OwnerPriceRecord {
+  edition: string;
+  /** @pattern ^\d{1,8}(\.\d{2})?$ */
+  amount: string;
+  /** @pattern ^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$ */
+  licenceVersion: string;
+  /**
+     * @minLength 20
+     * @maxLength 20000
+     */
+  licenceText: string;
+  /**
+     * @minLength 3
+     * @maxLength 300
+     */
+  taxTreatment: string;
+  /**
+     * @minLength 3
+     * @maxLength 40
+     */
+  from: string;
+  /**
+     * Where the owner's approval is written
+     * @minLength 3
+     * @maxLength 160
+     */
+  reference: string;
+  /**
+     * The checksum the preview gave
+     * @pattern ^[0-9a-f]{64}$
+     */
+  confirm: string;
+}
+
+export type OwnerPriceRecordedClosedItem = {
+  priceId: string;
+  /** @minimum 1 */
+  amountKobo: number;
+};
+
+export interface OwnerPriceRecorded {
+  priceId: string;
+  edition: string;
+  title: string;
+  /** @minimum 1 */
+  amountKobo: number;
+  from: string;
+  /** @maxItems 100 */
+  closed: OwnerPriceRecordedClosedItem[];
+}
+
 export type CommerceOrderStatus = typeof CommerceOrderStatus[keyof typeof CommerceOrderStatus];
 
 

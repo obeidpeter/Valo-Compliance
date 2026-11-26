@@ -79,6 +79,15 @@ export function formatDateTime(value: string | Date): string {
   return `${written(year, month, day)}, ${time}`;
 }
 
+/**
+ * A time typed on a Lagos clock, as an input of type datetime-local gives it ("2026-12-01T09:00"),
+ * written with Lagos's offset ("2026-12-01T09:00:00+01:00"): Lagos keeps UTC+1 all year. Anything
+ * else comes back empty.
+ */
+export function lagosClockTime(value: string): string {
+  return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value) ? `${value}:00+01:00` : "";
+}
+
 /** Today's calendar date in Lagos, as "2026-11-18". */
 export function lagosToday(now = new Date()): string {
   const { year, month, day } = inLagos(now);

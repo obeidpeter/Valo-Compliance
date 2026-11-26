@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { and, asc, eq, gt, inArray, isNull, or, sql } from "drizzle-orm";
 import type { db } from "@workspace/db";
+import { ValoProblem } from "../../platform/valo-problem";
 import { premiumEditions, type PremiumEdition } from "./premium-editions";
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -15,6 +16,10 @@ type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
  *
  * Only a published premium template from the staff library (decision 0018) can be priced here.
  */
+
+/** Why a template cannot be priced now. */
+export const NOT_PRICEABLE =
+  "Only a published premium template from the staff library, not overdue for its review and not held by staff, can be priced. Check its review date, and any hold in the staff library.";
 
 /** ₦10,000,000: a figure above it is far more likely a typing error than a template's price. */
 export const PREMIUM_PRICE_LIMIT_KOBO = 1_000_000_000;
@@ -36,11 +41,11 @@ const oneLine = (value: string, min: number, max: number) =>
 /** An amount in naira, as the owner writes it ("1500" or "1500.00"), in kobo. */
 export function nairaToKobo(text: string): number {
   if (!/^\d{1,8}(?:\.\d{2})?$/.test(text))
-    throw Error("Write the amount in naira, such as 1500 or 1500.00, without commas or ₦.");
+    throw new ValoProblem(422, "Write the amount in naira, such as 1500 or 1500.00, without commas or ₦.");
   const [whole, fraction = "00"] = text.split(".");
   const kobo = Number(whole) * 100 + Number(fraction);
   if (kobo <= 0 || kobo > PREMIUM_PRICE_LIMIT_KOBO)
-    throw Error("A price is more than ₦0 and at most ₦10,000,000.");
+    throw new ValoProblem(422, "A price is more than ₦0 and at most ₦10,000,000.");
   return kobo;
 }
 
@@ -55,16 +60,19 @@ export function premiumPriceTerms(input: {
 }): PremiumPriceTerms {
   const edition = input.edition ?? "";
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(edition))
-    throw Error("Give the edition ID that status lists for the template.");
+    throw new ValoProblem(422, "Give the edition ID that status lists for the template.");
   const licenceVersion = input.licenceVersion ?? "";
   if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/.test(licenceVersion))
-    throw Error("Give a licence version of letters, digits, dots, dashes or underscores, such as premium-1.");
+    throw new ValoProblem(
+      422,
+      "Give a licence version of letters, digits, dots, dashes or underscores, such as premium-1.",
+    );
   const licenceText = (input.licenceText ?? "").trim();
   if (licenceText.length < 20 || licenceText.length > 20000)
-    throw Error("The licence text is 20 to 20,000 characters, read from its file.");
+    throw new ValoProblem(422, "The licence text is 20 to 20,000 characters, read from its file.");
   const taxTreatment = (input.taxTreatment ?? "").trim();
   if (!oneLine(taxTreatment, 3, 300))
-    throw Error("Give the tax treatment on one line, in 3 to 300 characters.");
+    throw new ValoProblem(422, "Give the tax treatment on one line, in 3 to 300 characters.");
   const from = input.from ?? "now";
   if (
     from !== "now" &&
@@ -73,7 +81,10 @@ export function premiumPriceTerms(input: {
       Number.isFinite(Date.parse(from))
     )
   )
-    throw Error("Give the start as now, or as a time with its offset, such as 2026-12-01T00:00:00+01:00.");
+    throw new ValoProblem(
+      422,
+      "Give the start as now, or as a time with its offset, such as 2026-12-01T00:00:00+01:00.",
+    );
   return {
     edition,
     amountKobo: nairaToKobo(input.amount ?? ""),
@@ -162,20 +173,21 @@ export type PremiumPriceApproval = { approvedBy: string; reference: string; conf
 /** The same in the caller's transaction, which nothing else in it may have used for prices yet. */
 export async function recordPremiumPriceIn(tx: Tx, terms: PremiumPriceTerms, approval: PremiumPriceApproval) {
   if (approval.confirm !== premiumPriceTermsId(terms))
-    throw Error("The confirmation is not the checksum of these terms. Preview them again and confirm that.");
+    throw new ValoProblem(
+      409,
+      "The confirmation is not the checksum of these terms. Preview them again and confirm that.",
+    );
   const approvedBy = approval.approvedBy.trim(),
     reference = approval.reference.trim();
-  if (!oneLine(approvedBy, 2, 120)) throw Error("Name who approved the price, on one line.");
-  if (!oneLine(reference, 3, 160)) throw Error("Say where the approval is written, on one line.");
+  if (!oneLine(approvedBy, 2, 120)) throw new ValoProblem(422, "Name who approved the price, on one line.");
+  if (!oneLine(reference, 3, 160))
+    throw new ValoProblem(422, "Say where the approval is written, on one line.");
   const { valoManualLibrary, valoPrices } = await import("@workspace/db");
   await tx.execute(
     sql`select pg_advisory_xact_lock(hashtextextended(${"premium-price:" + terms.edition}, 0))`,
   );
   const { rows: live } = await tx.execute<PremiumEdition>(premiumEditions(terms.edition));
-  if (!live[0] || live[0].held)
-    throw Error(
-      "Only a published premium template from the staff library, not overdue for its review and not held by staff, can be priced. Check its edition ID and review date with status, and any hold in the staff library.",
-    );
+  if (!live[0] || live[0].held) throw new ValoProblem(409, NOT_PRICEABLE);
   const [entry] = await tx
     .select({ title: valoManualLibrary.title })
     .from(valoManualLibrary)
@@ -184,7 +196,10 @@ export async function recordPremiumPriceIn(tx: Tx, terms: PremiumPriceTerms, app
   const now = new Date(rows[0]!.now);
   const from = terms.from === "now" ? now : new Date(terms.from);
   if (+from < +now)
-    throw Error("This price would start in the past. Preview it again with now or a later start.");
+    throw new ValoProblem(
+      409,
+      "This price would start in the past. Preview it again with now or a later start.",
+    );
   // A price that starts now starts at the transaction's own time, as the database holds it: a copy
   // read back keeps only milliseconds, and closing a price a fraction before now() is refused.
   const start = terms.from === "now" ? sql`now()` : from;
@@ -197,12 +212,14 @@ export async function recordPremiumPriceIn(tx: Tx, terms: PremiumPriceTerms, app
     .for("update");
   const scheduled = open.find((price) => +price.effectiveFrom >= +from);
   if (scheduled)
-    throw Error(
+    throw new ValoProblem(
+      409,
       `A price for this template already starts at ${scheduled.effectiveFrom.toISOString()}. Start the new one after it.`,
     );
   const ending = open.find((price) => price.effectiveTo !== null);
   if (ending)
-    throw Error(
+    throw new ValoProblem(
+      409,
       `This template's price already ends at ${ending.effectiveTo!.toISOString()}. Start the new one then or later.`,
     );
   for (const price of open) await tx.update(p).set({ effectiveTo: start }).where(eq(p.id, price.id));
