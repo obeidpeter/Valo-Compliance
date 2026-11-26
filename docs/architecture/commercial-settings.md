@@ -62,7 +62,7 @@ terms wait on the owner's refund policy.
    dates and the owner's approval, versioned as prices are, with an append-only change log. The
    drafting assistant's two daily allowances and the later-editions rule are its first keys. Each
    order records the access rule it was bought under.
-4. **One-off bundles.** A bundle is a curated set of premium templates sold together, once, at one
+4. **One-off bundles** (built). A bundle is a curated set of premium templates sold together, once, at one
    price. It is versioned as a price is. Its order copies every template's edition and licence, and
    its settlement grants each one, once.
 
@@ -346,19 +346,34 @@ and 3b, the access rule that each order records.
     checksum, with the owner's own sign-in as the approval's author. The System area shows the panel below
     the prices. It lists each bundle's open and scheduled versions and the premium templates a bundle may
     hold, each marked when it is not on sale now, and says that checkout does not offer bundles yet.
-- **4c, buying a bundle.**
-  - Checkout offers a bundle's open version while each of its templates has a released edition that is
-    not held and not overdue. The buyer sees the templates it includes, its licence and tax treatment, and
-    the access rule, and accepts them as for a template.
-  - An order names either a price or a bundle. A bundle's order copies the bundle's licence and, for each
-    template, the released edition it grants, with its title. It is refused while the workspace already
-    holds one of those editions.
-  - Settlement grants one entitlement for each edition, in the same transaction, once (PAY-005); an
-    order may now hold one entitlement for each edition it grants.
-  - `valo_order_terms_hold` accepts a bundle's order for an edition the order's line names, whose
-    item is one of the bundle's, under the bundle's licence and approval.
-  - A refund or a dispute covers the whole order, so its entitlements end together; drafts made from them
-    stay the customer's (EDT-010). The receipt lists each edition.
+- **4c, buying a bundle** (built).
+  - **What is offered.** Checkout offers a bundle's version in effect while each of its templates has a
+    released edition that is neither held nor overdue for its review, and not to a workspace that already
+    holds one of those editions, bought or carried to. `valo_bundle_editions(bundle)`, which a customer
+    request may call and which runs as its owner, gives each template's released edition and whether it is
+    held. The purchases screen lists the bundle's templates, its amount, tax treatment, licence and the access
+    rule a purchase made now records; the buyer accepts the licence and the rule, as for a template.
+  - **The order.** Migration `bundle_orders` lets an order name a bundle's version in place of a price, and
+    exactly one of them (`valo_orders_offer_check`). A bundle's order copies the bundle's amount, licence and
+    tax treatment and, for each template, the released edition it grants, with its title. It is made under
+    the same locks as a template's order, with the bundle's version held, as a price is, and each edition
+    checked again under its own lock. It is refused while the workspace holds one of those editions, or while
+    another order covers one; the same request returns the order already made.
+  - **Settlement** grants one entitlement for each edition, in the same transaction, once (PAY-005): an
+    order may now hold one entitlement for each edition (`valo_entitlement_order_edition_unique`). A repair
+    grants only an edition with no grant yet, and never while a refund or a dispute is on record.
+  - **What it reaches.** `valo_order_terms_hold` (4a) holds for a bundle's order and an edition its line
+    names, whose item is one of the bundle's, under the bundle's licence and with the owner's approval
+    (migration `bundle_order_guards`). Every reader that calls it, the purchased file, the premium form, the
+    carried editions and the rest, so follows a bundle's purchase as it follows a template's, and each
+    edition carries to its template's later editions under the access rule the order recorded.
+  - **After a change.** The owner's next version of the bundle, or a template's next edition, leaves the
+    order's amount, licence and editions as they were (ADM-006).
+  - **Refunds and disputes** act on the whole order, so its entitlements end together; drafts made from
+    them stay the customer's (EDT-010). The order card and its receipt list each template the order grants,
+    with its download while the purchase holds it.
+  - The customer role may read and lock a bundle's version (`valo_bundles: "select lock"`), with the
+    lock-only trigger refusing any change, and call `valo_bundle_editions`.
 
 **Slice 4b: tests.**
 - **Unit:** a bundle's name, title, two to ten templates each once, amount, licence, tax treatment and
@@ -389,6 +404,38 @@ and 3b, the access rule that each order records.
   when the choice of templates changes, records only the terms previewed, and has no automated WCAG 2.2
   AA failure.
 
+**Slice 4c: tests.**
+- **Unit:** a bundle's order card lists each template it grants, with each one's download while the
+  purchase holds it and a note for one it no longer holds, names no single edition, and downloads nothing
+  before the payment is verified.
+- **On the migrations, tracked and unjournalled:**
+  - both keep every row, and every order held before names its price and no bundle;
+  - an order names exactly one of a price and a bundle, and holds one grant for each edition, none twice;
+  - a bundle's order holds for each edition its line names of the bundle's templates, under the bundle's
+    licence, and not for an edition its line does not name, one of another template, or another licence; a
+    template's order is checked as before;
+  - `valo_bundle_editions` gives each template's released edition and whether it is held;
+  - a customer request reads a bundle's templates and locks its version, and cannot change it.
+- **Over HTTP, in the staff library's database test:**
+  - checkout offers a bundle of two released premium templates with each one's edition, and while one is
+    held the bundle is neither offered nor ordered;
+  - an order names one template or one bundle, with the licence and the rule its buyer was shown, of a
+    bundle on sale;
+  - a bundle's order copies the bundle's amount and each template's edition, grants nothing before a
+    verified payment, and asking again returns the same order;
+  - **PAY-005:** a verified payment, reported twice, grants each edition once; both templates download, are
+    listed among the workspace's own, and the bundle is no longer offered to it or sold to it again, while
+    another workspace is offered it and holds nothing;
+  - **ADM-006:** the owner's next version of the bundle leaves the order's amount, bundle and terms as they
+    were, and is offered to others at its own amount;
+  - under the rule the order recorded, its purchase carries to a template's next edition;
+  - a reversed payment ends both grants together.
+- **In the browser, on a phone:** the purchases screen lists a bundle's templates, its licence and the
+  access rule before the buyer accepts it, saves an order of the bundle with what the buyer accepted, and a
+  bundle's order downloads each of its templates, with no automated WCAG 2.2 AA failure.
+
 ## What comes next
 
-Slice 4c, buying a bundle.
+The commercial settings row is built: the owner's price screen, a price carried to the next edition, the
+versioned settings and access rule, and one-off bundles. What the owner records with them, prices, settings
+and bundles, stays the owner's to decide.
