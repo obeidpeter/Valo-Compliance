@@ -722,6 +722,13 @@
       "when": 1795700658102,
       "tag": "20261126134418_request_minutes",
       "breakpoints": true
+    },
+    {
+      "idx": 103,
+      "version": "7",
+      "when": 1795702378781,
+      "tag": "20261126141258_security_signal_guard_refusal",
+      "breakpoints": true
     }
   ]
 }
