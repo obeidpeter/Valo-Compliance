@@ -5411,6 +5411,20 @@
       "file": "artifacts/api-server/src/platform/http-logging.test.ts",
       "test": "each request's log line names its route's pattern and never a value from the address",
       "proves": "Each request's log line names the pattern of the route it matched, through nested routers and answers sent later, or says it matched none, and never writes a value from the address."
+    },
+    {
+      "requirement": "SEC-008",
+      "job": "foundation",
+      "file": "scripts/src/valo/log-inventory.test.ts",
+      "test": "the log inventory lists every event the API, the worker and the operator commands log, and no other",
+      "proves": "Every event the API, the worker and the operator commands name in their source, whether given to the logger or printed as JSON, is listed once in the log inventory, and every event listed is logged somewhere; a deliberate fault, an event left out, fails it."
+    },
+    {
+      "requirement": "SEC-008",
+      "job": "foundation",
+      "file": "scripts/src/valo/log-inventory.test.ts",
+      "test": "the API's one logger writes only to its process's output, and every table the log inventory names is in the schema",
+      "proves": "The API's source makes one logger, in platform/logger.ts, and one request logger, given it; the logger names no destination but the process's output and, in development, its readable printer; and every table the log inventory names is in the database's schema."
     }
   ]
 }

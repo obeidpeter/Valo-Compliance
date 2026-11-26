@@ -163,6 +163,12 @@ input recorded as a security event."
 - **An inventory** (the security baseline, v5.0.0-16.1.1): what each part logs, where it goes, who can
   read it and for how long it is kept: the request logs, the worker's alert file, the journal, the
   security signals, the request counts and the histories.
+  - Built: [the log inventory](../valo/log-inventory.md). It has a table of records with their form,
+    destination, readers and keeping, what is never written, and every event the API, the worker and
+    the operator commands log, with when each is written.
+  - A test (`scripts/src/valo/log-inventory.test.ts`) fails on an event logged and not listed, or listed
+    and logged nowhere. It also fails on a second logger, a destination other than the process's output,
+    or a table the inventory names that is not in the schema.
 - **A system of their own** (v5.0.0-16.4.3): logs leave the machine that wrote them only once the owner
   chooses where they go, which may cost money (the owner's points).
 
@@ -180,7 +186,7 @@ input recorded as a security event."
 | 2 | Part 3: request counts, failure and time alerts, more backlogs, the route in each request's log | Built |
 | 3a | Part 2: spread-out abuse and refused input | Built |
 | 3b | Part 2: money and AI spend, whole-workspace downloads and staff copies | Built |
-| 4 | Part 4: the log inventory, and the security baseline updated | Not built |
+| 4 | Part 4: the log inventory, and the security baseline updated | Built, but for a system of their own for the logs, which waits for the owner |
 
 ## The owner's points
 
