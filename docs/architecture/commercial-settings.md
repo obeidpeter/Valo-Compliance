@@ -307,6 +307,41 @@ and 3b, the access rule that each order records.
   drafts made from them stay the customer's (EDT-010).
 - **Which bundles exist** is the owner's to decide. Until the owner records one, none is offered.
 
+**Slice 4: how it is built.** In three parts, each with its own pull request.
+
+- **4a, one check of a purchase's terms** (built; moving code, no change of behaviour). Five database readers and
+  checkout's list of verified editions each repeat the same check: the order's price names the edition,
+  the order's line copies it and the price's licence, and the price carries the owner's approval. A new
+  function, `valo_order_terms_hold(order, edition)`, makes that check once, and each reader calls it.
+  Who an edition reaches and its notices read no price, and stay as they are. Like every function a
+  customer request may call, it runs as its owner; in a request's scope it reads only that workspace's
+  orders. Its upgrade check shows the readers call it and read no price of their own, and that it holds
+  for the edition and licence an order names and nothing else; the staff library's, the entitlement and
+  the commerce tests, unchanged, show each reader behaves as before.
+- **4b, versioned bundles and the owner's screen.**
+  - `valo_bundles` holds a bundle's versions: a name that stays the same across them, a title, its
+    templates, two to ten premium templates from the staff library, each named by its item, so a bundle
+    outlives its templates' editions; the amount, licence, tax treatment, the owner's approval reference and
+    effective dates. It is versioned as prices are: a version never changes in place, the next one closes
+    it when it starts, once, an append-only change log keeps both, and the table keeps a history digest.
+    The staff library's premium templates are the only ones the owner prices (slice 1), so they are the
+    only ones a bundle holds.
+  - The owner records a version on the System area's screen, after a preview of the exact terms and their
+    checksum, as for a price. An item that is not a premium template of the staff library is refused.
+- **4c, buying a bundle.**
+  - Checkout offers a bundle's open version while each of its templates has a released edition that is
+    not held and not overdue. The buyer sees the templates it includes, its licence and tax treatment, and
+    the access rule, and accepts them as for a template.
+  - An order names either a price or a bundle. A bundle's order copies the bundle's licence and, for each
+    template, the released edition it grants, with its title. It is refused while the workspace already
+    holds one of those editions.
+  - Settlement grants one entitlement for each edition, in the same transaction, once (PAY-005); an
+    order may now hold one entitlement for each edition it grants.
+  - `valo_order_terms_hold` accepts a bundle's order for an edition the order's line names, whose
+    item is one of the bundle's, under the bundle's licence and approval.
+  - A refund or a dispute covers the whole order, so its entitlements end together; drafts made from them
+    stay the customer's (EDT-010). The receipt lists each edition.
+
 ## What comes next
 
-Slice 4, one-off bundles.
+Slice 4b, versioned bundles and the owner's screen for them.
