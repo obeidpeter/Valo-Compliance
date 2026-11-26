@@ -61,11 +61,26 @@ The requirements, verbatim from the specification:
   are missing, so it cannot pass by reading nothing. It runs after the foundation job's build, and after
   the database job's production build, where the job's synthetic login passwords and connection strings
   are set.
-- **A rotation runbook** (`docs/valo/secret-rotation.md`): each secret the registry lists, who holds
-  it, how to rotate it, what rotating it changes, and how to revoke it in an emergency.
-- **A rehearsal in CI** on the job's own database, for each of the four logins: rotate the password
-  with its script; the old password is refused and the new one works; revoke the login in an
-  emergency, and the work that needs it stops with its own code; restore it.
+- **A rotation runbook** (`docs/valo/secret-rotation.md`): each secret the registry lists, and the
+  operator's backup secrets, with who holds it, how to rotate it, what rotating it changes, and how to
+  revoke it in an emergency.
+- **A rehearsal in CI** for each of the four logins (`artifacts/api-server/src/platform/login-rotation.test.ts`,
+  foundation job): the work stops with the login's own code while the database still has the old
+  password; rotated with its script, the old password is refused and the new one works; revoked in an
+  emergency with its sessions ended, the work that needs it stops with its own code and the process
+  carries on; restored, the work goes on.
+  - It runs on a PostgreSQL cluster of its own that asks for passwords, with every migration applied,
+    not on the job's own database: a login belongs to the whole cluster, so rotating it there would
+    change it under the job's other tests.
+- **What designing the rehearsal found, and slice 2 fixed:**
+  - A login the database refused (a wrong password or a revoked login) failed with PostgreSQL's own
+    error, not the login's code. Each login's pool now gives such a refusal the login's code
+    (`lib/db/src/login-pool.ts`), and the workspace login's gives the scope's. The worker's record of
+    a preparation reads the code under a failed query too.
+  - No pool listened for an idle connection's failure. pg-pool emits it on the pool, and an emitter's
+    error with no listener throws, so ending a login's sessions in an emergency, or a database restart,
+    would have stopped the API or the worker. Every pool now reports such a failure, and the API and
+    the worker log it as `db.connection_failed`, by its login and code.
 
 ### Part 2: limits as settings (SEC-005)
 
@@ -118,7 +133,7 @@ The requirements, verbatim from the specification:
 | Slice | What | State |
 | --- | --- | --- |
 | 1 | Part 1's bundle check | Built |
-| 2 | Part 1's rotation runbook and the logins' rehearsal | Not built |
+| 2 | Part 1's rotation runbook and the logins' rehearsal | Built |
 | 3 | Part 4 and Part 5: the code rules and the HTTP gaps | Not built |
 | 4 | Part 3: advisories, the scheduled scan, the bill of materials and the image check | Not built |
 | 5 | Part 2: limits as settings | Not built |

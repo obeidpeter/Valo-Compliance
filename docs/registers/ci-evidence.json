@@ -5483,11 +5483,25 @@
       "proves": "The check run after each build of the web app finds a secret setting's value, by the setting's name only, in a static or public file, and a payment or identity provider's secret key, a private key or a connection string with a password by its shape; it passes publishable keys, other settings' values, values too short to mean anything and the server's own bundle, and tells when there is no build to read."
     },
     {
+      "requirement": "SEC-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/platform/login-rotation.test.ts",
+      "test": "each database login is rotated, revoked in an emergency and restored, and the work that needs it stops with its own code while the process carries on (SEC-002, OPS-004)",
+      "proves": "On a PostgreSQL cluster of its own that asks for passwords, with every migration applied, each of the four database logins is rotated with its own script: the old password is refused and the new one works, and while a process still has the old one, its work stops with the login's own code."
+    },
+    {
       "requirement": "OPS-004",
       "job": "foundation",
       "file": "artifacts/api-server/src/lib/bundle-secrets.test.ts",
       "test": "no file the browser is sent may hold a secret setting's value or a secret's shape (SEC-002, OPS-004)",
       "proves": "The same check finds a key, or any secret setting's value, in a file the browser is sent, naming the setting or the key's shape and never the secret."
+    },
+    {
+      "requirement": "OPS-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/platform/login-rotation.test.ts",
+      "test": "each database login is rotated, revoked in an emergency and restored, and the work that needs it stops with its own code while the process carries on (SEC-002, OPS-004)",
+      "proves": "Each of the four database logins is rotated with its script, revoked in an emergency with its open sessions ended, and restored. Revoked, its work stops with the login's own code, each ended session is reported with its code and nothing is thrown, and the application's own connection goes on working."
     }
   ]
 }

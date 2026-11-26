@@ -2441,11 +2441,24 @@
     {
       "id": "v5.0.0-11.1.1",
       "level": 2,
-      "status": "not met",
+      "status": "partly met",
       "bears_on": [
-        "SEC-002"
+        "SEC-002",
+        "OPS-004"
       ],
-      "gap": "No document sets how keys are made, kept, rotated and retired, or who may hold each. The keys exist: the secret behind the limits' and signals' keyed hashes, the privacy signing keys, the workspace credential key, the payment provider's webhook secret and the identity provider's secret key."
+      "control": "A runbook says, for each secret and key, where it is kept, who may hold it, how it is made, how it is rotated and revoked in an emergency, and what rotating it changes. The four database logins' rotation and emergency revocation are rehearsed in CI.",
+      "code": [
+        "docs/valo/secret-rotation.md",
+        "lib/db/scripts/workspace-login.mjs",
+        "lib/db/src/login-pool.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/platform/login-rotation.test.ts",
+          "test": "each database login is rotated, revoked in an emergency and restored, and the work that needs it stops with its own code while the process carries on (SEC-002, OPS-004)"
+        }
+      ],
+      "gap": "No schedule sets when each key is rotated, production's secret store is not chosen yet, and no provider key's rotation has been rehearsed with its provider."
     },
     {
       "id": "v5.0.0-11.1.2",
@@ -3807,10 +3820,11 @@
       "bears_on": [
         "SEC-008"
       ],
-      "control": "When an outside service fails, Valo goes on safely: the identity provider's proxy answers an empty 502, AI and payment outages are reported apart from core availability, and a database wait ends at its timeout.",
+      "control": "When an outside service fails, Valo goes on safely: the identity provider's proxy answers an empty 502, AI and payment outages are reported apart from core availability, and a database wait ends at its timeout, and a database connection that fails while idle is reported and dropped, and the process carries on.",
       "code": [
         "artifacts/api-server/src/middlewares/clerkProxyMiddleware.ts",
-        "lib/db/src/index.ts"
+        "lib/db/src/index.ts",
+        "lib/db/src/login-pool.ts"
       ],
       "tests": [
         {
@@ -3828,6 +3842,10 @@
         {
           "file": "artifacts/api-server/src/modules/ai-lanes/inference-customer-controls.integration.test.ts",
           "test": "original customer quota, pause, tenant and outage boundaries use actual PostgreSQL/services with no provider"
+        },
+        {
+          "file": "artifacts/api-server/src/platform/login-rotation.test.ts",
+          "test": "each database login is rotated, revoked in an emergency and restored, and the work that needs it stops with its own code while the process carries on (SEC-002, OPS-004)"
         }
       ]
     },

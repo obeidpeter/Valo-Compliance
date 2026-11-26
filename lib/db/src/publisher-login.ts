@@ -1,4 +1,5 @@
 import pg from "pg";
+import { LoginPool } from "./login-pool";
 
 /**
  * The database login the publisher connects as (VALO_PUBLISHER_DATABASE_URL). It may become the
@@ -11,8 +12,8 @@ export const PUBLISHER_LOGIN_ROLE = "valo_publisher_login";
  * database. Logs keep codes, never messages. */
 export const PUBLISHER_LOGIN_UNAVAILABLE_CODE = "VALO_PUBLISHER_LOGIN_UNAVAILABLE";
 
-function unavailable(reason: string) {
-  return Object.assign(new Error(`The publisher login is unavailable: ${reason}`), {
+function unavailable(reason: string, cause?: unknown) {
+  return Object.assign(new Error(`The publisher login is unavailable: ${reason}`, { cause }), {
     code: PUBLISHER_LOGIN_UNAVAILABLE_CODE,
   });
 }
@@ -49,19 +50,26 @@ export function publisherConnectionString(publisherUrl: string | undefined, data
 
 let pool: pg.Pool | undefined;
 
-/** The publisher's own small pool, opened when the publisher first needs it. */
+/**
+ * The publisher's own small pool, opened when the publisher first needs it. A login the database
+ * refuses, as after an emergency revocation, fails with the publisher's own code.
+ */
 export function publisherPool(options: pg.PoolConfig = {}) {
-  pool ??= new pg.Pool({
-    connectionString: publisherConnectionString(
-      process.env.VALO_PUBLISHER_DATABASE_URL,
-      process.env.DATABASE_URL,
-    ),
-    // A release is one short transaction at a time.
-    max: 2,
-    options: "-c timezone=UTC",
-    connectionTimeoutMillis: 10_000,
-    ...options,
-  });
+  pool ??= new LoginPool(
+    PUBLISHER_LOGIN_ROLE,
+    {
+      connectionString: publisherConnectionString(
+        process.env.VALO_PUBLISHER_DATABASE_URL,
+        process.env.DATABASE_URL,
+      ),
+      // A release is one short transaction at a time.
+      max: 2,
+      options: "-c timezone=UTC",
+      connectionTimeoutMillis: 10_000,
+      ...options,
+    },
+    (cause) => unavailable("the database refused its login", cause),
+  );
   return pool;
 }
 

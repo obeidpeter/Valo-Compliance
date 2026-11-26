@@ -4,6 +4,7 @@ import * as schema from "./schema";
 import {
   currentWorkspaceScope,
   newScopeKey,
+  WORKSPACE_LOGIN_ROLE,
   scopeClient,
   scopeKeyPads,
   verifyWorkspaceScope,
@@ -13,6 +14,7 @@ import {
 } from "./workspace-scope";
 import { endPublisherPool, publisherPool } from "./publisher-login";
 import { drafterLogin, reviewerLogin } from "./service-login";
+import { connectWith, loginRefused, reportIdleFailures, type ConnectCallback } from "./login-pool";
 
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL must be set. Did you forget to provision a database?");
@@ -52,12 +54,6 @@ function withTimeoutCode(error: Error) {
   return error;
 }
 
-type ConnectCallback = (
-  err: Error | undefined,
-  client: pg.PoolClient | undefined,
-  done: (release?: unknown) => void,
-) => void;
-
 /** How long a process's credential key is accepted, and when it is replaced before that. */
 const SCOPE_KEY_VALIDITY = "7 days";
 const SCOPE_KEY_RENEW_MS = 24 * 60 * 60 * 1000;
@@ -72,6 +68,8 @@ class ValoPool extends pg.Pool {
   constructor(options: pg.PoolConfig, customerOptions: pg.PoolConfig) {
     super(options);
     this.#customerOptions = customerOptions;
+    // An idle connection that fails, as when the database restarts, is reported, not thrown.
+    reportIdleFailures(this, "application");
   }
 
   // pg's own query() takes its connection through connect(callback), so both forms are
@@ -89,13 +87,7 @@ class ValoPool extends pg.Pool {
           })
         : this.#scoped(workspaceId);
     if (!callback) return ready;
-    // Serves pg's callback API: the callback runs once, from whichever handler settles.
-    /* oxlint-disable promise/no-callback-in-promise */
-    ready.then(
-      (client) => callback(undefined, client, (release) => client.release(release as Error | boolean)),
-      (error: Error) => callback(error, undefined, () => undefined),
-    );
-    /* oxlint-enable promise/no-callback-in-promise */
+    connectWith(ready, callback);
   }
 
   /** Connections of the workspace login, open now, for tests and diagnostics. */
@@ -116,11 +108,15 @@ class ValoPool extends pg.Pool {
       throw workspaceScopeUnavailable("VALO_CUSTOMER_DATABASE_URL is not set");
     if (!this.#customer) {
       this.#customer = new pg.Pool(this.#customerOptions);
-      // An idle customer connection's failure is reported like an application connection's.
-      this.#customer.on("error", (error, client) => this.emit("error", error, client));
+      // An idle customer connection's failure is reported, as its session's end in an emergency
+      // revocation would be, not thrown.
+      reportIdleFailures(this.#customer, WORKSPACE_LOGIN_ROLE);
     }
     const key = await this.#scopeKey();
     const client = await this.#customer.connect().catch((error: Error) => {
+      // A login the database refuses, as after an emergency revocation, fails with the scope's code.
+      if (loginRefused(error))
+        throw workspaceScopeUnavailable("the database refused the workspace login", error);
       throw withTimeoutCode(error);
     });
     if (!this.#verified.has(client)) {
@@ -217,6 +213,7 @@ export {
   WORKSPACE_SCOPE_UNAVAILABLE_CODE,
 } from "./workspace-scope";
 
+export { onConnectionFailure } from "./login-pool";
 export {
   PUBLISHER_LOGIN_ROLE,
   PUBLISHER_LOGIN_UNAVAILABLE_CODE,

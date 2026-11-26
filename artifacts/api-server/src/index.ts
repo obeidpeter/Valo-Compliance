@@ -3,6 +3,7 @@ import app from "./app";
 import { logger } from "./platform/logger";
 import { setting } from "./platform/settings";
 import { startRequestCountWriter } from "./modules/operations";
+import { logConnectionFailures } from "./platform/database-failures";
 
 const rawPort = setting("PORT");
 
@@ -16,6 +17,8 @@ if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
+// A database connection that fails while idle is logged, and the API carries on.
+logConnectionFailures(logger);
 await initializeApplicationRuntime();
 const server = app.listen(port, (err) => {
   if (err) {
