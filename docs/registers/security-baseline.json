@@ -907,13 +907,13 @@
           "test": "production denies injected scripts, frames, objects and unconfigured origins while allowing required Clerk resources"
         }
       ],
+      "gap": "The API's answers carry no policy. They are JSON, which runs nothing, but a policy of default-src 'none' would cover them too.",
       "checks": [
         {
           "job": "foundation",
           "step": "Prove compiled frontend enforces unique nonces and blocks injected scripts"
         }
-      ],
-      "gap": "The API's answers carry no policy. They are JSON, which runs nothing, but a policy of default-src 'none' would cover them too."
+      ]
     },
     {
       "id": "v5.0.0-3.4.4",
@@ -977,13 +977,13 @@
           "test": "hostile text sent to every operation in the contract comes back only inside JSON with the security headers, fails no route, and stays text in the database and its searches"
         }
       ],
+      "gap": "The API's answers carry no frame-ancestors policy, only the older X-Frame-Options.",
       "checks": [
         {
           "job": "foundation",
           "step": "Prove compiled frontend enforces unique nonces and blocks injected scripts"
         }
-      ],
-      "gap": "The API's answers carry no frame-ancestors policy, only the older X-Frame-Options."
+      ]
     },
     {
       "id": "v5.0.0-3.5.1",
@@ -2596,13 +2596,13 @@
       "code": [
         "artifacts/valo/middleware.ts"
       ],
+      "gap": "Identifiers are random UUIDs, which ASVS does not count as unguessable; Valo relies on authorization, not on them. No check covers every random value.",
       "checks": [
         {
           "job": "foundation",
           "step": "Prove compiled frontend enforces unique nonces and blocks injected scripts"
         }
-      ],
-      "gap": "Identifiers are random UUIDs, which ASVS does not count as unguessable; Valo relies on authorization, not on them. No check covers every random value."
+      ]
     },
     {
       "id": "v5.0.0-11.6.1",
@@ -3099,13 +3099,13 @@
       "code": [
         "artifacts/valo/src/components/account-state-boundary.tsx"
       ],
+      "gap": "No Clear-Site-Data header is sent when a session ends.",
       "checks": [
         {
           "job": "foundation",
           "step": "Prove controlled profile and checker state does not cross accounts"
         }
-      ],
-      "gap": "No Clear-Site-Data header is sent when a session ends."
+      ]
     },
     {
       "id": "v5.0.0-14.3.2",
@@ -3448,11 +3448,25 @@
     {
       "id": "v5.0.0-16.1.1",
       "level": 2,
-      "status": "not met",
+      "status": "met",
       "bears_on": [
         "SEC-008"
       ],
-      "gap": "No inventory lists what each part logs, where it goes, who reads it and how long it is kept."
+      "control": "The log inventory (docs/valo/log-inventory.md) lists each record the API, the worker and the operator tools keep: its form, where it goes, who can read it and how long it is kept, what is never written, and every event by name; a test keeps it to the code.",
+      "code": [
+        "artifacts/api-server/src/platform/logger.ts",
+        "artifacts/api-server/src/platform/http-logging.ts"
+      ],
+      "tests": [
+        {
+          "file": "scripts/src/valo/log-inventory.test.ts",
+          "test": "the log inventory lists every event the API, the worker and the operator commands log, and no other"
+        },
+        {
+          "file": "scripts/src/valo/log-inventory.test.ts",
+          "test": "the API's one logger writes only to its process's output, and every table the log inventory names is in the schema"
+        }
+      ]
     },
     {
       "id": "v5.0.0-16.2.1",
@@ -3496,11 +3510,11 @@
     {
       "id": "v5.0.0-16.2.3",
       "level": 2,
-      "status": "partly met",
+      "status": "met",
       "bears_on": [
         "SEC-008"
       ],
-      "control": "The API and the worker log only to their output; the worker writes alerts to a file on its disk and copies them to the database's alert journal.",
+      "control": "The API and the worker log only to their output, through one logger; the worker writes alerts to a file on its disk and copies them to the database's alert journal; the log inventory names each of these, and every table it names is in the schema.",
       "code": [
         "artifacts/api-server/src/platform/logger.ts",
         "artifacts/api-server/src/modules/operations"
@@ -3509,9 +3523,12 @@
         {
           "file": "artifacts/api-server/src/platform/http-logging.test.ts",
           "test": "real HTTP request, parser and application error logs omit private markers but retain correlation/status"
+        },
+        {
+          "file": "scripts/src/valo/log-inventory.test.ts",
+          "test": "the API's one logger writes only to its process's output, and every table the log inventory names is in the schema"
         }
-      ],
-      "gap": "No inventory says which destinations are allowed (16.1.1)."
+      ]
     },
     {
       "id": "v5.0.0-16.2.4",

@@ -129,17 +129,17 @@ but the counts reads keep (3.4.1, 3.4.5, 4.1.1, 15.3.6, 15.3.7, 3.5.3).
 
 | Status | Requirements |
 | --- | --- |
-| met | 59 |
-| partly met | 41 |
+| met | 61 |
+| partly met | 40 |
 | untested | 21 |
-| not met | 5 |
+| not met | 4 |
 | not applicable | 63 |
 | identity provider | 54 |
 | host | 10 |
 
 - **Not met**: a key management policy (v5.0.0-11.1.1) and an inventory of keys and algorithms
   (v5.0.0-11.1.2); protection levels for sensitive data, and requirements for each (v5.0.0-14.1.2);
-  an inventory of what is logged, where, for whom and for how long (v5.0.0-16.1.1); and logs sent to a
+  and logs sent to a
   system apart from the machine that wrote them (v5.0.0-16.4.3).
 - **Not applicable** are mostly whole chapters Valo has nothing of: OAuth and OpenID (Valo is neither
   a server nor a client of its own; sign-in is the provider's), WebRTC, GraphQL and WebSockets; and
@@ -158,9 +158,10 @@ What is left falls to the plan's later rows and to the launch:
   storage and source downloads; strict equality in the linter; tests of the staff upload's refusals,
   the authorized party, TRACE and a folder address; a check of the built image for `.git`; time frames
   and an owner for advisories; a software bill of materials.
-- **Alerts that reach a person** (Phase 7): logs to a system of their own, and an inventory of them.
-  Each request's log line now names its route (16.2.1), and refused input is now counted as a security
-  event (16.3.3).
+- **Alerts that reach a person** (Phase 7): logs to a system of their own, which waits for the owner.
+  Each request's log line now names its route (16.2.1), refused input is counted as a security event
+  (16.3.3), and the log inventory lists what is logged, where it goes, for whom and for how long, with a
+  test that keeps it to the code (16.1.1, 16.2.3).
 - **Documents**: the key policy and inventory, protection levels, field-level authorization rules,
   the ways in with the strength each needs, and the staff upload's limits; and, in the processor
   review, the host the identity provider's script sends its telemetry to (`clerk-telemetry.com`),
