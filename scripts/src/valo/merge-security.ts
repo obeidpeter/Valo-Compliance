@@ -8,6 +8,8 @@ import { randomBytes } from "node:crypto";
 import assert from "node:assert/strict";
 import { withoutVerifiedSourceHashFindings } from "./security-evidence-exceptions";
 import {
+  ADVISORY_TIME_FRAMES,
+  RECORDED_LOWER_ADVISORIES,
   REVIEWED_DEPENDENCY_ADVISORIES,
   dependencySummary,
   installedDependencyPaths,
@@ -91,9 +93,13 @@ try {
     const why = await run("pnpm", ["why", name, "-r", "--json"]);
     if (why.code === 0) installedPaths[name] = installedDependencyPaths(JSON.parse(why.stdout), name, root);
   }
+  // Each record stands only until its date, so the gate reads them on the day it runs (UTC).
+  report.advisoryTimeFrames = ADVISORY_TIME_FRAMES;
   report.dependencies = dependencySummary(JSON.parse(audit.stdout), {
     advisories: REVIEWED_DEPENDENCY_ADVISORIES,
+    lower: RECORDED_LOWER_ADVISORIES,
     installedPaths,
+    today: new Date().toISOString().slice(0, 10),
   });
   const secretPath = join(dir, "git.json");
   const secrets = await run("gitleaks", [
