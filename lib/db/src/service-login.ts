@@ -1,4 +1,5 @@
 import pg from "pg";
+import { LoginPool } from "./login-pool";
 
 /**
  * A service's own database login (docs/architecture/service-logins.md): it may become one content role
@@ -28,8 +29,8 @@ function destination(connection: string) {
 }
 
 export function serviceLogin(login: ServiceLogin) {
-  const unavailable = (reason: string) =>
-    Object.assign(new Error(`The ${login.service} login is unavailable: ${reason}`), {
+  const unavailable = (reason: string, cause?: unknown) =>
+    Object.assign(new Error(`The ${login.service} login is unavailable: ${reason}`, { cause }), {
       code: login.unavailableCode,
     });
   /**
@@ -53,16 +54,23 @@ export function serviceLogin(login: ServiceLogin) {
   let pool: pg.Pool | undefined;
   return {
     connectionString,
-    /** The service's own small pool, opened when the service first needs it. */
+    /**
+     * The service's own small pool, opened when the service first needs it. A login the database
+     * refuses, as after an emergency revocation, fails with the service's own code.
+     */
     pool(options: pg.PoolConfig = {}) {
-      pool ??= new pg.Pool({
-        connectionString: connectionString(process.env[login.setting], process.env.DATABASE_URL),
-        // Each piece of the service's work is one short transaction at a time.
-        max: 2,
-        options: "-c timezone=UTC",
-        connectionTimeoutMillis: 10_000,
-        ...options,
-      });
+      pool ??= new LoginPool(
+        login.role,
+        {
+          connectionString: connectionString(process.env[login.setting], process.env.DATABASE_URL),
+          // Each piece of the service's work is one short transaction at a time.
+          max: 2,
+          options: "-c timezone=UTC",
+          connectionTimeoutMillis: 10_000,
+          ...options,
+        },
+        (cause) => unavailable("the database refused its login", cause),
+      );
       return pool;
     },
     /** Closes the service's pool, if one was opened. */

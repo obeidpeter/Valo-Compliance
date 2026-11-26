@@ -49,7 +49,10 @@ import {
   exportWorkerConcurrency,
 } from "../platform/valo-worker-health";
 import { environment, setting } from "../platform/settings";
+import { logConnectionFailures } from "../platform/database-failures";
 
+// A database connection that fails while idle is logged, and the worker carries on.
+logConnectionFailures(logger);
 await initializeApplicationRuntime();
 developmentExportsOnly();
 assertRecoveryEffectsAllowed();

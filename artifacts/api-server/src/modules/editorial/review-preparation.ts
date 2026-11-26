@@ -82,17 +82,25 @@ type Outcome =
   | { status: "closed" };
 type Claim = { id: string; attempt: number; templateId: string };
 
-/** The code a login's error carries when the worker was not given that login's connection. */
+/**
+ * The code a login's error carries when the worker was not given that login's connection, or when the
+ * database refused the login.
+ */
 const LOGIN_UNAVAILABLE = /^VALO_[A-Z]+_LOGIN_UNAVAILABLE$/;
 /**
  * A code a preparation stopped with, as the commands print it, or the code of a login the worker was
- * not given, such as drafting's; anything else is not repeated.
+ * not given or the database refused, such as drafting's; anything else is not repeated. Drizzle reports
+ * a failed query with the login's error as its cause, so the causes are read too.
  */
-function failureCode(error: unknown) {
+export function failureCode(error: unknown) {
   const message = error instanceof Error ? error.message : "";
   if (/^[A-Z][A-Z0-9_]{2,79}(?::\S{1,200})?$/.test(message)) return message;
-  const code = (error as { code?: unknown } | null)?.code;
-  return typeof code === "string" && LOGIN_UNAVAILABLE.test(code) ? code : "PREPARATION_FAILED";
+  for (let e: unknown = error, depth = 0; e && typeof e === "object" && depth < 5; depth++) {
+    const code = (e as { code?: unknown }).code;
+    if (typeof code === "string" && LOGIN_UNAVAILABLE.test(code)) return code;
+    e = (e as { cause?: unknown }).cause;
+  }
+  return "PREPARATION_FAILED";
 }
 /** What the gate named, kept short enough for the request's record. */
 const kept = (reasons: readonly string[]) => {

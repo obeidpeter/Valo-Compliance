@@ -226,6 +226,8 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-isolated-recovery
       - name: Validate phase 2 migrations, applied phase 1 bytes and existing staff preservation
         run: VALO_RUN_MIGRATION_TESTS=synthetic-isolated-only pnpm --filter @workspace/db test:phase1-migrations
+      - name: Rehearse rotating, revoking and restoring each database login (SEC-002, OPS-004)
+        run: pnpm --filter @workspace/api-server test:valo-login-rotation
       - name: Retain isolated recovery report
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

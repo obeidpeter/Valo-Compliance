@@ -65,6 +65,7 @@ is that inventory, part 4 of [alerts that reach a person](../architecture/alerts
 | `editorial.run_completed` | The editorial pipeline | An editorial run finished |
 | `editorial.run_failed` | The editorial pipeline | An editorial run failed |
 | `privacy.lock_connection_failed` | The erasure | The erasure's lock connection failed |
+| `db.connection_failed` | The API and the worker | A pooled database connection failed while idle, by its login and code: the pool dropped it, and the next query opens another |
 | `operations.request_counts_unwritten` | The API's request counts | The counts could not be written, and wait for the next write |
 | `operations.request_counts_written` | The API's request counts | The counts were written again after a failure |
 | `operations.request_minutes_not_removed` | The API's request counts | Minutes older than a week could not be removed |
