@@ -949,6 +949,129 @@ export function rawSqlReport(root = repositoryRoot): string[] {
   return violations;
 }
 
+/** The child_process functions that run their command through a shell. */
+const SHELL_FUNCTIONS = new Set(["exec", "execSync"]);
+const CHILD_PROCESS = new Set(["child_process", "node:child_process"]);
+
+const isChildProcess = (node: ts.Node | undefined) =>
+  node !== undefined && ts.isStringLiteralLike(node) && CHILD_PROCESS.has(node.text);
+
+/** The name of an object literal's property, when it is written out. */
+function propertyName(name: ts.PropertyName) {
+  return ts.isIdentifier(name) || ts.isStringLiteralLike(name) ? name.text : undefined;
+}
+
+/**
+ * Each place a file starts a shell: it takes exec or execSync from child_process, by import, require
+ * or a dynamic import, or, in a file that takes anything from child_process, it writes a `shell`
+ * option, which would make spawn, execFile or their synchronous forms run the command through a
+ * shell. The option is refused wherever it is written in such a file, since a call may reach it
+ * through a wrapper such as promisify.
+ */
+function shellStarts(path: string, text: string) {
+  const source = ts.createSourceFile(
+    path,
+    text,
+    ts.ScriptTarget.Latest,
+    true,
+    path.endsWith(".tsx") ? ts.ScriptKind.TSX : /\.m?js$/.test(path) ? ts.ScriptKind.JS : ts.ScriptKind.TS,
+  );
+  const found: { line: number; what: string }[] = [];
+  const add = (node: ts.Node, what: string) => found.push({ line: lineOf(source, node.getStart()), what });
+  /** Local names bound to the whole of child_process. */
+  const modules = new Set<string>();
+  let takesChildProcess = false;
+  const fromBinding = (binding: ts.BindingName) => {
+    if (ts.isIdentifier(binding)) modules.add(binding.text);
+    else if (ts.isObjectBindingPattern(binding))
+      for (const element of binding.elements) {
+        const taken = element.propertyName ?? element.name;
+        if (ts.isIdentifier(taken) && SHELL_FUNCTIONS.has(taken.text))
+          add(element, `${taken.text}() from child_process`);
+      }
+  };
+  const takes = (node: ts.Node) => {
+    if (ts.isImportDeclaration(node) && isChildProcess(node.moduleSpecifier)) {
+      takesChildProcess = true;
+      const clause = node.importClause;
+      if (clause?.name) modules.add(clause.name.text);
+      const bindings = clause?.namedBindings;
+      if (bindings && ts.isNamespaceImport(bindings)) modules.add(bindings.name.text);
+      if (bindings && ts.isNamedImports(bindings))
+        for (const element of bindings.elements) {
+          const taken = (element.propertyName ?? element.name).text;
+          if (SHELL_FUNCTIONS.has(taken)) add(element, `${taken}() from child_process`);
+        }
+    }
+    if (
+      ts.isCallExpression(node) &&
+      isChildProcess(node.arguments[0]) &&
+      (node.expression.kind === ts.SyntaxKind.ImportKeyword ||
+        (ts.isIdentifier(node.expression) && node.expression.text === "require"))
+    ) {
+      takesChildProcess = true;
+      let parent = node.parent;
+      while (ts.isAwaitExpression(parent) || ts.isParenthesizedExpression(parent)) parent = parent.parent;
+      if (ts.isVariableDeclaration(parent)) fromBinding(parent.name);
+      else if (ts.isPropertyAccessExpression(parent) && SHELL_FUNCTIONS.has(parent.name.text))
+        add(parent.name, `${parent.name.text}() from child_process`);
+    }
+    ts.forEachChild(node, takes);
+  };
+  takes(source);
+  if (!takesChildProcess) return found;
+  const uses = (node: ts.Node) => {
+    if (
+      ts.isPropertyAccessExpression(node) &&
+      ts.isIdentifier(node.expression) &&
+      modules.has(node.expression.text) &&
+      SHELL_FUNCTIONS.has(node.name.text)
+    )
+      add(node.name, `${node.name.text}() from child_process`);
+    if (
+      (ts.isPropertyAssignment(node) || ts.isShorthandPropertyAssignment(node)) &&
+      propertyName(node.name) === "shell"
+    )
+      add(node.name, "a shell option");
+    ts.forEachChild(node, uses);
+  };
+  uses(source);
+  return found.sort((a, b) => a.line - b.line);
+}
+
+/**
+ * no-shell (small hardening, part 4): product code starts no shell. A program is started with its
+ * arguments as a list (execFile, spawn, fork or their synchronous forms), so no text it is given is
+ * read as a command.
+ */
+export function noShellViolations(path: string, text: string): string[] {
+  return shellStarts(path, text).map(
+    ({ line, what }) =>
+      `${path}:${line} no-shell ${what} runs a command through a shell; give execFile or spawn the program and its arguments`,
+  );
+}
+
+const isProductModule = (path: string) =>
+  isProductSource(path) ||
+  (path.endsWith(".mjs") && !path.endsWith(".test.mjs") && !posixPath(path).includes("/test-support/"));
+
+export function noShellReport(root = repositoryRoot): string[] {
+  const dirs = [
+    "artifacts/api-server/src",
+    `${WEB}src`,
+    `${WEB}app`,
+    ...libraryDirs(root),
+    "lib/db/scripts",
+    "scripts/src",
+    "scripts/ops",
+  ];
+  const files = dirs.flatMap((dir) => {
+    const full = join(root, dir);
+    return statSync(full, { throwIfNoEntry: false })?.isDirectory() ? sourceFiles(full, isProductModule) : [];
+  });
+  return files.flatMap((file) => noShellViolations(posixRelative(root, file), readFileSync(file, "utf8")));
+}
+
 if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
   const violations = [
     ...silentCatchReport(),
@@ -964,6 +1087,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1
     ...historyReseedReport(),
     ...rawHtmlReport(),
     ...rawSqlReport(),
+    ...noShellReport(),
   ];
   for (const violation of violations) process.stdout.write(`${violation}\n`);
   process.stdout.write(`architecture check: ${violations.length} violation(s)\n`);

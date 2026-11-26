@@ -4,7 +4,10 @@ import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { createServer } from "node:net";
 import { once } from "node:events";
+import { request as httpRequest } from "node:http";
 import { createRequire } from "node:module";
+import { randomUUID } from "node:crypto";
+import { readdirSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
@@ -99,6 +102,88 @@ try {
   checks.push(
     "Actual Next responses enforce unique server-generated nonces, reject supplied policy/nonce, disallow framing and prevent HTML caching, on the browser app's page and every server-rendered page",
   );
+  // The web server's own headers and content types (small hardening, part 5): each page, and the
+  // files it sends as they are, say what they are, may not be read as anything else, and send no
+  // address to another site.
+  const said = (response: Response) => ({
+    nosniff: response.headers.get("x-content-type-options"),
+    referrer: response.headers.get("referrer-policy"),
+    type: response.headers.get("content-type") ?? "",
+  });
+  for (const path of paths) {
+    const page = said(await fetch(origin + path));
+    assert.equal(page.nosniff, "nosniff", path);
+    assert.equal(page.referrer, "same-origin", path);
+    assert.match(page.type, /^text\/html; charset=utf-8$/i, path);
+  }
+  const script = (await (await fetch(origin + "/checker")).text()).match(
+    /\/_next\/static\/chunks\/[^"']+\.js/,
+  )?.[0];
+  assert.ok(script, "the page loads a script of the build's own");
+  for (const [path, type] of [
+    [script, /^application\/javascript; charset=utf-8$/i],
+    ["/favicon.svg", /^image\/svg\+xml$/],
+    ["/robots.txt", /^text\/plain; charset=utf-8$/i],
+  ] as const) {
+    const response = await fetch(origin + path);
+    assert.equal(response.status, 200, path);
+    const file = said(response);
+    assert.equal(file.nosniff, "nosniff", path);
+    assert.equal(file.referrer, "same-origin", path);
+    assert.match(file.type, type, path);
+  }
+  checks.push(
+    "Each page is HTML in UTF-8, and a script, an image and a text file are sent with their own types; every one carries nosniff and the same-origin referrer policy",
+  );
+  // A folder is answered as an address the server does not have, never with a listing: the answer
+  // names none of the folder's files, but those the page itself loads.
+  for (const folder of ["chunks", "css", "media"]) {
+    const files = readdirSync(resolve(front, ".next/static", folder), { withFileTypes: true })
+      .filter((entry) => entry.isFile())
+      .map((entry) => entry.name);
+    assert.ok(files.length > 0, `the build has files in ${folder}`);
+    const response = await fetch(`${origin}/_next/static/${folder}/`);
+    assert.ok(
+      response.status === 404 || (response.ok && said(response).type.startsWith("text/html")),
+      `${folder}: ${response.status}`,
+    );
+    const rest = (await response.text()).replace(/(?:\/_next\/)?static\/[\w./~%-]+/g, "");
+    assert.deepEqual(
+      files.filter((name) => rest.includes(name)),
+      [],
+      `the answer for ${folder} lists its files`,
+    );
+  }
+  checks.push(
+    "A folder of the build's files is answered as an address the server does not have, and lists none of its files",
+  );
+  // TRACE is refused, and repeats nothing the request carried. Next answers it for a file with 405,
+  // and for a page with its error page, since the middleware's runtime refuses the method.
+  const probe = `synthetic-trace-${randomUUID()}`;
+  const trace = (path: string) =>
+    new Promise<{ status: number; body: string }>((done, failed) => {
+      const sent = httpRequest(
+        origin + path,
+        { method: "TRACE", headers: { "x-valo-trace-probe": probe } },
+        (answer) => {
+          let body = "";
+          answer.setEncoding("utf8");
+          answer.on("data", (chunk: string) => (body += chunk));
+          answer.on("end", () => done({ status: answer.statusCode ?? 0, body }));
+        },
+      );
+      sent.on("error", failed);
+      sent.end();
+    });
+  const traced: Record<string, number> = {};
+  for (const path of ["/checker", script]) {
+    const answer = await trace(path);
+    traced[path === script ? "file" : "page"] = answer.status;
+    assert.ok(answer.status >= 400, `${path} answers TRACE with ${answer.status}`);
+    assert.ok(!answer.body.includes(probe), `${path} repeats what TRACE sent`);
+  }
+  report.traceStatuses = traced;
+  checks.push("TRACE is refused for a page and for a file, and repeats nothing the request carried");
   browser = await chromium.launch({ headless: true, ...chromiumLaunchPath() });
   const context = await browser.newContext(),
     page = await context.newPage();

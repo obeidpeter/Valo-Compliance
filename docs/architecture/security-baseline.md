@@ -114,8 +114,9 @@ its requirement: an entry can still claim more than its evidence shows. That is 
 judge, and the reason the map is not an assessment.
 
 Two more tests in the same file hold what the map counts on:
-- **The linter keeps refusing** `eval`, code built from strings, raw HTML in JSX and `javascript:`
-  addresses in JSX, as the lint step applies its configuration (1.2.2, 1.3.2, 3.2.2).
+- **The linter keeps refusing** `eval`, code built from strings, raw HTML in JSX, `javascript:`
+  addresses in JSX and comparisons that are not strict, but against null, as the lint step applies
+  its configuration (1.2.2, 1.3.2, 3.2.2, 15.3.5).
 - **No address carries a secret.** No path or query parameter in the API contract is named as a
   token, key, secret or password (14.2.1).
 
@@ -125,13 +126,26 @@ query value twice and keys that would reach every object's prototype, and finds 
 unchanged; and sends every read in the contract, as each kind of caller, and finds no table changed
 but the counts reads keep (3.4.1, 3.4.5, 4.1.1, 15.3.6, 15.3.7, 3.5.3).
 
+[Small hardening](small-hardening.md) (slice 3a) added:
+- **On the API:** a policy of `default-src 'none'` and `frame-ancestors 'none'` on every answer of
+  its own, which the reflection test now requires too, while the identity provider's answers, passed
+  through its proxy, keep the provider's policy; and TRACE and three folders answered with a JSON 404
+  that repeats nothing sent (3.4.3, 13.4.3, 13.4.4).
+- **On the web server:** the compiled frontend's check reads `nosniff`, the referrer policy and the
+  content type of every page, a script, an image and a text file; asks for three folders of the
+  build's files and finds none listed; and sends TRACE to a page and a file, which are refused and
+  repeat nothing (3.4.4, 3.4.5, 4.1.1, 13.4.3, 13.4.4). A page answers TRACE with the server's error
+  page, a 500, since the runtime of Next's middleware does not take the method.
+- **In the code:** strict equality in the linter (15.3.5), and a repository rule, `no-shell`, that
+  refuses `exec` and `execSync` from `child_process` and a `shell` option (1.2.5).
+
 ## What the map finds
 
 | Status | Requirements |
 | --- | --- |
-| met | 61 |
-| partly met | 41 |
-| untested | 21 |
+| met | 69 |
+| partly met | 35 |
+| untested | 19 |
 | not met | 3 |
 | not applicable | 63 |
 | identity provider | 54 |
@@ -152,12 +166,10 @@ but the counts reads keep (3.4.1, 3.4.5, 4.1.1, 15.3.6, 15.3.7, 3.5.3).
   a network allowlist and the database's transport.
 
 What is left falls to the plan's later rows and to the launch:
-- **Small hardening** (Phase 7): HSTS on static files and subdomains once the domain is known; a
-  policy of `default-src 'none'` and `frame-ancestors 'none'` on the API's answers; tests that read
-  the web server's own headers and content types; a rule against starting a shell; no redirects on
-  storage and source downloads; strict equality in the linter; tests of the staff upload's refusals,
-  the authorized party, TRACE and a folder address; a check of the built image for `.git`; time frames
-  and an owner for advisories; a software bill of materials.
+- **Small hardening** (Phase 7): HSTS on static files and subdomains once the domain is known; no
+  redirects on storage and source downloads; tests of the staff upload's refusals and the authorized
+  party; a check of the built image for `.git`; time frames and an owner for advisories; a software
+  bill of materials.
 - **Alerts that reach a person** (Phase 7): logs to a system of their own, which waits for the owner.
   Each request's log line now names its route (16.2.1), refused input is counted as a security event
   (16.3.3), and the log inventory lists what is logged, where it goes, for whom and for how long, with a

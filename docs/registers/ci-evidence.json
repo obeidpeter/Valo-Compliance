@@ -83,7 +83,7 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/routes/valo-reflection.integration.test.ts",
       "test": "hostile text sent to every operation in the contract comes back only inside JSON with the security headers, fails no route, and stays text in the database and its searches",
-      "proves": "Against real PostgreSQL and the whole API, every operation in the contract, sent hostile markup and SQL text in its path, query and body, each query value twice and keys that would reach every object's prototype, answers in JSON or nothing, naming its character set, with nosniff, no framing, a same-origin referrer policy and HSTS for a year, kept from shared caches when private and never with a failure of the server's own, and no request changes the prototype every object inherits; an unknown address and a malformed or oversized body are answered the same way; every read, sent as each kind of caller, changes no table but the counts reads keep; SQL text comes back byte for byte, searches read %, _ and \\ literally, and a NUL character is refused as a detail not taken."
+      "proves": "Against real PostgreSQL and the whole API, every operation in the contract, sent hostile markup and SQL text in its path, query and body, each query value twice and keys that would reach every object's prototype, answers in JSON or nothing, naming its character set, with nosniff, a policy that loads and runs nothing, no framing, a same-origin referrer policy and HSTS for a year, kept from shared caches when private and never with a failure of the server's own, and no request changes the prototype every object inherits; an unknown address, the API's folders, TRACE and a malformed or oversized body are answered the same way, the folders and TRACE with a JSON 404 that repeats nothing sent; every read, sent as each kind of caller, changes no table but the counts reads keep; SQL text comes back byte for byte, searches read %, _ and \\ literally, and a NUL character is refused as a detail not taken."
     },
     {
       "requirement": "SEC-003",
@@ -139,7 +139,14 @@
       "job": "foundation",
       "file": "scripts/src/valo/security-baseline.test.ts",
       "test": "the linter CI runs refuses the code the security baseline counts on it to refuse",
-      "proves": "The linter CI runs on every merge refuses eval and code built from strings, raw HTML in JSX and script addresses in JSX."
+      "proves": "The linter CI runs on every merge refuses eval and code built from strings, raw HTML in JSX, script addresses in JSX, and comparisons that are not strict but against null."
+    },
+    {
+      "requirement": "SEC-003",
+      "job": "foundation",
+      "file": "scripts/src/valo/architecture-check.test.ts",
+      "test": "product code starts no shell: no exec or execSync from child_process, and no shell option (small hardening, part 4)",
+      "proves": "The repository rule no-shell refuses product code that takes exec or execSync from child_process, by import, require or a dynamic import, or writes a shell option where it starts a program, and finds none in the repository."
     },
     {
       "requirement": "NFR-011",
@@ -2701,7 +2708,7 @@
       "job": "foundation",
       "file": "artifacts/api-server/src/middlewares/clerkProxyMiddleware.test.ts",
       "test": "the Clerk proxy forwards only what Clerk should see and returns responses the edge accepts",
-      "proves": "The identity provider's frontend calls pass through Valo's own address with only the headers the provider needs, and its answers come back without hop-by-hop headers."
+      "proves": "The identity provider's frontend calls pass through Valo's own address with only the headers the provider needs, and its answers come back without hop-by-hop headers, with Valo's security headers but the provider's own content policy."
     },
     {
       "requirement": "IAM-001",

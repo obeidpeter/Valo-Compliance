@@ -206,7 +206,7 @@ test("the security baseline's check finds an entry that claims more than its evi
   ]);
 });
 
-/** The rules the baseline counts on the linter to enforce (1.2.2, 1.3.2 and 3.2.2). */
+/** The rules the baseline counts on the linter to enforce (1.2.2, 1.3.2, 3.2.2 and 15.3.5). */
 const LINT_RULES = [
   "no-eval",
   "no-implied-eval",
@@ -214,6 +214,7 @@ const LINT_RULES = [
   "react/no-danger",
   "react/no-danger-with-children",
   "react/jsx-no-script-url",
+  "eqeqeq",
 ];
 
 test("the linter CI runs refuses the code the security baseline counts on it to refuse", () => {
