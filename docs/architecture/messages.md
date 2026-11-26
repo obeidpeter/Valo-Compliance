@@ -91,6 +91,45 @@ The requirements, verbatim from the specification:
   reminders' included. The words follow the reminders' rule: an accepted message is never called sent or
   delivered.
 
+Built (slice 1a), for a workspace's messages to a member's verified address:
+- **The table** (`lib/db/src/schema/valo-messages.ts`). A row holds its workspace, kind, class, the
+  identity it is for, the record it is about, and its state. A workspace's record owes one message of each
+  kind, which is the row's idempotency: a replayed event adds none. The rule is each workspace's own, so a
+  row in one workspace never stands in the way of another's. The database holds each kind to its class and
+  each state to agree with itself. A message with no workspace, and a typed address, join it in slice 4; a
+  delivery and a bounce in slice 2.
+- **The states.** `queued`, then `sending` while one attempt holds its lease, then `accepted` once a sender
+  took it. `held` waits for what stops it for now. `failed` and `cancelled` end it. No state says
+  delivered.
+- **Queueing** (`queueMessage`). A settled order and a processed refund each write their message in their
+  own transaction, beside the purchase ledger's row.
+- **The dispatcher** (`modules/messages/valo-message-dispatcher.ts`), the worker's `messages` task, each
+  minute. In the message's workspace scope it claims the message and, in that transaction, checks again:
+  - the pause;
+  - that the workspace's erasure has not begun;
+  - that the recipient is still a member of the workspace;
+  - that the record still owes the message: the order is still verified, or the refund is processed;
+  - that the purchase ledger's row is not held.
+
+  A message stopped for good is `cancelled`, with the reason. One stopped for now is `held`, and looked at
+  again later. Otherwise it commits the attempt, calls the sender with nothing held, and records the
+  result in a transaction of its own.
+- **Retries.** An attempt the sender does not take is offered again after 1, 2, 4 and 8 minutes, five
+  attempts in all, each with the same idempotency key, then the message is `failed`. An attempt whose
+  process stopped is offered again once its 30-second lease ends. Past a sender's own window for telling
+  a retry from a new message, the message fails and is not offered again.
+- **The pause.** A member of staff with the system role pauses and resumes sending on the staff screen's
+  "Service safety pauses", as for checkout and AI, with a reason. The pause's record counts the messages
+  waiting. Checkout and AI run on.
+- **Privacy.** The processing inventory and the privacy notice name the messages. A workspace's data
+  download lists each message and what became of it, without whom it was for. An erasure removes them,
+  and none is sent once an erasure has begun.
+- **Before the table exists.** The Replit development database is given each migration by hand
+  ([runbook](../valo/migration-messages.md)). Until it has this one, a payment settles and a refund is
+  processed as before and no message is owed: an order settled then is sent none later, as every order
+  settled before this change.
+- **Not yet:** the delivery log, and an alert on failed messages, are slice 1b's.
+
 ### 2. The sender (WRK-003)
 
 - **One interface.** `MessageSender` takes a recipient, a subject, plain text, headers, an idempotency key
@@ -101,6 +140,18 @@ The requirements, verbatim from the specification:
 - **What stays off.** No sender reaches anyone but the development test address until the owner approves a
   provider and a sender address. A production sender also needs a reviewed launch change, since production
   serves only the health check.
+
+Built (slice 1a):
+- **The interface** (`modules/messages/message-sender.ts`). A sender is handed the message's idempotency
+  key, its kind, the recipient as an identity, a subject and plain text. It returns its reference for the
+  message. It is never handed an address: a real sender reads the identity's verified address as it
+  sends. Headers and tags join the interface with the unsubscribe headers, and the reminder adapter moves
+  onto it, in slice 3.
+- **The stand-in.** It sends nothing to anyone. It gives each idempotency key one reference, as a provider
+  that tells a retry from a new message would. It keeps what it was handed only in a test.
+- **The worker's sender** is chosen by `VALO_MESSAGE_SENDER` as the worker starts. Unset, there is none,
+  and every message waits as `held`. `stand-in` is the only value there is. Any other value, or the
+  stand-in in production, stops the worker before it works.
 
 ### 3. Delivery and bounces (WRK-003)
 
@@ -142,8 +193,12 @@ The requirements, verbatim from the specification:
   alerts and erasure keep reading it. A hold on its row cancels the message before it is sent. The
   message's own row, not this one, says what became of the message.
 
-**The words**, proposed for the owner to review before the first real send (the owner's point 3). For an
-order of ₦15,000.00 made in the provider's test mode:
+Built (slice 1a): the two messages and their words (`modules/messages/message-text.ts`), queued as above.
+The PDF receipt is slice 1b's. What the purchases screen says of a receipt's email is unchanged: it reads
+the ledger's row, which still says no email is configured, as none is.
+
+**The words**, for the owner to review before the first real send (the owner's point 3). A test keeps
+this page's copy the same as the code's. For an order of ₦15,000.00 made in the provider's test mode:
 
 ```text
 Subject: Your Valo receipt for order valo-example-order
@@ -223,7 +278,7 @@ carries its test-mode line.
 
 | Slice | What | State |
 | --- | --- | --- |
-| 1a | The outbox, the sender interface, the stand-in, the dispatcher and the pause, with receipts and refund notices as its first messages | Not built |
+| 1a | The outbox, the sender interface, the stand-in, the dispatcher and the pause, with receipts and refund notices as its first messages | Built |
 | 1b | The workspace's delivery log, the PDF receipt, and an alert on failed messages | Not built |
 | 2 | Delivery and bounces: the webhook, suppression and the states on the log | Not built |
 | 3 | Unsubscribe: the links, the endpoint, consent read at dispatch, and the reminders on the shared sender | Not built |

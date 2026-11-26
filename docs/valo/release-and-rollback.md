@@ -302,6 +302,13 @@ row it changed until its transaction ends. Apply the migrations (see
 `docs/valo/migration-history-digest-changes.md`). After them each write adds its change as a row of its
 own, and no write to a history waits on another's digest.
 
+A message that stays `held` in `valo_messages` says why in its `reason`. `SENDER_NOT_CONFIGURED` means
+the worker has no sender: `VALO_MESSAGE_SENDER` is unset, as it is unless a stand-in is wanted.
+`MESSAGES_PAUSED` means the staff safety pause on sending is on. Neither is a fault, and the message is
+offered once the cause is gone. A `failed` message was offered five times and not taken, or its sender
+could no longer tell a retry from a new message. No message reaches anyone: the only sender is a stand-in
+that sends nothing (see `docs/architecture/messages.md` and `docs/valo/migration-messages.md`).
+
 A customer request that answers the generic 503 with error code `42501` in its log
 ran a command `valo_workspace_scope` does not hold: the code started using a table,
 command or column before a migration granted it (`WORKSPACE_SCOPE_PRIVILEGES` in

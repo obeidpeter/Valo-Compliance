@@ -159,6 +159,11 @@ Rules that apply now:
 - Only the operator commands in `FINITE_WORK_BINDING_ENTRIES` hand the inference
   dispatcher its work-binding checks (`provideFiniteWorkBindings`), and only the real
   `assertFiniteWorkBindings`; the `inference-bindings` repository rule enforces this.
+- A message to a customer is never sent where its event happens. The event's transaction
+  records it with `queueMessage` (`modules/messages`, `docs/architecture/messages.md`), and only
+  the dispatcher hands it to a sender, after checking again whatever could stop it. A row of
+  `valo_messages` holds no message text and no address. The only sender is a stand-in that
+  sends nothing: a sender that reaches a real address needs the owner's approval (section 1).
 - API code is moving into one folder per capability under
   `artifacts/api-server/src/modules/`. Code outside a module imports it only through
   its `index.ts`; the `module-boundary` repository rule enforces this, and tests may

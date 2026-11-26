@@ -37,6 +37,13 @@
       "proves": "No HTTP code can make, cast or redirect the workspace actor a service acts for; only the server's own resolution of a membership issues one."
     },
     {
+      "requirement": "SEC-001",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/messages/valo-messages.integration.test.ts",
+      "test": "messages wait in the outbox and are offered to the sender once, after every check is made again (WRK-003, WRK-004, PAY-008, PAY-009)",
+      "proves": "Against PostgreSQL, in another workspace's database scope a message can be neither read, changed nor offered to a sender, in its own scope a message's recipient cannot be changed, and a row another workspace holds about the same record's id does not stand in for a workspace's own message."
+    },
+    {
       "requirement": "IAM-003",
       "job": "postgres",
       "file": "artifacts/api-server/src/platform/workspace-row-security.integration.test.ts",
@@ -3131,6 +3138,20 @@
       "proves": "The development test refund policy says a confirmed full refund suspends future template reuse and that saved drafts, revisions and already downloaded files are never deleted, the purchase history screen says saved drafts and previously downloaded files are not deleted, and every scanned web app and API source sentence that pairs a downloaded copy with a word such as removed, revoked or locked also contains a negating or keeping word."
     },
     {
+      "requirement": "PAY-008",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/messages/valo-messages.integration.test.ts",
+      "test": "messages wait in the outbox and are offered to the sender once, after every check is made again (WRK-003, WRK-004, PAY-008, PAY-009)",
+      "proves": "Against PostgreSQL, a refund's notice is handed to the stand-in sender only for a refund the provider processed; the notice of a refund that is only requested is cancelled without the sender being called."
+    },
+    {
+      "requirement": "PAY-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/messages/messages.test.ts",
+      "test": "a refund message says a processed refund is not yet the bank's credit, and an unconfirmed amount is not guessed (PAY-008)",
+      "proves": "The refund notice's words say the provider confirmed the refund and that this is not yet confirmation that the bank has credited the account, and an amount the provider has not confirmed is said to be unconfirmed."
+    },
+    {
       "requirement": "PAY-009",
       "job": "foundation",
       "file": "artifacts/api-server/src/lib/valo-guided.test.ts",
@@ -3317,7 +3338,7 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/privacy/valo-privacy-erasure.integration.test.ts",
       "test": "resumable physical development erasure with retained exclusions and replay",
-      "proves": "A synthetic deletion request, run by privacy staff with fresh MFA and an acknowledgement, quarantines the workspace while its document still exists, then removes its documents, revisions, profile versions, saved templates, rule and edition notices and its private files in a controlled local file store, redacts its support and privacy-case text and clears its AI draft content, while another workspace's document and notices stay and the request ends partially fulfilled with the outside-processors step held."
+      "proves": "A synthetic deletion request, run by privacy staff with fresh MFA and an acknowledgement, quarantines the workspace while its document still exists, then removes its documents, revisions, profile versions, saved templates, rule and edition notices, the messages Valo owed it and its private files in a controlled local file store, redacts its support and privacy-case text and clears its AI draft content, while another workspace's document, notices and message stay and the request ends partially fulfilled with the outside-processors step held."
     },
     {
       "requirement": "PRV-003",
@@ -4069,6 +4090,13 @@
       "proves": "After reminders are scheduled, turning them off makes the next dispatch of a due reminder end as cancelled without calling the controlled sender, and every reminder of the workspace is cancelled."
     },
     {
+      "requirement": "WRK-004",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/messages/valo-messages.integration.test.ts",
+      "test": "messages wait in the outbox and are offered to the sender once, after every check is made again (WRK-003, WRK-004, PAY-008, PAY-009)",
+      "proves": "Against PostgreSQL, each message carries its class, and the two kinds there are, receipts and refund notices, are necessary. Just before a message is offered the dispatcher checks again the pause, the workspace's erasure, the recipient's membership and the record it is about, and a message stopped by any of them is not handed to the sender. No optional message, unsubscribe link or consent check exists yet."
+    },
+    {
       "requirement": "WRK-006",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/documents/valo-workspace-documents.integration.test.ts",
@@ -4627,6 +4655,27 @@
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
       "test": "the reminders screen says in plain words whether emails are being sent and what has happened to each reminder",
       "proves": "Signed in through a stand-in identity with synthetic data, the reminders screen says that reminders are off unless turned on, that each is planned for 09:00 Lagos time, and whether emails are being sent; its delivery log gives each reminder's state and reason in words, and a message the email service accepted is not called sent or delivered. This shows the screen's words, not that a reminder is scheduled or an email sent."
+    },
+    {
+      "requirement": "WRK-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/messages/valo-messages.integration.test.ts",
+      "test": "messages wait in the outbox and are offered to the sender once, after every check is made again (WRK-003, WRK-004, PAY-008, PAY-009)",
+      "proves": "Against PostgreSQL, with a stand-in sender that sends nothing, two runs of the messages task at once offer a settled order's receipt message once and record the stand-in's reference, a message the sender does not take is offered again with the same key five times at most, and no state of a message says delivered. Each message's state can be read back; a delivery log for the customer is not built yet."
+    },
+    {
+      "requirement": "WRK-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/messages/messages.test.ts",
+      "test": "the worker's sender is the stand-in only when its setting says so, and never in production (WRK-003)",
+      "proves": "The messages task has no sender unless its setting names the stand-in, which sends nothing; any other value, and the stand-in in production, is refused. No sender that reaches a real address exists."
+    },
+    {
+      "requirement": "WRK-003",
+      "job": "foundation",
+      "file": "lib/db/scripts/phase1-migrations.test.mjs",
+      "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
+      "proves": "After the messages migrations, the database holds one message for each workspace's record and kind, refuses a state that does not agree with itself, such as an accepted message without its sender's reference, and lets a customer request change only a message's state, never whom or what it is for."
     },
     {
       "requirement": "SRV-002",
@@ -5271,6 +5320,20 @@
       "file": "lib/db/scripts/phase1-migrations.test.mjs",
       "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
       "proves": "After the edition purchases migration, the database lets a verified purchase download its template's next released edition and start its form, for the buying workspace only and only while the purchase stands."
+    },
+    {
+      "requirement": "PAY-009",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/messages/valo-messages.integration.test.ts",
+      "test": "messages wait in the outbox and are offered to the sender once, after every check is made again (WRK-003, WRK-004, PAY-008, PAY-009)",
+      "proves": "Against PostgreSQL, a settled order owes one receipt message to whoever placed it however often its settlement is replayed, an order only created owes none, and the message handed to the stand-in sender names the order's reference, what was bought and the amount. The stand-in sends nothing, so no receipt reaches a customer by email yet."
+    },
+    {
+      "requirement": "PAY-009",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/messages/messages.test.ts",
+      "test": "a receipt message names the order and what it is not, links to the purchases page and has no unsubscribe link (PAY-009, WRK-004)",
+      "proves": "The receipt message's words say it is Valo's receipt for the purchase and not a business invoice, a government receipt or an official tax invoice, and that a test-mode purchase took no real money."
     },
     {
       "requirement": "EDP-011",
