@@ -999,7 +999,9 @@ test(
           const { liveReleasedVersions, releasedResources } =
             await import("../modules/catalogue/valo-released-content");
           const { REVIEW_INPUT_CEILING } = await import("../modules/editorial/review-meter");
-          const { checkReviewedGuideSources } = await import("../modules/editorial/reviewed-guide-checks");
+          const { checkReviewedGuideSources, listReviewedGuides } =
+            await import("../modules/editorial/reviewed-guide-checks");
+          const { ListReviewedGuidesResponse } = await import("@workspace/api-zod");
           const guide = "GUD-02",
             clockBefore = Date.now();
           // This subtest runs on the real clock, where the others run on a fixed one. The database
@@ -1176,21 +1178,64 @@ test(
                 )
               ).rows;
             assert.deepEqual(await checks(), []);
+            // The owner's panel lists the guide as it would be checked now, through the contract's own
+            // schema: its whole text, each sentence with the passage it rests on, where each source's copy
+            // stands, and nothing holding it. Nobody else reads it.
+            const listed = async () =>
+              ListReviewedGuidesResponse.parse(
+                await listReviewedGuides({ identityId: owner, recentMfa: true, verifiedAt: Date.now() }),
+              ).items.find((item) => item.versionId === prepared.id);
+            await assert.rejects(
+              listReviewedGuides({
+                identityId: `synthetic-not-the-owner-${randomUUID()}`,
+                recentMfa: true,
+                verifiedAt: Date.now(),
+              }),
+              { status: 403 },
+            );
+            const candidate = current.bundle.candidate;
+            const shown = (await listed())!;
+            assert.deepEqual(
+              [shown.guideId, shown.version, shown.candidateHash, shown.saved, shown.holds, shown.lastCheck],
+              [guide, candidate.version, current.candidate.hash, false, [], null],
+            );
+            assert.equal(shown.title, (JSON.parse(candidate.body) as { title: string }).title);
+            assert.ok(shown.text.some((part) => part.includes(shown.claims[0]!.text)));
+            assert.deepEqual(
+              shown.claims.map((c) => [c.text, c.sourceId, c.quote, c.held]),
+              candidate.claims.map((c) => [c.text, c.sourceId, c.quote, false]),
+            );
+            assert.deepEqual(
+              shown.sources.map((s) => [s.id, s.passage, s.state]),
+              current.bundle.sources.map((s) => [s.id, s.text, "holds"]),
+            );
             // Nor does a check while the Act's capture was last checked over a day ago, or once the Act's
-            // file has changed since that capture: the daily check must have found it current.
+            // file has changed since that capture: the daily check must have found it current. The panel
+            // says which, for each source, and that it holds the guide.
             const watch = (column: "checked_at" | "last_raw_hash", value: unknown) =>
               scoped.query(`UPDATE valo_source_watches SET ${column} = $2 WHERE source_id = $1`, [
                 leadId,
                 value,
               ]);
             const notCurrent = /no longer the current one, or was not checked within the last day/;
+            const panelSays = async (state: string, hold: RegExp) => {
+              const now = (await listed())!;
+              assert.ok(
+                now.sources.every((s) => s.state === state),
+                state,
+              );
+              assert.ok(now.holds.length > 0 && now.holds.every((h) => hold.test(h)), now.holds.join(" "));
+            };
             await watch("checked_at", new Date(Date.now() - 86_460_000));
             await assert.rejects(ownerCheck(), notCurrent);
+            await panelSays("not_current", /was not checked within the last day/);
             await watch("checked_at", checkedAt);
             await watch("last_raw_hash", "e".repeat(64));
             await assert.rejects(ownerCheck(), notCurrent);
+            await panelSays("changed", /has changed since this guide was prepared/);
             await watch("last_raw_hash", rawChecksum);
             assert.deepEqual(await checks(), []);
+            assert.deepEqual((await listed())!.holds, []);
             // The owner's check of the exact candidate, through the captures its sources are bound to.
             const captures = (current.row.attestations as { sourceSnapshots: Record<string, string> })
               .sourceSnapshots;
@@ -1203,6 +1248,12 @@ test(
             assert.deepEqual(await checks(), [
               { checked_by: owner, candidate_hash: current.candidate.hash, captures },
             ]);
+            // The panel shows the check and the day it counts for (the contract's schema reads times as dates).
+            assert.deepEqual((await listed())!.lastCheck, {
+              checkedAt: new Date(checked.checkedAt),
+              countsUntil: new Date(Date.parse(checked.checkedAt) + 86_400_000),
+              counts: true,
+            });
 
             // With the check, a package of the guides' kind that nobody has approved still admits nothing,
             // and an approval of template reviews does not admit a guide's reviews.
@@ -1267,6 +1318,11 @@ test(
             // A day after the owner's check, the admitted pair is not sent and the guides' approval admits
             // it no more: the owner checks again.
             await backdateChecks();
+            assert.equal(
+              (await listed())!.lastCheck!.counts,
+              false,
+              "the panel says the check no longer counts",
+            );
             await assert.rejects(sendReviews(), /OWNER_SOURCE_CHECK_REQUIRED/);
             await assert.rejects(admit(guides.packageId, guides.expiresAt), /OWNER_SOURCE_CHECK_REQUIRED/);
             assert.equal(calls, before, "refusing calls no model");
@@ -1319,6 +1375,7 @@ test(
             const result = await publish(id, artifacts);
             assert.equal(result.eligibility?.decision, "eligible");
             assert.equal(result.status, "published");
+            assert.equal(await listed(), undefined, "a released guide needs no check, and leaves the panel");
             const row = await savedVersion(prepared.id);
             assert.equal(row.status, "published");
             assert.equal(evaluatePublication(row.bundle).decision, "eligible");

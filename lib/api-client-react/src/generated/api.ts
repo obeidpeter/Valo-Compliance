@@ -163,6 +163,9 @@ import type {
   RetainedDraftLoad,
   RetainedDraftLoadResult,
   RetainedDraftStatus,
+  ReviewedGuideCheckReceipt,
+  ReviewedGuideCheckRequest,
+  ReviewedGuidePage,
   RuleNotices,
   SavedAssessment,
   SavedAssessmentInput,
@@ -7692,6 +7695,211 @@ export const useDecideOwnerRule = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getDecideOwnerRuleMutationOptions(options), queryClient);
+    }
+
+export const getListReviewedGuidesUrl = () => {
+
+
+
+
+  return `/api/admin/reviewed-guides`
+}
+
+/**
+ * Each prepared guide awaiting its reviews, newest first, with its whole text, each claim with the passage it rests on, where each of its sources' copies stands now, what holds it, and the owner's latest check of it (docs/architecture/reviewed-route.md, part 2). Read-only. Development only.
+ * @summary Guides on the reviewed route awaiting the development owner's check of their sources
+ */
+export const listReviewedGuides = async ( options?: Parameters<typeof customFetch>[1]): Promise<ReviewedGuidePage> => {
+
+  return customFetch<ReviewedGuidePage>(getListReviewedGuidesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListReviewedGuidesQueryKey = () => {
+    return [
+    "listReviewedGuides"
+    ] as const;
+    }
+
+
+export const getListReviewedGuidesQueryOptions = <TData = Awaited<ReturnType<typeof listReviewedGuides>>, TError = ErrorType<void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listReviewedGuides>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListReviewedGuidesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listReviewedGuides>>> = ({ signal }) => listReviewedGuides({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listReviewedGuides>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListReviewedGuidesQueryResult = NonNullable<Awaited<ReturnType<typeof listReviewedGuides>>>
+export type ListReviewedGuidesQueryError = ErrorType<void>
+
+
+/**
+ * Each prepared guide awaiting its reviews, newest first, with its whole text, each claim with the passage it rests on, where each of its sources' copies stands now, what holds it, and the owner's latest check of it (docs/architecture/reviewed-route.md, part 2). Read-only. Development only.
+ * @summary Guides on the reviewed route awaiting the development owner's check of their sources
+ */
+export function useListReviewedGuides<TData = Awaited<ReturnType<typeof listReviewedGuides>>, TError = ErrorType<void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listReviewedGuides>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listReviewedGuides>>,
+          TError,
+          Awaited<ReturnType<typeof listReviewedGuides>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Each prepared guide awaiting its reviews, newest first, with its whole text, each claim with the passage it rests on, where each of its sources' copies stands now, what holds it, and the owner's latest check of it (docs/architecture/reviewed-route.md, part 2). Read-only. Development only.
+ * @summary Guides on the reviewed route awaiting the development owner's check of their sources
+ */
+export function useListReviewedGuides<TData = Awaited<ReturnType<typeof listReviewedGuides>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listReviewedGuides>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listReviewedGuides>>,
+          TError,
+          Awaited<ReturnType<typeof listReviewedGuides>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Each prepared guide awaiting its reviews, newest first, with its whole text, each claim with the passage it rests on, where each of its sources' copies stands now, what holds it, and the owner's latest check of it (docs/architecture/reviewed-route.md, part 2). Read-only. Development only.
+ * @summary Guides on the reviewed route awaiting the development owner's check of their sources
+ */
+export function useListReviewedGuides<TData = Awaited<ReturnType<typeof listReviewedGuides>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listReviewedGuides>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Each prepared guide awaiting its reviews, newest first, with its whole text, each claim with the passage it rests on, where each of its sources' copies stands now, what holds it, and the owner's latest check of it (docs/architecture/reviewed-route.md, part 2). Read-only. Development only.
+ * @summary Guides on the reviewed route awaiting the development owner's check of their sources
+ */
+export function useListReviewedGuides<TData = Awaited<ReturnType<typeof listReviewedGuides>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listReviewedGuides>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListReviewedGuidesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCheckReviewedGuideUrl = (versionId: string,) => {
+
+
+
+
+  return `/api/admin/reviewed-guides/${encodeURIComponent(String(versionId))}/checks`
+}
+
+/**
+ * The owner confirms the guide they read by its candidate's checksum. Its sources are checked again against today's copies, and the check is recorded only if every one holds. A guide's reviews are admitted, and the guide released, only within a day of such a check. Nothing is reviewed or released here.
+ * @summary Record the development owner's check of a prepared guide's official sources
+ */
+export const checkReviewedGuide = async (versionId: string,
+    reviewedGuideCheckRequest: ReviewedGuideCheckRequest, options?: Parameters<typeof customFetch>[1]): Promise<ReviewedGuideCheckReceipt> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ReviewedGuideCheckReceipt>(getCheckReviewedGuideUrl(versionId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(reviewedGuideCheckRequest)
+  }
+);}
+
+
+
+
+
+export const getCheckReviewedGuideMutationKey = () => ['checkReviewedGuide'] as const;
+
+export const getCheckReviewedGuideMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof checkReviewedGuide>>, TError,CheckReviewedGuideMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof checkReviewedGuide>>, TError,CheckReviewedGuideMutationVariables, TContext> => {
+
+const mutationKey = getCheckReviewedGuideMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof checkReviewedGuide>>, CheckReviewedGuideMutationVariables> = (props) => {
+          const {versionId,data} = props ?? {};
+
+          return  checkReviewedGuide(versionId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CheckReviewedGuideMutationResult = NonNullable<Awaited<ReturnType<typeof checkReviewedGuide>>>
+    export type CheckReviewedGuideMutationBody = BodyType<ReviewedGuideCheckRequest>
+    export type CheckReviewedGuideMutationError = ErrorType<void>
+    export type CheckReviewedGuideMutationVariables = {versionId: string;data: BodyType<ReviewedGuideCheckRequest>}
+
+    /**
+ * The owner confirms the guide they read by its candidate's checksum. Its sources are checked again against today's copies, and the check is recorded only if every one holds. A guide's reviews are admitted, and the guide released, only within a day of such a check. Nothing is reviewed or released here.
+ * @summary Record the development owner's check of a prepared guide's official sources
+ */
+export const useCheckReviewedGuide = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof checkReviewedGuide>>, TError,CheckReviewedGuideMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof checkReviewedGuide>>,
+        TError,
+        CheckReviewedGuideMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCheckReviewedGuideMutationOptions(options), queryClient);
     }
 
 export const getGetCorrectionNoticesUrl = (params?: GetCorrectionNoticesParams,) => {

@@ -23,6 +23,10 @@ import {
   ListOwnerReviewWorkResponse,
   NoteOwnerReviewWorkParams,
   NoteOwnerReviewWorkResponse,
+  ListReviewedGuidesResponse,
+  CheckReviewedGuideParams,
+  CheckReviewedGuideBody,
+  CheckReviewedGuideResponse,
 } from "@workspace/api-zod";
 import { sameOriginMutation } from "../middlewares/valo-identity";
 import { verifiedStaffSession } from "./valo-customer-access";
@@ -35,9 +39,11 @@ import {
   type SourceStaffActor,
 } from "../modules/sources";
 import {
+  checkReviewedGuideSources,
   decideOwnerRule,
   listOwnerReviewWork,
   listOwnerRules,
+  listReviewedGuides,
   noteOwnerReviewWork,
   requestReviewPreparation,
   reviewPreparable,
@@ -153,6 +159,25 @@ export function createSourceControlsRouter(
   router.post("/admin/owner-rules/:ruleId/decisions", sameOriginMutation, async (req, res) => {
     const actor = await owner(req, res.locals);
     res.json(DecideOwnerRuleResponse.parse(await decideOwnerRule(actor, ownerRuleId(req.params), req.body)));
+  });
+  // Guides on the reviewed route, which the development owner checks before their reviews and their
+  // release (docs/architecture/reviewed-route.md, part 2; decision 0018).
+  router.get("/admin/reviewed-guides", async (req, res) => {
+    res.json(ListReviewedGuidesResponse.parse(await listReviewedGuides(await owner(req, res.locals))));
+  });
+  router.post("/admin/reviewed-guides/:versionId/checks", sameOriginMutation, async (req, res) => {
+    const actor = await owner(req, res.locals);
+    const params = CheckReviewedGuideParams.safeParse(req.params);
+    if (!params.success)
+      throw new ValoProblem(404, "This guide is not awaiting its reviews. Nothing was recorded.");
+    const body = CheckReviewedGuideBody.strict().safeParse(req.body);
+    if (!body.success)
+      throw new ValoProblem(422, "Confirm the guide you read by its checksum. Nothing was recorded.");
+    res.json(
+      CheckReviewedGuideResponse.parse(
+        await checkReviewedGuideSources(actor, params.data.versionId, body.data.confirmCandidateHash),
+      ),
+    );
   });
   return router;
 }

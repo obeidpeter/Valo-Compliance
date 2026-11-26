@@ -3018,6 +3018,110 @@ export interface OwnerRuleReceipt {
   superseded: number[];
 }
 
+export type ReviewedGuideClaimKind = typeof ReviewedGuideClaimKind[keyof typeof ReviewedGuideClaimKind];
+
+
+export const ReviewedGuideClaimKind = {
+  source_statement: 'source_statement',
+  interpretation: 'interpretation',
+  optional_practice: 'optional_practice',
+} as const;
+
+export interface ReviewedGuideClaim {
+  /** The guide's sentence. */
+  text: string;
+  kind: ReviewedGuideClaimKind;
+  sourceId: string;
+  /** Where in its source the quoted words are. */
+  locator: string;
+  quote: string;
+  /** Whether today's copy of its source lacks the words it quotes. */
+  held: boolean;
+}
+
+/**
+ * Where the copy this guide is bound to stands now.
+ */
+export type ReviewedGuideSourceState = typeof ReviewedGuideSourceState[keyof typeof ReviewedGuideSourceState];
+
+
+export const ReviewedGuideSourceState = {
+  holds: 'holds',
+  no_copy: 'no_copy',
+  changed: 'changed',
+  not_current: 'not_current',
+  unreadable: 'unreadable',
+  passage_missing: 'passage_missing',
+  quote_missing: 'quote_missing',
+} as const;
+
+export interface ReviewedGuideSource {
+  id: string;
+  title: string;
+  url: string;
+  /** The source's words the guide rests on. */
+  passage: string;
+  /**
+     * When the daily source check last read the source's address, if it has.
+     * @nullable
+     */
+  checkedAt: string | null;
+  /** Where the copy this guide is bound to stands now. */
+  state: ReviewedGuideSourceState;
+}
+
+export interface ReviewedGuideLastCheck {
+  checkedAt: string;
+  countsUntil: string;
+  /** Whether the check still admits the guide's reviews and its release. */
+  counts: boolean;
+}
+
+export interface ReviewedGuideItem {
+  versionId: string;
+  guideId: string;
+  title: string;
+  /** @minimum 1 */
+  version: number;
+  /**
+     * The checksum of the exact guide shown. The owner's check confirms it.
+     * @pattern ^[a-f0-9]{64}$
+     */
+  candidateHash: string;
+  preparedAt: string;
+  reviewBy: string;
+  /** Whether its reviews have run and the guide is saved, waiting for a current check before its release. */
+  saved: boolean;
+  /** The guide's whole text, part by part, as its page and files print it. */
+  text: string[];
+  claims: ReviewedGuideClaim[];
+  sources: ReviewedGuideSource[];
+  /** What stops the owner checking it now, in plain words. Empty when nothing does. */
+  holds: string[];
+  lastCheck: ReviewedGuideLastCheck | null;
+}
+
+export interface ReviewedGuidePage {
+  items: ReviewedGuideItem[];
+}
+
+export interface ReviewedGuideCheckRequest {
+  /** @pattern ^[a-f0-9]{64}$ */
+  confirmCandidateHash: string;
+}
+
+export interface ReviewedGuideCheckReceipt {
+  versionId: string;
+  guide: string;
+  /** @minimum 1 */
+  version: number;
+  /** @pattern ^[a-f0-9]{64}$ */
+  candidateHash: string;
+  checkedAt: string;
+  /** @minimum 1 */
+  sources: number;
+}
+
 export type ExportInputFormat = typeof ExportInputFormat[keyof typeof ExportInputFormat];
 
 

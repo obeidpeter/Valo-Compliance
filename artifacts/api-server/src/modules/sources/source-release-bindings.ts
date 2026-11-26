@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import { allSourceLeads, publicationSchema, releaseEvidence } from "@workspace/valo-core";
+import { logger } from "../../platform/logger";
 import { readSourceText } from "./source-storage";
 import {
   type SourceReader,
@@ -76,6 +77,83 @@ export async function verifyReleasedSources(
     });
   }
   return captures;
+}
+
+/** Where one bundle source stands against the capture its release names (inspectReleasedSources). */
+export type InspectedSourceState =
+  "holds" | "no_copy" | "changed" | "not_current" | "unreadable" | "passage_missing" | "quote_missing";
+export type InspectedSourceCapture = {
+  bundleSourceId: string;
+  snapshotId: string | null;
+  /** When the source's watch last checked its address, if it has. */
+  checkedAt: string | null;
+  state: InspectedSourceState;
+  /** The positions, in the candidate's claims, of the claims on this source whose quotations the copy lacks. */
+  missingQuotes: number[];
+};
+
+/**
+ * The read-only form of verifyReleasedSources, for a person to read before they check a guide: where
+ * each bundle source stands against the capture named for it, with every claim whose quotation the
+ * copy lacks rather than only the first problem. It reads private storage, so a caller runs it outside
+ * any transaction. It records nothing.
+ */
+export async function inspectReleasedSources(
+  reader: SourceReader,
+  raw: unknown,
+  snapshotIds: Record<string, string> = {},
+  now = new Date(),
+  readText: (snapshotId: string, checksum: string) => Promise<string> = readSourceText,
+): Promise<InspectedSourceCapture[]> {
+  const bundle = publicationSchema.parse(raw);
+  const inspected: InspectedSourceCapture[] = [];
+  for (const source of bundle.sources) {
+    const snapshotId = snapshotIds[source.id] ?? null;
+    const entry = { bundleSourceId: source.id, snapshotId, checkedAt: null, missingQuotes: [] };
+    if (!snapshotId || !allSourceLeads.some((s) => s.url === source.url)) {
+      inspected.push({ ...entry, state: "no_copy" });
+      continue;
+    }
+    const snapshot = await captureFor(reader, source.url, snapshotId);
+    if (!snapshot) {
+      inspected.push({ ...entry, state: "no_copy" });
+      continue;
+    }
+    const checkedAt = snapshot.checked_at ? new Date(sourceTime(snapshot.checked_at)).toISOString() : null;
+    // The address now serves another file than the one this copy holds.
+    if (snapshot.raw_checksum !== snapshot.last_raw_hash) {
+      inspected.push({ ...entry, checkedAt, state: "changed" });
+      continue;
+    }
+    if (!currentCapture(snapshot, source.url, now)) {
+      inspected.push({ ...entry, checkedAt, state: "not_current" });
+      continue;
+    }
+    let text: string;
+    try {
+      text = await readText(String(snapshot.id), String(snapshot.text_checksum));
+    } catch (error) {
+      // A copy whose stored text is missing or no longer matches its checksum cannot be read. That is
+      // this source's state, and the release check refuses the copy the same way.
+      logger.warn({ event: "source_inspection.capture_unreadable", err: error });
+      inspected.push({ ...entry, checkedAt, state: "unreadable" });
+      continue;
+    }
+    const missingQuotes = bundle.candidate.claims.flatMap((claim, index) =>
+      claim.sourceId === source.id && !text.includes(claim.quote) ? [index] : [],
+    );
+    inspected.push({
+      ...entry,
+      checkedAt,
+      missingQuotes,
+      state: !text.includes(source.text)
+        ? "passage_missing"
+        : missingQuotes.length
+          ? "quote_missing"
+          : "holds",
+    });
+  }
+  return inspected;
 }
 
 /**

@@ -681,6 +681,13 @@
       "proves": "After the reviewed guide checks migrations, the database records a check of a prepared guide's sources only for the development owner, at its own time, and never changes or removes one, and it lets the publisher release a guide on the reviewed route only on such a check of that exact candidate and the captures its version names, made within the last day by someone who is still the owner, while a template needs none."
     },
     {
+      "requirement": "CMP-008",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "the owner's guide panel shows a prepared guide's text, passages and sources, and records the check of that exact guide only when nothing holds it",
+      "proves": "On an emulated phone, with stand-in answers from the server, the development owner's panel in Staff, System shows why a guide is held and offers no check of it, and for a guide that nothing holds shows its text, each sentence with its passage and where its source's copy stands, and sends the check with that guide's exact checksum, with no automated accessibility failure."
+    },
+    {
       "requirement": "WEB-003",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/catalogue/valo-catalogue-visibility.integration.test.ts",
@@ -1973,7 +1980,21 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/lib/managed-callers-real-bindings.integration.test.ts",
       "test": "actual managed callers with real PostgreSQL, source/candidate/case checks and zero-network SDK",
-      "proves": "In a disposable copy of the database, the development owner's check of a guide's sources records nothing while the capture of the Act it quotes was last checked over a day ago or the Act's file has changed since that capture, and without that check the guide's reviews are not admitted."
+      "proves": "In a disposable copy of the database, the development owner's check of a guide's sources records nothing while the capture of the Act it quotes was last checked over a day ago or the Act's file has changed since that capture, the owner's panel lists the guide with each source in that state and the reason it holds the guide, and without the check the guide's reviews are not admitted."
+    },
+    {
+      "requirement": "EDP-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/sources/source-inspection.test.ts",
+      "test": "every source that does not hold is reported, each with its own reason, rather than only the first",
+      "proves": "Inspecting a guide's sources against stand-in copies of its retained passages reports, in one inspection, a source with no copy named, one whose official file has changed since its copy and one whose copy was last checked over a day ago, each with its own reason, while the others hold."
+    },
+    {
+      "requirement": "EDP-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/sources/source-inspection.test.ts",
+      "test": "a copy that cannot be read, or that lacks a source's passage, holds that source",
+      "proves": "A source whose stored copy cannot be read, or whose copy lacks the passage the guide rests on, is reported as holding the guide rather than passed over."
     },
     {
       "requirement": "EDP-003",

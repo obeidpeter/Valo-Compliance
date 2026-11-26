@@ -233,6 +233,53 @@ paths:
         "404": { description: No rule is prepared under that name }
         "409": { description: "The rule, its sources or its release changed, or something holds it" }
         "422": { description: A confirmation or the reason is missing }
+  /admin/reviewed-guides:
+    get:
+      operationId: listReviewedGuides
+      tags: [staff]
+      summary: Guides on the reviewed route awaiting the development owner's check of their sources
+      description: >-
+        Each prepared guide awaiting its reviews, newest first, with its whole text, each claim with the
+        passage it rests on, where each of its sources' copies stands now, what holds it, and the owner's
+        latest check of it (docs/architecture/reviewed-route.md, part 2). Read-only. Development only.
+      responses:
+        "200":
+          description: The prepared guides. Nothing is recorded, reviewed or released.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReviewedGuidePage" }
+        "401": { description: Sign-in required }
+        "403": { description: Recently verified development owner required }
+        "503": { description: The reviewed guide checks migrations have not been applied }
+  /admin/reviewed-guides/{versionId}/checks:
+    post:
+      operationId: checkReviewedGuide
+      tags: [staff]
+      summary: Record the development owner's check of a prepared guide's official sources
+      description: >-
+        The owner confirms the guide they read by its candidate's checksum. Its sources are checked again
+        against today's copies, and the check is recorded only if every one holds. A guide's reviews are
+        admitted, and the guide released, only within a day of such a check. Nothing is reviewed or
+        released here.
+      parameters:
+        - { name: versionId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReviewedGuideCheckRequest" }
+      responses:
+        "200":
+          description: The check, as the database recorded it.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReviewedGuideCheckReceipt" }
+        "401": { description: Sign-in required }
+        "403": { description: Recently verified development owner required }
+        "404": { description: The guide is not awaiting its reviews }
+        "409": { description: "The guide changed, its review date has passed, or one of its sources does not hold" }
+        "422": { description: The guide's checksum is missing }
+        "503": { description: The reviewed guide checks migrations have not been applied }
   /workspace/correction-notices: {"get": {"operationId": "getCorrectionNotices", "tags": ["workspace"], "parameters": [{"name": "page", "in": "query", "schema": {"type": "integer", "minimum": 1, "maximum": 10000, "default": 1}}], "responses": {"200": {"description": "Current authorized result. No publication or spending approval is granted.", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/CorrectionNotices"}}}}, "401": {"description": "Sign-in required"}, "403": {"description": "Active area role and recent MFA required"}, "409": {"description": "Changed version or request-key conflict"}}}}
 schemas:
   SourceControlAction: {"oneOf": [{"type": "object", "required": ["requestKey", "reason", "action", "sourceId"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["watch_source"]}, "sourceId": {"type": "string", "minLength": 1, "maxLength": 100}}, "additionalProperties": false}, {"type": "object", "required": ["requestKey", "reason", "action", "kind", "id", "version"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["hold_version"]}, "kind": {"type": "string", "enum": ["content", "rule"]}, "id": {"type": "string", "format": "uuid"}, "version": {"type": "integer", "minimum": 1}}, "additionalProperties": false}, {"type": "object", "required": ["requestKey", "reason", "action", "kind", "id", "version"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["withdraw_version"]}, "kind": {"type": "string", "enum": ["content", "rule"]}, "id": {"type": "string", "format": "uuid"}, "version": {"type": "integer", "minimum": 1}}, "additionalProperties": false}, {"type": "object", "required": ["requestKey", "reason", "action", "service"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["pause_service"]}, "service": {"type": "string", "enum": ["ai", "checkout"]}}, "additionalProperties": false}, {"type": "object", "required": ["requestKey", "reason", "action", "service"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["resume_service"]}, "service": {"type": "string", "enum": ["ai", "checkout"]}}, "additionalProperties": false}]}
@@ -612,3 +659,91 @@ schemas:
       version: { type: integer }
       state: { type: string, enum: [published, withdrawn] }
       superseded: { type: array, items: { type: integer } }
+  ReviewedGuidePage:
+    type: object
+    required: [items]
+    properties:
+      items: { type: array, items: { $ref: "#/components/schemas/ReviewedGuideItem" } }
+  ReviewedGuideItem:
+    type: object
+    required:
+      [versionId, guideId, title, version, candidateHash, preparedAt, reviewBy, saved, text, claims, sources, holds, lastCheck]
+    properties:
+      versionId: { type: string, format: uuid }
+      guideId: { type: string }
+      title: { type: string }
+      version: { type: integer, minimum: 1 }
+      candidateHash:
+        type: string
+        pattern: "^[a-f0-9]{64}$"
+        description: The checksum of the exact guide shown. The owner's check confirms it.
+      preparedAt: { type: string, format: date-time }
+      reviewBy: { type: string, format: date-time }
+      saved:
+        type: boolean
+        description: Whether its reviews have run and the guide is saved, waiting for a current check before its release.
+      text:
+        type: array
+        description: The guide's whole text, part by part, as its page and files print it.
+        items: { type: string }
+      claims: { type: array, items: { $ref: "#/components/schemas/ReviewedGuideClaim" } }
+      sources: { type: array, items: { $ref: "#/components/schemas/ReviewedGuideSource" } }
+      holds:
+        type: array
+        description: What stops the owner checking it now, in plain words. Empty when nothing does.
+        items: { type: string }
+      lastCheck:
+        anyOf:
+          - { $ref: "#/components/schemas/ReviewedGuideLastCheck" }
+          - { type: "null" }
+  ReviewedGuideClaim:
+    type: object
+    required: [text, kind, sourceId, locator, quote, held]
+    properties:
+      text: { type: string, description: The guide's sentence. }
+      kind: { type: string, enum: [source_statement, interpretation, optional_practice] }
+      sourceId: { type: string }
+      locator: { type: string, description: Where in its source the quoted words are. }
+      quote: { type: string }
+      held: { type: boolean, description: "Whether today's copy of its source lacks the words it quotes." }
+  ReviewedGuideSource:
+    type: object
+    required: [id, title, url, passage, checkedAt, state]
+    properties:
+      id: { type: string }
+      title: { type: string }
+      url: { type: string }
+      passage: { type: string, description: The source's words the guide rests on. }
+      checkedAt:
+        type: [string, "null"]
+        format: date-time
+        description: When the daily source check last read the source's address, if it has.
+      state:
+        type: string
+        enum: [holds, no_copy, changed, not_current, unreadable, passage_missing, quote_missing]
+        description: Where the copy this guide is bound to stands now.
+  ReviewedGuideLastCheck:
+    type: object
+    required: [checkedAt, countsUntil, counts]
+    properties:
+      checkedAt: { type: string, format: date-time }
+      countsUntil: { type: string, format: date-time }
+      counts:
+        type: boolean
+        description: Whether the check still admits the guide's reviews and its release.
+  ReviewedGuideCheckRequest:
+    type: object
+    required: [confirmCandidateHash]
+    additionalProperties: false
+    properties:
+      confirmCandidateHash: { type: string, pattern: "^[a-f0-9]{64}$" }
+  ReviewedGuideCheckReceipt:
+    type: object
+    required: [versionId, guide, version, candidateHash, checkedAt, sources]
+    properties:
+      versionId: { type: string, format: uuid }
+      guide: { type: string }
+      version: { type: integer, minimum: 1 }
+      candidateHash: { type: string, pattern: "^[a-f0-9]{64}$" }
+      checkedAt: { type: string, format: date-time }
+      sources: { type: integer, minimum: 1 }
