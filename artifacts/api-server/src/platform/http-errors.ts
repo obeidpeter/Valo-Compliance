@@ -45,6 +45,15 @@ export function guardRefusal(error: unknown): string | null {
 export const notFound: RequestHandler = (_req, res) => {
   res.status(404).json({ code: "NOT_FOUND", error: "There is nothing at this address." });
 };
+declare global {
+  namespace Express {
+    interface Locals {
+      /** Set by the error handler when it answers an unexpected failure (docs/architecture/alerts.md, part 3). */
+      valoUnexpectedFailure?: boolean;
+    }
+  }
+}
+
 export const onError: ErrorRequestHandler = (error: unknown, req, res, _next) => {
   res.setHeader("Cache-Control", "private, no-store");
   if (typeof error === "object" && error !== null && "type" in error) {
@@ -104,6 +113,8 @@ export const onError: ErrorRequestHandler = (error: unknown, req, res, _next) =>
     res.locals.valoSecuritySignal = "guard_refusal";
     req.log.error({ event: "request.refused_by_guard", guard }, "request refused by a database guard");
   }
+  // NFR-003: the request counts count this answer as a failure, as they do no refusal Valo means to give.
+  res.locals.valoUnexpectedFailure = true;
   req.log.error(
     {
       event: "request.failed",
