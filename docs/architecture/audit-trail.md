@@ -237,6 +237,14 @@ development default, not a reviewed threshold, under the security/privacy incide
       minutes old.
   - **The rule.** Every table whose rows a trigger guards against deletion keeps a digest, as it refuses
     TRUNCATE; the migration test checks this on the whole schema.
+  - **Writers that change many rows at once.** A transaction holds each digest row it has changed until
+    it ends, and takes them in the order its rows come. Two transactions that each change many history
+    rows can therefore each hold a digest row the other then waits for, and the database ends one of
+    them as a deadlock. Erasure is such a writer: each of its sections removes or redacts up to a
+    hundred history rows, and erasures of different cases run at once. So each section first waits for
+    any other erasure's section to finish (`ERASURE_SECTION_LOCK`, a transaction-scoped advisory lock
+    taken before anything else in its transaction). The erasure test holds that lock from another
+    connection and finds the next section waiting until it is released.
   - **A change to a history's columns.** A row's hash is of every column it holds, so a migration that
     adds, drops, renames or retypes a history's column changes every row's hash, and the count would
     find that history mismatched. Such a migration calls `valo_history_digest_reseed` for that history
