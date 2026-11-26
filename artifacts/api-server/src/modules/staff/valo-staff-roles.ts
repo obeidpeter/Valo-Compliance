@@ -74,6 +74,8 @@ export async function systemAuthority(
   tx: Tx,
   actor: StaffActor,
   refusal = "A current permanent system assignment is required to administer staff roles. Emergency access cannot grant privileges.",
+  // What emergency system access may do as well, such as reading the alerts during an incident.
+  { emergency = false }: { emergency?: boolean } = {},
 ) {
   requireFreshStaffSession(actor);
   const [row] = await tx
@@ -84,7 +86,7 @@ export async function systemAuthority(
         eq(valoStaffAssignments.identityId, actor.identityId),
         eq(valoStaffAssignments.role, "system"),
         activeStaffAssignment(),
-        eq(valoStaffAssignments.grantMode, "permanent"),
+        ...(emergency ? [] : [eq(valoStaffAssignments.grantMode, "permanent")]),
       ),
     )
     .for("share");

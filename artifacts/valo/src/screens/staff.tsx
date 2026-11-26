@@ -1,5 +1,6 @@
 import { StaffRoleAdministration } from "@/components/staff-role-administration";
 import { AuditHistory } from "@/components/audit-history";
+import { OperationalAlerts } from "@/components/operational-alerts";
 import { OwnerRegulatoryGuidance } from "@/components/owner-regulatory-guidance";
 import { OwnerCheckerRules } from "@/components/owner-checker-rules";
 import { OwnerReviewedGuides } from "@/components/owner-reviewed-guides";
@@ -183,6 +184,7 @@ export default function StaffPage() {
               {q.data.notice}
             </p>
             {area === "finance" && <FinanceRefunds />}
+            {area === "system" && <OperationalAlerts />}
             {area === "system" && <StaffRoleAdministration />}
             {area === "system" && <AuditHistory />}
             {area === "content" && <RetainedDrafts />}

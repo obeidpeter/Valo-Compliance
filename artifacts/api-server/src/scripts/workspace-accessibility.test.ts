@@ -255,6 +255,38 @@ function auditHistoryPage(query: URLSearchParams) {
   });
 }
 
+/**
+ * The System area's alerts as the worker's journal gives them (SEC-008, NFR-010, docs/architecture/alerts.md,
+ * part 1): one address refused over its limit now, and the export queue Valo could not read, and then could.
+ */
+const alertId = (n: number) => `00000000-0000-4000-8000-${(0xab0000 + n).toString(16).padStart(12, "0")}`;
+const refusedAlert = {
+  id: alertId(1),
+  code: "DENIED_ACCESS_DETECTED",
+  title: "One address is being refused again and again",
+  state: "active",
+  at: at(24),
+  reading: 21,
+  threshold: 20,
+  runbook: "Security/privacy incident",
+  accountable: "Incident lead + privacy owner",
+} as const;
+const exportQueueAlert = {
+  code: "EXPORTS_PROBE_UNAVAILABLE",
+  title: "Valo cannot read the export queue",
+  threshold: 100,
+  runbook: "Broken export / AI outage",
+  accountable: "Engineering",
+} as const;
+const operationalAlerts = api.GetOperationalAlertsResponse.parse({
+  active: [refusedAlert],
+  changes: [
+    refusedAlert,
+    { ...exportQueueAlert, id: alertId(2), state: "resolved", at: at(23), reading: 3 },
+    { ...exportQueueAlert, id: alertId(3), state: "active", at: at(22), reading: null },
+  ],
+});
+
 /** A corpus of synthetic acceptance cases as the reviewer's page reads it (decision 0016, slice 1). */
 function acceptanceCases(corpus: string) {
   const prefix =
@@ -1078,6 +1110,8 @@ const answers: Record<string, unknown> = {
   "GET /admin/acceptance-cases": (query: URLSearchParams) => acceptanceCases(query.get("corpus") ?? ""),
   "GET /admin/acceptance-runs": (query: URLSearchParams) => acceptanceRun(query.get("corpus") ?? ""),
   "GET /admin/audit-history": auditHistoryPage,
+  // The alerts the worker raised and cleared (docs/architecture/alerts.md, part 1).
+  "GET /admin/operations/alerts": operationalAlerts,
   // The owner's price screen (docs/architecture/commercial-settings.md, slice 1): one published premium
   // template with its open price.
   "GET /admin/owner-prices": api.ListOwnerPricesResponse.parse({
@@ -6277,6 +6311,57 @@ test("the System area's audit history shows one history at a time and pages thro
     assert.deepEqual(unknown, []);
   } finally {
     await close();
+  }
+});
+
+// SEC-008, NFR-010 (docs/architecture/alerts.md, part 1): in the System area, a system operator reads the
+// alerts active now and the latest changes to them, each in plain words with its reading, its limit, the
+// runbook to follow and the roles accountable.
+test("the System area's alerts say in plain words what is active now and what changed, and fit a phone", async () => {
+  const { page, unknown, errors, close } = await phone("/staff");
+  try {
+    await ready(page);
+    await page.getByTestId("tab-staff-system").click();
+    const alerts = page.getByRole("region", { name: "Alerts" });
+    await expect(alerts.getByRole("list", { name: "Active alerts" }).getByRole("listitem")).toHaveText([
+      "One address is being refused again and againRaised 24 Nov 2026, 10:00Reading 21; limit 20Runbook: Security/privacy incident · Accountable: Incident lead + privacy owner",
+    ]);
+    await expect(alerts.getByRole("list", { name: "Latest alert changes" }).getByRole("listitem")).toHaveText(
+      [
+        "Raised 24 Nov 2026, 10:00: One address is being refused again and againReading 21; limit 20",
+        "Cleared 23 Nov 2026, 10:00: Valo cannot read the export queueReading 3; limit 100",
+        "Raised 22 Nov 2026, 10:00: Valo cannot read the export queueNo reading could be taken; limit 100",
+      ],
+    );
+    await expect(alerts).toContainText("No alert is sent anywhere");
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "the System area's alerts"), []);
+    assert.deepEqual([...new Set(unknown)], []);
+    assert.deepEqual(errors, []);
+  } finally {
+    await close();
+  }
+  // With nothing raised yet, the list says so.
+  const quiet: Api = async (route, method, path, query) => {
+    if (method === "GET" && path === "/admin/operations/alerts")
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(api.GetOperationalAlertsResponse.parse({ active: [], changes: [] })),
+      });
+    await answer(route, method, path, query);
+  };
+  const empty = await phone("/staff", quiet);
+  try {
+    await ready(empty.page);
+    await empty.page.getByTestId("tab-staff-system").click();
+    const alerts = empty.page.getByRole("region", { name: "Alerts" });
+    await expect(alerts).toContainText("No alert is active.");
+    await expect(alerts).toContainText("No alert has been raised yet.");
+    assert.deepEqual([...new Set(empty.unknown)], []);
+    assert.deepEqual(empty.errors, []);
+  } finally {
+    await empty.close();
   }
 });
 

@@ -1383,6 +1383,20 @@ paths:
   /admin/manual-library/{id}/revisions/{version}/file: {"get":{"operationId":"previewManualLibraryFile","tags":["staff"],"parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string","format":"uuid"}},{"name":"version","in":"path","required":true,"schema":{"type":"integer"}}],"responses":{"200":{"description":"Authorized template file","content":{"application/octet-stream":{"schema":{"type":"string","format":"binary"}}}},"401":{"description":"Sign in required"},"403":{"description":"Access denied"},"404":{"description":"Unavailable"},"409":{"description":"Revision conflict or source hold"}}}}
   /account/manual-templates/{id}/download: {"get":{"operationId":"downloadManualTemplate","tags":["catalogue"],"parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string","format":"uuid"}}],"responses":{"200":{"description":"Authorized template file","content":{"application/octet-stream":{"schema":{"type":"string","format":"binary"}}}},"401":{"description":"Sign in required"},"403":{"description":"Access denied"},"404":{"description":"Unavailable"},"409":{"description":"Revision conflict or source hold"}}}}
   /workspace/manual-premium-templates/{id}/download: {"get":{"operationId":"downloadPremiumManualTemplate","tags":["catalogue"],"parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string","format":"uuid"}}],"responses":{"200":{"description":"Workspace purchase for this published premium edition","content":{"application/octet-stream":{"schema":{"type":"string","format":"binary"}}}},"401":{"description":"Sign in required"},"403":{"description":"Access denied"},"404":{"description":"Unavailable"},"409":{"description":"Revision conflict or source hold"}}}}
+  /admin/operations/alerts:
+    get:
+      operationId: getOperationalAlerts
+      tags: [admin]
+      responses:
+        "200":
+          description: >-
+            System operators only, emergency access included, with recent MFA (SEC-008, NFR-010). The alerts active
+            now, newest first, and the latest changes to them, raised and cleared, newest first. An alert names the
+            runbook to follow and the roles accountable, and holds no request content, address or identity.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OperationalAlerts" }
+        "403": { description: Missing a system assignment or recent MFA. }
   /public/status:
     get:
       operationId: getBuildStatus
@@ -4432,6 +4446,39 @@ components:
         templateId: { type: [string, 'null'] }
         state: { type: string, enum: [no_template, no_form, fits, does_not_fit] }
         problems: { type: array, maxItems: 200, items: { type: string, maxLength: 400 } }
+    OperationalAlerts:
+      type: object
+      additionalProperties: false
+      required: [active, changes]
+      properties:
+        active:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/OperationalAlert" }
+        changes:
+          type: array
+          maxItems: 50
+          items: { $ref: "#/components/schemas/OperationalAlert" }
+    OperationalAlert:
+      type: object
+      additionalProperties: false
+      required: [id, code, title, state, at, reading, threshold, runbook, accountable]
+      properties:
+        id: { type: string, format: uuid }
+        code: { type: string, pattern: '^[A-Z][A-Z_]{2,80}$' }
+        title: { type: string, maxLength: 300 }
+        state: { type: string, enum: [active, resolved] }
+        at: { type: string, format: date-time }
+        reading:
+          description: What the alert's reading found, where it has one.
+          type: [integer, "null"]
+          minimum: 0
+        threshold:
+          description: The limit the reading is measured against, where it has one.
+          type: [integer, "null"]
+          minimum: 0
+        runbook: { type: [string, "null"], maxLength: 200 }
+        accountable: { type: [string, "null"], maxLength: 200 }
     BuildStatus:
       type: object
       required: [receivedRequirements, expectedRequirements, publishedTemplates, p0Passed, r2Unlocked, livePaymentsEnabled, notice]

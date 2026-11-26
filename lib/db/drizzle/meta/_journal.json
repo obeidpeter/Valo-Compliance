@@ -701,6 +701,20 @@
       "when": 1795684707525,
       "tag": "20261126091827_privacy_hold_guards",
       "breakpoints": true
+    },
+    {
+      "idx": 100,
+      "version": "7",
+      "when": 1795697640395,
+      "tag": "20261126125400_operational_alerts",
+      "breakpoints": true
+    },
+    {
+      "idx": 101,
+      "version": "7",
+      "when": 1795697663982,
+      "tag": "20261126125423_operational_alert_guards",
+      "breakpoints": true
     }
   ]
 }

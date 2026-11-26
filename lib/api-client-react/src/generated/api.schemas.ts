@@ -3892,6 +3892,53 @@ export interface ManualLibraryHold {
   reason: string;
 }
 
+export type OperationalAlertState = typeof OperationalAlertState[keyof typeof OperationalAlertState];
+
+
+export const OperationalAlertState = {
+  active: 'active',
+  resolved: 'resolved',
+} as const;
+
+export interface OperationalAlert {
+  id: string;
+  /** @pattern ^[A-Z][A-Z_]{2,80}$ */
+  code: string;
+  /** @maxLength 300 */
+  title: string;
+  state: OperationalAlertState;
+  at: string;
+  /**
+     * What the alert's reading found, where it has one.
+     * @minimum 0
+     * @nullable
+     */
+  reading: number | null;
+  /**
+     * The limit the reading is measured against, where it has one.
+     * @minimum 0
+     * @nullable
+     */
+  threshold: number | null;
+  /**
+     * @maxLength 200
+     * @nullable
+     */
+  runbook: string | null;
+  /**
+     * @maxLength 200
+     * @nullable
+     */
+  accountable: string | null;
+}
+
+export interface OperationalAlerts {
+  /** @maxItems 100 */
+  active: OperationalAlert[];
+  /** @maxItems 50 */
+  changes: OperationalAlert[];
+}
+
 export interface BuildStatus {
   receivedRequirements: number;
   expectedRequirements: number;

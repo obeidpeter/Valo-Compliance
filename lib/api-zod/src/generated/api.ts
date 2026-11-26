@@ -6291,6 +6291,60 @@ export const DownloadPremiumManualTemplateParams = zod.object({
 export const DownloadPremiumManualTemplateResponse = zod.unknown()
 
 
+export const getOperationalAlertsResponseActiveItemCodeRegExp = new RegExp('^[A-Z][A-Z_]{2,80}$');
+export const getOperationalAlertsResponseActiveItemTitleMax = 300;
+
+export const getOperationalAlertsResponseActiveItemReadingMin = 0;
+
+export const getOperationalAlertsResponseActiveItemThresholdMin = 0;
+
+export const getOperationalAlertsResponseActiveItemRunbookMax = 200;
+
+export const getOperationalAlertsResponseActiveItemAccountableMax = 200;
+
+export const getOperationalAlertsResponseActiveMax = 100;
+
+export const getOperationalAlertsResponseChangesItemCodeRegExp = new RegExp('^[A-Z][A-Z_]{2,80}$');
+export const getOperationalAlertsResponseChangesItemTitleMax = 300;
+
+export const getOperationalAlertsResponseChangesItemReadingMin = 0;
+
+export const getOperationalAlertsResponseChangesItemThresholdMin = 0;
+
+export const getOperationalAlertsResponseChangesItemRunbookMax = 200;
+
+export const getOperationalAlertsResponseChangesItemAccountableMax = 200;
+
+export const getOperationalAlertsResponseChangesMax = 50;
+
+
+
+export const GetOperationalAlertsResponse = zod.object({
+  "active": zod.array(zod.object({
+  "id": zod.uuid(),
+  "code": zod.string().regex(getOperationalAlertsResponseActiveItemCodeRegExp),
+  "title": zod.string().max(getOperationalAlertsResponseActiveItemTitleMax),
+  "state": zod.enum(['active', 'resolved']),
+  "at": zod.coerce.date(),
+  "reading": zod.int().min(getOperationalAlertsResponseActiveItemReadingMin).nullable().describe('What the alert\'s reading found, where it has one.'),
+  "threshold": zod.int().min(getOperationalAlertsResponseActiveItemThresholdMin).nullable().describe('The limit the reading is measured against, where it has one.'),
+  "runbook": zod.string().max(getOperationalAlertsResponseActiveItemRunbookMax).nullable(),
+  "accountable": zod.string().max(getOperationalAlertsResponseActiveItemAccountableMax).nullable()
+})).max(getOperationalAlertsResponseActiveMax),
+  "changes": zod.array(zod.object({
+  "id": zod.uuid(),
+  "code": zod.string().regex(getOperationalAlertsResponseChangesItemCodeRegExp),
+  "title": zod.string().max(getOperationalAlertsResponseChangesItemTitleMax),
+  "state": zod.enum(['active', 'resolved']),
+  "at": zod.coerce.date(),
+  "reading": zod.int().min(getOperationalAlertsResponseChangesItemReadingMin).nullable().describe('What the alert\'s reading found, where it has one.'),
+  "threshold": zod.int().min(getOperationalAlertsResponseChangesItemThresholdMin).nullable().describe('The limit the reading is measured against, where it has one.'),
+  "runbook": zod.string().max(getOperationalAlertsResponseChangesItemRunbookMax).nullable(),
+  "accountable": zod.string().max(getOperationalAlertsResponseChangesItemAccountableMax).nullable()
+})).max(getOperationalAlertsResponseChangesMax)
+})
+
+
 export const GetBuildStatusResponse = zod.object({
   "receivedRequirements": zod.int(),
   "expectedRequirements": zod.int(),

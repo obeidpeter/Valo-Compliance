@@ -1,5 +1,10 @@
 import { pool } from "@workspace/db";
-import { collectOperationalSample, recordOperationalAlerts } from "../modules/operations";
+import {
+  collectOperationalSample,
+  copyAlertChanges,
+  publishAlertChanges,
+  recordOperationalAlerts,
+} from "../modules/operations";
 import { logger } from "../platform/logger";
 try {
   const sample = await collectOperationalSample((text) => {
@@ -7,10 +12,15 @@ try {
     return pool.query(config);
   });
   const alerts = await recordOperationalAlerts(sample);
+  // Staff read the alerts from the database's journal (docs/architecture/alerts.md, part 1).
+  const copy = await copyAlertChanges(publishAlertChanges);
   logger.info({
     event: "operations.probe",
     sample,
     alerts,
+    alertJournalBehind: copy.behind,
+    alertJournalLost: copy.lost,
+    ...(copy.behind > 0 ? { err: copy.error } : {}),
     externalMessagesSent: 0,
     productionReadiness: false,
     retention35Days: "unresolved",

@@ -235,30 +235,134 @@ export const ALERT_RUNBOOKS = {
   PRIVILEGED_READING: { runbook: "Security/privacy incident", accountable: "Incident lead + privacy owner" },
   HISTORY_INTEGRITY: { runbook: "Security/privacy incident", accountable: "Incident lead + privacy owner" },
 } as const;
+const alertSubject = (code: string) => code.replace(/_(BACKLOG|DETECTED|PROBE_UNAVAILABLE|UNAVAILABLE)$/, "");
 export function alertRunbook(code: string) {
-  const subject = code.replace(/_(BACKLOG|DETECTED|PROBE_UNAVAILABLE|UNAVAILABLE)$/, "");
+  const subject = alertSubject(code);
   return Object.hasOwn(ALERT_RUNBOOKS, subject)
     ? ALERT_RUNBOOKS[subject as keyof typeof ALERT_RUNBOOKS]
     : null;
 }
+/**
+ * What each alert is about, in plain words for the staff who read it (docs/architecture/alerts.md, part
+ * 1): what it says when raised, and what Valo reads for it, for when that reading cannot be taken.
+ */
+export const ALERT_WORDS = {
+  DATABASE: { raised: "The database cannot be reached", reading: "the database" },
+  WORKER: { raised: "The background worker is not running or is late", reading: "the background worker" },
+  EXPORTS: {
+    raised: "More exports are waiting than the worker is keeping up with",
+    reading: "the export queue",
+  },
+  CLEANUP: { raised: "Files are waiting to be removed past their time", reading: "file removal" },
+  EXPORT_RETENTION: { raised: "Expired files are waiting to be retired", reading: "expired files" },
+  WORKSPACE_CLEANUP: {
+    raised: "Whole-workspace downloads are waiting to be cleared away",
+    reading: "whole-workspace downloads",
+  },
+  PRIVACY_REQUESTS: {
+    raised: "A privacy request is open past the date Valo aims to finish it by",
+    reading: "privacy requests",
+  },
+  PAYMENTS: { raised: "A paid order is missing its access or its receipt", reading: "paid orders" },
+  DENIED_ACCESS: { raised: "One address is being refused again and again", reading: "refused requests" },
+  SIGNATURE_FAILURES: {
+    raised: "A message from the payment provider failed its signature check",
+    reading: "the payment provider's signatures",
+  },
+  ROLE_CHANGES: { raised: "A staff role was changed in the last hour", reading: "staff role changes" },
+  BULK_EXPORTS: { raised: "A caller reached the export limit", reading: "the export limit" },
+  PAYMENT_ACTIVITY: { raised: "A caller reached a payment limit", reading: "the payment limits" },
+  AI_ACTIVITY: {
+    raised: "A caller reached the drafting assistant's limit",
+    reading: "the drafting assistant's limit",
+  },
+  GUARD_REFUSALS: {
+    raised: "The database refused a change to a record it protects",
+    reading: "the database's refusals",
+  },
+  PRIVILEGED_READING: { raised: "A member of staff read more records than usual", reading: "staff reading" },
+  HISTORY_INTEGRITY: {
+    raised: "A history no longer matches its hourly count",
+    reading: "the histories' counts",
+  },
+} as const satisfies Record<keyof typeof ALERT_RUNBOOKS, { raised: string; reading: string }>;
+/** An alert's title, in plain words, or null for a code this module never raises. */
+export function alertTitle(code: string) {
+  const subject = alertSubject(code);
+  if (!Object.hasOwn(ALERT_WORDS, subject)) return null;
+  const words = ALERT_WORDS[subject as keyof typeof ALERT_WORDS];
+  return code.endsWith("_PROBE_UNAVAILABLE") ? `Valo cannot read ${words.reading}` : words.raised;
+}
+/** The reading each alert's subject is raised on, where it has one. */
+const SUBJECT_READINGS: Partial<
+  Record<keyof typeof ALERT_RUNBOOKS, Exclude<keyof OperationalSample["limits"], "workerAgeMs"> | "payments">
+> = {
+  EXPORTS: "exports",
+  CLEANUP: "cleanup",
+  EXPORT_RETENTION: "exportRetention",
+  WORKSPACE_CLEANUP: "workspaceCleanup",
+  PRIVACY_REQUESTS: "privacyRequests",
+  PAYMENTS: "payments",
+  DENIED_ACCESS: "deniedAccess",
+  SIGNATURE_FAILURES: "signatureFailures",
+  ROLE_CHANGES: "roleChanges",
+  BULK_EXPORTS: "bulkExports",
+  PAYMENT_ACTIVITY: "paymentActivity",
+  AI_ACTIVITY: "aiActivity",
+  GUARD_REFUSALS: "guardRefusals",
+  PRIVILEGED_READING: "privilegedReading",
+  HISTORY_INTEGRITY: "historyIntegrity",
+};
+/** An alert's reading in a sample and the limit it is measured against, where it has them. */
+function measure(sample: OperationalSample, code: string) {
+  const name = SUBJECT_READINGS[alertSubject(code) as keyof typeof ALERT_RUNBOOKS];
+  if (!name) return { reading: null, threshold: null };
+  const metric = sample[name];
+  return {
+    reading: metric.status === "ok" ? metric.value : null,
+    threshold: name === "payments" ? 0 : sample.limits[name],
+  };
+}
 type Alert = {
   id: string;
+  /** Its place in the journal, counted from the journal's first change. */
+  sequence: number;
   at: string;
   code: string;
   state: "active" | "resolved";
+  reading?: number | null;
+  threshold?: number | null;
   runbook?: string | null;
   accountable?: string | null;
 };
-type AlertState = { sequence: number; active: string[]; events: Alert[]; sample?: OperationalSample };
+/** One change in the journal: an alert raised or cleared. */
+export type AlertChange = Alert;
+type AlertState = {
+  sequence: number;
+  /** The last change the database's journal holds (docs/architecture/alerts.md, part 1). */
+  published: number;
+  active: string[];
+  events: Alert[];
+  sample?: OperationalSample;
+};
+/** The journal as a file written before its changes were numbered and copied may hold it. */
+type StoredAlertState = Omit<AlertState, "published" | "events"> & {
+  published?: number;
+  events: (Omit<Alert, "sequence"> & { sequence?: number })[];
+};
+/** Copies changes to the database's journal; it must take a change it already holds without harm. */
+export type AlertPublisher = (changes: AlertChange[]) => Promise<void>;
 /** Internal only. Atomic bounded project-local journal, not a production monitor/audit archive. */
 const pendingAlertWrites = new Map<string, Promise<void>>();
-export async function recordOperationalAlerts(sample: OperationalSample, directory = operationsDirectory) {
-  assertApplicationRuntime();
+/**
+ * Runs `work` holding the journal's lock: one at a time in this process, in the order asked, and across
+ * processes by the lock file. Local contention waits in FIFO order instead of consuming the interprocess
+ * lock's bounded retry window.
+ */
+async function underAlertLock<T>(directory: string, work: () => Promise<T>) {
   const key = join(directory, "."),
     previous = pendingAlertWrites.get(key) ?? Promise.resolve();
-  // Local contention waits in FIFO order instead of consuming the interprocess
-  // lock's bounded retry window. The file lock still protects separate workers.
-  const result = previous.then(() => recordOperationalAlertsLocked(sample, directory));
+  const result = previous.then(() => underAlertFileLock(directory, work));
   const tail = result.then(
     () => undefined,
     () => undefined,
@@ -270,11 +374,9 @@ export async function recordOperationalAlerts(sample: OperationalSample, directo
     if (pendingAlertWrites.get(key) === tail) pendingAlertWrites.delete(key);
   }
 }
-async function recordOperationalAlertsLocked(sample: OperationalSample, directory: string) {
-  assertApplicationRuntime();
+async function underAlertFileLock<T>(directory: string, work: () => Promise<T>) {
   await mkdir(directory, { recursive: true, mode: 0o700 });
-  const lock = join(directory, "alerts.lock"),
-    file = join(directory, "alerts.json");
+  const lock = join(directory, "alerts.lock");
   let acquired = false;
   for (let n = 0; n < 200 && !acquired; n++) {
     try {
@@ -305,72 +407,128 @@ async function recordOperationalAlertsLocked(sample: OperationalSample, director
   }
   if (!acquired) throw Error("INTERNAL_ALERT_LOCK_UNAVAILABLE");
   try {
-    let state: AlertState = { sequence: 0, active: [], events: [] };
-    try {
-      state = JSON.parse(await readFile(file, "utf8"));
-    } catch (e) {
-      if ((e as NodeJS.ErrnoException).code !== "ENOENT") throw Error("INTERNAL_ALERT_HISTORY_UNREADABLE");
-    }
-    const active: string[] = [];
-    if (sample.database.status !== "ok" || sample.database.value !== 1) active.push("DATABASE_UNAVAILABLE");
-    if (sample.worker.status !== "healthy") active.push("WORKER_UNAVAILABLE");
-    for (const name of [
-      "exports",
-      "cleanup",
-      "exportRetention",
-      "workspaceCleanup",
-      "privacyRequests",
-      "payments",
-    ] as const) {
-      const code =
-        name === "workspaceCleanup"
-          ? "WORKSPACE_CLEANUP"
-          : name === "exportRetention"
-            ? "EXPORT_RETENTION"
-            : name === "privacyRequests"
-              ? "PRIVACY_REQUESTS"
-              : name.toUpperCase();
-      const metric = sample[name];
-      if (metric.status !== "ok") active.push(code + "_PROBE_UNAVAILABLE");
-      else if (metric.value! > (name === "payments" ? 0 : sample.limits[name]))
-        active.push(code + "_BACKLOG");
-    }
-    for (const [name, subject] of SECURITY_METRICS) {
-      const metric = sample[name];
-      if (metric.status !== "ok") active.push(subject + "_PROBE_UNAVAILABLE");
-      else if (metric.value! > sample.limits[name]) active.push(subject + "_DETECTED");
-    }
-    const events: Alert[] = [];
-    for (const code of new Set([...state.active, ...active])) {
-      if (state.active.includes(code) === active.includes(code)) continue;
-      const owner = alertRunbook(code);
-      events.push({
-        id: randomUUID(),
-        at: sample.checkedAt,
-        code,
-        state: active.includes(code) ? "active" : "resolved",
-        runbook: owner?.runbook ?? null,
-        accountable: owner?.accountable ?? null,
-      });
-    }
-    state = {
-      sequence: state.sequence + events.length,
-      active,
-      events: [...state.events, ...events].slice(-1000),
-      sample,
-    };
-    await atomicJson(file, state);
-    return {
-      active: state.active,
-      owners: state.active.map((code) => ({
-        code,
-        runbook: alertRunbook(code)?.runbook ?? null,
-        accountable: alertRunbook(code)?.accountable ?? null,
-      })),
-      emitted: events.length,
-      sequence: state.sequence,
-    };
+    return await work();
   } finally {
     await unlink(lock);
   }
+}
+/** The journal as the file holds it, or an empty one where there is no file yet. */
+async function readAlertState(file: string): Promise<AlertState> {
+  let stored: StoredAlertState = { sequence: 0, published: 0, active: [], events: [] };
+  try {
+    stored = JSON.parse(await readFile(file, "utf8"));
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code !== "ENOENT") throw Error("INTERNAL_ALERT_HISTORY_UNREADABLE");
+  }
+  // A journal written before changes were numbered: number its changes by their place, the last being
+  // the journal's count. None of them has been copied yet.
+  return {
+    ...stored,
+    published: stored.published ?? 0,
+    events: stored.events.map((event, index) => ({
+      ...event,
+      sequence: event.sequence ?? stored.sequence - (stored.events.length - 1 - index),
+    })),
+  };
+}
+export async function recordOperationalAlerts(sample: OperationalSample, directory = operationsDirectory) {
+  assertApplicationRuntime();
+  return underAlertLock(directory, () =>
+    recordOperationalAlertsLocked(sample, join(directory, "alerts.json")),
+  );
+}
+async function recordOperationalAlertsLocked(sample: OperationalSample, file: string) {
+  let state = await readAlertState(file);
+  const active: string[] = [];
+  if (sample.database.status !== "ok" || sample.database.value !== 1) active.push("DATABASE_UNAVAILABLE");
+  if (sample.worker.status !== "healthy") active.push("WORKER_UNAVAILABLE");
+  for (const name of [
+    "exports",
+    "cleanup",
+    "exportRetention",
+    "workspaceCleanup",
+    "privacyRequests",
+    "payments",
+  ] as const) {
+    const code =
+      name === "workspaceCleanup"
+        ? "WORKSPACE_CLEANUP"
+        : name === "exportRetention"
+          ? "EXPORT_RETENTION"
+          : name === "privacyRequests"
+            ? "PRIVACY_REQUESTS"
+            : name.toUpperCase();
+    const metric = sample[name];
+    if (metric.status !== "ok") active.push(code + "_PROBE_UNAVAILABLE");
+    else if (metric.value! > (name === "payments" ? 0 : sample.limits[name])) active.push(code + "_BACKLOG");
+  }
+  for (const [name, subject] of SECURITY_METRICS) {
+    const metric = sample[name];
+    if (metric.status !== "ok") active.push(subject + "_PROBE_UNAVAILABLE");
+    else if (metric.value! > sample.limits[name]) active.push(subject + "_DETECTED");
+  }
+  const events: Alert[] = [];
+  for (const code of new Set([...state.active, ...active])) {
+    if (state.active.includes(code) === active.includes(code)) continue;
+    const owner = alertRunbook(code);
+    events.push({
+      id: randomUUID(),
+      sequence: state.sequence + events.length + 1,
+      at: sample.checkedAt,
+      code,
+      state: active.includes(code) ? "active" : "resolved",
+      ...measure(sample, code),
+      runbook: owner?.runbook ?? null,
+      accountable: owner?.accountable ?? null,
+    });
+  }
+  state = {
+    sequence: state.sequence + events.length,
+    published: state.published,
+    active,
+    events: [...state.events, ...events].slice(-1000),
+    sample,
+  };
+  await atomicJson(file, state);
+  return {
+    active: state.active,
+    owners: state.active.map((code) => ({
+      code,
+      runbook: alertRunbook(code)?.runbook ?? null,
+      accountable: alertRunbook(code)?.accountable ?? null,
+    })),
+    emitted: events.length,
+    sequence: state.sequence,
+  };
+}
+/**
+ * Copies every change the database's journal does not yet hold (docs/architecture/alerts.md, part 1).
+ * The file is read and marked under its lock, but the copying is done without it, so a slow or absent
+ * database never keeps another reading waiting on the file. A change copied twice does no harm: the
+ * publisher takes a change it already holds as it is. When the database cannot take them, they stay
+ * in the file for the next copy, and the result says how many and why. The file keeps the last 1,000
+ * changes, so a change it no longer holds before the database took it is lost to the journal; the
+ * result counts those too.
+ */
+export async function copyAlertChanges(publish: AlertPublisher, directory = operationsDirectory) {
+  assertApplicationRuntime();
+  const file = join(directory, "alerts.json");
+  const { pending, lost } = await underAlertLock(directory, async () => {
+    const state = await readAlertState(file);
+    const pending = state.events.filter((event) => event.sequence > state.published);
+    return { pending, lost: pending.length ? pending[0]!.sequence - state.published - 1 : 0 };
+  });
+  if (pending.length === 0) return { copied: 0, behind: 0, lost } as const;
+  try {
+    await publish(pending);
+  } catch (error) {
+    return { copied: 0, behind: pending.length, lost, error } as const;
+  }
+  const last = pending.at(-1)!.sequence;
+  await underAlertLock(directory, async () => {
+    const state = await readAlertState(file);
+    // Another reading may have written the file since; only the count of copied changes moves on.
+    if (state.published < last) await atomicJson(file, { ...state, published: last });
+  });
+  return { copied: pending.length, behind: 0, lost } as const;
 }

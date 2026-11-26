@@ -1,4 +1,5 @@
 import { createStaffRoleRouter } from "./valo-staff-roles";
+import { createOperationalAlertsRouter } from "./valo-operational-alerts";
 import { Router, type Request } from "express";
 import { verifiedStaffSession } from "../lib/valo-managed-session";
 export { makeVerifiedStaffSession } from "../lib/valo-managed-session";
@@ -151,6 +152,7 @@ customerAccessRouter.get("/workspace/privacy-cases/:id/result", async (req, res)
 export const staffOperationsRouter = Router();
 export { verifiedStaffSession };
 staffOperationsRouter.use(createStaffRoleRouter(verifiedStaffSession));
+staffOperationsRouter.use(createOperationalAlertsRouter(verifiedStaffSession));
 /** Uses the same live session/user checks but grants only original-requester
  * case access. Staff roles/MFA are not required of ordinary customers. */
 export function createPrivacyRequesterRouter(
