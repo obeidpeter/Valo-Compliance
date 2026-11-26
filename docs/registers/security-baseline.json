@@ -465,10 +465,12 @@
         {
           "file": "artifacts/api-server/src/platform/request-complexity.test.ts",
           "test": "deep, broad and high-node-count JSON fails within fixed budgets"
-        },
+        }
+      ],
+      "checks": [
         {
-          "file": "artifacts/api-server/src/platform/request-complexity.test.ts",
-          "test": "isolated real API rejects compressed/oversized JSON and remains alive"
+          "job": "postgres",
+          "step": "Prove the real API refuses compressed and oversized JSON and keeps serving"
         }
       ]
     },
@@ -3265,10 +3267,12 @@
         {
           "file": "artifacts/api-server/src/lib/valo-write-security.integration.test.ts",
           "test": "durable customer write ceilings preserve saved data"
-        },
+        }
+      ],
+      "checks": [
         {
-          "file": "artifacts/api-server/src/platform/request-complexity.test.ts",
-          "test": "isolated real API rejects compressed/oversized JSON and remains alive"
+          "job": "postgres",
+          "step": "Prove the real API refuses compressed and oversized JSON and keeps serving"
         }
       ]
     },

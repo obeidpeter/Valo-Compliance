@@ -129,13 +129,6 @@
     },
     {
       "requirement": "SEC-003",
-      "job": "postgres",
-      "file": "artifacts/api-server/src/platform/request-complexity.test.ts",
-      "test": "isolated real API rejects compressed/oversized JSON and remains alive",
-      "proves": "The real API refuses compressed and oversized bodies, answers malformed JSON with a safe 400, and keeps serving."
-    },
-    {
-      "requirement": "SEC-003",
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/tasks/valo-reminder-resend.test.ts",
       "test": "controlled acceptance preserves one bounded provider key and minimal stable body, not inbox delivery",
