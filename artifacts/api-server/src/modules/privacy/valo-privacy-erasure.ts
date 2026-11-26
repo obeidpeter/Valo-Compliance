@@ -69,7 +69,16 @@ const legacyPhases = [
   "dispute_work",
   "valo_correction_notices", // append only: preserve all historical phase indexes
 ] as const;
-const phases = [...legacyPhases, ...copyPhases] as const;
+/**
+ * Phases added after the copy phases: a workspace's notices that a requirements-check rule's version,
+ * or a template edition, was replaced or withdrawn (docs/architecture/processing-inventory.md,
+ * slice 5). Append only: every earlier phase keeps its index, so an erasure in progress resumes where
+ * it stopped and runs these at its end. A finished erasure is not reopened.
+ */
+const laterPhases = ["valo_rule_notices", "valo_edition_notices"] as const;
+const phases = [...legacyPhases, ...copyPhases, ...laterPhases] as const;
+/** How many application phases a current erasure, or its replay, runs one at a time. */
+export const applicationErasurePhaseCount = phases.length;
 const phasesFor = (seal: ErasureSeal) =>
   seal.scope === "development-application-content-erasure-v3" ? phases : legacyPhases;
 const removedMessage = "[Private content removed by verified workspace erasure]";
