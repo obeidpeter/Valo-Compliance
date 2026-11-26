@@ -3076,7 +3076,7 @@ components:
               value: { type: [integer, boolean], minimum: 0 }
     CustomerPurchases:
       type: object
-      required: [available, message, orders, products, ownedDownloads, livePaymentsEnabled, purchaseCarriesToLaterEditions]
+      required: [available, message, orders, products, bundles, ownedDownloads, livePaymentsEnabled, purchaseCarriesToLaterEditions]
       properties:
         available: { type: boolean }
         message: { type: string }
@@ -3089,10 +3089,39 @@ components:
         products:
           type: array
           items: { $ref: "#/components/schemas/TemplateOffer" }
+        bundles:
+          type: array
+          description: "The bundles on sale now that hold no template the workspace already owns (docs/architecture/commercial-settings.md, slice 4c)."
+          items: { $ref: "#/components/schemas/BundleOffer" }
         ownedDownloads:
           type: array
           description: Downloads for the signed-in workspace's currently released purchases, indexed by current or past approved offer.
           items: { $ref: "#/components/schemas/OwnedCheckoutDownload" }
+    BundleOffer:
+      type: object
+      additionalProperties: false
+      required: [id, bundle, title, amountKobo, currency, licenceVersion, licenceText, taxTreatment, templates]
+      properties:
+        id: { type: string, format: uuid, description: "The bundle's version on sale, which an order names" }
+        bundle: { type: string, description: "The bundle's name across its versions" }
+        title: { type: string }
+        amountKobo: { type: integer, minimum: 1 }
+        currency: { type: string }
+        licenceVersion: { type: string }
+        licenceText: { type: string }
+        taxTreatment: { type: string }
+        templates:
+          description: The edition of each of its templates that an order grants, by title.
+          type: array
+          minItems: 2
+          maxItems: 10
+          items:
+            type: object
+            additionalProperties: false
+            required: [edition, title]
+            properties:
+              edition: { type: string, format: uuid }
+              title: { type: string }
     OwnedCheckoutDownload:
       type: object
       required: [offerId, edition, title, downloadPath]
@@ -3112,9 +3141,11 @@ components:
             version: { type: integer }
     CommerceOrderInput:
       type: object
-      required: [priceId, acceptedLicenceVersion, acceptedCarriesToLaterEditions, requestKey]
+      description: An order buys one template's price or one bundle's version, and names exactly one of them.
+      required: [acceptedLicenceVersion, acceptedCarriesToLaterEditions, requestKey]
       properties:
         priceId: { type: string, format: uuid }
+        bundleId: { type: string, format: uuid, description: "The bundle's version on sale" }
         acceptedLicenceVersion: { type: string, minLength: 1, maxLength: 100 }
         acceptedCarriesToLaterEditions:
           type: boolean
@@ -3237,7 +3268,7 @@ components:
       properties: {}
     CommerceOrder:
       type: object
-      required: [id, reference, title, amountKobo, currency, status, createdAt, lastCheckedAt, licenceVersion, licenceText, taxTreatment, contentVersionId, carriesToLaterEditions, refundStatus, receiptReference, refunds, refundableKobo, refundedKobo, refundPolicy, disputeStatus]
+      required: [id, reference, title, amountKobo, currency, status, createdAt, lastCheckedAt, licenceVersion, licenceText, taxTreatment, contentVersionId, editions, carriesToLaterEditions, refundStatus, receiptReference, refunds, refundableKobo, refundedKobo, refundPolicy, disputeStatus]
       properties:
         id: { type: string }
         reference: { type: string }
@@ -3250,7 +3281,19 @@ components:
         licenceVersion: { type: string }
         licenceText: { type: string }
         taxTreatment: { type: string }
-        contentVersionId: { type: string }
+        contentVersionId: { type: [string, "null"], description: "The edition a template's order buys; none for a bundle's order" }
+        editions:
+          description: "Each edition the order grants, with the title it copied: one for a template's order, one for each of a bundle's templates."
+          type: array
+          minItems: 1
+          maxItems: 10
+          items:
+            type: object
+            additionalProperties: false
+            required: [contentVersionId, title]
+            properties:
+              contentVersionId: { type: string }
+              title: { type: string }
         carriesToLaterEditions:
           type: boolean
           description: "The access rule the order recorded when it was made, and keeps: whether the purchase carries to its template's later editions. An order made before the rule had a record carries."

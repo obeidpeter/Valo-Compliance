@@ -1,5 +1,5 @@
-import { and, asc, eq, gt, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
-import { db, valoOrders, valoPrices } from "@workspace/db";
+import { and, asc, eq, inArray, isNotNull, or, sql } from "drizzle-orm";
+import { db, valoBundles, valoOrders, valoPrices, type ValoOrderLine } from "@workspace/db";
 import type { WorkspaceActor } from "../workspaces";
 import { ValoProblem } from "../../platform/valo-problem";
 
@@ -26,26 +26,50 @@ export async function lockCheckoutWorkspace(tx: Tx, workspaceId: string) {
   await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${workspaceId}))`);
 }
 
-/** Prefer a recorded payment, then the order already sent to the provider, then the oldest
- * open order. A saved order whose price has closed can be replaced if it never left Valo. */
-export async function openEditionOrder(tx: Tx, actor: WorkspaceActor, edition: string, priceId: string) {
+/**
+ * The editions an order grants, each with the title its line copied: a template's order its one edition, a
+ * bundle's order the released edition of each of its templates (docs/architecture/commercial-settings.md,
+ * slice 4c).
+ */
+export function orderLineEditions(line: ValoOrderLine) {
+  return line.editions ?? [{ contentVersionId: line.contentVersionId, title: line.title }];
+}
+export const orderEditions = (line: ValoOrderLine) =>
+  orderLineEditions(line).map((edition) => edition.contentVersionId);
+
+/** What an order buys: a template's price or a bundle's version. */
+export type OrderOffer = { priceId: string | null; bundleId: string | null };
+
+/** Whether an order's line names any of these editions. */
+const namesAny = (editions: string[]) =>
+  sql`(${valoOrders.line}->>'contentVersionId' in ${editions} or exists (
+    select from jsonb_array_elements(coalesce(${valoOrders.line}->'editions', '[]'::jsonb)) as named(edition)
+     where named.edition->>'contentVersionId' in ${editions}))`;
+
+/** Prefer a recorded payment, then the order already sent to the provider, then the oldest open order
+ * that covers any of these editions. A saved order whose price or bundle has closed can be replaced if it
+ * never left Valo. */
+export async function openEditionOrder(tx: Tx, actor: WorkspaceActor, editions: string[], offer: OrderOffer) {
+  const closesAt = sql`coalesce(${valoPrices.effectiveTo}, ${valoBundles.effectiveTo})`;
   const [row] = await tx
     .select({ order: valoOrders })
     .from(valoOrders)
-    .innerJoin(valoPrices, eq(valoPrices.id, valoOrders.priceId))
+    .leftJoin(valoPrices, eq(valoPrices.id, valoOrders.priceId))
+    .leftJoin(valoBundles, eq(valoBundles.id, valoOrders.bundleId))
     .where(
       and(
         eq(valoOrders.workspaceId, actor.workspaceId),
-        eq(valoPrices.contentVersionId, edition),
+        namesAny(editions),
         or(
           inArray(valoOrders.status, ["verified_success", "needs_review", "pending"]),
           and(
             eq(valoOrders.status, "created"),
             or(
-              eq(valoPrices.id, priceId),
+              offer.priceId ? eq(valoOrders.priceId, offer.priceId) : undefined,
+              offer.bundleId ? eq(valoOrders.bundleId, offer.bundleId) : undefined,
               isNotNull(valoOrders.checkoutUrl),
-              isNull(valoPrices.effectiveTo),
-              gt(valoPrices.effectiveTo, sql`now()`),
+              sql`${closesAt} is null`,
+              sql`${closesAt} > now()`,
             ),
           ),
         ),
@@ -61,7 +85,9 @@ export async function openEditionOrder(tx: Tx, actor: WorkspaceActor, edition: s
   if (row?.order.status === "verified_success" || row?.order.status === "needs_review") {
     throw new ValoProblem(
       409,
-      "A payment for this edition is already on record. Check your purchases before paying again.",
+      editions.length > 1
+        ? "A payment for a template in this bundle is already on record. Check your purchases before paying again."
+        : "A payment for this edition is already on record. Check your purchases before paying again.",
     );
   }
   return row?.order;
@@ -74,7 +100,7 @@ export async function assertPayableOrder(
 ) {
   if (!["created", "pending"].includes(order.status))
     throw new ValoProblem(409, "This order can no longer start a payment. Check your purchases.");
-  const existing = await openEditionOrder(tx, actor, order.line.contentVersionId, order.priceId);
+  const existing = await openEditionOrder(tx, actor, orderEditions(order.line), order);
   if (existing?.id !== order.id)
     throw new ValoProblem(
       409,

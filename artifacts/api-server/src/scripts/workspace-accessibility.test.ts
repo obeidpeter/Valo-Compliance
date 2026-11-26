@@ -446,6 +446,7 @@ const answers: Record<string, unknown> = {
     message: "Synthetic test fixture: payments run in test mode only.",
     livePaymentsEnabled: false,
     purchaseCarriesToLaterEditions: true,
+    bundles: [],
     orders: [
       {
         id: "00000000-0000-4000-8000-00000000a101",
@@ -460,6 +461,9 @@ const answers: Record<string, unknown> = {
         licenceText: "Synthetic licence text.",
         taxTreatment: "Synthetic tax treatment.",
         contentVersionId: "00000000-0000-4000-8000-00000000a201",
+        editions: [
+          { contentVersionId: "00000000-0000-4000-8000-00000000a201", title: "Synthetic premium template" },
+        ],
         carriesToLaterEditions: true,
         refundStatus: null,
         receiptReference: "RCT-SYNTH-1",
@@ -4031,6 +4035,7 @@ test("a direct checkout shows only the chosen price and leaves an obsolete link 
         ],
         livePaymentsEnabled: false,
         purchaseCarriesToLaterEditions: true,
+        bundles: [],
         orders: [],
         products: [offer, { ...offer, id: otherId, title: "Other synthetic template" }],
       }),
@@ -4073,6 +4078,153 @@ test("a direct checkout shows only the chosen price and leaves an obsolete link 
   }
 });
 
+// ADM-006 (docs/architecture/commercial-settings.md, slice 4c): a bundle on sale shows its templates, licence, tax
+// treatment and the access rule before the buyer accepts it, and a bundle's order downloads each of its templates.
+test("a bundle on sale lists its templates and terms, and a bundle's order downloads each template", async () => {
+  const edition = (n: number) => "00000000-0000-4000-8000-00000000f" + String(n).padStart(3, "0");
+  const templates = [
+    { edition: edition(1), title: "Synthetic agreement" },
+    { edition: edition(2), title: "Synthetic policy" },
+  ];
+  const bundle = {
+    id: "00000000-0000-4000-8000-00000000e101",
+    bundle: "synthetic-starter",
+    title: "Synthetic starter bundle",
+    amountKobo: 600000,
+    currency: "NGN",
+    licenceVersion: "synthetic-bundle-1",
+    licenceText: "Synthetic bundle licence for one business's own use.",
+    taxTreatment: "Synthetic tax treatment.",
+    templates,
+  };
+  const owned = (n: number, title: string) => ({
+    offerId: edition(n),
+    edition: edition(n),
+    title,
+    downloadPath: "/api/workspace/manual-premium-templates/" + edition(n) + "/download",
+  });
+  const paid = {
+    id: "00000000-0000-4000-8000-00000000e201",
+    reference: "ORD-SYNTH-BUNDLE",
+    title: "Synthetic earlier bundle",
+    amountKobo: 500000,
+    currency: "NGN",
+    status: "verified_success" as const,
+    createdAt: at(20),
+    lastCheckedAt: at(20),
+    licenceVersion: "synthetic-bundle-0",
+    licenceText: "Synthetic earlier bundle licence.",
+    taxTreatment: "Synthetic tax treatment.",
+    contentVersionId: null,
+    editions: [
+      { contentVersionId: edition(3), title: "Synthetic register" },
+      { contentVersionId: edition(4), title: "Synthetic letter" },
+    ],
+    carriesToLaterEditions: true,
+    refundStatus: null,
+    receiptReference: "RCT-SYNTH-BUNDLE",
+    refunds: [],
+    refundableKobo: 500000,
+    refundedKobo: 0,
+    refundPolicy: "Synthetic refund policy.",
+    disputeStatus: null,
+  };
+  const ordered: unknown[] = [];
+  const listing = except({
+    "GET /workspace/purchases": api.GetCustomerPurchasesResponse.parse({
+      available: true,
+      message: "Synthetic bundles.",
+      livePaymentsEnabled: false,
+      purchaseCarriesToLaterEditions: true,
+      bundles: [bundle],
+      orders: [paid],
+      products: [],
+      ownedDownloads: [owned(3, "Synthetic register"), owned(4, "Synthetic letter")],
+    }),
+  });
+  const buying: Api = async (route, method, path, query) => {
+    if (method === "POST" && path === "/workspace/orders") {
+      ordered.push(route.request().postDataJSON());
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(
+          api.CreateCommerceOrderResponse.parse({
+            ...paid,
+            id: "00000000-0000-4000-8000-00000000e202",
+            reference: "ORD-SYNTH-NEW",
+            title: bundle.title,
+            amountKobo: bundle.amountKobo,
+            status: "created",
+            lastCheckedAt: null,
+            licenceVersion: bundle.licenceVersion,
+            licenceText: bundle.licenceText,
+            editions: templates.map((template) => ({
+              contentVersionId: template.edition,
+              title: template.title,
+            })),
+            receiptReference: null,
+          }),
+        ),
+      });
+    } else await listing(route, method, path, query);
+  };
+  const { page, errors, unknown, close } = await phone("/workspace/purchases", buying);
+  try {
+    await ready(page);
+    await expect(page.getByTestId("text-nothing-to-buy")).toHaveText(
+      "No template is on sale on its own. The bundles below can be bought.",
+    );
+    const offer = page.getByTestId("bundle-offer");
+    await expect(offer.getByRole("heading", { name: "Synthetic starter bundle · ₦6,000.00" })).toBeVisible();
+    await expect(
+      offer.getByRole("list", { name: "Templates in Synthetic starter bundle" }).getByRole("listitem"),
+    ).toHaveText(["Synthetic agreement", "Synthetic policy"]);
+    // The access rule a purchase made now records, before the buyer accepts the licence.
+    await expect(offer.getByTestId("bundle-later-editions")).toHaveText(
+      "Later editions of these templates are included at no further charge.",
+    );
+    await offer.getByText("Licence · synthetic-bundle-1", { exact: true }).click();
+    await expect(offer.getByText(bundle.licenceText, { exact: true })).toBeVisible();
+    const save = offer.getByRole("button", { name: "Save test order" });
+    await expect(save).toBeDisabled();
+    await offer
+      .getByRole("checkbox", { name: "I accept this version of the licence for this business." })
+      .check();
+    await expect(save).toBeEnabled();
+    // A bundle's order lists each template it grants, each with its download.
+    const order = page.getByRole("list", { name: "Templates in Synthetic earlier bundle" });
+    await expect(order.getByRole("link", { name: "Download Synthetic register" })).toHaveAttribute(
+      "href",
+      "/api/workspace/manual-premium-templates/" + edition(3) + "/download",
+    );
+    await expect(order.getByRole("link", { name: "Download Synthetic letter" })).toHaveAttribute(
+      "href",
+      "/api/workspace/manual-premium-templates/" + edition(4) + "/download",
+    );
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "the purchases screen with a bundle on sale"), []);
+    await page.setViewportSize({ width: 360, height: 640 });
+    await save.click();
+    await expect.poll(() => ordered.length).toBe(1);
+    const [body] = ordered as Record<string, unknown>[];
+    assert.match(String(body!.requestKey), /^[0-9a-f-]{36}$/);
+    assert.deepEqual(
+      { ...body, requestKey: undefined },
+      {
+        bundleId: bundle.id,
+        acceptedLicenceVersion: "synthetic-bundle-1",
+        acceptedCarriesToLaterEditions: true,
+        requestKey: undefined,
+      },
+    );
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
+
 test("My Templates lists owned editions once, including older purchases and closed offers", async () => {
   const id = (suffix: number) => "00000000-0000-4000-8000-" + String(suffix).padStart(12, "0");
   const edition = (n: number, title: string, reviewed = false) => ({
@@ -4100,6 +4252,7 @@ test("My Templates lists owned editions once, including older purchases and clos
     message: "Test purchases.",
     livePaymentsEnabled: false,
     purchaseCarriesToLaterEditions: true,
+    bundles: [],
     orders: [],
     products: [current, { ...current, id: id(200), title: "Another template" }],
     ownedDownloads: [
@@ -4176,7 +4329,7 @@ test("My Templates lists owned editions once, including older purchases and clos
 test("purchase history offers the exact owned file on a verified order and keeps its receipt after access ends", async () => {
   const listing = api.GetCustomerPurchasesResponse.parse(answers["GET /workspace/purchases"]);
   const paid = listing.orders[0]!;
-  const edition = paid.contentVersionId;
+  const edition = paid.contentVersionId!;
   const downloadPath = "/api/workspace/manual-premium-templates/" + edition + "/download";
   listing.ownedDownloads = [
     "00000000-0000-4000-8000-00000000a301",
@@ -4188,6 +4341,7 @@ test("purchase history offers the exact owned file on a verified order and keeps
       id: "00000000-0000-4000-8000-00000000a102",
       reference: "ORD-SYNTH-2",
       contentVersionId: "00000000-0000-4000-8000-00000000a202",
+      editions: [{ contentVersionId: "00000000-0000-4000-8000-00000000a202", title: paid.title }],
       // Made while the owner's rule said a purchase covers only the edition bought (ADM-006).
       carriesToLaterEditions: false,
     },
@@ -4249,6 +4403,7 @@ test("with nothing for sale and no order, the purchases screen says so in plain 
         ownedDownloads: [],
         livePaymentsEnabled: false,
         purchaseCarriesToLaterEditions: true,
+        bundles: [],
         orders: [],
         products: [],
       }),

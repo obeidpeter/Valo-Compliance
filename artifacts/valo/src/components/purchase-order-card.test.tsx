@@ -20,6 +20,9 @@ const order: CommerceOrder = {
   licenceText: "Synthetic licence text.",
   taxTreatment: "Synthetic tax treatment.",
   contentVersionId: "00000000-0000-4000-8000-00000000a201",
+  editions: [
+    { contentVersionId: "00000000-0000-4000-8000-00000000a201", title: "Synthetic premium template" },
+  ],
   carriesToLaterEditions: true,
   refundStatus: null,
   receiptReference: "RCT-SYNTH-1",
@@ -31,7 +34,7 @@ const order: CommerceOrder = {
 };
 const bought: OwnedCheckoutDownload = {
   offerId: "00000000-0000-4000-8000-00000000a301",
-  edition: order.contentVersionId,
+  edition: order.contentVersionId!,
   title: order.title,
   downloadPath: "/api/workspace/manual-premium-templates/00000000-0000-4000-8000-00000000a201/download",
 };
@@ -69,4 +72,57 @@ test("an order shows the access rule it recorded when it was made (ADM-006)", ()
     /Later editions<\/dt><dd[^>]*>Not included: this order covers the edition bought, while it stays released</,
   );
   assert.match(render(undefined, only), /This edition is no longer available to download/);
+});
+
+test("a bundle's order lists each template it grants, with each one's download while the purchase holds it (ADM-006)", () => {
+  const first = "00000000-0000-4000-8000-00000000a211",
+    second = "00000000-0000-4000-8000-00000000a212";
+  const bundle: CommerceOrder = {
+    ...order,
+    title: "Synthetic starter bundle",
+    contentVersionId: null,
+    editions: [
+      { contentVersionId: first, title: "Synthetic agreement" },
+      { contentVersionId: second, title: "Synthetic policy" },
+    ],
+  };
+  const files = (held: boolean) =>
+    bundle.editions.map((edition) => ({
+      ...edition,
+      download:
+        held || edition.contentVersionId === first
+          ? {
+              offerId: edition.contentVersionId,
+              edition: edition.contentVersionId,
+              title: edition.title,
+              downloadPath:
+                "/api/workspace/manual-premium-templates/" + edition.contentVersionId + "/download",
+            }
+          : undefined,
+    }));
+  const shown = (held: boolean, status: CommerceOrder["status"] = "verified_success") =>
+    renderToStaticMarkup(
+      <QueryClientProvider client={new QueryClient()}>
+        <OrderCard
+          order={{ ...bundle, status }}
+          download={undefined}
+          bundleFiles={files(held)}
+          changed={async () => undefined}
+        />
+      </QueryClientProvider>,
+    );
+  const both = shown(true);
+  assert.match(both, /Templates in this bundle/);
+  for (const edition of [first, second])
+    assert.match(both, new RegExp(`href="/api/workspace/manual-premium-templates/${edition}/download"`));
+  assert.match(both, /aria-label="Download Synthetic agreement"/);
+  // A bundle's order names no single edition, and says nothing of one.
+  assert.doesNotMatch(both, /Content version/);
+  assert.doesNotMatch(both, /This edition is no longer available to download/);
+  // A template the purchase no longer holds says so, while the other still downloads.
+  const one = shown(false);
+  assert.match(one, /Synthetic policy<\/span><span[^>]*>No longer available to download/);
+  assert.match(one, new RegExp(`/api/workspace/manual-premium-templates/${first}/download`));
+  // Before the payment is verified, nothing downloads.
+  assert.doesNotMatch(shown(true, "pending"), /bundle-template-download/);
 });

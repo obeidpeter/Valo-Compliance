@@ -1495,6 +1495,11 @@ export interface RefundRecord {
   failure: string | null;
 }
 
+export type CommerceOrderEditionsItem = {
+  contentVersionId: string;
+  title: string;
+};
+
 export interface CommerceOrder {
   id: string;
   reference: string;
@@ -1508,7 +1513,17 @@ export interface CommerceOrder {
   licenceVersion: string;
   licenceText: string;
   taxTreatment: string;
-  contentVersionId: string;
+  /**
+     * The edition a template's order buys; none for a bundle's order
+     * @nullable
+     */
+  contentVersionId: string | null;
+  /**
+     * Each edition the order grants, with the title it copied: one for a template's order, one for each of a bundle's templates.
+     * @minItems 1
+     * @maxItems 10
+     */
+  editions: CommerceOrderEditionsItem[];
   /** The access rule the order recorded when it was made, and keeps: whether the purchase carries to its template's later editions. An order made before the rule had a record carries. */
   carriesToLaterEditions: boolean;
   /** @nullable */
@@ -1521,6 +1536,31 @@ export interface CommerceOrder {
   refundPolicy: string;
   /** @nullable */
   disputeStatus: string | null;
+}
+
+export type BundleOfferTemplatesItem = {
+  edition: string;
+  title: string;
+};
+
+export interface BundleOffer {
+  /** The bundle's version on sale, which an order names */
+  id: string;
+  /** The bundle's name across its versions */
+  bundle: string;
+  title: string;
+  /** @minimum 1 */
+  amountKobo: number;
+  currency: string;
+  licenceVersion: string;
+  licenceText: string;
+  taxTreatment: string;
+  /**
+     * The edition of each of its templates that an order grants, by title.
+     * @minItems 2
+     * @maxItems 10
+     */
+  templates: BundleOfferTemplatesItem[];
 }
 
 /**
@@ -1553,12 +1593,19 @@ export interface CustomerPurchases {
   hasMoreOrders?: boolean;
   orders: CommerceOrder[];
   products: TemplateOffer[];
+  /** The bundles on sale now that hold no template the workspace already owns (docs/architecture/commercial-settings.md, slice 4c). */
+  bundles: BundleOffer[];
   /** Downloads for the signed-in workspace's currently released purchases, indexed by current or past approved offer. */
   ownedDownloads: OwnedCheckoutDownload[];
 }
 
+/**
+ * An order buys one template's price or one bundle's version, and names exactly one of them.
+ */
 export interface CommerceOrderInput {
-  priceId: string;
+  priceId?: string;
+  /** The bundle's version on sale */
+  bundleId?: string;
   /**
      * @minLength 1
      * @maxLength 100

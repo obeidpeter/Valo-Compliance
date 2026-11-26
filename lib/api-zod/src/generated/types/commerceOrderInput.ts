@@ -6,8 +6,13 @@
  * OpenAPI spec version: 0.1.0
  */
 
+/**
+ * An order buys one template's price or one bundle's version, and names exactly one of them.
+ */
 export interface CommerceOrderInput {
-  priceId: string;
+  priceId?: string;
+  /** The bundle's version on sale */
+  bundleId?: string;
   /**
      * @minLength 1
      * @maxLength 100

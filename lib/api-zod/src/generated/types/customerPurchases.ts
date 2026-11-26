@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { BundleOffer } from './bundleOffer';
 import type { CommerceOrder } from './commerceOrder';
 import type { OwnedCheckoutDownload } from './ownedCheckoutDownload';
 import type { TemplateOffer } from './templateOffer';
@@ -18,6 +19,8 @@ export interface CustomerPurchases {
   hasMoreOrders?: boolean;
   orders: CommerceOrder[];
   products: TemplateOffer[];
+  /** The bundles on sale now that hold no template the workspace already owns (docs/architecture/commercial-settings.md, slice 4c). */
+  bundles: BundleOffer[];
   /** Downloads for the signed-in workspace's currently released purchases, indexed by current or past approved offer. */
   ownedDownloads: OwnedCheckoutDownload[];
 }
