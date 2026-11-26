@@ -856,6 +856,13 @@
       "proves": "The security signals migration applies tracked and unjournalled without changing existing rows, its table refuses any other kind of event and any subject that is not a hash, and a customer request's scoped role can neither read nor write it."
     },
     {
+      "requirement": "SEC-008",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/operations/incident-rehearsal.integration.test.ts",
+      "test": "an incident rehearsal on synthetic data detects the refusals and the role change, contains them, keeps the workspace's data and the histories as they are, and answers the person affected in the app without sending anything",
+      "proves": "On a disposable database, the incident procedure's technical steps work as it says: repeated refusals and a role change raise their alerts under the incident runbook, the drafting assistant and checkout pause and refuse new work, a revoked staff account is refused, a held workspace's data is kept, the suspect's reads cannot be changed or removed, and support staff answer the person affected in the app with nothing queued to send. It is not a tabletop."
+    },
+    {
       "requirement": "ADM-004",
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/editorial/valo-rule-release.test.ts",
@@ -4277,6 +4284,20 @@
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
       "test": "privacy staff see each hold on a workspace and why, release one another member placed, and hold the open request's workspace with a reason the person is not shown",
       "proves": "On an emulated phone with stand-in answers, the staff privacy screen lists each hold with its reason and who placed it, says that a held request's erasure has stopped, sends a hold of the open request's workspace and the release of another member's hold with their reasons, and has no automated WCAG 2.2 AA failure."
+    },
+    {
+      "requirement": "PRV-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/operations/incident-rehearsal.integration.test.ts",
+      "test": "an incident rehearsal on synthetic data detects the refusals and the role change, contains them, keeps the workspace's data and the histories as they are, and answers the person affected in the app without sending anything",
+      "proves": "On a disposable database, the incident alerts name the privacy owner as accountable, privacy staff hold the affected workspace so Valo's own deletion of its data stops, and neither the revoked account nor the member who placed the hold can release it."
+    },
+    {
+      "requirement": "PRV-003",
+      "job": "foundation",
+      "file": "scripts/src/valo/incident-procedure.test.ts",
+      "test": "the incident procedure, its tabletop and their design give no length of time for telling the authority or the people affected",
+      "proves": "The incident procedure, its tabletop script and their design contain no sentence that puts a length of time beside telling, notifying or reporting, or beside the authority, and the check finds such a sentence when one is planted."
     },
     {
       "requirement": "EDT-002",
