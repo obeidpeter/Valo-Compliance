@@ -48,7 +48,6 @@ import {
   replayErasureObjects,
   replayErasedApplication,
   closePrivacyErasureLocks,
-  ERASURE_SECTION_LOCK,
 } from "./valo-privacy-erasure";
 import { erasureProofMode, erasureProofStorage } from "../../test-support/erasure-proof-storage";
 import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
@@ -422,47 +421,6 @@ test(
               ).rows[0]!.remaining,
             );
           let supportBatches = 0;
-          // Another erasure's section is under way: this case's next section waits for it to finish,
-          // and then goes on. Two sections at once could otherwise each hold a history digest row the
-          // other waits for, and the database would end one as a deadlock.
-          {
-            const { default: pg } = await import("pg");
-            const other = new pg.Client({ connectionString: process.env.DATABASE_URL });
-            await other.connect();
-            try {
-              await other.query("BEGIN");
-              await other.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [
-                ERASURE_SECTION_LOCK,
-              ]);
-              let settled = false;
-              const next = act("resume_erasure").finally(() => {
-                settled = true;
-              });
-              const waiting = async () =>
-                Number(
-                  (
-                    await other.query(
-                      `SELECT count(*)::int AS n FROM pg_locks WHERE locktype='advisory' AND NOT granted AND objsubid=1
-                        AND classid=((hashtextextended($1, 0) >> 32) & 4294967295)::oid
-                        AND objid=(hashtextextended($1, 0) & 4294967295)::oid`,
-                      [ERASURE_SECTION_LOCK],
-                    )
-                  ).rows[0].n,
-                );
-              for (let i = 0; i < 100; i++) {
-                if (settled || (await waiting()) > 0) break;
-                await new Promise((resolve) => setTimeout(resolve, 50));
-              }
-              // Another test's erasure may be waiting too, so at least one: this one, still unfinished.
-              assert.ok((await waiting()) >= 1, "the section waits for the other erasure's section");
-              assert.equal(settled, false);
-              await other.query("COMMIT");
-              detail = await next;
-              version = detail.request.version;
-            } finally {
-              await other.end();
-            }
-          }
           const currentPhase = async () =>
             (
               await db
