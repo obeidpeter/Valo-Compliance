@@ -34,7 +34,9 @@ test("actual export entries and worker startup reject before database, queue or 
       export const valoMemberships={},valoContentVersions={},valoDocuments={},valoDocumentRevisions={},valoExportJobs={},
       valoExportRequests={},valoFileAssets={},valoExportObjects={},valoEvents={},valoPrivacyTombstones={},
       valoWorkspaceExports={},valoWorkspaceExportAttempts={},valoWorkspaces={},valoPrivacyCases={},valoPrivacyEvents={},valoProfileVersions={},
-      valoPrivacyHolds={},valoStaffAccessAudit={};`,
+      valoPrivacyHolds={},valoStaffAccessAudit={};
+      // Listening for a pooled connection's failure opens no connection, so it is not an effect.
+      export const onConnectionFailure=()=>()=>{};`,
     ],
     [
       "drizzle-orm",
