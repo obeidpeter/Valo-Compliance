@@ -110,6 +110,7 @@ is that inventory, part 4 of [alerts that reach a person](../architecture/alerts
 | `checker.journey_check_failed` | The requirements check journey command | One of its checks failed |
 | `checker.journey_failed` | The requirements check journey command | Its journey failed, by the phase |
 | `controlled_privacy_browser_failed` | The privacy data browser command | Its browser check failed |
+| `bundle-secrets` | The bundle check, after each build of the web app in CI | It read what the browser is sent: how many files, and each finding by file and by the setting or the secret's shape, never the secret |
 
 ## Not yet
 
