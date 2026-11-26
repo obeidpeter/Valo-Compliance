@@ -445,15 +445,24 @@
     {
       "id": "v5.0.0-1.5.1",
       "level": 1,
-      "status": "untested",
+      "status": "met",
       "bears_on": [
         "SEC-003"
       ],
-      "control": "Valo runs no XML parser on what it is sent: a Word upload's XML is read as text only after any DOCTYPE or ENTITY in it is refused, so no external entity can be resolved. Valo writes its own Word files' XML.",
+      "control": "Valo runs no XML parser on what it is sent: a Word upload's document is read with patterns, which decode only XML's five named entities and numeric references and leave any other entity as written, after a document type or an entity declared in its document or content types is refused. No entity is ever expanded. Valo writes its own Word files' XML.",
       "code": [
         "artifacts/api-server/src/modules/manual-library/files.ts"
       ],
-      "gap": "No test sends a Word file with an entity to show it is refused."
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/modules/manual-library/files.test.ts",
+          "test": "the staff upload refuses a Word file that declares a document type or an entity, or reaches outside itself"
+        },
+        {
+          "file": "artifacts/api-server/src/modules/manual-library/files.test.ts",
+          "test": "a standard Word file is read, and its text kept as written"
+        }
+      ]
     },
     {
       "id": "v5.0.0-1.5.2",
@@ -1237,26 +1246,30 @@
     {
       "id": "v5.0.0-5.1.1",
       "level": 2,
-      "status": "partly met",
+      "status": "met",
       "bears_on": [
         "SEC-004"
       ],
-      "control": "The code sets what a Content editor may upload to the staff library: a Word or PDF file of up to 2 MB; a Word file of at most 300 parts and 12 MB unpacked, with no macros, embedded programs, DTDs or outside links; a PDF of up to 100 pages with no encryption, scripts or embedded files. R1 accepts no file from customers: the specification keeps uploads for R2, behind its attachment controls.",
+      "control": "The code sets what a Content editor may upload to the staff library: a Word or PDF file of up to 2 MB; a Word file of at most 300 parts and 12 MB unpacked, with no macros, embedded programs, DTDs or outside links; a PDF of up to 100 pages with no encryption, scripts or embedded files. R1 accepts no file from customers: the specification keeps uploads for R2, behind its attachment controls. A note records the limits and what happens to a refused file: it is refused before the draft is saved, nothing of it is stored, and its log line names only the request.",
       "code": [
-        "artifacts/api-server/src/modules/manual-library/files.ts#readEditorialUpload"
+        "artifacts/api-server/src/modules/manual-library/files.ts#readEditorialUpload",
+        "docs/valo/staff-upload-limits.md"
       ],
       "tests": [
         {
           "file": "scripts/src/valo/r1-boundaries.test.ts",
           "test": "R1 customer workspaces have no evidence upload and only the Content staff editor accepts a document"
+        },
+        {
+          "file": "artifacts/api-server/src/modules/manual-library/files.test.ts",
+          "test": "the staff upload refuses a file over its limits before it reads it"
         }
-      ],
-      "gap": "No document sets these limits or says what happens to a refused file; they are only in the code."
+      ]
     },
     {
       "id": "v5.0.0-5.2.1",
       "level": 1,
-      "status": "untested",
+      "status": "met",
       "bears_on": [
         "SEC-004"
       ],
@@ -1264,12 +1277,17 @@
       "code": [
         "artifacts/api-server/src/modules/manual-library/files.ts#fileLimit"
       ],
-      "gap": "No test gives the staff upload a file over its limits."
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/modules/manual-library/files.test.ts",
+          "test": "the staff upload refuses a file over its limits before it reads it"
+        }
+      ]
     },
     {
       "id": "v5.0.0-5.2.2",
       "level": 1,
-      "status": "untested",
+      "status": "met",
       "bears_on": [
         "SEC-004"
       ],
@@ -1277,12 +1295,17 @@
       "code": [
         "artifacts/api-server/src/modules/manual-library/files.ts#readEditorialUpload"
       ],
-      "gap": "No test gives the staff upload a file whose content is not its kind."
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/modules/manual-library/files.test.ts",
+          "test": "the staff upload refuses a file whose content is not its kind, or that carries a program"
+        }
+      ]
     },
     {
       "id": "v5.0.0-5.2.3",
       "level": 2,
-      "status": "untested",
+      "status": "met",
       "bears_on": [
         "SEC-004"
       ],
@@ -1290,7 +1313,16 @@
       "code": [
         "artifacts/api-server/src/modules/manual-library/files.ts"
       ],
-      "gap": "No test gives the staff upload a package over these limits."
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/modules/manual-library/files.test.ts",
+          "test": "the staff upload refuses a file over its limits before it reads it"
+        },
+        {
+          "file": "artifacts/api-server/src/modules/manual-library/files.test.ts",
+          "test": "the staff upload refuses a file whose content is not its kind, or that carries a program"
+        }
+      ]
     },
     {
       "id": "v5.0.0-5.3.1",
@@ -2275,15 +2307,20 @@
     {
       "id": "v5.0.0-9.2.3",
       "level": 2,
-      "status": "untested",
+      "status": "met",
       "bears_on": [
         "IAM-001"
       ],
-      "control": "Valo gives the provider's SDK the trusted site's origin as the only authorized party, so a session token made for another site is refused.",
+      "control": "Valo gives the provider's library the trusted site's origin as the only authorized party, so a session token made for another site, or for none, is refused, as is one signed with another key or past its time.",
       "code": [
-        "artifacts/api-server/src/app.ts"
+        "artifacts/api-server/src/middlewares/identity.ts#identityMiddleware"
       ],
-      "gap": "No test presents a token made for another site."
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/middlewares/identity.test.ts",
+          "test": "a sign-in token is accepted only when it was made for Valo's own site, and only as the provider signed it"
+        }
+      ]
     },
     {
       "id": "v5.0.0-9.2.4",
@@ -3432,22 +3469,35 @@
     {
       "id": "v5.0.0-15.3.2",
       "level": 2,
-      "status": "partly met",
+      "status": "met",
       "bears_on": [
         "SEC-004"
       ],
-      "control": "Calls to the payment provider refuse a redirect, and the external monitor and the storage probe do not follow one.",
+      "control": "Calls to the payment provider refuse a redirect. The external monitor, the storage probe and every anonymous probe of private storage take a redirect as their answer and never follow it. The official sources' downloads follow at most three redirects, each to https on the source's own host and checked before it is followed.",
       "code": [
         "artifacts/api-server/src/modules/commerce/valo-paystack-contract.ts",
-        "artifacts/api-server/src/platform/valo-external-monitor.ts"
+        "artifacts/api-server/src/platform/valo-external-monitor.ts",
+        "artifacts/api-server/src/platform/anonymous-object.ts#anonymousObjectStatus",
+        "artifacts/api-server/src/modules/sources/source-fetch.ts#fetchOfficialSource"
       ],
       "tests": [
         {
           "file": "artifacts/api-server/src/modules/commerce/valo-paystack-contract.test.ts",
           "test": "no merchant call is made with a live key, in production, in a deployment or in a recovery run"
+        },
+        {
+          "file": "artifacts/api-server/src/platform/anonymous-object.test.ts",
+          "test": "an anonymous probe of a private object reports a redirect as its answer and never follows it (SEC-002)"
+        },
+        {
+          "file": "artifacts/api-server/src/platform/anonymous-object.test.ts",
+          "test": "only the anonymous probe addresses the storage service directly"
+        },
+        {
+          "file": "artifacts/api-server/src/modules/sources/registered-source.test.ts",
+          "test": "a registered source is fetched only on a policy host, and a redirect stays on that host over https"
         }
-      ],
-      "gap": "Calls to private storage and the official sources' downloads follow redirects as fetch does by default."
+      ]
     },
     {
       "id": "v5.0.0-15.3.3",

@@ -136,11 +136,25 @@ The requirements, verbatim from the specification:
     of Valo's own or the host's, and is left to the launch.
 - Storage probes refuse redirects. Official sources keep following up to three redirects on their own
   host, over https, with each hop checked: that is intended, and the baseline's wording is corrected.
+  Built (slice 3b):
+  - every anonymous probe of private storage now goes through one function
+    (`platform/anonymous-object.ts`), which takes a redirect as its answer. The production storage
+    probe already did; the three others followed redirects, as `fetch` does by default;
+  - its test asks a server of its own, whose first answer is a redirect, and finds the probe never
+    asks for the redirect's target. A second test finds no other product source addressing the
+    storage service.
 - Tests give the staff upload a file over its limits, a file whose content is not its kind, a Word
   package over its limits and a Word file with an entity. A note records the upload's limits and what
-  happens to a refused file.
+  happens to a refused file. Built (slice 3b): `modules/manual-library/files.test.ts`, with every file
+  made in the test, and [the staff upload's limits](../valo/staff-upload-limits.md). The upload runs
+  no XML parser: it reads a document's text with patterns, so no entity is ever expanded, and it
+  refuses a declared one before reading.
 - A test presents a sign-in token made for another site, where the identity provider's library allows
-  one to be made without its servers.
+  one to be made without its servers. Built (slice 3b): the identity middleware moves from `app.ts`
+  to `middlewares/identity.ts`, unchanged, so the test uses the API's own. Given a synthetic
+  instance's key, the library checks a token itself. A token made for Valo's site signs its holder
+  in; one made for another site or for none, signed with another key or past its time, signs no one
+  in.
 
 ## What does not change
 
@@ -155,7 +169,7 @@ The requirements, verbatim from the specification:
 | 1 | Part 1's bundle check | Built |
 | 2 | Part 1's rotation runbook and the logins' rehearsal | Built |
 | 3a | Part 4, and Part 5's policy, headers, content types, folders and TRACE | Built |
-| 3b | Part 5's storage redirects, the staff upload's refusals and the token made for another site | Not built |
+| 3b | Part 5's storage redirects, the staff upload's refusals and the token made for another site | Built |
 | 4 | Part 3: advisories, the scheduled scan, the bill of materials and the image check | Not built |
 | 5 | Part 2: limits as settings | Not built |
 
