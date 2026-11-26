@@ -4,17 +4,22 @@ import { randomUUID } from "node:crypto";
 import type { NextFunction, Request, Response } from "express";
 import { contractOperations } from "../test-support/contract-operations";
 import { LONG_MARKUP, MARK, SHORT_MARKUP } from "../test-support/hostile-markup";
+import { NO_ROWS, changedTables, tableDigests } from "../test-support/table-digests";
 
 /**
  * SEC-003: "Accept: stored/reflected XSS, injection … tests pass." What a caller sends never comes back
  * as a page a browser would run (docs/architecture/hostile-input.md, part 3).
  *
  * Every operation in the contract is sent hostile markup and SQL text in each of its path's values, in
- * its query and, for a change, in its body's keys and values, from the site's own page and, where it
- * needs an account, signed in, so that it reaches the route's own checks. Every answer must be JSON or empty, never HTML; carry the
- * headers that stop a browser reading it as another type or framing it; be kept from shared caches when
- * it is private; and be no failure of the server's own. An address the API does not have, a malformed
- * body and an oversized one are answered the same way, as are refusals before any route is reached.
+ * its query, each value twice, and, for a change, in its body's keys and values, from the site's own
+ * page and, where it needs an account, signed in, so that it reaches the route's own checks. Every
+ * answer must be JSON or empty, never HTML, and name its character set; carry the headers that stop a
+ * browser reading it as another type, framing it or sending its address on, and HSTS for a year; be
+ * kept from shared caches when it is private; and be no failure of the server's own. No request may
+ * change the prototype every object inherits. An address the API does not have, a malformed body and
+ * an oversized one are answered the same way, as are refusals before any route is reached, and no read
+ * changes anything but the counts reads keep. The security baseline cites these checks by their OWASP
+ * ASVS 5.0.0 identifiers (docs/registers/security-baseline.json).
  *
  * Only the identity provider is stood in for. Every account is synthetic, and the database is a
  * disposable one.
@@ -109,8 +114,18 @@ test(
       const found: string[] = [];
       if (answer.headers.get("x-content-type-options") !== "nosniff") found.push(`${where}: no nosniff`);
       if (answer.headers.get("x-frame-options") !== "DENY") found.push(`${where}: may be framed`);
+      if (answer.headers.get("referrer-policy") !== "same-origin")
+        found.push(`${where}: may send its address to another site`);
+      // HSTS for at least a year (OWASP ASVS 5.0.0 V3.4.1).
+      const hsts = Number(
+        /max-age=(\d+)/.exec(answer.headers.get("strict-transport-security") ?? "")?.[1] ?? 0,
+      );
+      if (hsts < 31_536_000) found.push(`${where}: no HSTS for a year`);
       if (answer.text && !answer.type.startsWith("application/json"))
         found.push(`${where}: answered ${answer.type || "no type"}, not JSON`);
+      // A text answer names its character encoding (ASVS V4.1.1).
+      else if (answer.text && !/;\s*charset=utf-8/i.test(answer.type))
+        found.push(`${where}: answered ${answer.type} with no charset`);
       if (answer.text.includes(MARK) && !answer.type.startsWith("application/json"))
         found.push(`${where}: repeats the markup outside JSON`);
       if (answer.status >= 500)
@@ -135,10 +150,16 @@ test(
       const switchesBefore = await switches();
 
       await t.test(
-        "every operation answers hostile text in JSON, with the headers, and fails no route",
+        "every operation answers hostile text in JSON, with the headers, fails no route and changes no object's prototype",
         async () => {
           const hostile = encodeURIComponent(SHORT_MARKUP);
-          const query = `?q=${hostile}&page=${hostile}&${hostile}=${hostile}`;
+          // Each value twice, as a caller polluting the parameters would (OWASP ASVS 5.0.0 V15.3.7), and
+          // keys that would reach every object's prototype if a parser or a merge followed them (V15.3.6).
+          const query =
+            `?q=${hostile}&q=${hostile}&page=${hostile}&page=${hostile}&${hostile}=${hostile}` +
+            "&__proto__[vhPolluted]=query&constructor[prototype][vhPolluted]=query&__proto__.vhPolluted=query";
+          const polluting =
+            '"__proto__":{"vhPolluted":"body"},"constructor":{"prototype":{"vhPolluted":"body"}}';
           const operations = contractOperations();
           assert.ok(operations.length >= 160, `only ${operations.length} operations in the contract`);
           const found: string[] = [];
@@ -162,11 +183,11 @@ test(
               },
               ...(change
                 ? {
-                    body: JSON.stringify({
+                    body: `{${polluting},${JSON.stringify({
                       [SHORT_MARKUP]: LONG_MARKUP,
                       title: SHORT_MARKUP,
                       message: LONG_MARKUP,
-                    }),
+                    }).slice(1)}`,
                   }
                 : {}),
             });
@@ -177,8 +198,35 @@ test(
             );
           }
           assert.deepEqual(found, []);
+          // The API runs in this process, so a polluted prototype would show here.
+          assert.ok(
+            !Object.hasOwn(Object.prototype, "vhPolluted"),
+            "a request changed every object's prototype",
+          );
         },
       );
+
+      await t.test("no read changes anything but the counts it keeps", async () => {
+        // ASVS V3.5.3: what changes something is a POST, PUT, PATCH or DELETE. Each read counts against
+        // its reader's limit, a refusal is counted for the security alerts, and a member of staff's read
+        // of a customer's data is recorded: those three tables are left out, and nothing else may change.
+        const leaveOut = ["valo_rate_buckets", "valo_security_signals", "valo_staff_access_audit"];
+        const before = await tableDigests(pool, leaveOut);
+        for (const operation of contractOperations().filter((each) => each.method === "GET")) {
+          const prefix = operation.path.split("/")[1];
+          const account =
+            prefix === "admin" ? staff : prefix === "public" || prefix === "checker" ? null : customer;
+          await send(
+            operation.path.replace(/\{[^}]+\}/g, () => randomUUID()),
+            {
+              headers: account ? { [identityHeader]: account } : visitor,
+            },
+          );
+        }
+        const changed = changedTables(before, await tableDigests(pool, leaveOut));
+        assert.deepEqual(changed, [], "a read changed what it should only read");
+        assert.notEqual(before.get("valo_workspaces") ?? NO_ROWS, NO_ROWS, "the comparison read no rows");
+      });
 
       await t.test("answers that no route gives carry the headers, in JSON", async () => {
         const json = { "Content-Type": "application/json", Origin: base, [identityHeader]: customer };
