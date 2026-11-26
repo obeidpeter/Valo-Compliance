@@ -129,8 +129,8 @@ but the counts reads keep (3.4.1, 3.4.5, 4.1.1, 15.3.6, 15.3.7, 3.5.3).
 
 | Status | Requirements |
 | --- | --- |
-| met | 60 |
-| partly met | 40 |
+| met | 57 |
+| partly met | 43 |
 | untested | 21 |
 | not met | 5 |
 | not applicable | 63 |
@@ -161,7 +161,9 @@ What is left falls to the plan's later rows and to the launch:
 - **Alerts that reach a person** (Phase 7): logs to a system of their own, an inventory of them, the
   route in each request's log, and refused input recorded as a security event.
 - **Documents**: the key policy and inventory, protection levels, field-level authorization rules,
-  the ways in with the strength each needs, and the staff upload's limits.
+  the ways in with the strength each needs, and the staff upload's limits; and, in the processor
+  review, the host the identity provider's script sends its telemetry to (`clerk-telemetry.com`),
+  which the pages' policy allows.
 - **The launch review**: the identity provider's settings and the host's, for the 64 entries that are
   theirs.
 

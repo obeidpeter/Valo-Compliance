@@ -70,7 +70,7 @@
       "bears_on": [
         "SEC-003"
       ],
-      "control": "The web app draws every text through React, which encodes it for HTML text and attributes. The API answers only in JSON. The PDF renderer escapes each text, and Word files are written through the docx library. A header Valo writes, such as a download's file name, is made from its own identifiers.",
+      "control": "The web app draws every text through React, which encodes it for HTML text and attributes. The API answers only in JSON. The PDF renderer escapes each text, and Word files are written through the docx library or, for a staff library entry made from text, with each text escaped. A header Valo writes, such as a download's file name, is made from its own identifiers.",
       "code": [
         "artifacts/api-server/src/lib/valo-render.ts",
         "artifacts/api-server/src/platform/security-headers.ts#securityHeaders"
@@ -130,7 +130,7 @@
       "bears_on": [
         "SEC-003"
       ],
-      "control": "The API writes JSON only through Express's res.json, and the pages pass data to the browser through React and Next.js, which escape it. Hostile markup sent to every operation comes back only inside JSON, and a page's address is drawn only escaped.",
+      "control": "The API writes JSON with JSON.stringify, as Express's res.json does, and the pages pass data to the browser through React and Next.js, which escape it. Hostile markup sent to every operation comes back only inside JSON, and a page's address is drawn only escaped.",
       "code": [
         "artifacts/api-server/src/app.ts",
         "artifacts/valo/src/server"
@@ -322,7 +322,7 @@
         "SEC-003",
         "SEC-004"
       ],
-      "control": "Valo calls out only to addresses it chooses: the payment provider's fixed address, the identity provider's frontend API through Valo's own proxy, private storage named in its settings, and official sources at https addresses on the policy's hosts. The PDF renderer refuses every request a document's text could make.",
+      "control": "Valo calls out only to addresses it chooses, among them the payment, email and AI providers' fixed addresses, the identity provider's frontend API through Valo's own proxy, private storage named in its settings, and official sources at https addresses on the policy's hosts. The PDF renderer refuses every request a document's text could make.",
       "code": [
         "artifacts/api-server/src/modules/commerce/valo-paystack-contract.ts#PAYSTACK_API",
         "artifacts/api-server/src/middlewares/clerkProxyMiddleware.ts",
@@ -479,7 +479,7 @@
       "bears_on": [
         "SEC-003"
       ],
-      "control": "The API contract defines each input's type, length, pattern and allowed values, and the schemas generated from it enforce exactly that on every route.",
+      "control": "The API contract documents each input's type, length, pattern and allowed values, and the routes validate input with the schemas generated from it.",
       "code": [
         "lib/api-spec/src",
         "lib/api-zod"
@@ -548,7 +548,7 @@
       "bears_on": [
         "SEC-003"
       ],
-      "control": "Every route parses its path, query and body with the schema generated from the contract before it uses them, and refuses what does not fit.",
+      "control": "Routes parse their path, query and body with the schemas generated from the contract before using them, as the repository's rules require, and every operation sent hostile input refuses what does not fit without failing.",
       "code": [
         "lib/api-zod",
         "artifacts/api-server/src/routes"
@@ -751,7 +751,7 @@
       "bears_on": [
         "SEC-003"
       ],
-      "control": "The API answers only JSON, with nosniff, so a browser that opens an API address shows text. Files are sent as attachments, and stored files are private, never in a public folder.",
+      "control": "The API answers in JSON, with nosniff, so a browser that opens an API address shows text; files are sent as attachments, and stored files are private, never in a public folder.",
       "code": [
         "artifacts/api-server/src/platform/security-headers.ts#securityHeaders",
         "artifacts/api-server/src/routes/valo-exports.ts"
@@ -894,7 +894,7 @@
       "bears_on": [
         "SEC-003"
       ],
-      "control": "Every page carries a policy with a fresh nonce for each response, 'strict-dynamic', object-src 'none' and base-uri 'none', and allows only Valo's own origin and the identity provider's.",
+      "control": "Every page carries a policy with a fresh nonce for each response, 'strict-dynamic', object-src 'none' and base-uri 'none', and allows scripts only from Valo's own origin and the identity provider's hosts, with the bot check its sign-up uses.",
       "code": [
         "artifacts/valo/src/lib/content-security-policy.ts#contentSecurityPolicy",
         "artifacts/valo/middleware.ts"
@@ -920,7 +920,7 @@
       "bears_on": [
         "SEC-003"
       ],
-      "control": "The API's answers carry nosniff, and the web app's configuration sets it on every page and file.",
+      "control": "The API's answers carry nosniff, and the web app's configuration sets it for every path it serves.",
       "code": [
         "artifacts/api-server/src/platform/security-headers.ts#securityHeaders",
         "artifacts/valo/next.config.mjs"
@@ -990,7 +990,7 @@
       "bears_on": [
         "SEC-003"
       ],
-      "control": "Every change must come from the trusted site's exact origin, which the server's settings name, and is refused before it is read otherwise, even for staff who hold the route's role.",
+      "control": "Every change must come from the trusted site's exact origin, which the server's settings name; any other is refused and saves nothing, even for staff who hold the route's role.",
       "code": [
         "artifacts/api-server/src/middlewares/valo-identity.ts#sameOriginMutation",
         "artifacts/api-server/src/lib/valo-site-origin.ts"
@@ -1135,7 +1135,7 @@
       "bears_on": [
         "SEC-005"
       ],
-      "control": "A forwarded address is believed only from proxies the settings name, walking back from the socket and stopping at the first untrusted hop, and an identity a request names in a header is never believed.",
+      "control": "A forwarded address is believed only from proxies the settings name, walking back from the socket and stopping at the first untrusted hop, and a page render's visitor only from this machine's own web server.",
       "code": [
         "artifacts/api-server/src/lib/valo-proxy-boundary.ts#clientAddress",
         "artifacts/api-server/src/middlewares/valo-quota.ts#pageRenderVisitor"
@@ -1266,7 +1266,7 @@
       "bears_on": [
         "SEC-002"
       ],
-      "control": "Files Valo makes are kept in private storage or the database, never in a public folder, and are sent only as attachments; nothing stored is ever run.",
+      "control": "Files Valo makes are kept in private storage or the database, never in a public folder, and are sent only as attachments.",
       "code": [
         "artifacts/api-server/src/platform/valo-private-storage.ts"
       ],
@@ -1338,12 +1338,12 @@
       "bears_on": [
         "SEC-004"
       ],
-      "control": "Download names are made of Valo's identifiers, version numbers and released slugs, with no quote, line break or path in them.",
+      "control": "Download names are made only of Valo's own identifiers and version numbers, such as valo-business-draft-r3.pdf or a staff library entry's manual-<id>-v2.docx, with no quote, line break or path in them.",
       "code": [
         "artifacts/api-server/src/routes/valo-exports.ts",
         "artifacts/api-server/src/modules/manual-library/index.ts"
       ],
-      "gap": "No test checks every download's name, and a staff library entry's slug is not held to a pattern in the contract."
+      "gap": "No test checks every download's name."
     },
     {
       "id": "v5.0.0-5.4.3",
@@ -1582,7 +1582,7 @@
       "bears_on": [
         "IAM-001"
       ],
-      "control": "The API accepts only the provider's sessions, the payment provider's signed webhook, and commands run on the server itself; an identity a request names in a header is never believed.",
+      "control": "The API accepts only the provider's sessions, the payment provider's signed webhook, and commands run on the server itself.",
       "code": [
         "artifacts/api-server/src/app.ts",
         "artifacts/api-server/src/modules/commerce/valo-paystack-contract.ts"
@@ -2113,7 +2113,7 @@
       "bears_on": [
         "SEC-001"
       ],
-      "control": "Answers keep only the fields the contract names, and some fields only for some roles, such as a refund's reason for finance.",
+      "control": "Some fields are shown only to some roles, such as a refund's reason, which only finance sees.",
       "code": [
         "artifacts/api-server/src/modules/staff"
       ],
@@ -2709,12 +2709,12 @@
     {
       "id": "v5.0.0-13.1.1",
       "level": 2,
-      "status": "met",
+      "status": "partly met",
       "bears_on": [
         "SEC-002",
         "PRV-002"
       ],
-      "control": "The processor review lists every outside service Valo relies on, and the processing inventory names none it leaves out; official sources may be added only on the policy's hosts.",
+      "control": "The processor review lists the outside services Valo relies on, and the processing inventory names none it leaves out; official sources may be added only on the policy's hosts.",
       "code": [
         "docs/valo/processor-review.md",
         "lib/valo-core/src/processing-inventory.ts"
@@ -2732,7 +2732,8 @@
           "file": "artifacts/api-server/src/modules/source-register/source-register.integration.test.ts",
           "test": "a Content editor adds a source only at an https address on a policy host, once, and the daily check fetches it there with every check"
         }
-      ]
+      ],
+      "gap": "The review does not name the host the identity provider's script sends its telemetry to, which the pages' policy allows (14.2.3)."
     },
     {
       "id": "v5.0.0-13.2.1",
@@ -2998,11 +2999,11 @@
     {
       "id": "v5.0.0-14.2.1",
       "level": 1,
-      "status": "met",
+      "status": "partly met",
       "bears_on": [
         "SEC-002"
       ],
-      "control": "Sessions travel in the provider's cookie or the Authorization header, and no operation in the contract takes a token, key, secret or password in its address.",
+      "control": "No operation in the API contract takes a token, key, secret or password in its address, and Valo's own requests carry the session in the provider's cookie or the Authorization header.",
       "code": [
         "lib/api-spec/src"
       ],
@@ -3011,7 +3012,8 @@
           "file": "scripts/src/valo/security-baseline.test.ts",
           "test": "no operation in the API contract takes a token, key, secret or password in its address"
         }
-      ]
+      ],
+      "gap": "The identity provider's own redirects can carry its tokens in an address; whether they do on the production domain is for the launch review."
     },
     {
       "id": "v5.0.0-14.2.2",
@@ -3039,11 +3041,11 @@
     {
       "id": "v5.0.0-14.2.3",
       "level": 2,
-      "status": "met",
+      "status": "partly met",
       "bears_on": [
         "PRV-002"
       ],
-      "control": "The pages load no tracker: their policy allows only Valo's own origin and the identity provider's, and the processor review lists every service that receives data.",
+      "control": "The pages load no analytics or advertising: their policy allows only Valo's own origin and the identity provider's hosts, with the bot check its sign-up uses, and the processor review lists every service that receives data.",
       "code": [
         "artifacts/valo/src/lib/content-security-policy.ts#contentSecurityPolicy",
         "docs/valo/processor-review.md"
@@ -3057,7 +3059,8 @@
           "file": "artifacts/api-server/src/modules/privacy/processing-inventory.test.ts",
           "test": "every outside service the inventory names is in the processor review"
         }
-      ]
+      ],
+      "gap": "The policy also lets the identity provider's script send its telemetry to clerk-telemetry.com, which the processor review does not name."
     },
     {
       "id": "v5.0.0-14.2.4",
@@ -3171,7 +3174,7 @@
       "bears_on": [
         "SEC-007"
       ],
-      "control": "The lockfile pins every package, its version and the registry it comes from, and CI installs only from it.",
+      "control": "The lockfile pins every package to its version and checksum, and CI installs only what it names.",
       "code": [
         "pnpm-lock.yaml"
       ],
@@ -3204,6 +3207,10 @@
         {
           "file": "artifacts/api-server/src/lib/valo-render.test.ts",
           "test": "PDFs share one browser, render in isolated contexts and never exceed five at once"
+        },
+        {
+          "file": "artifacts/api-server/src/modules/ai/inference-batch-dispatch.integration.test.ts",
+          "test": "durable finite batch dispatch — isolated PostgreSQL and controlled transport, zero paid calls"
         },
         {
           "file": "artifacts/api-server/src/platform/request-complexity.test.ts",
@@ -3298,7 +3305,7 @@
       "bears_on": [
         "SEC-001"
       ],
-      "control": "Each route passes its answer through the contract's generated schema, which keeps only the fields the contract names.",
+      "control": "Routes pass their answers through the contract's generated schemas, which keep only the fields the contract names.",
       "code": [
         "lib/api-zod",
         "artifacts/api-server/src/routes"
@@ -3332,7 +3339,7 @@
       "bears_on": [
         "SEC-003"
       ],
-      "control": "Bodies are parsed by strict schemas that refuse fields they do not name, and what the server owns, such as the workspace, the caller and roles, is never taken from a body.",
+      "control": "Bodies are parsed by the contract's schemas, which refuse or drop fields they do not name, and what the server owns, such as the workspace, the caller and roles, is never taken from a body.",
       "code": [
         "lib/api-zod",
         "artifacts/api-server/src/modules/workspaces"
@@ -3525,7 +3532,7 @@
         "SEC-008",
         "PRV-001"
       ],
-      "control": "Logs hold no private text: an error is logged by its type, a guard's refusal by its name, and an address or account only as a keyed hash.",
+      "control": "Logs hold no private text: an error is logged by its type and a guard's refusal by its name, and the limits and security signals keep an address or account only as a keyed hash.",
       "code": [
         "artifacts/api-server/src/platform/safe-error.ts",
         "artifacts/api-server/src/lib/valo-security-signals.ts"
