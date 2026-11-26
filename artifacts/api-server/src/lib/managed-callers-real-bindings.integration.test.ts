@@ -741,6 +741,70 @@ test(
           assert.equal(calls, before);
         },
       );
+      // docs/architecture/reviewed-route.md, part 1: once the template's next version is released, the
+      // version before it is replaced. It leaves the catalogue, its file and a new document from it are
+      // refused, and a document made from it stays the customer's and reads replaced.
+      await t.test(
+        "a version replaced by the next one the real publisher releases closes to new downloads and new documents",
+        async () => {
+          await reset();
+          answer = async () => passing();
+          const {
+            createReleasedTemplateDraft,
+            listDocumentEditions,
+            liveReleasedVersions,
+            readReleasedMaster,
+          } = await import("../modules/catalogue");
+          const { resolveWorkspace } = await import("../modules/workspaces");
+          const reader = await resolveWorkspace(`synthetic-replaced-reader-${randomUUID()}`);
+          const live = async () =>
+            (await liveReleasedVersions()).filter((r) => r.templateId === "TPL-07").map((r) => r.id);
+          // The version the subtest before this one released is the template's live one.
+          const [first] = await live();
+          assert.ok(first, "the released version is live");
+          const firstVersion = (await savedVersion(first)).version;
+          const made = await createReleasedTemplateDraft(reader, first);
+          // The next version is prepared, reviewed and released the same way.
+          const fixture = await operational();
+          const reviews = await fixture.execute(),
+            second = versionOf(fixture);
+          assert.equal(
+            (
+              await publish(
+                fixture.id,
+                reviews.map((r) => r.artifact),
+              )
+            ).status,
+            "published",
+          );
+          const secondRow = await savedVersion(second);
+          assert.equal(secondRow.version, firstVersion + 1);
+          // The catalogue lists the new version alone.
+          assert.deepEqual(await live(), [second]);
+          // The replaced version's file, and a new document from it, are refused.
+          const replaced = { status: 404, message: /A newer version of this template was released/ };
+          await assert.rejects(readReleasedMaster(first, "docx", reader), replaced);
+          await assert.rejects(readReleasedMaster(first, "pdf", reader), replaced);
+          await assert.rejects(createReleasedTemplateDraft(reader, first), replaced);
+          // The new version's file is served, the one its release recorded, and a document starts from it.
+          const file = await readReleasedMaster(second, "docx", reader);
+          assert.equal(file.version, firstVersion + 1);
+          assert.equal(sha(file.bytes), secondRow.attestations.exports.docx.hash);
+          const current = await createReleasedTemplateDraft(reader, second);
+          // The document made from the replaced version reads replaced, with the new version; the one made
+          // from the new version reads nothing.
+          const { items } = await listDocumentEditions(reader);
+          assert.deepEqual(
+            items.map((item) => [item.documentId, item.version, item.state, item.current?.version]),
+            [[made.id, firstVersion, "replaced", firstVersion + 1]],
+          );
+          assert.ok(!items.some((item) => item.documentId === current.id));
+          // The document made from the replaced version is unchanged (DOC-007).
+          const { getDocument } = await import("../modules/documents");
+          const kept = await getDocument(reader, made.id);
+          assert.deepEqual([kept.title, kept.content], [made.title, made.content]);
+        },
+      );
       const { prepareCustomerFiniteManifest, executeApprovedCustomerManifest } =
         await import("../modules/ai-lanes/inference-customer-manifest");
       const { input } = await prepareCustomerFiniteManifest("CAI-CAND-INV-01");

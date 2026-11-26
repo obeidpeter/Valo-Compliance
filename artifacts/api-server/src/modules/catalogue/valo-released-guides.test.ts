@@ -86,7 +86,13 @@ test("a published guide is shown only while its policy stands, its sources are c
   // What the stand-ins answer; each case below changes one of them.
   const world = { guidance: approved, sourcesCurrent: true, permissionCurrent: true, policyReads: 0 };
   const tables = {
-    valoContentVersions: { id: "content.id", policyId: "content.policy", status: "content.status" },
+    valoContentVersions: {
+      id: "content.id",
+      policyId: "content.policy",
+      status: "content.status",
+      templateId: "content.template",
+      version: "content.version",
+    },
     valoPublicationPolicies: { id: "policy.id", hash: "policy.hash" },
   };
   // This fixture contains one sourced guide and no manually published entries.
@@ -107,6 +113,10 @@ test("a published guide is shown only while its policy stands, its sources are c
             innerJoin: () => ({
               where: async () => [{ content: guide, policy: { id: approved.version, hash: approved.hash } }],
             }),
+            // Every version ever released, by its number: this guide's alone, so none replaces it.
+            where: async () => [
+              { templateId: guide.templateId, version: guide.version, status: guide.status },
+            ],
           }),
         }),
       },
