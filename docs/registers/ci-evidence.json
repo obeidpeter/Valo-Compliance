@@ -5292,6 +5292,41 @@
       "file": "artifacts/valo/src/lib/library-review.test.ts",
       "test": "the staff library says when a published entry's review is due, and once overdue that customers cannot find, download or buy it",
       "proves": "The staff library gives a published entry's review date and, once it is overdue, says that customers cannot find, download or buy it until it is reviewed and that what they already have is unchanged; an entry counts as overdue from the moment its review falls due."
+    },
+    {
+      "requirement": "SEC-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/operations/alert-copy.test.ts",
+      "test": "the database's journal receives every change once, and a change it cannot take waits in the file",
+      "proves": "The worker copies each alert change to the database's journal once, by the change's own id, and keeps a change the database cannot take in its file until a later copy takes it."
+    },
+    {
+      "requirement": "SEC-008",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/operations/alert-journal.integration.test.ts",
+      "test": "operational alerts: the journal takes each change once and keeps it, and only a current system operator reads it",
+      "proves": "On a real database, alert changes reach the journal through the worker's copy once each and are never changed or removed, and only a current system operator reads them, emergency system access included."
+    },
+    {
+      "requirement": "NFR-010",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/operations/alert-copy.test.ts",
+      "test": "every alert reads in plain words, and one whose reading Valo cannot take says so",
+      "proves": "Every alert the worker can raise has a plain title for the staff who read it, and an alert whose reading cannot be taken says that Valo cannot read it."
+    },
+    {
+      "requirement": "NFR-010",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/operations/alert-copy.test.ts",
+      "test": "each change carries its place in the journal, and the reading and limit it was raised or cleared on",
+      "proves": "Each alert change records when it was raised or cleared, the reading and the limit it was measured against, and none of the readings' error text."
+    },
+    {
+      "requirement": "NFR-010",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "the System area's alerts say in plain words what is active now and what changed, and fit a phone",
+      "proves": "The staff page's System area lists the active alerts and the latest changes in plain words, each with its reading, its limit, the runbook to follow and the roles accountable, and the list passes the automated accessibility checks on a phone."
     }
   ]
 }

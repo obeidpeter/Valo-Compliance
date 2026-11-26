@@ -36,6 +36,8 @@ import {
   recordWorkerHeartbeat,
   collectOperationalSample,
   recordOperationalAlerts,
+  copyAlertChanges,
+  publishAlertChanges,
   countHistories,
 } from "../modules/operations";
 import { assertRecoveryEffectsAllowed } from "../platform/valo-recovery-effects";
@@ -299,6 +301,12 @@ async function dispatch() {
           return pool.query(config);
         });
         const alerts = await recordOperationalAlerts(sample);
+        // The journal on this disk comes first; the database's journal, which staff read, then takes
+        // every change it does not yet hold (docs/architecture/alerts.md, part 1).
+        const copy = await copyAlertChanges(publishAlertChanges);
+        if (copy.behind > 0)
+          logger.warn({ event: "operations.alert_journal_behind", behind: copy.behind, err: copy.error });
+        if (copy.lost > 0) logger.error({ event: "operations.alert_journal_lost", lost: copy.lost });
         if (setting("VALO_SUPERVISED_WORKER") === "ipc-v1" && process.connected && process.send)
           process.send(
             {

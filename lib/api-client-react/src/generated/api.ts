@@ -111,6 +111,7 @@ import type {
   ManualLibraryReview,
   ManualLibraryReviewDate,
   ManualLibraryRevision,
+  OperationalAlerts,
   OwnerBundlePage,
   OwnerBundlePreview,
   OwnerBundleRecord,
@@ -9912,6 +9913,100 @@ export function useDownloadPremiumManualTemplate<TData = Awaited<ReturnType<type
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getDownloadPremiumManualTemplateQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetOperationalAlertsUrl = () => {
+
+
+
+
+  return `/api/admin/operations/alerts`
+}
+
+export const getOperationalAlerts = async ( options?: Parameters<typeof customFetch>[1]): Promise<OperationalAlerts> => {
+
+  return customFetch<OperationalAlerts>(getGetOperationalAlertsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetOperationalAlertsQueryKey = () => {
+    return [
+    "getOperationalAlerts"
+    ] as const;
+    }
+
+
+export const getGetOperationalAlertsQueryOptions = <TData = Awaited<ReturnType<typeof getOperationalAlerts>>, TError = ErrorType<void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOperationalAlerts>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetOperationalAlertsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getOperationalAlerts>>> = ({ signal }) => getOperationalAlerts({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOperationalAlerts>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetOperationalAlertsQueryResult = NonNullable<Awaited<ReturnType<typeof getOperationalAlerts>>>
+export type GetOperationalAlertsQueryError = ErrorType<void>
+
+
+export function useGetOperationalAlerts<TData = Awaited<ReturnType<typeof getOperationalAlerts>>, TError = ErrorType<void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOperationalAlerts>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getOperationalAlerts>>,
+          TError,
+          Awaited<ReturnType<typeof getOperationalAlerts>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetOperationalAlerts<TData = Awaited<ReturnType<typeof getOperationalAlerts>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOperationalAlerts>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getOperationalAlerts>>,
+          TError,
+          Awaited<ReturnType<typeof getOperationalAlerts>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetOperationalAlerts<TData = Awaited<ReturnType<typeof getOperationalAlerts>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOperationalAlerts>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetOperationalAlerts<TData = Awaited<ReturnType<typeof getOperationalAlerts>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOperationalAlerts>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetOperationalAlertsQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

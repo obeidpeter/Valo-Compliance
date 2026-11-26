@@ -62,7 +62,7 @@ test("actual export entries and worker startup reject before database, queue or 
     ],
     [
       "valo-operations",
-      "export const recordWorkerHeartbeat=async()=>{globalThis.guardEffects.services++},collectOperationalSample=recordWorkerHeartbeat,recordOperationalAlerts=recordWorkerHeartbeat;",
+      "export const recordWorkerHeartbeat=async()=>{globalThis.guardEffects.services++},collectOperationalSample=recordWorkerHeartbeat,recordOperationalAlerts=recordWorkerHeartbeat,copyAlertChanges=recordWorkerHeartbeat;",
     ],
     [
       "valo-customer-access",
@@ -106,7 +106,13 @@ test("actual export entries and worker startup reject before database, queue or 
     [
       "valo-operations",
       `const hit=async()=>{globalThis.guardEffects.services++;};
-      export const recordWorkerHeartbeat=hit,collectOperationalSample=hit,recordOperationalAlerts=hit;`,
+      export const recordWorkerHeartbeat=hit,collectOperationalSample=hit,recordOperationalAlerts=hit,copyAlertChanges=hit;`,
+    ],
+    // The worker copies the alerts into the database's journal through the operations module's index.
+    [
+      "alert-journal",
+      `const hit=async()=>{globalThis.guardEffects.services++;};
+      export const publishAlertChanges=hit,operationalAlerts=hit,ALERT_CHANGES_SHOWN=50;`,
     ],
     [
       "valo-privacy-erasure",
