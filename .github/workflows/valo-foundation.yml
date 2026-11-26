@@ -5,6 +5,11 @@ on:
     branches: [main, "feature/valo-p0-foundation"]
   push:
     branches: [main, "feature/valo-*", "claude/**"]
+  # The dependency, secret and static checks once a week too, so an advisory published after the
+  # last merge is found (SEC-007). The other jobs skip a scheduled run. GitHub starts a schedule
+  # only from the default branch, main, so this runs once the workflow reaches main.
+  schedule:
+    - cron: "41 5 * * 1"
 
 permissions:
   contents: read
@@ -39,12 +44,22 @@ jobs:
           corepack prepare pnpm@10.26.1 --activate
           pnpm install --frozen-lockfile
           pnpm --filter @workspace/scripts exec tsx src/valo/merge-security.ts
+      - name: Make the software bill of materials from the lockfile (SEC-007)
+        # After a blocked scan too: the bill lists what the lockfile installs either way.
+        if: ${{ !cancelled() }}
+        run: pnpm --filter @workspace/scripts exec tsx src/valo/sbom.ts
       - name: Retain sanitized reports even on failure
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: redacted-merge-security
           path: generated-artifacts/valo-security/merge-security.json
+      - name: Retain the software bill of materials
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: software-bill-of-materials
+          path: generated-artifacts/valo-security/sbom.cdx.json
   merge-static:
     name: Static security checks with detector canary
     runs-on: ubuntu-latest
@@ -68,6 +83,7 @@ jobs:
           path: generated-artifacts/valo-security/merge-static.json
   foundation:
     name: Foundation typecheck and unit tests
+    if: github.event_name != 'schedule'
     # PostgreSQL 16 recovery tooling is part of the supported CI target.
     # ubuntu-latest advanced to 26.04, which no longer supplies that package.
     runs-on: ubuntu-24.04
@@ -300,6 +316,7 @@ jobs:
           if-no-files-found: ignore
   postgres:
     name: Synthetic PostgreSQL isolation and concurrency
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-24.04
     # The NFR-011 coverage steps run the payment, auth and rules tests a second time and fail an
     # area below 80% branch coverage. The job takes 10 to 13 minutes, of which the Chromium
@@ -547,16 +564,18 @@ jobs:
           if-no-files-found: ignore
   container-images:
     name: Container images build and start safely
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
-      - name: Build the API and web images and prove PDF rendering, refusal without configuration and web headers
+      - name: Build the API and web images and prove PDF rendering, refusal without configuration, web headers and no source control metadata
         run: scripts/ops/check-container-images.sh
   web-performance:
     name: Public pages on an emulated phone (NFR-002 lab check)
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-24.04
     # The same Playwright download as the foundation job; a run has taken 13 minutes.
     timeout-minutes: 30
@@ -618,8 +637,9 @@ jobs:
   evidence:
     name: Requirement evidence from this run
     needs: [foundation, postgres, web-performance]
-    # Runs after a failed job too, so the report shows which cited tests did not pass.
-    if: ${{ !cancelled() }}
+    # Runs after a failed job too, so the report shows which cited tests did not pass, but not on
+    # the weekly schedule, which runs no tests.
+    if: ${{ !cancelled() && github.event_name != 'schedule' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:

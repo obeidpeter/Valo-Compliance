@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Builds the API and web images from the Dockerfile and proves that each one starts
-# safely. The containers get no configuration and no secrets. The API image runs with
-# no network access; the web container is reachable only on the loopback port this
-# check publishes.
+# safely and holds no source control metadata. The containers get no configuration and
+# no secrets. The API image runs with no network access; the web container is reachable
+# only on the loopback port this check publishes.
 #
 #   scripts/ops/check-container-images.sh
 #
@@ -37,6 +37,24 @@ for image in "$api" "$web"; do
     exit 1
   fi
 done
+
+echo "Neither image holds source control metadata (.git, .svn or .hg) anywhere in its files."
+listing=$(mktemp)
+for image in "$api" "$web"; do
+  scratch=$(docker create "$image")
+  docker export "$scratch" | tar -t >"$listing"
+  docker rm "$scratch" >/dev/null
+  # The listing must be the image's: the check cannot pass by reading nothing.
+  if ! grep -qx 'etc/passwd' "$listing"; then
+    echo "Could not list the files of $image" >&2
+    exit 1
+  fi
+  if grep -E -m 5 '(^|/)\.(git|svn|hg)(/|$)' "$listing" >&2; then
+    echo "$image holds source control metadata" >&2
+    exit 1
+  fi
+done
+rm -f "$listing"
 
 echo "The API image renders a PDF with its own Chromium, libraries and fonts."
 docker run --rm --network none "$api" node --input-type=module -e '
