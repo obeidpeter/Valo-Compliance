@@ -30,6 +30,13 @@
       "proves": "An identifier field added to a private operation's body, query string or headers, as the API's own request schemas declare them, fails CI until it has a substitution case, a client-key scope or a recorded reason."
     },
     {
+      "requirement": "SEC-001",
+      "job": "foundation",
+      "file": "scripts/src/valo/architecture-check.test.ts",
+      "test": "HTTP code cannot create, cast or redirect a workspace actor",
+      "proves": "No HTTP code can make, cast or redirect the workspace actor a service acts for; only the server's own resolution of a membership issues one."
+    },
+    {
       "requirement": "IAM-003",
       "job": "postgres",
       "file": "artifacts/api-server/src/platform/workspace-row-security.integration.test.ts",
@@ -76,7 +83,7 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/routes/valo-reflection.integration.test.ts",
       "test": "hostile text sent to every operation in the contract comes back only inside JSON with the security headers, fails no route, and stays text in the database and its searches",
-      "proves": "Against real PostgreSQL and the whole API, every operation in the contract, sent hostile markup and SQL text in its path, query and body, answers in JSON or nothing, with nosniff and no framing, kept from shared caches when private and never with a failure of the server's own; an unknown address and a malformed or oversized body are answered the same way; SQL text comes back byte for byte, searches read %, _ and \\ literally, and a NUL character is refused as a detail not taken."
+      "proves": "Against real PostgreSQL and the whole API, every operation in the contract, sent hostile markup and SQL text in its path, query and body, each query value twice and keys that would reach every object's prototype, answers in JSON or nothing, naming its character set, with nosniff, no framing, a same-origin referrer policy and HSTS for a year, kept from shared caches when private and never with a failure of the server's own, and no request changes the prototype every object inherits; an unknown address and a malformed or oversized body are answered the same way; every read, sent as each kind of caller, changes no table but the counts reads keep; SQL text comes back byte for byte, searches read %, _ and \\ literally, and a NUL character is refused as a detail not taken."
     },
     {
       "requirement": "SEC-003",
@@ -98,6 +105,48 @@
       "file": "scripts/src/valo/architecture-check.test.ts",
       "test": "product code builds no SQL from text but where it is reviewed, and each review counts its texts (SEC-003)",
       "proves": "The raw-sql repository rule fails on sql.raw of anything but a fixed string and on a query whose text is a template with substitutions or a joined string, outside reviewed files whose count of such texts must match their review, and the repository has none."
+    },
+    {
+      "requirement": "SEC-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-site-origin.test.ts",
+      "test": "origin comparison includes scheme, port and exact serialized origin",
+      "proves": "The same-origin check compares a change's origin with the trusted site by scheme, host and port exactly."
+    },
+    {
+      "requirement": "SEC-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-site-origin.test.ts",
+      "test": "trusted site comes only from server configuration; production never falls back to a development hostname",
+      "proves": "The trusted site's origin comes only from the server's settings, and production never falls back to a development hostname."
+    },
+    {
+      "requirement": "SEC-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/platform/request-complexity.test.ts",
+      "test": "deep, broad and high-node-count JSON fails within fixed budgets",
+      "proves": "A body nested too deep, too broad or with too many values is refused within fixed budgets before any schema reads it."
+    },
+    {
+      "requirement": "SEC-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/platform/request-complexity.test.ts",
+      "test": "isolated real API rejects compressed/oversized JSON and remains alive",
+      "proves": "The real API refuses compressed and oversized bodies, answers malformed JSON with a safe 400, and keeps serving."
+    },
+    {
+      "requirement": "SEC-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/tasks/valo-reminder-resend.test.ts",
+      "test": "controlled acceptance preserves one bounded provider key and minimal stable body, not inbox delivery",
+      "proves": "A reminder email's body is the same whatever the task's title, and holds neither the title nor the account's identity, so no text a customer typed reaches the email."
+    },
+    {
+      "requirement": "SEC-003",
+      "job": "foundation",
+      "file": "scripts/src/valo/security-baseline.test.ts",
+      "test": "the linter CI runs refuses the code the security baseline counts on it to refuse",
+      "proves": "The linter CI runs on every merge refuses eval and code built from strings, raw HTML in JSX and script addresses in JSX."
     },
     {
       "requirement": "NFR-011",
@@ -2599,6 +2648,20 @@
       "proves": "With a controlled identity provider, the live session check calls the provider on every request, so a banned account is refused at once, and that refusal also removes the session's cached pass, so the next cached check is refused too."
     },
     {
+      "requirement": "IAM-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/middlewares/clerkProxyMiddleware.test.ts",
+      "test": "the Clerk proxy forwards only what Clerk should see and returns responses the edge accepts",
+      "proves": "The identity provider's frontend calls pass through Valo's own address with only the headers the provider needs, and its answers come back without hop-by-hop headers."
+    },
+    {
+      "requirement": "IAM-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/middlewares/clerkProxyMiddleware.test.ts",
+      "test": "an unreachable Frontend API answers an empty 502 with a length and no detail",
+      "proves": "When the identity provider cannot be reached, its proxy answers an empty 502 that says nothing of the failure."
+    },
+    {
       "requirement": "NFR-005",
       "job": "foundation",
       "file": "artifacts/api-server/src/platform/valo-recovery-effects.test.ts",
@@ -3495,6 +3558,34 @@
       "proves": "With an old and a rotated synthetic webhook signing secret both configured, a payment webhook signed with the rotated secret passes the signature check, while against a single configured secret a webhook whose body changed after signing or whose timestamp is 301 seconds off fails, and a correctly signed one fails when no secret is configured."
     },
     {
+      "requirement": "SEC-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/platform/settings.test.ts",
+      "test": "every variable product code reads is registered and only settings reads process.env",
+      "proves": "Product code reads its configuration, secrets among it, only through the settings registry, which names every variable."
+    },
+    {
+      "requirement": "SEC-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/platform/settings.test.ts",
+      "test": "secrets never carry example values",
+      "proves": "No secret in the settings registry carries an example value that could be used as it is."
+    },
+    {
+      "requirement": "SEC-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-production-storage.test.ts",
+      "test": "production storage is explicit, canonical and separate from every ancestor of development",
+      "proves": "Production's file storage is named explicitly, in canonical form, and apart from every folder development uses."
+    },
+    {
+      "requirement": "SEC-002",
+      "job": "foundation",
+      "file": "scripts/src/valo/security-baseline.test.ts",
+      "test": "no operation in the API contract takes a token, key, secret or password in its address",
+      "proves": "No path or query parameter in the API contract is a token, key, secret or password, so none travels in an address."
+    },
+    {
       "requirement": "SEC-004",
       "job": "foundation",
       "file": "artifacts/api-server/src/lib/valo-render.test.ts",
@@ -3537,6 +3628,55 @@
       "proves": "In PostgreSQL, a rate-limit bucket written directly at the checkout or AI quota limit for a synthetic caller adds one to the operations probe's payment-activity or AI-activity security reading."
     },
     {
+      "requirement": "SEC-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-proxy-boundary.test.ts",
+      "test": "real HTTP walks only explicitly trusted proxies and stops before forged client prefixes",
+      "proves": "Behind the proxies configured as trusted, the API takes a caller's address from the forwarded chain and stops at the first hop it does not trust, so a caller cannot choose the address its limits count."
+    },
+    {
+      "requirement": "SEC-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-proxy-boundary.test.ts",
+      "test": "proxy configuration rejects hop counts, names and universal networks",
+      "proves": "The trusted proxy setting accepts only explicit networks: a hop count, a name or a network that covers every address is refused."
+    },
+    {
+      "requirement": "SEC-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/middlewares/valo-quota.test.ts",
+      "test": "a page render from this machine counts for the visitor's forwarded address, under one shared ceiling",
+      "proves": "A public page rendered on the web server counts against its visitor's own read limit, and all page renders together against one ceiling, so no forwarded address raises what the pages read in all."
+    },
+    {
+      "requirement": "SEC-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/middlewares/valo-quota.test.ts",
+      "test": "a signed-in read counts for the account, whatever address it names",
+      "proves": "A signed-in read counts against the account's limit, whatever address the request names."
+    },
+    {
+      "requirement": "SEC-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-quota.test.ts",
+      "test": "quota subjects are pseudonymised, domain-separated and keyed",
+      "proves": "Each limit counts an address or account only as a keyed hash, apart for each kind of subject, so the counts hold no address or account in the clear."
+    },
+    {
+      "requirement": "SEC-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-quota.test.ts",
+      "test": "quota defaults preserve the requested initial ceilings",
+      "proves": "The limits start at the ceilings SEC-005 names: 60 anonymous and 120 signed-in reads a minute, 5 AI requests, and 10 checkouts and exports a minute a person, with daily account limits."
+    },
+    {
+      "requirement": "SEC-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-quota.test.ts",
+      "test": "missing quota configuration fails rather than silently using memory or an unkeyed IP hash",
+      "proves": "Without its key, or with one shorter than 32 characters, the limits refuse to count rather than fall back to memory or an unkeyed hash."
+    },
+    {
       "requirement": "SEC-006",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/publication/publication-guards.integration.test.ts",
@@ -3558,6 +3698,13 @@
       "proves": "A customer, an administrator without fresh MFA and an administrator granting a role to themselves cannot grant roles, emergency system access is refused the role administration list, a grant whose audit record fails to save is rolled back, and saved role-change records cannot be edited or deleted."
     },
     {
+      "requirement": "SEC-006",
+      "job": "foundation",
+      "file": "scripts/src/valo/architecture-check.test.ts",
+      "test": "only the publisher names the publisher's database connection",
+      "proves": "Only the publisher's own code names the publisher's database connection, so no other code holds that login."
+    },
+    {
       "requirement": "SEC-007",
       "job": "foundation",
       "file": "scripts/src/valo/security-reports.test.ts",
@@ -3577,6 +3724,34 @@
       "file": "scripts/src/valo/merge-static.test.ts",
       "test": "static driver keeps an honest sanitized outcome: finding",
       "proves": "With a stand-in scanner that detects its canary and reports one finding in the repository, the static security check fails with a non-zero exit and records the finding's rule, file, line and severity, while the scanner's message and matched code appear in neither its result file nor its output."
+    },
+    {
+      "requirement": "SEC-007",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/platform/valo-development-runtime.test.ts",
+      "test": "explicit development only; empty markers are absent, every nonempty marker rejects",
+      "proves": "Development-only features run only when the runtime says development and no deployment marker is present."
+    },
+    {
+      "requirement": "SEC-007",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/platform/valo-development-runtime.test.ts",
+      "test": "actual export entries and worker startup reject before database, queue or storage effects",
+      "proves": "Outside development, the export entries and the worker refuse to start before touching the database, the queue or storage."
+    },
+    {
+      "requirement": "SEC-007",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/platform/valo-runtime-activation.test.ts",
+      "test": "production activation cannot be granted by configuration inspection or a development copy",
+      "proves": "Production cannot be switched on by configuration alone or by copying a development setup."
+    },
+    {
+      "requirement": "SEC-007",
+      "job": "foundation",
+      "file": "scripts/src/valo/security-baseline.test.ts",
+      "test": "every OWASP ASVS 5.0.0 Level 1 and 2 requirement is mapped to Valo's control, with its code and the evidence CI runs, or with its gap or reason",
+      "proves": "The security baseline maps each of the standard's 253 Level 1 and 2 requirements, its code exists, its tests are in this register and its CI steps run."
     },
     {
       "requirement": "WEB-002",
