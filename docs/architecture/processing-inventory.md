@@ -86,7 +86,8 @@ Each slice is its own pull request.
 | --- | --- | --- | --- |
 | 1 | **The inventory.** This design, part 1, and its tests against the database schema and the processor review. | PRV-001 | Built |
 | 2 | **The notice.** Part 2: the privacy page from the inventory, with its version, and its browser test. | PRV-001, PRO-002 | Built |
-| 3 | **The notice where data is collected.** Part 3, with a migration for the version each record keeps. | PRV-001, PRO-002 | Not started |
+| 3a | **The notice at the business profile.** Part 3 for the profile, whose versions already keep a notice version. | PRV-001, PRO-002 | Built |
+| 3b | **The notice at sign-up, a support request and the drafting assistant.** Part 3 for the rest, with a migration for the version each record keeps. | PRV-001, PRO-002 | Not started |
 | 4 | **Consents.** Part 4, with a migration for the consent history and its upgrade test. | PRO-002 | Not started |
 | 5 | **Erasure.** Part 5, with a database test. | PRV-003 | Built |
 
@@ -125,6 +126,20 @@ Each slice is its own pull request.
   It now says the files Valo keeps for download are kept at Valo only until that date, and a copy a
   person has saved stays theirs. The customer wording check reads the inventory and the notice from now
   on.
+
+### Slice 3a: the notice at the business profile
+
+- **The version kept.** Each business profile version already kept a notice version, but always the
+  fixed label `development-processing-v1`, which named no words. It now keeps the privacy notice's
+  version in force when the profile was saved.
+- **The notice where the choice is made.** The profile's marketing choice says it is optional, off by
+  default, and that saying no changes nothing else a person can do, and links the privacy notice.
+- **The version in force, not one the browser sends.** The profile screen links the notice rather than
+  showing its words, so the record keeps the version the server holds when it saves. A notice changed
+  between opening the screen and saving would be recorded as the newer one.
+- **Left for slice 3b.** Sign-up, a support request and the drafting assistant's agreement keep no
+  notice version yet; their tables need a column, and so a migration. The contact form's records keep
+  their own fixed label, `development-access-support-1`, which this slice does not change.
 
 ### Slice 5: erasure
 

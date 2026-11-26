@@ -3061,6 +3061,20 @@
       "proves": "On the compiled web server, the privacy page's HTML shows every activity of the processing inventory with its title, purpose, data and retention, the needed ones apart from the optional ones and marketing, the draft notice, the version and the links for download, correction, deletion and help without signing in."
     },
     {
+      "requirement": "PRO-002",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/documents/valo-workspace-documents.integration.test.ts",
+      "test": "profile correction appends history, preserves declined marketing and rejects stale saves",
+      "proves": "On a disposable database, each saved business profile version is kept with its revision and the version of the privacy notice in force when it was saved, a declined marketing choice stays declined, and a stale save is refused."
+    },
+    {
+      "requirement": "PRO-002",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "the business profile's marketing choice is off unless chosen, says saying no changes nothing else, and links the privacy notice",
+      "proves": "On an emulated phone with stand-in answers, the business profile's marketing choice is off, says it is optional and that saying no changes nothing else, and links the privacy notice."
+    },
+    {
       "requirement": "PRV-003",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/privacy/valo-privacy-erasure.integration.test.ts",
