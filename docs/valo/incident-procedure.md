@@ -8,8 +8,8 @@ named people, and no tabletop has been held. It is not legal advice.
 ## When it applies
 
 - **An alert under the "Security/privacy incident" runbook:** `DENIED_ACCESS`, `SIGNATURE_FAILURES`,
-  `ROLE_CHANGES`, `BULK_EXPORTS`, `AI_ACTIVITY`, `GUARD_REFUSALS`, `PRIVILEGED_READING` or
-  `HISTORY_INTEGRITY`, raised or with its probe unavailable. The operations probe writes them to the
+  `SPREAD_REFUSALS`, `LIMITED_CALLERS`, `REFUSED_INPUT`, `ROLE_CHANGES`, `BULK_EXPORTS`, `AI_ACTIVITY`,
+  `GUARD_REFUSALS`, `PRIVILEGED_READING` or `HISTORY_INTEGRITY`, raised or with its probe unavailable. The operations probe writes them to the
   worker's alert file (`artifacts/api-server/generated-artifacts/valo-operations/alerts.json`); run
   `pnpm --filter @workspace/api-server run valo:operations-probe` to read them now.
 - **A report** from a customer, a member of staff or an outside service that someone saw, changed or

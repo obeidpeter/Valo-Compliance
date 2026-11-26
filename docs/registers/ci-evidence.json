@@ -923,7 +923,28 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/lib/valo-security-signals.integration.test.ts",
       "test": "refusals and signature failures are counted by hashed address, outside any workspace scope, for the security alerts",
-      "proves": "Refused requests (401 and 403) and rejected payment webhook signatures are counted per hashed address and minute, including a refusal sent inside a customer's workspace scope, while successful, missing and rate-limited responses are not; the probe reads the counts, a caller at an export, checkout or AI quota limit is read as bulk exports or unusual payment or AI activity, and a failure to count never changes a response."
+      "proves": "Refused requests (401 and 403), refusals by a limit (429), refused input (422 and 400) and rejected payment webhook signatures are counted per hashed address, minute and kind, including a refusal sent inside a customer's workspace scope, while successful and missing responses are not; the probe reads the counts, a caller at an export, checkout or AI quota limit is read as bulk exports or unusual payment or AI activity, and a failure to count never changes a response."
+    },
+    {
+      "requirement": "SEC-005",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-security-signals.integration.test.ts",
+      "test": "refusals spread over many addresses, callers refused by a limit and one address's refused input are read from the last ten minutes of the real table",
+      "proves": "In PostgreSQL, five addresses each refused 15 times add 75 to the reading of every address's refusals while the most refused address reads 15, twelve callers refused by a limit count once each however often they were refused, the refused input of the address that sent the most is read rather than the total, and signals older than ten minutes are not read."
+    },
+    {
+      "requirement": "SEC-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/operations/valo-operations.test.ts",
+      "test": "refusals spread over many addresses, callers refused by a limit and one address's refused input raise their own alerts, past their limits only",
+      "proves": "With stubbed readings, a hundred refusals of every address together, ten callers refused by a limit and twenty refused inputs from one address in ten minutes raise nothing, one more of each raises SPREAD_REFUSALS_DETECTED, LIMITED_CALLERS_DETECTED and REFUSED_INPUT_DETECTED under the security/privacy incident runbook, and a reading that cannot be taken raises its own alert."
+    },
+    {
+      "requirement": "SEC-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/middlewares/valo-security-signals.test.ts",
+      "test": "each refusal is counted as its kind, by the keyed address of the caller, a page render's visitor included",
+      "proves": "Over real HTTP, 401 and 403 are counted as denied access, 429 as a refusal by a limit, and 400, 413, 415 and 422 as refused input, a route's own signal wins, other answers are not counted, and a page the web server renders for a visitor is counted for the visitor's keyed address rather than the web server's."
     },
     {
       "requirement": "SEC-008",
