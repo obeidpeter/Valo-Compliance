@@ -108,30 +108,42 @@ record describes. That is deliberate: someone has to read the new file and write
 
 ## What happens next, and what is not built
 
-- **The two reviews: refused.** The reviewed route's publisher releases no guide: a guide that
-  says what the law requires is released only on the owner's sign-off in the staff library
-  (decision 0018), after the owner's own check of its sources, and the publisher holds every guide
-  it is given with `REGULATORY_ARTICLE_AWAITING_OWNER_SOURCE_CHECK`. Paid reviews of a guide would
-  therefore release nothing, so none is approved or admitted, since 24 November 2026:
+- **The two reviews: only after the owner's check of the guide's sources.** A guide that says what
+  the law requires is released only after the development owner's own check of its official sources
+  (decision 0018). On the reviewed route that check is of one prepared candidate
+  ([the reviewed route](../architecture/reviewed-route.md), part 2). The owner confirms the
+  candidate by its checksum. Each capture the candidate is bound to must still be its watch's current
+  one, checked within the last day, and hold the guide's passages and quotations. The database keeps
+  the check, refuses it from anyone but the development owner, and never changes or removes it. A
+  check counts for a day.
 
-  1. `tsx src/scripts/finite-allocation-approval.ts prepare <package.json> --guide-pairs` still
-     writes a package of the guides' kind, for reading. The package says that its reviews are not
-     approved or admitted, and `approve` refuses it with `GUIDE_REVIEWS_RELEASE_NOTHING`.
+  1. `tsx src/scripts/finite-allocation-approval.ts prepare <package.json> --guide-pairs` writes a
+     package of the guides' kind. The owner approves it as any package, with `approve`.
   2. `tsx src/scripts/finite-inference-run.ts --prepare <package id> --candidate=<artifact id>:<sha256>`
-     still plans the pair for a prepared guide, and calls no model. Admitting the pair is refused
-     under every package: a guide package with `GUIDE_REVIEWS_RELEASE_NOTHING`, any other with
-     `PACKAGE_EXECUTABLE_PREPARER_UNAVAILABLE` or `WORK_OUTSIDE_PACKAGE`.
+     plans the pair for a prepared guide, and calls no model. Admitting the pair, and sending each of
+     its reviews, is refused with `OWNER_SOURCE_CHECK_REQUIRED` until the owner has checked that
+     candidate's sources within the last day. A pair admitted under another kind of package is refused
+     with `PACKAGE_EXECUTABLE_PREPARER_UNAVAILABLE` or `WORK_OUTSIDE_PACKAGE`.
+  3. `publish-reviewed-pair.ts` saves and releases a guide that passes every gate only on such a
+     check. Without one it stops with `OWNER_SOURCE_CHECK_REQUIRED` and saves nothing: the owner checks
+     again, at no cost, and the command is run again. A guide that fails a gate is saved and held. The
+     publisher and the database ask for the check again at release.
 
-  A test shows this for a guide, in a disposable copy of the database with made-up approvals:
-  the guide is prepared from a stored capture and its pair planned. Its approval is refused, and
-  nothing is recorded, sent, reserved or saved. Its pair is also refused while no package is
-  approved, and refused under an approved package of template reviews. A unit test shows the
-  publisher holding a sourced guide that passes every other check. Before 24 November 2026 the pair
-  was admitted under an approved package of guide reviews, and the test ran both reviews through
-  the real dispatcher with a stand-in for the model before the publisher held the guide.
+  The owner will make the check in Staff → System → **Guides on the reviewed route**, the reviewed
+  route's slice 2b. Until that panel is built, nothing records a real check, so no guide's reviews are
+  admitted. The two migrations are not applied to the Replit development database
+  ([how to apply them](migration-reviewed-guide-checks.md)).
 
-  The route can take a guide again only once it carries the owner's source check, the step
-  decision 0018 requires; the finishing plan's phase 3 builds what the reviewed route still lacks.
+  A test shows the route for GUD-02, in a disposable copy of the database with made-up approvals and
+  a stand-in for the model. The guide is prepared from a stored capture and its pair planned. Before
+  the owner's check nothing admits its pair. A check by anyone else, a check of other words, and a
+  check while the Act's capture is stale are refused and record nothing. With the owner's check, the
+  pair is refused without an approved package and under an approved package of template reviews, and
+  is admitted under an approved package of guide reviews. A day after the check its reviews are not
+  sent and the guide is not saved. On a current check, both reviews run through the real dispatcher,
+  and the real publisher releases the guide, bound to the captures the owner checked. The reviews in
+  the test are controlled fixtures, not reviews.
+
   One command line has been run for a guide, as a process in a test: the preparing command, against
   a database that holds no watch on the guide's address. It stops with `GUIDE_HAS_NO_BOUND_SOURCE`
   and keeps nothing, and it refuses a guide with no claim map and a call without the terms file.
