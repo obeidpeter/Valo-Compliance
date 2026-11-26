@@ -736,6 +736,13 @@
       "when": 1795703160362,
       "tag": "20261126142600_security_signal_limits_and_input",
       "breakpoints": true
+    },
+    {
+      "idx": 105,
+      "version": "7",
+      "when": 1795706069751,
+      "tag": "20261126151429_drafter_login",
+      "breakpoints": true
     }
   ]
 }

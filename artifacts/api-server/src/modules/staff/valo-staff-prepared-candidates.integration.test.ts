@@ -11,6 +11,7 @@ import {
   valoStaffAssignments,
 } from "@workspace/db";
 import { preparedCandidateState, staffOperations } from "./valo-staff-operations";
+import { draftSynthetic } from "../../test-support/drafted-content";
 
 // A template candidate awaiting its reviews is a private artifact (decision 0014), so the
 // staff Content area lists it from its own record. Every row here is synthetic.
@@ -39,18 +40,21 @@ test(
         policy: { synthetic: true },
         authority: { synthetic: true },
       });
+      // Candidates and their records are added as drafting adds them, on its own connection.
       const version = async (id: string, templateId: string, status: "candidate" | "held") => {
-        await db.insert(valoContentVersions).values({
-          id,
-          templateId,
-          version: 1,
-          slug: templateId.toLowerCase(),
-          policyId,
-          candidateHash: hex("1"),
-          bundle: { synthetic: true },
-          attestations: { synthetic: true },
-          reviewBy: new Date(now + 30 * day),
-        });
+        await draftSynthetic((tx) =>
+          tx.insert(valoContentVersions).values({
+            id,
+            templateId,
+            version: 1,
+            slug: templateId.toLowerCase(),
+            policyId,
+            candidateHash: hex("1"),
+            bundle: { synthetic: true },
+            attestations: { synthetic: true },
+            reviewBy: new Date(now + 30 * day),
+          }),
+        );
         if (status === "held")
           await db.update(valoContentVersions).set({ status }).where(eq(valoContentVersions.id, id));
       };
@@ -75,7 +79,7 @@ test(
       ];
       await version(savedId, template(2), "held");
       await version(randomUUID(), template(4), "candidate");
-      await db.insert(valoPreparedCandidates).values(rows);
+      await draftSynthetic((tx) => tx.insert(valoPreparedCandidates).values(rows));
 
       const actor = { identityId: staff, recentMfa: true, verifiedAt: Date.now() };
       const result = await staffOperations(actor, "content");

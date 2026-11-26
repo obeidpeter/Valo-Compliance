@@ -198,9 +198,22 @@ test(
         );
       await copyDatabaseFunctions(scoped, schema, INFERENCE_LEDGER_FUNCTIONS);
       // The fixture schema's copied tables carry no triggers, and the application is pointed at
-      // them through this one pool: the release runs on it too, not on the real publisher login.
+      // them through this one pool: drafting and the release run on it too, not on the real drafting
+      // and publisher logins. The check that drafting can log in finds drafting on this schema.
       t.mock.module("@workspace/db", {
-        namedExports: { ...database, db: drizzle(scoped), pool: scoped, publisherDb: () => drizzle(scoped) },
+        namedExports: {
+          ...database,
+          db: drizzle(scoped),
+          pool: scoped,
+          drafterDb: () => drizzle(scoped),
+          publisherDb: () => drizzle(scoped),
+        },
+      });
+      t.mock.module(new URL("../modules/publication/drafting-login.ts", import.meta.url).href, {
+        namedExports: {
+          assertDrafterCanLogIn: async () =>
+            assert.equal((await scoped.query("SELECT current_schema() AS name")).rows[0].name, schema),
+        },
       });
       t.mock.module(new URL("../modules/publication/publication-artifacts.ts", import.meta.url).href, {
         namedExports: { getPublicationArtifact: get, putPublicationArtifact: put },

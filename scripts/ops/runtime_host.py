@@ -46,11 +46,21 @@ def runtime_configuration(path, env):
     return config
 
 
-def process_environment(env):
+# A service login's connection goes only to the process that uses it (docs/architecture/service-logins.md):
+# drafting's to the worker, whose preparation job drafts, and the publisher's to no serving process, since
+# only an operator's command publishes. The passwords that enable the logins belong to no serving process.
+SERVICE_LOGIN_CONNECTIONS = {'VALO_DRAFTER_DATABASE_URL': ('worker',), 'VALO_PUBLISHER_DATABASE_URL': ()}
+SERVICE_LOGIN_PASSWORDS = {'VALO_DRAFTER_LOGIN_PASSWORD', 'VALO_PUBLISHER_LOGIN_PASSWORD'}
+
+
+def process_environment(env, name=None):
+    """The environment one serving process starts with: `name` is 'api' or 'worker', or None for a
+    process that serves neither, such as the release check, which gets no service login's connection."""
     # Backup credentials and unsafe process startup hooks do not belong to serving processes.
     forbidden = {'VALO_RESTIC_PASSWORD', 'VALO_BACKUP_MONITOR_URL', 'NODE_OPTIONS', 'NODE_PATH', 'PYTHONPATH',
-                 'PYTHONSTARTUP', 'LD_PRELOAD', 'BASH_ENV', 'ENV'}
-    return {k: v for k, v in env.items() if k not in forbidden and not k.startswith(('AWS_', 'RESTIC_'))}
+                 'PYTHONSTARTUP', 'LD_PRELOAD', 'BASH_ENV', 'ENV', *SERVICE_LOGIN_PASSWORDS}
+    return {k: v for k, v in env.items() if k not in forbidden and not k.startswith(('AWS_', 'RESTIC_'))
+            and name in SERVICE_LOGIN_CONNECTIONS.get(k, (name,))}
 
 
 def production_gate(config, env):
@@ -123,7 +133,8 @@ def stop_group(child, grace=STOP_GRACE_SECONDS):
     raise RuntimeError('HOST_CHILD_EXIT_UNCONFIRMED')
 
 
-def supervise(commands, cwd, env, state, stopped, grace=STOP_GRACE_SECONDS, restart_delay=5, poll=0.2):
+def supervise(commands, cwd, env, state, stopped, grace=STOP_GRACE_SECONDS, restart_delay=5, poll=0.2,
+              environments=None):
     children, history, logs, identities = {}, {name: deque() for name in commands}, {}, {}
     clean = True
     def start(name):
@@ -131,7 +142,7 @@ def supervise(commands, cwd, env, state, stopped, grace=STOP_GRACE_SECONDS, rest
         require(not log.is_symlink(), 'HOST_LOG_LINK_FORBIDDEN')
         logs[name] = log.open('ab')
         guarded = [sys.executable, str(Path(__file__).with_name('parent_guard.py')), str(os.getpid()), *commands[name]]
-        children[name] = subprocess.Popen(guarded, cwd=cwd, env=env, stdin=subprocess.DEVNULL,
+        children[name] = subprocess.Popen(guarded, cwd=cwd, env=(environments or {}).get(name, env), stdin=subprocess.DEVNULL,
                                            stdout=logs[name], stderr=logs[name], start_new_session=True, close_fds=True)
         identity = process_identity(children[name].pid)
         require(identity is not None and identity['group'] == identity['pid'], 'HOST_PROCESS_IDENTITY_UNCONFIRMED')
@@ -181,7 +192,8 @@ def run(path, env, stopped):
         for name in ('index.mjs', 'export-supervisor.mjs', 'export-worker.mjs'):
             require((dist / name).is_file() and not (dist / name).is_symlink(), 'BUILT_RUNTIME_REQUIRED')
         commands = {'api': ['node', str(dist / 'index.mjs')], 'worker': ['node', str(dist / 'export-supervisor.mjs')]}
-        supervise(commands, dist.parent, child_env, state, stopped)
+        supervise(commands, dist.parent, child_env, state, stopped,
+                  environments={name: process_environment(env, name) for name in commands})
 
 
 if __name__ == '__main__':

@@ -363,6 +363,13 @@ jobs:
         run: |
           url=$(node lib/db/scripts/publisher-login.mjs --print-url)
           echo "VALO_PUBLISHER_DATABASE_URL=$url" >> "$GITHUB_ENV"
+      - name: Let drafting connect as the drafting login
+        env:
+          # Ephemeral synthetic CI service only; not a production secret.
+          VALO_DRAFTER_LOGIN_PASSWORD: synthetic_ci_only_drafter_login
+        run: |
+          url=$(node lib/db/scripts/drafter-login.mjs --print-url)
+          echo "VALO_DRAFTER_DATABASE_URL=$url" >> "$GITHUB_ENV"
       - name: Record pooled connections taken inside transactions in every later step
         run: |
           echo "VALO_NESTED_PRELOAD=file://$PWD/artifacts/api-server/src/test-support/nested-connection-preload.mjs" >> "$GITHUB_ENV"

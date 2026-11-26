@@ -172,6 +172,16 @@ try {
   customerUrl.username = "valo_workspace_login";
   customerUrl.password = loginPassword;
   env.VALO_CUSTOMER_DATABASE_URL = customerUrl.toString();
+  // Drafting connects as its own login, as in database CI: the database adds content only from it
+  // (docs/architecture/service-logins.md). Its password too is random, used once and never logged.
+  const drafterPassword = randomBytes(18).toString("base64url"),
+    drafterUrl = new URL(env.DATABASE_URL);
+  env.VALO_DRAFTER_LOGIN_PASSWORD = drafterPassword;
+  await command("drafter-login", "node", ["lib/db/scripts/drafter-login.mjs"]);
+  delete env.VALO_DRAFTER_LOGIN_PASSWORD;
+  drafterUrl.username = "valo_drafter_login";
+  drafterUrl.password = drafterPassword;
+  env.VALO_DRAFTER_DATABASE_URL = drafterUrl.toString();
   env.VALO_DEV_QUEUE_MIGRATION = "reviewed-synthetic-development";
   await command("queue-migration", "pnpm", [
     "--filter",

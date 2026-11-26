@@ -15,6 +15,7 @@ import ts from "typescript";
  * - workspace-actor: see workspaceActorViolations.
  * - inference-bindings: see inferenceBindingViolations.
  * - publisher-connection: see publisherConnectionViolations.
+ * - drafter-connection: see drafterConnectionViolations.
  * - module-boundary: see moduleBoundaryViolations.
  * - public-server: see publicServerViolations.
  * - web-formatting: see webFormattingViolations.
@@ -348,6 +349,47 @@ export function publisherConnectionViolations(path: string, text: string): strin
 export function publisherConnectionReport(root = repositoryRoot): string[] {
   return sourceFiles(join(root, "artifacts/api-server/src"), isProductSource).flatMap((file) =>
     publisherConnectionViolations(posixRelative(root, file), readFileSync(file, "utf8")),
+  );
+}
+
+/**
+ * The files that may name drafting's own database connection: the three drafting paths
+ * (docs/architecture/service-logins.md, part 1), and the check that drafting can log in.
+ */
+export const DRAFTER_CONNECTION_ENTRIES = [
+  "artifacts/api-server/src/modules/ai-lanes/inference-reviewed-publication.ts",
+  "artifacts/api-server/src/modules/editorial/guidance-preparation.ts",
+  "artifacts/api-server/src/modules/editorial/operational-preparation.ts",
+  "artifacts/api-server/src/modules/publication/drafting-login.ts",
+];
+
+/**
+ * drafter-connection (docs/architecture/service-logins.md, part 1; SEC-006): the database adds a content
+ * version or a prepared candidate only in a session that logged in as the drafting login. `drafterDb`
+ * and `drafterLogin` open such a session, so they may be named only by the drafting paths and the check
+ * that drafting can log in. Any other code that reached for them could add content past the preparers'
+ * checks. Tests and their fixtures may name them, to stand in for them, to add synthetic content or to
+ * check the boundary.
+ */
+export function drafterConnectionViolations(path: string, text: string): string[] {
+  if (!/\.tsx?$/.test(path) || /\.test\.tsx?$/.test(path) || !/\bdrafter(?:Db|Login)\b/.test(text)) return [];
+  if (DRAFTER_CONNECTION_ENTRIES.includes(path)) return [];
+  const source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const violations: string[] = [];
+  const visit = (node: ts.Node) => {
+    if (ts.isIdentifier(node) && (node.text === "drafterDb" || node.text === "drafterLogin"))
+      violations.push(
+        `${path}:${lineOf(source, node.getStart(source))} drafter-connection only the drafting paths may use drafting's database connection`,
+      );
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  return violations;
+}
+
+export function drafterConnectionReport(root = repositoryRoot): string[] {
+  return sourceFiles(join(root, "artifacts/api-server/src"), isProductSource).flatMap((file) =>
+    drafterConnectionViolations(posixRelative(root, file), readFileSync(file, "utf8")),
   );
 }
 
@@ -871,6 +913,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1
     ...workspaceActorReport(),
     ...inferenceBindingReport(),
     ...publisherConnectionReport(),
+    ...drafterConnectionReport(),
     ...moduleBoundaryViolations(),
     ...publicServerViolations(),
     ...webFormattingReport(),

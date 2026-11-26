@@ -47,25 +47,39 @@ test("actual preparation and prepared-candidate readiness bind another form with
     publishCalls = 0,
     holdCalls = 0,
     publisherChecks = 0;
-  const database = {
-    select: () => ({
-      from: (table: unknown) => ({
-        where: () => {
-          const rows = table === contentTable ? saved : savedPolicies;
-          return Object.assign(Promise.resolve(rows), { limit: async () => rows });
+  // Content is added only on drafting's own connection (docs/architecture/service-logins.md). Each
+  // candidate or prepared candidate the stand-ins take records the connection that added it.
+  const addedOn: string[] = [];
+  let draftingAvailable = true;
+  const connection = (name: "application" | "drafting") => {
+    const conn = {
+      select: () => ({
+        from: (table: unknown) => ({
+          where: () => {
+            const rows = table === contentTable ? saved : savedPolicies;
+            return Object.assign(Promise.resolve(rows), { limit: async () => rows });
+          },
+        }),
+      }),
+      insert: (table: unknown) => ({
+        values: (row: any) => {
+          if (table === preparedTable || table === contentTable) addedOn.push(name);
+          if (table === preparedTable) preparedRows.push(row);
+          else (table === contentTable ? saved : savedPolicies).push({ ...row, status: "draft" });
+          return { onConflictDoNothing: async () => undefined };
         },
       }),
-    }),
-    insert: (table: unknown) => ({
-      values: (row: any) => {
-        if (table === preparedTable) preparedRows.push(row);
-        else (table === contentTable ? saved : savedPolicies).push({ ...row, status: "draft" });
-        return { onConflictDoNothing: async () => undefined };
-      },
-    }),
-    transaction: async (fn: (tx: unknown) => Promise<unknown>) =>
-      fn({ ...database, execute: async () => ({ rows: [] }) }),
+      transaction: async (fn: (tx: unknown) => Promise<unknown>) =>
+        fn({ ...conn, execute: async () => ({ rows: [] }) }),
+      // The login the connection logged in as, which the check that drafting can log in reads.
+      execute: async () => ({
+        rows: [{ login: name === "drafting" ? "valo_drafter_login" : "synthetic_application_login" }],
+      }),
+    };
+    return conn;
   };
+  const database = connection("application"),
+    drafting = connection("drafting");
   const put = async (bytes: Buffer, extension: ArtifactRef["extension"]): Promise<ArtifactRef> => {
     const ref = { id: randomUUID(), hash: sha256(bytes), extension };
     artifacts.set(ref.id, Buffer.from(bytes));
@@ -99,6 +113,14 @@ test("actual preparation and prepared-candidate readiness bind another form with
   t.mock.module("@workspace/db", {
     namedExports: {
       db: database,
+      drafterDb: () => {
+        if (!draftingAvailable)
+          throw Object.assign(Error("The drafting login is unavailable"), {
+            code: "VALO_DRAFTER_LOGIN_UNAVAILABLE",
+          });
+        return drafting;
+      },
+      DRAFTER_LOGIN_ROLE: "valo_drafter_login",
       valoContentVersions: contentTable,
       valoPublicationPolicies: policyTable,
       valoPreparedCandidates: preparedTable,
@@ -184,6 +206,16 @@ test("actual preparation and prepared-candidate readiness bind another form with
   await writeFile(path, JSON.stringify(snapshot));
   await assert.rejects(() => prepareOperationalCandidateRelease("TPL-13", path), /PREPARER_UNAVAILABLE/);
   assert.equal(saved.length, 0);
+  // Without drafting's own login, a preparation stops before it reads, renders or saves anything.
+  const untouched = () => [saved.length, savedPolicies.length, preparedRows.length, artifacts.size];
+  const before = untouched();
+  draftingAvailable = false;
+  await assert.rejects(
+    () => prepareOperationalCandidateRelease("TPL-12", path),
+    (error: { code?: string }) => error.code === "VALO_DRAFTER_LOGIN_UNAVAILABLE",
+  );
+  draftingAvailable = true;
+  assert.deepEqual(untouched(), before);
   const prepared = await prepareOperationalCandidateRelease("TPL-12", path);
   assert.equal(prepared.providerFailure, "FINITE_REVIEW_NOT_RUN");
   assert.equal(prepared.release.decision, "awaiting_reviews");
@@ -223,6 +255,8 @@ test("actual preparation and prepared-candidate readiness bind another form with
     },
   );
   assert.equal(+preparedRows[0].reviewBy, Date.parse(stored.reviewBy));
+  // The record was added on drafting's own connection, and nothing else added content.
+  assert.deepEqual(addedOn, ["drafting"]);
   const ready = await readOperationalInferenceReadiness(binding);
   assert.equal(ready.candidate.id, "TPL-12");
   assert.equal(ready.candidate.hash, prepared.candidateHash);
@@ -318,6 +352,8 @@ test("actual preparation and prepared-candidate readiness bind another form with
     assert.equal(current.candidate.id, id);
     assert.ok(current.checks.every((c) => c.result === "pass"));
   }
+  // Six prepared candidates, each recorded on drafting's own connection.
+  assert.deepEqual(addedOn, Array(6).fill("drafting"));
   assert.equal(holdCalls, 0);
   assert.equal(reviewCalls, 0);
   assert.equal(authoringCalls, 0);

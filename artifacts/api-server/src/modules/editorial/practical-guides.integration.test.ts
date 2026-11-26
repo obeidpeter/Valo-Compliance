@@ -40,6 +40,7 @@ test(
       namedExports: { putPublicationArtifact: put, getPublicationArtifact: get },
     });
     const { db, pool, valoContentVersions } = await import("@workspace/db");
+    const { asDraftingLogin } = await import("../../test-support/drafted-content");
     const { prepareOperationalCandidateRelease } = await import("./operational-preparation");
     const { readOperationalInferenceReadiness } = await import("../ai-lanes/inference-operational-ready");
     const { saveOperationalReviewPlan } = await import("./operational-review");
@@ -198,24 +199,25 @@ test(
           );
           const check = async (reviews: ArtifactRef[]) =>
             db.transaction(async (tx) => {
-              await tx.execute(sql`SET LOCAL ROLE valo_content_drafter_dev`);
               const attestations: ReleaseAttestations = {
                 ...(current.row.attestations as ReleaseAttestations),
                 reviews,
               };
-              await tx.insert(valoContentVersions).values({
-                id: result.id,
-                templateId: id,
-                version: candidate.version,
-                slug: practicalGuideSlug(id),
-                policyId: reviewed.policy.version,
-                candidateHash: candidate.hash,
-                bundle: reviewed,
-                attestations,
-                status: "candidate",
-                reviewBy: new Date(candidate.reviewBy!),
-              });
-              await tx.execute(sql`RESET ROLE`);
+              // Saved as drafting saves it, inside this transaction, which is always undone.
+              await asDraftingLogin(tx, () =>
+                tx.insert(valoContentVersions).values({
+                  id: result.id,
+                  templateId: id,
+                  version: candidate.version,
+                  slug: practicalGuideSlug(id),
+                  policyId: reviewed.policy.version,
+                  candidateHash: candidate.hash,
+                  bundle: reviewed,
+                  attestations,
+                  status: "candidate",
+                  reviewBy: new Date(candidate.reviewBy!),
+                }),
+              );
               const { row } = await validateOperationalVersionInTransaction(tx, result.id);
               assert.equal(await currentOperationalPermission(row), true);
               const resource = projectReleasedResource(row);

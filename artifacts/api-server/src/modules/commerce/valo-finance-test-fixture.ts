@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { db, valoContentVersions, valoPublicationPolicies } from "@workspace/db";
 import { setting } from "../../platform/settings";
 import { singleRow } from "../../platform/rows";
+import { draftSynthetic } from "../../test-support/drafted-content";
 export async function financeHeldFixture() {
   const [existing] = await db
     .select()
@@ -24,21 +25,24 @@ export async function financeHeldFixture() {
     policy,
     authority: { syntheticOnly: true, ownerApprovalClaimed: false },
   });
+  // Added as drafting adds a candidate, on its own connection: the database takes one from no other.
   const row = singleRow(
-    await db
-      .insert(valoContentVersions)
-      .values({
-        id: randomUUID(),
-        templateId: `CONTROLLED-FINANCE-${token}`,
-        version: 1,
-        slug: `controlled-finance-${token}`,
-        policyId,
-        candidateHash: hash(bundle),
-        bundle,
-        attestations: { checks: [] },
-        reviewBy: new Date(0),
-      })
-      .returning(),
+    await draftSynthetic((tx) =>
+      tx
+        .insert(valoContentVersions)
+        .values({
+          id: randomUUID(),
+          templateId: `CONTROLLED-FINANCE-${token}`,
+          version: 1,
+          slug: `controlled-finance-${token}`,
+          policyId,
+          candidateHash: hash(bundle),
+          bundle,
+          attestations: { checks: [] },
+          reviewBy: new Date(0),
+        })
+        .returning(),
+    ),
   );
   await db
     .update(valoContentVersions)

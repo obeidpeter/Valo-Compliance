@@ -79,7 +79,7 @@ export async function publishReviewedOperationalCandidate(input: {
   assertDevelopmentRuntime();
   if (!/^[-a-zA-Z0-9_:]{1,160}$/.test(input.batchId) || input.reviews.length !== 2)
     throw Error("REVIEWED_PAIR_ARGUMENTS_INVALID");
-  const { db, valoContentVersions } = await import("@workspace/db");
+  const { db, drafterDb, valoContentVersions } = await import("@workspace/db");
   const [batch] = (
     await db.execute(
       sql`select manifest, manifest_hash, results from valo_inference_batches where id=${input.batchId}`,
@@ -222,7 +222,9 @@ export async function publishReviewedOperationalCandidate(input: {
   };
   const eligibility = evaluateOperationalRelease(bundle);
   await assertGuideCheckedBeforeRelease(db, versionId, bundle, attestations, eligibility);
-  await db.transaction(async (tx) => {
+  // Saved on drafting's own connection, as the drafter role: the database takes a version from no other.
+  // Nothing has been saved before this, so a drafting login that is missing stops the command here.
+  await drafterDb().transaction(async (tx) => {
     await tx.execute(sql`SET LOCAL ROLE valo_content_drafter_dev`);
     await tx.insert(valoContentVersions).values({
       id: versionId,

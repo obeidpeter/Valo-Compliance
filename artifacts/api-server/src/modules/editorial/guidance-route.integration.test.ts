@@ -84,6 +84,7 @@ test(
     });
 
     const { db } = await import("@workspace/db");
+    const { asDraftingLogin } = await import("../../test-support/drafted-content");
     const { prepareGuideCandidateRelease, guideSlug } = await import("./guidance-preparation");
     const { operationalReviewRequests } = await import("./operational-review");
     const { readOperationalInferenceReadiness } = await import("../ai-lanes/inference-operational-ready");
@@ -422,12 +423,13 @@ test(
       const outcome = await db
         .transaction(async (tx) => {
           await storeCaptures(tx, options);
-          await tx.execute(sql`SET LOCAL ROLE valo_content_drafter_dev`);
-          await tx.execute(
-            sql`insert into valo_content_versions(id,template_id,version,slug,policy_id,candidate_hash,bundle,attestations,status,review_by)
+          // Saved as drafting saves it, inside this transaction, which is always undone.
+          await asDraftingLogin(tx, () =>
+            tx.execute(
+              sql`insert into valo_content_versions(id,template_id,version,slug,policy_id,candidate_hash,bundle,attestations,status,review_by)
               values(${versionId}::uuid,${guide},${reviewed.candidate.version},${kept.slug},${policy.version},${reviewed.candidate.hash},${JSON.stringify(reviewed)}::jsonb,${JSON.stringify(options.attestations ?? attested)}::jsonb,'candidate',${new Date(reviewed.candidate.reviewBy!)})`,
+            ),
           );
-          await tx.execute(sql`RESET ROLE`);
           passed = await validateOperationalVersionInTransaction(tx, versionId);
           throw Error(rolledBack);
         })

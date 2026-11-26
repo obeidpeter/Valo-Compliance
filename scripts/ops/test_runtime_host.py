@@ -19,6 +19,16 @@ class RuntimeConfigTest(unittest.TestCase):
                'NODE_OPTIONS': '--require unsafe', 'LD_PRELOAD': 'unsafe'}
         self.assertEqual(host.process_environment(env), {'NODE_ENV': 'production', 'DATABASE_URL': 'synthetic-db'})
 
+    def test_each_service_login_reaches_only_the_process_that_uses_it(self):
+        env = {'NODE_ENV': 'production', 'DATABASE_URL': 'synthetic-db',
+               'VALO_DRAFTER_DATABASE_URL': 'synthetic-drafting', 'VALO_PUBLISHER_DATABASE_URL': 'synthetic-publishing',
+               'VALO_DRAFTER_LOGIN_PASSWORD': 'private', 'VALO_PUBLISHER_LOGIN_PASSWORD': 'private'}
+        serving = {'NODE_ENV': 'production', 'DATABASE_URL': 'synthetic-db'}
+        # Drafting's connection reaches the worker alone; the publisher's, and either login's password, neither.
+        self.assertEqual(host.process_environment(env, 'worker'), {**serving, 'VALO_DRAFTER_DATABASE_URL': 'synthetic-drafting'})
+        self.assertEqual(host.process_environment(env, 'api'), serving)
+        self.assertEqual(host.process_environment(env), serving)
+
     def test_production_gate_never_uses_configuration_only_or_overrides_mode(self):
         with tempfile.TemporaryDirectory() as d:
             root=Path(d); gate=root/'artifacts/api-server/dist/production-preflight.mjs';gate.parent.mkdir(parents=True);gate.write_text('')
@@ -73,6 +83,28 @@ class ProcessSupervisionTest(unittest.TestCase):
                 until=time.monotonic()+8
                 while time.monotonic()<until and (not marker.exists() or marker.read_text()!='2'):time.sleep(.02)
                 self.assertEqual(marker.read_text(),'2')
+            finally:stop.set();thread.join(5)
+            self.assertFalse(thread.is_alive());self.assertEqual(failures,[])
+
+    def test_real_children_start_with_their_own_environments(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)
+            script=root/'child.py'
+            script.write_text("import os,pathlib,signal,time,sys\npathlib.Path(sys.argv[1]).write_text(os.environ.get('VALO_DRAFTER_DATABASE_URL','absent'))\nsignal.signal(signal.SIGTERM,lambda *_:sys.exit(0))\nwhile True:time.sleep(.01)\n")
+            env={**os.environ,'VALO_DRAFTER_DATABASE_URL':'synthetic-drafting'}
+            seen={name:root/(name+'.seen') for name in ('api','worker')}
+            commands={name:[sys.executable,str(script),str(path)] for name,path in seen.items()}
+            stop=threading.Event(); failures=[]
+            def run():
+                try:host.supervise(commands,root,env,root,stop,grace=2,restart_delay=.01,poll=.01,
+                                   environments={name:host.process_environment(env,name) for name in commands})
+                except Exception as error:failures.append(error)
+            thread=threading.Thread(target=run);thread.start()
+            try:
+                until=time.monotonic()+8
+                while time.monotonic()<until and not all(p.exists() and p.read_text() for p in seen.values()):time.sleep(.02)
+                self.assertEqual(seen['worker'].read_text(),'synthetic-drafting')
+                self.assertEqual(seen['api'].read_text(),'absent')
             finally:stop.set();thread.join(5)
             self.assertFalse(thread.is_alive());self.assertEqual(failures,[])
 

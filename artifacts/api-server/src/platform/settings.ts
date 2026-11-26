@@ -366,6 +366,18 @@ export const OTHER_PACKAGE_SETTINGS: Record<string, SettingDefinition> = {
       "Password lib/db/scripts/publisher-login.mjs gives valo_publisher_login when an operator enables it; at least 24 printable ASCII characters. The application never reads it.",
     secret: true,
   },
+  VALO_DRAFTER_DATABASE_URL: {
+    group: "Database",
+    description:
+      "The same database, logged in as valo_drafter_login, for adding a content version or a prepared candidate (read by lib/db; lib/db/scripts/drafter-login.mjs prints it). The database adds content only in a session that logged in as this login, so preparing a candidate fails while it is unset. Give it only to the commands that prepare and to the worker, never to the API.",
+    secret: true,
+  },
+  VALO_DRAFTER_LOGIN_PASSWORD: {
+    group: "Database",
+    description:
+      "Password lib/db/scripts/drafter-login.mjs gives valo_drafter_login when an operator enables it; at least 24 printable ASCII characters. The application never reads it.",
+    secret: true,
+  },
 };
 
 export function renderEnvExample(): string {
