@@ -2853,9 +2853,10 @@
       "bears_on": [
         "SEC-002"
       ],
-      "control": "Secrets come only from the server's secret store, through the settings registry; no secret has an example value, and every merge scans the source for secrets.",
+      "control": "Secrets come only from the server's secret store, through the settings registry; no secret has an example value, every merge scans the source for secrets, and after each build of the web app a check finds no secret setting's value and no secret's shape in what the browser is sent.",
       "code": [
-        "artifacts/api-server/src/platform/settings.ts"
+        "artifacts/api-server/src/platform/settings.ts",
+        "artifacts/api-server/src/lib/bundle-secrets.ts"
       ],
       "tests": [
         {
@@ -2869,9 +2870,23 @@
         {
           "file": "scripts/src/valo/security-reports.test.ts",
           "test": "secret detector strips matches, secrets and source lines"
+        },
+        {
+          "file": "artifacts/api-server/src/lib/bundle-secrets.test.ts",
+          "test": "no file the browser is sent may hold a secret setting's value or a secret's shape (SEC-002, OPS-004)"
         }
       ],
-      "gap": "Production's secret store is the host's, and not chosen yet."
+      "gap": "Production's secret store is the host's, and not chosen yet.",
+      "checks": [
+        {
+          "job": "foundation",
+          "step": "Check that no file the browser is sent holds a secret (SEC-002, OPS-004)"
+        },
+        {
+          "job": "postgres",
+          "step": "Check that no file the browser is sent holds a secret this job holds (SEC-002, OPS-004)"
+        }
+      ]
     },
     {
       "id": "v5.0.0-13.3.2",

@@ -245,6 +245,8 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-refund-provider
       - name: Build the Next.js application
         run: pnpm --filter @workspace/valo run build
+      - name: Check that no file the browser is sent holds a secret (SEC-002, OPS-004)
+        run: pnpm --filter @workspace/api-server exec tsx src/scripts/bundle-secrets.ts ../valo
       - name: Prove compiled frontend enforces unique nonces and blocks injected scripts
         run: pnpm --filter @workspace/api-server exec tsx src/scripts/frontend-security-browser.ts
       - name: Retain compiled frontend security evidence
@@ -473,6 +475,8 @@ jobs:
       # stand-in for the identity library, so the provider's script is never asked for.
       - name: Build the web app for the rehearsal of a business owner's first tasks
         run: NODE_ENV=production CLERK_PUBLISHABLE_KEY="pk_test_$(printf 'clerk.example.invalid$' | base64 -w0)" pnpm --filter @workspace/valo run build
+      - name: Check that no file the browser is sent holds a secret this job holds (SEC-002, OPS-004)
+        run: pnpm --filter @workspace/api-server exec tsx src/scripts/bundle-secrets.ts ../valo
       - name: Rehearse a business owner's first tasks in a browser against the real API and database
         env:
           VALO_TESTER_TASKS_FILES: ${{ github.workspace }}/generated-artifacts/tester-tasks
