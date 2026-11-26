@@ -20,6 +20,7 @@ import {
   developmentPublicationOnly,
   operationalPolicy,
   putPublicationArtifact,
+  assertDrafterCanLogIn,
   assertPublisherCanLogIn,
   publishOperationalVersion,
   recordActualPublicationHold,
@@ -59,11 +60,13 @@ async function prepareCandidate(templateId: string, terms: TermsCopy) {
   return prepareRelease(templateId, terms, false);
 }
 async function prepareRelease(templateId: string, terms: TermsCopy, requestReviews: boolean) {
-  const { db, valoContentVersions, valoPublicationPolicies, valoPreparedCandidates } =
+  const { db, drafterDb, valoContentVersions, valoPublicationPolicies, valoPreparedCandidates } =
     await import("@workspace/db");
   developmentPublicationOnly();
-  // The one-step path pays for authoring and reviews and then releases. It finds out now, before
-  // anything is paid for, whether the publisher can log in.
+  // Every path adds a candidate, which only drafting's own login may do. The one-step path also pays
+  // for authoring and reviews and then releases. Each finds out now, before anything is saved or paid
+  // for, whether drafting can log in and, on the one-step path, whether the publisher can.
+  await assertDrafterCanLogIn();
   if (requestReviews) await assertPublisherCanLogIn();
   const snapshot = await terms();
   const useRecordedAuthoring = requestReviews && setting("VALO_OPERATIONAL_AUTHORING") === "recorded";
@@ -397,8 +400,9 @@ async function prepareRelease(templateId: string, terms: TermsCopy, requestRevie
       reviewBy: new Date(content.reviewBy).toISOString(),
       preparedAt: now.toISOString(),
     });
-    // The artifact stays the candidate; this row only lets staff find it in the Content area.
-    await db.transaction(async (tx) => {
+    // The artifact stays the candidate; this row only lets staff find it in the Content area. It is
+    // added on drafting's own connection, as the drafter role: the database takes it from no other.
+    await drafterDb().transaction(async (tx) => {
       await tx.execute(sql`SET LOCAL ROLE valo_content_drafter_dev`);
       await tx.insert(valoPreparedCandidates).values({
         artifactId: candidateArtifact.id,
@@ -428,7 +432,8 @@ async function prepareRelease(templateId: string, terms: TermsCopy, requestRevie
       providerFailure,
     };
   }
-  await db.transaction(async (tx) => {
+  // Added on drafting's own connection, as the drafter role: the database takes a version from no other.
+  await drafterDb().transaction(async (tx) => {
     await tx.execute(sql`SET LOCAL ROLE valo_content_drafter_dev`);
     await tx.insert(valoContentVersions).values({
       id,

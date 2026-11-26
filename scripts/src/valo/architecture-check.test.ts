@@ -22,6 +22,9 @@ import {
   rawSqlViolations,
   publisherConnectionReport,
   publisherConnectionViolations,
+  DRAFTER_CONNECTION_ENTRIES,
+  drafterConnectionReport,
+  drafterConnectionViolations,
   moduleBoundaryViolations,
   publicServerEntries,
   publicServerViolations,
@@ -155,6 +158,43 @@ test("only the publisher names the publisher's database connection", () => {
     [],
   );
   assert.deepEqual(publisherConnectionReport(), [], "the repository keeps the rule");
+});
+
+test("only the drafting paths name drafting's database connection", () => {
+  const use = "const { drafterDb } = await import('@workspace/db');\nawait drafterDb().transaction(run);\n";
+  for (const entry of DRAFTER_CONNECTION_ENTRIES)
+    assert.deepEqual(drafterConnectionViolations(entry, use), []);
+  const elsewhere = drafterConnectionViolations("artifacts/api-server/src/routes/valo.ts", use);
+  assert.equal(elsewhere.length, 2, "the import and the call are each reported");
+  assert.match(
+    elsewhere[0]!,
+    /^artifacts\/api-server\/src\/routes\/valo\.ts:1 drafter-connection only the drafting paths/,
+  );
+  // The publisher may not draft, nor may the module that requests a preparation.
+  for (const path of [
+    "artifacts/api-server/src/modules/publication/publication-publisher.ts",
+    "artifacts/api-server/src/modules/editorial/review-preparation.ts",
+  ])
+    assert.equal(drafterConnectionViolations(path, use).length, 2, path);
+  // The login's own pool is the same connection, and renaming either on the way in does not hide it.
+  assert.equal(
+    drafterConnectionViolations(
+      "artifacts/api-server/src/lib/example.ts",
+      "import { drafterLogin as login, drafterDb as other } from '@workspace/db';\nlogin.pool();\n",
+    ).length,
+    2,
+  );
+  // A test may stand in for the connection, or check the boundary.
+  assert.deepEqual(drafterConnectionViolations("artifacts/api-server/src/lib/example.test.ts", use), []);
+  // The word in a comment or a string is not a use.
+  assert.deepEqual(
+    drafterConnectionViolations(
+      "artifacts/api-server/src/lib/example.ts",
+      "// drafterDb is for drafting\nconst name = 'drafterLogin';\n",
+    ),
+    [],
+  );
+  assert.deepEqual(drafterConnectionReport(), [], "the repository keeps the rule");
 });
 
 test("only the reviewed operator commands provide the dispatcher's binding checks, and only the real ones", () => {

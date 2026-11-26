@@ -43,6 +43,7 @@ test(
       valoEvents,
     } = await import("@workspace/db");
     const { createTicket } = await import(".");
+    const { draftSynthetic } = await import("../../test-support/drafted-content");
     const { resolveWorkspace } = await import("../workspaces");
     const { ValoProblem } = await import("../../platform/valo-problem");
     const { saveAccessSupport, workspaceDataExport } = await import("../privacy/valo-customer-access");
@@ -342,8 +343,10 @@ test(
           sourcePolicy = `${prefix}-unapproved`;
           await db.execute(sql`INSERT INTO valo_publication_policies(id,hash,policy,authority)
         VALUES(${sourcePolicy},${digest(bundle.policy)},${JSON.stringify(bundle.policy)}::jsonb,'{"synthetic":true,"approved":false}')`);
-          await db.execute(sql`INSERT INTO valo_content_versions(id,template_id,version,slug,policy_id,candidate_hash,bundle,attestations,status,review_by)
-        VALUES(${contentId}::uuid,${prefix},1,${contentId},${sourcePolicy},${bundle.candidate.hash},${JSON.stringify(bundle)}::jsonb,'{}','candidate',${new Date(+now + 86400000)})`);
+          await draftSynthetic((tx) =>
+            tx.execute(sql`INSERT INTO valo_content_versions(id,template_id,version,slug,policy_id,candidate_hash,bundle,attestations,status,review_by)
+        VALUES(${contentId}::uuid,${prefix},1,${contentId},${sourcePolicy},${bundle.candidate.hash},${JSON.stringify(bundle)}::jsonb,'{}','candidate',${new Date(+now + 86400000)})`),
+          );
           const queued = await api.actOnSupportCase(
             actor(0),
             id,

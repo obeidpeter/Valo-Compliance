@@ -12,6 +12,7 @@ import {
   type ScopeKey,
 } from "./workspace-scope";
 import { endPublisherPool, publisherPool } from "./publisher-login";
+import { drafterLogin } from "./service-login";
 
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL must be set. Did you forget to provision a database?");
@@ -105,6 +106,7 @@ class ValoPool extends pg.Pool {
   override async end(): Promise<void> {
     await this.#customer?.end();
     await endPublisherPool();
+    await drafterLogin.end();
     return super.end();
   }
 
@@ -195,6 +197,11 @@ export const db = drizzle(pool, { schema });
  * the release of a content version runs here; everything else uses `db`.
  */
 export const publisherDb = () => drizzle(publisherPool(), { schema });
+/**
+ * The database as drafting sees it: connections that logged in as the drafting login. Only adding a
+ * content version or a prepared candidate runs here (docs/architecture/service-logins.md).
+ */
+export const drafterDb = () => drizzle(drafterLogin.pool(), { schema });
 export { schema };
 export {
   runInWorkspaceScope,
@@ -209,5 +216,6 @@ export {
   PUBLISHER_LOGIN_UNAVAILABLE_CODE,
   publisherConnectionString,
 } from "./publisher-login";
+export { DRAFTER_LOGIN_ROLE, DRAFTER_LOGIN_UNAVAILABLE_CODE, drafterLogin } from "./service-login";
 
 export * from "./schema";

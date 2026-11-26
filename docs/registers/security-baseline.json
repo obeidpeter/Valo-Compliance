@@ -2744,10 +2744,11 @@
       "bears_on": [
         "SEC-006"
       ],
-      "control": "Customer requests and the publisher each connect with a login of their own, and every customer transaction carries a credential signed for that transaction alone.",
+      "control": "Customer requests, drafting and the publisher each connect with a login of their own, and every customer transaction carries a credential signed for that transaction alone.",
       "code": [
         "lib/db/src/workspace-scope.ts",
-        "lib/db/scripts/workspace-row-security.mjs"
+        "lib/db/scripts/workspace-row-security.mjs",
+        "lib/db/src/service-login.ts"
       ],
       "tests": [
         {
@@ -2757,6 +2758,10 @@
         {
           "file": "artifacts/api-server/src/modules/publication/publication-guards.integration.test.ts",
           "test": "a content version is published only by a session that logged in as the publisher"
+        },
+        {
+          "file": "artifacts/api-server/src/modules/publication/publication-guards.integration.test.ts",
+          "test": "a content version or a prepared candidate is added only by a session that logged in as the drafting login"
         }
       ],
       "gap": "The logins use passwords from the secret store, not short-lived tokens or certificates."
@@ -2768,7 +2773,7 @@
       "bears_on": [
         "SEC-006"
       ],
-      "control": "Customer requests connect as a login that can only become the workspace scope, whose privileges are exactly those listed, and the publisher's login can only publish.",
+      "control": "Customer requests connect as a login that can only become the workspace scope, whose privileges are exactly those listed; the publisher's login can only publish, and drafting's can only add candidates.",
       "code": [
         "lib/db/scripts/workspace-row-security.mjs#WORKSPACE_SCOPE_PRIVILEGES"
       ],
@@ -2780,6 +2785,10 @@
         {
           "file": "artifacts/api-server/src/modules/publication/publication-guards.integration.test.ts",
           "test": "a content version is published only by a session that logged in as the publisher"
+        },
+        {
+          "file": "artifacts/api-server/src/modules/publication/publication-guards.integration.test.ts",
+          "test": "a content version or a prepared candidate is added only by a session that logged in as the drafting login"
         }
       ]
     },
@@ -2863,9 +2872,11 @@
       "bears_on": [
         "SEC-006"
       ],
-      "control": "Each process holds only the secrets it needs: only the publisher's code names the publisher's connection, which the API and the worker never get.",
+      "control": "Each process holds only the secrets it needs: only the publisher's code names the publisher's connection, and only the drafting paths name drafting's. On a self-hosted machine the supervisor gives drafting's connection to the worker alone, and the publisher's to neither the API nor the worker.",
       "code": [
-        "artifacts/api-server/src/modules/publication"
+        "artifacts/api-server/src/modules/publication",
+        "artifacts/api-server/src/modules/publication/drafting-login.ts",
+        "scripts/ops/runtime_host.py#process_environment"
       ],
       "tests": [
         {
@@ -2875,9 +2886,17 @@
         {
           "file": "scripts/src/valo/architecture-check.test.ts",
           "test": "only the publisher names the publisher's database connection"
+        },
+        {
+          "file": "artifacts/api-server/src/modules/publication/publication-guards.integration.test.ts",
+          "test": "a content version or a prepared candidate is added only by a session that logged in as the drafting login"
+        },
+        {
+          "file": "scripts/src/valo/architecture-check.test.ts",
+          "test": "only the drafting paths name drafting's database connection"
         }
       ],
-      "gap": "Who may read the secret store itself is the host's to set."
+      "gap": "Who may read the secret store itself is the host's to set. On Replit every workflow gets every secret, so there the API's process holds drafting's connection, though no API code uses it."
     },
     {
       "id": "v5.0.0-13.4.1",

@@ -26,6 +26,7 @@ test(
       await import("@workspace/db");
     const { resolveWorkspace } = await import("../workspaces");
     const { financeHeldFixture } = await import("../commerce/valo-finance-test-fixture");
+    const { draftSynthetic } = await import("../../test-support/drafted-content");
     const { requirePurchaseForPricedMaster } = await import("./valo-released-content");
     const {
       commercialSettingChoice,
@@ -136,20 +137,22 @@ test(
         .from(valoContentVersions)
         .where(eq(valoContentVersions.templateId, held.templateId));
       const next = Math.max(...versions.map((row) => row.version)) + 1;
-      const [later] = await db
-        .insert(valoContentVersions)
-        .values({
-          id: randomUUID(),
-          templateId: held.templateId,
-          version: next,
-          slug: held.slug + "-v" + next,
-          policyId: held.policyId,
-          candidateHash: held.candidateHash,
-          bundle: held.bundle,
-          attestations: held.attestations,
-          reviewBy: held.reviewBy,
-        })
-        .returning();
+      const [later] = await draftSynthetic((tx) =>
+        tx
+          .insert(valoContentVersions)
+          .values({
+            id: randomUUID(),
+            templateId: held.templateId,
+            version: next,
+            slug: held.slug + "-v" + next,
+            policyId: held.policyId,
+            candidateHash: held.candidateHash,
+            bundle: held.bundle,
+            attestations: held.attestations,
+            reviewBy: held.reviewBy,
+          })
+          .returning(),
+      );
       const releaseLater = (actor: typeof purchaser) =>
         db.transaction((tx) => requirePurchaseForPricedMaster(tx, actor, later!));
       await releaseLater(purchaser);

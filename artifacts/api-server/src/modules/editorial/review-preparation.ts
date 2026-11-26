@@ -82,10 +82,17 @@ type Outcome =
   | { status: "closed" };
 type Claim = { id: string; attempt: number; templateId: string };
 
-/** A code a preparation stopped with, as the commands print it; anything else is not repeated. */
+/** The code a login's error carries when the worker was not given that login's connection. */
+const LOGIN_UNAVAILABLE = /^VALO_[A-Z]+_LOGIN_UNAVAILABLE$/;
+/**
+ * A code a preparation stopped with, as the commands print it, or the code of a login the worker was
+ * not given, such as drafting's; anything else is not repeated.
+ */
 function failureCode(error: unknown) {
   const message = error instanceof Error ? error.message : "";
-  return /^[A-Z][A-Z0-9_]{2,79}(?::\S{1,200})?$/.test(message) ? message : "PREPARATION_FAILED";
+  if (/^[A-Z][A-Z0-9_]{2,79}(?::\S{1,200})?$/.test(message)) return message;
+  const code = (error as { code?: unknown } | null)?.code;
+  return typeof code === "string" && LOGIN_UNAVAILABLE.test(code) ? code : "PREPARATION_FAILED";
 }
 /** What the gate named, kept short enough for the request's record. */
 const kept = (reasons: readonly string[]) => {

@@ -263,6 +263,17 @@ valo_publisher_login" was attempted on another connection: the database publishe
 for the publisher's login. Nothing else uses the login, so preparing, reviewing, holding,
 withdrawing and reading content are unaffected (see `docs/valo/migration-publisher-login.md`).
 
+`VALO_DRAFTER_LOGIN_UNAVAILABLE` means a candidate could not be prepared or saved because drafting's own
+connection is missing or wrong. Check, in order: the drafter login migration is applied;
+`VALO_DRAFTER_DATABASE_URL` is set for the command that prepares, or for the worker, leads to the same
+host, port and database as `DATABASE_URL`, and logs in as `valo_drafter_login` with its current
+password; and the login can log in (`lib/db/scripts/drafter-login.mjs` enables it). The worker records
+the code on the preparation request it could not carry out; ask for it again once the login works. A
+candidate refused with error code `42501` and "added only by a session that logged in as
+valo_drafter_login" was added on another connection: the database adds content only for drafting's
+login. Holding, withdrawing, publishing and reading content do not use it (see
+`docs/valo/migration-drafter-login.md`).
+
 A customer request that answers the generic 503 with error code `42501` in its log
 ran a command `valo_workspace_scope` does not hold: the code started using a table,
 command or column before a migration granted it (`WORKSPACE_SCOPE_PRIVILEGES` in

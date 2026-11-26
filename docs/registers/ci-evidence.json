@@ -3747,6 +3747,27 @@
       "proves": "Only the publisher's own code names the publisher's database connection, so no other code holds that login."
     },
     {
+      "requirement": "SEC-006",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/publication/publication-guards.integration.test.ts",
+      "test": "a content version or a prepared candidate is added only by a session that logged in as the drafting login",
+      "proves": "The application's own login cannot add a content version or a prepared candidate, as itself or as the drafter role; a session that logged in as the drafting login holds nothing itself, can become only the drafter role, and as it adds both but reads no customer data, publishes nothing and changes no policy; and a drafting connection that is missing, is another login's or leads to another database is refused before it connects."
+    },
+    {
+      "requirement": "SEC-006",
+      "job": "foundation",
+      "file": "scripts/src/valo/architecture-check.test.ts",
+      "test": "only the drafting paths name drafting's database connection",
+      "proves": "Only the three drafting paths and the check that drafting can log in name drafting's database connection, so no other code, the API's and the publisher's included, adds content on it."
+    },
+    {
+      "requirement": "SEC-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/inference-operational-preparation.test.ts",
+      "test": "actual preparation and prepared-candidate readiness bind another form without authoring, review, approval or publication",
+      "proves": "A template's preparation adds each prepared candidate's record on drafting's own connection and nothing on the application's, and without drafting's login it stops before it reads, renders or saves anything."
+    },
+    {
       "requirement": "SEC-007",
       "job": "foundation",
       "file": "scripts/src/valo/security-reports.test.ts",

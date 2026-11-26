@@ -236,6 +236,7 @@ test(
         ["localhost", "127.0.0.1", "[::1]"].includes(new URL(process.env.DATABASE_URL).hostname),
     );
     const { db } = await import("@workspace/db");
+    const { draftSynthetic } = await import("../../test-support/drafted-content");
     const { digest } = await import("@workspace/valo-core");
     const register = await import("./index");
     const controls = await import("../sources/valo-source-controls"),
@@ -277,8 +278,10 @@ test(
       await db.execute(
         sql`insert into valo_publication_policies(id,hash,policy,authority) values(${policyId},${digest(b.policy)},${JSON.stringify(b.policy)}::jsonb,'{"synthetic":true,"approved":false}')`,
       );
-      await db.execute(sql`insert into valo_content_versions(id,template_id,version,slug,policy_id,candidate_hash,bundle,attestations,status,review_by)
-       values(${contentId}::uuid,${prefix},1,${contentId},${policyId},${b.candidate.hash},${JSON.stringify(b)}::jsonb,'{}','candidate',${new Date(+now + 86400000)})`);
+      await draftSynthetic((tx) =>
+        tx.execute(sql`insert into valo_content_versions(id,template_id,version,slug,policy_id,candidate_hash,bundle,attestations,status,review_by)
+       values(${contentId}::uuid,${prefix},1,${contentId},${policyId},${b.candidate.hash},${JSON.stringify(b)}::jsonb,'{}','candidate',${new Date(+now + 86400000)})`),
+      );
       await db.execute(sql`insert into valo_source_release_bindings(target_kind,target_id,source_id,bundle_source_id,source_hash,snapshot_id,raw_hash)
        values('content',${contentId}::uuid,${sourceId},${b.sources[0]!.id},${b.sources[0]!.hash},${snapshotId}::uuid,${digest(raw)})`);
       assert.equal(await state.sourceTargetAllowed(db, "content", contentId, b, now), true);

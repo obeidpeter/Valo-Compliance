@@ -5,6 +5,7 @@ import { assertDevelopmentRuntime } from "../../platform/valo-development-runtim
 import { singleRow } from "../../platform/rows";
 import {
   assembleGuideBundle,
+  assertDrafterCanLogIn,
   assertPermissionRoute,
   buildGuideCandidate,
   capturedGuidePassages,
@@ -71,8 +72,11 @@ async function prepareGuide(id: string, terms: TermsCopy, options: GuidePreparat
   assertDevelopmentRuntime();
   developmentPublicationOnly();
   if (!mappedGuideIds.includes(id)) throw Error("GUIDE_CLAIM_MAP_MISSING");
-  const { db, valoContentVersions, valoPublicationPolicies, valoPreparedCandidates } =
+  const { db, drafterDb, valoContentVersions, valoPublicationPolicies, valoPreparedCandidates } =
     await import("@workspace/db");
+  // A guide that passes is kept as a candidate, which only drafting's own login may add. The
+  // preparation finds out now, before anything is read, rendered or saved, whether drafting can log in.
+  await assertDrafterCanLogIn();
   const now = options.now ?? new Date();
   const snapshot = await terms();
   if (
@@ -182,8 +186,9 @@ async function prepareGuide(id: string, terms: TermsCopy, options: GuidePreparat
     reviewBy: new Date(built.candidate.reviewBy!).toISOString(),
     preparedAt: now.toISOString(),
   });
-  // The artifact is the candidate; this row only lets staff find it in the Content area.
-  await db.transaction(async (tx) => {
+  // The artifact is the candidate; this row only lets staff find it in the Content area. It is added on
+  // drafting's own connection, as the drafter role: the database takes it from no other.
+  await drafterDb().transaction(async (tx) => {
     await tx.execute(sql`SET LOCAL ROLE valo_content_drafter_dev`);
     await tx.insert(valoPreparedCandidates).values({
       artifactId: candidateArtifact.id,

@@ -3,14 +3,15 @@
  * release artifacts, intake and content of original operational templates and the list of those whose
  * AI preparation is supported, a guide's document and its canonical content, its claim map, its own
  * policy, rights record, amendment records, mechanical checks and assembled bundle, the prepared
- * candidates awaiting their reviews, their mechanical, export, rights and final checks, and the
- * publisher that releases a reviewed version. Code outside
+ * candidates awaiting their reviews, their mechanical, export, rights and final checks, the check that
+ * drafting can log in, and the publisher that releases a reviewed version. Code outside
  * artifacts/api-server/src/modules/publication imports only this file (repository rule `module-boundary`);
  * tests may import the module's files directly.
  *
  * Used only inside the module, and not re-exported: claim-locator.ts, operational-restrictions.ts, publication-final-check.ts.
  */
 export * from "./candidate-arithmetic";
+export * from "./drafting-login";
 export * from "./guidance-amendments";
 export * from "./guidance-bundle";
 export * from "./guidance-candidate";

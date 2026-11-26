@@ -7,6 +7,7 @@ import { liveReleasedVersions, releasedCatalogue } from "./valo-released-content
 import { createDocument } from "../documents";
 import { resolveWorkspace } from "../workspaces";
 import { syntheticDocument } from "../../lib/valo-test-fixtures";
+import { draftSynthetic } from "../../test-support/drafted-content";
 
 // WEB-003: public search, accepted when "unpublished content and customer drafts never appear".
 // The versions here are candidates and held items, never published rows: nothing in a test may
@@ -29,20 +30,22 @@ test(
     const versions: string[] = [];
     for (const status of ["candidate", "held"] as const) {
       const bundle = { fixture: true, title: `Synthetic ${marker} ${status} template`, published: false };
-      const [row] = await db
-        .insert(valoContentVersions)
-        .values({
-          id: randomUUID(),
-          templateId: `SYNTHETIC-SEARCH-${marker}-${status}`,
-          version: 1,
-          slug: `synthetic-${marker}-${status}`,
-          policyId,
-          candidateHash: hash(bundle),
-          bundle,
-          attestations: { checks: [] },
-          reviewBy: new Date(Date.now() + 86_400_000),
-        })
-        .returning();
+      const [row] = await draftSynthetic((tx) =>
+        tx
+          .insert(valoContentVersions)
+          .values({
+            id: randomUUID(),
+            templateId: `SYNTHETIC-SEARCH-${marker}-${status}`,
+            version: 1,
+            slug: `synthetic-${marker}-${status}`,
+            policyId,
+            candidateHash: hash(bundle),
+            bundle,
+            attestations: { checks: [] },
+            reviewBy: new Date(Date.now() + 86_400_000),
+          })
+          .returning(),
+      );
       if (status === "held")
         await db
           .update(valoContentVersions)

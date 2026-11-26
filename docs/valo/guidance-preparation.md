@@ -10,10 +10,14 @@ then prints what holds the guide and keeps no candidate.
 
 ## What must be in place
 
-1. **The publisher login.** Apply its migration and enable it as
+1. **The drafting login.** Apply its migration and enable it as
+   [the drafting login note](migration-drafter-login.md) says, and give the command its connection
+   (`VALO_DRAFTER_DATABASE_URL`). Without it the command stops with `VALO_DRAFTER_LOGIN_UNAVAILABLE`
+   before it reads, renders or keeps anything.
+2. **The publisher login.** Apply its migration and enable it as
    [the publisher login note](migration-publisher-login.md) says. A guide can be prepared without
    it, but it cannot be published.
-2. **A watch on each official address the guide rests on.** A member of staff registers the
+3. **A watch on each official address the guide rests on.** A member of staff registers the
    address for the daily check with the source controls in the Content area. A watch approves
    nothing. The addresses are:
 
@@ -38,9 +42,9 @@ then prints what holds the guide and keeps no candidate.
 
    The command asks only for the addresses the guide it is given rests on.
 
-3. **A capture of each address, checked within the last day.** The daily source check makes it. The
+4. **A capture of each address, checked within the last day.** The daily source check makes it. The
    preparer fetches nothing itself.
-4. **A copy of the AI provider's terms taken within the last day.** This command fetches the
+5. **A copy of the AI provider's terms taken within the last day.** This command fetches the
    provider's five public pages and writes the copy:
 
    ```sh
@@ -52,7 +56,7 @@ then prints what holds the guide and keeps no candidate.
    now say before any template or guide is prepared. The command has not yet been run against the
    provider's site from the development environment. Run from a build machine with a plain
    request, the five pages were served on 21 November 2026 and held all five sentences.
-5. **The owner's approval of the guidance policy.** Given on 22 November 2026 for
+6. **The owner's approval of the guidance policy.** Given on 22 November 2026 for
    `docs/valo/policies/guidance-publication-policy.md` as it stands, and held in the code as that
    file's checksum. Any edit to the file ends it until the owner approves the new text, and every
    guide is then held

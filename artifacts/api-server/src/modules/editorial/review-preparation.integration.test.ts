@@ -37,6 +37,7 @@ test(
       },
     });
     const { db, pool } = await import("@workspace/db");
+    const { draftSynthetic } = await import("../../test-support/drafted-content");
     const preparation = await import("./review-preparation");
     const corrections = await import("../sources/valo-source-corrections"),
       controls = await import("../sources/valo-source-controls"),
@@ -86,8 +87,10 @@ test(
       );
       const version = async (templateId: string) => {
         const id = randomUUID();
-        await db.execute(sql`insert into valo_content_versions(id,template_id,version,slug,policy_id,candidate_hash,bundle,attestations,status,review_by)
-          values(${id}::uuid,${templateId},1,${id},${policyId},${b.candidate.hash},${JSON.stringify(b)}::jsonb,'{}','candidate',${new Date(+now + 86400000)})`);
+        await draftSynthetic((tx) =>
+          tx.execute(sql`insert into valo_content_versions(id,template_id,version,slug,policy_id,candidate_hash,bundle,attestations,status,review_by)
+          values(${id}::uuid,${templateId},1,${id},${policyId},${b.candidate.hash},${JSON.stringify(b)}::jsonb,'{}','candidate',${new Date(+now + 86400000)})`),
+        );
         return id;
       };
       const [template, other, unserved] = [
@@ -216,6 +219,33 @@ test(
       const stopped = (await row("TPL-10")).preparation!;
       assert.equal(stopped.status, "failed");
       assert.deepEqual(stopped.reasons, [`PROVIDER_TERMS_SENTENCE_MISSING:${changed}`]);
+      assert.equal(
+        Number(
+          (
+            await db.execute(
+              sql`select count(*)::int as n from valo_prepared_candidates where template_id='TPL-10'`,
+            )
+          ).rows[0]!.n,
+        ),
+        kept,
+      );
+
+      // A worker that was not given drafting's own login prepares nothing, and the request says why.
+      await preparation.requestReviewPreparation(fresh(staff), onTemplate.id);
+      const { drafterLogin } = await import("@workspace/db");
+      const drafting = process.env.VALO_DRAFTER_DATABASE_URL;
+      await drafterLogin.end();
+      delete process.env.VALO_DRAFTER_DATABASE_URL;
+      try {
+        assert.equal(await preparation.prepareRequestedCandidates({ readPage: page() }), true);
+      } finally {
+        process.env.VALO_DRAFTER_DATABASE_URL = drafting;
+      }
+      const unconfigured = (await row("TPL-10")).preparation!;
+      assert.deepEqual(
+        [unconfigured.status, unconfigured.reasons],
+        ["failed", ["VALO_DRAFTER_LOGIN_UNAVAILABLE"]],
+      );
       assert.equal(
         Number(
           (

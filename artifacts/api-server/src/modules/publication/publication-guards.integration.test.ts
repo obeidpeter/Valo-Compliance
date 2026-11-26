@@ -38,6 +38,7 @@ test(
     assert.ok(!process.env.REPLIT_DEPLOYMENT);
     assert.ok(["localhost", "127.0.0.1", "[::1]"].includes(new URL(process.env.DATABASE_URL!).hostname));
     const { db } = await import("@workspace/db");
+    const { draftSynthetic } = await import("../../test-support/drafted-content");
     const { publishOperationalVersion, recordActualPublicationHold, withdrawOperationalVersion } =
       await import("./publication-publisher");
     const { liveOperationalVersions, readReleasedMaster } =
@@ -57,11 +58,12 @@ test(
     await db.execute(
       sql`insert into valo_publication_policies(id,hash,policy,authority) values(${prefix},${digest(bundle.policy)},${JSON.stringify(bundle.policy)}::jsonb,'{"synthetic":true,"approved":false}')`,
     );
-    // Drafters add candidates; this is the only way content versions are created.
-    await asRole(
-      "valo_content_drafter_dev",
-      sql`insert into valo_content_versions(id,template_id,version,slug,policy_id,candidate_hash,bundle,attestations,status,review_by)
-        values(${id}::uuid,${prefix},1,${prefix},${prefix},${bundle.candidate.hash},${JSON.stringify(bundle)}::jsonb,'{}','candidate',${new Date(Date.now() + 86_400_000)})`,
+    // Drafting adds candidates, on its own login; this is the only way content versions are created.
+    await draftSynthetic((tx) =>
+      tx.execute(
+        sql`insert into valo_content_versions(id,template_id,version,slug,policy_id,candidate_hash,bundle,attestations,status,review_by)
+          values(${id}::uuid,${prefix},1,${prefix},${prefix},${bundle.candidate.hash},${JSON.stringify(bundle)}::jsonb,'{}','candidate',${new Date(Date.now() + 86_400_000)})`,
+      ),
     );
 
     await t.test("the bounded publisher records the failed gates as a hold", async () => {
@@ -98,9 +100,8 @@ test(
 
     await t.test("the drafter role cannot change publication state", async () => {
       await assert.rejects(
-        asRole(
-          "valo_content_drafter_dev",
-          sql`update valo_content_versions set status='published' where id=${id}::uuid`,
+        draftSynthetic((tx) =>
+          tx.execute(sql`update valo_content_versions set status='published' where id=${id}::uuid`),
         ),
         databaseError("42501"),
       );
@@ -108,10 +109,11 @@ test(
 
     await t.test("a drafter cannot add a version straight into published state", async () => {
       await assert.rejects(
-        asRole(
-          "valo_content_drafter_dev",
-          sql`insert into valo_content_versions(id,template_id,version,slug,policy_id,candidate_hash,bundle,attestations,status,review_by)
-            values(${randomUUID()}::uuid,${prefix},2,${`${prefix}-2`},${prefix},'forged','{}','{}','published',${new Date(Date.now() + 86_400_000)})`,
+        draftSynthetic((tx) =>
+          tx.execute(
+            sql`insert into valo_content_versions(id,template_id,version,slug,policy_id,candidate_hash,bundle,attestations,status,review_by)
+              values(${randomUUID()}::uuid,${prefix},2,${`${prefix}-2`},${prefix},'forged','{}','{}','published',${new Date(Date.now() + 86_400_000)})`,
+          ),
         ),
         databaseError(/Candidates cannot publish themselves/),
       );
@@ -179,6 +181,7 @@ test(
       await import("@workspace/db");
     const { assertPublisherCanLogIn, publishOperationalVersion } = await import("./publication-publisher");
     const { default: pg } = await import("pg");
+    const { draftSynthetic } = await import("../../test-support/drafted-content");
 
     const id = randomUUID(),
       prefix = `synthetic-publisher-login-${id}`,
@@ -193,10 +196,11 @@ test(
     await db.execute(
       sql`insert into valo_publication_policies(id,hash,policy,authority) values(${prefix},${digest(bundle.policy)},${JSON.stringify(bundle.policy)}::jsonb,'{"synthetic":true,"approved":false}')`,
     );
-    await asRole(
-      "valo_content_drafter_dev",
-      sql`insert into valo_content_versions(id,template_id,version,slug,policy_id,candidate_hash,bundle,attestations,status,review_by)
-        values(${id}::uuid,${prefix},1,${prefix},${prefix},${bundle.candidate.hash},${JSON.stringify(bundle)}::jsonb,'{}','candidate',${new Date(Date.now() + 86_400_000)})`,
+    await draftSynthetic((tx) =>
+      tx.execute(
+        sql`insert into valo_content_versions(id,template_id,version,slug,policy_id,candidate_hash,bundle,attestations,status,review_by)
+          values(${id}::uuid,${prefix},1,${prefix},${prefix},${bundle.candidate.hash},${JSON.stringify(bundle)}::jsonb,'{}','candidate',${new Date(Date.now() + 86_400_000)})`,
+      ),
     );
     const publish = sql`update valo_content_versions set status='published', published_at=now() where id=${id}::uuid`;
     const needsPublisher = databaseError(
@@ -330,6 +334,182 @@ test(
 );
 
 /**
+ * Drafting's own login (docs/architecture/service-logins.md, part 1; SEC-006). The database adds a
+ * content version or a prepared candidate only in a session that logged in as valo_drafter_login, as
+ * the drafter role. Every candidate here is synthetic, and every one the database accepts is rolled back.
+ */
+test(
+  "a content version or a prepared candidate is added only by a session that logged in as the drafting login",
+  { skip: process.env.VALO_RUN_DB_TESTS !== "synthetic-development-only", timeout: 60_000 },
+  async (t) => {
+    assert.equal(process.env.NODE_ENV, "development");
+    assert.ok(!process.env.REPLIT_DEPLOYMENT);
+    assert.ok(["localhost", "127.0.0.1", "[::1]"].includes(new URL(process.env.DATABASE_URL!).hostname));
+    const { db, drafterLogin, DRAFTER_LOGIN_ROLE, DRAFTER_LOGIN_UNAVAILABLE_CODE } =
+      await import("@workspace/db");
+    const { assertDrafterCanLogIn } = await import("./drafting-login");
+    const { default: pg } = await import("pg");
+
+    const prefix = `synthetic-drafter-login-${randomUUID()}`,
+      bundle = heldSourceBundle(new Date(), false),
+      hash = "b".repeat(64);
+    await db.execute(
+      sql`insert into valo_publication_policies(id,hash,policy,authority) values(${prefix},${digest(bundle.policy)},${JSON.stringify(bundle.policy)}::jsonb,'{"synthetic":true,"approved":false}')`,
+    );
+    const asRole = (role: string | null, query: ReturnType<typeof sql>) =>
+      db.transaction(async (tx) => {
+        if (role) await tx.execute(sql.raw(`set local role ${role}`));
+        return tx.execute(query);
+      });
+    const left = async () =>
+      (
+        await db.execute(sql`select
+          (select count(*)::int from valo_content_versions where template_id=${prefix}) as versions,
+          (select count(*)::int from valo_prepared_candidates where template_id=${prefix}) as prepared`)
+      ).rows[0];
+    const needsDrafter = databaseError(/added only by a session that logged in as valo_drafter_login/);
+
+    await t.test(
+      "the application's own login cannot add a candidate or a prepared candidate, whatever role it takes",
+      async () => {
+        for (const add of [
+          sql`insert into valo_content_versions(id,template_id,version,slug,policy_id,candidate_hash,bundle,attestations,status,review_by)
+            values(${randomUUID()}::uuid,${prefix},1,${prefix},${prefix},${hash},${JSON.stringify(bundle)}::jsonb,'{}','candidate',${new Date(Date.now() + 86_400_000)})`,
+          sql`insert into valo_prepared_candidates(artifact_id,artifact_hash,version_id,template_id,version,candidate_hash,prepared_at,review_by)
+            values(${randomUUID()}::uuid,${"a".repeat(64)},${randomUUID()}::uuid,${prefix},1,${hash},now(),${new Date(Date.now() + 86_400_000)})`,
+        ]) {
+          await assert.rejects(asRole(null, add), needsDrafter);
+          await assert.rejects(asRole("valo_content_drafter_dev", add), needsDrafter);
+          await assert.rejects(asRole("valo_content_drafter_dev", add), databaseError("42501"));
+        }
+        assert.deepEqual(await left(), { versions: 0, prepared: 0 });
+      },
+    );
+
+    // One session that logged in as the drafting login, as drafting does.
+    const application = process.env.DATABASE_URL!,
+      configured = drafterLogin.connectionString(process.env.VALO_DRAFTER_DATABASE_URL, application);
+    const drafter = new pg.Client({ connectionString: configured });
+    await drafter.connect();
+    t.after(() => drafter.end());
+    const addVersion = {
+      text: `insert into valo_content_versions(id,template_id,version,slug,policy_id,candidate_hash,bundle,attestations,status,review_by)
+        values(gen_random_uuid(),$1,1,$1,$1,$2,$3::jsonb,'{}','candidate',now()+interval '1 day') returning status`,
+      values: [prefix, hash, JSON.stringify(bundle)],
+    };
+    const addPrepared = {
+      text: `insert into valo_prepared_candidates(artifact_id,artifact_hash,version_id,template_id,version,candidate_hash,prepared_at,review_by)
+        values(gen_random_uuid(),$2,gen_random_uuid(),$1,1,$3,now(),now()+interval '1 day') returning version`,
+      values: [prefix, "a".repeat(64), hash],
+    };
+    const refused = async (query: string | { text: string; values: unknown[] }) => {
+      await drafter.query("BEGIN");
+      try {
+        await assert.rejects(
+          drafter.query(query),
+          (error: { code?: string }) => error.code === "42501",
+          typeof query === "string" ? query : query.text,
+        );
+      } finally {
+        await drafter.query("ROLLBACK");
+      }
+    };
+
+    await t.test("the drafting login holds nothing itself and can become only the drafter", async () => {
+      const who = await drafter.query("select session_user as login, current_user as acting");
+      assert.deepEqual(who.rows[0], { login: DRAFTER_LOGIN_ROLE, acting: DRAFTER_LOGIN_ROLE });
+      const role = await drafter.query(
+        "select rolcanlogin, rolsuper, rolinherit, rolcreaterole, rolcreatedb, rolbypassrls from pg_roles where rolname=$1",
+        [DRAFTER_LOGIN_ROLE],
+      );
+      assert.deepEqual(role.rows[0], {
+        rolcanlogin: true,
+        rolsuper: false,
+        rolinherit: false,
+        rolcreaterole: false,
+        rolcreatedb: false,
+        rolbypassrls: false,
+      });
+      const memberships = await drafter.query(
+        "select r.rolname from pg_auth_members m join pg_roles r on r.oid=m.roleid join pg_roles u on u.oid=m.member where u.rolname=$1",
+        [DRAFTER_LOGIN_ROLE],
+      );
+      assert.deepEqual(
+        memberships.rows.map((r) => r.rolname),
+        ["valo_content_drafter_dev"],
+      );
+      // As itself it adds and reads nothing.
+      await refused(addVersion);
+      await refused(addPrepared);
+      await refused("select id from valo_content_versions limit 1");
+      await refused("select id from valo_documents limit 1");
+      // It cannot become the publisher, the reviewer or the customer scope.
+      for (const other of ["valo_content_publisher_dev", "valo_content_reviewer_dev", "valo_workspace_scope"])
+        await refused(`set local role ${other}`);
+    });
+
+    await t.test(
+      "as the drafter role it adds candidates, and reads no customer data, publishes nothing and changes no policy",
+      async () => {
+        await drafter.query("BEGIN");
+        try {
+          await drafter.query("set local role valo_content_drafter_dev");
+          const added = await drafter.query(addVersion);
+          assert.equal(added.rows[0]?.status, "candidate", "the database accepts the drafting login");
+          const prepared = await drafter.query(addPrepared);
+          assert.equal(prepared.rows[0]?.version, 1);
+          for (const text of [
+            "select id from valo_documents limit 1",
+            "select id from valo_orders limit 1",
+            `update valo_content_versions set status='published', published_at=now() where template_id='${prefix}'`,
+            `update valo_publication_policies set hash='forged' where id='${prefix}'`,
+          ]) {
+            await drafter.query("SAVEPOINT attempt");
+            await assert.rejects(
+              drafter.query(text),
+              (error: { code?: string }) => error.code === "42501",
+              text,
+            );
+            await drafter.query("ROLLBACK TO SAVEPOINT attempt");
+          }
+        } finally {
+          // Nothing stays: the synthetic candidates passed no gate.
+          await drafter.query("ROLLBACK");
+        }
+        assert.deepEqual(await left(), { versions: 0, prepared: 0 });
+      },
+    );
+
+    await t.test("the check a preparation runs first finds the drafting login in use", async () => {
+      await assertDrafterCanLogIn();
+    });
+
+    await t.test(
+      "a drafting connection that is missing, or leads elsewhere, is refused before it is used",
+      () => {
+        const unavailable = (run: () => unknown) =>
+          assert.throws(run, (error: { code?: string }) => error.code === DRAFTER_LOGIN_UNAVAILABLE_CODE);
+        unavailable(() => drafterLogin.connectionString(undefined, application));
+        unavailable(() => drafterLogin.connectionString("", application));
+        // The application's own login, and the publisher's, are not drafting's.
+        unavailable(() => drafterLogin.connectionString(application, application));
+        const publisher = new URL(configured);
+        publisher.username = "valo_publisher_login";
+        unavailable(() => drafterLogin.connectionString(publisher.href, application));
+        // The drafting login of another database, or another server.
+        const other = new URL(configured);
+        other.pathname = "/another_database";
+        unavailable(() => drafterLogin.connectionString(other.href, application));
+        const elsewhere = new URL(configured);
+        elsewhere.port = "6543";
+        unavailable(() => drafterLogin.connectionString(elsewhere.href, application));
+        unavailable(() => drafterLogin.connectionString(configured, undefined));
+      },
+    );
+  },
+);
+
+/**
  * A guide says what the law requires, so the publisher releases it only under the guidance policy
  * (decision 0017, point 1). Nothing here is published: each attempt is refused at the policy or held
  * by the gate, and the candidates are synthetic rows built from the retained drafts.
@@ -346,6 +526,7 @@ test(
     const { guidancePolicy } = await import("./guidance-policy");
     const { operationalPolicy } = await import("./operational-policy");
     const { assembledGuide, passagesReadAt } = await import("./guidance-release.fixtures");
+    const { draftSynthetic } = await import("../../test-support/drafted-content");
 
     const now = new Date();
     const guidance = await guidancePolicy(),
@@ -357,13 +538,12 @@ test(
     const save = async (bundle: PublicationBundle) => {
       const id = randomUUID(),
         name = `synthetic-guide-policy-${id}`;
-      await db.transaction(async (tx) => {
-        await tx.execute(sql.raw("set local role valo_content_drafter_dev"));
-        await tx.execute(
+      await draftSynthetic((tx) =>
+        tx.execute(
           sql`insert into valo_content_versions(id,template_id,version,slug,policy_id,candidate_hash,bundle,attestations,status,review_by)
             values(${id}::uuid,${name},${bundle.candidate.version},${name},${bundle.policy.version},${bundle.candidate.hash},${JSON.stringify(bundle)}::jsonb,'{}','candidate',${new Date(bundle.candidate.reviewBy!)})`,
-        );
-      });
+        ),
+      );
       return id;
     };
     const status = async (id: string) =>

@@ -20,6 +20,7 @@ test(
     assertDevelopmentRuntime();
     assert.ok(["localhost", "127.0.0.1", "[::1]"].includes(new URL(process.env.DATABASE_URL!).hostname));
     const { db, pool } = await import("@workspace/db");
+    const { draftSynthetic } = await import("../../test-support/drafted-content");
     const review = await import("./source-review"),
       corrections = await import("./valo-source-corrections"),
       controls = await import("./valo-source-controls");
@@ -46,8 +47,10 @@ test(
       await db.execute(
         sql`insert into valo_publication_policies(id,hash,policy,authority) values(${policyId},${digest(b.policy)},${JSON.stringify(b.policy)}::jsonb,'{"synthetic":true,"approved":false}')`,
       );
-      await db.execute(sql`insert into valo_content_versions(id,template_id,version,slug,policy_id,candidate_hash,bundle,attestations,status,review_by)
-        values(${contentId}::uuid,${prefix},1,${contentId},${policyId},${b.candidate.hash},${JSON.stringify(b)}::jsonb,'{}','candidate',${new Date(+now + 86400000)})`);
+      await draftSynthetic((tx) =>
+        tx.execute(sql`insert into valo_content_versions(id,template_id,version,slug,policy_id,candidate_hash,bundle,attestations,status,review_by)
+        values(${contentId}::uuid,${prefix},1,${contentId},${policyId},${b.candidate.hash},${JSON.stringify(b)}::jsonb,'{}','candidate',${new Date(+now + 86400000)})`),
+      );
       for (const [id, version] of [
         [ruleOne, 1],
         [ruleTwo, 2],

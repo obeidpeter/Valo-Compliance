@@ -30,6 +30,7 @@ test(
     const configured = new URL(process.env.DATABASE_URL!);
     assert.ok(["localhost", "127.0.0.1", "[::1]"].includes(configured.hostname));
     const { db, pool } = await import("@workspace/db");
+    const { draftSynthetic } = await import("../../test-support/drafted-content");
     const { evaluateEditorialPermissionDenials } = await import("./editorial-permission-evaluation");
     const id = randomUUID(),
       runId = randomUUID(),
@@ -44,8 +45,10 @@ test(
       await db.execute(
         sql`insert into valo_publication_policies(id,hash,policy,authority) values(${prefix},${digest(bundle.policy)},${JSON.stringify(bundle.policy)}::jsonb,'{"synthetic":true,"approved":false}')`,
       );
-      await db.execute(sql`insert into valo_content_versions(id,template_id,version,slug,policy_id,candidate_hash,bundle,attestations,status,review_by)
-   values(${id}::uuid,${prefix},1,${prefix},${prefix},${bundle.candidate.hash},${JSON.stringify(bundle)}::jsonb,'{}','candidate',${new Date(Date.now() + 86400000)})`);
+      await draftSynthetic((tx) =>
+        tx.execute(sql`insert into valo_content_versions(id,template_id,version,slug,policy_id,candidate_hash,bundle,attestations,status,review_by)
+   values(${id}::uuid,${prefix},1,${prefix},${prefix},${bundle.candidate.hash},${JSON.stringify(bundle)}::jsonb,'{}','candidate',${new Date(Date.now() + 86400000)})`),
+      );
       await t.test(
         "both concrete roles deny function invocation and SQL mutation, preserving six current-run audit rows",
         async () => {
