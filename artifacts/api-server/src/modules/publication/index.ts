@@ -40,5 +40,6 @@ export * from "./original-content-adapter";
 export * from "./publication-artifacts";
 export * from "./publication-publisher";
 export * from "./provider-terms-capture";
+export * from "./reviewed-guide-check";
 export * from "./rights-applicability";
 export * from "./source-facts";

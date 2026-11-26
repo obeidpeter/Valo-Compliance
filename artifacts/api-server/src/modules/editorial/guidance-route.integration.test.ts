@@ -245,9 +245,10 @@ test(
     }
 
     // The review route's own gates, short of spending anything. The pair is saved as a plan that is
-    // not held for its size. The manifest takes a guide. The check the dispatcher makes just before
-    // it sends anything builds both requests again from the stored candidate and finds them
-    // unchanged. And only a package for guides admits the pair.
+    // not held for its size. The manifest takes a guide. The check the dispatcher makes before
+    // admission and just before it sends anything builds both requests again from the stored candidate
+    // and finds them unchanged, and then asks for the development owner's check of the guide's sources
+    // (decision 0018), which nobody has made here. And only a package for guides takes the pair.
     const { saveOperationalReviewPlan } = await import("./operational-review");
     const { prepareOperationalFiniteManifest } = await import("../ai/inference-manifest");
     const { assertFiniteWorkBindings } = await import("../ai-lanes/inference-work-bindings");
@@ -280,16 +281,12 @@ test(
         ["publication", "challenge", guide],
       ],
     );
-    for (const work of manifest.works) await assertFiniteWorkBindings(work);
+    for (const work of manifest.works)
+      await assert.rejects(assertFiniteWorkBindings(work), /OWNER_SOURCE_CHECK_REQUIRED/);
     const guidePackage = await prepareFiniteAllocationPackage(new Date(), finitePackagePreparers.guidePairs),
       templatePackage = await prepareFiniteAllocationPackage(new Date());
-    // The pair is complete, and no package admits it: the publisher releases a guide only after the
-    // owner's source check (decision 0018), so its reviews would release nothing.
     for (const work of manifest.works) {
-      assert.throws(
-        () => assertWorkPackageMembership(work, guidePackage, guide),
-        /GUIDE_REVIEWS_RELEASE_NOTHING/,
-      );
+      assert.doesNotThrow(() => assertWorkPackageMembership(work, guidePackage, guide));
       assert.throws(() => assertWorkPackageMembership(work, templatePackage, guide), /PREPARER_UNAVAILABLE/);
     }
 

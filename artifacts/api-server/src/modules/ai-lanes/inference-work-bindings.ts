@@ -89,7 +89,7 @@ export async function assertFiniteWorkBindings(work: FiniteWork) {
       throw Error("OPERATIONAL_PLAN_BINDING_REQUIRED");
     const [
       { db },
-      { getPublicationArtifact },
+      { getPublicationArtifact, OWNER_SOURCE_CHECK_REQUIRED, reviewedGuideChecked },
       { readOperationalInferenceReadiness },
       { operationalReviewRequests },
     ] = await Promise.all([
@@ -139,6 +139,18 @@ export async function assertFiniteWorkBindings(work: FiniteWork) {
       and request_hash=${requestDigest(work.request)} and created_at < ${new Date(b.historicalCutoff)}
       and provider_response_id is null and outcome in ('reserved','failed') limit 1`);
     if (unknown.rows.length) throw Error("HISTORICAL_EXACT_REQUEST_COMPLETION_UNKNOWN");
+    // A guide's reviews are admitted and sent only once the development owner has checked its exact
+    // candidate's sources, within the last day (decision 0018; docs/architecture/reviewed-route.md, part 2).
+    if (
+      current.bundle.candidate.contentClass === "sourced_guidance" &&
+      !(await reviewedGuideChecked(
+        db,
+        b.candidateVersionId,
+        work.candidateHash,
+        (current.row.attestations as { sourceSnapshots?: Record<string, string> }).sourceSnapshots,
+      ))
+    )
+      throw Error(OWNER_SOURCE_CHECK_REQUIRED);
   } else if (editorialCaseSources) {
     // The case's candidate is rebuilt above, never read from a saved version.
     actualSources.push(...editorialCaseSources);

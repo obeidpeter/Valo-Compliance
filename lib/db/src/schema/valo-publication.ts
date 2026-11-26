@@ -9,6 +9,7 @@ import {
   index,
   bigserial,
   check,
+  foreignKey,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
@@ -83,6 +84,49 @@ export const valoPreparedCandidates = pgTable(
     check("valo_prepared_candidates_artifact_hash_check", sql`${t.artifactHash} ~ '^[a-f0-9]{64}$'`),
     check("valo_prepared_candidates_candidate_hash_check", sql`${t.candidateHash} ~ '^[a-f0-9]{64}$'`),
     check("valo_prepared_candidates_version_check", sql`${t.version} > 0`),
+  ],
+);
+/**
+ * The development owner's checks of a prepared guide's official sources on the reviewed route
+ * (docs/architecture/reviewed-route.md, part 2; decision 0018). Each row says that the owner checked
+ * that exact candidate's sources, through the captures it names, at the time the database recorded. A
+ * guide's reviews are admitted, and the guide released, only on such a check made within the last day.
+ * A row is never changed or removed, and the database refuses one from anyone but the development owner.
+ */
+export const valoReviewedGuideChecks = pgTable(
+  "valo_reviewed_guide_checks",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    artifactId: uuid("artifact_id").notNull(),
+    artifactHash: text("artifact_hash").notNull(),
+    versionId: uuid("version_id").notNull(),
+    guideId: text("guide_id").notNull(),
+    version: integer("version").notNull(),
+    candidateHash: text("candidate_hash").notNull(),
+    /** Each of the guide's sources, by its id in the candidate, and the capture checked of it. */
+    captures: jsonb("captures").$type<Record<string, string>>().notNull(),
+    checkedBy: text("checked_by").notNull(),
+    checkedAt: timestamp("checked_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    foreignKey({
+      name: "valo_reviewed_guide_checks_artifact_fk",
+      columns: [t.artifactId],
+      foreignColumns: [valoPreparedCandidates.artifactId],
+    }),
+    index("valo_reviewed_guide_checks_version_idx").on(t.versionId, t.checkedAt),
+    check(
+      "valo_reviewed_guide_checks_guide_check",
+      sql`${t.guideId} ~ '^GUD-(0[1-9]|[12][0-9]|30)$' AND ${t.version} > 0`,
+    ),
+    check(
+      "valo_reviewed_guide_checks_hash_check",
+      sql`${t.candidateHash} ~ '^[a-f0-9]{64}$' AND ${t.artifactHash} ~ '^[a-f0-9]{64}$'`,
+    ),
+    check(
+      "valo_reviewed_guide_checks_captures_check",
+      sql`jsonb_typeof(${t.captures}) = 'object' AND ${t.captures} <> '{}'::jsonb`,
+    ),
   ],
 );
 export const valoPublicationAiAttempts = pgTable(

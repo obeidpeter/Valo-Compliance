@@ -12,7 +12,10 @@ import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
  *     <batch id> <result artifact id> <result artifact sha256>
  *
  * The result artifact is the report --execute printed. Each review must be the one the approved
- * batch settled; the publisher rechecks every gate. It calls no model.
+ * batch settled; the publisher rechecks every gate. It calls no model. A guide that passes every gate
+ * is saved and released only on the development owner's check of its exact candidate's sources from
+ * within the last day (decision 0018): without one, it stops with OWNER_SOURCE_CHECK_REQUIRED and saves
+ * nothing, and runs again once the owner has checked.
  */
 async function main() {
   assertDevelopmentRuntime();

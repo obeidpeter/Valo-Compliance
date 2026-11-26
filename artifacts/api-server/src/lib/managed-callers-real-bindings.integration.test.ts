@@ -16,7 +16,7 @@ import type { ArtifactRef } from "../modules/publication/publication-artifacts";
 import type { ManagedRequest, ManagedCompletionResult } from "../modules/ai/managed-inference";
 import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
 import { copyDatabaseFunctions, INFERENCE_LEDGER_FUNCTIONS } from "../test-support/database-functions";
-import { digest } from "@workspace/valo-core";
+import { digest, evaluatePublication, mandatoryEnhancedChecks } from "@workspace/valo-core";
 
 test(
   "actual managed callers with real PostgreSQL, source/candidate/case checks and zero-network SDK",
@@ -117,6 +117,10 @@ test(
       // counts the fixture schema's drafts.
       await copyDatabaseFunctions(scoped, schema, [
         "valo_customer_ai_reservations(timestamptz,timestamptz,text)",
+        // The development owner, and whether the owner checked a guide's sources (decision 0018): the
+        // owner's check of a guide and the guide's admission and release read the fixture schema's rows.
+        "valo_manual_regulatory_owner(text)",
+        "valo_reviewed_guide_checked(uuid,text,jsonb)",
       ]);
       const serials = await scoped.query(
         "SELECT table_name,column_name FROM information_schema.columns WHERE table_schema=$1 AND column_default LIKE 'nextval(%'",
@@ -975,12 +979,12 @@ test(
         },
       );
       // Decision 0017: a guide is prepared on the same route, under the policy the owner approved, from
-      // captures made of the passages kept in the repository. Its pair of reviews is not sent: the
-      // publisher releases a guide only after the owner's source check (decision 0018), which this
-      // route does not have, so no package of guide reviews is approved or admitted (CMP-008,
-      // EDP-004). The approvals tried are synthetic ones in this schema.
+      // captures made of the passages kept in the repository. Its pair of reviews is admitted and sent only
+      // once the development owner has checked the guide's sources, and the publisher releases it only on
+      // that check (decision 0018; docs/architecture/reviewed-route.md, part 2). The approvals of AI spending
+      // are synthetic ones recorded in this schema, and the model is the stand-in above.
       await t.test(
-        "a guide's review pair is prepared and planned, and refused before any approval, admission or model call",
+        "a guide's review pair is admitted only after the owner's check of its sources, and the publisher then releases it",
         async () => {
           await reset();
           const { prepareGuideCandidateRelease } = await import("../modules/editorial/guidance-preparation");
@@ -994,6 +998,8 @@ test(
             await import("../modules/publication/guidance-release.fixtures");
           const { liveReleasedVersions, releasedResources } =
             await import("../modules/catalogue/valo-released-content");
+          const { REVIEW_INPUT_CEILING } = await import("../modules/editorial/review-meter");
+          const { checkReviewedGuideSources } = await import("../modules/editorial/reviewed-guide-checks");
           const guide = "GUD-02",
             clockBefore = Date.now();
           // This subtest runs on the real clock, where the others run on a fixed one. The database
@@ -1102,34 +1108,258 @@ test(
                 assertFiniteWorkBindings,
               );
             const callsBeforeAdmission = calls;
-            // A package of the guides' kind that nobody has approved admits nothing.
+            // Before the development owner has checked the guide's sources, nothing admits its reviews:
+            // the binding checks refuse them before any package is read.
             const guidePackage = await packageOf("guidePairs");
+            await assert.rejects(
+              admit(allocationPackageId(guidePackage), new Date(Date.now() + 3_600_000).toISOString()),
+              /OWNER_SOURCE_CHECK_REQUIRED/,
+            );
+            assert.equal(calls, callsBeforeAdmission, "refusing calls no model");
+            assert.equal((await state()).entries.length, 0, "and reserves nothing");
+
+            // The development owner is the identity the operator's bootstrap granted (decision 0018).
+            const {
+              db: fixtureDb,
+              valoStaffAssignments,
+              valoStaffRoleChanges,
+            } = await import("@workspace/db");
+            const owner = `synthetic-guide-owner-${randomUUID()}`,
+              assignment = randomUUID();
+            await fixtureDb.insert(valoStaffAssignments).values({
+              id: assignment,
+              identityId: owner,
+              role: "system",
+              grantedBy: "synthetic operator",
+              reason: "Synthetic owner of a guide's source check",
+            });
+            await fixtureDb.insert(valoStaffRoleChanges).values({
+              id: randomUUID(),
+              requestKey: randomUUID(),
+              inputHash: sha(Buffer.from("synthetic")),
+              actorId: "operator-bootstrap:synthetic",
+              actorAssignmentId: assignment,
+              assignmentId: assignment,
+              targetIdentityId: owner,
+              action: "grant",
+              role: "system",
+              reason: "Synthetic development owner fixture",
+              after: { active: true },
+              targetVerifiedAt: new Date(),
+            });
+            const ownerCheck = (confirm = current.candidate.hash) =>
+              checkReviewedGuideSources(
+                { identityId: owner, recentMfa: true, verifiedAt: Date.now() },
+                prepared.id,
+                confirm,
+              );
+            // Nobody else checks a guide's sources, and a check of other words than the candidate's
+            // records nothing.
+            await assert.rejects(
+              checkReviewedGuideSources(
+                {
+                  identityId: `synthetic-not-the-owner-${randomUUID()}`,
+                  recentMfa: true,
+                  verifiedAt: Date.now(),
+                },
+                prepared.id,
+                current.candidate.hash,
+              ),
+              { status: 403 },
+            );
+            await assert.rejects(ownerCheck("f".repeat(64)), /changed since you opened it/);
+            const checks = async () =>
+              (
+                await scoped.query(
+                  "SELECT checked_by, candidate_hash, captures FROM valo_reviewed_guide_checks WHERE version_id=$1",
+                  [prepared.id],
+                )
+              ).rows;
+            assert.deepEqual(await checks(), []);
+            // Nor does a check while the Act's capture was last checked over a day ago, or once the Act's
+            // file has changed since that capture: the daily check must have found it current.
+            const watch = (column: "checked_at" | "last_raw_hash", value: unknown) =>
+              scoped.query(`UPDATE valo_source_watches SET ${column} = $2 WHERE source_id = $1`, [
+                leadId,
+                value,
+              ]);
+            const notCurrent = /no longer the current one, or was not checked within the last day/;
+            await watch("checked_at", new Date(Date.now() - 86_460_000));
+            await assert.rejects(ownerCheck(), notCurrent);
+            await watch("checked_at", checkedAt);
+            await watch("last_raw_hash", "e".repeat(64));
+            await assert.rejects(ownerCheck(), notCurrent);
+            await watch("last_raw_hash", rawChecksum);
+            assert.deepEqual(await checks(), []);
+            // The owner's check of the exact candidate, through the captures its sources are bound to.
+            const captures = (current.row.attestations as { sourceSnapshots: Record<string, string> })
+              .sourceSnapshots;
+            const checked = await ownerCheck();
+            assert.deepEqual(
+              [checked.guide, checked.versionId, checked.candidateHash, checked.sources],
+              [guide, prepared.id, current.candidate.hash, Object.keys(captures).length],
+            );
+            assert.ok(checked.sources > 0);
+            assert.deepEqual(await checks(), [
+              { checked_by: owner, candidate_hash: current.candidate.hash, captures },
+            ]);
+
+            // With the check, a package of the guides' kind that nobody has approved still admits nothing,
+            // and an approval of template reviews does not admit a guide's reviews.
             await assert.rejects(
               admit(allocationPackageId(guidePackage), new Date(Date.now() + 3_600_000).toISOString()),
               /ALLOCATION_PACKAGE_NOT_AUTHORIZED/,
             );
-            // An approval of template reviews does not admit a guide's reviews.
             const templates = await approve(await packageOf("templatePairs"));
             await assert.rejects(
               admit(templates.packageId, templates.expiresAt),
               /PACKAGE_EXECUTABLE_PREPARER_UNAVAILABLE/,
             );
             await revokeFiniteAllocationPackage(scoped, templates.packageId, schema);
-            // And a guide package cannot be approved: the publisher releases a guide only after the
-            // owner's source check (decision 0018), so its reviews would release nothing.
-            await assert.rejects(approve(guidePackage), /GUIDE_REVIEWS_RELEASE_NOTHING/);
+
+            // Under an approval of guide reviews, the pair is admitted, and approving and admitting call no
+            // model and reserve nothing.
+            const guides = await approve(guidePackage);
+            const admitted = await admit(guides.packageId, guides.expiresAt);
+            assert.equal(admitted.packageId, guides.packageId);
+            assert.match(admitted.batchId, /^finite-submanifest:[a-f0-9]{64}$/);
+            assert.equal(calls, callsBeforeAdmission, "approving and admitting call no model");
+            assert.equal((await state()).entries.length, 0, "and reserve nothing");
+            const id = admitted.batchId,
+              pair = manifest.works[0]!.pair!;
+
+            // The stand-in answers each request with a pass and the five enhanced checks, each quoting the
+            // first source the request itself carries. It is not a review.
+            answer = async (request) => {
+              const sent = JSON.parse((request.messages[1] as { content: string }).content) as {
+                sources: { text: string }[];
+              };
+              return response(
+                JSON.stringify({
+                  verdict: "pass",
+                  findings: [],
+                  missingEvidence: [],
+                  observations: ["Controlled fixture; not a genuine review"],
+                  enhancedChecks: mandatoryEnhancedChecks.map((name) => ({
+                    name,
+                    result: "pass",
+                    passage: sent.sources[0]!.text.slice(0, 200),
+                    note: "Controlled fixture; not a genuine check",
+                  })),
+                }),
+              );
+            };
+            const before = calls,
+              sentBefore = captured.length;
+            const sendReviews = () =>
+              run(() =>
+                withApprovedInferencePair(id, pair, () =>
+                  executeOperationalReviewPlan(plan, current.candidate, current.serverEvidence),
+                ),
+              );
+            // In this disposable copy, a check's time is moved back as if the owner had checked a day and a
+            // minute ago.
+            const backdateChecks = () =>
+              scoped.query(
+                "UPDATE valo_reviewed_guide_checks SET checked_at = checked_at - interval '1 day 1 minute' WHERE version_id=$1",
+                [prepared.id],
+              );
+            // A day after the owner's check, the admitted pair is not sent and the guides' approval admits
+            // it no more: the owner checks again.
+            await backdateChecks();
+            await assert.rejects(sendReviews(), /OWNER_SOURCE_CHECK_REQUIRED/);
+            await assert.rejects(admit(guides.packageId, guides.expiresAt), /OWNER_SOURCE_CHECK_REQUIRED/);
+            assert.equal(calls, before, "refusing calls no model");
+            assert.equal(captured.length, sentBefore, "and sends nothing");
+            assert.equal((await state()).entries.length, 0, "and reserves nothing");
+            await ownerCheck();
+            const reviews = await sendReviews();
+            assert.equal(reviews.length, 2);
+            assert.equal(calls - before, 2, "one call to the stand-in for each review");
+            // Both were charged to the batch admitted under the guides' approval.
+            assert.deepEqual(
+              (await state()).entries.map((e) => [e.runKey.startsWith(`${id}:`), e.lane, e.status]),
+              [
+                [true, "publication", "settled"],
+                [true, "publication", "settled"],
+              ],
+            );
+            // What was sent is what was planned: a guide's request, larger than a template's may be.
+            assert.deepEqual(
+              captured
+                .slice(sentBefore)
+                .map((request) => requestDigest(request))
+                .sort(),
+              plan.entries.map((entry) => entry.meter.requestHash).sort(),
+            );
+            for (const entry of plan.entries) {
+              assert.ok(entry.meter.withinInputCeiling);
+              assert.ok(entry.meter.conservativeInputTokenBound > REVIEW_INPUT_CEILING);
+            }
+            assert.equal(
+              await savedVersion(prepared.id),
+              undefined,
+              "nothing is saved before the reviews are checked",
+            );
+
+            // A day after the owner's check, the guide is neither saved nor released, and its reviews
+            // stand: the owner checks again.
+            const artifacts = reviews.map((r) => r.artifact);
+            await backdateChecks();
+            await assert.rejects(publish(id, artifacts), /OWNER_SOURCE_CHECK_REQUIRED/);
+            assert.equal(
+              await savedVersion(prepared.id),
+              undefined,
+              "nothing is saved without a current check",
+            );
+            await ownerCheck();
+
+            // With the owner's current check, the real publisher releases the guide, with both reviews
+            // and the five enhanced checks they ran recorded as passed.
+            const result = await publish(id, artifacts);
+            assert.equal(result.eligibility?.decision, "eligible");
+            assert.equal(result.status, "published");
+            const row = await savedVersion(prepared.id);
+            assert.equal(row.status, "published");
+            assert.equal(evaluatePublication(row.bundle).decision, "eligible");
+            assert.equal(row.bundle.candidate.id, guide);
+            assert.equal(row.bundle.candidate.contentClass, "sourced_guidance");
+            assert.equal(row.bundle.policy.ownerApproved, true);
+            assert.equal(row.bundle.policy.hash, (await realGuidancePolicy.guidancePolicy()).policy.hash);
+            assert.deepEqual(
+              row.bundle.enhancedChecks.map((c: { name: string; result: string }) => [c.name, c.result]),
+              mandatoryEnhancedChecks.map((name) => [name, "pass"]),
+            );
+            assert.deepEqual(
+              row.bundle.reviews.map((r: { role: string; verdict: string }) => [r.role, r.verdict]),
+              [
+                ["factual", "pass"],
+                ["challenge", "pass"],
+              ],
+            );
+            // Its sources are bound to the captures the owner checked.
+            const bound = await scoped.query(
+              "SELECT bundle_source_id, snapshot_id FROM valo_source_release_bindings WHERE target_kind='content' AND target_id=$1 ORDER BY bundle_source_id",
+              [prepared.id],
+            );
+            assert.deepEqual(
+              Object.fromEntries(bound.rows.map((b) => [b.bundle_source_id, b.snapshot_id])),
+              captures,
+            );
             assert.deepEqual(
               (
-                await scoped.query("SELECT id FROM valo_inference_batches WHERE id=$1", [
-                  allocationPackageId(guidePackage),
+                await scoped.query("SELECT action FROM valo_publication_audit WHERE version_id=$1", [
+                  prepared.id,
                 ])
-              ).rows,
-              [],
-              "no approval is recorded",
+              ).rows.map((r) => r.action),
+              ["published"],
             );
-            assert.equal(calls, callsBeforeAdmission, "refusing calls no model");
-            assert.equal((await state()).entries.length, 0, "and reserves nothing");
-            assert.equal(await savedVersion(prepared.id), undefined, "nothing is saved");
+            assert.equal(calls - before, 2, "publication makes no further model request");
+            // The guide is on the site while the policy it was released under stands, and not once its
+            // approval is supposed absent.
+            assert.ok((await liveReleasedVersions()).some((version) => version.id === prepared.id));
+            assert.ok((await releasedResources()).some((resource) => resource.id === prepared.id));
+            guideApproval.absent = true;
             assert.ok(!(await liveReleasedVersions()).some((version) => version.id === prepared.id));
             assert.ok(!(await releasedResources()).some((resource) => resource.id === prepared.id));
           } finally {

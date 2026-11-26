@@ -34,16 +34,18 @@ import {
 } from "../sources";
 import { publicationCheckTime } from "./operational-restrictions";
 import { finalOperationalPublicationCheck } from "./publication-final-check";
+import { reviewedGuideChecked } from "./reviewed-guide-check";
 type PublicationTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 const regulatorySourceHold = "REGULATORY_ARTICLE_AWAITING_OWNER_SOURCE_CHECK";
 
-/** Reviews attest to the submitted evidence. Releasing a new regulatory article also needs the owner's source check. */
+/**
+ * Reviews attest to the submitted evidence. Releasing a regulatory article also needs the development
+ * owner's check of its exact candidate's sources, made within the last day (decision 0018;
+ * docs/architecture/reviewed-route.md, part 2). That check is not part of the bundle: the publish command
+ * asks for it before it saves an eligible guide, and the publisher and the database ask again at release.
+ */
 export function evaluateOperationalRelease(bundle: unknown) {
-  const evidence = evaluatePublication(bundle);
-  const candidate = publicationSchema.safeParse(bundle);
-  if (candidate.success && candidate.data.candidate.contentClass === "sourced_guidance")
-    return { ...evidence, decision: "hold" as const, reasons: [...evidence.reasons, regulatorySourceHold] };
-  return evidence;
+  return evaluatePublication(bundle);
 }
 
 export type ReleaseAttestations = {
@@ -312,7 +314,18 @@ export async function publishOperationalVersionInTransaction(tx: PublicationTx, 
   const { valoContentVersions, valoPublicationAudit } = await import("@workspace/db");
   const { row, bundle } = await validateOperationalVersionInTransaction(tx, id);
   if (row.status === "published") return { id, decision: "published" as const, idempotent: true };
-  if (bundle.candidate.contentClass === "sourced_guidance") throw Error(regulatorySourceHold);
+  // A guide is released only on the development owner's check of its exact candidate and captures, made
+  // within the last day (decision 0018). The database refuses the release without it too.
+  if (
+    bundle.candidate.contentClass === "sourced_guidance" &&
+    !(await reviewedGuideChecked(
+      tx,
+      id,
+      row.candidateHash,
+      (row.attestations as ReleaseAttestations).sourceSnapshots,
+    ))
+  )
+    throw Error(regulatorySourceHold);
   await tx
     .update(valoContentVersions)
     .set({ status: "published", publishedAt: new Date() })

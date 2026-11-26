@@ -25,9 +25,9 @@ import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
  *     editorial cases' review pairs (decision 0015), or with --checker-challenges only the challenges
  *     of the requirements check's frozen scenarios (RUL-008), or with --guide-pairs only the review pairs of
  *     guides that say what the law requires (decision 0017): each approval covers one kind of work.
- *     A guide package is written for reading only: `approve` refuses it, since the publisher
- *     releases a guide only after the owner's source check (decision 0018) and its reviews would
- *     release nothing.
+ *     A guide's review pair is admitted and sent only once the development owner has checked that
+ *     exact candidate's official sources within the last day, and the publisher releases the guide
+ *     only on such a check of it (decision 0018; docs/architecture/reviewed-route.md, part 2).
  *   tsx src/scripts/finite-allocation-approval.ts status
  *     Lists every recorded package approval. Read-only.
  *   VALO_RECORD_OWNER_INFERENCE_APPROVAL=owner-approved-exact-finite-package \
