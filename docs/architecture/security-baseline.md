@@ -139,13 +139,25 @@ but the counts reads keep (3.4.1, 3.4.5, 4.1.1, 15.3.6, 15.3.7, 3.5.3).
 - **In the code:** strict equality in the linter (15.3.5), and a repository rule, `no-shell`, that
   refuses `exec` and `execSync` from `child_process` and a `shell` option (1.2.5).
 
+Slice 3b added:
+- **The staff upload's limits**, in a note of their own ([staff upload limits](../valo/staff-upload-limits.md)),
+  and tests that give the upload a file over each limit, a file whose content is not its kind, a Word
+  package over its limits, and a Word file that declares an entity (5.1.1, 5.2.1, 5.2.2, 5.2.3, 1.5.1).
+- **Storage probes that refuse redirects:** every anonymous probe of private storage goes through
+  one function, which takes a redirect as its answer, as the storage probe already did (15.3.2). The
+  official sources' downloads keep following at most three redirects, each to https on the source's
+  own host and checked first, as their tests show.
+- **A token made for another site:** through the API's own identity middleware, with a synthetic key
+  and no call to the provider, a session token made for another site, or for none, signs no one in
+  (9.2.3).
+
 ## What the map finds
 
 | Status | Requirements |
 | --- | --- |
-| met | 69 |
-| partly met | 35 |
-| untested | 19 |
+| met | 76 |
+| partly met | 33 |
+| untested | 14 |
 | not met | 3 |
 | not applicable | 63 |
 | identity provider | 54 |
@@ -166,16 +178,15 @@ but the counts reads keep (3.4.1, 3.4.5, 4.1.1, 15.3.6, 15.3.7, 3.5.3).
   a network allowlist and the database's transport.
 
 What is left falls to the plan's later rows and to the launch:
-- **Small hardening** (Phase 7): HSTS on static files and subdomains once the domain is known; no
-  redirects on storage and source downloads; tests of the staff upload's refusals and the authorized
-  party; a check of the built image for `.git`; time frames and an owner for advisories; a software
-  bill of materials.
+- **Small hardening** (Phase 7): HSTS on static files and subdomains once the domain is known; a
+  check of the built image for `.git`; time frames and an owner for advisories; a software bill of
+  materials.
 - **Alerts that reach a person** (Phase 7): logs to a system of their own, which waits for the owner.
   Each request's log line now names its route (16.2.1), refused input is counted as a security event
   (16.3.3), and the log inventory lists what is logged, where it goes, for whom and for how long, with a
   test that keeps it to the code (16.1.1, 16.2.3).
 - **Documents**: the key policy and inventory, protection levels, field-level authorization rules,
-  the ways in with the strength each needs, and the staff upload's limits; and, in the processor
+  and the ways in with the strength each needs; and, in the processor
   review, the host the identity provider's script sends its telemetry to (`clerk-telemetry.com`),
   which the pages' policy allows.
 - **The launch review**: the identity provider's settings and the host's, for the 64 entries that are

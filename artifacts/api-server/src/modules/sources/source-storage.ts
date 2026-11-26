@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { Client } from "@replit/object-storage";
 import { setting } from "../../platform/settings";
+import { anonymousObjectStatus } from "../../platform/anonymous-object";
 const checksum = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
 function sourceObject(snapshotId: string, kind: "raw" | "text") {
   if (!/^[a-f0-9-]{36}$/.test(snapshotId)) throw Error("SOURCE_STORAGE_INVALID_ID");
@@ -43,12 +44,11 @@ export async function probePrivateSource(snapshotId: string, kind: "raw" | "text
   const stored = await client.downloadAsBytes(name);
   if (!stored.ok || checksum(stored.value[0]) !== expectedChecksum)
     throw Error("SOURCE_STORAGE_CHECKSUM_FAILED");
-  const response = await fetch(
-    `https://storage.googleapis.com/${encodeURIComponent(bucket)}/${name.split("/").map(encodeURIComponent).join("/")}`,
-    { signal: AbortSignal.timeout(10000) },
-  );
-  await response.body?.cancel();
-  return { anonymousStatus: response.status, authorizedChecksumMatched: true, size: stored.value[0].length };
+  return {
+    anonymousStatus: await anonymousObjectStatus(bucket, name),
+    authorizedChecksumMatched: true,
+    size: stored.value[0].length,
+  };
 }
 /** Internal source-evidence reader only; never mounted as a public download. */
 export async function readSourceText(snapshotId: string, expectedChecksum: string) {

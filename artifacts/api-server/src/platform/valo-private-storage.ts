@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { Client } from "@replit/object-storage";
 import { privateStorageScope, privateObjectName, type StorageScope } from "./valo-storage-scope";
 import { environment } from "./settings";
+import { anonymousObjectStatus } from "./anonymous-object";
 export const fileChecksum = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
 function object(key: string, scope = runtimePrivateScope()) {
   const name = privateObjectName(scope, key);
@@ -59,12 +60,7 @@ export const deletePrivateFile = (key: string) => remove(runtimePrivateScope(), 
 /** Compatibility probe only: never returns the bucket/object locator. */
 export async function anonymousPrivateFileStatus(key: string) {
   const { bucket, name } = object(key);
-  const response = await fetch(
-    `https://storage.googleapis.com/${encodeURIComponent(bucket)}/${name.split("/").map(encodeURIComponent).join("/")}`,
-    { signal: AbortSignal.timeout(10000) },
-  );
-  await response.body?.cancel();
-  return response.status;
+  return anonymousObjectStatus(bucket, name);
 }
 export function privateWorkspaceObject(key: string) {
   if (!key.endsWith(".json")) throw Error("WORKSPACE_JSON_REQUIRED");

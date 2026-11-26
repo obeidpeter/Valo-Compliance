@@ -3,6 +3,7 @@ import { Client } from "@replit/object-storage";
 import { privateStorageScope, storageProbeName } from "../platform/valo-storage-scope";
 import { runStorageProbe } from "../platform/valo-storage-probe";
 import { setting } from "../platform/settings";
+import { anonymousObjectStatus } from "../platform/anonymous-object";
 
 // This opt-in operator command only addresses a separate synthetic canary prefix.
 // No production route or background worker invokes it automatically.
@@ -48,14 +49,7 @@ try {
     runId,
     action === "--start" ? "start" : "cleanup",
     new Client({ bucketId: scope.bucket }),
-    async (bucket, name) => {
-      const response = await fetch(
-        `https://storage.googleapis.com/${encodeURIComponent(bucket)}/${name.split("/").map(encodeURIComponent).join("/")}`,
-        { redirect: "manual", signal: AbortSignal.timeout(10_000) },
-      );
-      await response.body?.cancel();
-      return response.status;
-    },
+    (bucket, name) => anonymousObjectStatus(bucket, name),
   );
   console.log(JSON.stringify(report));
   if (!report.passed) process.exitCode = 1;

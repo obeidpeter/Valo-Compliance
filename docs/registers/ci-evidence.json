@@ -149,6 +149,55 @@
       "proves": "The repository rule no-shell refuses product code that takes exec or execSync from child_process, by import, require or a dynamic import, or writes a shell option where it starts a program, and finds none in the repository."
     },
     {
+      "requirement": "SEC-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/manual-library/files.test.ts",
+      "test": "the staff upload refuses a file over its limits before it reads it",
+      "proves": "The staff upload answers a file longer than 2 MB of base64 with 413, and one over 2 MB, empty or not plain base64, a Word package that expands past 12 MB or holds more than 300 parts, and a PDF of more than 100 pages, with 422."
+    },
+    {
+      "requirement": "SEC-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/manual-library/files.test.ts",
+      "test": "the staff upload refuses a file whose content is not its kind, or that carries a program",
+      "proves": "The staff upload refuses a PDF given as a Word file and a Word file given as a PDF, a package that is not a Word document, a Word package with a macro, an embedded object or a part named outside the package, and a PDF with a script."
+    },
+    {
+      "requirement": "SEC-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/manual-library/files.test.ts",
+      "test": "the staff upload refuses a Word file that declares a document type or an entity, or reaches outside itself",
+      "proves": "The staff upload refuses a Word file whose document or content types declare a document type or an entity, one with a picture fetched from outside it, and one with a reference outside Unicode."
+    },
+    {
+      "requirement": "SEC-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/manual-library/files.test.ts",
+      "test": "a standard Word file is read, and its text kept as written",
+      "proves": "A standard Word file's text is read as written, an entity it does not declare stays as written rather than being expanded, and a hyperlink out of it is kept as a link."
+    },
+    {
+      "requirement": "SEC-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/platform/anonymous-object.test.ts",
+      "test": "an anonymous probe of a private object reports a redirect as its answer and never follows it (SEC-002)",
+      "proves": "Against a server of the test's own, the anonymous probe of a private object reports a redirect, or a refusal, as its answer and never asks for the redirect's target."
+    },
+    {
+      "requirement": "SEC-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/platform/anonymous-object.test.ts",
+      "test": "only the anonymous probe addresses the storage service directly",
+      "proves": "No product source of the API but the anonymous probe addresses the storage service, so every probe of private storage refuses redirects."
+    },
+    {
+      "requirement": "IAM-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/middlewares/identity.test.ts",
+      "test": "a sign-in token is accepted only when it was made for Valo's own site, and only as the provider signed it",
+      "proves": "Through the API's own identity middleware, with a synthetic instance's key and no call to the provider, a session token made for Valo's site signs its holder in, and one made for another site or for none, signed with another key or past its time, signs no one in."
+    },
+    {
       "requirement": "NFR-011",
       "job": "foundation",
       "file": "scripts/src/valo/architecture-check.test.ts",
