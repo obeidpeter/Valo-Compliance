@@ -127,7 +127,7 @@ app, the real API and a disposable database. A synthetic customer saves hostile 
 API wherever they type text that the app shows back:
 - the business profile;
 - a document's title and fields;
-- a form's answers;
+- the answers to a template's questions;
 - a task;
 - a support request;
 - a privacy request.
@@ -191,7 +191,7 @@ The payloads live in one test-support list. They cover:
 | Slice | What | Size | State |
 | --- | --- | --- | --- |
 | 1 | Part 1: every change from another site, and the preview files' checks that need no preview | M | Built |
-| 2 | Part 2: stored markup, drawn on the customer's and staff's screens | M | Proposed |
+| 2 | Part 2: stored markup, drawn on the customer's and staff's screens | M | Built |
 | 3 | Parts 3 and 4: reflected markup, injection, the security headers fix and the two rules | M | Proposed |
 
 ## Settled while building it
@@ -208,6 +208,14 @@ The payloads live in one test-support list. They cover:
   task, and the comparison sees the tasks table change.
 - **The preview files stay.** They probe the real proxy and the development database's data, which CI
   cannot reach. The test inventory says which of their checks now run in CI.
+- **Slice 2: a template's questions.** A template's form of its own (forms v2) needs the template's
+  wording released for it, which a disposable database does not hold. The test starts the invoice's
+  questions-only form instead, as the app's own button starts it, with the markup among its answers.
+- **Slice 2: the staff roles.** The member of staff holds the content, support and privacy roles. The
+  staff page opens on its Content area, whose requests are refused to staff without the content role,
+  and every request a screen makes must be answered.
+- **Slice 2: the check can fail.** After the screens, the same markup is put into a page as HTML on
+  purpose. It runs and leaves its elements, and the check finds both.
 
 ## The owner's points
 

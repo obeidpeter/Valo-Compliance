@@ -468,6 +468,8 @@ jobs:
           name: tester-tasks-invoices
           path: generated-artifacts/tester-tasks
           if-no-files-found: ignore
+      - name: Draw markup saved through the API on the customer's and staff's screens, and find it shown as text (SEC-003)
+        run: pnpm --filter @workspace/api-server test:valo-stored-markup-db
       - name: Prove the release record names the commit, migrations, content and rule versions and known issues (OPS-005)
         run: pnpm --filter @workspace/api-server test:valo-release-record-db
       - name: Prove the staff Content area lists templates awaiting their reviews (KI-010)
