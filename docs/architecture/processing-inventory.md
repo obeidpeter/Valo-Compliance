@@ -88,7 +88,7 @@ Each slice is its own pull request.
 | 2 | **The notice.** Part 2: the privacy page from the inventory, with its version, and its browser test. | PRV-001, PRO-002 | Built |
 | 3a | **The notice at the business profile.** Part 3 for the profile, whose versions already keep a notice version. | PRV-001, PRO-002 | Built |
 | 3b | **The notice at sign-up, a support request and the drafting assistant.** Part 3 for the rest, with a migration for the version each record keeps. | PRV-001, PRO-002 | Not started |
-| 4 | **Consents.** Part 4, with a migration for the consent history and its upgrade test. | PRO-002 | Not started |
+| 4 | **Consents.** Part 4, with a migration for the consent history and its upgrade test. | PRO-002 | Built |
 | 5 | **Erasure.** Part 5, with a database test. | PRV-003 | Built |
 
 ## Settled while building it
@@ -140,6 +140,23 @@ Each slice is its own pull request.
 - **Left for slice 3b.** Sign-up, a support request and the drafting assistant's agreement keep no
   notice version yet; their tables need a column, and so a migration. The contact form's records keep
   their own fixed label, `development-access-support-1`, which this slice does not change.
+
+### Slice 4: consents with their history
+
+- **One history for both choices.** `valo_consent_changes` keeps each change to a workspace's
+  marketing choice and its reminder opt-in: which choice, what was chosen, who made the change, when, and
+  the privacy notice's version in force. A save that keeps a choice as it was adds nothing; declining at
+  the start adds nothing either, since off is where every choice starts.
+- **Compared with what was saved before.** The marketing choice is compared with the profile's previous
+  version, and the reminder opt-in with the saved setting. History starts with this slice: a choice made
+  earlier has no row until it next changes.
+- **Customer requests add and read, and change nothing.** The scoped role may only insert a row and
+  read its own workspace's (row-level security), so the history cannot be edited from the site.
+- **Until the migrations are applied**, saving a changed choice answers 503 and changes nothing, rather
+  than saving the choice without its record ([runbook](../valo/migration-consent-changes.md)).
+- **Erasure** removes a workspace's history with its other rows, in a phase appended after slice 5's.
+- **The reminders' own label.** A reminder setting still carries `optional-task-reminders-v1`, the
+  version of the reminder screen's words. The history keeps the privacy notice's version beside it.
 
 ### Slice 5: erasure
 

@@ -2960,7 +2960,7 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/documents/valo-workspace-documents.integration.test.ts",
       "test": "development PostgreSQL tenant, concurrency, history and durable-ticket proof",
-      "proves": "A synthetic workspace's first profile save with marketing declined succeeds and returns marketing declined, a correction is stored as a second profile version while the first version still shows the original state, and a save from a stale profile revision is refused with a conflict."
+      "proves": "On a disposable database, each saved business profile version is kept with its revision and the version of the privacy notice in force when it was saved, a declined marketing choice stays declined and records no change, turning marketing on and off again is each recorded once in the consent history with the notice's version and who changed it, and a stale save is refused."
     },
     {
       "requirement": "PRO-002",
@@ -3065,7 +3065,7 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/documents/valo-workspace-documents.integration.test.ts",
       "test": "profile correction appends history, preserves declined marketing and rejects stale saves",
-      "proves": "On a disposable database, each saved business profile version is kept with its revision and the version of the privacy notice in force when it was saved, a declined marketing choice stays declined, and a stale save is refused."
+      "proves": "On a disposable database, each saved business profile version is kept with its revision and the version of the privacy notice in force when it was saved, a declined marketing choice stays declined and records no change, turning marketing on and off again is each recorded once in the consent history with the notice's version and who changed it, and a stale save is refused."
     },
     {
       "requirement": "PRO-002",
@@ -3073,6 +3073,13 @@
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
       "test": "the business profile's marketing choice is off unless chosen, says saying no changes nothing else, and links the privacy notice",
       "proves": "On an emulated phone with stand-in answers, the business profile's marketing choice is off, says it is optional and that saying no changes nothing else, and links the privacy notice."
+    },
+    {
+      "requirement": "PRO-002",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/tasks/valo-requirements.integration.test.ts",
+      "test": "dispatch checks opt-out before any adapter invocation",
+      "proves": "On a disposable database, turning task reminders on and off again is each recorded once in the consent history, with the privacy notice's version and who made the change, while a save that keeps reminders on records nothing."
     },
     {
       "requirement": "PRV-003",
