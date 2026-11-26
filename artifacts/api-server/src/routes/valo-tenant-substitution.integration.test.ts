@@ -198,6 +198,10 @@ const PRIVATE_TABLES: Record<string, { cases: readonly string[] } | { reason: st
     ],
   },
   valo_concern_messages: { cases: ["POST /workspace/concerns/{id}/respond"] },
+  valo_consent_changes: {
+    reason:
+      "History of the workspace's own optional choices, written by PUT /workspace/profile and PUT /workspace/reminder-preferences; never named by identifier.",
+  },
   valo_correction_notices: {
     reason: "Notices to the workspace; customers list only their own (GET /workspace/correction-notices).",
   },

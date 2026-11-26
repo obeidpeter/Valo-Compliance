@@ -10,6 +10,7 @@ import {
   valoEvents,
   valoMemberships,
   valoProfileVersions,
+  valoConsentChanges,
   valoSupportCases,
   valoSupportTickets,
   valoWorkspaces,
@@ -84,6 +85,35 @@ test(
           assert.equal(versions.find((v) => v.revision === 2)!.profile.state, "Bayelsa");
           // Each version keeps the privacy notice in force when it was saved (processing inventory, slice 3).
           for (const version of versions) assert.equal(version.noticeVersion, privacyNotice().version);
+          // PRO-002: turning marketing on, and off again, is each recorded with the notice in force; a save
+          // that keeps the choice is not, and declining it at the start records nothing (slice 4).
+          assert.equal(
+            (
+              await db
+                .select()
+                .from(valoConsentChanges)
+                .where(eq(valoConsentChanges.workspaceId, a.workspaceId))
+            ).length,
+            0,
+          );
+          for (const [expectedRevision, marketingConsent] of [
+            [2, true],
+            [3, true],
+            [4, false],
+          ] as const)
+            await saveProfile(a, { expectedRevision, profile: { ...syntheticProfile, marketingConsent } });
+          const changes = await db
+            .select()
+            .from(valoConsentChanges)
+            .where(eq(valoConsentChanges.workspaceId, a.workspaceId))
+            .orderBy(valoConsentChanges.createdAt);
+          assert.deepEqual(
+            changes.map((change) => [change.consent, change.choice, change.noticeVersion, change.actorId]),
+            [
+              ["marketing", true, privacyNotice().version, a.identityId],
+              ["marketing", false, privacyNotice().version, a.identityId],
+            ],
+          );
           assert.equal((await getWorkspace(b)).profile, null);
         },
       );
@@ -587,6 +617,7 @@ test(
         await tx.delete(valoDocumentRevisions).where(inArray(valoDocumentRevisions.workspaceId, workspaces));
         await tx.delete(valoDocuments).where(inArray(valoDocuments.workspaceId, workspaces));
         await tx.delete(valoProfileVersions).where(inArray(valoProfileVersions.workspaceId, workspaces));
+        await tx.delete(valoConsentChanges).where(inArray(valoConsentChanges.workspaceId, workspaces));
         await tx.delete(valoMemberships).where(inArray(valoMemberships.workspaceId, workspaces));
         await tx.delete(valoWorkspaces).where(inArray(valoWorkspaces.id, workspaces));
       });

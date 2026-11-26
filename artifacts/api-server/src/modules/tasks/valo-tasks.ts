@@ -25,6 +25,7 @@ import {
 } from "../rules";
 import { reminderEmailConfiguration, automaticReminderDeliveryReady } from "./valo-reminder-resend";
 import { singleRow } from "../../platform/rows";
+import { recordConsentChange } from "../../lib/consent-changes";
 
 const emailBlocker =
   "Development email needs an approved sender and an owner-controlled test recipient. Preferences are saved; inbox delivery has not been verified.";
@@ -433,6 +434,14 @@ export async function saveReminderPreferences(actor: WorkspaceActor, raw: unknow
       actorId: actor.identityId,
       updatedAt: new Date(),
     };
+    // Turning reminders on or off is recorded with the notice in force (processing inventory, slice 4).
+    if ((old?.enabled ?? false) !== input.enabled)
+      await recordConsentChange(tx, {
+        workspaceId: actor.workspaceId,
+        actorId: actor.identityId,
+        consent: "reminders",
+        choice: input.enabled,
+      });
     const savedPrefs = singleRow(
       await tx
         .insert(valoReminderPreferences)

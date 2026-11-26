@@ -84,6 +84,7 @@ export const processingInventory: readonly ProcessingActivity[] = [
       "its state and local government area, number of employees and turnover band",
       "whether it handles personal data, imports or manufactures",
       "your choice about marketing messages",
+      "each change to your choices about marketing messages and reminders, with the version of this notice in force",
     ],
     subjects: ["account holders", "sole traders whose business details are about them"],
     staff: null,
@@ -91,7 +92,7 @@ export const processingInventory: readonly ProcessingActivity[] = [
     retention:
       "Kept while your account is open, with every earlier version. A verified deletion request removes them.",
     consent: null,
-    tables: ["valo_profile_versions"],
+    tables: ["valo_profile_versions", "valo_consent_changes"],
   },
   {
     id: "documents",

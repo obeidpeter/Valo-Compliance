@@ -10,6 +10,7 @@ import { ValoProblem } from "../../platform/valo-problem";
 import { privacyIdentityHashes } from "../../lib/valo-privacy-keys";
 import { workspaceActorFromMembership, type WorkspaceActor } from "../../platform/workspace-context";
 import { singleRow } from "../../platform/rows";
+import { recordConsentChange } from "../../lib/consent-changes";
 export type { WorkspaceActor };
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 /** Read authorization must not retain a membership SHARE lock during a long
@@ -246,6 +247,26 @@ export async function saveProfile(actor: WorkspaceActor, raw: unknown) {
         workspace.profileRevision,
       );
     await limitWorkspaceWrite(tx, actor, "profile");
+    // A change to the marketing choice is recorded with the notice in force (processing inventory, slice 4).
+    const [previous] = workspace.profileRevision
+      ? await tx
+          .select({ profile: valoProfileVersions.profile })
+          .from(valoProfileVersions)
+          .where(
+            and(
+              eq(valoProfileVersions.workspaceId, actor.workspaceId),
+              eq(valoProfileVersions.revision, workspace.profileRevision),
+            ),
+          )
+      : [];
+    const marketing = input.profile.marketingConsent === true;
+    if ((previous?.profile.marketingConsent === true) !== marketing)
+      await recordConsentChange(tx, {
+        workspaceId: actor.workspaceId,
+        actorId: actor.identityId,
+        consent: "marketing",
+        choice: marketing,
+      });
     const revision = workspace.profileRevision + 1;
     await tx.insert(valoProfileVersions).values({
       id: randomUUID(),

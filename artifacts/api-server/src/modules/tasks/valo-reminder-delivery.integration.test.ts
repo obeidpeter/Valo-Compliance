@@ -9,6 +9,7 @@ import {
   pool,
   valoReminderOutbox,
   valoReminderPreferences,
+  valoConsentChanges,
   valoTasks,
   valoEvents,
   valoMemberships,
@@ -459,6 +460,7 @@ test(
       await db
         .delete(valoReminderPreferences)
         .where(eq(valoReminderPreferences.workspaceId, actor.workspaceId));
+      await db.delete(valoConsentChanges).where(eq(valoConsentChanges.workspaceId, actor.workspaceId));
       await db.delete(valoTasks).where(eq(valoTasks.workspaceId, actor.workspaceId));
       await db.delete(valoEvents).where(eq(valoEvents.workspaceId, actor.workspaceId));
       await db.delete(valoMemberships).where(eq(valoMemberships.workspaceId, actor.workspaceId));

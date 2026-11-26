@@ -71,11 +71,11 @@ const legacyPhases = [
 ] as const;
 /**
  * Phases added after the copy phases: a workspace's notices that a requirements-check rule's version,
- * or a template edition, was replaced or withdrawn (docs/architecture/processing-inventory.md,
- * slice 5). Append only: every earlier phase keeps its index, so an erasure in progress resumes where
+ * or a template edition, was replaced or withdrawn, and the history of its optional choices
+ * (docs/architecture/processing-inventory.md, slices 5 and 4). Append only: every earlier phase keeps its index, so an erasure in progress resumes where
  * it stopped and runs these at its end. A finished erasure is not reopened.
  */
-const laterPhases = ["valo_rule_notices", "valo_edition_notices"] as const;
+const laterPhases = ["valo_rule_notices", "valo_edition_notices", "valo_consent_changes"] as const;
 const phases = [...legacyPhases, ...copyPhases, ...laterPhases] as const;
 /** How many application phases a current erasure, or its replay, runs one at a time. */
 export const applicationErasurePhaseCount = phases.length;
