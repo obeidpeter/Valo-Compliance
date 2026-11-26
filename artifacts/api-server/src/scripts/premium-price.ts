@@ -19,7 +19,9 @@ import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
  *     prices. Read-only.
  *   pnpm --filter @workspace/api-server price:premium preview --edition <edition ID> \
  *     --amount <naira> --licence-version <version> --licence-file <file> --tax <tax treatment> \
- *     [--from now|<ISO time with offset>]
+ *     [--from now|<ISO time with offset>] [--carries yes|no]
+ *     --carries yes records the price for each later edition of the template as it is released
+ *     (docs/architecture/commercial-settings.md, slice 2); it is part of the terms and their checksum.
  *     Prints the exact terms and their checksum. Writes nothing.
  *   VALO_RECORD_OWNER_PRICE_APPROVAL=owner-approved-exact-price-terms \
  *   pnpm --filter @workspace/api-server price:premium record <the same terms> \
@@ -28,7 +30,7 @@ import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
  */
 const usage =
   "usage: premium-price.ts status | preview <terms> | record <terms> --approved-by <who> --reference <where> --confirm <checksum>; " +
-  "terms: --edition <id> --amount <naira> --licence-version <version> --licence-file <file> --tax <text> [--from now|<ISO time>]";
+  "terms: --edition <id> --amount <naira> --licence-version <version> --licence-file <file> --tax <text> [--from now|<ISO time>] [--carries yes|no]";
 const [mode, ...rest] = process.argv.slice(2);
 const option = (name: string) => {
   const index = rest.indexOf(name);
@@ -45,6 +47,7 @@ async function terms() {
     licenceText: await readFile(file, "utf8"),
     taxTreatment: option("--tax"),
     from: option("--from"),
+    carries: option("--carries"),
   });
 }
 
@@ -56,6 +59,7 @@ function describe(value: Awaited<ReturnType<typeof terms>>) {
     `licence text:    ${value.licenceText.length} characters, starting "${value.licenceText.slice(0, 60)}"`,
     `tax treatment:   ${value.taxTreatment}`,
     `starts:          ${value.from}`,
+    `later editions:  ${value.carries ? "carries to each one as it is released" : "does not carry"}`,
   ].join("\n");
 }
 
@@ -73,6 +77,8 @@ try {
           console.log(
             `  ${formatKobo(BigInt(p.amountKobo))}, licence ${p.licenceVersion}, from ${p.effectiveFrom.toISOString()}` +
               (p.effectiveTo ? ` to ${p.effectiveTo.toISOString()}` : "") +
+              (p.carriesToLaterEditions ? ", carries to later editions" : "") +
+              (p.carriedFrom ? `, carried from price ${p.carriedFrom}` : "") +
               ` (price ${p.priceId})`,
           );
       }

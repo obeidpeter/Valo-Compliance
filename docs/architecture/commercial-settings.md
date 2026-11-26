@@ -54,7 +54,7 @@ terms wait on the owner's refund policy.
 1. **The owner's price screen** (built). In the System area, the development owner records a premium
    template's price, after a preview of the exact terms and their checksum. The owner's own verified
    sign-in is the approval's author. The command stays for recovery.
-2. **A price carried to the next edition.** When the owner records a price, they choose whether it
+2. **A price carried to the next edition** (built). When the owner records a price, they choose whether it
    carries to the template's later editions, and the choice is part of the checksum. When the next
    edition is released, a price that carries is recorded for it, with the same terms and a link to the
    price it came from, and the earlier edition's price closes.
@@ -132,6 +132,44 @@ takes no payment, and no sample price is carried into production.
 - A price that does not carry leaves the new edition without a price, as today, until the owner records
   one.
 - An order for the earlier edition keeps its price, terms and amount.
+- A carried price carries on: the release after it carries the copy, never the original again.
+- A price the owner scheduled for the edition on sale carries too, from its own start. The price on
+  sale until then carries with the end it already has; a price closes once, so neither is closed
+  again.
+
+**How it is built.**
+- Migration `price_carries` adds `carries_to_later_editions`, which is no for every price recorded
+  before it, and `carried_from`, with a check that a carried price carries on. The new columns change
+  every price row's hash, so the same migration reseeds the prices' history digest (audit trail,
+  `valo_history_digest_reseed`).
+- Migration `price_carry_on_release` adds `valo_carry_premium_prices`, run by a trigger on the staff
+  library when an edition of a premium template becomes published. It records the carried prices in
+  the release's own transaction, whatever code releases the edition, with the releasing login's own
+  rights. The customer role cannot run it.
+- The copy keeps the owner's approval reference as it was written; `carried_from` is the link, so the
+  reference stays the same however many editions it is carried to.
+- The terms' checksum now includes the choice. A preview made before this change no longer matches,
+  so recording it asks for a new preview.
+- The `price:premium` command takes `--carries yes` or `--carries no`. On the owner's screen it is a
+  checkbox, and the preview says whether the price carries to later editions.
+
+**Tests.**
+- **Unit:** the choice is yes or no, anything else is refused, and the checksum changes with it.
+- **Over HTTP, in the staff library's database test:**
+  - a price that does not carry leaves the next edition without one;
+  - the same terms that carry have another checksum, and recording with the other one is refused;
+  - at the next release, a price that carries is recorded for the new edition with the same amount,
+    licence, tax treatment and approval reference, carried from it, starting when it closes;
+  - **ADM-006:** an order made at the earlier edition's price keeps its price, amount, licence and
+    edition;
+  - the release after that carries the copy, never the original again, and the change log keeps each
+    one;
+  - a scheduled price carries from its own start, and the price on sale until then keeps its end.
+- **On the migrations:** prices recorded before carry nothing and keep their terms, the prices' digest
+  still matches, the check refuses a carried price that does not carry on, the trigger is defined as
+  written, and the customer role cannot run its function.
+- **In the browser, on a phone:** the owner ticks the choice, the preview says the price carries, and
+  the recording sends it with the checksum.
 
 ## Slice 3: quotas and the access rule as versioned settings
 
@@ -173,4 +211,4 @@ takes no payment, and no sample price is carried into production.
 
 ## What comes next
 
-Slice 2, a price carried to the next edition.
+Slice 3, quotas and the access rule as versioned settings.

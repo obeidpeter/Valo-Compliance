@@ -11,6 +11,7 @@ import {
   index,
   foreignKey,
   check,
+  type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import { currentWorkspace, linkedRowPolicy, workspaceRowPolicy } from "./valo-workspace-scope";
 import { sql } from "drizzle-orm";
@@ -57,12 +58,21 @@ export const valoPrices = pgTable(
     effectiveFrom: timestamp("effective_from", { withTimezone: true }).notNull(),
     effectiveTo: timestamp("effective_to", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    /**
+     * Whether the owner's approval of these terms covers the template's later editions
+     * (docs/architecture/commercial-settings.md, slice 2). Part of the terms: it never changes.
+     */
+    carriesToLaterEditions: boolean("carries_to_later_editions").notNull().default(false),
+    /** The price this one was carried from, at the release of its template's next edition. */
+    carriedFrom: uuid("carried_from").references((): AnyPgColumn => valoPrices.id),
   },
   (t) => [
     check("valo_prices_amount_kobo_check", sql`${t.amountKobo} > 0`),
     check("valo_prices_approval_reference_check", sql`length(${t.approvalReference}) > 0`),
     check("valo_prices_check", sql`${t.effectiveTo} IS NULL OR ${t.effectiveTo} > ${t.effectiveFrom}`),
     check("valo_prices_currency_check", sql`${t.currency} = 'NGN'`),
+    // A price carried to a later edition carries on to the next.
+    check("valo_prices_carried_check", sql`${t.carriedFrom} IS NULL OR ${t.carriesToLaterEditions}`),
   ],
 );
 /**

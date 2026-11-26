@@ -7,6 +7,7 @@
  */
 
 export interface OwnerPriceExactTerms {
+  carries: boolean;
   edition: string;
   /** @minimum 1 */
   amountKobo: number;

@@ -575,6 +575,20 @@
       "when": 1795651858769,
       "tag": "20261126001058_history_digest_reseed",
       "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1795652194814,
+      "tag": "20261126001634_price_carries",
+      "breakpoints": true
+    },
+    {
+      "idx": 83,
+      "version": "7",
+      "when": 1795652314803,
+      "tag": "20261126001834_price_carry_on_release",
+      "breakpoints": true
     }
   ]
 }

@@ -1014,6 +1014,12 @@ export interface OwnerPrice {
   effectiveFrom: string;
   /** @nullable */
   effectiveTo: string | null;
+  carriesToLaterEditions: boolean;
+  /**
+     * The price this one was carried from, at its edition's release
+     * @nullable
+     */
+  carriedFrom: string | null;
 }
 
 export interface OwnerPricedTemplate {
@@ -1037,6 +1043,8 @@ export interface OwnerPricePage {
 }
 
 export interface OwnerPriceTerms {
+  /** Whether the price is recorded for each later edition of the template as it is released */
+  carries: boolean;
   edition: string;
   /**
      * The amount in naira, such as 1500 or 1500.00
@@ -1064,6 +1072,7 @@ export interface OwnerPriceTerms {
 }
 
 export interface OwnerPriceExactTerms {
+  carries: boolean;
   edition: string;
   /** @minimum 1 */
   amountKobo: number;
@@ -1081,6 +1090,7 @@ export interface OwnerPricePreview {
 }
 
 export interface OwnerPriceRecord {
+  carries: boolean;
   edition: string;
   /** @pattern ^\d{1,8}(\.\d{2})?$ */
   amount: string;

@@ -7,6 +7,8 @@
  */
 
 export interface OwnerPriceTerms {
+  /** Whether the price is recorded for each later edition of the template as it is released */
+  carries: boolean;
   edition: string;
   /**
      * The amount in naira, such as 1500 or 1500.00

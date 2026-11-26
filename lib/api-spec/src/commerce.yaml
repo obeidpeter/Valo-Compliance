@@ -333,7 +333,7 @@ schemas:
   OwnerPrice:
     type: object
     additionalProperties: false
-    required: [priceId, amountKobo, licenceVersion, taxTreatment, effectiveFrom, effectiveTo]
+    required: [priceId, amountKobo, licenceVersion, taxTreatment, effectiveFrom, effectiveTo, carriesToLaterEditions, carriedFrom]
     properties:
       priceId: { type: string, format: uuid }
       amountKobo: { type: integer, minimum: 1 }
@@ -341,11 +341,14 @@ schemas:
       taxTreatment: { type: string }
       effectiveFrom: { type: string, format: date-time }
       effectiveTo: { type: [string, "null"], format: date-time }
+      carriesToLaterEditions: { type: boolean }
+      carriedFrom: { type: [string, "null"], format: uuid, description: "The price this one was carried from, at its edition's release" }
   OwnerPriceTerms:
     type: object
     additionalProperties: false
-    required: [edition, amount, licenceVersion, licenceText, taxTreatment, from]
+    required: [edition, amount, licenceVersion, licenceText, taxTreatment, from, carries]
     properties:
+      carries: { type: boolean, description: "Whether the price is recorded for each later edition of the template as it is released" }
       edition: { type: string, format: uuid }
       amount: { type: string, pattern: "^\\d{1,8}(\\.\\d{2})?$", description: "The amount in naira, such as 1500 or 1500.00" }
       licenceVersion: { type: string, pattern: "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" }
@@ -355,8 +358,9 @@ schemas:
   OwnerPriceExactTerms:
     type: object
     additionalProperties: false
-    required: [edition, amountKobo, licenceVersion, licenceText, taxTreatment, from]
+    required: [edition, amountKobo, licenceVersion, licenceText, taxTreatment, from, carries]
     properties:
+      carries: { type: boolean }
       edition: { type: string, format: uuid }
       amountKobo: { type: integer, minimum: 1 }
       licenceVersion: { type: string }
@@ -374,8 +378,9 @@ schemas:
   OwnerPriceRecord:
     type: object
     additionalProperties: false
-    required: [edition, amount, licenceVersion, licenceText, taxTreatment, from, reference, confirm]
+    required: [edition, amount, licenceVersion, licenceText, taxTreatment, from, carries, reference, confirm]
     properties:
+      carries: { type: boolean }
       edition: { type: string, format: uuid }
       amount: { type: string, pattern: "^\\d{1,8}(\\.\\d{2})?$" }
       licenceVersion: { type: string, pattern: "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" }
