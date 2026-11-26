@@ -232,6 +232,14 @@ development default, not a reviewed threshold, under the security/privacy incide
       minutes old.
   - **The rule.** Every table whose rows a trigger guards against deletion keeps a digest, as it refuses
     TRUNCATE; the migration test checks this on the whole schema.
+  - **A change to a history's columns.** A row's hash is of every column it holds, so a migration that
+    adds, drops, renames or retypes a history's column changes every row's hash, and the count would
+    find that history mismatched. Such a migration calls `valo_history_digest_reseed` for that history
+    after the change, in its own transaction, and the history's digest starts again from its rows.
+    - It reseeds only a table that keeps a digest, and the digest's guard is on again before it returns.
+    - Only migrations call it: the repository rule `history-reseed` keeps product code from naming it.
+    - The migration test runs the whole chain over rows written before it and finds every digest
+      matching, so a migration that forgets to reseed fails it.
   - **What it cannot show.** The owning login could change a row and its digest together. Only slice 5,
     an owner the application cannot act as, closes that.
 
@@ -250,7 +258,10 @@ development default, not a reviewed threshold, under the security/privacy incide
   - a digest trigger switched off is found;
   - a digest cannot be changed or removed directly, and a kept count cannot be changed;
   - every table whose rows a trigger guards against deletion keeps a digest.
-- The index and digest migrations have their upgrade checks.
+- The reseed migration's check: a column added to a history makes it mismatch, a reseed in the same
+  transaction makes it match again with the guard back on, and a table that keeps no digest is refused.
+- After the whole chain of migrations, over rows written before them, every history matches its digest.
+- The index, digest and reseed migrations have their upgrade checks.
 
 ## Slice 4: the staff viewer
 
