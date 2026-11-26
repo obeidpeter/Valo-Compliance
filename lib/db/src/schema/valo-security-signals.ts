@@ -6,7 +6,8 @@ import { pgTable, text, integer, timestamp, primaryKey, index, check } from "dri
  * for the internal alerts. It holds no request content, address or identity: the subject is a
  * keyed hash, as quota subjects are. It holds no workspace rows, and the workspace scope has no
  * access to it; only the application role writes it, outside any workspace scope. Rows expire a
- * day after their minute.
+ * day after their minute. Its kinds are the API's (`SECURITY_SIGNAL_KINDS`); a kind the API counts and
+ * the table refuses is never counted, as a database guard's refusal was not until 26 November 2026.
  */
 export const valoSecuritySignals = pgTable(
   "valo_security_signals",
@@ -20,7 +21,10 @@ export const valoSecuritySignals = pgTable(
   (t) => [
     primaryKey({ columns: [t.kind, t.subjectHash, t.windowStartedAt] }),
     index("valo_security_signals_expiry_idx").on(t.expiresAt),
-    check("valo_security_signals_kind_check", sql`${t.kind} IN ('denied_access', 'signature_failure')`),
+    check(
+      "valo_security_signals_kind_check",
+      sql`${t.kind} IN ('denied_access', 'signature_failure', 'guard_refusal')`,
+    ),
     check("valo_security_signals_count_check", sql`${t.count} > 0`),
     check("valo_security_signals_subject_hash_check", sql`${t.subjectHash} ~ '^[a-f0-9]{64}$'`),
   ],

@@ -1364,7 +1364,14 @@
       "job": "foundation",
       "file": "artifacts/api-server/src/platform/http-logging.test.ts",
       "test": "a database guard's refusal is answered as a failure, counted as a security signal and logged by the guard's name alone",
-      "proves": "Over real HTTP, a request a database guard refused is answered as an unexpected failure and counted as a guard_refusal security signal, a check constraint's refusal is not, and the log names only the guard, never its message or the query."
+      "proves": "Over real HTTP, a request a database guard refused is answered as an unexpected failure and handed to the security signal counter as a guard_refusal, which a stand-in records here, a check constraint's refusal is not, and the log names only the guard, never its message or the query."
+    },
+    {
+      "requirement": "ADM-009",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-security-signals.integration.test.ts",
+      "test": "a database guard's refusal is counted on the real database and read by its alert's reading, and the table takes every kind the API counts",
+      "proves": "In PostgreSQL, a real guard's refusal to empty a history, sent through the real error handler and the real security signal counter, is answered 503 and counted once as a guard_refusal for its hashed address, the guard refusals reading rises by one, and the table takes each kind the API counts, which before the security signal kinds migration it refused."
     },
     {
       "requirement": "ADM-009",

@@ -3645,6 +3645,10 @@
         {
           "file": "artifacts/api-server/src/platform/http-logging.test.ts",
           "test": "a database guard's refusal is answered as a failure, counted as a security signal and logged by the guard's name alone"
+        },
+        {
+          "file": "artifacts/api-server/src/lib/valo-security-signals.integration.test.ts",
+          "test": "a database guard's refusal is counted on the real database and read by its alert's reading, and the table takes every kind the API counts"
         }
       ]
     },

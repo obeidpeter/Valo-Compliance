@@ -4,10 +4,15 @@ import { test } from "node:test";
 import express from "express";
 import { sql } from "drizzle-orm";
 import { currentWorkspaceScope, db, runInWorkspaceScope } from "@workspace/db";
+import { Writable } from "node:stream";
 import { securitySignals } from "../middlewares/valo-security-signals";
 import { readinessQueries } from "../modules/operations/valo-operations";
+import { onError } from "../platform/http-errors";
+import { requestLogging } from "../platform/http-logging";
+import { createApplicationLogger } from "../platform/logger";
 import { quotaSubjectHash } from "./valo-quota-policy";
 import {
+  SECURITY_SIGNAL_KINDS,
   purgeExpiredSecuritySignals,
   recordSecuritySignal,
   securitySubjectHash,
@@ -138,5 +143,65 @@ test(
       (await db.execute(sql`select 1 from valo_security_signals where subject_hash=${expired}`)).rows.length,
       0,
     );
+  },
+);
+
+// ADM-009 (docs/architecture/audit-trail.md, slice 3): a database guard's refusal raises
+// GUARD_REFUSALS_DETECTED. The error handler marked each refusal, but the table took only the first two
+// kinds, so none was ever counted.
+test(
+  "a database guard's refusal is counted on the real database and read by its alert's reading, and the table takes every kind the API counts",
+  { skip: process.env.VALO_RUN_DB_TESTS !== "synthetic-development-only", timeout: 30000 },
+  async () => {
+    const subject = hashOf(`synthetic-${randomUUID()}`);
+    const app = express();
+    // The application's request logger, which the error handler writes to, writing nowhere here.
+    app.use(
+      requestLogging(
+        createApplicationLogger(
+          new Writable({
+            write(_chunk, _encoding, next) {
+              next();
+            },
+          }),
+        ),
+      ),
+    );
+    app.use(securitySignals({ subject: () => subject }));
+    // A history the database keeps whole: its guard refuses to empty it, and nothing is removed.
+    app.post("/empty-a-history", async (_req, _res, next) => {
+      try {
+        await db.execute(sql`TRUNCATE valo_staff_role_changes`);
+      } catch (error) {
+        next(error);
+      }
+    });
+    app.use(onError);
+    const server = app.listen(0, "127.0.0.1");
+    await new Promise<void>((resolve) => server.once("listening", resolve));
+    const port = (server.address() as { port: number }).port;
+    const counted = async () =>
+      (
+        await db.execute<{ n: number }>(
+          sql`select coalesce(sum(count), 0)::int as n from valo_security_signals
+            where subject_hash=${subject} and kind='guard_refusal'`,
+        )
+      ).rows[0]!.n;
+    const before = await reading(readinessQueries.guardRefusals);
+    try {
+      const response = await fetch(`http://127.0.0.1:${port}/empty-a-history`, { method: "POST" });
+      assert.equal(response.status, 503);
+      await response.body?.cancel();
+      // Counting happens after the response is sent, so wait for it.
+      for (let i = 0; i < 50 && (await counted()) !== 1; i++)
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      assert.equal(await counted(), 1);
+    } finally {
+      server.close();
+    }
+    assert.equal(await reading(readinessQueries.guardRefusals), before + 1);
+    // Every kind the API counts is one the table takes.
+    for (const kind of SECURITY_SIGNAL_KINDS)
+      await recordSecuritySignal(kind, hashOf(`synthetic-${randomUUID()}`));
   },
 );
