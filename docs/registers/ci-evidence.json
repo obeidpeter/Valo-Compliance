@@ -4237,6 +4237,27 @@
       "proves": "On an emulated phone with stand-in answers, the staff privacy screen lists each of a partly done request's six steps, offers the four outside steps and both outcomes, says that the person who asked reads the words, has no automated WCAG 2.2 AA failure with the form open, and sends the chosen step, outcome and words."
     },
     {
+      "requirement": "PRV-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/operations/valo-operations.test.ts",
+      "test": "a privacy request open past the date Valo aims to finish it by raises an alert under the deletion and recovery runbook, and a failed reading makes its probe unavailable",
+      "proves": "Privacy requests still open past the date Valo aims to finish them by raise PRIVACY_REQUESTS_BACKLOG under the deletion and recovery runbook, with the privacy owner accountable, a failed reading raises its own alert, and the reading counts only requests not done, refused or cancelled that were made more than Valo's own aim ago."
+    },
+    {
+      "requirement": "PRV-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/privacy/valo-privacy-requests.integration.test.ts",
+      "test": "a request still open after the date Valo aims to finish it by is counted by the operations probe and listed first in the staff queue with that date, and is not counted once it is cancelled",
+      "proves": "On a disposable database, the operations probe counts a synthetic request made a day more than Valo's own aim ago, the staff queue lists it first with the date Valo aims to finish it by, a date moved outside the application holds the request, and once cancelled it is no longer counted."
+    },
+    {
+      "requirement": "PRV-003",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "the staff privacy queue gives each open request the date Valo aims to finish it by, says it is Valo's own aim and not a time limit set by law, and says when it has passed",
+      "proves": "On an emulated phone with stand-in answers, the staff privacy queue gives each open request the date Valo aims to finish it by, says that it is Valo's own aim and not a time limit set by law, says when the date has passed, gives a finished request none, and has no automated WCAG 2.2 AA failure."
+    },
+    {
       "requirement": "EDT-002",
       "job": "postgres",
       "file": "artifacts/api-server/src/scripts/tester-tasks.integration.test.ts",

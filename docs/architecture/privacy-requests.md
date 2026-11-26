@@ -85,7 +85,7 @@ Each slice is its own pull request.
 | --- | --- | --- | --- |
 | 1 | **A hold returns a request to where it was.** Part 1, with a database test. | PRV-003 | Built |
 | 2 | **The outside steps and "Done".** Part 2: two staff actions, the staff screen, and the database test of a request through every step. | PRV-003 | Built |
-| 3 | **Age, target and alert.** Part 3: the target the owner sets, the queue's order and the alert. | PRV-003 | Not started |
+| 3 | **Age, target and alert.** Part 3: the target the owner sets, the queue's order and the alert. | PRV-003 | Built |
 | 4 | **A hold of its own.** Part 4, with a migration, its checks in the erasure and the removal of downloads, and the staff screen. | PRV-003 | Not started |
 
 ## Settled while building it
@@ -133,6 +133,27 @@ Each slice is its own pull request.
 
   A second test finishes a data download the same way and finds its prepared result still the person's.
 
+### Slice 3: how long a request has been open
+
+- **Valo's own aim.** 14 days after a request is made, as the design proposes, until the privacy owner
+  sets the number (`PRIVACY_REQUEST_AIM_DAYS`, the owner's point 1). No screen names a time limit as the
+  law's.
+- **Who sees it.** The staff queue, beside each open request: "Valo aims to finish it by 10 Dec 2026.
+  That is Valo's own aim, not a time limit set by law." Once the date has passed it says "Open past
+  10 Dec 2026, the date Valo aimed to finish it by." The person who asked is not shown it, as it is not a
+  promise to them (the owner's point 4).
+- **The queue's order.** Open requests come first, the oldest first, then the rest, the newest first.
+- **The alert.** The operations probe counts the open requests made more than 14 days ago. Any one
+  raises `PRIVACY_REQUESTS_BACKLOG` under the deletion and recovery runbook, with the privacy owner
+  accountable, and a failed reading raises `PRIVACY_REQUESTS_PROBE_UNAVAILABLE`. Like every operations
+  alert, it is written to the worker's alert file; nothing sends a message.
+- **A moved date holds the request.** A request's date is part of its signed history, so a date
+  changed outside the application holds the request for investigation.
+- **The tests.** A database test makes a request older than the aim. It finds the probe counting it, the
+  staff queue listing it first with that date, the request held while its date is moved, and, once it is
+  cancelled, no longer counted. A unit test raises the alert and the unavailable reading. A phone
+  browser test reads the queue's words before and after the date.
+
 ## The owner's points
 
 1. The number of days after a request is made by which Valo aims to finish it. Until the owner sets it,
@@ -141,3 +162,5 @@ Each slice is its own pull request.
    retrieved and checked, with the AI checks PRV-003 names.
 3. Whether releasing a hold of its own needs a second member of privacy staff. The design proposes one,
    with a reason.
+4. Whether the person who asked should see the date Valo aims to finish their request by. Slice 3 shows
+   it to staff only.

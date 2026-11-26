@@ -12,7 +12,7 @@ import {
 } from "@workspace/api-client-react";
 import { ErrorState } from "@/components/states";
 import { useUnsavedNavigation } from "@/lib/use-unsaved-navigation";
-import { formatDateTime } from "@/lib/format";
+import { formatDateTime, formatDay } from "@/lib/format";
 import { privacyStepStatusWords, privacyStepWords } from "@/lib/privacy-words";
 const actions: { value: PrivacyStaffAction["action"]; label: string }[] = [
   { value: "claim", label: "Claim verified request" },
@@ -150,6 +150,14 @@ export default function PrivacyOperations() {
                   {row.kind} · {row.status.replaceAll("_", " ")} · version {row.version} ·{" "}
                   {formatDateTime(row.createdAt)}
                 </p>
+                {row.aimBy && (
+                  <p className="mt-1 text-sm" data-testid="text-privacy-aim">
+                    {Date.parse(row.aimBy) < Date.now()
+                      ? `Open past ${formatDay(row.aimBy)}, the date Valo aimed to finish it by.`
+                      : `Valo aims to finish it by ${formatDay(row.aimBy)}.`}{" "}
+                    That is Valo's own aim, not a time limit set by law.
+                  </p>
+                )}
                 <p className="mt-3 whitespace-pre-wrap break-words text-sm">{row.message}</p>
                 <button
                   type="button"

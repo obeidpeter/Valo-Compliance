@@ -3973,6 +3973,11 @@ export interface PrivacyCase {
   resultScope: string;
   createdAt: string;
   updatedAt: string;
+  /**
+     * In the staff queue only, for a request not yet done, refused or cancelled, the date Valo aims to finish it by. It is Valo's own aim, not a time limit set by law.
+     * @nullable
+     */
+  aimBy?: string | null;
 }
 
 export interface PrivacyInformation {

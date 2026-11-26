@@ -14,6 +14,16 @@ export type PrivacyStatus =
   | "cancelled"
   | "failed";
 export const terminalPrivacyStatus = (s: PrivacyStatus) => ["fulfilled", "rejected", "cancelled"].includes(s);
+/**
+ * The number of days after a request is made by which Valo aims to finish it. It is Valo's own aim,
+ * not a time limit set by law: none is stated until an official copy is retrieved and checked, as
+ * PRV-003 requires. Proposed; the privacy owner sets it (docs/architecture/privacy-requests.md,
+ * the owner's point 1).
+ */
+export const PRIVACY_REQUEST_AIM_DAYS = 14;
+/** When Valo aims to finish a request made at this time. */
+export const privacyRequestAimBy = (createdAt: Date) =>
+  new Date(createdAt.getTime() + PRIVACY_REQUEST_AIM_DAYS * 24 * 60 * 60 * 1000);
 export function assertPrivacyVersion(current: number, expected: number) {
   if (current !== expected)
     throw new ValoProblem(409, "This request changed. Reload its current state before retrying.", current);

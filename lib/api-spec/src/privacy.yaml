@@ -289,6 +289,10 @@ schemas:
       resultScope: { type: string }
       createdAt: { type: string }
       updatedAt: { type: string }
+      aimBy:
+        type: string
+        nullable: true
+        description: In the staff queue only, for a request not yet done, refused or cancelled, the date Valo aims to finish it by. It is Valo's own aim, not a time limit set by law.
   PrivacyInformation:
     type: object
     additionalProperties: false
