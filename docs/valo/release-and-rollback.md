@@ -212,6 +212,13 @@ checks, which are not provisioned yet.
 | `BULK_EXPORTS_DETECTED` | Any caller used its whole export quota window | Internal operations sample (SEC-008) |
 | `PAYMENT_ACTIVITY_DETECTED` | Any caller used its whole checkout or refund quota window | Internal operations sample (SEC-008) |
 | `AI_ACTIVITY_DETECTED` | Any caller used its whole AI quota window | Internal operations sample (SEC-008) |
+| `CHECKOUTS_DETECTED` | More than 50 checkouts began in the last hour, every workspace together | Internal operations sample (SEC-005) |
+| `CHECKOUT_AMOUNT_DETECTED` | The checkouts begun in the last hour came to more than ₦1,000,000 | Internal operations sample (SEC-005) |
+| `REFUNDS_DETECTED` | More than 5 refunds were asked for in the last hour, every workspace together | Internal operations sample (SEC-008) |
+| `REFUND_AMOUNT_DETECTED` | The refunds authorised in the last hour came to more than ₦100,000 | Internal operations sample (SEC-008) |
+| `AI_SPEND_DETECTED` | The drafts of the last hour used more than a quarter of the drafting assistant's daily allowance in all | Internal operations sample (SEC-005) |
+| `WORKSPACE_DOWNLOADS_DETECTED` | More than 10 whole-workspace downloads were asked for in the last hour | Internal operations sample (SEC-008) |
+| `STAFF_COPIES_DETECTED` | Privacy staff prepared more than 5 copies of a workspace's data in the last hour | Internal operations sample (SEC-008) |
 | `GUARD_REFUSALS_DETECTED` | A database guard refused an application request in the last ten minutes: a fault, or an attempt to change a history | Internal operations sample (ADM-009) |
 | `PRIVILEGED_READING_DETECTED` | One staff member read more than 100 distinct records or lists in the last hour | Internal operations sample (ADM-009) |
 | `HISTORY_INTEGRITY_DETECTED` | The latest hourly count found a history whose digest no longer matches its rows, or whose digest trigger is missing or off: a change made outside the application | Internal operations sample (ADM-009) |
