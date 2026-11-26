@@ -65,15 +65,23 @@ test("every outside service the inventory names is in the processor review", () 
     new URL("../../../../../docs/valo/processor-review.md", import.meta.url),
     "utf8",
   );
-  const services = review
+  const rows = review
     .slice(review.indexOf("## Services"))
     .split("\n")
     .filter((line) => line.startsWith("| ") && !line.startsWith("| Service") && !line.startsWith("| ---"))
-    .map((line) => line.split("|")[1]!.trim());
+    .map((line) => line.split("|").map((cell) => cell.trim()));
+  const services = rows.map((cells) => cells[1]!);
   assert.ok(services.includes("Replit") && services.includes("Paystack"), services.join(", "));
   const named = [...new Set(processingInventory.flatMap((activity) => activity.services))];
   assert.deepEqual(
     named.filter((service) => !services.includes(service)),
+    [],
+  );
+  // A service the review says receives no customer data is never named as receiving any.
+  const receivesNone = rows.filter((cells) => /no customer data/i.test(cells[3]!)).map((cells) => cells[1]!);
+  assert.ok(receivesNone.includes("Healthchecks.io"), receivesNone.join(", "));
+  assert.deepEqual(
+    named.filter((service) => receivesNone.includes(service)),
     [],
   );
 });

@@ -12,14 +12,16 @@
 export type LawfulBasis =
   "consent" | "contract" | "legal_obligation" | "vital_interests" | "public_task" | "legitimate_interests";
 
-/** An outside service, by its name in the processor review's table of services. */
+/**
+ * An outside service that may receive personal data, by its name in the processor review's table of
+ * services. Healthchecks.io and GitHub are not among them: the review says they receive no customer data.
+ */
 export type ProcessorName =
   | "Replit"
   | "Clerk"
   | "Resend, through Replit Connectors"
   | "Paystack"
   | "OpenAI, through Replit AI Integrations"
-  | "Healthchecks.io"
   | "Backblaze B2";
 
 export type ProcessingActivity = {
@@ -232,7 +234,7 @@ export const processingInventory: readonly ProcessingActivity[] = [
     staff: "Support staff, and content staff for a problem with content.",
     services: ["Replit"],
     retention:
-      "Kept while your account is open. A verified deletion request removes your messages; a short record that the case existed is kept.",
+      "Kept while your account is open. A verified deletion request replaces the words of your messages; the case and its record are kept.",
     consent: null,
     tables: [
       "valo_support_tickets",
@@ -287,7 +289,7 @@ export const processingInventory: readonly ProcessingActivity[] = [
     ],
     subjects: ["account holders", "visitors"],
     staff: "System staff, to investigate a security event.",
-    services: ["Replit", "Healthchecks.io"],
+    services: ["Replit"],
     retention: "Not decided by the owner. Request counts expire within minutes.",
     consent: null,
     tables: ["valo_events", "valo_rate_buckets", "valo_security_signals", "valo_scope_keys"],
