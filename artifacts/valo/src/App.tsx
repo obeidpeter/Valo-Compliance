@@ -163,6 +163,19 @@ function AuthFrame({ children, side }: { children: ReactNode; side: "in" | "up" 
           <Wordmark />
         </div>
         {children}
+        {side === "up" && (
+          <p className="w-full max-w-[440px] break-words text-center text-sm text-muted-foreground">
+            Before you create an account, read{" "}
+            <Link
+              href="/privacy"
+              className="font-medium text-primary underline underline-offset-4"
+              data-testid="link-auth-privacy"
+            >
+              what Valo does with your data
+            </Link>
+            .
+          </p>
+        )}
         <p className="w-full max-w-[440px] break-words text-center text-sm text-muted-foreground">
           Cannot sign in, or is your account unverified or suspended? See{" "}
           <Link

@@ -705,6 +705,26 @@ test("on a phone, every step of the requirements check, its review, its results 
 
 // The identity provider cannot load in a test, so its forms are stand-ins that show what the app
 // hands them. This checks the app's side: the provider's own redirect is not exercised here.
+// PRV-001: the privacy notice is linked where an account is created (docs/architecture/processing-inventory.md,
+// slice 3b).
+test("before an account is created or a message is saved, the sign-up page and the trouble-signing-in form link what Valo does with your data", async () => {
+  for (const [path, id] of [
+    ["/sign-up", "link-auth-privacy"],
+    ["/account-access", "link-access-privacy"],
+  ] as const) {
+    const { page, errors, close } = await app.desktop(path, answer);
+    try {
+      const link = page.getByTestId(id);
+      await link.waitFor({ state: "visible", timeout: 30_000 });
+      assert.equal(await link.getAttribute("href"), "/privacy", path);
+      assert.equal((await link.innerText()).trim(), "what Valo does with your data", path);
+      assert.deepEqual(errors, [], path);
+    } finally {
+      await close();
+    }
+  }
+});
+
 test("what a visitor chose on the landing page is handed to sign-up and sign-in: the page to start on afterwards, and the other form's address with the choice kept; a choice the site does not offer is handed nowhere", async () => {
   const cases: [address: string, after: string, otherForm: string][] = [
     ["/sign-up?start=invoice", "/workspace/documents/new?start=invoice", "/sign-in?start=invoice"],

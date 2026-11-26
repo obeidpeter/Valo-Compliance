@@ -1112,6 +1112,19 @@ test("the privacy page shows each activity of the processing inventory, what the
   assert.match(main, /<a[^>]*href="\/contact"[^>]*>Contact us/);
 });
 
+// PRV-001: the privacy notice is linked where data is collected (docs/architecture/processing-inventory.md,
+// slice 3b). The contact form is written without an account, so its link is in the server's HTML.
+test("the contact form links what Valo does with your data before a message is saved, in the server's HTML", async () => {
+  const html = await (await fetch(web.origin + "/contact")).text();
+  const main = html.slice(html.search(/<main/), html.indexOf("</main>"));
+  const form = main.slice(main.indexOf('data-testid="form-access-support"'), main.indexOf("</form>"));
+  assert.ok(form.length > 0, "the contact form is in the server's HTML");
+  const link = form.match(/<a\b[^>]*data-testid="link-access-privacy"[^>]*>([^<]*)<\/a>/);
+  assert.ok(link, "the form links the notice");
+  assert.match(link[0], /href="\/privacy"/);
+  assert.equal(link[1], "what Valo does with your data");
+});
+
 // The specification's 2026 update (docs/specification/essential-business-documents.txt): "The
 // Nigeria Revenue Service has replaced the former FIRS framework, and the new Tax ID replaces the
 // previous TIN identifier." Its source S02 is on www.nrs.gov.ng. The page named the earlier body and

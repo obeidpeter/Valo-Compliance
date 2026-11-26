@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { Check, FilePenLine, Loader2, Plus, Sparkles, UserCheck, X } from "lucide-react";
 import {
@@ -520,6 +520,17 @@ export function AIDraftCompose() {
                 Consent is needed for the AI draft only. A manual draft does not need it.
               </p>
             )}
+            <p className="mt-2 text-sm text-muted-foreground">
+              Read{" "}
+              <Link
+                href="/privacy"
+                className="font-medium text-primary underline underline-offset-2"
+                data-testid="link-ai-privacy"
+              >
+                what Valo does with your data
+              </Link>{" "}
+              before you agree.
+            </p>
             {aiErr && (
               <p
                 role="alert"

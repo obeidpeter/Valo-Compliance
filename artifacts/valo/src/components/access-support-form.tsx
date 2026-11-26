@@ -7,6 +7,7 @@ import {
 } from "@workspace/api-client-react";
 import { describeError } from "@/lib/describe-error";
 import { resolveIdempotencyKey, type IdempotencySlot } from "@/lib/idempotency";
+import { SiteLinkTo as Link } from "./site-link";
 
 const TOPICS: { v: AccessSupportInputTopic; l: string; d: string }[] = [
   {
@@ -213,6 +214,17 @@ export function AccessSupportForm({ defaultTopic = "general" }: { defaultTopic?:
       <p className="text-sm text-muted-foreground" data-testid="text-access-limits">
         A member of Valo's staff reads your message. Valo does not send replies by email yet, and no time for
         a reply is promised.
+      </p>
+      <p className="text-sm text-muted-foreground">
+        Read{" "}
+        <Link
+          href="/privacy"
+          className="font-medium text-primary underline underline-offset-2"
+          data-testid="link-access-privacy"
+        >
+          what Valo does with your data
+        </Link>{" "}
+        before you save your message.
       </p>
       <p className="rounded-xl border border-[hsl(var(--ochre-border))] bg-[hsl(var(--ochre-soft))] px-4 py-3 text-sm">
         Never include passwords, verification codes, ID numbers or payment details. Valo staff will never ask

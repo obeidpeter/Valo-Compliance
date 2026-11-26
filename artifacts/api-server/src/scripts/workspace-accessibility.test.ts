@@ -1167,6 +1167,28 @@ const phone = (path: string, api: Api = answer) => app.phone(path, api);
 /** The same on a desktop-sized page. */
 const desktop = (path: string, api: Api = answer) => app.desktop(path, api);
 
+// PRV-001: the privacy notice is linked where data is collected (docs/architecture/processing-inventory.md,
+// slice 3b), outside each choice's label so that following it ticks nothing.
+test("the support form and the drafting assistant link the privacy notice beside the choice each asks for", async () => {
+  for (const [path, id] of [
+    ["/support", "link-support-privacy"],
+    ["/workspace/ai", "link-ai-privacy"],
+  ] as const) {
+    const { page, unknown, errors, close } = await phone(path);
+    try {
+      await ready(page);
+      const link = page.getByTestId(id);
+      await link.waitFor({ state: "visible", timeout: 30_000 });
+      assert.equal(await link.getAttribute("href"), "/privacy", path);
+      assert.equal((await link.innerText()).trim(), "what Valo does with your data", path);
+      assert.equal(await link.evaluate((node) => node.closest("label") === null), true, path);
+      assert.deepEqual([...unknown, ...errors], [], path);
+    } finally {
+      await close();
+    }
+  }
+});
+
 // PRO-002: "the user can decline marketing and still use the product". The profile's marketing choice
 // links the privacy notice it is recorded against (docs/architecture/processing-inventory.md, slice 3).
 test("the business profile's marketing choice is off unless chosen, says saying no changes nothing else, and links the privacy notice", async () => {
