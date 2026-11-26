@@ -50,7 +50,11 @@ import {
 } from "../platform/valo-worker-health";
 import { environment, setting } from "../platform/settings";
 import { logConnectionFailures } from "../platform/database-failures";
+import { requestLimits } from "../lib/valo-quota-policy";
 
+// The worker's alerts read each request limit's setting: a value outside its bounds stops it here, before it
+// works (SEC-005).
+requestLimits();
 // A database connection that fails while idle is logged, and the worker carries on.
 logConnectionFailures(logger);
 await initializeApplicationRuntime();

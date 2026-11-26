@@ -3,14 +3,15 @@ import { join, resolve } from "node:path";
 import { randomUUID } from "node:crypto";
 import { assertApplicationRuntime, runtimeEnvironment } from "../../platform/valo-runtime-activation";
 import { workerReadiness, type WorkerHeartbeat } from "../../platform/valo-worker-health";
-import { quotaPolicy, type QuotaBucket } from "../../lib/valo-quota-policy";
+import { quotaLimit, type QuotaBucket } from "../../lib/valo-quota-policy";
 import { PRIVACY_REQUEST_AIM_DAYS } from "../../lib/valo-privacy-state";
 import { COMMERCIAL_SETTINGS } from "../commercial-settings";
 export const operationsDirectory = resolve("generated-artifacts/valo-operations");
-/** Live windows of the named quota buckets that reached their limit: one caller using all of it. */
+/** Live windows of the named quota buckets that reached their limit, as configured: one caller using all
+ * of it. */
 const atQuotaLimit = (buckets: readonly QuotaBucket[]) =>
   `SELECT count(*)::int AS value FROM (SELECT 1 FROM valo_rate_buckets WHERE expires_at > now() AND (${buckets
-    .map((bucket) => `(bucket='${bucket}' AND used_count >= ${quotaPolicy[bucket]})`)
+    .map((bucket) => `(bucket='${bucket}' AND used_count >= ${quotaLimit(bucket)})`)
     .join(" OR ")}) LIMIT 10001) bounded`;
 export const readinessQueries = {
   database: "SELECT 1 AS value",
@@ -78,14 +79,16 @@ export const readinessQueries = {
     GROUP BY subject_hash) per_subject`,
   roleChanges:
     "SELECT count(*)::int AS value FROM (SELECT 1 FROM valo_staff_role_changes WHERE created_at > now() - interval '1 hour' LIMIT 10001) bounded",
-  bulkExports: atQuotaLimit(["export-create"]),
-  paymentActivity: atQuotaLimit([
-    "checkout-create",
-    "checkout-create-day",
-    "refund-create",
-    "refund-create-day",
-  ]),
-  aiActivity: atQuotaLimit(["customer-ai"]),
+  // Read as each sample is taken, so each counts callers at the ceilings the settings give.
+  get bulkExports() {
+    return atQuotaLimit(["export-create"]);
+  },
+  get paymentActivity() {
+    return atQuotaLimit(["checkout-create", "checkout-create-day", "refund-create", "refund-create-day"]);
+  },
+  get aiActivity() {
+    return atQuotaLimit(["customer-ai"]);
+  },
   // docs/architecture/alerts.md, part 2 (SEC-005, SEC-008): money, the drafting assistant's use and
   // whole-workspace copies, of every workspace together, over the last hour. Checkouts begun, and what
   // they come to in whole naira:

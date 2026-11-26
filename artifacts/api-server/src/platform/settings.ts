@@ -14,6 +14,7 @@
 type Group =
   | "Runtime"
   | "Identity and request security"
+  | "Request limits"
   | "Database"
   | "Files and exports"
   | "Payments (test mode only)"
@@ -86,6 +87,131 @@ export const SETTINGS = {
   VALO_TRUSTED_PROXY_CIDRS: {
     group: "Identity and request security",
     description: "Comma-separated CIDRs of reverse proxies whose forwarding headers are trusted.",
+  },
+
+  // Each request limit, with today's ceiling as its default (SEC-005: configurable ceilings). A value must
+  // be a whole number from 1 to 10,000; the API and the worker refuse to start on any other.
+  VALO_LIMIT_PUBLIC_SUPPORT: {
+    group: "Request limits",
+    description:
+      "Support requests from people not signed in, from one contact address a minute (1-10000, default 3).",
+    example: "3",
+  },
+  VALO_LIMIT_PUBLIC_SUPPORT_DAY: {
+    group: "Request limits",
+    description:
+      "Support requests from people not signed in, from one contact address a day (1-10000, default 20).",
+    example: "20",
+  },
+  VALO_LIMIT_PUBLIC_SUPPORT_SOCKET: {
+    group: "Request limits",
+    description:
+      "Support requests from people not signed in, from one network address a minute (1-10000, default 20).",
+    example: "20",
+  },
+  VALO_LIMIT_PUBLIC_SUPPORT_SOCKET_DAY: {
+    group: "Request limits",
+    description:
+      "Support requests from people not signed in, from one network address a day (1-10000, default 100).",
+    example: "100",
+  },
+  VALO_LIMIT_PUBLIC_SUPPORT_ALL: {
+    group: "Request limits",
+    description:
+      "Support requests from people not signed in, from everyone together a minute (1-10000, default 100).",
+    example: "100",
+  },
+  VALO_LIMIT_PUBLIC_SUPPORT_ALL_DAY: {
+    group: "Request limits",
+    description:
+      "Support requests from people not signed in, from everyone together a day (1-10000, default 1000).",
+    example: "1000",
+  },
+  VALO_LIMIT_ANONYMOUS_READ: {
+    group: "Request limits",
+    description: "Reads by one visitor or address not signed in, a minute (1-10000, default 60).",
+    example: "60",
+  },
+  VALO_LIMIT_AUTHENTICATED_READ: {
+    group: "Request limits",
+    description: "Reads by one signed-in account a minute (1-10000, default 120).",
+    example: "120",
+  },
+  VALO_LIMIT_PAGE_RENDER_READ: {
+    group: "Request limits",
+    description:
+      "Reads by every page the web server renders, for all visitors together, a minute (1-10000, default 600).",
+    example: "600",
+  },
+  VALO_LIMIT_CUSTOMER_AI: {
+    group: "Request limits",
+    description: "Drafting assistant requests by one account a minute (1-10000, default 5).",
+    example: "5",
+  },
+  VALO_LIMIT_CHECKOUT_CREATE: {
+    group: "Request limits",
+    description: "Checkouts begun by one account a minute (1-10000, default 10).",
+    example: "10",
+  },
+  VALO_LIMIT_CHECKOUT_CREATE_DAY: {
+    group: "Request limits",
+    description: "Checkouts begun by one account a day (1-10000, default 100).",
+    example: "100",
+  },
+  VALO_LIMIT_EXPORT_CREATE: {
+    group: "Request limits",
+    description: "Document exports asked for by one account a minute (1-10000, default 10).",
+    example: "10",
+  },
+  VALO_LIMIT_PROFILE_WRITE: {
+    group: "Request limits",
+    description: "Business profile changes by one account a minute (1-10000, default 20).",
+    example: "20",
+  },
+  VALO_LIMIT_PROFILE_WRITE_DAY: {
+    group: "Request limits",
+    description: "Business profile changes by one account a day (1-10000, default 200).",
+    example: "200",
+  },
+  VALO_LIMIT_DOCUMENT_WRITE: {
+    group: "Request limits",
+    description: "Document changes by one account a minute (1-10000, default 30).",
+    example: "30",
+  },
+  VALO_LIMIT_DOCUMENT_WRITE_DAY: {
+    group: "Request limits",
+    description: "Document changes by one account a day (1-10000, default 600).",
+    example: "600",
+  },
+  VALO_LIMIT_SUPPORT_WRITE: {
+    group: "Request limits",
+    description: "Support messages by one signed-in customer a minute (1-10000, default 3).",
+    example: "3",
+  },
+  VALO_LIMIT_SUPPORT_WRITE_DAY: {
+    group: "Request limits",
+    description: "Support messages by one signed-in customer a day (1-10000, default 20).",
+    example: "20",
+  },
+  VALO_LIMIT_STAFF_SUPPORT_WRITE: {
+    group: "Request limits",
+    description: "Support actions by one member of staff a minute (1-10000, default 20).",
+    example: "20",
+  },
+  VALO_LIMIT_STAFF_SUPPORT_WRITE_DAY: {
+    group: "Request limits",
+    description: "Support actions by one member of staff a day (1-10000, default 200).",
+    example: "200",
+  },
+  VALO_LIMIT_REFUND_CREATE: {
+    group: "Request limits",
+    description: "Refund requests by one account a minute (1-10000, default 10).",
+    example: "10",
+  },
+  VALO_LIMIT_REFUND_CREATE_DAY: {
+    group: "Request limits",
+    description: "Refund requests by one account a day (1-10000, default 50).",
+    example: "50",
   },
 
   DATABASE_URL: { group: "Database", description: "PostgreSQL connection string.", secret: true },

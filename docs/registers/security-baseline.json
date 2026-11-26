@@ -543,14 +543,20 @@
       "bears_on": [
         "SEC-005"
       ],
-      "control": "Each limit is set in one policy: reads, writes, checkout, exports and the drafting assistant, per person, per account and per day, with shared ceilings for page renders. The AI budget's limits are the owner's approved allowance, kept in its ledger.",
+      "control": "Each limit is set in one policy, and a note lists them: reads, writes, checkout, exports, refunds, support and the drafting assistant, per person, per account and per day, with shared ceilings for page renders and public support. Each is a setting of its own, today's ceiling by default, which the API and the worker read as they start, refusing a value outside 1 to 10,000. The AI budget's limits are the owner's approved allowance, kept in its ledger.",
       "code": [
-        "artifacts/api-server/src/lib/valo-quota-policy.ts#quotaPolicy"
+        "artifacts/api-server/src/lib/valo-quota-policy.ts#quotaPolicy",
+        "artifacts/api-server/src/lib/valo-quota-policy.ts#quotaLimit",
+        "docs/valo/request-limits.md"
       ],
       "tests": [
         {
           "file": "artifacts/api-server/src/lib/valo-quota.test.ts",
           "test": "quota defaults preserve the requested initial ceilings"
+        },
+        {
+          "file": "artifacts/api-server/src/lib/valo-quota.test.ts",
+          "test": "each ceiling is a setting of its own, today's ceiling by default, and only a whole number from 1 to 10,000 is accepted (SEC-005)"
         },
         {
           "file": "artifacts/api-server/src/lib/valo-write-security.integration.test.ts",

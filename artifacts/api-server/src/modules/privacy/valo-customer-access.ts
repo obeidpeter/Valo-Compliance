@@ -24,7 +24,7 @@ import {
   valoSupportMessages,
 } from "@workspace/db";
 import { RequestAccessSupportBody } from "@workspace/api-zod";
-import { consumeQuota, quotaSubjectHash } from "../../lib/valo-quota";
+import { consumeQuota, quotaLimit, quotaSubjectHash } from "../../lib/valo-quota";
 import { authorizeWorkspaceRead, type WorkspaceActor } from "../workspaces";
 import { ValoProblem } from "../../platform/valo-problem";
 import {
@@ -82,17 +82,18 @@ export async function saveAccessSupport(raw: unknown, remoteAddress: string) {
       return ack(old.id);
     }
     // Socket address only: hostile Forwarded/X-Forwarded-For cannot choose a quota identity.
+    // One contact address, one network address and everyone together, each with ceilings of its own.
     for (const [kind, value, minute, day] of [
-      ["user", `access-contact:${data.email}`, 3, 20],
-      ["ip", `access-socket:${remoteAddress}`, 20, 100],
-      ["user", "access-intake-global", 100, 1000],
+      ["user", `access-contact:${data.email}`, "public-support", "public-support-day"],
+      ["ip", `access-socket:${remoteAddress}`, "public-support-socket", "public-support-socket-day"],
+      ["user", "access-intake-global", "public-support-all", "public-support-all-day"],
     ] as const) {
       const hash = quotaSubjectHash(setting("SESSION_SECRET"), kind, value);
-      for (const [bucket, limit, window] of [
-        ["public-support", minute, "minute"],
-        ["public-support-day", day, "day"],
+      for (const [bucket, window] of [
+        [minute, "minute"],
+        [day, "day"],
       ] as const) {
-        const q = await consumeQuota(bucket, hash, limit, window, tx);
+        const q = await consumeQuota(bucket, hash, quotaLimit(bucket), window, tx);
         if (!q.allowed)
           throw new ValoProblem(
             429,

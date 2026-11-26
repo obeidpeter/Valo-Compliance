@@ -26,7 +26,7 @@ import {
   type WorkspaceActor,
 } from "../workspaces";
 import { referableLibraryEntries, referredLibraryEdition } from "../manual-library";
-import { consumeQuota, quotaSubjectHash } from "../../lib/valo-quota";
+import { consumeQuota, quotaLimit, quotaSubjectHash } from "../../lib/valo-quota";
 import { setting } from "../../platform/settings";
 import {
   activeStaffAssignment,
@@ -463,14 +463,15 @@ export async function actOnSupportCase(actor: SupportStaffActor, id: string, raw
     let row = await lockedCase(tx, id);
     await currentSupportStaff(tx, actor, "support");
     if (await replay(tx, row, actor.identityId, input)) return detail(tx, row, true);
-    for (const [bucket, limit, window] of [
-      ["support-write", 20, "minute"],
-      ["support-write-day", 200, "day"],
+    // A member of staff's actions are counted apart from customers' support messages.
+    for (const [bucket, window] of [
+      ["staff-support-write", "minute"],
+      ["staff-support-write-day", "day"],
     ] as const) {
       const q = await consumeQuota(
         bucket,
         quotaSubjectHash(setting("SESSION_SECRET"), "user", `support-staff:${actor.identityId}`),
-        limit,
+        quotaLimit(bucket),
         window,
         tx,
       );

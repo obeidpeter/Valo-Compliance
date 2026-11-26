@@ -89,6 +89,29 @@ The requirements, verbatim from the specification:
 - A value outside its bounds stops the server at start, as other settings do.
 - Tests: the defaults are today's ceilings; a configured value is the one a request meets.
 
+Built (slice 5), with a note of every limit ([request limits](../valo/request-limits.md)):
+- **The settings.** Each of the 23 ceilings has a setting of its own in the registry, `VALO_LIMIT_`
+  and its bucket's name, with today's ceiling as its default and its example (`lib/valo-quota-policy.ts`,
+  `quotaLimit`). Unset or empty, a setting gives the default. Its value must be a whole number from 1
+  to 10,000, written plainly.
+- **The inline ceilings join the table**, each with a bucket of its own:
+  - staff support actions (20 a minute, 200 a day). They had shared customers' support buckets, with
+    their own ceilings written where they were counted;
+  - public support requests from one network address (20 and 100), and from everyone together (100
+    and 1,000);
+  - refunds (10 and 50), whose buckets were in the table already but whose ceilings were written
+    again where they were counted.
+- **At start.** The API and the worker read every limit before anything else they do: a value outside
+  its bounds stops either one, naming the setting.
+- **Where requests meet them.** Every count reads its ceiling from its setting, and so do the worker's
+  alerts on callers at a limit.
+- **The tests:**
+  - the defaults are today's ceilings, every setting is registered, and a set value is read;
+  - each value outside the bounds is refused;
+  - the real API entry stops at start on one, before it listens;
+  - the shipped worker stops on one before any effect;
+  - in the database, a ceiling set by its setting is the one the count meets.
+
 ### Part 3: vulnerability management (SEC-007)
 
 - **An owner and a date.** Each reviewed exception names the role that owns it and the date by which
@@ -198,7 +221,7 @@ Built (slice 4), with a note of the time frames and the bill
 | 3a | Part 4, and Part 5's policy, headers, content types, folders and TRACE | Built |
 | 3b | Part 5's storage redirects, the staff upload's refusals and the token made for another site | Built |
 | 4 | Part 3: advisories, the scheduled scan, the bill of materials and the image check | Built |
-| 5 | Part 2: limits as settings | Not built |
+| 5 | Part 2: limits as settings | Built |
 
 ## The owner's points
 
@@ -207,3 +230,5 @@ Built (slice 4), with a note of the time frames and the bill
 2. **The scheduled scan** runs once the workflow reaches `main`. So do Dependabot's weekly update
    proposals, which GitHub also reads from `main`.
 3. **A time frame for routine updates**, when no advisory needs one, is not set.
+4. **The limits' production values**: today's ceilings are development defaults. Each is a setting, so
+   the production values can be set without a change to the code.

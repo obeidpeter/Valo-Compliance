@@ -164,6 +164,10 @@ Slice 4 added:
 - **The image check** lists every file in both images and finds no source control metadata (13.4.1).
 - **A weekly run** of the scans, which starts once the workflow reaches `main`.
 
+Slice 5 made each request limit a setting of its own, today's ceiling by default, with a note of every
+limit ([request limits](../valo/request-limits.md)). A value outside 1 to 10,000 stops the API and the
+worker at start (2.1.3).
+
 ## What the map finds
 
 | Status | Requirements |

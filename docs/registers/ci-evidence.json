@@ -3778,6 +3778,34 @@
       "requirement": "SEC-005",
       "job": "foundation",
       "file": "artifacts/api-server/src/lib/valo-quota.test.ts",
+      "test": "each ceiling is a setting of its own, today's ceiling by default, and only a whole number from 1 to 10,000 is accepted (SEC-005)",
+      "proves": "Every limit's bucket has a registered setting whose example is today's ceiling; with none set every ceiling is the default, a set value replaces only its own bucket's ceiling and an empty one is unset, and zero, over 10,000, negative, fractional, padded, zero-led, exponent, hexadecimal or wordy values are refused, naming the setting."
+    },
+    {
+      "requirement": "SEC-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-quota.test.ts",
+      "test": "the API stops as it starts on a request limit outside its bounds, before it listens (SEC-005)",
+      "proves": "The real API entry, started with a limit of zero and a database address nothing answers, exits with an error naming the limit's setting and never reports listening."
+    },
+    {
+      "requirement": "SEC-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/platform/valo-development-runtime.test.ts",
+      "test": "actual export entries and worker startup reject before database, queue or storage effects",
+      "proves": "Among its cases, the shipped worker started in development with a limit over 10,000 exits naming the limit's setting, before any database, queue, storage, render or service effect."
+    },
+    {
+      "requirement": "SEC-005",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-quota.integration.test.ts",
+      "test": "a ceiling set by its setting is the one a request meets, in the database's count (SEC-005)",
+      "proves": "With the export limit's setting at 2 and no ceiling passed, the database-backed count allows two exports in a minute and refuses the third, reporting a limit of 2, and keeps a count of 2."
+    },
+    {
+      "requirement": "SEC-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-quota.test.ts",
       "test": "missing quota configuration fails rather than silently using memory or an unkeyed IP hash",
       "proves": "Without its key, or with one shorter than 32 characters, the limits refuse to count rather than fall back to memory or an unkeyed hash."
     },
