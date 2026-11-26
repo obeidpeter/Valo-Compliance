@@ -58,6 +58,13 @@
       "proves": "The production content security policy allows scripts only by nonce, no inline or evaluated script, no objects or framing, no unconfigured origins, and fonts and styles only from the app's own origin."
     },
     {
+      "requirement": "SEC-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-cross-site.integration.test.ts",
+      "test": "every change in the contract refuses a request from another site, counts it, and saves nothing",
+      "proves": "Against real PostgreSQL and the whole API, every change in the contract but the anonymous requirements check, sent as a page on another site could send it (from that site, with no origin or a null one, marked by the browser as from another or a sibling site, or with a body a form sends), is refused with 403 even for a member of staff who holds its role; each refusal is counted as denied access and no table changes, while the same kind of request from the site's own page is saved."
+    },
+    {
       "requirement": "NFR-011",
       "job": "foundation",
       "file": "scripts/src/valo/architecture-check.test.ts",
