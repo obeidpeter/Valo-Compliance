@@ -41,6 +41,10 @@
 
     // React: the rules of hooks.
     "react/rules-of-hooks": "error",
+    // SEC-003 (docs/architecture/hostile-input.md, part 4): Valo has no rich text, so no component puts
+    // text into the page as HTML. The repository rule raw-html covers the browser's own HTML sinks.
+    "react/no-danger": "error",
+    "react/no-danger-with-children": "error",
 
     // Configured for this codebase.
     "eslint/no-unused-vars": [

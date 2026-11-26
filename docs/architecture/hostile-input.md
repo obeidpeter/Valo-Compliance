@@ -192,7 +192,7 @@ The payloads live in one test-support list. They cover:
 | --- | --- | --- | --- |
 | 1 | Part 1: every change from another site, and the preview files' checks that need no preview | M | Built |
 | 2 | Part 2: stored markup, drawn on the customer's and staff's screens | M | Built |
-| 3 | Parts 3 and 4: reflected markup, injection, the security headers fix and the two rules | M | Proposed |
+| 3 | Parts 3 and 4: reflected markup, injection, the security headers fix and the two rules | M | Built |
 
 ## Settled while building it
 
@@ -216,6 +216,28 @@ The payloads live in one test-support list. They cover:
   and every request a screen makes must be answered.
 - **Slice 2: the check can fail.** After the screens, the same markup is put into a page as HTML on
   purpose. It runs and leaves its elements, and the check finds both.
+- **Slice 3: a NUL character.** The reflection test found that a NUL character in a text made the
+  server fail, with a 503, where it should refuse the detail: PostgreSQL cannot hold one in text. The
+  check every body passes for its size and shape now refuses one, in a body's keys and texts, in the
+  query and in the path, as the 422 the schemas give, naming where it was and never what.
+- **Slice 3: two answers outside JSON.** Before the fix, an address the API does not have was answered
+  with a page of HTML, and a malformed or oversized body's answer had no `nosniff` and could be framed.
+  The headers are now set first, and an unknown address is answered in JSON. The test shows both
+  failing without the fix.
+- **Slice 3: the catalogue's search reads words.** It keeps letters and digits only, so punctuation alone
+  is no search and lists everything, as an empty search does, and SQL text finds only what holds its
+  words. The staff library's search runs in the database: the test loads the drafts kept in the
+  repository, and each of `%`, `_`, `\` and SQL text finds only titles that hold it.
+- **Slice 3: the site's own scripts.** On the pages the server draws, the check passes over the site's
+  inline scripts, each of which carries the response's nonce. A payload's script carries none.
+- **Slice 3: what the SQL rule reads.** It reads a query's own text: `sql.raw` of anything but a fixed
+  string, and a query whose text is a template with substitutions or a joined string. Text built
+  elsewhere and passed by name is not read. Its review lists 25 files and the 43 texts they build, none
+  of them a customer's route: the AI ledger's checked schema name, the recovery tools' fixed tables,
+  development databases with random names, and operator commands that apply committed migrations.
+- **Slice 3: what the HTML rule reviews.** Two places hand a browser HTML: the PDF renderer, which
+  escapes every text, and the reader of an official source's page, with scripts off and every request
+  refused.
 
 ## The owner's points
 

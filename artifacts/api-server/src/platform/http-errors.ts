@@ -1,4 +1,4 @@
-import type { ErrorRequestHandler } from "express";
+import type { ErrorRequestHandler, RequestHandler } from "express";
 import { ZodError } from "zod";
 import { safeValidationFields } from "./request-complexity";
 import { ValoProblem } from "./valo-problem";
@@ -41,6 +41,10 @@ export function guardRefusal(error: unknown): string | null {
 }
 
 /** Shared production handler. Importing it must not initialise a database or provider. */
+/** An address the API does not have. Answered in JSON, so that no API answer is a page of HTML. */
+export const notFound: RequestHandler = (_req, res) => {
+  res.status(404).json({ code: "NOT_FOUND", error: "There is nothing at this address." });
+};
 export const onError: ErrorRequestHandler = (error: unknown, req, res, _next) => {
   res.setHeader("Cache-Control", "private, no-store");
   if (typeof error === "object" && error !== null && "type" in error) {

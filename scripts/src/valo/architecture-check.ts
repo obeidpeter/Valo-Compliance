@@ -600,6 +600,270 @@ export function silentCatchReport(root = repositoryRoot): string[] {
   );
 }
 
+/** Product source of the API, the web app and the shared libraries, where the two rules below read. */
+function productSourceUnder(root: string, dirs: string[]) {
+  return dirs.flatMap((dir) => {
+    const full = join(root, dir);
+    return statSync(full, { throwIfNoEntry: false })?.isDirectory() ? sourceFiles(full, isProductSource) : [];
+  });
+}
+const libraryDirs = (root: string) =>
+  readdirSync(join(root, "lib"))
+    .map((name) => `lib/${name}/src`)
+    .filter((dir) => statSync(join(root, dir), { throwIfNoEntry: false })?.isDirectory());
+const parse = (path: string, text: string) =>
+  ts.createSourceFile(
+    path,
+    text,
+    ts.ScriptTarget.Latest,
+    true,
+    path.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+  );
+
+/**
+ * The places that hand a browser HTML, each with why what it hands over cannot run (SEC-003,
+ * docs/architecture/hostile-input.md, part 4). The linter's react/no-danger keeps raw HTML out of JSX.
+ */
+export const RAW_HTML_ENTRIES: Record<string, string> = {
+  "artifacts/api-server/src/lib/valo-render.ts":
+    "draws a document's PDF from HTML in which every text is escaped, with scripts off and every request the page makes refused (valo-render.test.ts)",
+  "artifacts/api-server/src/modules/sources/source-extract.ts":
+    "reads an official source's own HTML for its text, with scripts off and every request the page makes refused (source-controls.test.ts)",
+};
+const HTML_PROPERTIES = new Set(["innerHTML", "outerHTML"]);
+const HTML_METHODS = new Set(["insertAdjacentHTML", "createContextualFragment", "setContent"]);
+
+/** Each place a file puts text into a page as HTML, or hands a browser HTML. */
+function htmlSinks(path: string, text: string) {
+  const source = parse(path, text);
+  const found: { line: number; what: string }[] = [];
+  const add = (node: ts.Node, what: string) => found.push({ line: lineOf(source, node.getStart()), what });
+  const visit = (node: ts.Node) => {
+    if (
+      ts.isBinaryExpression(node) &&
+      (node.operatorToken.kind === ts.SyntaxKind.EqualsToken ||
+        node.operatorToken.kind === ts.SyntaxKind.PlusEqualsToken) &&
+      ts.isPropertyAccessExpression(node.left) &&
+      HTML_PROPERTIES.has(node.left.name.text)
+    )
+      add(node.left.name, node.left.name.text);
+    if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression)) {
+      const name = node.expression.name.text;
+      if (HTML_METHODS.has(name)) add(node.expression.name, `${name}()`);
+      else if (
+        (name === "write" || name === "writeln") &&
+        ts.isIdentifier(node.expression.expression) &&
+        node.expression.expression.text === "document"
+      )
+        add(node.expression.name, `document.${name}()`);
+    }
+    if (ts.isJsxAttribute(node) && ts.isIdentifier(node.name) && /^srcdoc$/i.test(node.name.text))
+      add(node.name, node.name.text);
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  return found;
+}
+
+/**
+ * raw-html (SEC-003): product code puts no text into a page as HTML, and hands a browser HTML only in
+ * the reviewed places above. Valo has no rich text: every text a person types is drawn as text.
+ */
+export function rawHtmlViolations(path: string, text: string): string[] {
+  if (RAW_HTML_ENTRIES[path] !== undefined) return [];
+  return htmlSinks(path, text).map(
+    ({ line, what }) =>
+      `${path}:${line} raw-html ${what} puts text into a page as HTML; draw it as text, or add a reviewed entry`,
+  );
+}
+
+export function rawHtmlReport(root = repositoryRoot): string[] {
+  const files = productSourceUnder(root, [
+    "artifacts/api-server/src",
+    `${WEB}src`,
+    `${WEB}app`,
+    ...libraryDirs(root),
+  ]);
+  const violations = files.flatMap((file) =>
+    rawHtmlViolations(posixRelative(root, file), readFileSync(file, "utf8")),
+  );
+  // A reviewed entry that hands a browser no HTML any more is taken out, so the list stays true.
+  for (const path of Object.keys(RAW_HTML_ENTRIES)) {
+    const full = join(root, path);
+    if (!statSync(full, { throwIfNoEntry: false }) || !htmlSinks(path, readFileSync(full, "utf8")).length)
+      violations.push(`${path} raw-html is reviewed, but hands a browser no HTML; take it off the list`);
+  }
+  return violations;
+}
+
+/**
+ * The places that build SQL text while the program runs, each with how many there are and why the text
+ * cannot come from a request (SEC-003, docs/architecture/hostile-input.md, part 4). Everywhere else,
+ * values reach the database as parameters, through Drizzle or its `sql` template.
+ */
+export const RAW_SQL_ENTRIES: Record<string, { texts: number; reason: string }> = {
+  "artifacts/api-server/src/modules/ai-lanes/inference-history-loader.ts": {
+    texts: 1,
+    reason: "names one of two AI run tables from a fixed list",
+  },
+  "artifacts/api-server/src/modules/ai/inference-allocation-package.ts": {
+    texts: 9,
+    reason:
+      "the inference ledger's schema name, checked against ^[a-z_][a-z0-9_]*$ before any query names it",
+  },
+  "artifacts/api-server/src/modules/ai/inference-batch-dispatch.ts": {
+    texts: 2,
+    reason:
+      "the inference ledger's schema name, checked against ^[a-z_][a-z0-9_]*$ before any query names it",
+  },
+  "artifacts/api-server/src/modules/ai/inference-budget-store.ts": {
+    texts: 6,
+    reason:
+      "the inference ledger's schema name, checked against ^[a-z_][a-z0-9_]*$ before any query names it",
+  },
+  "artifacts/api-server/src/modules/editorial/editorial-lifecycle-sandbox.ts": {
+    texts: 2,
+    reason: "names a disposable development database made from a random UUID",
+  },
+  "artifacts/api-server/src/modules/editorial/editorial-permission-evaluation.ts": {
+    texts: 1,
+    reason: "sets a role from the fixed list editorialRestrictedRoles",
+  },
+  "artifacts/api-server/src/modules/recovery/valo-recovery-erasure.ts": {
+    texts: 3,
+    reason:
+      "names tables from a fixed list, and columns read from pg_attribute and checked against ^[a-z_]+$",
+  },
+  "artifacts/api-server/src/scripts/apply-dispute-development.ts": {
+    texts: 1,
+    reason: "an operator command that applies the SQL of a committed migration file",
+  },
+  "artifacts/api-server/src/scripts/apply-editorial-meter.ts": {
+    texts: 1,
+    reason: "an operator command that applies the SQL of a committed migration file",
+  },
+  "artifacts/api-server/src/scripts/apply-erasure-development.ts": {
+    texts: 1,
+    reason: "an operator command that applies the SQL of a committed migration file",
+  },
+  "artifacts/api-server/src/scripts/apply-erasure-hardening-development.ts": {
+    texts: 1,
+    reason: "an operator command that applies the SQL of a committed migration file",
+  },
+  "artifacts/api-server/src/scripts/apply-privacy-information-development.ts": {
+    texts: 1,
+    reason: "an operator command that applies the SQL of a committed migration file",
+  },
+  "artifacts/api-server/src/scripts/apply-privacy-keys-development.ts": {
+    texts: 1,
+    reason: "an operator command that applies the SQL of a committed migration file",
+  },
+  "artifacts/api-server/src/scripts/apply-refund-lifecycle.ts": {
+    texts: 1,
+    reason: "an operator command that applies the SQL of a committed migration file",
+  },
+  "artifacts/api-server/src/scripts/apply-reminder-retry.ts": {
+    texts: 1,
+    reason: "an operator command that applies the SQL of a committed migration file",
+  },
+  "artifacts/api-server/src/scripts/apply-reminder-window.ts": {
+    texts: 1,
+    reason: "an operator command that applies the SQL of a committed migration file",
+  },
+  "artifacts/api-server/src/scripts/apply-workspace-export-development.ts": {
+    texts: 1,
+    reason: "an operator command that applies the SQL of a committed migration file",
+  },
+  "artifacts/api-server/src/scripts/customer-experience-journey.ts": {
+    texts: 1,
+    reason: "removes a synthetic workspace's rows over a fixed list of tables",
+  },
+  "artifacts/api-server/src/scripts/inference-dispatch-crash-child.ts": {
+    texts: 1,
+    reason: "names an isolated ledger schema checked against ^finite_[a-f0-9]{32}$",
+  },
+  "artifacts/api-server/src/scripts/isolated-recovery.ts": {
+    texts: 2,
+    reason: "counts rows in tables from the recovery drill's fixed list",
+  },
+  "artifacts/api-server/src/scripts/privacy-case-proof.ts": {
+    texts: 1,
+    reason: "removes a synthetic workspace's rows over a fixed list of tables",
+  },
+  "artifacts/api-server/src/scripts/privacy-copy-migration.ts": {
+    texts: 2,
+    reason: "names an isolated schema made from a random UUID",
+  },
+  "artifacts/api-server/src/scripts/zod-upgrade-proof.ts": {
+    texts: 1,
+    reason: "removes a synthetic workspace's rows over a fixed list of tables",
+  },
+  "lib/db/src/index.ts": {
+    texts: 1,
+    reason: "writes the scope key's validity, a constant interval",
+  },
+};
+
+/** Each place a file builds SQL text while the program runs: `sql.raw` of anything but a fixed string,
+ * and a query whose text is a template with substitutions or a joined string. Text built elsewhere and
+ * passed by name is not read here. */
+function sqlTexts(path: string, text: string) {
+  const source = parse(path, text);
+  const found: { line: number; what: string }[] = [];
+  const built = (node: ts.Expression | undefined) =>
+    node !== undefined &&
+    (ts.isTemplateExpression(node) ||
+      (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.PlusToken));
+  const visit = (node: ts.Node) => {
+    if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression)) {
+      const [first] = node.arguments;
+      const name = node.expression.name.text;
+      if (
+        name === "raw" &&
+        ts.isIdentifier(node.expression.expression) &&
+        node.expression.expression.text === "sql" &&
+        !(first && (ts.isStringLiteral(first) || ts.isNoSubstitutionTemplateLiteral(first)))
+      )
+        found.push({ line: lineOf(source, node.getStart()), what: "sql.raw()" });
+      else if (name === "query" && built(first))
+        found.push({ line: lineOf(source, node.getStart()), what: "a query built from text" });
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  return found;
+}
+
+/**
+ * raw-sql (SEC-003): product code builds no SQL text while the program runs, but in the reviewed places
+ * above, each with as many such texts as its entry gives.
+ */
+export function rawSqlViolations(path: string, text: string): string[] {
+  const found = sqlTexts(path, text);
+  const entry = RAW_SQL_ENTRIES[path];
+  if (entry && entry.texts === found.length) return [];
+  if (entry)
+    return [
+      `${path} raw-sql builds ${found.length} SQL text(s) while it runs; its review lists ${entry.texts}, so review the change`,
+    ];
+  return found.map(
+    ({ line, what }) =>
+      `${path}:${line} raw-sql ${what} builds SQL from text; pass values as parameters, or add a reviewed entry`,
+  );
+}
+
+export function rawSqlReport(root = repositoryRoot): string[] {
+  const files = productSourceUnder(root, ["artifacts/api-server/src", ...libraryDirs(root)]);
+  const read = new Set(files.map((file) => posixRelative(root, file)));
+  const violations = files.flatMap((file) =>
+    rawSqlViolations(posixRelative(root, file), readFileSync(file, "utf8")),
+  );
+  for (const path of Object.keys(RAW_SQL_ENTRIES))
+    if (!read.has(path))
+      violations.push(`${path} raw-sql is reviewed, but is not product source; take it off the list`);
+  return violations;
+}
+
 if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
   const violations = [
     ...silentCatchReport(),
@@ -611,6 +875,8 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1
     ...publicServerViolations(),
     ...webFormattingReport(),
     ...historyReseedReport(),
+    ...rawHtmlReport(),
+    ...rawSqlReport(),
   ];
   for (const violation of violations) process.stdout.write(`${violation}\n`);
   process.stdout.write(`architecture check: ${violations.length} violation(s)\n`);
