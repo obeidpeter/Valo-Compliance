@@ -137,6 +137,31 @@ Settled while building it:
 - **What goes.** `GUIDE_REVIEWS_RELEASE_NOTHING` goes. The guide preparation note says what the
   owner does and when.
 
+Settled while building it (slice 2a):
+- **One action checks and records.** The owner confirms the candidate by its checksum, and the check
+  of its sources runs again at that moment. So the check recorded is the check made. A candidate that
+  changed since the owner opened it, or whose review date has passed, records nothing.
+- **What the check reads.** Each of the guide's sources must still be bound to the capture its
+  candidate names. That capture must still be its watch's current one, checked within the last day,
+  and must hold the source's passage and every quotation from it. This is the check the publisher
+  makes at release (`verifyReleasedSources`). The files are read outside any transaction, and nothing
+  calls a model. In 2a, the first source that does not hold is reported and nothing is recorded. The
+  panel, in 2b, lists every claim that does not bind.
+- **The database keeps the check.** A row of `valo_reviewed_guide_checks` names the prepared
+  candidate, the guide, its version, the candidate's checksums and the capture of each source. The
+  database refuses a row from anyone but the development owner and records its time itself. It never
+  changes or removes a row, and the table cannot be emptied. `valo_reviewed_guide_checked` answers
+  whether the check counts: it is of that exact candidate and captures, made within the last day, by
+  someone who is still the development owner. The publisher's role asks it and reads no check or staff
+  record itself ([applying the migrations](../valo/migration-reviewed-guide-checks.md)).
+- **Where it is asked.** The binding checks ask before admission and again before each review is sent,
+  so a check older than a day stops a pair already admitted (`OWNER_SOURCE_CHECK_REQUIRED`). The
+  publish command asks before it saves a guide that passes every gate. Without the check it saves
+  nothing, and runs again once the owner has checked. The publisher and the database ask again at
+  release. A guide that fails a gate is saved and held, as any version is.
+- **Approving.** A package of guide reviews is approved as before 24 November 2026. Its pairs are
+  admitted only with the owner's check.
+
 ### Part 3: rules on the reviewed route
 
 - **The bundle builder.** It starts from a rule prepared in the repository for the owner's route
@@ -205,7 +230,8 @@ Each slice is its own pull request.
 | # | Slice | Requirements |
 | --- | --- | --- |
 | 1 | **A replaced version closes** (built). This design, then part 1, with a migration for the forms' check, its upgrade test and runbook. Unit tests of which version is live for each mix of states. A database test: the real-bindings test publishes TPL-07's version 2 after version 1 through the real publisher, with two passing synthetic reviews. Version 1 then leaves the catalogue, its file and a new document from it are refused, version 2's are served, and a document made from version 1 reads replaced. | DOC-007, EDT-010, ADM-005 |
-| 2 | **The owner's source check for a guide.** Part 2: the panel, the kept check, the admission and the publisher's check, and a migration for the database's check, with its upgrade test and runbook. Database tests: with no check, or an older one, a guide's reviews are not admitted and the guide is not released. With the owner's check of the exact candidate, the stand-in reviews run and the publisher releases it. Another person's check, or a check of another candidate, releases nothing. | EDP-002, EDP-004, EDP-006, ADM-005 |
+| 2a | **The owner's source check for a guide, in the database and the route** (built). Part 2 apart from the panel: the kept check, the admission's and the publisher's checks, and two migrations for the database's check, with their upgrade tests and runbook. Database tests: with no check, or a day-old one, GUD-02's reviews are not admitted or sent and the guide is not saved or released. With the owner's check of the exact candidate, the stand-in reviews run and the real publisher releases it, bound to the captures checked. Another person's check, a check of another candidate or other captures, and a check while a capture is stale record or release nothing. | EDP-002, EDP-004, EDP-005, EDP-006, ADM-005 |
+| 2b | **The owner's panel.** Staff → System → **Guides on the reviewed route**: the list, the candidate's text and passages, what holds it, and the check. Its contract, routes and browser test. | EDP-002, EDP-004, ADM-005 |
 | 3a | **A rule's bundle and its reviews.** The builder, the package kind and its binding checks. Database tests: a prepared rule's pair is admitted only under a package of its kind and runs with a stand-in model. A held rule keeps nothing. | EDP-003, EDP-004, EDP-006, ADM-004 |
 | 3b | **The release request and restoring a version.** The request command and the restore. Database tests: a reviewed rule is planned and applied from its request. A restored version is released as the next one, and saved results keep their versions. | ADM-004 |
 | 4a | **A template's claim map, its preparer and the proposed policy.** The map's builder and checks, the preparer, and the policy as a file for the owner, with TPL-31, the data processing agreement, mapped first. | EDP-003, EDP-005, EDP-006, ADM-005 |

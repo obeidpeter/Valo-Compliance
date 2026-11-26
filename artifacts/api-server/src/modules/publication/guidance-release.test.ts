@@ -728,11 +728,11 @@ test("a candidate whose claims or sources were changed after it was built is fou
   );
 });
 
-// CMP-008 and EDP-004: the reviewed route's publisher holds a guide that states the law, even one that
-// passes every other check, for the owner's source check, which the route does not have (decision
-// 0018). A guide's reviews would therefore release nothing, and no package admits them
-// (`GUIDE_REVIEWS_RELEASE_NOTHING` in inference-allocation-package.ts).
-test("the publisher holds a sourced guide that passes every other check, for want of the owner's source check", async () => {
+// Decision 0018 and docs/architecture/reviewed-route.md, part 2: a guide's bundle is judged as any
+// version's is. The development owner's check of its sources is not part of the bundle: the publish command
+// asks for it before it saves an eligible guide, and the publisher and the database ask again at release.
+// Those are tested against a database (the real-bindings test and the migration test).
+test("a sourced guide that passes every check is eligible by its bundle, the owner's check being asked for at release", async () => {
   const { evaluatePublication } = await import("@workspace/valo-core");
   const { evaluateOperationalRelease } = await import("./publication-publisher");
   const { syntheticRuleRelease } = await import("../../test-support/synthetic-rule-release");
@@ -748,9 +748,6 @@ test("the publisher holds a sourced guide that passes every other check, for wan
     now: new Date(),
   });
   assert.equal(bundle.candidate.contentClass, "sourced_guidance");
-  assert.equal(evaluatePublication(bundle).decision, "eligible");
-  assert.deepEqual(evaluateOperationalRelease(bundle), {
-    decision: "hold",
-    reasons: ["REGULATORY_ARTICLE_AWAITING_OWNER_SOURCE_CHECK"],
-  });
+  assert.deepEqual(evaluateOperationalRelease(bundle), { decision: "eligible", reasons: [] });
+  assert.deepEqual(evaluateOperationalRelease(bundle), evaluatePublication(bundle));
 });

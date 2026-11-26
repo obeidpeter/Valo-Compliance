@@ -674,6 +674,13 @@
       "proves": "The drafting and review database roles are each refused when they call the publisher, change a content version's status or change the publication policy; the version stays a candidate and all six refusals are kept in an append-only audit."
     },
     {
+      "requirement": "CMP-008",
+      "job": "foundation",
+      "file": "lib/db/scripts/phase1-migrations.test.mjs",
+      "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
+      "proves": "After the reviewed guide checks migrations, the database records a check of a prepared guide's sources only for the development owner, at its own time, and never changes or removes one, and it lets the publisher release a guide on the reviewed route only on such a check of that exact candidate and the captures its version names, made within the last day by someone who is still the owner, while a template needs none."
+    },
+    {
       "requirement": "WEB-003",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/catalogue/valo-catalogue-visibility.integration.test.ts",
@@ -1183,6 +1190,13 @@
       "file": "scripts/src/valo/publication.test.ts",
       "test": "missing authoritative evidence, scope or review holds an item, and no human reviewer is required",
       "proves": "A complete synthetic publication record with no field for a human reviewer, lawyer, specialist, approver or sign-off is eligible."
+    },
+    {
+      "requirement": "ADM-005",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/managed-callers-real-bindings.integration.test.ts",
+      "test": "actual managed callers with real PostgreSQL, source/candidate/case checks and zero-network SDK",
+      "proves": "In a disposable copy of the database, the real publisher releases a guide (GUD-02) only on the development owner's check of that exact candidate's sources from within the last day, and its stored version is then eligible under the guidance policy as the owner approved it, carries both passing synthetic reviews and its enhanced checks, and is bound to the captures the owner checked; a day-old check saves and releases nothing."
     },
     {
       "requirement": "ADM-009",
@@ -1955,6 +1969,13 @@
       "proves": "A passage of an official text that is not kept in the repository is supplied only from a capture of that text's own address whose words between the recorded places have the recorded checksum; a capture of another address or with other words supplies nothing. The words in this test are made up."
     },
     {
+      "requirement": "EDP-002",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/managed-callers-real-bindings.integration.test.ts",
+      "test": "actual managed callers with real PostgreSQL, source/candidate/case checks and zero-network SDK",
+      "proves": "In a disposable copy of the database, the development owner's check of a guide's sources records nothing while the capture of the Act it quotes was last checked over a day ago or the Act's file has changed since that capture, and without that check the guide's reviews are not admitted."
+    },
+    {
       "requirement": "EDP-003",
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/editorial/pipeline-contract.test.ts",
@@ -2039,6 +2060,13 @@
       "proves": "What a guide's two reviewers are given beside the candidate and its sources holds no field for a verdict or another review."
     },
     {
+      "requirement": "EDP-004",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/managed-callers-real-bindings.integration.test.ts",
+      "test": "actual managed callers with real PostgreSQL, source/candidate/case checks and zero-network SDK",
+      "proves": "In a disposable copy of the database, a guide's factual review and its challenge are admitted only under an approved package of guide reviews and after the development owner's check of that exact candidate's sources, and are sent as the two separate requests planned, each settled once against that batch; before the check, or a day after it, nothing is admitted, sent or reserved."
+    },
+    {
       "requirement": "EDP-005",
       "job": "foundation",
       "file": "scripts/src/valo/publication.test.ts",
@@ -2100,6 +2128,13 @@
       "file": "artifacts/api-server/src/modules/publication/guidance-review-inputs.test.ts",
       "test": "differences between official copies are given for the sections quoted, and an open question always",
       "proves": "The reviewers are given the differences found between the official copies of an Act for the sections a guide quotes, and every open question about the text even when it names a section the guide does not quote."
+    },
+    {
+      "requirement": "EDP-005",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/managed-callers-real-bindings.integration.test.ts",
+      "test": "actual managed callers with real PostgreSQL, source/candidate/case checks and zero-network SDK",
+      "proves": "In a disposable copy of the database, with stand-in reviews that are not reviews, a guide is released by the real publisher with the five enhanced checks (controlling text, amendments, effective dates, exceptions and jurisdiction) recorded as passed by both reviews on its stored version, and only on the development owner's check of that exact candidate's sources from within the last day."
     },
     {
       "requirement": "EDP-006",

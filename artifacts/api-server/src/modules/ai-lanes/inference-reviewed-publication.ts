@@ -11,8 +11,10 @@ import {
   evaluateOperationalRelease,
   getPublicationArtifact,
   operationalReviewSchemaFor,
+  OWNER_SOURCE_CHECK_REQUIRED,
   publishOperationalVersion,
   recordActualPublicationHold,
+  reviewedGuideChecked,
   type ArtifactRef,
   type ReleaseAttestations,
 } from "../publication";
@@ -25,6 +27,27 @@ async function releaseOrHold(versionId: string, eligibility: ReturnType<typeof e
   return eligibility.decision === "eligible"
     ? await publishOperationalVersion(versionId)
     : { ...(await recordActualPublicationHold(versionId)), decision: "held" as const };
+}
+
+/**
+ * A guide that passes every gate is saved and released only once the development owner has checked its
+ * exact candidate's sources, within the last day (decision 0018; docs/architecture/reviewed-route.md,
+ * part 2). Without that check nothing is saved or held: the owner checks again, at no cost, and the
+ * command is run again. A guide that fails a gate is saved and held as any version is.
+ */
+async function assertGuideCheckedBeforeRelease(
+  reader: Parameters<typeof reviewedGuideChecked>[0],
+  versionId: string,
+  bundle: PublicationBundle,
+  attestations: ReleaseAttestations,
+  eligibility: ReturnType<typeof evaluateOperationalRelease>,
+) {
+  if (
+    eligibility.decision === "eligible" &&
+    bundle.candidate.contentClass === "sourced_guidance" &&
+    !(await reviewedGuideChecked(reader, versionId, bundle.candidate.hash, attestations.sourceSnapshots))
+  )
+    throw Error(OWNER_SOURCE_CHECK_REQUIRED);
 }
 
 type ReviewRecord = {
@@ -93,7 +116,15 @@ export async function publishReviewedOperationalCandidate(input: {
     if (saved.candidateHash !== first.candidateHash) throw Error("CANDIDATE_ALREADY_SAVED");
     if (saved.status !== "candidate")
       return { id: versionId, decision: saved.status, idempotent: true, rerun: true };
-    const release = await releaseOrHold(versionId, evaluateOperationalRelease(saved.bundle));
+    const eligibility = evaluateOperationalRelease(saved.bundle);
+    await assertGuideCheckedBeforeRelease(
+      db,
+      versionId,
+      publicationSchema.parse(saved.bundle),
+      saved.attestations as ReleaseAttestations,
+      eligibility,
+    );
+    const release = await releaseOrHold(versionId, eligibility);
     return { id: versionId, decision: release.decision, release, rerun: true };
   }
 
@@ -189,6 +220,8 @@ export async function publishReviewedOperationalCandidate(input: {
     ...(current.row.attestations as ReleaseAttestations),
     reviews: reviewed.map(({ ref }) => ref),
   };
+  const eligibility = evaluateOperationalRelease(bundle);
+  await assertGuideCheckedBeforeRelease(db, versionId, bundle, attestations, eligibility);
   await db.transaction(async (tx) => {
     await tx.execute(sql`SET LOCAL ROLE valo_content_drafter_dev`);
     await tx.insert(valoContentVersions).values({
@@ -203,7 +236,6 @@ export async function publishReviewedOperationalCandidate(input: {
       reviewBy: current.row.reviewBy,
     });
   });
-  const eligibility = evaluateOperationalRelease(bundle);
   const release = await releaseOrHold(versionId, eligibility);
   const [stored] = await db
     .select({ status: valoContentVersions.status })
