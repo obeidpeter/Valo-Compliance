@@ -45,6 +45,7 @@ import {
   createPrivacyRequesterRouter,
 } from "./valo-customer-access";
 import { commerceRouter } from "./valo-commerce";
+import { messagesRouter } from "./valo-messages";
 import {
   listDocumentEditions,
   listEditionNotices,
@@ -193,6 +194,7 @@ router.use(customerAccessRouter);
 router.use(correctionNoticesRouter);
 router.use(supportCustomerRouter);
 router.use(commerceRouter);
+router.use(messagesRouter);
 router.get("/workspace/saved-templates", async (_req, res) => {
   res.set("Cache-Control", "private, no-store");
   res.json(await savedTemplateList(res.locals.valoActor));

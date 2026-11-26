@@ -522,6 +522,23 @@ const answers: Record<string, unknown> = {
     ],
     products: [],
   }),
+  [`GET /workspace/messages`]: api.ListWorkspaceMessagesResponse.parse([
+    {
+      id: "00000000-0000-4000-8000-00000000d101",
+      kind: "purchase_receipt",
+      orderId: "00000000-0000-4000-8000-00000000a101",
+      orderReference: "ORD-SYNTH-1",
+      refundReference: null,
+      forYou: true,
+      status: "held",
+      reason: "SENDER_NOT_CONFIGURED",
+      attempts: 0,
+      createdAt: at(12),
+      lastAttemptAt: null,
+      nextAttemptAt: at(13),
+      acceptedAt: null,
+    },
+  ]),
   [`GET /workspace/data-exports`]: api.ListWorkspaceDataExportsResponse.parse({
     items: [],
     nextCursor: null,
@@ -1305,6 +1322,7 @@ const SIGNED_IN: { path: string; title: string; area?: string }[] = [
   { path: "/workspace/notifications", title: "Reminders" },
   { path: "/workspace/profile", title: "Business profile" },
   { path: "/workspace/purchases", title: "Purchases and licences" },
+  { path: "/workspace/messages", title: "Messages from Valo" },
   { path: "/workspace/account", title: "Sign-in and security" },
   { path: "/workspace/privacy", title: "Your data and privacy requests" },
   { path: "/workspace/support", title: "Support requests" },
@@ -1403,6 +1421,7 @@ test("a signed-in list with nothing in it shows its empty state, with no automat
       },
     ],
     ["/workspace/assessments", { "GET /workspace/assessments": [] }],
+    ["/workspace/messages", { "GET /workspace/messages": [], "GET /workspace/reminders": [] }],
   ];
   for (const [path, overrides] of empty) {
     const { page, unknown, errors, close } = await phone(path, except(overrides));
@@ -1431,6 +1450,7 @@ test("a signed-in screen whose data fails to load shows an alert with a retry bu
     "/workspace/tasks",
     "/workspace/reminders",
     "/workspace/purchases",
+    "/workspace/messages",
     "/workspace/privacy",
     "/staff",
     "/staff/privacy",
@@ -1540,6 +1560,7 @@ const ACCOUNT: [path: string, label: string][] = [
   ["/workspace/account", "Sign-in and security"],
   ["/workspace/privacy", "Privacy and data"],
   ["/workspace/purchases", "Purchases"],
+  ["/workspace/messages", "Messages"],
   ["/workspace/support", "Support requests"],
 ];
 
@@ -1604,7 +1625,7 @@ test("on a desktop, every workspace screen's header lists the five sections and 
   }
 });
 
-test("the account menu lists the account's four pages, closes with Escape, a click elsewhere or focus moving on, returns focus to its button, and leaves sign out beside it", async () => {
+test("the account menu lists the account's pages, closes with Escape, a click elsewhere or focus moving on, returns focus to its button, and leaves sign out beside it", async () => {
   const { page, errors, close } = await desktop("/workspace");
   try {
     await ready(page);
@@ -1726,7 +1747,7 @@ test("on a phone, the workspace's bottom bar lists the five sections with every 
 test("the phone's opened menu fits a short screen and a phone on its side: every control in it comes to rest on screen and clear of the bottom bar", async () => {
   const problems: string[] = [];
   // Signed in, the menu is at its longest on a public screen: the site's five pages, the workspace,
-  // the account's four pages and sign out. Inside the workspace it has help, those pages and sign out.
+  // the account's pages and sign out. Inside the workspace it has help, those pages and sign out.
   for (const path of ["/checker", "/workspace/account", "/workspace"]) {
     const { page, errors, close } = await phone(path);
     try {
@@ -4705,13 +4726,35 @@ test("purchase history offers the exact owned file on a verified order and keeps
       .getByRole("article")
       .filter({ has: page.getByText(paid.reference, { exact: true }) });
     const download = history.getByRole("link", { name: "Download " + paid.title, exact: true });
-    const receipt = order.getByRole("button", { name: "Download test purchase receipt" });
+    // PAY-009: the receipt downloads as a file, by a plain link to the order's own receipt.
+    const receipt = order.getByRole("link", {
+      name: `Download test receipt (PDF) for order ${paid.reference}`,
+    });
     await expect(download).toHaveCount(1);
     await expect(order.getByRole("link", { name: "Download " + paid.title })).toHaveAttribute(
       "href",
       downloadPath,
     );
     await expect(receipt).toBeVisible();
+    await expect(receipt).toHaveText("Test receipt (PDF)");
+    await expect(receipt).toHaveAttribute("href", `/api/workspace/orders/${paid.id}/receipt/file`);
+    // It says what the receipt is not, and what became of its email, in the delivery log's words.
+    await expect(order.getByTestId("order-receipt-note")).toHaveText(
+      "This is Valo's receipt for a test purchase. It is not a live payment, a business invoice, a government receipt or an official tax invoice. " +
+        "Receipt email: On hold. Valo is not sending emails yet. Nothing has been emailed.",
+    );
+    // An order the log holds no message for says that nothing was emailed, and an unpaid order has no receipt.
+    await expect(
+      history
+        .getByRole("article")
+        .filter({ has: page.getByText("ORD-SYNTH-2", { exact: true }) })
+        .getByTestId("order-receipt-message"),
+    ).toHaveText("Receipt email: none. Valo emailed nothing about it.");
+    const unpaid = history
+      .getByRole("article")
+      .filter({ has: page.getByText("ORD-SYNTH-4", { exact: true }) });
+    await expect(unpaid.getByTestId("order-receipt-download")).toHaveCount(0);
+    await expect(unpaid.getByTestId("order-receipt-note")).toHaveCount(0);
     // Each order shows the access rule it recorded when it was made.
     await expect(order.getByTestId("order-later-editions")).toHaveText("Included at no further charge");
     await expect(
@@ -4724,6 +4767,205 @@ test("purchase history offers the exact owned file on a verified order and keeps
     await page.reload();
     await expect(receipt).toBeVisible();
     await expect(download).toHaveCount(0);
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+  // While the delivery log cannot be read, the orders are still shown, and a receipt says nothing of its
+  // email rather than that none was sent.
+  const unread = await phone("/workspace/purchases", async (route, method, apiPath, query) => {
+    if (`${method} ${apiPath}` === "GET /workspace/messages")
+      await route.fulfill({
+        status: 500,
+        contentType: "application/json",
+        body: '{"error":"Synthetic failure"}',
+      });
+    else await except({ "GET /workspace/purchases": listing })(route, method, apiPath, query);
+  });
+  try {
+    const order = unread.page
+      .getByRole("region", { name: "Your orders" })
+      .getByRole("article")
+      .filter({ has: unread.page.getByText(paid.reference, { exact: true }) });
+    await expect(order.getByTestId("order-receipt-download")).toBeVisible();
+    await expect(order.getByTestId("order-receipt-note")).toHaveText(
+      "This is Valo's receipt for a test purchase. It is not a live payment, a business invoice, a government receipt or an official tax invoice.",
+    );
+    await expect(order.getByTestId("order-receipt-message")).toHaveCount(0);
+    assert.deepEqual(unread.unknown, []);
+  } finally {
+    await unread.close();
+  }
+});
+
+// WRK-003: "... and a delivery log." The workspace's log of every message, in the customer's words. No
+// message is called sent or delivered, and one Valo only recorded is said not to have been emailed
+// (docs/architecture/messages.md, slice 1b).
+test("the messages screen says in plain words what has happened to each message and reminder, calls none of them sent or delivered, and says of a message Valo only recorded that nothing was emailed", async () => {
+  const message = (n: number, fields: Record<string, unknown>) => ({
+    id: `00000000-0000-4000-8000-00000000d20${n}`,
+    kind: "purchase_receipt",
+    orderId: "00000000-0000-4000-8000-00000000a101",
+    orderReference: "ORD-SYNTH-1",
+    refundReference: null,
+    forYou: true,
+    status: "queued",
+    reason: null,
+    attempts: 0,
+    createdAt: at(12),
+    lastAttemptAt: null,
+    nextAttemptAt: null,
+    acceptedAt: null,
+    ...fields,
+  });
+  const records = api.ListWorkspaceMessagesResponse.parse([
+    message(1, { status: "held", reason: "SENDER_NOT_CONFIGURED", createdAt: at(24), nextAttemptAt: at(25) }),
+    message(2, {
+      status: "recorded",
+      attempts: 1,
+      createdAt: at(23),
+      lastAttemptAt: at(23),
+      acceptedAt: at(23),
+    }),
+    message(3, {
+      kind: "refund_processed",
+      refundReference: "RFD-SYNTH-1",
+      forYou: false,
+      status: "accepted",
+      attempts: 1,
+      createdAt: at(22),
+      lastAttemptAt: at(22),
+      acceptedAt: at(22),
+    }),
+    message(4, {
+      status: "failed",
+      reason: "ATTEMPT_LIMIT_REACHED",
+      attempts: 5,
+      createdAt: at(21),
+      lastAttemptAt: at(21),
+    }),
+    message(5, {
+      orderId: null,
+      orderReference: null,
+      status: "cancelled",
+      reason: "ORDER_NOT_VERIFIED",
+      createdAt: at(20),
+    }),
+    message(6, {
+      status: "queued",
+      reason: "SENDER_DID_NOT_TAKE",
+      attempts: 2,
+      createdAt: at(19),
+      lastAttemptAt: at(19),
+      nextAttemptAt: at(26),
+    }),
+  ]);
+  const reminders = api.ListRemindersResponse.parse(answers["GET /workspace/reminders"]);
+  const row = (page: Page, n: number) => page.getByTestId(`row-message-${records[n - 1]!.id}`);
+  {
+    const { page, errors, unknown, close } = await desktop(
+      "/workspace/messages",
+      except({ "GET /workspace/messages": records }),
+    );
+    try {
+      await ready(page);
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText("Messages from Valo");
+      await expect(page.getByTestId("text-messages-intro")).toHaveText(
+        "Each message Valo owes this workspace about a purchase or a refund, and each reminder about a task, with what has happened to it. " +
+          "No message is shown as delivered: the most Valo knows is that an email service accepted it.",
+      );
+      // Newest first, the reminder among the messages.
+      const rows = page.getByTestId("list-messages").locator("> li");
+      await expect(rows).toHaveCount(7);
+      assert.deepEqual(
+        await rows.evaluateAll((items) => items.map((item) => item.getAttribute("data-testid"))),
+        [`row-reminder-${reminders[0]!.id}`, ...records.map((record) => `row-message-${record.id}`)],
+      );
+
+      // Waiting because nothing is emailed yet. The receipt itself is where it always is.
+      await expect(row(page, 1)).toContainText("Receipt for order ORD-SYNTH-1");
+      await expect(row(page, 1)).toContainText("24 Nov 2026, 10:00 · For you");
+      await expect(row(page, 1)).toContainText("Valo is not sending emails yet. Nothing has been emailed.");
+      await expect(row(page, 1)).toContainText("Valo looks at this again after 25 Nov 2026, 10:00.");
+      await expect(row(page, 1)).toContainText("The receipt itself is on your Purchases page.");
+      await expect(row(page, 1).getByRole("link", { name: "Go to Purchases" })).toHaveAttribute(
+        "href",
+        "/workspace/purchases",
+      );
+      await expect(row(page, 1).locator(".pill")).toHaveText("On hold");
+      // A message Valo only recorded: nothing was emailed, and it is not called accepted, sent or tried.
+      await expect(row(page, 2).locator(".pill")).toHaveText("Not emailed");
+      await expect(row(page, 2)).toContainText(
+        "Nothing was emailed: Valo was not sending emails when this message was due.",
+      );
+      assert.doesNotMatch(await row(page, 2).innerText(), /accept|delivered|\bsent\b|Tried/i);
+      // The email service took a refund's notice for another member. That is not called sent, or delivered.
+      await expect(row(page, 3)).toContainText("Refund notice for order ORD-SYNTH-1");
+      await expect(row(page, 3)).toContainText(
+        "22 Nov 2026, 10:00 · For another member of this workspace · Refund RFD-SYNTH-1",
+      );
+      await expect(row(page, 3).locator(".pill")).toHaveText("Accepted by email service");
+      await expect(row(page, 3)).toContainText(
+        "The email service accepted this message. That does not show it reached your inbox.",
+      );
+      await expect(row(page, 3)).toContainText("Tried once. Last tried 22 Nov 2026, 10:00.");
+      await expect(row(page, 3)).toContainText("The refund itself is on your Purchases page.");
+      assert.doesNotMatch(await row(page, 3).innerText(), /delivered|\bsent\b/i);
+      // Five tries and no more: the customer cannot clear this alone, so the way to report it is here.
+      await expect(row(page, 4).locator(".pill")).toHaveText("Not confirmed");
+      await expect(row(page, 4)).toContainText(
+        "Valo tried five times and stopped. The email service did not confirm that it accepted this message.",
+      );
+      await expect(row(page, 4)).toContainText("Tried 5 times. Last tried 21 Nov 2026, 10:00.");
+      await expect(row(page, 4).getByRole("link", { name: "Report a problem" })).toHaveAttribute(
+        "href",
+        "/support",
+      );
+      // Cancelled, about an order the workspace no longer holds, which is not named.
+      await expect(row(page, 5).locator("p").first()).toHaveText("Receipt");
+      await expect(row(page, 5).locator(".pill")).toHaveText("Cancelled");
+      await expect(row(page, 5)).toContainText(
+        "This order's payment is no longer recorded as verified, so no message is sent about it.",
+      );
+      // Not taken yet, and to be tried again with the same message.
+      await expect(row(page, 6).locator(".pill")).toHaveText("Waiting");
+      await expect(row(page, 6)).toContainText(
+        "The email service did not confirm that it accepted this message. Valo will try again, and asks for this same message to be sent, not a second one.",
+      );
+      await expect(row(page, 6)).toContainText(
+        "Tried 2 times. Last tried 19 Nov 2026, 10:00.Valo tries again after 26 Nov 2026, 10:00.",
+      );
+      // The reminder, in the reminders' own words, with the way to its own page.
+      const reminder = page.getByTestId(`row-reminder-${reminders[0]!.id}`);
+      await expect(reminder).toContainText("Reminder: Synthetic task 1");
+      await expect(reminder).toContainText("Planned for 25 Nov 2026, 10:00");
+      await expect(reminder.locator(".pill")).toHaveText("On hold");
+      await expect(reminder.getByRole("link", { name: "Go to Reminders" })).toHaveAttribute(
+        "href",
+        "/workspace/reminders",
+      );
+
+      // None of the system's own words.
+      const shown = (await page.locator("main").innerText()).replace(/\s+/g, " ");
+      assert.doesNotMatch(
+        shown,
+        /provider|dispatch|\bserver\b|outbox|stand-in|\bsender\b|queue|[A-Z]{3,}_[A-Z]/i,
+      );
+      assert.deepEqual((await wcagFailures(page)).failures, []);
+      assert.deepEqual(errors, []);
+      assert.deepEqual(unknown, []);
+    } finally {
+      await close();
+    }
+  }
+  const { page, errors, unknown, close } = await phone(
+    "/workspace/messages",
+    except({ "GET /workspace/messages": records }),
+  );
+  try {
+    await ready(page);
+    assert.deepEqual(await phoneProblems(page, "the messages, with seven in the log"), []);
     assert.deepEqual(errors, []);
     assert.deepEqual(unknown, []);
   } finally {

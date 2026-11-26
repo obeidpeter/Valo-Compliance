@@ -30,6 +30,12 @@ export type MessageSender = {
   send(message: OutgoingMessage): Promise<{ providerMessageId: string }>;
 };
 
+/**
+ * The stand-in's name, as each message it takes records it. A message this sender took was sent to no one:
+ * the workspace's log says so, and never calls it accepted by an email service.
+ */
+export const STAND_IN_SENDER = "stand-in";
+
 /** A message the stand-in was handed, as a test reads it. */
 export type KeptMessage = Omit<OutgoingMessage, "signal"> & { providerMessageId: string };
 
@@ -43,7 +49,7 @@ export function standInSender(options: { keep?: boolean; refuse?: () => boolean 
   const references = new Map<string, string>();
   const kept: KeptMessage[] = [];
   const sender: MessageSender & { kept: readonly KeptMessage[] } = {
-    name: "stand-in",
+    name: STAND_IN_SENDER,
     kept,
     async send(message) {
       message.signal.throwIfAborted();
@@ -72,7 +78,7 @@ export function standInSender(options: { keep?: boolean; refuse?: () => boolean 
 export function configuredMessageSender(env: NodeJS.ProcessEnv = environment()): MessageSender | null {
   const choice = env.VALO_MESSAGE_SENDER;
   if (choice === undefined || choice === "") return null;
-  if (choice !== "stand-in") throw Error("MessageSenderSettingInvalid: VALO_MESSAGE_SENDER");
+  if (choice !== STAND_IN_SENDER) throw Error("MessageSenderSettingInvalid: VALO_MESSAGE_SENDER");
   if (env.NODE_ENV === "production") throw Error("MessageSenderStandInInProduction: VALO_MESSAGE_SENDER");
   return standInSender();
 }

@@ -46,7 +46,7 @@ test("a workspace address belongs to one section, and a screen opened from a pag
 test("the account's pages are in no section, and each marks only itself", () => {
   assert.deepEqual(
     ACCOUNT_PAGES.map((page) => page.label),
-    ["Sign-in and security", "Privacy and data", "Purchases", "Support requests"],
+    ["Sign-in and security", "Privacy and data", "Purchases", "Messages", "Support requests"],
   );
   for (const page of ACCOUNT_PAGES) {
     assert.equal(onAccountPage(page.href), true, page.href);

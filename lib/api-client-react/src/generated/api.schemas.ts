@@ -3892,6 +3892,51 @@ export interface ManualLibraryHold {
   reason: string;
 }
 
+export type WorkspaceMessageKind = typeof WorkspaceMessageKind[keyof typeof WorkspaceMessageKind];
+
+
+export const WorkspaceMessageKind = {
+  purchase_receipt: 'purchase_receipt',
+  refund_processed: 'refund_processed',
+} as const;
+
+export type WorkspaceMessageStatus = typeof WorkspaceMessageStatus[keyof typeof WorkspaceMessageStatus];
+
+
+export const WorkspaceMessageStatus = {
+  queued: 'queued',
+  sending: 'sending',
+  held: 'held',
+  accepted: 'accepted',
+  recorded: 'recorded',
+  failed: 'failed',
+  cancelled: 'cancelled',
+} as const;
+
+export interface WorkspaceMessage {
+  id: string;
+  kind: WorkspaceMessageKind;
+  /** @nullable */
+  orderId: string | null;
+  /** @nullable */
+  orderReference: string | null;
+  /** @nullable */
+  refundReference: string | null;
+  forYou: boolean;
+  status: WorkspaceMessageStatus;
+  /** @nullable */
+  reason: string | null;
+  /** @minimum 0 */
+  attempts: number;
+  createdAt: string;
+  /** @nullable */
+  lastAttemptAt: string | null;
+  /** @nullable */
+  nextAttemptAt: string | null;
+  /** @nullable */
+  acceptedAt: string | null;
+}
+
 export type OperationalAlertState = typeof OperationalAlertState[keyof typeof OperationalAlertState];
 
 

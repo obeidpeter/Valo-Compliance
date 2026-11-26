@@ -5,6 +5,8 @@ import { ShoppingBag } from "lucide-react";
 import {
   useGetCustomerPurchases,
   getGetCustomerPurchasesQueryKey,
+  useListWorkspaceMessages,
+  getListWorkspaceMessagesQueryKey,
   createCommerceOrder,
 } from "@workspace/api-client-react";
 import { DisputeFormsBoundary } from "@/components/dispute-workflows";
@@ -36,6 +38,11 @@ function PurchaseHistoryContent() {
         refetchInterval: (query) => (hasActivePurchaseWork(query.state.data?.orders) ? 30000 : false),
       },
     });
+  // What became of each order's messages (docs/architecture/messages.md, slice 1b). The orders are shown
+  // whether or not this loads; an order's card says nothing of its messages until it has.
+  const messages = useListWorkspaceMessages({
+    query: { queryKey: getListWorkspaceMessagesQueryKey(), refetchOnWindowFocus: true },
+  });
   const [licences, setLicences] = useState<Record<string, boolean>>({}),
     [busy, setBusy] = useState(false),
     [error, setError] = useState<string | null>(null),
@@ -282,6 +289,7 @@ function PurchaseHistoryContent() {
                               download: editionDownloads.get(edition.contentVersionId),
                             }))
                       }
+                      messages={messages.data}
                       changed={refresh}
                     />
                   ))}

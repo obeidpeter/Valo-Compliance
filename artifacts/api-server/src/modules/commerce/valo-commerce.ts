@@ -771,19 +771,28 @@ export async function refreshOrder(actor: WorkspaceActor, id: string) {
   // Revalidates membership AFTER the network wait and resource lock.
   return settleVerifiedOrder(id, data, actor);
 }
+/** The workspace's order whose receipt the caller may read: one with a recorded verified original purchase. */
+async function receiptOrder(tx: Tx, actor: WorkspaceActor, id: string) {
+  const [order] = await tx
+    .select()
+    .from(valoOrders)
+    .where(and(eq(valoOrders.id, id), eq(valoOrders.workspaceId, actor.workspaceId)));
+  if (!order) throw new ValoProblem(404, "Order not found.");
+  await authorizeWorkspaceRead(tx, actor);
+  if (
+    !order.providerTransactionId ||
+    (order.status !== "verified_success" && !(await originalReceiptExists(tx, id, order.workspaceId)))
+  )
+    throw new ValoProblem(409, "There is no recorded verified original purchase receipt for this order.");
+  return order;
+}
+/** The order a receipt file is made from, after the checks its receipt has. */
+export async function purchaseReceiptOrder(actor: WorkspaceActor, id: string) {
+  return db.transaction((tx) => receiptOrder(tx, actor, id));
+}
 export async function purchaseReceipt(actor: WorkspaceActor, id: string) {
   return db.transaction(async (tx) => {
-    const [order] = await tx
-      .select()
-      .from(valoOrders)
-      .where(and(eq(valoOrders.id, id), eq(valoOrders.workspaceId, actor.workspaceId)));
-    if (!order) throw new ValoProblem(404, "Order not found.");
-    await authorizeWorkspaceRead(tx, actor);
-    if (
-      !order.providerTransactionId ||
-      (order.status !== "verified_success" && !(await originalReceiptExists(tx, id, order.workspaceId)))
-    )
-      throw new ValoProblem(409, "There is no recorded verified original purchase receipt for this order.");
+    const order = await receiptOrder(tx, actor, id);
     const [delivery] = await tx
       .select()
       .from(valoPurchaseOutbox)

@@ -211,6 +211,7 @@ import type {
   WorkspaceExportJob,
   WorkspaceExportPage,
   WorkspaceExportRequest,
+  WorkspaceMessage,
   WorkspaceTask,
   WriteLimitResponse
 } from './api.schemas';
@@ -2600,6 +2601,100 @@ export function useGetCommerceReceipt<TData = Awaited<ReturnType<typeof getComme
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetCommerceReceiptQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getDownloadCommerceReceiptUrl = (id: string,) => {
+
+
+
+
+  return `/api/workspace/orders/${encodeURIComponent(String(id))}/receipt/file`
+}
+
+export const downloadCommerceReceipt = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<Blob> => {
+
+  return customFetch<Blob>(getDownloadCommerceReceiptUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getDownloadCommerceReceiptQueryKey = (id: string,) => {
+    return [
+    "downloadCommerceReceipt", ...(id ? [id] : [])
+    ] as const;
+    }
+
+
+export const getDownloadCommerceReceiptQueryOptions = <TData = Awaited<ReturnType<typeof downloadCommerceReceipt>>, TError = ErrorType<void | ApiProblem>>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadCommerceReceipt>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getDownloadCommerceReceiptQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof downloadCommerceReceipt>>> = ({ signal }) => downloadCommerceReceipt(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof downloadCommerceReceipt>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type DownloadCommerceReceiptQueryResult = NonNullable<Awaited<ReturnType<typeof downloadCommerceReceipt>>>
+export type DownloadCommerceReceiptQueryError = ErrorType<void | ApiProblem>
+
+
+export function useDownloadCommerceReceipt<TData = Awaited<ReturnType<typeof downloadCommerceReceipt>>, TError = ErrorType<void | ApiProblem>>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadCommerceReceipt>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof downloadCommerceReceipt>>,
+          TError,
+          Awaited<ReturnType<typeof downloadCommerceReceipt>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDownloadCommerceReceipt<TData = Awaited<ReturnType<typeof downloadCommerceReceipt>>, TError = ErrorType<void | ApiProblem>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadCommerceReceipt>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof downloadCommerceReceipt>>,
+          TError,
+          Awaited<ReturnType<typeof downloadCommerceReceipt>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDownloadCommerceReceipt<TData = Awaited<ReturnType<typeof downloadCommerceReceipt>>, TError = ErrorType<void | ApiProblem>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadCommerceReceipt>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDownloadCommerceReceipt<TData = Awaited<ReturnType<typeof downloadCommerceReceipt>>, TError = ErrorType<void | ApiProblem>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadCommerceReceipt>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getDownloadCommerceReceiptQueryOptions(id,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -9913,6 +10008,100 @@ export function useDownloadPremiumManualTemplate<TData = Awaited<ReturnType<type
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getDownloadPremiumManualTemplateQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListWorkspaceMessagesUrl = () => {
+
+
+
+
+  return `/api/workspace/messages`
+}
+
+export const listWorkspaceMessages = async ( options?: Parameters<typeof customFetch>[1]): Promise<WorkspaceMessage[]> => {
+
+  return customFetch<WorkspaceMessage[]>(getListWorkspaceMessagesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListWorkspaceMessagesQueryKey = () => {
+    return [
+    "listWorkspaceMessages"
+    ] as const;
+    }
+
+
+export const getListWorkspaceMessagesQueryOptions = <TData = Awaited<ReturnType<typeof listWorkspaceMessages>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWorkspaceMessages>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListWorkspaceMessagesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listWorkspaceMessages>>> = ({ signal }) => listWorkspaceMessages({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listWorkspaceMessages>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListWorkspaceMessagesQueryResult = NonNullable<Awaited<ReturnType<typeof listWorkspaceMessages>>>
+export type ListWorkspaceMessagesQueryError = ErrorType<unknown>
+
+
+export function useListWorkspaceMessages<TData = Awaited<ReturnType<typeof listWorkspaceMessages>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWorkspaceMessages>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listWorkspaceMessages>>,
+          TError,
+          Awaited<ReturnType<typeof listWorkspaceMessages>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListWorkspaceMessages<TData = Awaited<ReturnType<typeof listWorkspaceMessages>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWorkspaceMessages>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listWorkspaceMessages>>,
+          TError,
+          Awaited<ReturnType<typeof listWorkspaceMessages>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListWorkspaceMessages<TData = Awaited<ReturnType<typeof listWorkspaceMessages>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWorkspaceMessages>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListWorkspaceMessages<TData = Awaited<ReturnType<typeof listWorkspaceMessages>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWorkspaceMessages>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListWorkspaceMessagesQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

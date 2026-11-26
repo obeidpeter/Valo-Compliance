@@ -762,7 +762,7 @@ try {
     await expect(page!.getByText("Order saved — not paid", { exact: true })).toBeVisible();
     await page!.getByText(/Licence at purchase/).click();
     await expect(page!.getByText(line.licenceText, { exact: true })).toBeVisible();
-    await expect(page!.getByRole("button", { name: "Download test purchase receipt" })).toHaveCount(0);
+    await expect(page!.getByTestId("order-receipt-download")).toHaveCount(0);
     await expect(page!.getByRole("button", { name: "Request refund review" })).toHaveCount(0);
     for (const width of [360, 390, 768, 1280]) {
       await page!.setViewportSize({ width, height: 900 });

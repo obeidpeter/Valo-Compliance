@@ -9,6 +9,7 @@
  */
 export * from "./valo-commerce";
 export * from "./valo-dispute-actions";
+export * from "./purchase-receipt-file";
 export * from "./valo-payment-concerns";
 export * from "./valo-payment-disputes";
 export * from "./valo-paystack-contract";

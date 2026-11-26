@@ -2847,8 +2847,8 @@
       "requirement": "NFR-006",
       "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
-      "test": "the account menu lists the account's four pages, closes with Escape, a click elsewhere or focus moving on, returns focus to its button, and leaves sign out beside it",
-      "proves": "With the keyboard alone, Enter on the header's account button shows its four links and sets aria-expanded, Tab moves into them, Escape hides them and returns focus to the button, and tabbing past the last link hides them; a click elsewhere hides them too, and following a link opens its page with the list hidden. No assistive technology is used."
+      "test": "the account menu lists the account's pages, closes with Escape, a click elsewhere or focus moving on, returns focus to its button, and leaves sign out beside it",
+      "proves": "With the keyboard alone, Enter on the header's account button shows its links, one for each of the account's pages, and sets aria-expanded, Tab moves into them, Escape hides them and returns focus to the button, and tabbing past the last link hides them; a click elsewhere hides them too, and following a link opens its page with the list hidden. No assistive technology is used."
     },
     {
       "requirement": "NFR-006",

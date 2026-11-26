@@ -7,6 +7,7 @@ import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   ALERT_RUNBOOKS,
+  alertTitle,
   alertRunbook,
   collectOperationalSample,
   recordOperationalAlerts,
@@ -71,7 +72,8 @@ test("internal probes measure failures independently and persist/deduplicate/rec
   try {
     await recordWorkerHeartbeat(worker.snapshot(), dir);
     // The security readings, the reading of privacy requests past Valo's own aim, and the readings of
-    // reminders, the job queue and the request counts are zero here; their alerts have their own tests.
+    // reminders, the job queue, messages and the request counts are zero here; their alerts have their own
+    // tests.
     const security = new Set<string>([
       ...securityQueries,
       readinessQueries.spreadRefusals,
@@ -90,6 +92,8 @@ test("internal probes measure failures independently and persist/deduplicate/rec
       readinessQueries.privacyRequests,
       readinessQueries.reminders,
       readinessQueries.jobQueue,
+      readinessQueries.messages,
+      readinessQueries.failedMessages,
       readinessQueries.requestFailures,
       readinessQueries.requestTime,
     ]);
@@ -527,6 +531,80 @@ test("waiting reminders and jobs, and failing or slow requests, raise their own 
       assert.match(readinessQueries[name], /COALESCE\(sum\(requests\), 0\) < 100 THEN 0/);
       assert.match(readinessQueries[name], /interval '10 minutes'/);
     }
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { recursive: true, force: true });
+    if (old === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = old;
+  }
+});
+
+// docs/architecture/messages.md, part 1: messages to customers waiting past their time raise a backlog, and
+// a message that failed raises an alert, both under the worker's runbook.
+test("messages waiting past their time, and a message that failed, raise their own alerts under the worker's runbook, past their limits only", async () => {
+  const old = process.env.NODE_ENV;
+  process.env.NODE_ENV = "development";
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => {
+    throw Error("EXTERNAL_MESSAGES_FORBIDDEN");
+  };
+  const dir = await mkdtemp(join(tmpdir(), "valo-ops-messages-"));
+  const worker = new WorkerHealth();
+  worker.finish(worker.begin()!, true);
+  try {
+    await recordWorkerHeartbeat(worker.snapshot(), dir);
+    type Readings = Partial<Record<"messages" | "failedMessages", number>>;
+    const sample = (readings: Readings, unreadable?: keyof Readings) =>
+      collectOperationalSample(async (sql) => {
+        if (unreadable && sql === readinessQueries[unreadable]) throw Error("SYNTHETIC_PROBE_FAILURE");
+        const named = (Object.keys(readings) as (keyof Readings)[]).find(
+          (name) => readinessQueries[name] === sql,
+        );
+        return {
+          rows: [{ value: sql === readinessQueries.database ? 1 : named ? readings[named] : 0 }],
+        };
+      }, dir);
+    const owner = { runbook: "Broken export / AI outage", accountable: "Engineering" };
+    // None waiting and none failed raises nothing.
+    assert.deepEqual((await recordOperationalAlerts(await sample({}), dir)).active, []);
+    // Any waiting, and any failed, raise their alerts.
+    const raised = await recordOperationalAlerts(await sample({ messages: 2, failedMessages: 1 }), dir);
+    assert.deepEqual(raised.owners, [
+      { code: "MESSAGES_BACKLOG", ...owner },
+      { code: "FAILED_MESSAGES_DETECTED", ...owner },
+    ]);
+    // Each says in plain words what it is about, and what Valo could not read when its reading fails.
+    assert.equal(alertTitle("MESSAGES_BACKLOG"), "Messages to customers are waiting past their time");
+    assert.equal(alertTitle("FAILED_MESSAGES_DETECTED"), "A message to a customer failed in the last day");
+    assert.equal(
+      alertTitle("MESSAGES_PROBE_UNAVAILABLE"),
+      "Valo cannot read the messages waiting to be sent",
+    );
+    assert.equal(
+      alertTitle("FAILED_MESSAGES_PROBE_UNAVAILABLE"),
+      "Valo cannot read the messages that failed",
+    );
+    // A reading that cannot be taken is an alert of its own, and clears the one it replaces.
+    assert.deepEqual((await recordOperationalAlerts(await sample({}, "failedMessages"), dir)).owners, [
+      { code: "FAILED_MESSAGES_PROBE_UNAVAILABLE", ...owner },
+    ]);
+    assert.deepEqual((await recordOperationalAlerts(await sample({}, "messages"), dir)).owners, [
+      { code: "MESSAGES_PROBE_UNAVAILABLE", ...owner },
+    ]);
+    assert.deepEqual((await recordOperationalAlerts(await sample({}), dir)).active, []);
+    // The readings. Waiting: queued fifteen minutes past its time, or still being sent fifteen minutes
+    // after its attempt's lease ended; never one held, which is held on purpose. Failed: in the last day.
+    assert.match(readinessQueries.messages, /status='queued' AND COALESCE\(next_attempt_at, created_at\) </);
+    assert.match(
+      readinessQueries.messages,
+      /status='sending' AND lease_until < now\(\) - interval '15 minutes'/,
+    );
+    assert.equal(readinessQueries.messages.match(/interval '15 minutes'/g)?.length, 2);
+    assert.doesNotMatch(readinessQueries.messages, /held/);
+    assert.match(
+      readinessQueries.failedMessages,
+      /status='failed' AND updated_at > now\(\) - interval '1 day'/,
+    );
   } finally {
     globalThis.fetch = originalFetch;
     await rm(dir, { recursive: true, force: true });
