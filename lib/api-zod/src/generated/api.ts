@@ -2107,6 +2107,132 @@ export const ReconcileFinanceRefundResponse = zod.object({
 })
 
 
+/**
+ * Each published premium template from the staff library, with its open price and any price scheduled to start (docs/architecture/commercial-settings.md, slice 1). Read-only. Development only.
+ * @summary The published premium templates and their prices, for the development owner (ADM-006)
+ */
+
+
+export const listOwnerPricesResponseItemsItemPricesMax = 100;
+
+export const listOwnerPricesResponseItemsMax = 500;
+
+
+
+export const ListOwnerPricesResponse = zod.object({
+  "items": zod.array(zod.object({
+  "edition": zod.uuid(),
+  "itemId": zod.uuid(),
+  "version": zod.int().min(1),
+  "title": zod.string(),
+  "publishedAt": zod.coerce.date().nullable(),
+  "prices": zod.array(zod.object({
+  "priceId": zod.uuid(),
+  "amountKobo": zod.int().min(1),
+  "licenceVersion": zod.string(),
+  "taxTreatment": zod.string(),
+  "effectiveFrom": zod.coerce.date(),
+  "effectiveTo": zod.coerce.date().nullable()
+})).max(listOwnerPricesResponseItemsItemPricesMax).describe('The open price and any scheduled to start, earliest first.')
+})).max(listOwnerPricesResponseItemsMax)
+})
+
+
+/**
+ * Refused unless `confirm` is the checksum the preview gave for exactly these terms. The template's open price closes when the new one starts. Recording takes no payment.
+ * @summary Record the owner's price for a published premium template
+ */
+export const recordOwnerPriceBodyAmountRegExp = new RegExp('^\\d{1,8}(\\.\\d{2})?$');
+export const recordOwnerPriceBodyLicenceVersionRegExp = new RegExp('^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$');
+export const recordOwnerPriceBodyLicenceTextMin = 20;
+export const recordOwnerPriceBodyLicenceTextMax = 20000;
+
+export const recordOwnerPriceBodyTaxTreatmentMin = 3;
+export const recordOwnerPriceBodyTaxTreatmentMax = 300;
+
+export const recordOwnerPriceBodyFromMin = 3;
+export const recordOwnerPriceBodyFromMax = 40;
+
+export const recordOwnerPriceBodyReferenceMin = 3;
+export const recordOwnerPriceBodyReferenceMax = 160;
+
+export const recordOwnerPriceBodyConfirmRegExp = new RegExp('^[0-9a-f]{64}$');
+
+
+export const RecordOwnerPriceBody = zod.object({
+  "edition": zod.uuid(),
+  "amount": zod.string().regex(recordOwnerPriceBodyAmountRegExp),
+  "licenceVersion": zod.string().regex(recordOwnerPriceBodyLicenceVersionRegExp),
+  "licenceText": zod.string().min(recordOwnerPriceBodyLicenceTextMin).max(recordOwnerPriceBodyLicenceTextMax),
+  "taxTreatment": zod.string().min(recordOwnerPriceBodyTaxTreatmentMin).max(recordOwnerPriceBodyTaxTreatmentMax),
+  "from": zod.string().min(recordOwnerPriceBodyFromMin).max(recordOwnerPriceBodyFromMax),
+  "reference": zod.string().min(recordOwnerPriceBodyReferenceMin).max(recordOwnerPriceBodyReferenceMax).describe('Where the owner\'s approval is written'),
+  "confirm": zod.string().regex(recordOwnerPriceBodyConfirmRegExp).describe('The checksum the preview gave')
+})
+
+
+
+export const recordOwnerPriceResponseClosedMax = 100;
+
+
+
+export const RecordOwnerPriceResponse = zod.object({
+  "priceId": zod.uuid(),
+  "edition": zod.uuid(),
+  "title": zod.string(),
+  "amountKobo": zod.int().min(1),
+  "from": zod.coerce.date(),
+  "closed": zod.array(zod.object({
+  "priceId": zod.uuid(),
+  "amountKobo": zod.int().min(1)
+})).max(recordOwnerPriceResponseClosedMax)
+})
+
+
+/**
+ * Writes nothing.
+ * @summary The exact terms of a price and their checksum, which recording confirms
+ */
+export const previewOwnerPriceBodyAmountRegExp = new RegExp('^\\d{1,8}(\\.\\d{2})?$');
+export const previewOwnerPriceBodyLicenceVersionRegExp = new RegExp('^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$');
+export const previewOwnerPriceBodyLicenceTextMin = 20;
+export const previewOwnerPriceBodyLicenceTextMax = 20000;
+
+export const previewOwnerPriceBodyTaxTreatmentMin = 3;
+export const previewOwnerPriceBodyTaxTreatmentMax = 300;
+
+export const previewOwnerPriceBodyFromMin = 3;
+export const previewOwnerPriceBodyFromMax = 40;
+
+
+
+export const PreviewOwnerPriceBody = zod.object({
+  "edition": zod.uuid(),
+  "amount": zod.string().regex(previewOwnerPriceBodyAmountRegExp).describe('The amount in naira, such as 1500 or 1500.00'),
+  "licenceVersion": zod.string().regex(previewOwnerPriceBodyLicenceVersionRegExp),
+  "licenceText": zod.string().min(previewOwnerPriceBodyLicenceTextMin).max(previewOwnerPriceBodyLicenceTextMax),
+  "taxTreatment": zod.string().min(previewOwnerPriceBodyTaxTreatmentMin).max(previewOwnerPriceBodyTaxTreatmentMax),
+  "from": zod.string().min(previewOwnerPriceBodyFromMin).max(previewOwnerPriceBodyFromMax).describe('now, or a time with its offset, such as 2026-12-01T00:00:00+01:00')
+})
+
+
+export const previewOwnerPriceResponseChecksumRegExp = new RegExp('^[0-9a-f]{64}$');
+
+
+export const PreviewOwnerPriceResponse = zod.object({
+  "title": zod.string(),
+  "terms": zod.object({
+  "edition": zod.uuid(),
+  "amountKobo": zod.int().min(1),
+  "licenceVersion": zod.string(),
+  "licenceText": zod.string(),
+  "taxTreatment": zod.string(),
+  "from": zod.string()
+}),
+  "checksum": zod.string().regex(previewOwnerPriceResponseChecksumRegExp)
+})
+
+
 export const GetWorkspaceDisputesResponse = zod.object({
   "concerns": zod.array(zod.object({
   "id": zod.string(),

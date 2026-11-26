@@ -1052,6 +1052,29 @@ const answers: Record<string, unknown> = {
   "GET /admin/acceptance-cases": (query: URLSearchParams) => acceptanceCases(query.get("corpus") ?? ""),
   "GET /admin/acceptance-runs": (query: URLSearchParams) => acceptanceRun(query.get("corpus") ?? ""),
   "GET /admin/audit-history": auditHistoryPage,
+  // The owner's price screen (docs/architecture/commercial-settings.md, slice 1): one published premium
+  // template with its open price.
+  "GET /admin/owner-prices": api.ListOwnerPricesResponse.parse({
+    items: [
+      {
+        edition: "00000000-0000-4000-8000-00000000b001",
+        itemId: "00000000-0000-4000-8000-00000000b002",
+        version: 1,
+        title: "Synthetic priced agreement",
+        publishedAt: at(20),
+        prices: [
+          {
+            priceId: "00000000-0000-4000-8000-00000000b003",
+            amountKobo: 250000,
+            licenceVersion: "synthetic-premium-1",
+            taxTreatment: "Synthetic tax treatment",
+            effectiveFrom: at(21),
+            effectiveTo: null,
+          },
+        ],
+      },
+    ],
+  }),
 };
 
 const answer: Api = async (route, method, path, query) => {
@@ -5564,6 +5587,106 @@ test("the System area's audit history shows one history at a time and pages thro
     await settled(page);
     assert.deepEqual(await phoneProblems(page, "the audit history"), []);
     assert.deepEqual(asked, ["access:1", "access:2", "refunds:1"]);
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
+
+// ADM-006 (docs/architecture/commercial-settings.md, slice 1): the owner previews a premium template's
+// price, sees its exact terms and checksum, and records exactly those terms.
+test("the owner's price screen previews a price's exact terms and records only what was previewed", async () => {
+  const checksum = "c".repeat(64);
+  const previews: unknown[] = [],
+    recorded: unknown[] = [];
+  const pricing: Api = async (route, method, path, query) => {
+    if (method === "POST" && path === "/admin/owner-prices/previews") {
+      const body = route.request().postDataJSON() as Record<string, string>;
+      previews.push(body);
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(
+          api.PreviewOwnerPriceResponse.parse({
+            title: "Synthetic priced agreement",
+            terms: {
+              edition: body.edition,
+              amountKobo: Math.round(Number(body.amount) * 100),
+              licenceVersion: body.licenceVersion,
+              licenceText: body.licenceText,
+              taxTreatment: body.taxTreatment,
+              from: body.from,
+            },
+            checksum,
+          }),
+        ),
+      });
+    } else if (method === "POST" && path === "/admin/owner-prices") {
+      recorded.push(route.request().postDataJSON());
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(
+          api.RecordOwnerPriceResponse.parse({
+            priceId: "00000000-0000-4000-8000-00000000b004",
+            edition: "00000000-0000-4000-8000-00000000b001",
+            title: "Synthetic priced agreement",
+            amountKobo: 300000,
+            from: at(25),
+            closed: [{ priceId: "00000000-0000-4000-8000-00000000b003", amountKobo: 250000 }],
+          }),
+        ),
+      });
+    } else await answer(route, method, path, query);
+  };
+  const { page, unknown, errors, close } = await phone("/staff", pricing);
+  try {
+    await ready(page);
+    await page.getByTestId("tab-staff-system").click();
+    const panel = page.getByRole("region", { name: "Premium template prices" });
+    await expect(panel.getByRole("list", { name: "Published premium templates" })).toContainText(
+      "₦2,500.00 from 21 Nov 2026, 10:00 · licence synthetic-premium-1 · Synthetic tax treatment",
+    );
+    const preview = panel.getByRole("button", { name: "Preview the exact terms" });
+    await expect(preview).toBeDisabled();
+    await panel.getByLabel("Template", { exact: true }).selectOption("00000000-0000-4000-8000-00000000b001");
+    await panel.getByLabel("Amount in naira, such as 1500 or 1500.00").fill("3000.00");
+    await panel.getByLabel("Licence version, such as premium-1").fill("synthetic-premium-2");
+    await panel.getByLabel("Licence text").fill("Synthetic licence for one business's own use only.");
+    await panel.getByLabel("Tax treatment, on one line").fill("Synthetic tax treatment");
+    await preview.click();
+    const shown = panel.getByTestId("owner-price-preview");
+    await expect(shown).toContainText("Amount₦3,000.00");
+    await expect(shown).toContainText(checksum);
+    // A changed term asks for a new preview: recording confirms only the terms previewed.
+    await panel.getByLabel("Amount in naira, such as 1500 or 1500.00").fill("3000.50");
+    await expect(shown).toHaveCount(0);
+    await panel.getByLabel("Amount in naira, such as 1500 or 1500.00").fill("3000.00");
+    await preview.click();
+    const record = panel.getByRole("button", { name: "Record this price" });
+    await expect(record).toBeDisabled();
+    await panel
+      .getByLabel("Where your approval is written, such as a decision's reference")
+      .fill("synthetic-owner-approval-2");
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "the owner's price screen with a preview"), []);
+    await page.setViewportSize({ width: 360, height: 640 });
+    await record.click();
+    await expect(panel.getByRole("status")).toHaveText(
+      "Price recorded: ₦3,000.00 for Synthetic priced agreement, from 25 Nov 2026, 10:00. The template's earlier price closes then.",
+    );
+    const terms = {
+      edition: "00000000-0000-4000-8000-00000000b001",
+      amount: "3000.00",
+      licenceVersion: "synthetic-premium-2",
+      licenceText: "Synthetic licence for one business's own use only.",
+      taxTreatment: "Synthetic tax treatment",
+      from: "now",
+    };
+    // Two previews of the same terms: the changed amount was never previewed.
+    assert.deepEqual(previews, [terms, terms]);
+    assert.deepEqual(recorded, [{ ...terms, reference: "synthetic-owner-approval-2", confirm: checksum }]);
     assert.deepEqual(errors, []);
     assert.deepEqual(unknown, []);
   } finally {

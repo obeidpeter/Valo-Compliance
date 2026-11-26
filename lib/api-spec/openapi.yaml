@@ -529,6 +529,65 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/RefundRecord" }
+  /admin/owner-prices:
+    get:
+      operationId: listOwnerPrices
+      tags: [staff]
+      summary: The published premium templates and their prices, for the development owner (ADM-006)
+      description: >-
+        Each published premium template from the staff library, with its open price and any price
+        scheduled to start (docs/architecture/commercial-settings.md, slice 1). Read-only. Development only.
+      responses:
+        "200":
+          description: The templates and their prices.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OwnerPricePage" }
+        "401": { description: Sign-in required }
+        "403": { description: "Only the development owner, with recent verification" }
+    post:
+      operationId: recordOwnerPrice
+      tags: [staff]
+      summary: Record the owner's price for a published premium template
+      description: >-
+        Refused unless `confirm` is the checksum the preview gave for exactly these terms. The template's
+        open price closes when the new one starts. Recording takes no payment.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/OwnerPriceRecord" }
+      responses:
+        "200":
+          description: The price recorded, and the prices it closed.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OwnerPriceRecorded" }
+        "401": { description: Sign-in required }
+        "403": { description: "Only the development owner, with recent verification" }
+        "409": { description: "The template cannot be priced now, or the checksum is not of these terms" }
+        "422": { description: A term is missing or malformed }
+  /admin/owner-prices/previews:
+    post:
+      operationId: previewOwnerPrice
+      tags: [staff]
+      summary: The exact terms of a price and their checksum, which recording confirms
+      description: Writes nothing.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/OwnerPriceTerms" }
+      responses:
+        "200":
+          description: The exact terms and their checksum.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OwnerPricePreview" }
+        "401": { description: Sign-in required }
+        "403": { description: "Only the development owner, with recent verification" }
+        "409": { description: The template cannot be priced now }
+        "422": { description: A term is missing or malformed }
   /workspace/disputes: {"get":{"operationId":"getWorkspaceDisputes","tags":["disputes"],"responses":{"200":{"description":"Private durable test-mode workflow. Provider outcomes are not bank victory guarantees.","content":{"application/json":{"schema":{"$ref":"#/components/schemas/WorkspaceDisputes"}}}},"403":{"description":"Active authority, recent staff MFA or workspace membership is absent."},"409":{"description":"Version, hold, canonical state or operation acknowledgement requires review."}}}}
   /workspace/orders/{orderId}/concerns: {"post":{"operationId":"createPaymentConcern","tags":["disputes"],"responses":{"200":{"description":"Private durable test-mode workflow. Provider outcomes are not bank victory guarantees.","content":{"application/json":{"schema":{"$ref":"#/components/schemas/PaymentConcern"}}}},"403":{"description":"Active authority, recent staff MFA or workspace membership is absent."},"409":{"description":"Version, hold, canonical state or operation acknowledgement requires review."}},"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/PaymentConcernInput"}}}},"parameters":[{"name":"orderId","in":"path","required":true,"schema":{"type":"string","format":"uuid"}}]}}
   /workspace/concerns/{id}/respond: {"post":{"operationId":"respondPaymentConcern","tags":["disputes"],"responses":{"200":{"description":"Private durable test-mode workflow. Provider outcomes are not bank victory guarantees.","content":{"application/json":{"schema":{"$ref":"#/components/schemas/PaymentConcern"}}}},"403":{"description":"Active authority, recent staff MFA or workspace membership is absent."},"409":{"description":"Version, hold, canonical state or operation acknowledgement requires review."}},"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/PaymentConcernResponse"}}}},"parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string","format":"uuid"}}]}}
@@ -2564,6 +2623,104 @@ components:
     FinancePaymentConcerns: {"type": "object", "additionalProperties": false, "required": ["concerns", "notice"], "properties": {"concerns": {"type": "array", "items": {"$ref": "#/components/schemas/PaymentConcern"}}, "notice": {"type": "string"}}}
     DisputeHoldInput: {"type": "object", "additionalProperties": false, "required": ["expectedVersion", "held", "reason"], "properties": {"expectedVersion": {"type": "integer", "minimum": 1}, "held": {"type": "boolean"}, "reason": {"type": "string", "minLength": 10, "maxLength": 1500}}}
     FinanceDisputeLink: {"type": "object", "additionalProperties": false, "required": ["orderId", "providerId"], "properties": {"orderId": {"type": "string", "format": "uuid"}, "providerId": {"type": "string", "pattern": "^\\d{1,40}$"}}}
+    OwnerPricePage:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          maxItems: 500
+          items: { $ref: "#/components/schemas/OwnerPricedTemplate" }
+    OwnerPricedTemplate:
+      type: object
+      additionalProperties: false
+      required: [edition, itemId, version, title, publishedAt, prices]
+      properties:
+        edition: { type: string, format: uuid }
+        itemId: { type: string, format: uuid }
+        version: { type: integer, minimum: 1 }
+        title: { type: string }
+        publishedAt: { type: [string, "null"], format: date-time }
+        prices:
+          description: The open price and any scheduled to start, earliest first.
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/OwnerPrice" }
+    OwnerPrice:
+      type: object
+      additionalProperties: false
+      required: [priceId, amountKobo, licenceVersion, taxTreatment, effectiveFrom, effectiveTo]
+      properties:
+        priceId: { type: string, format: uuid }
+        amountKobo: { type: integer, minimum: 1 }
+        licenceVersion: { type: string }
+        taxTreatment: { type: string }
+        effectiveFrom: { type: string, format: date-time }
+        effectiveTo: { type: [string, "null"], format: date-time }
+    OwnerPriceTerms:
+      type: object
+      additionalProperties: false
+      required: [edition, amount, licenceVersion, licenceText, taxTreatment, from]
+      properties:
+        edition: { type: string, format: uuid }
+        amount: { type: string, pattern: "^\\d{1,8}(\\.\\d{2})?$", description: "The amount in naira, such as 1500 or 1500.00" }
+        licenceVersion: { type: string, pattern: "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" }
+        licenceText: { type: string, minLength: 20, maxLength: 20000 }
+        taxTreatment: { type: string, minLength: 3, maxLength: 300 }
+        from: { type: string, minLength: 3, maxLength: 40, description: "now, or a time with its offset, such as 2026-12-01T00:00:00+01:00" }
+    OwnerPriceExactTerms:
+      type: object
+      additionalProperties: false
+      required: [edition, amountKobo, licenceVersion, licenceText, taxTreatment, from]
+      properties:
+        edition: { type: string, format: uuid }
+        amountKobo: { type: integer, minimum: 1 }
+        licenceVersion: { type: string }
+        licenceText: { type: string }
+        taxTreatment: { type: string }
+        from: { type: string }
+    OwnerPricePreview:
+      type: object
+      additionalProperties: false
+      required: [title, terms, checksum]
+      properties:
+        title: { type: string }
+        terms: { $ref: "#/components/schemas/OwnerPriceExactTerms" }
+        checksum: { type: string, pattern: "^[0-9a-f]{64}$" }
+    OwnerPriceRecord:
+      type: object
+      additionalProperties: false
+      required: [edition, amount, licenceVersion, licenceText, taxTreatment, from, reference, confirm]
+      properties:
+        edition: { type: string, format: uuid }
+        amount: { type: string, pattern: "^\\d{1,8}(\\.\\d{2})?$" }
+        licenceVersion: { type: string, pattern: "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" }
+        licenceText: { type: string, minLength: 20, maxLength: 20000 }
+        taxTreatment: { type: string, minLength: 3, maxLength: 300 }
+        from: { type: string, minLength: 3, maxLength: 40 }
+        reference: { type: string, minLength: 3, maxLength: 160, description: Where the owner's approval is written }
+        confirm: { type: string, pattern: "^[0-9a-f]{64}$", description: The checksum the preview gave }
+    OwnerPriceRecorded:
+      type: object
+      additionalProperties: false
+      required: [priceId, edition, title, amountKobo, from, closed]
+      properties:
+        priceId: { type: string, format: uuid }
+        edition: { type: string, format: uuid }
+        title: { type: string }
+        amountKobo: { type: integer, minimum: 1 }
+        from: { type: string, format: date-time }
+        closed:
+          type: array
+          maxItems: 100
+          items:
+            type: object
+            additionalProperties: false
+            required: [priceId, amountKobo]
+            properties:
+              priceId: { type: string, format: uuid }
+              amountKobo: { type: integer, minimum: 1 }
     CustomerPurchases:
       type: object
       required: [available, message, orders, products, ownedDownloads, livePaymentsEnabled]
