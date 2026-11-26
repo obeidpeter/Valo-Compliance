@@ -65,6 +65,13 @@
       "proves": "Against real PostgreSQL and the whole API, every change in the contract but the anonymous requirements check, sent as a page on another site could send it (from that site, with no origin or a null one, marked by the browser as from another or a sibling site, or with a body a form sends), is refused with 403 even for a member of staff who holds its role; each refusal is counted as denied access and no table changes, while the same kind of request from the site's own page is saved."
     },
     {
+      "requirement": "SEC-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/scripts/stored-markup.integration.test.ts",
+      "test": "markup saved through the API is drawn as text on the customer's and staff's screens, and none of it runs",
+      "proves": "Against real PostgreSQL, the real API and the real web app in a browser without the content security policy, hostile markup saved through the API in a business profile, a document, a template's answers, a task, a support request, a privacy request and a staff answer is shown on each customer and staff screen as the text typed, with no element it tried to make and no script it carried run, while the same markup put into a page as HTML on purpose runs and is caught."
+    },
+    {
       "requirement": "NFR-011",
       "job": "foundation",
       "file": "scripts/src/valo/architecture-check.test.ts",
