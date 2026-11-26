@@ -9,6 +9,7 @@ import { GetReleasedResourceResponse } from "@workspace/api-zod";
 import { paginateReleasedItems, type ReleasedLibraryItem } from "../modules/catalogue/valo-catalogue";
 import { menuProblems, phoneProblems, ready } from "../test-support/app-in-browser";
 import { oldWordsIn } from "../test-support/old-words";
+import { MARK, PROBE, SHORT_MARKUP, type Probe } from "../test-support/hostile-markup";
 import { industries, industry, items, resources, serverAnswer } from "../test-support/public-answers";
 import { HYDRATION, startWebServer } from "../test-support/web-server";
 import { baselineTemplates, processingInventory } from "@workspace/valo-core";
@@ -675,6 +676,38 @@ test("the library's filters, sort and page live in its address: the server rende
     }
   } finally {
     catalogueItems = null;
+  }
+});
+
+test("hostile markup in a page's address is drawn only as text: the server's HTML holds it escaped, and the page runs none of it (SEC-003)", async () => {
+  // docs/architecture/hostile-input.md, part 3: the two pages the server draws that read their address,
+  // each given hostile markup in every value it reads and in a name of its own.
+  const hostile = encodeURIComponent(SHORT_MARKUP);
+  const addresses = [
+    `/library?q=${hostile}&category=${hostile}&industry=${hostile}&sort=${hostile}&page=${hostile}&${hostile}=${hostile}`,
+    `/services?category=${hostile}&${hostile}=${hostile}`,
+  ];
+  for (const address of addresses) {
+    const html = await (await fetch(web.origin + address)).text();
+    assert.ok(!html.includes(MARK), `${address}: the server's HTML holds the markup unescaped`);
+    const { page, errors, close } = await web.phone(address);
+    try {
+      await ready(page);
+      const drawn = (await page.evaluate(PROBE)) as Probe;
+      assert.equal(drawn.ran, null, `${address}: a payload ran`);
+      assert.deepEqual(drawn.injected, [], `${address}: the markup made elements`);
+      assert.deepEqual(errors, [], `${address}: page errors`);
+    } finally {
+      await close();
+    }
+  }
+  // The library's search box holds the search it was given, as text, up to the 120 characters it takes.
+  const { page, close } = await web.phone(`/library?q=${hostile}`);
+  try {
+    await ready(page);
+    await expect(page.getByRole("searchbox").first()).toHaveValue(SHORT_MARKUP.slice(0, 120));
+  } finally {
+    await close();
   }
 });
 

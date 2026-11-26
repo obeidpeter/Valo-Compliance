@@ -16,10 +16,10 @@ export const LONG_MARKUP = `${SHORT_MARKUP} <iframe srcdoc="<script>parent.__vh=
 /** A part of every payload that a page drawing it as text shows exactly. */
 export const MARK = "<img src=x id=valo-hostile";
 
-/** What a payload leaves in a page that drew it as HTML. The app sets no inline handler, script or
- * framed document of its own. */
+/** What a payload leaves in a page that drew it as HTML. The app sets no inline handler or framed
+ * document of its own, and its only inline scripts are the site's own, each with the response's nonce. */
 export const INJECTED =
-  '#valo-hostile, [onerror], [onload], [ontoggle], iframe[srcdoc], object, embed, a[href^="javascript" i], script:not([src])';
+  '#valo-hostile, [onerror], [onload], [ontoggle], iframe[srcdoc], object, embed, a[href^="javascript" i], script:not([src]):not([nonce])';
 
 /** Run in the page: whether any payload ran, what it left, and every text the page shows, its form
  * fields' values among them. */

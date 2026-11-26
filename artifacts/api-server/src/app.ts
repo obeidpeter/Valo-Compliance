@@ -3,7 +3,8 @@ import { requestLogging } from "./platform/http-logging";
 import { clerkMiddleware } from "@clerk/express";
 import { publishableKeyFromHost } from "@clerk/shared/keys";
 import { requestComplexityLimit } from "./platform/request-complexity";
-import { onError } from "./platform/http-errors";
+import { notFound, onError } from "./platform/http-errors";
+import { securityHeaders } from "./platform/security-headers";
 import { setting } from "./platform/settings";
 export { onError } from "./platform/http-errors";
 import {
@@ -26,6 +27,8 @@ configureProxyBoundary(app);
 
 app.use(requestLogging(logger));
 app.disable("x-powered-by");
+// Before anything else can answer, so every answer carries them (SEC-003).
+app.use(securityHeaders);
 app.use((req, res, next) => {
   const sendJson = res.json.bind(res);
   res.json = ((body: unknown) => {
@@ -68,19 +71,13 @@ app.use(
     };
   }),
 );
-app.use((_req, res, next) => {
-  res.setHeader("X-Content-Type-Options", "nosniff");
-  res.setHeader("X-Frame-Options", "DENY");
-  res.setHeader("Referrer-Policy", "same-origin");
-  // Browsers ignore HSTS on plain HTTP, so this is safe in local development.
-  res.setHeader("Strict-Transport-Security", "max-age=31536000");
-  next();
-});
 
 app.use(requestReadQuota);
 app.use("/api", router);
 app.use("/api", valoRouter);
 app.use("/api", valoExportsRouter);
+// An address the API does not have is answered in JSON, like every other answer (SEC-003).
+app.use("/api", notFound);
 app.use(onError);
 
 export default app;
