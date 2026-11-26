@@ -84,7 +84,7 @@ Each slice is its own pull request.
 | # | Slice | Requirements | State |
 | --- | --- | --- | --- |
 | 1 | **A hold returns a request to where it was.** Part 1, with a database test. | PRV-003 | Built |
-| 2 | **The outside steps and "Done".** Part 2: two staff actions, the staff screen, and the database test of a request through every step. | PRV-003 | Not started |
+| 2 | **The outside steps and "Done".** Part 2: two staff actions, the staff screen, and the database test of a request through every step. | PRV-003 | Built |
 | 3 | **Age, target and alert.** Part 3: the target the owner sets, the queue's order and the alert. | PRV-003 | Not started |
 | 4 | **A hold of its own.** Part 4, with a migration, its checks in the erasure and the removal of downloads, and the staff screen. | PRV-003 | Not started |
 
@@ -102,6 +102,36 @@ Each slice is its own pull request.
   and releases each, and finds each partly done again, with its prepared result and its steps as they
   were. Without the change, the data download came back "With privacy staff". A request held before
   anything was done still comes back to its staff member.
+
+### Slice 2: the outside steps, and "Done"
+
+- **Two staff actions.** `record_step` records one of the four outside steps as confirmed or not
+  needed, and `complete` marks the request done. Only the member of privacy staff who claimed the
+  request takes either, and only while it is partly done.
+- **The words are the person's.** What staff write becomes the step's words and the reason in the
+  request's signed history. The person who asked reads both on their privacy page, and the staff screen
+  says so before anything is sent.
+- **Again, until done.** A step can be recorded again, with its reason, until the request is done. Each
+  record is an event in the signed history.
+- **"Done".** A request can be marked done once every step is confirmed or not needed and the first two
+  are confirmed. That completion check existed, but nothing reached it. A finished request says "This
+  request is done. Each step says what was done there, or why it was not needed.", and no action changes
+  it after. A data download's prepared result stays the person's to fetch.
+- **What it does not check.** A recorded step is what staff say they did elsewhere. Valo does not reach
+  the sign-in service, the other services or the backups to confirm it.
+- **The staff screen** now shows each step of the request it opens, with its outcome and words, so staff
+  see what is still held.
+- **The database tests** take a synthetic deletion through every step:
+  - confirmed by its owner, claimed and erased;
+  - its four outside steps recorded, one of them twice;
+  - marked done.
+
+  They check that:
+  - only its own staff member records a step, and only one of the four outside steps, with an outcome;
+  - it cannot be marked done while a step is held;
+  - nothing changes it once done.
+
+  A second test finishes a data download the same way and finds its prepared result still the person's.
 
 ## The owner's points
 
