@@ -30,6 +30,7 @@ import { ValoProblem } from "../../platform/valo-problem";
 import { privacyKey, privacySigner } from "../../lib/valo-privacy-keys";
 import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
 import { removedPrivateText, verifiedPrivacyRedaction } from "./valo-privacy-redactions";
+import { workspaceUnderHold } from "./valo-workspace-hold";
 import {
   assertPrivacyVersion,
   assertPrivacyTransition,
@@ -582,9 +583,15 @@ export async function staffPrivacyDetail(actor: PrivacyStaffActor, id: string) {
       reason:
         "Read privacy case history, processing scope and information messages without changing case state.",
     });
+    // While a hold of its own stands on the workspace, its erasure is not offered
+    // (docs/architecture/privacy-requests.md, slice 4).
+    const workspaceHeld = await workspaceUnderHold(tx, row.workspaceId);
     return {
       ...(await privacyDetail(tx, row, events)),
-      availableActions: availablePrivacyActions(row, actor.identityId),
+      workspaceHeld,
+      availableActions: availablePrivacyActions(row, actor.identityId).filter(
+        (action) => !workspaceHeld || (action !== "start_erasure" && action !== "resume_erasure"),
+      ),
     };
   });
 }

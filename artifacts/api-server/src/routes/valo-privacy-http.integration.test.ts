@@ -1,6 +1,12 @@
-import { test } from "node:test";
+import { after, test } from "node:test";
 import { sql } from "drizzle-orm";
-import { GetPrivacyCaseResponse, ListPrivacyCasesResponse } from "@workspace/api-zod";
+import {
+  GetPrivacyCaseResponse,
+  ListPrivacyCasesResponse,
+  ListPrivacyHoldsResponse,
+  PlacePrivacyHoldResponse,
+  ReleasePrivacyHoldResponse,
+} from "@workspace/api-zod";
 import assert from "node:assert/strict";
 import express from "express";
 import { randomUUID } from "node:crypto";
@@ -13,6 +19,7 @@ import {
   valoPrivacyEvents,
   valoPrivacyTombstones,
   valoPrivacyErasureObjects,
+  valoPrivacyHolds,
   valoStaffAccessAudit,
   valoWorkspaces,
   valoMemberships,
@@ -20,6 +27,7 @@ import {
   valoEvents,
 } from "@workspace/db";
 import {
+  createPrivacyHoldsRouter,
   createPrivacyOperationsRouter,
   createPrivacyRequesterRouter,
   makeVerifiedStaffSession,
@@ -28,6 +36,11 @@ import {
 import { createPrivacyCase, confirmPrivacyCase } from "../modules/privacy/valo-privacy";
 import { resolveWorkspace } from "../modules/workspaces";
 import { ValoProblem } from "../platform/valo-problem";
+
+// The pool closes once, after every test in this file.
+after(async () => {
+  if (process.env.VALO_RUN_DB_TESTS === "synthetic-development-only") await pool.end();
+});
 
 test(
   "actual HTTP privacy routes apply an independent privacy role and fresh MFA",
@@ -472,7 +485,137 @@ test(
       await db
         .delete(valoWorkspaces)
         .where(inArray(valoWorkspaces.id, [owner.workspaceId, quarantinedOwner.workspaceId]));
-      await pool.end();
+    }
+  },
+);
+
+// PRV-003 (docs/architecture/privacy-requests.md, slice 4): a hold of its own on a workspace is placed, listed
+// and released through its own routes, behind the same privacy role and fresh-MFA gate as the privacy
+// queue, and changed only from the trusted origin.
+test(
+  "actual HTTP routes place, list and release a hold of its own on a workspace, for privacy staff alone and from the trusted origin",
+  {
+    skip: process.env.VALO_RUN_DB_TESTS !== "synthetic-development-only",
+    timeout: 30000,
+  },
+  async () => {
+    assert.equal(process.env.NODE_ENV, "development");
+    assert.ok(!process.env.REPLIT_DEPLOYMENT);
+    const tag = randomUUID(),
+      owner = await resolveWorkspace(`synthetic-http-hold-${tag}`);
+    const [placer, releaser, finance] = ["placer", "releaser", "finance"].map(
+      (x) => `synthetic-http-hold-${x}-${tag}`,
+    ) as [string, string, string];
+    const app = express();
+    app.use(express.json());
+    app.use(
+      "/admin/privacy-holds",
+      createPrivacyHoldsRouter(
+        makeVerifiedStaffSession({
+          auth: (req) => {
+            const raw = req.header("x-test-identity"),
+              id = raw && [placer, releaser, finance].includes(raw) ? raw : null;
+            return {
+              userId: id,
+              sessionId: id ? `controlled-session:${id}` : null,
+              sessionClaims: { fva: [0, 0] },
+              has: () => Boolean(id),
+            };
+          },
+          session: async (id) => ({ status: "active", userId: id.slice("controlled-session:".length) }),
+          user: async (id) => ({
+            id,
+            banned: false,
+            locked: false,
+            twoFactorEnabled: true,
+            primaryEmailAddressId: "controlled-primary",
+            emailAddresses: [{ id: "controlled-primary", verification: { status: "verified" } }],
+          }),
+        }),
+      ),
+    );
+    app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+      res
+        .status(err instanceof ValoProblem ? err.status : 503)
+        .json({ error: err instanceof Error ? err.message : "unavailable" });
+    });
+    const server = app.listen(0, "127.0.0.1");
+    await new Promise<void>((resolve) => server.once("listening", () => resolve()));
+    const address = server.address();
+    if (!address || typeof address === "string") throw Error("HTTP_LISTENER_UNAVAILABLE");
+    const base = `http://127.0.0.1:${address.port}`;
+    const previousOrigin = process.env.VALO_TRUSTED_ORIGIN;
+    process.env.VALO_TRUSTED_ORIGIN = base;
+    const reason = "Synthetic: a controlled HTTP hold on a workspace.";
+    const send = (identity: string, path = "", body?: object, origin = base) =>
+      fetch(`${base}/admin/privacy-holds${path}`, {
+        method: body ? "POST" : "GET",
+        headers: { "x-test-identity": identity, "content-type": "application/json", Origin: origin },
+        ...(body ? { body: JSON.stringify(body) } : {}),
+      });
+    try {
+      for (const [identityId, role] of [
+        [placer, "privacy"],
+        [releaser, "privacy"],
+        [finance, "finance"],
+      ] as const)
+        await db.insert(valoStaffAssignments).values({
+          id: randomUUID(),
+          identityId,
+          role,
+          grantedBy: "controlled-fixture",
+          reason: "HTTP workspace hold regression",
+        });
+      // Other staff roles and a hostile origin are refused, and place nothing.
+      assert.equal((await send(finance)).status, 403);
+      assert.equal((await send(finance, "", { workspaceId: owner.workspaceId, reason })).status, 403);
+      assert.equal(
+        (
+          await send(
+            placer,
+            "",
+            { workspaceId: owner.workspaceId, reason },
+            "https://hostile.example.invalid",
+          )
+        ).status,
+        403,
+      );
+      assert.deepEqual(
+        await db.select().from(valoPrivacyHolds).where(eq(valoPrivacyHolds.workspaceId, owner.workspaceId)),
+        [],
+      );
+      const placed = await send(placer, "", { workspaceId: owner.workspaceId, reason });
+      assert.equal(placed.status, 200);
+      assert.equal(placed.headers.get("cache-control"), "private, no-store");
+      const hold = PlacePrivacyHoldResponse.parse(await placed.json());
+      assert.equal((await send(placer, "", { workspaceId: owner.workspaceId, reason })).status, 409);
+      const listed = ListPrivacyHoldsResponse.parse(await (await send(releaser)).json());
+      assert.equal(listed.ready, true);
+      assert.deepEqual(
+        listed.items.filter((item) => item.id === hold.id).map((item) => [item.reason, item.placedByYou]),
+        [[reason, false]],
+      );
+      // The member who placed it does not release it; another member does, once.
+      assert.equal((await send(placer, `/${hold.id}/release`, { reason })).status, 403);
+      const released = await send(releaser, `/${hold.id}/release`, { reason });
+      assert.equal(released.status, 200);
+      assert.equal(ReleasePrivacyHoldResponse.parse(await released.json()).released, true);
+      assert.equal((await send(releaser, `/${hold.id}/release`, { reason })).status, 409);
+    } finally {
+      if (previousOrigin === undefined) delete process.env.VALO_TRUSTED_ORIGIN;
+      else process.env.VALO_TRUSTED_ORIGIN = previousOrigin;
+      await new Promise<void>((resolve, reject) => server.close((err) => (err ? reject(err) : resolve())));
+      // A synthetic workspace's holds are removed with their triggers on.
+      await db.delete(valoPrivacyHolds).where(eq(valoPrivacyHolds.workspaceId, owner.workspaceId));
+      await db.delete(valoMemberships).where(eq(valoMemberships.workspaceId, owner.workspaceId));
+      await db.delete(valoEvents).where(eq(valoEvents.workspaceId, owner.workspaceId));
+      await db
+        .delete(valoStaffAccessAudit)
+        .where(inArray(valoStaffAccessAudit.actorId, [placer, releaser, finance]));
+      await db
+        .delete(valoStaffAssignments)
+        .where(inArray(valoStaffAssignments.identityId, [placer, releaser, finance]));
+      await db.delete(valoWorkspaces).where(eq(valoWorkspaces.id, owner.workspaceId));
     }
   },
 );

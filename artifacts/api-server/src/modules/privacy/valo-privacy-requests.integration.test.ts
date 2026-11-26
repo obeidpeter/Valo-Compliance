@@ -11,6 +11,7 @@ import {
   valoPrivacyCases,
   valoPrivacyErasureObjects,
   valoPrivacyEvents,
+  valoPrivacyHolds,
   valoPrivacyTombstones,
   valoProfileVersions,
   valoStaffAccessAudit,
@@ -35,7 +36,13 @@ import {
 import { readinessQueries } from "../operations/valo-operations";
 import { PRIVACY_REQUEST_AIM_DAYS, privacyRequestAimBy } from "../../lib/valo-privacy-state";
 import { privacyPreparedResult, processPrivacyAction } from "./valo-privacy-processing";
-import { closePrivacyErasureLocks, processPrivacyErasure } from "./valo-privacy-erasure";
+import {
+  closePrivacyErasureLocks,
+  processPrivacyErasure,
+  replayErasureObjects,
+} from "./valo-privacy-erasure";
+import { listPrivacyHolds, placePrivacyHold, releasePrivacyHold } from "./valo-privacy-holds";
+import { privateCleanupAuthority } from "./valo-private-cleanup-authority";
 
 const reason = "Synthetic privacy request proof; no customer or provider data.";
 const skip = process.env.VALO_RUN_DB_TESTS !== "synthetic-development-only";
@@ -98,6 +105,9 @@ const outcomes = (steps: { system: string; status: string }[]) =>
 after(async () => {
   if (skip) return;
   await db.transaction(async (tx) => {
+    // A synthetic workspace's holds are removed with their triggers on, so the holds' history digest stays
+    // true (ADM-009).
+    await tx.delete(valoPrivacyHolds).where(inArray(valoPrivacyHolds.workspaceId, owners));
     await tx.execute(sql`SET LOCAL session_replication_role=replica`);
     // Replica mode skips foreign key cascades, so a ticket's support case and its history are removed
     // explicitly; case history is reached through its case.
@@ -402,5 +412,110 @@ test(
     assert.equal(await pastDue(), before);
     const after = await listStaffPrivacyCases(staff, 1);
     assert.equal(after.items.find((item) => item.id === id)?.aimBy ?? null, null);
+  },
+);
+
+// PRV-003: "legal-hold handling". A hold of its own on a workspace, apart from any request, stops Valo's
+// own deletion of the workspace's data while it stands (docs/architecture/privacy-requests.md, slice 4).
+test(
+  "a hold of its own on a workspace stops its erasure from starting or going on, and the removal of its files, until another member of privacy staff releases it",
+  { skip, timeout: 180000 },
+  async () => {
+    assertSyntheticDatabase();
+    const staff = await privacyStaff(),
+      other = await privacyStaff();
+    const deletion = await claimed("deletion", staff);
+    const workspaceId = deletion.actor.workspaceId;
+    const erase = (action: "start_erasure" | "resume_erasure", expectedVersion: number) =>
+      processPrivacyErasure(
+        staff,
+        deletion.id,
+        { action, expectedVersion, reason, acknowledgement: true },
+        // The synthetic workspace holds no files, so nothing is removed from storage.
+        async () => {},
+      );
+    const cleanup = () => db.transaction((tx) => privateCleanupAuthority(tx, workspaceId));
+    const why = "Synthetic: an authority asked Valo to keep this workspace's data as it is.";
+    const held = /This workspace is held/;
+    assert.equal((await cleanup()).allowed, true);
+
+    // Placed with a reason; a workspace that exists has at most one standing hold.
+    let hold = await placePrivacyHold(staff, { workspaceId, reason: why });
+    assert.deepEqual([hold.placedByYou, hold.released], [true, false]);
+    await assert.rejects(placePrivacyHold(other, { workspaceId, reason: why }), { status: 409 });
+    await assert.rejects(placePrivacyHold(staff, { workspaceId: randomUUID(), reason: why }), {
+      status: 404,
+    });
+    await assert.rejects(placePrivacyHold(staff, { workspaceId, reason: "   brief    " }), { status: 422 });
+
+    // While it stands, Valo's own deletion stops: the cleanup of private files is refused, and the erasure
+    // is neither offered nor started, and changes nothing.
+    assert.deepEqual(await cleanup(), { allowed: false, privacyOwned: false, workspaceHeld: true });
+    let staffView = await staffPrivacyDetail(staff, deletion.id);
+    assert.equal(staffView.workspaceHeld, true);
+    assert.ok(!staffView.availableActions.includes("start_erasure"));
+    await assert.rejects(erase("start_erasure", deletion.detail.request.version), {
+      status: 409,
+      message: held,
+    });
+    const [untouched] = await db.select().from(valoPrivacyCases).where(eq(valoPrivacyCases.id, deletion.id));
+    assert.deepEqual([untouched?.status, untouched?.erasurePhase], ["assigned", "not_started"]);
+    assert.deepEqual(
+      await db.select().from(valoPrivacyTombstones).where(eq(valoPrivacyTombstones.workspaceId, workspaceId)),
+      [],
+    );
+    const [membership] = await db
+      .select()
+      .from(valoMemberships)
+      .where(eq(valoMemberships.workspaceId, workspaceId));
+    assert.equal(membership?.active, "yes");
+
+    // Privacy staff see it with its reason; the member who placed it does not release it.
+    const listed = (await listPrivacyHolds(other)).items.find((item) => item.id === hold.id);
+    assert.deepEqual([listed?.reason, listed?.placedByYou, listed?.released], [why, false, false]);
+    await assert.rejects(releasePrivacyHold(staff, hold.id, { reason }), { status: 403 });
+    hold = await releasePrivacyHold(other, hold.id, {
+      reason: "Synthetic: the authority no longer needs the data kept.",
+    });
+    assert.deepEqual([hold.released, hold.releasedByYou], [true, true]);
+    await assert.rejects(releasePrivacyHold(other, hold.id, { reason }), { status: 409 });
+    assert.equal((await cleanup()).allowed, true);
+
+    // Released, the erasure starts. A hold placed while it runs stops it at its next step, and it goes on
+    // where it stopped once that hold is released.
+    staffView = await staffPrivacyDetail(staff, deletion.id);
+    assert.equal(staffView.workspaceHeld, false);
+    assert.ok(staffView.availableActions.includes("start_erasure"));
+    let detail = await erase("start_erasure", staffView.request.version);
+    assert.equal(detail.request.status, "in_progress");
+    const during = await placePrivacyHold(other, { workspaceId, reason: why });
+    await assert.rejects(erase("resume_erasure", detail.request.version), { status: 409, message: held });
+    staffView = await staffPrivacyDetail(staff, deletion.id);
+    assert.ok(!staffView.availableActions.includes("resume_erasure"));
+    assert.deepEqual(
+      [staffView.request.version, staffView.request.status],
+      [detail.request.version, "in_progress"],
+    );
+    await releasePrivacyHold(staff, during.id, { reason: "Synthetic: the erasure may go on." });
+    for (let n = 0; n < 80 && detail.request.status !== "partially_fulfilled"; n++)
+      detail = await erase("resume_erasure", detail.request.version);
+    assert.equal(detail.request.status, "partially_fulfilled");
+
+    // The repeated cleanup of a finished erasure stops under a hold too, and goes on once it is released.
+    const after = await placePrivacyHold(staff, { workspaceId, reason: why });
+    await assert.rejects(
+      replayErasureObjects(deletion.id, async () => {}),
+      { status: 409, message: held },
+    );
+    await releasePrivacyHold(other, after.id, { reason: "Synthetic: the cleanup may go on." });
+    assert.equal((await replayErasureObjects(deletion.id, async () => {})).failed, 0);
+
+    // Each hold is kept, with who placed and released it, and why.
+    const kept = await db
+      .select()
+      .from(valoPrivacyHolds)
+      .where(eq(valoPrivacyHolds.workspaceId, workspaceId));
+    assert.equal(kept.length, 3);
+    assert.ok(kept.every((row) => row.releasedAt && row.releaseReason && row.releasedBy !== row.placedBy));
   },
 );

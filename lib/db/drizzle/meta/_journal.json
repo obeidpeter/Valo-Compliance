@@ -687,6 +687,20 @@
       "when": 1795675644245,
       "tag": "20261126064724_consent_change_grants",
       "breakpoints": true
+    },
+    {
+      "idx": 98,
+      "version": "7",
+      "when": 1795684704423,
+      "tag": "20261126091824_privacy_holds",
+      "breakpoints": true
+    },
+    {
+      "idx": 99,
+      "version": "7",
+      "when": 1795684707525,
+      "tag": "20261126091827_privacy_hold_guards",
+      "breakpoints": true
     }
   ]
 }

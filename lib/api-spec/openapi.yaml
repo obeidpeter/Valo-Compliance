@@ -1662,6 +1662,53 @@ paths:
               schema: { $ref: "#/components/schemas/PrivacyCaseDetail" }
         "403": { $ref: "#/components/responses/AuthError" }
         "409": { $ref: "#/components/responses/ConflictError" }
+  /admin/privacy-holds:
+    get:
+      operationId: listPrivacyHolds
+      responses:
+        "200":
+          description: Privacy-role and fresh-MFA gated holds of their own on workspaces, the standing ones first, then the most recently placed, up to 100
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PrivacyHoldList" }
+        "403": { $ref: "#/components/responses/AuthError" }
+    post:
+      operationId: placePrivacyHold
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PrivacyHoldInput" }
+      responses:
+        "200":
+          description: The hold placed. While it stands, Valo's own deletion of the workspace's data stops.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PrivacyHold" }
+        "403": { $ref: "#/components/responses/AuthError" }
+        "404": { $ref: "#/components/responses/AuthError" }
+        "409": { $ref: "#/components/responses/ConflictError" }
+        "503": { description: The privacy holds migrations have not been applied }
+  /admin/privacy-holds/{id}/release:
+    post:
+      operationId: releasePrivacyHold
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PrivacyHoldRelease" }
+      responses:
+        "200":
+          description: The hold released, by another member of privacy staff than the one who placed it
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PrivacyHold" }
+        "403": { $ref: "#/components/responses/AuthError" }
+        "404": { $ref: "#/components/responses/AuthError" }
+        "409": { $ref: "#/components/responses/ConflictError" }
+        "503": { description: The privacy holds migrations have not been applied }
   /checker/preview:
     post:
       operationId: previewAssessment
@@ -4454,6 +4501,9 @@ components:
         request: { $ref: "#/components/schemas/PrivacyCase" }
         mayRespond: { type: boolean }
         availableActions: { type: array, items: { type: string } }
+        workspaceHeld:
+          type: boolean
+          description: In the staff view only, whether a hold of its own stands on the request's workspace. While it does, Valo's own deletion of the workspace's data stops, and the erasure is not offered.
         messages:
           type: array
           items:
@@ -4501,6 +4551,41 @@ components:
           type: string
           description: For record_step, whether the step was carried out and confirmed, or was not needed.
           enum: [confirmed, not_applicable]
+    PrivacyHold:
+      type: object
+      description: A hold of its own on a workspace, apart from any privacy request. Privacy staff see it; the person whose workspace is held is not shown its reason.
+      required: [id, workspaceId, reason, placedAt, placedByYou, released, releasedAt, releaseReason, releasedByYou]
+      properties:
+        id: { type: string, format: uuid }
+        workspaceId: { type: string, format: uuid }
+        reason: { type: string }
+        placedAt: { type: string }
+        placedByYou: { type: boolean }
+        released: { type: boolean }
+        releasedAt: { type: string, nullable: true }
+        releaseReason: { type: string, nullable: true }
+        releasedByYou: { type: boolean }
+    PrivacyHoldList:
+      type: object
+      required: [ready, items]
+      properties:
+        ready:
+          type: boolean
+          description: Whether the privacy holds migrations have reached this database. Until they have, nothing is held and no hold can be placed.
+        items: { type: array, items: { $ref: "#/components/schemas/PrivacyHold" } }
+    PrivacyHoldInput:
+      type: object
+      additionalProperties: false
+      required: [workspaceId, reason]
+      properties:
+        workspaceId: { type: string, format: uuid }
+        reason: { type: string, minLength: 10, maxLength: 1000 }
+    PrivacyHoldRelease:
+      type: object
+      additionalProperties: false
+      required: [reason]
+      properties:
+        reason: { type: string, minLength: 10, maxLength: 1000 }
     CustomerAccount:
       type: object
       required: [workspaceId, privacyRequests]

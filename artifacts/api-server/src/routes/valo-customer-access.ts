@@ -25,6 +25,9 @@ import {
   privacyPreparedResult,
   requirePrivacyStaff,
   type PrivacyStaffActor,
+  listPrivacyHolds,
+  placePrivacyHold,
+  releasePrivacyHold,
   requesterPrivacyList,
   requesterPrivacyDetail,
   requesterPrivacyReply,
@@ -56,6 +59,9 @@ import {
   CancelPrivacyCaseResponse,
   ListStaffPrivacyCasesResponse,
   ActOnStaffPrivacyCaseResponse,
+  ListPrivacyHoldsResponse,
+  PlacePrivacyHoldResponse,
+  ReleasePrivacyHoldResponse,
 } from "@workspace/api-zod";
 import { db } from "@workspace/db";
 export const publicAccessRouter = Router();
@@ -274,7 +280,38 @@ export function createPrivacyOperationsRouter(
   });
   return router;
 }
+/** Holds of their own on workspaces (docs/architecture/privacy-requests.md, slice 4), behind the same
+ * privacy-role and fresh-MFA gate as the privacy queue. A harness may inject a synthetic resolver. */
+export function createPrivacyHoldsRouter(
+  authenticate: (req: Request) => Promise<PrivacyStaffActor> = verifiedStaffSession,
+) {
+  const router = Router();
+  router.use((_req, res, next) => {
+    res.set("Cache-Control", "private, no-store");
+    next();
+  });
+  const privacyActor = async (req: Request) => {
+    const actor = await authenticate(req);
+    await db.transaction((tx) => requirePrivacyStaff(tx, actor));
+    return actor;
+  };
+  router.get("/", async (req, res) => {
+    res.json(ListPrivacyHoldsResponse.parse(await listPrivacyHolds(await privacyActor(req))));
+  });
+  router.post("/", sameOriginMutation, async (req, res) => {
+    res.json(PlacePrivacyHoldResponse.parse(await placePrivacyHold(await privacyActor(req), req.body)));
+  });
+  router.post("/:id/release", sameOriginMutation, async (req, res) => {
+    res.json(
+      ReleasePrivacyHoldResponse.parse(
+        await releasePrivacyHold(await privacyActor(req), z.string().uuid().parse(req.params.id), req.body),
+      ),
+    );
+  });
+  return router;
+}
 staffOperationsRouter.use("/admin/privacy-cases", createPrivacyOperationsRouter());
+staffOperationsRouter.use("/admin/privacy-holds", createPrivacyHoldsRouter());
 staffOperationsRouter.get("/admin/operations", async (req, res) => {
   res.set("Cache-Control", "private, no-store");
   const actor = await verifiedStaffSession(req);

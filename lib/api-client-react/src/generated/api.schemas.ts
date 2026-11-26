@@ -4035,6 +4035,8 @@ export interface PrivacyCaseDetail {
   request: PrivacyCase;
   mayRespond: boolean;
   availableActions?: string[];
+  /** In the staff view only, whether a hold of its own stands on the request's workspace. While it does, Valo's own deletion of the workspace's data stops, and the erasure is not offered. */
+  workspaceHeld?: boolean;
   messages: PrivacyCaseDetailMessagesItem[];
   events: PrivacyCaseDetailEventsItem[];
   steps: PrivacyCaseDetailStepsItem[];
@@ -4096,6 +4098,46 @@ export interface PrivacyStaffAction {
   system?: PrivacyStaffActionSystem;
   /** For record_step, whether the step was carried out and confirmed, or was not needed. */
   outcome?: PrivacyStaffActionOutcome;
+}
+
+/**
+ * A hold of its own on a workspace, apart from any privacy request. Privacy staff see it; the person whose workspace is held is not shown its reason.
+ */
+export interface PrivacyHold {
+  id: string;
+  workspaceId: string;
+  reason: string;
+  placedAt: string;
+  placedByYou: boolean;
+  released: boolean;
+  /** @nullable */
+  releasedAt: string | null;
+  /** @nullable */
+  releaseReason: string | null;
+  releasedByYou: boolean;
+}
+
+export interface PrivacyHoldList {
+  /** Whether the privacy holds migrations have reached this database. Until they have, nothing is held and no hold can be placed. */
+  ready: boolean;
+  items: PrivacyHold[];
+}
+
+export interface PrivacyHoldInput {
+  workspaceId: string;
+  /**
+     * @minLength 10
+     * @maxLength 1000
+     */
+  reason: string;
+}
+
+export interface PrivacyHoldRelease {
+  /**
+     * @minLength 10
+     * @maxLength 1000
+     */
+  reason: string;
 }
 
 export interface PrivacyRequestRecord {

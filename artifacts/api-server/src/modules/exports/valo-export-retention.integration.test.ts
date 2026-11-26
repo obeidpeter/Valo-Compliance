@@ -16,6 +16,7 @@ import {
   valoWorkspaces,
   valoPrivacyCases,
   valoPrivacyEvents,
+  valoPrivacyHolds,
   valoSupportTickets,
   valoStaffAssignments,
   valoStaffAccessAudit,
@@ -30,6 +31,7 @@ import {
   readPrivacyCase,
 } from "../privacy/valo-privacy";
 import { privateCleanupAuthority } from "../privacy/valo-private-cleanup-authority";
+import { placePrivacyHold, releasePrivacyHold } from "../privacy/valo-privacy-holds";
 import {
   exportRetentionAt,
   exportIsExpired,
@@ -181,6 +183,23 @@ test(
       });
       return { operator, id, detail, reason };
     };
+    /** A member of privacy staff, with fresh multi-factor verification. */
+    const privacyMember = async () => {
+      const member = {
+        identityId: "synthetic-retention-privacy-" + randomUUID(),
+        recentMfa: true,
+        verifiedAt: Date.now(),
+      };
+      staff.push(member.identityId);
+      await db.insert(valoStaffAssignments).values({
+        id: randomUUID(),
+        identityId: member.identityId,
+        role: "privacy",
+        grantedBy: "synthetic",
+        reason: "Synthetic retention workspace hold regression; no customer data.",
+      });
+      return member;
+    };
     const financial = async () =>
       Object.fromEntries(
         await Promise.all(
@@ -328,6 +347,43 @@ test(
           assert.equal((await expireGeneratedExports(actor.workspaceId)).expired, 1);
         },
       );
+      // PRV-003 (docs/architecture/privacy-requests.md, slice 4): a hold of its own on the workspace, with no
+      // privacy request, keeps its old files too.
+      await t.test(
+        "a hold of its own on the workspace keeps expired files and blocks their regeneration until another member of privacy staff releases it",
+        async () => {
+          const actor = await owner(),
+            item = await seed(actor),
+            placer = await privacyMember(),
+            releaser = await privacyMember();
+          const placed = await placePrivacyHold(placer, {
+            workspaceId: actor.workspaceId,
+            reason: "Synthetic retention workspace hold; no customer data.",
+          });
+          assert.deepEqual(await db.transaction((tx) => privateCleanupAuthority(tx, actor.workspaceId)), {
+            allowed: false,
+            privacyOwned: false,
+            workspaceHeld: true,
+          });
+          assert.equal((await expireGeneratedExports(actor.workspaceId)).held, 1);
+          assert.ok((await getExport(actor, item.job.id)).asset);
+          assert.ok(files.has(item.key));
+          // The person is told only that Valo is keeping the workspace's files, not why.
+          await assert.rejects(retryExport(actor, item.job.id), {
+            status: 409,
+            message:
+              "This file cannot be made again for now, as Valo is keeping this workspace's files as they are. Your saved document is safe.",
+          });
+          await releasePrivacyHold(releaser, placed.id, {
+            reason: "Synthetic: the workspace no longer needs to be held.",
+          });
+          await db
+            .update(objects)
+            .set({ nextCleanupAt: new Date(0) })
+            .where(eq(objects.objectKey, item.key));
+          assert.equal((await expireGeneratedExports(actor.workspaceId)).expired, 1);
+        },
+      );
       await t.test(
         "malformed bindings yield a bounded next batch; unassigned legacy and future dates are preserved",
         async () => {
@@ -413,6 +469,7 @@ test(
       const ids = owners.map((actor) => actor.workspaceId);
       if (ids.length) {
         for (const table of [
+          valoPrivacyHolds,
           objects,
           assets,
           valoExportRequests,

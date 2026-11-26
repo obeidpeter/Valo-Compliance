@@ -14,6 +14,7 @@ import { ErrorState } from "@/components/states";
 import { useUnsavedNavigation } from "@/lib/use-unsaved-navigation";
 import { formatDateTime, formatDay } from "@/lib/format";
 import { privacyStepStatusWords, privacyStepWords } from "@/lib/privacy-words";
+import { PrivacyHolds, emptyHoldDraft, holdDraftDirty, type HoldDraft } from "@/components/privacy-holds";
 const actions: { value: PrivacyStaffAction["action"]; label: string }[] = [
   { value: "claim", label: "Claim verified request" },
   { value: "request_information", label: "Request more information" },
@@ -45,8 +46,9 @@ export default function PrivacyOperations() {
     [ack, setAck] = useState(false),
     [system, setSystem] = useState<PrivacyStaffActionSystem>("private_files"),
     [outcome, setOutcome] = useState<PrivacyStaffActionOutcome>("confirmed");
+  const [holdDraft, setHoldDraft] = useState<HoldDraft>(emptyHoldDraft);
   const dirty = !!reason.trim() || !!profileVersionId.trim() || ack;
-  const nav = useUnsavedNavigation(() => dirty),
+  const nav = useUnsavedNavigation(() => dirty || holdDraftDirty(holdDraft)),
     dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     if (nav.blocked) dialog.current?.showModal();
@@ -223,6 +225,12 @@ export default function PrivacyOperations() {
               </p>
               <p className="whitespace-pre-wrap break-words">{inspection.request.message}</p>
               <p>{inspection.request.resultScope}</p>
+              {inspection.workspaceHeld && (
+                <p className="rounded-xl bg-secondary p-3" data-testid="text-privacy-workspace-held">
+                  This request's workspace is held. Valo's own deletion of its data has stopped, so its
+                  erasure is not offered until another member of privacy staff releases the hold.
+                </p>
+              )}
               <ul className="grid gap-2" aria-label="Steps of this request" data-testid="list-privacy-steps">
                 {inspection.steps.map((step) => (
                   <li key={step.system}>
@@ -416,6 +424,12 @@ export default function PrivacyOperations() {
           )}
         </section>
       )}
+      <PrivacyHolds
+        draft={holdDraft}
+        onDraft={setHoldDraft}
+        openedWorkspace={inspection?.request.workspaceId ?? null}
+        onChanged={() => (selected ? inspected.refetch() : Promise.resolve())}
+      />
       <dialog
         ref={dialog}
         className="max-w-md rounded-2xl border border-border bg-background p-6 text-foreground shadow-xl backdrop:bg-black/40"
@@ -440,6 +454,7 @@ export default function PrivacyOperations() {
             className="btn btn-ghost btn-sm"
             onClick={() => {
               clear();
+              setHoldDraft(emptyHoldDraft);
               nav.proceed();
             }}
           >
