@@ -25,6 +25,9 @@ import {
   DRAFTER_CONNECTION_ENTRIES,
   drafterConnectionReport,
   drafterConnectionViolations,
+  REVIEWER_CONNECTION_ENTRIES,
+  reviewerConnectionReport,
+  reviewerConnectionViolations,
   moduleBoundaryViolations,
   publicServerEntries,
   publicServerViolations,
@@ -195,6 +198,47 @@ test("only the drafting paths name drafting's database connection", () => {
     [],
   );
   assert.deepEqual(drafterConnectionReport(), [], "the repository keeps the rule");
+});
+
+test("only the review's record names review's database connection", () => {
+  const use = "const { reviewerDb } = await import('@workspace/db');\nawait reviewerDb().transaction(run);\n";
+  for (const entry of REVIEWER_CONNECTION_ENTRIES)
+    assert.deepEqual(reviewerConnectionViolations(entry, use), []);
+  // Drafting may not record a review of what it drafted, nor may the publisher.
+  for (const path of [
+    "artifacts/api-server/src/modules/editorial/operational-preparation.ts",
+    "artifacts/api-server/src/modules/editorial/operational-authoring.ts",
+    "artifacts/api-server/src/modules/publication/publication-publisher.ts",
+    "artifacts/api-server/src/routes/valo.ts",
+  ]) {
+    const found = reviewerConnectionViolations(path, use);
+    assert.equal(found.length, 2, path);
+    assert.match(found[0]!, /reviewer-connection only the review's record may use/);
+  }
+  // Neither connection's names reach the other's files.
+  for (const entry of REVIEWER_CONNECTION_ENTRIES)
+    assert.equal(
+      drafterConnectionViolations(entry, "import { drafterDb } from '@workspace/db';\n").length,
+      1,
+      entry,
+    );
+  // The login's own pool is the same connection, and renaming either on the way in does not hide it.
+  assert.equal(
+    reviewerConnectionViolations(
+      "artifacts/api-server/src/lib/example.ts",
+      "import { reviewerLogin as login, reviewerDb as other } from '@workspace/db';\nlogin.pool();\n",
+    ).length,
+    2,
+  );
+  assert.deepEqual(reviewerConnectionViolations("artifacts/api-server/src/lib/example.test.ts", use), []);
+  assert.deepEqual(
+    reviewerConnectionViolations(
+      "artifacts/api-server/src/lib/example.ts",
+      "// reviewerDb is for review\nconst name = 'reviewerLogin';\n",
+    ),
+    [],
+  );
+  assert.deepEqual(reviewerConnectionReport(), [], "the repository keeps the rule");
 });
 
 test("only the reviewed operator commands provide the dispatcher's binding checks, and only the real ones", () => {

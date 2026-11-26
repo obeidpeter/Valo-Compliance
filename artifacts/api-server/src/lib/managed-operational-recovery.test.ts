@@ -57,10 +57,24 @@ test("actual operational caller recovers an artifact failure from settled receip
     nextAttempt = 0,
     safetyChecks = 0;
   const dialect = new PgDialect();
-  const execute = async (query: SQL) => {
+  // An attempt is recorded only on review's own connection, as the reviewer role
+  // (docs/architecture/service-logins.md); each statement knows the connection it came on.
+  let reviewerSessions = 0;
+  const executeOn = (connection: "application" | "review") => async (query: SQL) => {
     const converted = dialect.sqlToQuery(query),
       text = converted.sql.replace(/\s+/g, " ").trim(),
       p = converted.params;
+    // Any connection may read the attempts; only review's records or changes one.
+    if (
+      /^(insert into|update) valo_publication_ai_attempts|^select pg_advisory_xact_lock\(747105\)|^SET LOCAL ROLE/.test(
+        text,
+      )
+    )
+      assert.equal(connection, "review", text);
+    if (text === "SET LOCAL ROLE valo_content_reviewer_dev") {
+      reviewerSessions++;
+      return { rows: [] };
+    }
     if (text.startsWith("select pg_advisory_xact_lock")) return { rows: [] };
     if (text.startsWith("select key from valo_safety_switches")) {
       // The managed entry checks the AI safety pause before each provider call.
@@ -108,18 +122,23 @@ test("actual operational caller recovers an artifact failure from settled receip
     }
     throw Error("UNEXPECTED_OPERATIONAL_TEST_SQL");
   };
-  const database = {
-    execute,
-    transaction: async <T>(fn: (tx: { execute: typeof execute }) => Promise<T>) => {
-      const before = structuredClone(attempts);
-      try {
-        return await fn({ execute });
-      } catch (error) {
-        attempts = before;
-        throw error;
-      }
-    },
+  const connection = (name: "application" | "review") => {
+    const execute = executeOn(name);
+    return {
+      execute,
+      transaction: async <T>(fn: (tx: { execute: typeof execute }) => Promise<T>) => {
+        const before = structuredClone(attempts);
+        try {
+          return await fn({ execute });
+        } catch (error) {
+          attempts = before;
+          throw error;
+        }
+      },
+    };
   };
+  const database = connection("application"),
+    reviewing = connection("review");
   let state: BudgetState = { ...emptyBudget(), priorUseReconciled: true };
   type Batch = {
     manifest: FiniteManifest;
@@ -217,6 +236,7 @@ test("actual operational caller recovers an artifact failure from settled receip
   t.mock.module("@workspace/db", {
     namedExports: {
       db: database,
+      reviewerDb: () => reviewing,
       pool: {
         connect: () => {
           throw Error("UNEXPECTED_REAL_DATABASE");
@@ -390,6 +410,8 @@ test("actual operational caller recovers an artifact failure from settled receip
   assert.equal(attemptInserts, 2);
   assert.equal(attempts.length, 2);
   assert.deepEqual(attempts.map((a) => a.outcome).sort(), ["completed", "failed"]);
+  // Every statement about an attempt came on review's own connection, as the reviewer role.
+  assert.ok(reviewerSessions > 0);
   assert.equal(state.entries.length, 2);
   assert.ok(state.entries.every((e) => e.status === "settled"));
   assert.notEqual(requestDigest(sdkRequests[0]), requestDigest(sdkRequests[1]));

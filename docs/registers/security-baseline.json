@@ -2744,7 +2744,7 @@
       "bears_on": [
         "SEC-006"
       ],
-      "control": "Customer requests, drafting and the publisher each connect with a login of their own, and every customer transaction carries a credential signed for that transaction alone.",
+      "control": "Customer requests, drafting, review and the publisher each connect with a login of their own, and every customer transaction carries a credential signed for that transaction alone.",
       "code": [
         "lib/db/src/workspace-scope.ts",
         "lib/db/scripts/workspace-row-security.mjs",
@@ -2762,6 +2762,10 @@
         {
           "file": "artifacts/api-server/src/modules/publication/publication-guards.integration.test.ts",
           "test": "a content version or a prepared candidate is added only by a session that logged in as the drafting login"
+        },
+        {
+          "file": "artifacts/api-server/src/modules/publication/publication-guards.integration.test.ts",
+          "test": "an AI review's attempt is recorded only by the review login, a drafting attempt only by the drafting login, and none is removed"
         }
       ],
       "gap": "The logins use passwords from the secret store, not short-lived tokens or certificates."
@@ -2773,7 +2777,7 @@
       "bears_on": [
         "SEC-006"
       ],
-      "control": "Customer requests connect as a login that can only become the workspace scope, whose privileges are exactly those listed; the publisher's login can only publish, and drafting's can only add candidates.",
+      "control": "Customer requests connect as a login that can only become the workspace scope, whose privileges are exactly those listed; the publisher's login can only publish, drafting's can only add candidates and drafting attempts, and review's can only record reviews' attempts.",
       "code": [
         "lib/db/scripts/workspace-row-security.mjs#WORKSPACE_SCOPE_PRIVILEGES"
       ],
@@ -2789,6 +2793,10 @@
         {
           "file": "artifacts/api-server/src/modules/publication/publication-guards.integration.test.ts",
           "test": "a content version or a prepared candidate is added only by a session that logged in as the drafting login"
+        },
+        {
+          "file": "artifacts/api-server/src/modules/publication/publication-guards.integration.test.ts",
+          "test": "an AI review's attempt is recorded only by the review login, a drafting attempt only by the drafting login, and none is removed"
         }
       ]
     },
@@ -2872,10 +2880,11 @@
       "bears_on": [
         "SEC-006"
       ],
-      "control": "Each process holds only the secrets it needs: only the publisher's code names the publisher's connection, and only the drafting paths name drafting's. On a self-hosted machine the supervisor gives drafting's connection to the worker alone, and the publisher's to neither the API nor the worker.",
+      "control": "Each process holds only the secrets it needs: only the publisher's code names the publisher's connection, only the drafting paths name drafting's, and only the review's record names review's. On a self-hosted machine the supervisor gives drafting's connection to the worker alone, and the publisher's and review's to neither the API nor the worker.",
       "code": [
         "artifacts/api-server/src/modules/publication",
         "artifacts/api-server/src/modules/publication/drafting-login.ts",
+        "artifacts/api-server/src/modules/editorial/operational-review.ts",
         "scripts/ops/runtime_host.py#process_environment"
       ],
       "tests": [
@@ -2894,9 +2903,17 @@
         {
           "file": "scripts/src/valo/architecture-check.test.ts",
           "test": "only the drafting paths name drafting's database connection"
+        },
+        {
+          "file": "artifacts/api-server/src/modules/publication/publication-guards.integration.test.ts",
+          "test": "an AI review's attempt is recorded only by the review login, a drafting attempt only by the drafting login, and none is removed"
+        },
+        {
+          "file": "scripts/src/valo/architecture-check.test.ts",
+          "test": "only the review's record names review's database connection"
         }
       ],
-      "gap": "Who may read the secret store itself is the host's to set. On Replit every workflow gets every secret, so there the API's process holds drafting's connection, though no API code uses it."
+      "gap": "Who may read the secret store itself is the host's to set. On Replit every workflow gets every secret, so there the API's process holds drafting's and review's connections, though no API code uses them."
     },
     {
       "id": "v5.0.0-13.4.1",
@@ -3717,7 +3734,7 @@
         "SEC-008",
         "ADM-009"
       ],
-      "control": "The histories of staff access, roles, refunds, privacy cases and publication are append-only in the database, and an hourly digest finds any change to them.",
+      "control": "The histories of staff access, roles, refunds, privacy cases and publication are append-only in the database, an AI attempt is never removed, and an hourly digest finds any change to them.",
       "code": [
         "artifacts/api-server/src/modules/operations"
       ],
@@ -3729,6 +3746,10 @@
         {
           "file": "artifacts/api-server/src/modules/operations/valo-history-digests.integration.test.ts",
           "test": "the hourly count keeps what it found once an hour, the alert reads the latest count, and a kept count never changes"
+        },
+        {
+          "file": "artifacts/api-server/src/modules/publication/publication-guards.integration.test.ts",
+          "test": "an AI review's attempt is recorded only by the review login, a drafting attempt only by the drafting login, and none is removed"
         }
       ],
       "gap": "The process logs are the host's to protect."

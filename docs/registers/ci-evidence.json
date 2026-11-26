@@ -3765,7 +3765,28 @@
       "job": "foundation",
       "file": "artifacts/api-server/src/lib/inference-operational-preparation.test.ts",
       "test": "actual preparation and prepared-candidate readiness bind another form without authoring, review, approval or publication",
-      "proves": "A template's preparation adds each prepared candidate's record on drafting's own connection and nothing on the application's, and without drafting's login it stops before it reads, renders or saves anything."
+      "proves": "A template's preparation adds each prepared candidate's record on drafting's own connection and nothing on the application's, and without drafting's login it stops before it reads, renders or saves anything; the one-step preparation that also reviews checks once that review can log in, and a preparation without reviews does not."
+    },
+    {
+      "requirement": "SEC-006",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/publication/publication-guards.integration.test.ts",
+      "test": "an AI review's attempt is recorded only by the review login, a drafting attempt only by the drafting login, and none is removed",
+      "proves": "The application's own login records no AI attempt, as itself or as either service's role, and neither changes nor removes one; a session that logged in as the review login holds nothing itself, can become only the reviewer role, and as it records a review's attempt and how it went but no drafting attempt, no other column, no removal, no content and no customer data; the drafting login, as the drafter role, records a drafting attempt and no review's; and a review connection that is missing, is another login's or leads to another database or server is refused before it is used."
+    },
+    {
+      "requirement": "SEC-006",
+      "job": "foundation",
+      "file": "scripts/src/valo/architecture-check.test.ts",
+      "test": "only the review's record names review's database connection",
+      "proves": "Only the review's record and its login check name review's database connection, so no other code, drafting's, the publisher's and the API's routes included, records a review's attempt on it, and renaming the connection on the way in does not hide it."
+    },
+    {
+      "requirement": "SEC-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/managed-operational-recovery.test.ts",
+      "test": "actual operational caller recovers an artifact failure from settled receipts without new attempts or SDK calls",
+      "proves": "The operational reviews reserve their attempts, and record how each went, only on review's own connection as the reviewer role: a write to an attempt on the application's connection fails the test."
     },
     {
       "requirement": "SEC-007",

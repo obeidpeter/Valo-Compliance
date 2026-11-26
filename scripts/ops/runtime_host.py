@@ -47,10 +47,12 @@ def runtime_configuration(path, env):
 
 
 # A service login's connection goes only to the process that uses it (docs/architecture/service-logins.md):
-# drafting's to the worker, whose preparation job drafts, and the publisher's to no serving process, since
-# only an operator's command publishes. The passwords that enable the logins belong to no serving process.
-SERVICE_LOGIN_CONNECTIONS = {'VALO_DRAFTER_DATABASE_URL': ('worker',), 'VALO_PUBLISHER_DATABASE_URL': ()}
-SERVICE_LOGIN_PASSWORDS = {'VALO_DRAFTER_LOGIN_PASSWORD', 'VALO_PUBLISHER_LOGIN_PASSWORD'}
+# drafting's to the worker, whose preparation job drafts, and review's and the publisher's to no serving
+# process, since only an operator's command runs reviews or publishes. The passwords that enable the
+# logins belong to no serving process.
+SERVICE_LOGIN_CONNECTIONS = {'VALO_DRAFTER_DATABASE_URL': ('worker',), 'VALO_REVIEWER_DATABASE_URL': (),
+                             'VALO_PUBLISHER_DATABASE_URL': ()}
+SERVICE_LOGIN_PASSWORDS = {'VALO_DRAFTER_LOGIN_PASSWORD', 'VALO_REVIEWER_LOGIN_PASSWORD', 'VALO_PUBLISHER_LOGIN_PASSWORD'}
 
 
 def process_environment(env, name=None):

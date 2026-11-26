@@ -196,12 +196,36 @@ export async function reviewOperationalCandidate(
   const plan = await saveOperationalReviewPlan(candidate, rights, provenance, exports, serverEvidence);
   return executeOperationalReviewPlan(plan, candidate, serverEvidence);
 }
+/**
+ * Checks that review's own connection works and logged in as the review login
+ * (docs/architecture/service-logins.md, part 2; SEC-006). Work that pays for drafting and then for
+ * reviews asks this first, so a login that is missing or cannot log in is found before anything is paid
+ * for.
+ */
+export async function assertReviewerCanLogIn() {
+  const { reviewerDb, REVIEWER_LOGIN_ROLE } = await import("@workspace/db");
+  const { rows } = await reviewerDb().execute(sql`select session_user as login`);
+  if (rows[0]?.login !== REVIEWER_LOGIN_ROLE) throw Error("REVIEWER_LOGIN_NOT_IN_USE");
+}
+type ReviewTx = Parameters<
+  Parameters<ReturnType<typeof import("@workspace/db").reviewerDb>["transaction"]>[0]
+>[0];
+/**
+ * A transaction on review's own connection, as the reviewer role. The database records and updates a
+ * review's attempt only in a session that logged in as the review login.
+ */
+async function asReviewer<T>(work: (tx: ReviewTx) => Promise<T>) {
+  const { reviewerDb } = await import("@workspace/db");
+  return reviewerDb().transaction(async (tx) => {
+    await tx.execute(sql`SET LOCAL ROLE valo_content_reviewer_dev`);
+    return work(tx);
+  });
+}
 export async function executeOperationalReviewPlan(
   plan: Awaited<ReturnType<typeof saveOperationalReviewPlan>>,
   candidate: PublicationBundle["candidate"],
   serverEvidence: OperationalServerEvidence,
 ) {
-  const { db } = await import("@workspace/db");
   const retained = await getPublicationArtifact(plan.artifact);
   if (
     sha256(Buffer.from(JSON.stringify({ manifest: plan.manifest, entries: plan.entries }))) !==
@@ -244,7 +268,8 @@ export async function executeOperationalReviewPlan(
     throw hold("OPERATIONAL_REVIEW_INPUT_CEILING_REACHED");
   assertManagedInferenceAvailable();
   if (!hasApprovedInferencePairContext()) throw hold("APPROVED_REVIEW_PAIR_REQUIRED");
-  const ids = await db.transaction(async (tx) => {
+  // Reserved on review's own connection: the database records a review's attempt from no other.
+  const ids = await asReviewer(async (tx) => {
     await tx.execute(sql`select pg_advisory_xact_lock(747105)`);
     // An explicitly approved finite allocation replaces the legacy scheduling
     // throttle for its exact listed work. Historical counts are not reset.
@@ -293,9 +318,11 @@ export async function executeOperationalReviewPlan(
         );
         const usage = providerUsage(response.usage);
         received = true;
-        await db.execute(sql`update valo_publication_ai_attempts set outcome='response_received',
+        await asReviewer((tx) =>
+          tx.execute(sql`update valo_publication_ai_attempts set outcome='response_received',
       provider_response_id=${response.id},input_tokens=${usage.inputTokens},output_tokens=${usage.outputTokens}
-      where id=${id}::bigint and request_hash=${entry.meter.requestHash}`);
+      where id=${id}::bigint and request_hash=${entry.meter.requestHash}`),
+        );
         if (
           (usage.inputTokens !== null && usage.inputTokens > entry.meter.inputCeiling) ||
           (usage.outputTokens !== null && usage.outputTokens > 8192)
@@ -327,8 +354,10 @@ export async function executeOperationalReviewPlan(
           completedAt: new Date().toISOString(),
         };
         const artifact = await putPublicationArtifact(Buffer.from(JSON.stringify(record)), "json");
-        await db.execute(sql`update valo_publication_ai_attempts set outcome='completed',completed_at=now()
-      where id=${id}::bigint and request_hash=${entry.meter.requestHash}`);
+        await asReviewer((tx) =>
+          tx.execute(sql`update valo_publication_ai_attempts set outcome='completed',completed_at=now()
+      where id=${id}::bigint and request_hash=${entry.meter.requestHash}`),
+        );
         return { record, artifact };
       } catch (error) {
         const code =
@@ -337,8 +366,10 @@ export async function executeOperationalReviewPlan(
             : received
               ? "OPERATIONAL_REVIEW_RESPONSE_INVALID"
               : "OPERATIONAL_REVIEW_PROVIDER_FAILURE";
-        await db.execute(sql`update valo_publication_ai_attempts set outcome='failed',error_code=${code},completed_at=now()
-        where id=${id}::bigint and request_hash=${entry.meter.requestHash}`);
+        await asReviewer((tx) =>
+          tx.execute(sql`update valo_publication_ai_attempts set outcome='failed',error_code=${code},completed_at=now()
+        where id=${id}::bigint and request_hash=${entry.meter.requestHash}`),
+        );
         return null;
       }
       // Independent means blind inputs, not concurrent spending. Sequential

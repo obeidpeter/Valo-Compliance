@@ -74,16 +74,43 @@ permission; automation cannot grant roles, change policy or suppress its own aud
 
 ### Part 2: a review login
 
-- **`valo_reviewer_login`**, as part 1, for the reviewer role, with `VALO_REVIEWER_DATABASE_URL`.
-- **The reviews' records only from it.** The reviewer role gains what recording an AI review's attempt
-  needs on `valo_publication_ai_attempts`, and the database records an attempt only from the review
-  login. So the drafting login cannot record a review of what it drafted, and the API cannot record one
-  at all.
-- **The editorial pipeline** reserves a drafting run and two review runs in one statement. Its slice
-  either splits them, the drafting run on the drafting login and the review runs on the review login, or
-  leaves the pipeline on the application's login and records that as the gap it is.
-- **The inference ledger** stays on the application's login, through its functions: it is spend
-  bookkeeping for every lane and for customers' drafts, not a review's outcome.
+- **`valo_reviewer_login`**, as part 1, for the reviewer role. Each environment enables it with a
+  password from its secret store, sent only as a SCRAM-SHA-256 verifier
+  (`lib/db/scripts/reviewer-login.mjs`), and stores its connection string as `VALO_REVIEWER_DATABASE_URL`,
+  which must lead to the application's own database.
+- **Each AI attempt only from its own login.** The attempts in `valo_publication_ai_attempts` are of two
+  kinds: a review's (`factual` or `challenge`) and a drafting attempt (`draft`, TPL-07's recorded
+  drafting).
+  - The reviewer role gains what recording a review's attempt needs: reading the attempts, to count the
+    day's and find one for the same request; adding one; and recording how it went (its outcome, the
+    provider's response id, the tokens, an error code and when it finished).
+  - The drafter role gains reading the attempts and adding a drafting attempt.
+  - The database records and updates a review's attempt only in a session that logged in as the review
+    login, and a drafting attempt only in one that logged in as the drafting login. So the drafting login
+    cannot record a review of what it drafted, and the application's login, which the API holds, can
+    record neither, even as either role.
+- **No attempt is removed.** An attempt keeps its role, is never removed, and the table cannot be
+  emptied. That makes it a history, so it keeps a digest ([audit trail](audit-trail.md), ADM-009), which
+  starts from the attempts it already holds.
+- **Its own connection** (`reviewerDb`), which only the review's record
+  (`modules/editorial/operational-review.ts`) uses. The repository rule `reviewer-connection` keeps other
+  code from naming it. TPL-07's recorded drafting (`operational-authoring.ts`) records its attempt on
+  drafting's connection, which the rule `drafter-connection` now lets it name.
+- **Who holds it.** The operator commands that run AI reviews: the finite run's reviewed pair
+  (`finite-inference-run.ts`), and TPL-07's one-step commands (`operational-release.ts` and
+  `chatgpt-permission-proof.ts`). Neither the API nor the worker runs a review, so on a self-hosted
+  machine the supervisor gives the connection to neither. Replit's secrets reach every workflow, so there
+  the API's process holds it, though no API code uses it.
+- **Found before the work.** TPL-07's one-step preparation checks that review can log in, with the
+  publisher's check, before it drafts or pays for anything. The finite run checks it before the
+  dispatcher records anything for the pair.
+- **What stays on the application's login, as the gap it is.**
+  - **The editorial pipeline** (`modules/editorial/pipeline.ts`), which only the operator's development
+    proof runs (`editorial-proof.ts`), reserves a drafting run and two review runs in one statement in
+    `valo_editorial_runs`, and records their outcomes there. Splitting that reservation between two
+    logins would change how one attempt is reserved and recovered, so it waits for a slice of its own.
+  - **The inference ledger** stays on the application's login, through its functions: it is spend
+    bookkeeping for every lane and for customers' drafts, not a review's outcome.
 
 ## What does not change
 
@@ -98,7 +125,7 @@ permission; automation cannot grant roles, change policy or suppress its own aud
 | Slice | What | State |
 | --- | --- | --- |
 | 1 | Part 1: the drafting login, its guard and connection, the three drafting paths on it, the tests' fixtures through it | Built |
-| 2 | Part 2: the review login, and the reviews' attempts only from it | Not built |
+| 2 | Part 2: the review login; each AI attempt only from its own login, and none removed | Built |
 
 ## The owner's points
 

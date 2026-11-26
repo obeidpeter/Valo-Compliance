@@ -274,6 +274,18 @@ valo_drafter_login" was added on another connection: the database adds content o
 login. Holding, withdrawing, publishing and reading content do not use it (see
 `docs/valo/migration-drafter-login.md`).
 
+`VALO_REVIEWER_LOGIN_UNAVAILABLE` means an AI review could not record its attempt because review's own
+connection is missing or wrong. It stops the review before an attempt is reserved or a model is called.
+Check, in order: the reviewer login migration is applied; `VALO_REVIEWER_DATABASE_URL` is set for the
+command that runs the reviews, leads to the same host, port and database as `DATABASE_URL`, and logs in
+as `valo_reviewer_login` with its current password; and the login can log in
+(`lib/db/scripts/reviewer-login.mjs` enables it). An attempt refused with error code `42501` and
+"recorded only by a session that logged in as valo_reviewer_login", or "as valo_drafter_login" for a
+drafting attempt, was recorded on another connection: the database records each AI attempt only for its
+own login. An attempt is never removed and the table cannot be emptied. Preparing a candidate without
+reviews, publishing and reading content do not use the login (see
+`docs/valo/migration-reviewer-login.md`).
+
 A customer request that answers the generic 503 with error code `42501` in its log
 ran a command `valo_workspace_scope` does not hold: the code started using a table,
 command or column before a migration granted it (`WORKSPACE_SCOPE_PRIVILEGES` in

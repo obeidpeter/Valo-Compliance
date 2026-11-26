@@ -46,12 +46,13 @@ test("actual preparation and prepared-candidate readiness bind another form with
     authoringCalls = 0,
     publishCalls = 0,
     holdCalls = 0,
-    publisherChecks = 0;
+    publisherChecks = 0,
+    reviewerChecks = 0;
   // Content is added only on drafting's own connection (docs/architecture/service-logins.md). Each
   // candidate or prepared candidate the stand-ins take records the connection that added it.
   const addedOn: string[] = [];
   let draftingAvailable = true;
-  const connection = (name: "application" | "drafting") => {
+  const connection = (name: "application" | "drafting" | "review") => {
     const conn = {
       select: () => ({
         from: (table: unknown) => ({
@@ -73,13 +74,23 @@ test("actual preparation and prepared-candidate readiness bind another form with
         fn({ ...conn, execute: async () => ({ rows: [] }) }),
       // The login the connection logged in as, which the check that drafting can log in reads.
       execute: async () => ({
-        rows: [{ login: name === "drafting" ? "valo_drafter_login" : "synthetic_application_login" }],
+        rows: [
+          {
+            login:
+              name === "drafting"
+                ? "valo_drafter_login"
+                : name === "review"
+                  ? "valo_reviewer_login"
+                  : "synthetic_application_login",
+          },
+        ],
       }),
     };
     return conn;
   };
   const database = connection("application"),
-    drafting = connection("drafting");
+    drafting = connection("drafting"),
+    reviewing = connection("review");
   const put = async (bytes: Buffer, extension: ArtifactRef["extension"]): Promise<ArtifactRef> => {
     const ref = { id: randomUUID(), hash: sha256(bytes), extension };
     artifacts.set(ref.id, Buffer.from(bytes));
@@ -121,6 +132,8 @@ test("actual preparation and prepared-candidate readiness bind another form with
         return drafting;
       },
       DRAFTER_LOGIN_ROLE: "valo_drafter_login",
+      reviewerDb: () => reviewing,
+      REVIEWER_LOGIN_ROLE: "valo_reviewer_login",
       valoContentVersions: contentTable,
       valoPublicationPolicies: policyTable,
       valoPreparedCandidates: preparedTable,
@@ -148,6 +161,10 @@ test("actual preparation and prepared-candidate readiness bind another form with
   });
   t.mock.module(new URL("../modules/editorial/operational-review.ts", import.meta.url).href, {
     namedExports: {
+      // Review's own login works here; the publisher's below does not.
+      assertReviewerCanLogIn: async () => {
+        reviewerChecks++;
+      },
       reviewOperationalCandidate: async () => {
         reviewCalls++;
         throw Error("REVIEW_FORBIDDEN");
@@ -359,7 +376,9 @@ test("actual preparation and prepared-candidate readiness bind another form with
   assert.equal(authoringCalls, 0);
   assert.equal(publishCalls, 0);
   assert.equal(networkCalls, 0);
-  // Preparing a candidate never releases, so it never asks for the publisher's login.
+  // Preparing a candidate never reviews or releases, so it never asks for review's or the publisher's
+  // login.
+  assert.equal(reviewerChecks, 0);
   assert.equal(publisherChecks, 0);
   // The one-step path pays for authoring and reviews and then releases. With the publisher's login
   // unavailable it stops before anything is paid for, saved or published.
@@ -369,6 +388,7 @@ test("actual preparation and prepared-candidate readiness bind another form with
     () => prepareInventoryRelease(path),
     (error: { code?: string }) => error.code === "VALO_PUBLISHER_LOGIN_UNAVAILABLE",
   );
+  assert.equal(reviewerChecks, 1);
   assert.equal(publisherChecks, 1);
   assert.equal(authoringCalls, 0);
   assert.equal(reviewCalls, 0);

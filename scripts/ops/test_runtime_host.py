@@ -21,10 +21,12 @@ class RuntimeConfigTest(unittest.TestCase):
 
     def test_each_service_login_reaches_only_the_process_that_uses_it(self):
         env = {'NODE_ENV': 'production', 'DATABASE_URL': 'synthetic-db',
-               'VALO_DRAFTER_DATABASE_URL': 'synthetic-drafting', 'VALO_PUBLISHER_DATABASE_URL': 'synthetic-publishing',
-               'VALO_DRAFTER_LOGIN_PASSWORD': 'private', 'VALO_PUBLISHER_LOGIN_PASSWORD': 'private'}
+               'VALO_DRAFTER_DATABASE_URL': 'synthetic-drafting', 'VALO_REVIEWER_DATABASE_URL': 'synthetic-review',
+               'VALO_PUBLISHER_DATABASE_URL': 'synthetic-publishing', 'VALO_DRAFTER_LOGIN_PASSWORD': 'private',
+               'VALO_REVIEWER_LOGIN_PASSWORD': 'private', 'VALO_PUBLISHER_LOGIN_PASSWORD': 'private'}
         serving = {'NODE_ENV': 'production', 'DATABASE_URL': 'synthetic-db'}
-        # Drafting's connection reaches the worker alone; the publisher's, and either login's password, neither.
+        # Drafting's connection reaches the worker alone; review's and the publisher's, and any login's
+        # password, neither.
         self.assertEqual(host.process_environment(env, 'worker'), {**serving, 'VALO_DRAFTER_DATABASE_URL': 'synthetic-drafting'})
         self.assertEqual(host.process_environment(env, 'api'), serving)
         self.assertEqual(host.process_environment(env), serving)

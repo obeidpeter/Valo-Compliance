@@ -70,7 +70,7 @@ async function main() {
     { readOperationalInferenceReadiness },
     { assertFiniteWorkBindings },
     { withApprovedInferencePair, provideFiniteWorkBindings, InferenceBudgetStore },
-    { saveOperationalReviewPlan, executeOperationalReviewPlan },
+    { saveOperationalReviewPlan, executeOperationalReviewPlan, assertReviewerCanLogIn },
     { getPublicationArtifact, putPublicationArtifact },
     { publicationWorkspaceRoot },
   ] = await Promise.all([
@@ -851,6 +851,10 @@ async function main() {
     expected.packageId = manifest.packageId;
     if (requestDigest(expected) !== row.manifest_hash) throw Error("RUNNER_MANIFEST_CHANGED");
     for (const work of manifest.works) await assertFiniteWorkBindings(work);
+    // The two reviews' attempts are recorded on review's own connection
+    // (docs/architecture/service-logins.md, part 2). A login that is missing or cannot log in stops
+    // the run here, before the dispatcher records anything for the pair.
+    await assertReviewerCanLogIn();
     const reviews = await withApprovedInferencePair(batchId!, first.pair, () =>
       executeOperationalReviewPlan(plan, current.candidate, current.serverEvidence),
     );

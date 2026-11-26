@@ -34,7 +34,7 @@ import {
   savePreparedCandidate,
 } from "../publication";
 import { recordOriginalAuthoring } from "./operational-authoring";
-import { reviewOperationalCandidate } from "./operational-review";
+import { assertReviewerCanLogIn, reviewOperationalCandidate } from "./operational-review";
 import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
 import { supportsOperationalInferenceTemplate } from "../publication";
 import { setting } from "../../platform/settings";
@@ -64,10 +64,14 @@ async function prepareRelease(templateId: string, terms: TermsCopy, requestRevie
     await import("@workspace/db");
   developmentPublicationOnly();
   // Every path adds a candidate, which only drafting's own login may do. The one-step path also pays
-  // for authoring and reviews and then releases. Each finds out now, before anything is saved or paid
-  // for, whether drafting can log in and, on the one-step path, whether the publisher can.
+  // for authoring and reviews, records the reviews, and then releases. Each finds out now, before
+  // anything is saved or paid for, whether drafting can log in and, on the one-step path, whether review
+  // and the publisher can.
   await assertDrafterCanLogIn();
-  if (requestReviews) await assertPublisherCanLogIn();
+  if (requestReviews) {
+    await assertReviewerCanLogIn();
+    await assertPublisherCanLogIn();
+  }
   const snapshot = await terms();
   const useRecordedAuthoring = requestReviews && setting("VALO_OPERATIONAL_AUTHORING") === "recorded";
   const versions = await db
