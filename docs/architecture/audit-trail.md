@@ -197,6 +197,11 @@ development default, not a reviewed threshold, under the security/privacy incide
     it. A check constraint, a key or a timeout names no function.
   - The request is still answered with the same 503. It is counted as a `guard_refusal` security
     signal, and only the guard's name is logged, never its message or the query.
+  - Until 26 November 2026 no such count was kept, so the alert could not be raised: the signals table's
+    kind check took only the first two kinds and refused the third. The tests stood in for the
+    database. The migration `20261126141258_security_signal_guard_refusal` lets the table take it
+    ([runbook](../valo/migration-security-signal-kinds.md)), and a database test now counts a real
+    guard's refusal.
   - The application never sends a change a guard refuses, so each refusal is a fault or an attempt to
     change a history, and either is worth an alert.
   - A guard also refuses some changes that are not to a history, such as a release missing what it
@@ -249,6 +254,8 @@ development default, not a reviewed threshold, under the security/privacy incide
 - The handler counts a guard's refusal, and not a check constraint's, a key's or a timeout's. It logs
   only the guard's name.
 - The real refusal of a change to a privacy case's history is read as that guard's.
+- A real guard's refusal, sent through the real error handler and counter, is counted on a real
+  database and raises the reading; and the table takes every kind the API counts.
 - The readings run on a real database. The hourly count keeps what it found once an hour, the alert
   reads the latest count, and a kept count cannot be removed.
 - The migration test, on a fresh cluster:
