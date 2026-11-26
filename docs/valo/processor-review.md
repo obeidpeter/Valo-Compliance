@@ -16,6 +16,10 @@ The requirements, verbatim:
   settings before live data." Accepted with a "documented review covers Replit, identity, email,
   payments, AI and monitoring; no unverified 'zero retention' promise."
 
+The processing inventory (`lib/valo-core/src/processing-inventory.ts`,
+[its design](../architecture/processing-inventory.md)) names these services, by the names in the table
+below, for each thing Valo processes. A test fails if it names a service this table does not list.
+
 "Not verified" below means nobody has confirmed it against the provider's contract or account
 settings. The specification's notes on sources S10 (Replit hosting geography) and S18 (OpenAI data
 controls) say the same: reconfirm geography at procurement, and do not assume zero retention.

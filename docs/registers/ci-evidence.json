@@ -1010,6 +1010,13 @@
       "proves": "The draft review of outside services covers Replit, identity, email, payments, AI and monitoring, each with what the code sends it, its region, its retention and its contract, and no sentence in the web app promises that a provider keeps nothing unless it disclaims the promise."
     },
     {
+      "requirement": "PRV-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/privacy/processing-inventory.test.ts",
+      "test": "every outside service the inventory names is in the processor review",
+      "proves": "Every outside service the processing inventory names as a recipient is a service listed in the processor review."
+    },
+    {
       "requirement": "ADM-001",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/privacy/valo-customer-access.integration.test.ts",
@@ -2996,6 +3003,27 @@
       "file": "artifacts/api-server/src/lib/valo-validation.test.ts",
       "test": "service enquiry consent cannot be assumed; support does not require sharing",
       "proves": "A service enquiry is refused without sharing consent and accepted with it, while a product support request is accepted without sharing consent."
+    },
+    {
+      "requirement": "PRV-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/privacy/processing-inventory.test.ts",
+      "test": "every table in the database schema is in the inventory or listed as holding no personal data, once",
+      "proves": "The processing inventory accounts for every table in the database schema: each is named by one processing activity, or listed once, with its reason, as holding no personal data."
+    },
+    {
+      "requirement": "PRV-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/privacy/processing-inventory.test.ts",
+      "test": "a table with a column naming a person or a workspace is never listed as holding no personal data",
+      "proves": "No table with a column naming a person, an identity, an email address, an actor or a workspace is listed as holding no personal data."
+    },
+    {
+      "requirement": "PRV-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/privacy/processing-inventory.test.ts",
+      "test": "optional processing rests on a consent that starts it, and the service needs no consent",
+      "proves": "In the processing inventory, an activity rests on consent exactly when it names the consent that starts it; accounts, documents, orders, the drafting assistant and support each have an activity with its purpose, basis, data, subjects, retention and tables."
     },
     {
       "requirement": "PRV-003",
