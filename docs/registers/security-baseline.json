@@ -1,0 +1,3816 @@
+{
+  "description": "Valo's security baseline: each OWASP ASVS 5.0.0 requirement at Levels 1 and 2, with the control Valo has for it, the code that holds the control, and the tests and CI steps that show it, or the gap that is left, or the reason it does not apply. It is Valo's own map for an independent assessor, not an assessment or a certification (docs/architecture/security-baseline.md).",
+  "basis": "VALO-TRD-001 v1.1, section 20: \"Use OWASP ASVS Level 2 as the proposed application-security verification baseline. Map applicable controls to evidence; do not claim certification merely because a scanner was run. [S19]\"",
+  "standard": {
+    "name": "OWASP Application Security Verification Standard",
+    "version": "5.0.0",
+    "levels": [
+      1,
+      2
+    ],
+    "source": "https://github.com/OWASP/ASVS/raw/v5.0.0/5.0/docs_en/OWASP_Application_Security_Verification_Standard_5.0.0_en.csv",
+    "sha256": "98c8fe911b9edb403af8ee05d3ce8201ecac2659e313b053890a62847cdcf680",
+    "licence": "The standard is CC BY-SA 4.0. This register holds only its identifiers and levels, and Valo's own words; read each requirement at the source."
+  },
+  "statuses": {
+    "met": "Valo's code does what the requirement asks, and a test or CI step run on every merge shows it.",
+    "partly met": "Part of it is done and shown; the gap names what is not done or not shown.",
+    "untested": "Valo's code does it, but no test or CI step shows it yet; the gap names what would.",
+    "not met": "Valo does not do it yet; the gap names what is needed.",
+    "not applicable": "Valo has nothing the requirement is about; the reason says why.",
+    "identity provider": "The sign-in provider, Clerk, does it for Valo; the reason says what the launch review must check, and the control what Valo does itself.",
+    "host": "The hosting platform does it, once one is chosen for production; the reason says what to check at launch."
+  },
+  "requirements": [
+    {
+      "id": "v5.0.0-1.1.1",
+      "level": 2,
+      "status": "untested",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "Express decodes a path's values and its query once, and the API parses a body's JSON once, before the generated schemas validate what results. Nothing decodes it again after validation.",
+      "code": [
+        "artifacts/api-server/src/app.ts",
+        "artifacts/api-server/src/platform/request-complexity.ts#requestComplexityLimit"
+      ],
+      "gap": "No test sends input encoded twice to show it is decoded only once."
+    },
+    {
+      "id": "v5.0.0-1.1.2",
+      "level": 2,
+      "status": "met",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "Output is encoded where it is used: React escapes each text as it draws it, the API writes its answers as JSON, the database driver binds every value, and the PDF renderer escapes each text as it builds a page.",
+      "code": [
+        "artifacts/api-server/src/lib/valo-render.ts",
+        "lib/db/src/index.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/scripts/stored-markup.integration.test.ts",
+          "test": "markup saved through the API is drawn as text on the customer's and staff's screens, and none of it runs"
+        },
+        {
+          "file": "artifacts/api-server/src/lib/valo-render.test.ts",
+          "test": "controlled HTML treats markup, local-file and metadata addresses as inert text"
+        },
+        {
+          "file": "scripts/src/valo/architecture-check.test.ts",
+          "test": "product code builds no SQL from text but where it is reviewed, and each review counts its texts (SEC-003)"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-1.2.1",
+      "level": 1,
+      "status": "met",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "The web app draws every text through React, which encodes it for HTML text and attributes. The API answers only in JSON. The PDF renderer escapes each text, and Word files are written through the docx library or, for a staff library entry made from text, with each text escaped. A header Valo writes, such as a download's file name, is made from its own identifiers.",
+      "code": [
+        "artifacts/api-server/src/lib/valo-render.ts",
+        "artifacts/api-server/src/platform/security-headers.ts#securityHeaders"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/scripts/stored-markup.integration.test.ts",
+          "test": "markup saved through the API is drawn as text on the customer's and staff's screens, and none of it runs"
+        },
+        {
+          "file": "artifacts/api-server/src/scripts/public-server-pages.test.ts",
+          "test": "hostile markup in a page's address is drawn only as text: the server's HTML holds it escaped, and the page runs none of it (SEC-003)"
+        },
+        {
+          "file": "artifacts/api-server/src/routes/valo-reflection.integration.test.ts",
+          "test": "hostile text sent to every operation in the contract comes back only inside JSON with the security headers, fails no route, and stays text in the database and its searches"
+        },
+        {
+          "file": "artifacts/api-server/src/lib/valo-render.test.ts",
+          "test": "controlled HTML treats markup, local-file and metadata addresses as inert text"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-1.2.2",
+      "level": 1,
+      "status": "partly met",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "Official sources are linked only at https addresses on the policy's hosts. The linter refuses a javascript: address written in JSX, and the pages' policy keeps an injected one from running.",
+      "code": [
+        "artifacts/api-server/src/modules/source-register",
+        "artifacts/valo/src/lib/content-security-policy.ts",
+        ".oxlintrc.json"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/modules/source-register/source-register.integration.test.ts",
+          "test": "a Content editor adds a source only at an https address on a policy host, once, and the daily check fetches it there with every check"
+        },
+        {
+          "file": "artifacts/api-server/src/scripts/stored-markup.integration.test.ts",
+          "test": "markup saved through the API is drawn as text on the customer's and staff's screens, and none of it runs"
+        },
+        {
+          "file": "scripts/src/valo/security-baseline.test.ts",
+          "test": "the linter CI runs refuses the code the security baseline counts on it to refuse"
+        }
+      ],
+      "gap": "The generated web client encodes each path value, but no test shows it, and nothing checks the scheme of every link the web app draws from saved data."
+    },
+    {
+      "id": "v5.0.0-1.2.3",
+      "level": 1,
+      "status": "met",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "The API writes JSON with JSON.stringify, as Express's res.json does, and the pages pass data to the browser through React and Next.js, which escape it. Hostile markup sent to every operation comes back only inside JSON, and a page's address is drawn only escaped.",
+      "code": [
+        "artifacts/api-server/src/app.ts",
+        "artifacts/valo/src/server"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/routes/valo-reflection.integration.test.ts",
+          "test": "hostile text sent to every operation in the contract comes back only inside JSON with the security headers, fails no route, and stays text in the database and its searches"
+        },
+        {
+          "file": "artifacts/api-server/src/scripts/public-server-pages.test.ts",
+          "test": "hostile markup in a page's address is drawn only as text: the server's HTML holds it escaped, and the page runs none of it (SEC-003)"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-1.2.4",
+      "level": 1,
+      "status": "met",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "Queries go through Drizzle, which binds every value. A repository rule refuses SQL built from text outside 25 reviewed files, each of whose texts cannot come from a request, and SQL text saved through the API comes back as it was sent.",
+      "code": [
+        "lib/db/src/index.ts",
+        "scripts/src/valo/architecture-check.ts#RAW_SQL_ENTRIES"
+      ],
+      "tests": [
+        {
+          "file": "scripts/src/valo/architecture-check.test.ts",
+          "test": "product code builds no SQL from text but where it is reviewed, and each review counts its texts (SEC-003)"
+        },
+        {
+          "file": "artifacts/api-server/src/routes/valo-reflection.integration.test.ts",
+          "test": "hostile text sent to every operation in the contract comes back only inside JSON with the security headers, fails no route, and stays text in the database and its searches"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-1.2.5",
+      "level": 1,
+      "status": "untested",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "Product code starts other programs only with execFile and fork, which pass arguments as a list and start no shell: the PDF reader's tools, LibreOffice's check of a Word file, and the source reader's browser.",
+      "code": [
+        "artifacts/api-server/src/modules/manual-library/files.ts",
+        "artifacts/api-server/src/modules/sources/source-extract.ts"
+      ],
+      "gap": "No rule stops product code starting a shell; a repository rule like the one for SQL would."
+    },
+    {
+      "id": "v5.0.0-1.2.6",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo has no directory service and builds no LDAP query."
+    },
+    {
+      "id": "v5.0.0-1.2.7",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo runs no XPath query."
+    },
+    {
+      "id": "v5.0.0-1.2.8",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo runs no LaTeX."
+    },
+    {
+      "id": "v5.0.0-1.2.9",
+      "level": 2,
+      "status": "untested",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "The regular expressions Valo builds at run time take its own content, such as a claim's section number or a rubric's word, and escape a customer's identifiers before matching them.",
+      "code": [
+        "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai-domain.ts",
+        "artifacts/api-server/src/modules/publication/claim-locator.ts"
+      ],
+      "gap": "No check reviews the expressions built at run time."
+    },
+    {
+      "id": "v5.0.0-1.3.1",
+      "level": 1,
+      "status": "not applicable",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/lib/valo-validation.test.ts",
+          "test": "arbitrary clauses, HTML nodes, network embeds and duplicate IDs are not accepted"
+        }
+      ],
+      "reason": "Valo takes no HTML from any editor: a document's text is plain text in typed blocks, and the schemas refuse HTML nodes in it."
+    },
+    {
+      "id": "v5.0.0-1.3.2",
+      "level": 1,
+      "status": "met",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "The linter refuses eval and code built from strings, and the pages' policy allows no 'unsafe-eval', so no code built from text runs on the server or in the browser.",
+      "code": [
+        ".oxlintrc.json",
+        "artifacts/valo/src/lib/content-security-policy.ts#contentSecurityPolicy"
+      ],
+      "tests": [
+        {
+          "file": "scripts/src/valo/security-baseline.test.ts",
+          "test": "the linter CI runs refuses the code the security baseline counts on it to refuse"
+        },
+        {
+          "file": "artifacts/valo/src/lib/content-security-policy.test.ts",
+          "test": "production denies injected scripts, frames, objects and unconfigured origins while allowing required Clerk resources"
+        }
+      ],
+      "checks": [
+        {
+          "job": "foundation",
+          "step": "Prove compiled frontend enforces unique nonces and blocks injected scripts"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-1.3.3",
+      "level": 2,
+      "status": "met",
+      "bears_on": [
+        "SEC-003",
+        "SEC-004"
+      ],
+      "control": "Text is limited before it reaches a context that could act on it: the schemas cap each text's length, a NUL character is refused, the renderer escapes text and loads nothing, and the SQL driver binds it.",
+      "code": [
+        "artifacts/api-server/src/platform/request-complexity.ts",
+        "artifacts/api-server/src/lib/valo-render.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/platform/request-complexity.test.ts",
+          "test": "deep, broad and high-node-count JSON fails within fixed budgets"
+        },
+        {
+          "file": "artifacts/api-server/src/routes/valo-reflection.integration.test.ts",
+          "test": "hostile text sent to every operation in the contract comes back only inside JSON with the security headers, fails no route, and stays text in the database and its searches"
+        },
+        {
+          "file": "artifacts/api-server/src/lib/valo-render.test.ts",
+          "test": "document text that tries to fetch a URL, read a local file or run script does none of it in the PDF or DOCX"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-1.3.4",
+      "level": 2,
+      "status": "not applicable",
+      "tests": [
+        {
+          "file": "scripts/src/valo/r1-boundaries.test.ts",
+          "test": "R1 customer workspaces have no evidence upload and only the Content staff editor accepts a document"
+        }
+      ],
+      "reason": "Valo accepts no SVG or other image from anyone. R1 accepts no file from customers: the specification keeps uploads for R2, behind its attachment controls."
+    },
+    {
+      "id": "v5.0.0-1.3.5",
+      "level": 2,
+      "status": "not applicable",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/scripts/stored-markup.integration.test.ts",
+          "test": "markup saved through the API is drawn as text on the customer's and staff's screens, and none of it runs"
+        }
+      ],
+      "reason": "Valo interprets no Markdown, CSS, XSL or BBCode that a person writes: every text is drawn as text."
+    },
+    {
+      "id": "v5.0.0-1.3.6",
+      "level": 2,
+      "status": "met",
+      "bears_on": [
+        "SEC-003",
+        "SEC-004"
+      ],
+      "control": "Valo calls out only to addresses it chooses, among them the payment, email and AI providers' fixed addresses, the identity provider's frontend API through Valo's own proxy, private storage named in its settings, and official sources at https addresses on the policy's hosts. The PDF renderer refuses every request a document's text could make.",
+      "code": [
+        "artifacts/api-server/src/modules/commerce/valo-paystack-contract.ts#PAYSTACK_API",
+        "artifacts/api-server/src/middlewares/clerkProxyMiddleware.ts",
+        "artifacts/api-server/src/platform/guidance-hosts.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/modules/source-register/source-register.integration.test.ts",
+          "test": "a Content editor adds a source only at an https address on a policy host, once, and the daily check fetches it there with every check"
+        },
+        {
+          "file": "artifacts/api-server/src/lib/valo-render.test.ts",
+          "test": "document text that tries to fetch a URL, read a local file or run script does none of it in the PDF or DOCX"
+        },
+        {
+          "file": "artifacts/api-server/src/middlewares/clerkProxyMiddleware.test.ts",
+          "test": "the Clerk proxy forwards only what Clerk should see and returns responses the edge accepts"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-1.3.7",
+      "level": 2,
+      "status": "met",
+      "bears_on": [
+        "SEC-003",
+        "SEC-004"
+      ],
+      "control": "No template is built from a request: templates are released content, the renderer builds each page from typed blocks in its own code, and it refuses formatting and inputs it does not know.",
+      "code": [
+        "artifacts/api-server/src/lib/valo-render.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/lib/valo-render.test.ts",
+          "test": "renderer rejects unknown formatting, arbitrary clause inputs and invalid dates"
+        },
+        {
+          "file": "artifacts/api-server/src/lib/valo-validation.test.ts",
+          "test": "arbitrary clauses, HTML nodes, network embeds and duplicate IDs are not accepted"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-1.3.8",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo runs on Node.js; it has no JNDI."
+    },
+    {
+      "id": "v5.0.0-1.3.9",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo uses no memcache."
+    },
+    {
+      "id": "v5.0.0-1.3.10",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "No format-string interpreter takes a person's text: the logs take structured fields, and their messages are fixed strings."
+    },
+    {
+      "id": "v5.0.0-1.3.11",
+      "level": 2,
+      "status": "met",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "A reminder email carries no text a customer wrote: its subject and words are fixed, with only the task's due date, and it goes through the email provider's HTTP API as JSON to the account's verified address alone.",
+      "code": [
+        "artifacts/api-server/src/modules/tasks/valo-reminder-resend.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/modules/tasks/valo-reminder-resend.test.ts",
+          "test": "controlled acceptance preserves one bounded provider key and minimal stable body, not inbox delivery"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-1.4.1",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo's code is TypeScript on Node.js, which manages memory; Valo has no native code of its own."
+    },
+    {
+      "id": "v5.0.0-1.4.2",
+      "level": 2,
+      "status": "met",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "Amounts are whole numbers of kobo, checked as integers within limits by the schemas, and a payment's amount must match its order's before it counts.",
+      "code": [
+        "artifacts/api-server/src/modules/commerce/valo-paystack-contract.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/modules/commerce/valo-paystack-contract.test.ts",
+          "test": "server verification rejects live domain, unsafe amounts and mismatched immutable order facts"
+        },
+        {
+          "file": "artifacts/api-server/src/modules/commerce/valo-commerce.integration.test.ts",
+          "test": "controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-1.4.3",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Node.js frees memory itself, so there are no pointers to leave dangling. The resources Valo holds, its database connections and browser pages, are released by code its tests check (2.3.3, 15.2.2)."
+    },
+    {
+      "id": "v5.0.0-1.5.1",
+      "level": 1,
+      "status": "untested",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "Valo runs no XML parser on what it is sent: a Word upload's XML is read as text only after any DOCTYPE or ENTITY in it is refused, so no external entity can be resolved. Valo writes its own Word files' XML.",
+      "code": [
+        "artifacts/api-server/src/modules/manual-library/files.ts"
+      ],
+      "gap": "No test sends a Word file with an entity to show it is refused."
+    },
+    {
+      "id": "v5.0.0-1.5.2",
+      "level": 2,
+      "status": "met",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "The API reads bodies only as JSON, within fixed limits of size, depth and breadth, and makes no object of a type a caller names.",
+      "code": [
+        "artifacts/api-server/src/app.ts",
+        "artifacts/api-server/src/platform/request-complexity.ts#assertInputBudget"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/platform/request-complexity.test.ts",
+          "test": "deep, broad and high-node-count JSON fails within fixed budgets"
+        }
+      ],
+      "checks": [
+        {
+          "job": "postgres",
+          "step": "Prove the real API refuses compressed and oversized JSON and keeps serving"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-2.1.1",
+      "level": 1,
+      "status": "met",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "The API contract documents each input's type, length, pattern and allowed values, and the routes validate input with the schemas generated from it.",
+      "code": [
+        "lib/api-spec/src",
+        "lib/api-zod"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/lib/valo-validation.test.ts",
+          "test": "arbitrary clauses, HTML nodes, network embeds and duplicate IDs are not accepted"
+        },
+        {
+          "file": "artifacts/api-server/src/routes/valo-reflection.integration.test.ts",
+          "test": "hostile text sent to every operation in the contract comes back only inside JSON with the security headers, fails no route, and stays text in the database and its searches"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-2.1.2",
+      "level": 2,
+      "status": "partly met",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "Where answers depend on each other, the rules say so: a question is asked only when the answer it depends on makes it relevant, and a payment's facts must match its order's.",
+      "code": [
+        "artifacts/valo/src/lib/checker.ts",
+        "artifacts/api-server/src/modules/commerce/valo-paystack-contract.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/valo/src/lib/checker.test.ts",
+          "test": "a question that depends on another answer is asked only when that answer makes it relevant"
+        },
+        {
+          "file": "artifacts/api-server/src/modules/commerce/valo-paystack-contract.test.ts",
+          "test": "server verification rejects live domain, unsafe amounts and mismatched immutable order facts"
+        }
+      ],
+      "gap": "No document lists the combinations each form checks."
+    },
+    {
+      "id": "v5.0.0-2.1.3",
+      "level": 2,
+      "status": "met",
+      "bears_on": [
+        "SEC-005"
+      ],
+      "control": "Each limit is set in one policy: reads, writes, checkout, exports and the drafting assistant, per person, per account and per day, with shared ceilings for page renders. The AI budget's limits are the owner's approved allowance, kept in its ledger.",
+      "code": [
+        "artifacts/api-server/src/lib/valo-quota-policy.ts#quotaPolicy"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/lib/valo-quota.test.ts",
+          "test": "quota defaults preserve the requested initial ceilings"
+        },
+        {
+          "file": "artifacts/api-server/src/lib/valo-write-security.integration.test.ts",
+          "test": "durable customer write ceilings preserve saved data"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-2.2.1",
+      "level": 1,
+      "status": "met",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "Routes parse their path, query and body with the schemas generated from the contract before using them, as the repository's rules require, and every operation sent hostile input refuses what does not fit without failing.",
+      "code": [
+        "lib/api-zod",
+        "artifacts/api-server/src/routes"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/lib/valo-validation.test.ts",
+          "test": "arbitrary clauses, HTML nodes, network embeds and duplicate IDs are not accepted"
+        },
+        {
+          "file": "artifacts/api-server/src/lib/valo-validation.test.ts",
+          "test": "updates require a positive integer expected revision"
+        },
+        {
+          "file": "artifacts/api-server/src/routes/valo-reflection.integration.test.ts",
+          "test": "hostile text sent to every operation in the contract comes back only inside JSON with the security headers, fails no route, and stays text in the database and its searches"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-2.2.2",
+      "level": 1,
+      "status": "met",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "The API validates every input itself; the web app's own checks are only for the person's convenience. Hostile input sent straight to every operation is handled by the API's own checks.",
+      "code": [
+        "artifacts/api-server/src/routes"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/routes/valo-reflection.integration.test.ts",
+          "test": "hostile text sent to every operation in the contract comes back only inside JSON with the security headers, fails no route, and stays text in the database and its searches"
+        },
+        {
+          "file": "artifacts/api-server/src/routes/valo-tenant-substitution.integration.test.ts",
+          "test": "another workspace's identifiers are refused exactly like unknown ones and change nothing"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-2.2.3",
+      "level": 2,
+      "status": "partly met",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "Related values are checked together where they decide money or access: a payment's amount, currency and reference against its order, and a document's revision against the one saved.",
+      "code": [
+        "artifacts/api-server/src/modules/commerce/valo-paystack-contract.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/modules/commerce/valo-paystack-contract.test.ts",
+          "test": "server verification rejects live domain, unsafe amounts and mismatched immutable order facts"
+        },
+        {
+          "file": "artifacts/api-server/src/lib/valo-validation.test.ts",
+          "test": "updates require a positive integer expected revision"
+        }
+      ],
+      "gap": "A profile's answers are not checked against each other beyond the choices each question offers."
+    },
+    {
+      "id": "v5.0.0-2.3.1",
+      "level": 1,
+      "status": "met",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "Each flow moves only by its steps, and the database refuses a skipped one: a content version is published only from a candidate that passed its gates, a privacy request moves only through its states, and an order is paid only after the payment provider confirms it.",
+      "code": [
+        "artifacts/api-server/src/modules/publication",
+        "artifacts/api-server/src/modules/privacy",
+        "artifacts/api-server/src/modules/commerce"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/modules/publication/publication-guards.integration.test.ts",
+          "test": "a synthetic candidate that fails its gates is held, and no role or path publishes, changes or withdraws it"
+        },
+        {
+          "file": "artifacts/api-server/src/modules/privacy/valo-privacy-requests.integration.test.ts",
+          "test": "a test request traverses every step: a synthetic deletion is confirmed, claimed and erased, its four outside steps are recorded by its own staff member, and it is marked done, after which nothing changes it"
+        },
+        {
+          "file": "artifacts/api-server/src/modules/commerce/valo-commerce.integration.test.ts",
+          "test": "controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-2.3.2",
+      "level": 2,
+      "status": "met",
+      "bears_on": [
+        "SEC-005"
+      ],
+      "control": "The limits the policy sets are enforced on every request and in the database, which counts them durably, and the drafting assistant stops at its daily allowance.",
+      "code": [
+        "artifacts/api-server/src/lib/valo-quota.ts#consumeQuota"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/lib/valo-write-security.integration.test.ts",
+          "test": "durable customer write ceilings preserve saved data"
+        },
+        {
+          "file": "artifacts/api-server/src/modules/ai-lanes/inference-customer-controls.integration.test.ts",
+          "test": "original customer quota, pause, tenant and outage boundaries use actual PostgreSQL/services with no provider"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-2.3.3",
+      "level": 2,
+      "status": "met",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "Each operation's changes are one database transaction, so a failure leaves nothing half done, and an export's lease is fenced, so a worker that dies cannot overwrite a later one.",
+      "code": [
+        "lib/db/src/index.ts",
+        "artifacts/api-server/src/modules/exports"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/modules/commerce/valo-commerce.integration.test.ts",
+          "test": "controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication"
+        },
+        {
+          "file": "artifacts/api-server/src/modules/exports/valo-export-recovery.integration.test.ts",
+          "test": "real process death, PostgreSQL lease fencing and export recovery"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-2.3.4",
+      "level": 2,
+      "status": "met",
+      "bears_on": [
+        "SEC-005"
+      ],
+      "control": "What is limited is taken under a lock: the AI budget is reserved through its ledger's functions, shared limits count every workspace, and two changes at once cannot remove the last administrator.",
+      "code": [
+        "artifacts/api-server/src/modules/ai",
+        "artifacts/api-server/src/modules/staff"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/modules/ai/inference-batch-dispatch.integration.test.ts",
+          "test": "durable finite batch dispatch — isolated PostgreSQL and controlled transport, zero paid calls"
+        },
+        {
+          "file": "artifacts/api-server/src/platform/workspace-row-security.integration.test.ts",
+          "test": "row-level security limits customer requests to their own workspace"
+        },
+        {
+          "file": "artifacts/api-server/src/modules/staff/valo-staff-roles.integration.test.ts",
+          "test": "staff role governance: disposable PostgreSQL, managed-session boundary and no real role mutations"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-2.4.1",
+      "level": 2,
+      "status": "met",
+      "bears_on": [
+        "SEC-005"
+      ],
+      "control": "Reads, writes, checkouts, exports and the drafting assistant each have a limit a minute and a day, kept in the database; request bodies have size and shape budgets.",
+      "code": [
+        "artifacts/api-server/src/middlewares/valo-quota.ts#makeRequestReadQuota",
+        "artifacts/api-server/src/lib/valo-quota-policy.ts#quotaPolicy"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/lib/valo-write-security.integration.test.ts",
+          "test": "durable customer write ceilings preserve saved data"
+        },
+        {
+          "file": "artifacts/api-server/src/lib/valo-quota.test.ts",
+          "test": "quota defaults preserve the requested initial ceilings"
+        },
+        {
+          "file": "artifacts/api-server/src/routes/valo-load.integration.test.ts",
+          "test": "ordinary requests and catalogue search keep p95 under one second at 20 requests per second"
+        },
+        {
+          "file": "artifacts/api-server/src/platform/request-complexity.test.ts",
+          "test": "deep, broad and high-node-count JSON fails within fixed budgets"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-3.2.1",
+      "level": 1,
+      "status": "met",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "The API answers in JSON, with nosniff, so a browser that opens an API address shows text; files are sent as attachments, and stored files are private, never in a public folder.",
+      "code": [
+        "artifacts/api-server/src/platform/security-headers.ts#securityHeaders",
+        "artifacts/api-server/src/routes/valo-exports.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/routes/valo-reflection.integration.test.ts",
+          "test": "hostile text sent to every operation in the contract comes back only inside JSON with the security headers, fails no route, and stays text in the database and its searches"
+        },
+        {
+          "file": "artifacts/api-server/src/lib/valo-workspace-download.integration.test.ts",
+          "test": "real paged workspace download, final authorization and disconnect cleanup"
+        },
+        {
+          "file": "artifacts/api-server/src/lib/valo-production-storage.test.ts",
+          "test": "production canary verifies exact bytes, anonymous denial and confirmed deletion, never customer keys"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-3.2.2",
+      "level": 1,
+      "status": "met",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "The web app draws every text through React. The linter refuses raw HTML in JSX, and a repository rule refuses HTML put into a page outside the two reviewed places. Markup saved through the API is drawn as text on every screen that shows it.",
+      "code": [
+        ".oxlintrc.json",
+        "scripts/src/valo/architecture-check.ts#RAW_HTML_ENTRIES"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/scripts/stored-markup.integration.test.ts",
+          "test": "markup saved through the API is drawn as text on the customer's and staff's screens, and none of it runs"
+        },
+        {
+          "file": "artifacts/api-server/src/scripts/public-server-pages.test.ts",
+          "test": "hostile markup in a page's address is drawn only as text: the server's HTML holds it escaped, and the page runs none of it (SEC-003)"
+        },
+        {
+          "file": "scripts/src/valo/architecture-check.test.ts",
+          "test": "product code puts no text into a page as HTML, and hands a browser HTML only where it is reviewed (SEC-003)"
+        },
+        {
+          "file": "scripts/src/valo/security-baseline.test.ts",
+          "test": "the linter CI runs refuses the code the security baseline counts on it to refuse"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-3.3.1",
+      "level": 1,
+      "status": "identity provider",
+      "bears_on": [
+        "SEC-002"
+      ],
+      "control": "Valo sets no cookie of its own; the sign-in cookies are the identity provider's.",
+      "reason": "Whether the provider's cookies carry Secure and a __Host- or __Secure- prefix is the provider's to set. The launch review must read them on the production domain."
+    },
+    {
+      "id": "v5.0.0-3.3.2",
+      "level": 2,
+      "status": "identity provider",
+      "bears_on": [
+        "SEC-002",
+        "SEC-003"
+      ],
+      "control": "Valo sets no cookie of its own, and it does not rely on SameSite against requests from other sites: it refuses them by their origin (3.5.1).",
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/routes/valo-cross-site.integration.test.ts",
+          "test": "every change in the contract refuses a request from another site, counts it, and saves nothing"
+        }
+      ],
+      "reason": "SameSite on the provider's cookies is the provider's to set. The launch review must read it on the production domain."
+    },
+    {
+      "id": "v5.0.0-3.3.3",
+      "level": 2,
+      "status": "identity provider",
+      "bears_on": [
+        "SEC-002"
+      ],
+      "control": "Valo sets no cookie of its own.",
+      "reason": "Whether the provider's cookies are named with __Host- is the provider's to set. The launch review must read them on the production domain."
+    },
+    {
+      "id": "v5.0.0-3.3.4",
+      "level": 2,
+      "status": "identity provider",
+      "bears_on": [
+        "SEC-002"
+      ],
+      "control": "Valo sets no cookie of its own, and its pages limit which scripts can run (3.4.3).",
+      "reason": "The provider's session cookie is read by the provider's own script in the page, by its design. Whether that meets this requirement is for the launch review."
+    },
+    {
+      "id": "v5.0.0-3.4.1",
+      "level": 1,
+      "status": "partly met",
+      "bears_on": [
+        "SEC-002"
+      ],
+      "control": "The API's answers and the web app's pages ask browsers to use HTTPS for a year (HSTS). The API's answers are tested.",
+      "code": [
+        "artifacts/api-server/src/platform/security-headers.ts#securityHeaders",
+        "artifacts/valo/middleware.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/routes/valo-reflection.integration.test.ts",
+          "test": "hostile text sent to every operation in the contract comes back only inside JSON with the security headers, fails no route, and stays text in the database and its searches"
+        }
+      ],
+      "gap": "The web server's static files carry no HSTS, and no policy covers subdomains, which Level 2 asks for; both wait on the production domain."
+    },
+    {
+      "id": "v5.0.0-3.4.2",
+      "level": 1,
+      "status": "met",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "The API sends no CORS header at all, so no page on another site can read its answers.",
+      "code": [
+        "artifacts/api-server/src/app.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/routes/valo-cross-site.integration.test.ts",
+          "test": "every change in the contract refuses a request from another site, counts it, and saves nothing"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-3.4.3",
+      "level": 2,
+      "status": "partly met",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "Every page carries a policy with a fresh nonce for each response, 'strict-dynamic', object-src 'none' and base-uri 'none', and allows scripts only from Valo's own origin and the identity provider's hosts, with the bot check its sign-up uses.",
+      "code": [
+        "artifacts/valo/src/lib/content-security-policy.ts#contentSecurityPolicy",
+        "artifacts/valo/middleware.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/valo/src/lib/content-security-policy.test.ts",
+          "test": "production denies injected scripts, frames, objects and unconfigured origins while allowing required Clerk resources"
+        }
+      ],
+      "checks": [
+        {
+          "job": "foundation",
+          "step": "Prove compiled frontend enforces unique nonces and blocks injected scripts"
+        }
+      ],
+      "gap": "The API's answers carry no policy. They are JSON, which runs nothing, but a policy of default-src 'none' would cover them too."
+    },
+    {
+      "id": "v5.0.0-3.4.4",
+      "level": 2,
+      "status": "partly met",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "The API's answers carry nosniff, and the web app's configuration sets it for every path it serves.",
+      "code": [
+        "artifacts/api-server/src/platform/security-headers.ts#securityHeaders",
+        "artifacts/valo/next.config.mjs"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/routes/valo-reflection.integration.test.ts",
+          "test": "hostile text sent to every operation in the contract comes back only inside JSON with the security headers, fails no route, and stays text in the database and its searches"
+        }
+      ],
+      "gap": "No test reads nosniff from the web server's answers."
+    },
+    {
+      "id": "v5.0.0-3.4.5",
+      "level": 2,
+      "status": "partly met",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "The API's answers and the web app's pages carry Referrer-Policy: same-origin, so no address is sent to another site.",
+      "code": [
+        "artifacts/api-server/src/platform/security-headers.ts#securityHeaders",
+        "artifacts/valo/next.config.mjs"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/routes/valo-reflection.integration.test.ts",
+          "test": "hostile text sent to every operation in the contract comes back only inside JSON with the security headers, fails no route, and stays text in the database and its searches"
+        }
+      ],
+      "gap": "No test reads the policy from the web server's answers."
+    },
+    {
+      "id": "v5.0.0-3.4.6",
+      "level": 2,
+      "status": "partly met",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "Pages refuse framing with frame-ancestors 'none' in their policy, checked in the compiled app; the API's answers refuse it with X-Frame-Options.",
+      "code": [
+        "artifacts/valo/src/lib/content-security-policy.ts#contentSecurityPolicy",
+        "artifacts/api-server/src/platform/security-headers.ts#securityHeaders"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/valo/src/lib/content-security-policy.test.ts",
+          "test": "production denies injected scripts, frames, objects and unconfigured origins while allowing required Clerk resources"
+        },
+        {
+          "file": "artifacts/api-server/src/routes/valo-reflection.integration.test.ts",
+          "test": "hostile text sent to every operation in the contract comes back only inside JSON with the security headers, fails no route, and stays text in the database and its searches"
+        }
+      ],
+      "checks": [
+        {
+          "job": "foundation",
+          "step": "Prove compiled frontend enforces unique nonces and blocks injected scripts"
+        }
+      ],
+      "gap": "The API's answers carry no frame-ancestors policy, only the older X-Frame-Options."
+    },
+    {
+      "id": "v5.0.0-3.5.1",
+      "level": 1,
+      "status": "met",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "Every change must come from the trusted site's exact origin, which the server's settings name; any other is refused and saves nothing, even for staff who hold the route's role.",
+      "code": [
+        "artifacts/api-server/src/middlewares/valo-identity.ts#sameOriginMutation",
+        "artifacts/api-server/src/lib/valo-site-origin.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/routes/valo-cross-site.integration.test.ts",
+          "test": "every change in the contract refuses a request from another site, counts it, and saves nothing"
+        },
+        {
+          "file": "artifacts/api-server/src/lib/valo-client-writes.test.ts",
+          "test": "the web client's changes that send nothing still reach their routes through the same-origin check"
+        },
+        {
+          "file": "artifacts/api-server/src/lib/valo-site-origin.test.ts",
+          "test": "origin comparison includes scheme, port and exact serialized origin"
+        },
+        {
+          "file": "artifacts/api-server/src/lib/valo-site-origin.test.ts",
+          "test": "trusted site comes only from server configuration; production never falls back to a development hostname"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-3.5.2",
+      "level": 1,
+      "status": "met",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "Valo does not rely on preflight: every change must come from the site's own origin and, with a body, as JSON, so a simple request from another site is refused.",
+      "code": [
+        "artifacts/api-server/src/middlewares/valo-identity.ts#sameOriginMutation"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/routes/valo-cross-site.integration.test.ts",
+          "test": "every change in the contract refuses a request from another site, counts it, and saves nothing"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-3.5.3",
+      "level": 1,
+      "status": "met",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "Only POST, PUT, PATCH and DELETE change anything: every read in the contract, sent as each kind of caller, leaves every table as it was but the counts reads keep.",
+      "code": [
+        "artifacts/api-server/src/routes"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/routes/valo-reflection.integration.test.ts",
+          "test": "hostile text sent to every operation in the contract comes back only inside JSON with the security headers, fails no route, and stays text in the database and its searches"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-3.5.4",
+      "level": 2,
+      "status": "not applicable",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "reason": "Valo is one application on one origin: its public site, the workspace and the staff area. The identity provider's pages are its own. If the staff area is to count as an application of its own, it needs a hostname of its own, which is for the launch review."
+    },
+    {
+      "id": "v5.0.0-3.5.5",
+      "level": 2,
+      "status": "not applicable",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "reason": "Valo's pages listen to no postMessage. The one channel they use is a BroadcastChannel, which only pages of the same origin can post to, and its handler acts only on a message of its own kind for the same session."
+    },
+    {
+      "id": "v5.0.0-3.7.1",
+      "level": 2,
+      "status": "met",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "The web app is React and Next.js, with no plugins, and its policy's object-src 'none' refuses plugin content.",
+      "code": [
+        "artifacts/valo/src/lib/content-security-policy.ts#contentSecurityPolicy"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/valo/src/lib/content-security-policy.test.ts",
+          "test": "production denies injected scripts, frames, objects and unconfigured origins while allowing required Clerk resources"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-3.7.2",
+      "level": 2,
+      "status": "untested",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "Valo sends a person to another host only to the payment provider's checkout, after checking that its address is https on checkout.paystack.com with no user name in it. The identity provider's redirects are its own.",
+      "code": [
+        "artifacts/api-server/src/modules/commerce/valo-paystack-contract.ts"
+      ],
+      "gap": "No test gives the check an address on another host."
+    },
+    {
+      "id": "v5.0.0-4.1.1",
+      "level": 1,
+      "status": "partly met",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "The API's answers are JSON with charset=utf-8, and the web server's pages are HTML in UTF-8, as Next.js sets them.",
+      "code": [
+        "artifacts/api-server/src/app.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/routes/valo-reflection.integration.test.ts",
+          "test": "hostile text sent to every operation in the contract comes back only inside JSON with the security headers, fails no route, and stays text in the database and its searches"
+        }
+      ],
+      "gap": "No test reads the pages' content type."
+    },
+    {
+      "id": "v5.0.0-4.1.2",
+      "level": 2,
+      "status": "host",
+      "bears_on": [
+        "SEC-002"
+      ],
+      "control": "The API does not redirect HTTP to HTTPS itself.",
+      "reason": "Which addresses redirect is the host's edge to set. Check at launch that only page addresses do."
+    },
+    {
+      "id": "v5.0.0-4.1.3",
+      "level": 2,
+      "status": "met",
+      "bears_on": [
+        "SEC-005"
+      ],
+      "control": "A forwarded address is believed only from proxies the settings name, walking back from the socket and stopping at the first untrusted hop, and a page render's visitor only from this machine's own web server.",
+      "code": [
+        "artifacts/api-server/src/lib/valo-proxy-boundary.ts#clientAddress",
+        "artifacts/api-server/src/middlewares/valo-quota.ts#pageRenderVisitor"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/lib/valo-proxy-boundary.test.ts",
+          "test": "real HTTP walks only explicitly trusted proxies and stops before forged client prefixes"
+        },
+        {
+          "file": "artifacts/api-server/src/lib/valo-proxy-boundary.test.ts",
+          "test": "proxy configuration rejects hop counts, names and universal networks"
+        },
+        {
+          "file": "artifacts/api-server/src/middlewares/valo-quota.test.ts",
+          "test": "a page render from this machine counts for the visitor's forwarded address, under one shared ceiling"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-4.2.1",
+      "level": 2,
+      "status": "host",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "Node's HTTP parser finds each request's end on Valo's servers.",
+      "reason": "The host's load balancer must agree with Node on where each request ends. Check at launch."
+    },
+    {
+      "id": "v5.0.0-4.3.1",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo has no GraphQL interface."
+    },
+    {
+      "id": "v5.0.0-4.3.2",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo has no GraphQL interface."
+    },
+    {
+      "id": "v5.0.0-4.4.1",
+      "level": 1,
+      "status": "not applicable",
+      "reason": "Valo uses no WebSocket."
+    },
+    {
+      "id": "v5.0.0-4.4.2",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo uses no WebSocket."
+    },
+    {
+      "id": "v5.0.0-4.4.3",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo uses no WebSocket."
+    },
+    {
+      "id": "v5.0.0-4.4.4",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo uses no WebSocket."
+    },
+    {
+      "id": "v5.0.0-5.1.1",
+      "level": 2,
+      "status": "partly met",
+      "bears_on": [
+        "SEC-004"
+      ],
+      "control": "The code sets what a Content editor may upload to the staff library: a Word or PDF file of up to 2 MB; a Word file of at most 300 parts and 12 MB unpacked, with no macros, embedded programs, DTDs or outside links; a PDF of up to 100 pages with no encryption, scripts or embedded files. R1 accepts no file from customers: the specification keeps uploads for R2, behind its attachment controls.",
+      "code": [
+        "artifacts/api-server/src/modules/manual-library/files.ts#readEditorialUpload"
+      ],
+      "tests": [
+        {
+          "file": "scripts/src/valo/r1-boundaries.test.ts",
+          "test": "R1 customer workspaces have no evidence upload and only the Content staff editor accepts a document"
+        }
+      ],
+      "gap": "No document sets these limits or says what happens to a refused file; they are only in the code."
+    },
+    {
+      "id": "v5.0.0-5.2.1",
+      "level": 1,
+      "status": "untested",
+      "bears_on": [
+        "SEC-004"
+      ],
+      "control": "A staff upload larger than 2 MB, or a Word file that unpacks to more than 12 MB, is refused before it is read. R1 accepts no file from customers: the specification keeps uploads for R2, behind its attachment controls.",
+      "code": [
+        "artifacts/api-server/src/modules/manual-library/files.ts#fileLimit"
+      ],
+      "gap": "No test gives the staff upload a file over its limits."
+    },
+    {
+      "id": "v5.0.0-5.2.2",
+      "level": 1,
+      "status": "untested",
+      "bears_on": [
+        "SEC-004"
+      ],
+      "control": "A staff upload must be what its kind says: a PDF must start with %PDF- and be readable by the PDF tools, and a Word file must be a Word document's package.",
+      "code": [
+        "artifacts/api-server/src/modules/manual-library/files.ts#readEditorialUpload"
+      ],
+      "gap": "No test gives the staff upload a file whose content is not its kind."
+    },
+    {
+      "id": "v5.0.0-5.2.3",
+      "level": 2,
+      "status": "untested",
+      "bears_on": [
+        "SEC-004"
+      ],
+      "control": "A Word upload is unpacked only within 12 MB and 300 parts, counted before each part is expanded, and a part with a path outside the package is refused.",
+      "code": [
+        "artifacts/api-server/src/modules/manual-library/files.ts"
+      ],
+      "gap": "No test gives the staff upload a package over these limits."
+    },
+    {
+      "id": "v5.0.0-5.3.1",
+      "level": 1,
+      "status": "met",
+      "bears_on": [
+        "SEC-002"
+      ],
+      "control": "Files Valo makes are kept in private storage or the database, never in a public folder, and are sent only as attachments.",
+      "code": [
+        "artifacts/api-server/src/platform/valo-private-storage.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/lib/valo-production-storage.test.ts",
+          "test": "production canary verifies exact bytes, anonymous denial and confirmed deletion, never customer keys"
+        },
+        {
+          "file": "artifacts/api-server/src/modules/exports/valo-exports.integration.test.ts",
+          "test": "real development PostgreSQL, private file storage and renderer integration"
+        },
+        {
+          "file": "artifacts/api-server/src/lib/valo-workspace-download.integration.test.ts",
+          "test": "real paged workspace download, final authorization and disconnect cleanup"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-5.3.2",
+      "level": 1,
+      "status": "met",
+      "bears_on": [
+        "SEC-004"
+      ],
+      "control": "Storage keys and temporary files are named from Valo's own identifiers, never from a name a person sends, and production's storage is named explicitly and apart from development's.",
+      "code": [
+        "artifacts/api-server/src/platform/valo-private-storage.ts",
+        "artifacts/api-server/src/modules/exports"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/lib/valo-production-storage.test.ts",
+          "test": "production storage is explicit, canonical and separate from every ancestor of development"
+        },
+        {
+          "file": "artifacts/api-server/src/modules/exports/valo-exports.integration.test.ts",
+          "test": "real development PostgreSQL, private file storage and renderer integration"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-5.4.1",
+      "level": 2,
+      "status": "met",
+      "bears_on": [
+        "SEC-004"
+      ],
+      "control": "Every download is named by Valo in its Content-Disposition, for example valo-business-draft-r3.pdf; no name a person sends is used.",
+      "code": [
+        "artifacts/api-server/src/routes/valo-exports.ts",
+        "artifacts/api-server/src/lib/valo-workspace-export-http.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/lib/valo-workspace-download.integration.test.ts",
+          "test": "real paged workspace download, final authorization and disconnect cleanup"
+        },
+        {
+          "file": "artifacts/api-server/src/routes/valo-manual-library.integration.test.ts",
+          "test": "manual publishing through staff HTTP routes and public readers"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-5.4.2",
+      "level": 2,
+      "status": "untested",
+      "bears_on": [
+        "SEC-004"
+      ],
+      "control": "Download names are made only of Valo's own identifiers and version numbers, such as valo-business-draft-r3.pdf or a staff library entry's manual-<id>-v2.docx, with no quote, line break or path in them.",
+      "code": [
+        "artifacts/api-server/src/routes/valo-exports.ts",
+        "artifacts/api-server/src/modules/manual-library/index.ts"
+      ],
+      "gap": "No test checks every download's name."
+    },
+    {
+      "id": "v5.0.0-5.4.3",
+      "level": 2,
+      "status": "partly met",
+      "bears_on": [
+        "SEC-004"
+      ],
+      "control": "The only files Valo serves that it did not make are those Content editors upload, and those are refused if they hold macros, embedded programs, scripts or encryption.",
+      "code": [
+        "artifacts/api-server/src/modules/manual-library/files.ts"
+      ],
+      "gap": "No antivirus scanner reads them."
+    },
+    {
+      "id": "v5.0.0-6.1.1",
+      "level": 1,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor. Valo limits each address's and account's requests (2.4.1), but sign-in attempts go to the provider.",
+      "reason": "The provider's defences against credential stuffing, guessing and malicious lockout are its own. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-6.1.2",
+      "level": 2,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "The words the provider refuses in passwords are its own to set. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-6.1.3",
+      "level": 2,
+      "status": "partly met",
+      "bears_on": [
+        "IAM-001",
+        "IAM-002"
+      ],
+      "control": "Customers and staff sign in only through the provider, and staff routes also need both factors verified within a fixed time.",
+      "code": [
+        "artifacts/api-server/src/platform/session-verification.ts",
+        "artifacts/api-server/src/lib/valo-managed-session.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/platform/session-verification.test.ts",
+          "test": "sensitive routes always check live, and a refusal ends cached access"
+        },
+        {
+          "file": "artifacts/api-server/src/lib/valo-managed-session.test.ts",
+          "test": "missing, malformed, future and stale factor ages cannot establish MFA"
+        }
+      ],
+      "gap": "No single document lists each way in and the strength each needs."
+    },
+    {
+      "id": "v5.0.0-6.2.1",
+      "level": 1,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "The minimum password length is the provider's to set. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-6.2.2",
+      "level": 1,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "A person changes their password in the provider's account pages. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-6.2.3",
+      "level": 1,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "The provider's password change asks for the current password, by its own design. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-6.2.4",
+      "level": 1,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "Checking new passwords against common ones is the provider's. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-6.2.5",
+      "level": 1,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "Which characters a password may hold is the provider's to set. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-6.2.6",
+      "level": 1,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "The password fields are the provider's sign-in components. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-6.2.7",
+      "level": 1,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "Pasting and password managers in the sign-in form are the provider's. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-6.2.8",
+      "level": 1,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "How a password is compared is the provider's. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-6.2.9",
+      "level": 2,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "The maximum password length is the provider's to set. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-6.2.10",
+      "level": 2,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "Whether passwords expire is the provider's to set. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-6.2.11",
+      "level": 2,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "Refusing context-specific words is the provider's. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-6.2.12",
+      "level": 2,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "Checking new passwords against breached ones is the provider's. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-6.3.1",
+      "level": 1,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "Defences against credential stuffing and guessing are the provider's (6.1.1). Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-6.3.2",
+      "level": 1,
+      "status": "met",
+      "bears_on": [
+        "SEC-006"
+      ],
+      "control": "Valo has no account of its own: every account is the provider's, and a staff role is held only by a named account through a recorded grant.",
+      "code": [
+        "artifacts/api-server/src/modules/staff"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/modules/staff/valo-staff-roles.integration.test.ts",
+          "test": "staff role governance: disposable PostgreSQL, managed-session boundary and no real role mutations"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-6.3.3",
+      "level": 2,
+      "status": "partly met",
+      "bears_on": [
+        "SEC-006",
+        "IAM-002"
+      ],
+      "control": "Staff routes need both of a staff account's factors, verified within a fixed time.",
+      "code": [
+        "artifacts/api-server/src/lib/valo-managed-session.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/lib/valo-managed-session.test.ts",
+          "test": "missing, malformed, future and stale factor ages cannot establish MFA"
+        },
+        {
+          "file": "artifacts/api-server/src/routes/valo-privacy-http.integration.test.ts",
+          "test": "actual HTTP privacy routes apply an independent privacy role and fresh MFA"
+        }
+      ],
+      "gap": "Customers sign in with one factor; whether to require a second is the owner's decision."
+    },
+    {
+      "id": "v5.0.0-6.3.4",
+      "level": 2,
+      "status": "partly met",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "The API accepts only the provider's sessions, the payment provider's signed webhook, and commands run on the server itself.",
+      "code": [
+        "artifacts/api-server/src/app.ts",
+        "artifacts/api-server/src/modules/commerce/valo-paystack-contract.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/platform/session-verification.test.ts",
+          "test": "sensitive routes always check live, and a refusal ends cached access"
+        },
+        {
+          "file": "artifacts/api-server/src/modules/commerce/valo-paystack-http.integration.test.ts",
+          "test": "isolated real HTTP signature/durability controls — synthetic signing key, NOT Paystack delivery"
+        }
+      ],
+      "gap": "No document lists every way in."
+    },
+    {
+      "id": "v5.0.0-6.4.1",
+      "level": 1,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "Initial passwords and activation codes are the provider's. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-6.4.2",
+      "level": 1,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "Valo asks no secret question; whether the provider offers password hints is its own. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-6.4.3",
+      "level": 2,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "Password reset is the provider's, and whether it keeps the second factor. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-6.4.4",
+      "level": 2,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "Recovering a lost factor is the provider's. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-6.5.1",
+      "level": 2,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-002"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "One-time codes are the provider's. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-6.5.2",
+      "level": 2,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-002"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "Backup codes are stored by the provider. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-6.5.3",
+      "level": 2,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-002"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "Codes and their seeds are made by the provider. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-6.5.4",
+      "level": 2,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-002"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "The codes' length is the provider's. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-6.5.5",
+      "level": 2,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-002"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "How long a code lasts is the provider's. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-6.6.1",
+      "level": 2,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-002"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "Whether codes are sent by text message is the provider's to set. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-6.6.2",
+      "level": 2,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-002"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "Binding a code to its sign-in is the provider's. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-6.6.3",
+      "level": 2,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-002"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "Limiting attempts at a code is the provider's. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-6.8.1",
+      "level": 2,
+      "status": "not applicable",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "reason": "Valo uses one identity provider and keys every account by that provider's own user id."
+    },
+    {
+      "id": "v5.0.0-6.8.2",
+      "level": 2,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "The provider's SDK checks each session token; Valo also confirms the session with the provider's API, live on sensitive routes and at least once a minute elsewhere.",
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/platform/session-verification.test.ts",
+          "test": "sensitive routes always check live, and a refusal ends cached access"
+        },
+        {
+          "file": "artifacts/api-server/src/platform/session-verification.test.ts",
+          "test": "everyday routes recheck the provider at least once a minute"
+        }
+      ],
+      "reason": "Checking each session token's signature is the provider's SDK's. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-6.8.3",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo receives no SAML assertion."
+    },
+    {
+      "id": "v5.0.0-6.8.4",
+      "level": 2,
+      "status": "met",
+      "bears_on": [
+        "SEC-006",
+        "IAM-002"
+      ],
+      "control": "Staff routes read the factor verification age the provider puts in the session, and refuse one that is missing, malformed, in the future or too old.",
+      "code": [
+        "artifacts/api-server/src/lib/valo-managed-session.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/lib/valo-managed-session.test.ts",
+          "test": "missing, malformed, future and stale factor ages cannot establish MFA"
+        },
+        {
+          "file": "artifacts/api-server/src/routes/valo-privacy-http.integration.test.ts",
+          "test": "actual HTTP privacy routes apply an independent privacy role and fresh MFA"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-7.1.1",
+      "level": 2,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "How long a session lasts idle and in all is the provider's to set, and the reasons are not recorded. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-7.1.2",
+      "level": 2,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "How many sessions an account may hold is the provider's to set. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-7.1.3",
+      "level": 2,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "Valo trusts one provider's sessions and confirms each with it (7.2.1).",
+      "reason": "How the provider's sessions end is its own. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-7.2.1",
+      "level": 1,
+      "status": "met",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "The API verifies every session on the server with the provider's SDK and confirms it with the provider's API: live on sensitive routes, at least once a minute on others, and a refusal is never cached.",
+      "code": [
+        "artifacts/api-server/src/platform/session-verification.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/platform/session-verification.test.ts",
+          "test": "sensitive routes always check live, and a refusal ends cached access"
+        },
+        {
+          "file": "artifacts/api-server/src/platform/session-verification.test.ts",
+          "test": "everyday routes recheck the provider at least once a minute"
+        },
+        {
+          "file": "artifacts/api-server/src/platform/session-verification.test.ts",
+          "test": "refusals are never cached, so a newly verified email works at once"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-7.2.2",
+      "level": 1,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "Valo uses no static key for a person's session.",
+      "reason": "The session tokens are the provider's signed tokens, made for each sign-in. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-7.2.3",
+      "level": 1,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "The sessions' identifiers are made by the provider. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-7.2.4",
+      "level": 1,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "A new session at each sign-in is the provider's to make. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-7.3.1",
+      "level": 2,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "The idle timeout is the provider's to set. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-7.3.2",
+      "level": 2,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "The longest a session lasts is the provider's to set. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-7.4.1",
+      "level": 1,
+      "status": "partly met",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "When a session ends, sensitive routes refuse it at once, and every other route within a minute, when Valo next confirms it with the provider.",
+      "code": [
+        "artifacts/api-server/src/platform/session-verification.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/platform/session-verification.test.ts",
+          "test": "sensitive routes always check live, and a refusal ends cached access"
+        },
+        {
+          "file": "artifacts/api-server/src/platform/session-verification.test.ts",
+          "test": "everyday routes recheck the provider at least once a minute"
+        }
+      ],
+      "gap": "For up to a minute, an ended session can still do what everyday routes allow."
+    },
+    {
+      "id": "v5.0.0-7.4.2",
+      "level": 1,
+      "status": "partly met",
+      "bears_on": [
+        "IAM-001",
+        "SEC-006"
+      ],
+      "control": "A disabled, banned or locked account is refused at once on sensitive routes and within a minute elsewhere, and a staff role ends as soon as it is withdrawn.",
+      "code": [
+        "artifacts/api-server/src/platform/session-verification.ts",
+        "artifacts/api-server/src/modules/staff"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/platform/session-verification.test.ts",
+          "test": "sensitive routes always check live, and a refusal ends cached access"
+        },
+        {
+          "file": "artifacts/api-server/src/modules/staff/valo-staff-roles.integration.test.ts",
+          "test": "staff role governance: disposable PostgreSQL, managed-session boundary and no real role mutations"
+        }
+      ],
+      "gap": "For up to a minute, a disabled account can still do what everyday routes allow."
+    },
+    {
+      "id": "v5.0.0-7.4.3",
+      "level": 2,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "Ending a person's other sessions after a change of factor is the provider's. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-7.4.4",
+      "level": 2,
+      "status": "untested",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "Every signed-in page has the account menu, with Sign out, in the site's header.",
+      "code": [
+        "artifacts/valo/src/components/site-shell.tsx"
+      ],
+      "gap": "No test checks that each signed-in page offers it."
+    },
+    {
+      "id": "v5.0.0-7.4.5",
+      "level": 2,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "Staff cannot end a person's sessions from Valo.",
+      "reason": "Ending a person's sessions is done in the provider's dashboard. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-7.5.1",
+      "level": 2,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "A person changes their email, password and second factor in the provider's account pages, which decide when to ask them to sign in again. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-7.5.2",
+      "level": 2,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "Seeing and ending one's sessions is in the provider's account pages. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-7.6.1",
+      "level": 2,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "Valo has one provider, whose sessions it confirms (7.2.1); how they end is the provider's. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-7.6.2",
+      "level": 2,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "A session starts only when a person signs in through the provider. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-8.1.1",
+      "level": 1,
+      "status": "met",
+      "bears_on": [
+        "SEC-001",
+        "SEC-006"
+      ],
+      "control": "The architecture's invariants set who may do what: a customer acts only in the workspace their membership names, and each staff role reaches only its own routes, with both factors and a fresh check.",
+      "code": [
+        "docs/architecture/README.md",
+        "artifacts/api-server/src/modules/staff"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/routes/valo-tenant-substitution.integration.test.ts",
+          "test": "another workspace's identifiers are refused exactly like unknown ones and change nothing"
+        },
+        {
+          "file": "artifacts/api-server/src/modules/staff/valo-staff-roles.integration.test.ts",
+          "test": "staff role governance: disposable PostgreSQL, managed-session boundary and no real role mutations"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-8.1.2",
+      "level": 2,
+      "status": "partly met",
+      "bears_on": [
+        "SEC-001",
+        "SEC-006"
+      ],
+      "control": "Some fields have rules of their own, in code: a refund's reason is shown only to finance, and a reviewer's decision is kept as written.",
+      "code": [
+        "artifacts/api-server/src/modules/staff"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/modules/staff/valo-audit-history.test.ts",
+          "test": "audit history entries keep a refund's reason with finance, say plainly what a count found and fit the contract"
+        }
+      ],
+      "gap": "No document lists the rules for each field."
+    },
+    {
+      "id": "v5.0.0-8.2.1",
+      "level": 1,
+      "status": "met",
+      "bears_on": [
+        "SEC-006"
+      ],
+      "control": "Each staff route needs its own role and refuses an account without an active assignment before reading its input; finance, privacy, content, support and the system operator each reach only their own.",
+      "code": [
+        "artifacts/api-server/src/modules/staff",
+        "artifacts/api-server/src/lib/valo-managed-session.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/modules/staff/valo-staff-roles.integration.test.ts",
+          "test": "staff role governance: disposable PostgreSQL, managed-session boundary and no real role mutations"
+        },
+        {
+          "file": "artifacts/api-server/src/routes/valo-privacy-http.integration.test.ts",
+          "test": "actual HTTP privacy routes apply an independent privacy role and fresh MFA"
+        },
+        {
+          "file": "artifacts/api-server/src/routes/valo-disputes-http.integration.test.ts",
+          "test": "actual dispute HTTP routers enforce managed finance authority, tenant binding and same-origin writes"
+        },
+        {
+          "file": "artifacts/api-server/src/modules/staff/valo-audit-history.integration.test.ts",
+          "test": "audit history: only a permanent system operator reads it, each read is recorded first, and reading changes no other history"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-8.2.2",
+      "level": 1,
+      "status": "met",
+      "bears_on": [
+        "SEC-001"
+      ],
+      "control": "Every private query is limited to the workspace the server resolves from the session, and another workspace's identifiers are refused exactly as unknown ones are; row-level security holds even if a query forgets its filter.",
+      "code": [
+        "artifacts/api-server/src/modules/workspaces",
+        "lib/db/src/workspace-scope.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/routes/valo-tenant-substitution.integration.test.ts",
+          "test": "another workspace's identifiers are refused exactly like unknown ones and change nothing"
+        },
+        {
+          "file": "artifacts/api-server/src/routes/valo-tenant-substitution.integration.test.ts",
+          "test": "every identifier a private operation takes outside its path has a substitution case or a recorded reason"
+        },
+        {
+          "file": "artifacts/api-server/src/platform/workspace-row-security.integration.test.ts",
+          "test": "row-level security limits customer requests to their own workspace"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-8.2.3",
+      "level": 2,
+      "status": "partly met",
+      "bears_on": [
+        "SEC-001"
+      ],
+      "control": "Some fields are shown only to some roles, such as a refund's reason, which only finance sees.",
+      "code": [
+        "artifacts/api-server/src/modules/staff"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/modules/staff/valo-audit-history.test.ts",
+          "test": "audit history entries keep a refund's reason with finance, say plainly what a count found and fit the contract"
+        }
+      ],
+      "gap": "No test checks each answer's fields against each caller's role."
+    },
+    {
+      "id": "v5.0.0-8.3.1",
+      "level": 1,
+      "status": "met",
+      "bears_on": [
+        "SEC-001"
+      ],
+      "control": "Authorization is decided on the server: a workspace actor comes only from the membership the server resolves, which no HTTP code can make or redirect, and the database's row-level security limits every query.",
+      "code": [
+        "artifacts/api-server/src/modules/workspaces",
+        "scripts/src/valo/architecture-check.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/routes/valo-tenant-substitution.integration.test.ts",
+          "test": "another workspace's identifiers are refused exactly like unknown ones and change nothing"
+        },
+        {
+          "file": "artifacts/api-server/src/platform/workspace-row-security.integration.test.ts",
+          "test": "row-level security limits customer requests to their own workspace"
+        },
+        {
+          "file": "scripts/src/valo/architecture-check.test.ts",
+          "test": "HTTP code cannot create, cast or redirect a workspace actor"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-8.4.1",
+      "level": 2,
+      "status": "met",
+      "bears_on": [
+        "SEC-001"
+      ],
+      "control": "Each workspace is its own tenant: requests and background work for it run in its database scope, and nothing one workspace does reaches another's rows.",
+      "code": [
+        "lib/db/src/workspace-scope.ts",
+        "lib/db/scripts/workspace-row-security.mjs"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/routes/valo-tenant-substitution.integration.test.ts",
+          "test": "another workspace's identifiers are refused exactly like unknown ones and change nothing"
+        },
+        {
+          "file": "artifacts/api-server/src/platform/workspace-row-security.integration.test.ts",
+          "test": "row-level security limits customer requests to their own workspace"
+        },
+        {
+          "file": "artifacts/api-server/src/platform/workspace-scope-jobs.integration.test.ts",
+          "test": "background work for one workspace reads it in that workspace's scope"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-9.1.1",
+      "level": 1,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001",
+        "IAM-003"
+      ],
+      "control": "Valo's own token, the credential that names a transaction's workspace, is checked by its HMAC in the database, which refuses a forged one.",
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/platform/workspace-row-security.integration.test.ts",
+          "test": "row-level security limits customer requests to their own workspace"
+        }
+      ],
+      "reason": "Checking the session tokens' signatures is the provider's SDK's. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-9.1.2",
+      "level": 1,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001",
+        "IAM-003"
+      ],
+      "control": "Valo's own credential has one algorithm, HMAC-SHA-256, and no header to name another.",
+      "reason": "The algorithms the session tokens may use are the provider's SDK's. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-9.1.3",
+      "level": 1,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001",
+        "IAM-003"
+      ],
+      "control": "Valo's own credential key comes from the server's settings.",
+      "reason": "Where the SDK finds the provider's keys is its own. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-9.2.1",
+      "level": 1,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001",
+        "IAM-003"
+      ],
+      "control": "Valo's own credential is good only for the transaction it is made for.",
+      "reason": "Checking the session tokens' times is the provider's SDK's. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-9.2.2",
+      "level": 2,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "Telling session tokens from other tokens is the provider's SDK's. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-9.2.3",
+      "level": 2,
+      "status": "untested",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "Valo gives the provider's SDK the trusted site's origin as the only authorized party, so a session token made for another site is refused.",
+      "code": [
+        "artifacts/api-server/src/app.ts"
+      ],
+      "gap": "No test presents a token made for another site."
+    },
+    {
+      "id": "v5.0.0-9.2.4",
+      "level": 2,
+      "status": "identity provider",
+      "bears_on": [
+        "IAM-001"
+      ],
+      "control": "Sign-in is the identity provider's (Clerk): Valo never sees a password or a second factor.",
+      "reason": "Which audiences the provider's key signs for is the provider's. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-10.1.1",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo neither runs an OAuth authorization server nor acts as an OAuth or OpenID client or resource server in its own code: sign-in, including any through another account, is the identity provider's, and the API accepts the provider's own session tokens, mapped under chapters 6, 7 and 9."
+    },
+    {
+      "id": "v5.0.0-10.1.2",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo neither runs an OAuth authorization server nor acts as an OAuth or OpenID client or resource server in its own code: sign-in, including any through another account, is the identity provider's, and the API accepts the provider's own session tokens, mapped under chapters 6, 7 and 9."
+    },
+    {
+      "id": "v5.0.0-10.2.1",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo neither runs an OAuth authorization server nor acts as an OAuth or OpenID client or resource server in its own code: sign-in, including any through another account, is the identity provider's, and the API accepts the provider's own session tokens, mapped under chapters 6, 7 and 9."
+    },
+    {
+      "id": "v5.0.0-10.2.2",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo neither runs an OAuth authorization server nor acts as an OAuth or OpenID client or resource server in its own code: sign-in, including any through another account, is the identity provider's, and the API accepts the provider's own session tokens, mapped under chapters 6, 7 and 9."
+    },
+    {
+      "id": "v5.0.0-10.3.1",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo neither runs an OAuth authorization server nor acts as an OAuth or OpenID client or resource server in its own code: sign-in, including any through another account, is the identity provider's, and the API accepts the provider's own session tokens, mapped under chapters 6, 7 and 9."
+    },
+    {
+      "id": "v5.0.0-10.3.2",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo neither runs an OAuth authorization server nor acts as an OAuth or OpenID client or resource server in its own code: sign-in, including any through another account, is the identity provider's, and the API accepts the provider's own session tokens, mapped under chapters 6, 7 and 9."
+    },
+    {
+      "id": "v5.0.0-10.3.3",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo neither runs an OAuth authorization server nor acts as an OAuth or OpenID client or resource server in its own code: sign-in, including any through another account, is the identity provider's, and the API accepts the provider's own session tokens, mapped under chapters 6, 7 and 9."
+    },
+    {
+      "id": "v5.0.0-10.3.4",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo neither runs an OAuth authorization server nor acts as an OAuth or OpenID client or resource server in its own code: sign-in, including any through another account, is the identity provider's, and the API accepts the provider's own session tokens, mapped under chapters 6, 7 and 9."
+    },
+    {
+      "id": "v5.0.0-10.4.1",
+      "level": 1,
+      "status": "not applicable",
+      "reason": "Valo neither runs an OAuth authorization server nor acts as an OAuth or OpenID client or resource server in its own code: sign-in, including any through another account, is the identity provider's, and the API accepts the provider's own session tokens, mapped under chapters 6, 7 and 9."
+    },
+    {
+      "id": "v5.0.0-10.4.2",
+      "level": 1,
+      "status": "not applicable",
+      "reason": "Valo neither runs an OAuth authorization server nor acts as an OAuth or OpenID client or resource server in its own code: sign-in, including any through another account, is the identity provider's, and the API accepts the provider's own session tokens, mapped under chapters 6, 7 and 9."
+    },
+    {
+      "id": "v5.0.0-10.4.3",
+      "level": 1,
+      "status": "not applicable",
+      "reason": "Valo neither runs an OAuth authorization server nor acts as an OAuth or OpenID client or resource server in its own code: sign-in, including any through another account, is the identity provider's, and the API accepts the provider's own session tokens, mapped under chapters 6, 7 and 9."
+    },
+    {
+      "id": "v5.0.0-10.4.4",
+      "level": 1,
+      "status": "not applicable",
+      "reason": "Valo neither runs an OAuth authorization server nor acts as an OAuth or OpenID client or resource server in its own code: sign-in, including any through another account, is the identity provider's, and the API accepts the provider's own session tokens, mapped under chapters 6, 7 and 9."
+    },
+    {
+      "id": "v5.0.0-10.4.5",
+      "level": 1,
+      "status": "not applicable",
+      "reason": "Valo neither runs an OAuth authorization server nor acts as an OAuth or OpenID client or resource server in its own code: sign-in, including any through another account, is the identity provider's, and the API accepts the provider's own session tokens, mapped under chapters 6, 7 and 9."
+    },
+    {
+      "id": "v5.0.0-10.4.6",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo neither runs an OAuth authorization server nor acts as an OAuth or OpenID client or resource server in its own code: sign-in, including any through another account, is the identity provider's, and the API accepts the provider's own session tokens, mapped under chapters 6, 7 and 9."
+    },
+    {
+      "id": "v5.0.0-10.4.7",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo neither runs an OAuth authorization server nor acts as an OAuth or OpenID client or resource server in its own code: sign-in, including any through another account, is the identity provider's, and the API accepts the provider's own session tokens, mapped under chapters 6, 7 and 9."
+    },
+    {
+      "id": "v5.0.0-10.4.8",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo neither runs an OAuth authorization server nor acts as an OAuth or OpenID client or resource server in its own code: sign-in, including any through another account, is the identity provider's, and the API accepts the provider's own session tokens, mapped under chapters 6, 7 and 9."
+    },
+    {
+      "id": "v5.0.0-10.4.9",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo neither runs an OAuth authorization server nor acts as an OAuth or OpenID client or resource server in its own code: sign-in, including any through another account, is the identity provider's, and the API accepts the provider's own session tokens, mapped under chapters 6, 7 and 9."
+    },
+    {
+      "id": "v5.0.0-10.4.10",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo neither runs an OAuth authorization server nor acts as an OAuth or OpenID client or resource server in its own code: sign-in, including any through another account, is the identity provider's, and the API accepts the provider's own session tokens, mapped under chapters 6, 7 and 9."
+    },
+    {
+      "id": "v5.0.0-10.4.11",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo neither runs an OAuth authorization server nor acts as an OAuth or OpenID client or resource server in its own code: sign-in, including any through another account, is the identity provider's, and the API accepts the provider's own session tokens, mapped under chapters 6, 7 and 9."
+    },
+    {
+      "id": "v5.0.0-10.5.1",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo neither runs an OAuth authorization server nor acts as an OAuth or OpenID client or resource server in its own code: sign-in, including any through another account, is the identity provider's, and the API accepts the provider's own session tokens, mapped under chapters 6, 7 and 9."
+    },
+    {
+      "id": "v5.0.0-10.5.2",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo neither runs an OAuth authorization server nor acts as an OAuth or OpenID client or resource server in its own code: sign-in, including any through another account, is the identity provider's, and the API accepts the provider's own session tokens, mapped under chapters 6, 7 and 9."
+    },
+    {
+      "id": "v5.0.0-10.5.3",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo neither runs an OAuth authorization server nor acts as an OAuth or OpenID client or resource server in its own code: sign-in, including any through another account, is the identity provider's, and the API accepts the provider's own session tokens, mapped under chapters 6, 7 and 9."
+    },
+    {
+      "id": "v5.0.0-10.5.4",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo neither runs an OAuth authorization server nor acts as an OAuth or OpenID client or resource server in its own code: sign-in, including any through another account, is the identity provider's, and the API accepts the provider's own session tokens, mapped under chapters 6, 7 and 9."
+    },
+    {
+      "id": "v5.0.0-10.5.5",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo neither runs an OAuth authorization server nor acts as an OAuth or OpenID client or resource server in its own code: sign-in, including any through another account, is the identity provider's, and the API accepts the provider's own session tokens, mapped under chapters 6, 7 and 9."
+    },
+    {
+      "id": "v5.0.0-10.6.1",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo neither runs an OAuth authorization server nor acts as an OAuth or OpenID client or resource server in its own code: sign-in, including any through another account, is the identity provider's, and the API accepts the provider's own session tokens, mapped under chapters 6, 7 and 9."
+    },
+    {
+      "id": "v5.0.0-10.6.2",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo neither runs an OAuth authorization server nor acts as an OAuth or OpenID client or resource server in its own code: sign-in, including any through another account, is the identity provider's, and the API accepts the provider's own session tokens, mapped under chapters 6, 7 and 9."
+    },
+    {
+      "id": "v5.0.0-10.7.1",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo neither runs an OAuth authorization server nor acts as an OAuth or OpenID client or resource server in its own code: sign-in, including any through another account, is the identity provider's, and the API accepts the provider's own session tokens, mapped under chapters 6, 7 and 9."
+    },
+    {
+      "id": "v5.0.0-10.7.2",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo neither runs an OAuth authorization server nor acts as an OAuth or OpenID client or resource server in its own code: sign-in, including any through another account, is the identity provider's, and the API accepts the provider's own session tokens, mapped under chapters 6, 7 and 9."
+    },
+    {
+      "id": "v5.0.0-10.7.3",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo neither runs an OAuth authorization server nor acts as an OAuth or OpenID client or resource server in its own code: sign-in, including any through another account, is the identity provider's, and the API accepts the provider's own session tokens, mapped under chapters 6, 7 and 9."
+    },
+    {
+      "id": "v5.0.0-11.1.1",
+      "level": 2,
+      "status": "not met",
+      "bears_on": [
+        "SEC-002"
+      ],
+      "gap": "No document sets how keys are made, kept, rotated and retired, or who may hold each. The keys exist: the secret behind the limits' and signals' keyed hashes, the privacy signing keys, the workspace credential key, the payment provider's webhook secret and the identity provider's secret key."
+    },
+    {
+      "id": "v5.0.0-11.1.2",
+      "level": 2,
+      "status": "not met",
+      "bears_on": [
+        "SEC-002"
+      ],
+      "gap": "No inventory lists each key, algorithm and certificate, where each may be used, and what it protects."
+    },
+    {
+      "id": "v5.0.0-11.2.1",
+      "level": 2,
+      "status": "untested",
+      "bears_on": [
+        "SEC-002"
+      ],
+      "control": "Every hash, HMAC and comparison uses Node's crypto module, and the database's checks PostgreSQL's own functions; Valo implements no cryptography itself.",
+      "code": [
+        "lib/db/src/workspace-scope.ts",
+        "artifacts/api-server/src/modules/commerce/valo-paystack-contract.ts"
+      ],
+      "gap": "No check stops another implementation being added."
+    },
+    {
+      "id": "v5.0.0-11.2.2",
+      "level": 2,
+      "status": "partly met",
+      "bears_on": [
+        "SEC-002"
+      ],
+      "control": "Keys can be replaced: the privacy signing keys rotate, and the payment provider's webhook secret has a rotation path.",
+      "code": [
+        "artifacts/api-server/src/lib/valo-privacy-state.ts",
+        "artifacts/api-server/src/modules/commerce/valo-paystack-contract.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/lib/valo-privacy-keys.integration.test.ts",
+          "test": "isolated privacy signing-key rotation — no real secret rotation"
+        },
+        {
+          "file": "artifacts/api-server/src/modules/commerce/valo-paystack-contract.test.ts",
+          "test": "timestamped raw-body authentication, replay bounds and rotation"
+        }
+      ],
+      "gap": "The algorithms are fixed in code, and no plan says how to change one or protect again what it protected."
+    },
+    {
+      "id": "v5.0.0-11.2.3",
+      "level": 2,
+      "status": "partly met",
+      "bears_on": [
+        "SEC-002"
+      ],
+      "control": "Valo's HMACs use SHA-256 or SHA-512, and the limits' key must be at least 32 characters.",
+      "code": [
+        "artifacts/api-server/src/lib/valo-quota-policy.ts#quotaSubjectHash"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/lib/valo-quota.test.ts",
+          "test": "missing quota configuration fails rather than silently using memory or an unkeyed IP hash"
+        }
+      ],
+      "gap": "No check covers every key's length."
+    },
+    {
+      "id": "v5.0.0-11.3.1",
+      "level": 1,
+      "status": "not applicable",
+      "bears_on": [
+        "SEC-002"
+      ],
+      "reason": "Valo's own code encrypts nothing; storage encryption at rest is the host's and the storage provider's (SEC-002)."
+    },
+    {
+      "id": "v5.0.0-11.3.2",
+      "level": 1,
+      "status": "not applicable",
+      "bears_on": [
+        "SEC-002"
+      ],
+      "reason": "Valo's own code encrypts nothing; storage encryption at rest is the host's and the storage provider's (SEC-002)."
+    },
+    {
+      "id": "v5.0.0-11.3.3",
+      "level": 2,
+      "status": "not applicable",
+      "bears_on": [
+        "SEC-002"
+      ],
+      "reason": "Valo's own code encrypts nothing. What it must keep from change, such as privacy redactions and recovery records, it seals with an HMAC."
+    },
+    {
+      "id": "v5.0.0-11.4.1",
+      "level": 1,
+      "status": "untested",
+      "bears_on": [
+        "SEC-002"
+      ],
+      "control": "Signatures, HMACs and integrity checks use SHA-256 or SHA-512. One query fingerprints a retention inventory with MD5 to notice it changed since a proposal was made, which is no security use.",
+      "code": [
+        "artifacts/api-server/src/lib/valo-export-retention-inventory.ts"
+      ],
+      "gap": "No check stops a weak hash being used for a security purpose."
+    },
+    {
+      "id": "v5.0.0-11.4.2",
+      "level": 2,
+      "status": "identity provider",
+      "bears_on": [
+        "SEC-002"
+      ],
+      "control": "Valo stores no password; its database logins' passwords are PostgreSQL's to store.",
+      "reason": "Customers' and staff's passwords are stored by the provider. Valo has not verified how the provider is set; the launch review must record its settings."
+    },
+    {
+      "id": "v5.0.0-11.4.3",
+      "level": 2,
+      "status": "untested",
+      "bears_on": [
+        "SEC-002"
+      ],
+      "control": "Hashes that hold content or records to what they were, such as content, candidate and policy hashes, are SHA-256.",
+      "code": [
+        "artifacts/api-server/src/modules/publication"
+      ],
+      "gap": "No check covers every hash used for integrity."
+    },
+    {
+      "id": "v5.0.0-11.4.4",
+      "level": 2,
+      "status": "not applicable",
+      "bears_on": [
+        "SEC-002"
+      ],
+      "reason": "Valo derives no key from a password."
+    },
+    {
+      "id": "v5.0.0-11.5.1",
+      "level": 2,
+      "status": "partly met",
+      "bears_on": [
+        "SEC-002"
+      ],
+      "control": "Values meant to be unguessable come from a secure generator: each page's nonce is 144 random bits from crypto.getRandomValues, unique for each response.",
+      "code": [
+        "artifacts/valo/middleware.ts"
+      ],
+      "checks": [
+        {
+          "job": "foundation",
+          "step": "Prove compiled frontend enforces unique nonces and blocks injected scripts"
+        }
+      ],
+      "gap": "Identifiers are random UUIDs, which ASVS does not count as unguessable; Valo relies on authorization, not on them. No check covers every random value."
+    },
+    {
+      "id": "v5.0.0-11.6.1",
+      "level": 2,
+      "status": "not applicable",
+      "bears_on": [
+        "SEC-002"
+      ],
+      "reason": "Valo makes no key pair and no public-key signature; the identity provider's token signatures are checked by its SDK (9.1.1)."
+    },
+    {
+      "id": "v5.0.0-12.1.1",
+      "level": 1,
+      "status": "host",
+      "bears_on": [
+        "SEC-002"
+      ],
+      "reason": "TLS ends at the host's edge. No production host is chosen yet. Check at launch that only TLS 1.2 and 1.3 are offered, 1.3 first."
+    },
+    {
+      "id": "v5.0.0-12.1.2",
+      "level": 2,
+      "status": "host",
+      "bears_on": [
+        "SEC-002"
+      ],
+      "reason": "The cipher suites are the host's edge's. No production host is chosen yet. Check them at launch."
+    },
+    {
+      "id": "v5.0.0-12.1.3",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo authenticates no one by a client certificate."
+    },
+    {
+      "id": "v5.0.0-12.2.1",
+      "level": 1,
+      "status": "host",
+      "bears_on": [
+        "SEC-002"
+      ],
+      "control": "Every answer asks browsers to use HTTPS for a year (3.4.1), and Valo's own calls go only to https addresses: the payment provider's and official sources on the policy's hosts.",
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/routes/valo-reflection.integration.test.ts",
+          "test": "hostile text sent to every operation in the contract comes back only inside JSON with the security headers, fails no route, and stays text in the database and its searches"
+        },
+        {
+          "file": "artifacts/api-server/src/modules/source-register/source-register.integration.test.ts",
+          "test": "a Content editor adds a source only at an https address on a policy host, once, and the daily check fetches it there with every check"
+        }
+      ],
+      "reason": "The edge that ends TLS, and whether it ever falls back, is the host's. No production host is chosen yet."
+    },
+    {
+      "id": "v5.0.0-12.2.2",
+      "level": 1,
+      "status": "host",
+      "bears_on": [
+        "SEC-002"
+      ],
+      "reason": "The site's certificate is the host's to provide. No production host is chosen yet."
+    },
+    {
+      "id": "v5.0.0-12.3.1",
+      "level": 2,
+      "status": "host",
+      "bears_on": [
+        "SEC-002"
+      ],
+      "control": "Calls to outside services use https addresses.",
+      "reason": "Whether the database and the host's own services are reached over TLS is the host's to set. No production host is chosen yet."
+    },
+    {
+      "id": "v5.0.0-12.3.2",
+      "level": 2,
+      "status": "untested",
+      "bears_on": [
+        "SEC-002"
+      ],
+      "control": "Node's HTTPS client checks certificates, and no product code turns that off.",
+      "code": [
+        "artifacts/api-server/src/platform/settings.ts"
+      ],
+      "gap": "No check stops it being turned off."
+    },
+    {
+      "id": "v5.0.0-12.3.3",
+      "level": 2,
+      "status": "host",
+      "bears_on": [
+        "SEC-002"
+      ],
+      "control": "The web server calls the API on the same machine.",
+      "reason": "How services on different machines reach each other is the host's network. No production host is chosen yet."
+    },
+    {
+      "id": "v5.0.0-12.3.4",
+      "level": 2,
+      "status": "host",
+      "bears_on": [
+        "SEC-002"
+      ],
+      "reason": "Certificates between the host's internal services are the host's. No production host is chosen yet."
+    },
+    {
+      "id": "v5.0.0-13.1.1",
+      "level": 2,
+      "status": "partly met",
+      "bears_on": [
+        "SEC-002",
+        "PRV-002"
+      ],
+      "control": "The processor review lists the outside services Valo relies on, and the processing inventory names none it leaves out; official sources may be added only on the policy's hosts.",
+      "code": [
+        "docs/valo/processor-review.md",
+        "lib/valo-core/src/processing-inventory.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/modules/privacy/processing-inventory.test.ts",
+          "test": "every outside service the inventory names is in the processor review"
+        },
+        {
+          "file": "scripts/src/valo/r1-boundaries.test.ts",
+          "test": "the web app claims neither that data stays in Nigeria nor that a provider keeps nothing, and the processor review covers every kind of service"
+        },
+        {
+          "file": "artifacts/api-server/src/modules/source-register/source-register.integration.test.ts",
+          "test": "a Content editor adds a source only at an https address on a policy host, once, and the daily check fetches it there with every check"
+        }
+      ],
+      "gap": "The review does not name the host the identity provider's script sends its telemetry to, which the pages' policy allows (14.2.3)."
+    },
+    {
+      "id": "v5.0.0-13.2.1",
+      "level": 2,
+      "status": "partly met",
+      "bears_on": [
+        "SEC-006"
+      ],
+      "control": "Customer requests and the publisher each connect with a login of their own, and every customer transaction carries a credential signed for that transaction alone.",
+      "code": [
+        "lib/db/src/workspace-scope.ts",
+        "lib/db/scripts/workspace-row-security.mjs"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/platform/workspace-row-security.integration.test.ts",
+          "test": "row-level security limits customer requests to their own workspace"
+        },
+        {
+          "file": "artifacts/api-server/src/modules/publication/publication-guards.integration.test.ts",
+          "test": "a content version is published only by a session that logged in as the publisher"
+        }
+      ],
+      "gap": "The logins use passwords from the secret store, not short-lived tokens or certificates."
+    },
+    {
+      "id": "v5.0.0-13.2.2",
+      "level": 2,
+      "status": "met",
+      "bears_on": [
+        "SEC-006"
+      ],
+      "control": "Customer requests connect as a login that can only become the workspace scope, whose privileges are exactly those listed, and the publisher's login can only publish.",
+      "code": [
+        "lib/db/scripts/workspace-row-security.mjs#WORKSPACE_SCOPE_PRIVILEGES"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/platform/workspace-row-security.integration.test.ts",
+          "test": "row-level security limits customer requests to their own workspace"
+        },
+        {
+          "file": "artifacts/api-server/src/modules/publication/publication-guards.integration.test.ts",
+          "test": "a content version is published only by a session that logged in as the publisher"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-13.2.3",
+      "level": 2,
+      "status": "untested",
+      "bears_on": [
+        "SEC-006"
+      ],
+      "control": "Each login's password comes from the secret store; code sets no default one.",
+      "code": [
+        "artifacts/api-server/src/platform/settings.ts"
+      ],
+      "gap": "Nothing refuses a default or reused password."
+    },
+    {
+      "id": "v5.0.0-13.2.4",
+      "level": 2,
+      "status": "partly met",
+      "bears_on": [
+        "SEC-004"
+      ],
+      "control": "Valo's own outbound calls go only to addresses it fixes or checks against a list: official sources on the policy's hosts, the payment provider's fixed address, and none at all from the renderer.",
+      "code": [
+        "artifacts/api-server/src/platform/guidance-hosts.ts",
+        "artifacts/api-server/src/lib/valo-render.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/modules/source-register/source-register.integration.test.ts",
+          "test": "a Content editor adds a source only at an https address on a policy host, once, and the daily check fetches it there with every check"
+        },
+        {
+          "file": "artifacts/api-server/src/lib/valo-render.test.ts",
+          "test": "document text that tries to fetch a URL, read a local file or run script does none of it in the PDF or DOCX"
+        }
+      ],
+      "gap": "No network allowlist at the host limits the API and the worker."
+    },
+    {
+      "id": "v5.0.0-13.2.5",
+      "level": 2,
+      "status": "host",
+      "bears_on": [
+        "SEC-004"
+      ],
+      "reason": "An allowlist for what the servers may reach is the host's network to set. No production host is chosen yet."
+    },
+    {
+      "id": "v5.0.0-13.3.1",
+      "level": 2,
+      "status": "partly met",
+      "bears_on": [
+        "SEC-002"
+      ],
+      "control": "Secrets come only from the server's secret store, through the settings registry; no secret has an example value, and every merge scans the source for secrets.",
+      "code": [
+        "artifacts/api-server/src/platform/settings.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/platform/settings.test.ts",
+          "test": "every variable product code reads is registered and only settings reads process.env"
+        },
+        {
+          "file": "artifacts/api-server/src/platform/settings.test.ts",
+          "test": "secrets never carry example values"
+        },
+        {
+          "file": "scripts/src/valo/security-reports.test.ts",
+          "test": "secret detector strips matches, secrets and source lines"
+        }
+      ],
+      "gap": "Production's secret store is the host's, and not chosen yet."
+    },
+    {
+      "id": "v5.0.0-13.3.2",
+      "level": 2,
+      "status": "partly met",
+      "bears_on": [
+        "SEC-006"
+      ],
+      "control": "Each process holds only the secrets it needs: only the publisher's code names the publisher's connection, which the API and the worker never get.",
+      "code": [
+        "artifacts/api-server/src/modules/publication"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/modules/publication/publication-guards.integration.test.ts",
+          "test": "a content version is published only by a session that logged in as the publisher"
+        },
+        {
+          "file": "scripts/src/valo/architecture-check.test.ts",
+          "test": "only the publisher names the publisher's database connection"
+        }
+      ],
+      "gap": "Who may read the secret store itself is the host's to set."
+    },
+    {
+      "id": "v5.0.0-13.4.1",
+      "level": 1,
+      "status": "untested",
+      "bears_on": [
+        "SEC-002"
+      ],
+      "control": "The images are built without the repository's .git folder.",
+      "code": [
+        ".dockerignore"
+      ],
+      "gap": "No check reads the built image."
+    },
+    {
+      "id": "v5.0.0-13.4.2",
+      "level": 2,
+      "status": "met",
+      "bears_on": [
+        "SEC-007"
+      ],
+      "control": "Outside development the API starts only as a rehearsal that answers its health check, and development-only features refuse to run anywhere else.",
+      "code": [
+        "artifacts/api-server/src/platform/valo-development-runtime.ts",
+        "artifacts/api-server/src/platform/valo-runtime-activation.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/platform/valo-development-runtime.test.ts",
+          "test": "explicit development only; empty markers are absent, every nonempty marker rejects"
+        },
+        {
+          "file": "artifacts/api-server/src/platform/valo-development-runtime.test.ts",
+          "test": "actual export entries and worker startup reject before database, queue or storage effects"
+        },
+        {
+          "file": "artifacts/api-server/src/platform/valo-runtime-activation.test.ts",
+          "test": "production activation cannot be granted by configuration inspection or a development copy"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-13.4.3",
+      "level": 2,
+      "status": "partly met",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "The API answers any address it does not have with a JSON 404, never a listing.",
+      "code": [
+        "artifacts/api-server/src/platform/http-errors.ts#notFound"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/routes/valo-reflection.integration.test.ts",
+          "test": "hostile text sent to every operation in the contract comes back only inside JSON with the security headers, fails no route, and stays text in the database and its searches"
+        }
+      ],
+      "gap": "No test asks the web server for a folder."
+    },
+    {
+      "id": "v5.0.0-13.4.4",
+      "level": 2,
+      "status": "untested",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "No route answers TRACE: the API treats it as an address it does not have.",
+      "code": [
+        "artifacts/api-server/src/platform/http-errors.ts#notFound"
+      ],
+      "gap": "No test sends TRACE."
+    },
+    {
+      "id": "v5.0.0-13.4.5",
+      "level": 2,
+      "status": "partly met",
+      "bears_on": [
+        "SEC-007"
+      ],
+      "control": "The API serves no copy of its contract, and outside development it answers only its health check.",
+      "code": [
+        "artifacts/api-server/src/platform/valo-development-runtime.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/platform/valo-development-runtime.test.ts",
+          "test": "explicit development only; empty markers are absent, every nonempty marker rejects"
+        }
+      ],
+      "gap": "No test lists what production serves."
+    },
+    {
+      "id": "v5.0.0-14.1.1",
+      "level": 2,
+      "status": "partly met",
+      "bears_on": [
+        "PRV-001"
+      ],
+      "control": "The processing inventory names the personal data in every table and whom it is about, and a test checks it against the schema.",
+      "code": [
+        "lib/valo-core/src/processing-inventory.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/modules/privacy/processing-inventory.test.ts",
+          "test": "every table in the database schema is in the inventory or listed as holding no personal data, once"
+        }
+      ],
+      "gap": "It does not sort the data into protection levels."
+    },
+    {
+      "id": "v5.0.0-14.1.2",
+      "level": 2,
+      "status": "not met",
+      "bears_on": [
+        "PRV-001"
+      ],
+      "gap": "With no protection levels, there are no requirements for each: encryption, integrity, retention, logging and access."
+    },
+    {
+      "id": "v5.0.0-14.2.1",
+      "level": 1,
+      "status": "partly met",
+      "bears_on": [
+        "SEC-002"
+      ],
+      "control": "No operation in the API contract takes a token, key, secret or password in its address, and Valo's own requests carry the session in the provider's cookie or the Authorization header.",
+      "code": [
+        "lib/api-spec/src"
+      ],
+      "tests": [
+        {
+          "file": "scripts/src/valo/security-baseline.test.ts",
+          "test": "no operation in the API contract takes a token, key, secret or password in its address"
+        }
+      ],
+      "gap": "The identity provider's own redirects can carry its tokens in an address; whether they do on the production domain is for the launch review."
+    },
+    {
+      "id": "v5.0.0-14.2.2",
+      "level": 2,
+      "status": "met",
+      "bears_on": [
+        "SEC-002"
+      ],
+      "control": "Private answers are marked private, no-store, so no shared cache keeps them.",
+      "code": [
+        "artifacts/api-server/src/middlewares/valo-quota.ts",
+        "artifacts/api-server/src/routes/valo-exports.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/routes/valo-reflection.integration.test.ts",
+          "test": "hostile text sent to every operation in the contract comes back only inside JSON with the security headers, fails no route, and stays text in the database and its searches"
+        },
+        {
+          "file": "artifacts/api-server/src/routes/valo-cross-site.integration.test.ts",
+          "test": "every change in the contract refuses a request from another site, counts it, and saves nothing"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-14.2.3",
+      "level": 2,
+      "status": "partly met",
+      "bears_on": [
+        "PRV-002"
+      ],
+      "control": "The pages load no analytics or advertising: their policy allows only Valo's own origin and the identity provider's hosts, with the bot check its sign-up uses, and the processor review lists every service that receives data.",
+      "code": [
+        "artifacts/valo/src/lib/content-security-policy.ts#contentSecurityPolicy",
+        "docs/valo/processor-review.md"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/valo/src/lib/content-security-policy.test.ts",
+          "test": "production denies injected scripts, frames, objects and unconfigured origins while allowing required Clerk resources"
+        },
+        {
+          "file": "artifacts/api-server/src/modules/privacy/processing-inventory.test.ts",
+          "test": "every outside service the inventory names is in the processor review"
+        }
+      ],
+      "gap": "The policy also lets the identity provider's script send its telemetry to clerk-telemetry.com, which the processor review does not name."
+    },
+    {
+      "id": "v5.0.0-14.2.4",
+      "level": 2,
+      "status": "partly met",
+      "bears_on": [
+        "PRV-001",
+        "PRV-003"
+      ],
+      "control": "The controls the inventory names are in place: retention and erasure, and logs that hold no private text.",
+      "code": [
+        "artifacts/api-server/src/modules/privacy"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/modules/privacy/valo-privacy-erasure.integration.test.ts",
+          "test": "resumable physical development erasure with retained exclusions and replay"
+        },
+        {
+          "file": "artifacts/api-server/src/platform/http-logging.test.ts",
+          "test": "real HTTP request, parser and application error logs omit private markers but retain correlation/status"
+        }
+      ],
+      "gap": "With no protection levels (14.1.2), there is nothing to check each control against."
+    },
+    {
+      "id": "v5.0.0-14.3.1",
+      "level": 1,
+      "status": "partly met",
+      "bears_on": [
+        "PRV-001"
+      ],
+      "control": "When a session ends or another account signs in, the page drops what it held: the checker's hand-off and the screens of the account before.",
+      "code": [
+        "artifacts/valo/src/components/account-state-boundary.tsx"
+      ],
+      "checks": [
+        {
+          "job": "foundation",
+          "step": "Prove controlled profile and checker state does not cross accounts"
+        }
+      ],
+      "gap": "No Clear-Site-Data header is sent when a session ends."
+    },
+    {
+      "id": "v5.0.0-14.3.2",
+      "level": 2,
+      "status": "met",
+      "bears_on": [
+        "SEC-002"
+      ],
+      "control": "Private answers and every page carry Cache-Control: no-store.",
+      "code": [
+        "artifacts/api-server/src/middlewares/valo-quota.ts",
+        "artifacts/valo/middleware.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/routes/valo-reflection.integration.test.ts",
+          "test": "hostile text sent to every operation in the contract comes back only inside JSON with the security headers, fails no route, and stays text in the database and its searches"
+        }
+      ],
+      "checks": [
+        {
+          "job": "foundation",
+          "step": "Prove compiled frontend enforces unique nonces and blocks injected scripts"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-14.3.3",
+      "level": 2,
+      "status": "partly met",
+      "bears_on": [
+        "PRV-001"
+      ],
+      "control": "Browser storage holds the theme, the ids of documents a person hid from their list and, only when a visitor signs up from the checker, that visitor's answers, in that tab, for 30 minutes, cleared when a session ends.",
+      "code": [
+        "artifacts/valo/src/lib/checker-handoff.ts",
+        "artifacts/valo/src/lib/document-list-helpers.ts"
+      ],
+      "gap": "The checker's answers describe a business, and no test checks what browser storage holds."
+    },
+    {
+      "id": "v5.0.0-15.1.1",
+      "level": 1,
+      "status": "partly met",
+      "bears_on": [
+        "SEC-007"
+      ],
+      "control": "Every merge fails on a high or critical advisory, unless it is reviewed for the one part of the dependency tree it reaches.",
+      "code": [
+        "scripts/src/valo/security-reports.ts"
+      ],
+      "tests": [
+        {
+          "file": "scripts/src/valo/security-reports.test.ts",
+          "test": "dependency detector fails on a harmless high canary and strips raw descriptions"
+        },
+        {
+          "file": "scripts/src/valo/security-reports.test.ts",
+          "test": "a reviewed advisory passes only within its reviewed subtree"
+        }
+      ],
+      "gap": "No document sets time frames for fixing lower advisories or for routine updates."
+    },
+    {
+      "id": "v5.0.0-15.1.2",
+      "level": 2,
+      "status": "partly met",
+      "bears_on": [
+        "SEC-007"
+      ],
+      "control": "The lockfile pins every package to its version and checksum, and CI installs only what it names.",
+      "code": [
+        "pnpm-lock.yaml"
+      ],
+      "tests": [
+        {
+          "file": "scripts/src/valo/security-reports.test.ts",
+          "test": "dependency detector fails on a harmless high canary and strips raw descriptions"
+        }
+      ],
+      "gap": "No software bill of materials is produced."
+    },
+    {
+      "id": "v5.0.0-15.1.3",
+      "level": 2,
+      "status": "met",
+      "bears_on": [
+        "SEC-005",
+        "NFR-004"
+      ],
+      "control": "What takes time is bounded and measured: exports run on a queue, five at once; the renderer shares one browser; the drafting assistant runs within a finite budget; and request bodies have size and shape budgets.",
+      "code": [
+        "artifacts/api-server/src/modules/exports",
+        "artifacts/api-server/src/lib/valo-render.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/modules/exports/valo-export-timing.integration.test.ts",
+          "test": "five parallel DOCX and PDF exports finish within NFR-004's p95, queue time included"
+        },
+        {
+          "file": "artifacts/api-server/src/lib/valo-render.test.ts",
+          "test": "PDFs share one browser, render in isolated contexts and never exceed five at once"
+        },
+        {
+          "file": "artifacts/api-server/src/modules/ai/inference-batch-dispatch.integration.test.ts",
+          "test": "durable finite batch dispatch — isolated PostgreSQL and controlled transport, zero paid calls"
+        },
+        {
+          "file": "artifacts/api-server/src/platform/request-complexity.test.ts",
+          "test": "deep, broad and high-node-count JSON fails within fixed budgets"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-15.2.1",
+      "level": 1,
+      "status": "partly met",
+      "bears_on": [
+        "SEC-007"
+      ],
+      "control": "No merge passes with a high or critical advisory open, unless it is reviewed for its part of the tree.",
+      "code": [
+        "scripts/src/valo/security-reports.ts"
+      ],
+      "tests": [
+        {
+          "file": "scripts/src/valo/security-reports.test.ts",
+          "test": "dependency detector fails on a harmless high canary and strips raw descriptions"
+        },
+        {
+          "file": "scripts/src/valo/security-reports.test.ts",
+          "test": "a reviewed advisory passes only within its reviewed subtree"
+        }
+      ],
+      "gap": "With no time frames for lower advisories (15.1.1), there is nothing to hold them to."
+    },
+    {
+      "id": "v5.0.0-15.2.2",
+      "level": 2,
+      "status": "met",
+      "bears_on": [
+        "SEC-005"
+      ],
+      "control": "Heavy work cannot starve the rest: the renderer never runs more than five pages at once, a database wait ends at its timeout, limits stop a caller's excess, and an oversized body is refused while the API keeps serving.",
+      "code": [
+        "artifacts/api-server/src/lib/valo-render.ts",
+        "lib/db/src/index.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/lib/valo-render.test.ts",
+          "test": "PDFs share one browser, render in isolated contexts and never exceed five at once"
+        },
+        {
+          "file": "artifacts/api-server/src/lib/database-pool.integration.test.ts",
+          "test": "the shared pool fails a connection wait after its timeout instead of hanging"
+        },
+        {
+          "file": "artifacts/api-server/src/lib/valo-write-security.integration.test.ts",
+          "test": "durable customer write ceilings preserve saved data"
+        }
+      ],
+      "checks": [
+        {
+          "job": "postgres",
+          "step": "Prove the real API refuses compressed and oversized JSON and keeps serving"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-15.2.3",
+      "level": 2,
+      "status": "met",
+      "bears_on": [
+        "SEC-007"
+      ],
+      "control": "Outside development the API answers only its health check, and development-only code refuses to run.",
+      "code": [
+        "artifacts/api-server/src/platform/valo-development-runtime.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/platform/valo-development-runtime.test.ts",
+          "test": "explicit development only; empty markers are absent, every nonempty marker rejects"
+        },
+        {
+          "file": "artifacts/api-server/src/platform/valo-development-runtime.test.ts",
+          "test": "actual export entries and worker startup reject before database, queue or storage effects"
+        },
+        {
+          "file": "artifacts/api-server/src/platform/valo-runtime-activation.test.ts",
+          "test": "production activation cannot be granted by configuration inspection or a development copy"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-15.3.1",
+      "level": 1,
+      "status": "untested",
+      "bears_on": [
+        "SEC-001"
+      ],
+      "control": "Routes pass their answers through the contract's generated schemas, which keep only the fields the contract names.",
+      "code": [
+        "lib/api-zod",
+        "artifacts/api-server/src/routes"
+      ],
+      "gap": "No test checks that every route does."
+    },
+    {
+      "id": "v5.0.0-15.3.2",
+      "level": 2,
+      "status": "partly met",
+      "bears_on": [
+        "SEC-004"
+      ],
+      "control": "Calls to the payment provider refuse a redirect, and the external monitor and the storage probe do not follow one.",
+      "code": [
+        "artifacts/api-server/src/modules/commerce/valo-paystack-contract.ts",
+        "artifacts/api-server/src/platform/valo-external-monitor.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/modules/commerce/valo-paystack-contract.test.ts",
+          "test": "no merchant call is made with a live key, in production, in a deployment or in a recovery run"
+        }
+      ],
+      "gap": "Calls to private storage and the official sources' downloads follow redirects as fetch does by default."
+    },
+    {
+      "id": "v5.0.0-15.3.3",
+      "level": 2,
+      "status": "met",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "Bodies are parsed by the contract's schemas, which refuse or drop fields they do not name, and what the server owns, such as the workspace, the caller and roles, is never taken from a body.",
+      "code": [
+        "lib/api-zod",
+        "artifacts/api-server/src/modules/workspaces"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/lib/valo-validation.test.ts",
+          "test": "arbitrary clauses, HTML nodes, network embeds and duplicate IDs are not accepted"
+        },
+        {
+          "file": "artifacts/api-server/src/routes/valo-tenant-substitution.integration.test.ts",
+          "test": "every identifier a private operation takes outside its path has a substitution case or a recorded reason"
+        },
+        {
+          "file": "artifacts/api-server/src/routes/valo-reflection.integration.test.ts",
+          "test": "hostile text sent to every operation in the contract comes back only inside JSON with the security headers, fails no route, and stays text in the database and its searches"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-15.3.4",
+      "level": 2,
+      "status": "met",
+      "bears_on": [
+        "SEC-005"
+      ],
+      "control": "The caller's address is taken only from proxies the settings trust, and a page render's visitor only from this machine's own web server, so limits and records count the real caller.",
+      "code": [
+        "artifacts/api-server/src/lib/valo-proxy-boundary.ts#clientAddress",
+        "artifacts/api-server/src/middlewares/valo-quota.ts#pageRenderVisitor"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/lib/valo-proxy-boundary.test.ts",
+          "test": "real HTTP walks only explicitly trusted proxies and stops before forged client prefixes"
+        },
+        {
+          "file": "artifacts/api-server/src/middlewares/valo-quota.test.ts",
+          "test": "a page render from this machine counts for the visitor's forwarded address, under one shared ceiling"
+        },
+        {
+          "file": "artifacts/api-server/src/middlewares/valo-quota.test.ts",
+          "test": "a signed-in read counts for the account, whatever address it names"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-15.3.5",
+      "level": 2,
+      "status": "partly met",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "TypeScript's strict checks and the contract's schemas fix each value's type before it is used.",
+      "code": [
+        "lib/api-zod"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/lib/valo-validation.test.ts",
+          "test": "arbitrary clauses, HTML nodes, network embeds and duplicate IDs are not accepted"
+        }
+      ],
+      "gap": "The linter does not require strict equality."
+    },
+    {
+      "id": "v5.0.0-15.3.6",
+      "level": 2,
+      "status": "met",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "No body or query can change what every object inherits: a request naming __proto__ or constructor leaves Object.prototype as it was.",
+      "code": [
+        "artifacts/api-server/src/platform/request-complexity.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/routes/valo-reflection.integration.test.ts",
+          "test": "hostile text sent to every operation in the contract comes back only inside JSON with the security headers, fails no route, and stays text in the database and its searches"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-15.3.7",
+      "level": 2,
+      "status": "met",
+      "bears_on": [
+        "SEC-003"
+      ],
+      "control": "Each route reads a value from the part of the request its schema names, and every operation, sent each query value twice, answers without failing.",
+      "code": [
+        "artifacts/api-server/src/routes"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/routes/valo-reflection.integration.test.ts",
+          "test": "hostile text sent to every operation in the contract comes back only inside JSON with the security headers, fails no route, and stays text in the database and its searches"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-16.1.1",
+      "level": 2,
+      "status": "not met",
+      "bears_on": [
+        "SEC-008"
+      ],
+      "gap": "No inventory lists what each part logs, where it goes, who reads it and how long it is kept."
+    },
+    {
+      "id": "v5.0.0-16.2.1",
+      "level": 2,
+      "status": "partly met",
+      "bears_on": [
+        "SEC-008"
+      ],
+      "control": "Each log line has its time, the request's id, its method and its status, and each history row names who did what, and when.",
+      "code": [
+        "artifacts/api-server/src/platform/http-logging.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/platform/http-logging.test.ts",
+          "test": "real HTTP request, parser and application error logs omit private markers but retain correlation/status"
+        },
+        {
+          "file": "artifacts/api-server/src/modules/staff/valo-audit-history.integration.test.ts",
+          "test": "audit history: only a permanent system operator reads it, each read is recorded first, and reading changes no other history"
+        }
+      ],
+      "gap": "A request's log line does not name its route."
+    },
+    {
+      "id": "v5.0.0-16.2.2",
+      "level": 2,
+      "status": "untested",
+      "bears_on": [
+        "SEC-008"
+      ],
+      "control": "pino writes each line's time in milliseconds since the epoch, which is UTC, and the database keeps times with their zone.",
+      "code": [
+        "artifacts/api-server/src/platform/logger.ts"
+      ],
+      "gap": "No test checks it, and the machines' clocks are the host's."
+    },
+    {
+      "id": "v5.0.0-16.2.3",
+      "level": 2,
+      "status": "partly met",
+      "bears_on": [
+        "SEC-008"
+      ],
+      "control": "The API and the worker log only to their output, and alerts are written to a file on the worker.",
+      "code": [
+        "artifacts/api-server/src/platform/logger.ts",
+        "artifacts/api-server/src/modules/operations"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/platform/http-logging.test.ts",
+          "test": "real HTTP request, parser and application error logs omit private markers but retain correlation/status"
+        }
+      ],
+      "gap": "No inventory says which destinations are allowed (16.1.1)."
+    },
+    {
+      "id": "v5.0.0-16.2.4",
+      "level": 2,
+      "status": "met",
+      "bears_on": [
+        "SEC-008"
+      ],
+      "control": "Logs are JSON lines from pino, which the tests read back.",
+      "code": [
+        "artifacts/api-server/src/platform/logger.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/platform/http-logging.test.ts",
+          "test": "real HTTP request, parser and application error logs omit private markers but retain correlation/status"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-16.2.5",
+      "level": 2,
+      "status": "met",
+      "bears_on": [
+        "SEC-008",
+        "PRV-001"
+      ],
+      "control": "Logs hold no private text: an error is logged by its type and a guard's refusal by its name, and the limits and security signals keep an address or account only as a keyed hash.",
+      "code": [
+        "artifacts/api-server/src/platform/safe-error.ts",
+        "artifacts/api-server/src/lib/valo-security-signals.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/platform/http-logging.test.ts",
+          "test": "real HTTP request, parser and application error logs omit private markers but retain correlation/status"
+        },
+        {
+          "file": "artifacts/api-server/src/platform/http-logging.test.ts",
+          "test": "a database guard's refusal is answered as a failure, counted as a security signal and logged by the guard's name alone"
+        },
+        {
+          "file": "artifacts/api-server/src/lib/valo-quota.test.ts",
+          "test": "quota subjects are pseudonymised, domain-separated and keyed"
+        },
+        {
+          "file": "artifacts/api-server/src/lib/valo-security-signals.integration.test.ts",
+          "test": "refusals and signature failures are counted by hashed address, outside any workspace scope, for the security alerts"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-16.3.1",
+      "level": 2,
+      "status": "identity provider",
+      "bears_on": [
+        "SEC-008"
+      ],
+      "control": "Valo records each request it refuses (16.3.2).",
+      "reason": "Sign-ins happen at the identity provider, which keeps their record. Valo has not verified what it keeps; the launch review must record it."
+    },
+    {
+      "id": "v5.0.0-16.3.2",
+      "level": 2,
+      "status": "met",
+      "bears_on": [
+        "SEC-008"
+      ],
+      "control": "Each 401 and 403 is counted, by keyed address, for the security alerts, and each staff read of a customer's data is recorded.",
+      "code": [
+        "artifacts/api-server/src/lib/valo-security-signals.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/lib/valo-security-signals.integration.test.ts",
+          "test": "refusals and signature failures are counted by hashed address, outside any workspace scope, for the security alerts"
+        },
+        {
+          "file": "artifacts/api-server/src/routes/valo-cross-site.integration.test.ts",
+          "test": "every change in the contract refuses a request from another site, counts it, and saves nothing"
+        },
+        {
+          "file": "artifacts/api-server/src/modules/staff/valo-audit-history.integration.test.ts",
+          "test": "audit history: only a permanent system operator reads it, each read is recorded first, and reading changes no other history"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-16.3.3",
+      "level": 2,
+      "status": "partly met",
+      "bears_on": [
+        "SEC-008"
+      ],
+      "control": "Changes from other sites, refusals, signature failures and refusals by a limit are recorded for the security alerts.",
+      "code": [
+        "artifacts/api-server/src/lib/valo-security-signals.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/routes/valo-cross-site.integration.test.ts",
+          "test": "every change in the contract refuses a request from another site, counts it, and saves nothing"
+        },
+        {
+          "file": "artifacts/api-server/src/lib/valo-security-signals.integration.test.ts",
+          "test": "refusals and signature failures are counted by hashed address, outside any workspace scope, for the security alerts"
+        },
+        {
+          "file": "artifacts/api-server/src/modules/operations/valo-operations.test.ts",
+          "test": "security signals raise their own alerts, owned by the security and payment runbooks"
+        }
+      ],
+      "gap": "A refused input, answered 422, is not recorded as a security event."
+    },
+    {
+      "id": "v5.0.0-16.3.4",
+      "level": 2,
+      "status": "met",
+      "bears_on": [
+        "SEC-008"
+      ],
+      "control": "Unexpected errors are logged by type with the request's id, and a database guard's refusal is logged and counted.",
+      "code": [
+        "artifacts/api-server/src/platform/http-logging.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/platform/http-logging.test.ts",
+          "test": "real HTTP request, parser and application error logs omit private markers but retain correlation/status"
+        },
+        {
+          "file": "artifacts/api-server/src/platform/http-logging.test.ts",
+          "test": "a database guard's refusal is answered as a failure, counted as a security signal and logged by the guard's name alone"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-16.4.1",
+      "level": 2,
+      "status": "untested",
+      "bears_on": [
+        "SEC-008"
+      ],
+      "control": "pino writes each line as JSON, which escapes line breaks and control characters in what it logs.",
+      "code": [
+        "artifacts/api-server/src/platform/logger.ts"
+      ],
+      "gap": "No test logs text with a line break in it."
+    },
+    {
+      "id": "v5.0.0-16.4.2",
+      "level": 2,
+      "status": "partly met",
+      "bears_on": [
+        "SEC-008",
+        "ADM-009"
+      ],
+      "control": "The histories of staff access, roles, refunds, privacy cases and publication are append-only in the database, and an hourly digest finds any change to them.",
+      "code": [
+        "artifacts/api-server/src/modules/operations"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/modules/staff/valo-audit-history.integration.test.ts",
+          "test": "audit history: only a permanent system operator reads it, each read is recorded first, and reading changes no other history"
+        },
+        {
+          "file": "artifacts/api-server/src/modules/operations/valo-history-digests.integration.test.ts",
+          "test": "the hourly count keeps what it found once an hour, the alert reads the latest count, and a kept count never changes"
+        }
+      ],
+      "gap": "The process logs are the host's to protect."
+    },
+    {
+      "id": "v5.0.0-16.4.3",
+      "level": 2,
+      "status": "not met",
+      "bears_on": [
+        "SEC-008"
+      ],
+      "gap": "Logs stay on the machine that wrote them; no separate system receives them yet."
+    },
+    {
+      "id": "v5.0.0-16.5.1",
+      "level": 2,
+      "status": "met",
+      "bears_on": [
+        "SEC-008"
+      ],
+      "control": "An unexpected failure is answered with a general message and the request's id, never its detail.",
+      "code": [
+        "artifacts/api-server/src/platform/http-errors.ts#onError"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/platform/http-logging.test.ts",
+          "test": "a database guard's refusal is answered as a failure, counted as a security signal and logged by the guard's name alone"
+        },
+        {
+          "file": "artifacts/api-server/src/routes/valo-reflection.integration.test.ts",
+          "test": "hostile text sent to every operation in the contract comes back only inside JSON with the security headers, fails no route, and stays text in the database and its searches"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-16.5.2",
+      "level": 2,
+      "status": "met",
+      "bears_on": [
+        "SEC-008"
+      ],
+      "control": "When an outside service fails, Valo goes on safely: the identity provider's proxy answers an empty 502, AI and payment outages are reported apart from core availability, and a database wait ends at its timeout.",
+      "code": [
+        "artifacts/api-server/src/middlewares/clerkProxyMiddleware.ts",
+        "lib/db/src/index.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/middlewares/clerkProxyMiddleware.test.ts",
+          "test": "an unreachable Frontend API answers an empty 502 with a length and no detail"
+        },
+        {
+          "file": "artifacts/api-server/src/lib/valo-availability.test.ts",
+          "test": "AI and payment provider outages are reported separately and never count against core availability"
+        },
+        {
+          "file": "artifacts/api-server/src/lib/database-pool.integration.test.ts",
+          "test": "the shared pool fails a connection wait after its timeout instead of hanging"
+        },
+        {
+          "file": "artifacts/api-server/src/modules/ai-lanes/inference-customer-controls.integration.test.ts",
+          "test": "original customer quota, pause, tenant and outage boundaries use actual PostgreSQL/services with no provider"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-16.5.3",
+      "level": 2,
+      "status": "met",
+      "bears_on": [
+        "SEC-008"
+      ],
+      "control": "A failed check stops the operation: a payment that does not match is refused, a guard's refusal is answered as a failure, and a refused change saves nothing.",
+      "code": [
+        "artifacts/api-server/src/modules/commerce/valo-paystack-contract.ts"
+      ],
+      "tests": [
+        {
+          "file": "artifacts/api-server/src/modules/commerce/valo-paystack-contract.test.ts",
+          "test": "server verification rejects live domain, unsafe amounts and mismatched immutable order facts"
+        },
+        {
+          "file": "artifacts/api-server/src/platform/http-logging.test.ts",
+          "test": "a database guard's refusal is answered as a failure, counted as a security signal and logged by the guard's name alone"
+        },
+        {
+          "file": "artifacts/api-server/src/routes/valo-cross-site.integration.test.ts",
+          "test": "every change in the contract refuses a request from another site, counts it, and saves nothing"
+        }
+      ]
+    },
+    {
+      "id": "v5.0.0-17.1.1",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo has no WebRTC: no TURN, media or signalling server."
+    },
+    {
+      "id": "v5.0.0-17.2.1",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo has no WebRTC: no TURN, media or signalling server."
+    },
+    {
+      "id": "v5.0.0-17.2.2",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo has no WebRTC: no TURN, media or signalling server."
+    },
+    {
+      "id": "v5.0.0-17.2.3",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo has no WebRTC: no TURN, media or signalling server."
+    },
+    {
+      "id": "v5.0.0-17.2.4",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo has no WebRTC: no TURN, media or signalling server."
+    },
+    {
+      "id": "v5.0.0-17.3.1",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo has no WebRTC: no TURN, media or signalling server."
+    },
+    {
+      "id": "v5.0.0-17.3.2",
+      "level": 2,
+      "status": "not applicable",
+      "reason": "Valo has no WebRTC: no TURN, media or signalling server."
+    }
+  ]
+}

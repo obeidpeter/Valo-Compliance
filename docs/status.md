@@ -30,7 +30,7 @@ No recorded evidence at all: none.
 
 ## Tests cited as evidence
 
-`docs/registers/ci-evidence.json` holds 732 citations of 501 tests for 126 requirements (decision 0010).
+`docs/registers/ci-evidence.json` holds 756 citations of 525 tests for 126 requirements (decision 0010).
 A CI job fails when a test cited for it does not pass, and each run's `readiness-report` artifact lists every citation's result.
 A citation is partial evidence: it never accepts a requirement.
 
@@ -94,7 +94,7 @@ A citation is partial evidence: it never accepts a requirement.
 | EDT-008 | 4 | postgres |
 | EDT-009 | 5 | foundation |
 | EDT-010 | 6 | foundation, postgres |
-| IAM-001 | 3 | foundation |
+| IAM-001 | 5 | foundation |
 | IAM-002 | 1 | foundation |
 | IAM-003 | 3 | postgres |
 | NFR-001 | 3 | foundation |
@@ -140,13 +140,13 @@ A citation is partial evidence: it never accepts a requirement.
 | RUL-007 | 3 | foundation, postgres |
 | RUL-008 | 19 | foundation, postgres, web-performance |
 | RUL-009 | 4 | foundation, postgres |
-| SEC-001 | 3 | postgres |
-| SEC-002 | 3 | foundation, postgres |
-| SEC-003 | 7 | foundation, postgres, web-performance |
+| SEC-001 | 4 | foundation, postgres |
+| SEC-002 | 7 | foundation, postgres |
+| SEC-003 | 12 | foundation, postgres, web-performance |
 | SEC-004 | 3 | foundation |
-| SEC-005 | 3 | foundation, postgres |
-| SEC-006 | 3 | postgres |
-| SEC-007 | 3 | foundation |
+| SEC-005 | 10 | foundation, postgres |
+| SEC-006 | 4 | foundation, postgres |
+| SEC-007 | 7 | foundation |
 | SEC-008 | 4 | foundation, postgres |
 | SRV-001 | 1 | foundation |
 | SRV-002 | 6 | foundation, postgres, web-performance |
