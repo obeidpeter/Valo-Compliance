@@ -14,7 +14,8 @@ test("template downloads read storage outside the transaction that holds the sou
   let inTransaction = false,
     permitted = true,
     lockedStatus = "published",
-    checkedStatus = "published";
+    checkedStatus = "published",
+    laterReleased = false;
   const events: string[] = [];
   const record = (name: string) => events.push(`${name}:${inTransaction ? "inside" : "outside"}`);
   const bundle = {
@@ -33,22 +34,36 @@ test("template downloads read storage outside the transaction that holds the sou
     attestations: { exports: { pdf: { id: "pdf-ref", hash: "pdf-hash" }, docx: { id: "d", hash: "h" } } },
   });
   const tables = {
-    valoContentVersions: { id: "content.id", name: "content" },
+    valoContentVersions: {
+      id: "content.id",
+      templateId: "content.template",
+      version: "content.version",
+      status: "content.status",
+      name: "content",
+    },
     valoPublicationPolicies: { id: "policy.id", hash: "policy.hash", name: "policy" },
     valoDocuments: { name: "documents" },
     valoPrices: { name: "prices" },
     valoEntitlements: { name: "entitlements" },
   };
-  const rowsFor = (table: unknown) =>
+  // Asked for versions by their number alone, the database answers with the template's later released
+  // versions: none, unless this test releases one.
+  const laterQuery = (projection?: Record<string, unknown>) =>
+    projection !== undefined && Object.keys(projection).join() === "version";
+  const rowsFor = (table: unknown, projection?: Record<string, unknown>) =>
     table === tables.valoContentVersions
-      ? [version(inTransaction ? lockedStatus : checkedStatus)]
+      ? laterQuery(projection)
+        ? laterReleased
+          ? [{ version: 4 }]
+          : []
+        : [version(inTransaction ? lockedStatus : checkedStatus)]
       : table === tables.valoPublicationPolicies
         ? [{ id: "policy-1", hash: "policy-hash" }]
         : [];
-  const select = () => ({
+  const select = (projection?: Record<string, unknown>) => ({
     from: (table: unknown) => ({
       where: () => {
-        const rows = Promise.resolve(rowsFor(table));
+        const rows = Promise.resolve(rowsFor(table, projection));
         return Object.assign(rows, { for: () => rows, limit: () => rows });
       },
     }),
@@ -177,6 +192,21 @@ test("template downloads read storage outside the transaction that holds the sou
       assert.deepEqual(events, ["source lock:inside"]);
     },
   );
+
+  // docs/architecture/reviewed-route.md, part 1: a replaced version's file closes to new downloads.
+  await t.test("a later version released before the lock refuses the download as replaced", async () => {
+    events.length = 0;
+    laterReleased = true;
+    try {
+      await assert.rejects(readReleasedMaster("version-1", "pdf", actor), {
+        status: 404,
+        message: /A newer version of this template was released/,
+      });
+    } finally {
+      laterReleased = false;
+    }
+    assert.deepEqual(events, ["policy files:outside", "rights evidence:outside", "source lock:inside"]);
+  });
 
   await t.test("a hold committed before the lock refuses the download", async () => {
     events.length = 0;

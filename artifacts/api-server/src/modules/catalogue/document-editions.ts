@@ -1,7 +1,7 @@
-import { and, eq, isNotNull, sql } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import { publicationSchema } from "@workspace/valo-core";
 import type { WorkspaceActor } from "../workspaces";
-import { liveReleasedVersions } from "./valo-released-content";
+import { latestReleased, releasedStates } from "./replaced-versions";
 import { documentInput } from "../../lib/valo-validation";
 
 /** A reviewed version's title, as its page names it: the title of the document its bundle holds. */
@@ -104,9 +104,10 @@ export async function listDocumentEditions(actor: WorkspaceActor) {
       ? [{ documentId: row.document, title: row.title, version: row.version, ...standing }]
       : [];
   });
-  // The reviewed route's versions, which the workspace's scope reads, against each template's live
-  // version now. A reviewed version records no date of withdrawal, and its reason is written for
-  // staff, not customers, so neither is shown.
+  // The reviewed route's versions, which the workspace's scope reads, against each template's latest
+  // released version, withdrawn or not: a version replaced by one since withdrawn reads withdrawn
+  // (docs/architecture/reviewed-route.md, part 1). A reviewed version records no date of withdrawal,
+  // and its reason is written for staff, not customers, so neither is shown.
   const reviewed = await db
     .select({
       document: valoDocuments.id,
@@ -119,9 +120,25 @@ export async function listDocumentEditions(actor: WorkspaceActor) {
     .innerJoin(valoContentVersions, eq(valoContentVersions.id, valoDocuments.templateVersionId))
     .where(and(eq(valoDocuments.workspaceId, actor.workspaceId), isNotNull(valoDocuments.templateVersionId)));
   if (reviewed.length) {
-    const live = new Map((await liveReleasedVersions()).map((row) => [row.templateId, row]));
+    const latest = latestReleased(
+      await db
+        .select({
+          templateId: valoContentVersions.templateId,
+          version: valoContentVersions.version,
+          status: valoContentVersions.status,
+          slug: valoContentVersions.slug,
+          publishedAt: valoContentVersions.publishedAt,
+        })
+        .from(valoContentVersions)
+        .where(
+          and(
+            inArray(valoContentVersions.templateId, [...new Set(reviewed.map((row) => row.templateId))]),
+            inArray(valoContentVersions.status, [...releasedStates]),
+          ),
+        ),
+    );
     for (const row of reviewed) {
-      const now = live.get(row.templateId);
+      const now = latest.get(row.templateId);
       const standing = editionStanding(
         {
           version: row.version,
@@ -132,7 +149,7 @@ export async function listDocumentEditions(actor: WorkspaceActor) {
         now
           ? {
               version: now.version,
-              withdrawn: false,
+              withdrawn: now.status === "withdrawn",
               releasedAt: now.publishedAt,
               withdrawnAt: null,
               reason: null,

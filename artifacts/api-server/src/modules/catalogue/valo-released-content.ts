@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, gt, inArray, sql } from "drizzle-orm";
 import type { db, valoContentVersions } from "@workspace/db";
 import {
   baselineTemplates,
@@ -33,6 +33,7 @@ import { setting } from "../../platform/settings";
 import { lockSourceState, sourceTargetAllowed } from "../sources";
 import { freeLibraryEdition, isManualTemplate, releasedManualEntries } from "../manual-library";
 import { libraryCopy } from "./library-copy";
+import { isReplaced, latestReleased, releasedStates, REPLACED_VERSION } from "./replaced-versions";
 import { manualCatalogue, manualResource, manualResourceKind, manualTemplate } from "./manual-presentation";
 import { releasedDocumentText, sampleFieldsPreview, templatePreview } from "./template-preview";
 import {
@@ -78,15 +79,27 @@ export function guidePolicyStands(
 export async function liveReleasedVersions() {
   const { db, valoContentVersions, valoPublicationPolicies } = await import("@workspace/db");
   if (setting("NODE_ENV") !== "development" || setting("REPLIT_DEPLOYMENT")) return [];
-  const [currentPolicy, rows] = await Promise.all([
+  const [currentPolicy, rows, released] = await Promise.all([
     operationalPolicy(),
     db
       .select({ content: valoContentVersions, policy: valoPublicationPolicies })
       .from(valoContentVersions)
       .innerJoin(valoPublicationPolicies, eq(valoContentVersions.policyId, valoPublicationPolicies.id))
       .where(eq(valoContentVersions.status, "published")),
+    // Every version ever released, by its number alone: a replaced version is never live again, even
+    // once the version that replaced it is withdrawn (docs/architecture/reviewed-route.md, part 1).
+    db
+      .select({
+        templateId: valoContentVersions.templateId,
+        version: valoContentVersions.version,
+        status: valoContentVersions.status,
+      })
+      .from(valoContentVersions)
+      .where(inArray(valoContentVersions.status, [...releasedStates])),
   ]);
+  const latest = latestReleased(released);
   const visible = rows.flatMap((r) => {
+    if (isReplaced(r.content, latest)) return [];
     const bundle = parseVisibleBundle(r.content, r.policy.hash);
     return bundle ? [{ row: r, bundle }] : [];
   });
@@ -417,7 +430,7 @@ export async function checkReleaseEvidence(id: string): Promise<CheckedRelease> 
   return { id, operationalEvidence } as CheckedRelease;
 }
 /** The database checks for a released version, under the shared source-state lock so a
- * hold or withdrawal committed first wins. Storage evidence comes from `release`. */
+ * hold, withdrawal or later release committed first wins. Storage evidence comes from `release`. */
 export async function lockedLiveVersion(
   tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
   release: CheckedRelease,
@@ -430,6 +443,21 @@ export async function lockedLiveVersion(
     .where(eq(valoContentVersions.id, release.id))
     .for("share");
   if (!row) throw new ValoProblem(404, "This template is not available.");
+  // A replaced version's file closes to new downloads, and no new document starts from it
+  // (docs/architecture/reviewed-route.md, part 1). The publisher releases and withdraws holding the
+  // same lock alone.
+  const [later] = await tx
+    .select({ version: valoContentVersions.version })
+    .from(valoContentVersions)
+    .where(
+      and(
+        eq(valoContentVersions.templateId, row.templateId),
+        gt(valoContentVersions.version, row.version),
+        inArray(valoContentVersions.status, [...releasedStates]),
+      ),
+    )
+    .limit(1);
+  if (later) throw new ValoProblem(404, REPLACED_VERSION);
   const [policy] = await tx
     .select()
     .from(valoPublicationPolicies)
