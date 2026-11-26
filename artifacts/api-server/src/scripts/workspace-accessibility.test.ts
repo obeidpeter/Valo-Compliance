@@ -1167,6 +1167,25 @@ const phone = (path: string, api: Api = answer) => app.phone(path, api);
 /** The same on a desktop-sized page. */
 const desktop = (path: string, api: Api = answer) => app.desktop(path, api);
 
+// PRO-002: "the user can decline marketing and still use the product". The profile's marketing choice
+// links the privacy notice it is recorded against (docs/architecture/processing-inventory.md, slice 3).
+test("the business profile's marketing choice is off unless chosen, says saying no changes nothing else, and links the privacy notice", async () => {
+  const { page, unknown, errors, close } = await phone("/workspace/profile");
+  try {
+    await ready(page);
+    const choice = page.getByTestId("checkbox-marketing");
+    assert.equal(await choice.isChecked(), false);
+    const said = (await page.locator("label", { has: choice }).innerText()).replace(/\s+/g, " ");
+    assert.match(said, /Optional, off by default\. Saying no changes nothing else you can do\./);
+    const link = page.getByTestId("link-profile-privacy");
+    assert.equal(await link.getAttribute("href"), "/privacy");
+    assert.equal((await link.innerText()).trim(), "What Valo does with your data");
+    assert.deepEqual([...unknown, ...errors], []);
+  } finally {
+    await close();
+  }
+});
+
 test("account security fits a two-column profile and an authenticator square at desktop and phone widths", async () => {
   const { page, close } = await desktop("/workspace/account");
   try {

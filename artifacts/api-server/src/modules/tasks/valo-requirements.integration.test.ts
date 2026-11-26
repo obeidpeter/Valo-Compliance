@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { privacyNotice } from "@workspace/valo-core/privacy-notice";
 import { randomUUID } from "node:crypto";
 import { test } from "node:test";
 import { eq, inArray } from "drizzle-orm";
@@ -9,6 +10,7 @@ import {
   valoTasks,
   valoReminderOutbox,
   valoReminderPreferences,
+  valoConsentChanges,
   valoMemberships,
   valoProfileVersions,
   valoEvents,
@@ -209,6 +211,20 @@ test(
       await t.test("dispatch checks opt-out before any adapter invocation", async () => {
         const rows = await tasks.listReminders(a);
         await tasks.saveReminderPreferences(a, { enabled: false, offsets: [1], expectedRevision: 2 });
+        // PRO-002: turning reminders on, and off again, is each recorded with the notice in force; a save
+        // that keeps them on is not (docs/architecture/processing-inventory.md, slice 4).
+        const changes = await db
+          .select()
+          .from(valoConsentChanges)
+          .where(eq(valoConsentChanges.workspaceId, a.workspaceId))
+          .orderBy(valoConsentChanges.createdAt);
+        assert.deepEqual(
+          changes.map((change) => [change.consent, change.choice, change.noticeVersion, change.actorId]),
+          [
+            ["reminders", true, privacyNotice().version, a.identityId],
+            ["reminders", false, privacyNotice().version, a.identityId],
+          ],
+        );
         let calls = 0;
         const result = await processReminder(
           a.workspaceId,
@@ -245,6 +261,7 @@ test(
     } finally {
       await db.delete(valoReminderOutbox).where(inArray(valoReminderOutbox.workspaceId, ids));
       await db.delete(valoReminderPreferences).where(inArray(valoReminderPreferences.workspaceId, ids));
+      await db.delete(valoConsentChanges).where(inArray(valoConsentChanges.workspaceId, ids));
       await db.delete(valoTasks).where(inArray(valoTasks.workspaceId, ids));
       await db.delete(valoAssessments).where(inArray(valoAssessments.workspaceId, ids));
       await db.delete(valoEvents).where(inArray(valoEvents.workspaceId, ids));

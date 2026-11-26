@@ -2960,7 +2960,7 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/documents/valo-workspace-documents.integration.test.ts",
       "test": "development PostgreSQL tenant, concurrency, history and durable-ticket proof",
-      "proves": "A synthetic workspace's first profile save with marketing declined succeeds and returns marketing declined, a correction is stored as a second profile version while the first version still shows the original state, and a save from a stale profile revision is refused with a conflict."
+      "proves": "A synthetic workspace's first profile save with marketing declined succeeds and returns marketing declined, a correction is stored as a second profile version while the first version still shows the original state, each version keeps the version of the privacy notice in force when it was saved, turning marketing on and off again is each recorded once in the consent history with the notice's version and who changed it, and a save from a stale profile revision is refused with a conflict."
     },
     {
       "requirement": "PRO-002",
@@ -3059,6 +3059,20 @@
       "file": "artifacts/api-server/src/scripts/public-server-pages.test.ts",
       "test": "the privacy page shows each activity of the processing inventory, what the service needs apart from what a visitor may choose, says it is a draft and gives its version, in the server's HTML",
       "proves": "On the compiled web server, the privacy page's HTML shows every activity of the processing inventory with its title, purpose, data and retention, the needed ones apart from the optional ones and marketing, the draft notice, the version and the links for download, correction, deletion and help without signing in."
+    },
+    {
+      "requirement": "PRO-002",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "the business profile's marketing choice is off unless chosen, says saying no changes nothing else, and links the privacy notice",
+      "proves": "On an emulated phone with stand-in answers, the business profile's marketing choice is off, says it is optional and that saying no changes nothing else, and links the privacy notice."
+    },
+    {
+      "requirement": "PRO-002",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/tasks/valo-requirements.integration.test.ts",
+      "test": "development saved assessments, task isolation, concurrency and reminder outbox",
+      "proves": "On a disposable database, turning task reminders on and off again is each recorded once in the consent history, with the privacy notice's version and who made the change, while a save that keeps reminders on records nothing."
     },
     {
       "requirement": "PRV-003",

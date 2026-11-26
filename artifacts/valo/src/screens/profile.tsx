@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { useSearch } from "wouter";
+import { Link, useSearch } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2, Plus, X } from "lucide-react";
 import {
@@ -468,7 +468,16 @@ export default function ProfilePage() {
           />
           <span>
             Send me occasional product updates.{" "}
-            <span className="text-muted-foreground">Optional, off by default.</span>
+            <span className="text-muted-foreground">
+              Optional, off by default. Saying no changes nothing else you can do.{" "}
+              <Link
+                href="/privacy"
+                className="underline underline-offset-2"
+                data-testid="link-profile-privacy"
+              >
+                What Valo does with your data
+              </Link>
+            </span>
           </span>
         </label>
 

@@ -28,6 +28,7 @@ import {
   valoSavedTemplates,
   valoRuleNotices,
   valoEditionNotices,
+  valoConsentChanges,
 } from "@workspace/db";
 import { eq, inArray, sql } from "drizzle-orm";
 import { guardRefusal } from "../../platform/http-errors";
@@ -110,6 +111,13 @@ test(
           reason: "Synthetic withdrawal for the erasure test.",
           held: true,
           documents: 0,
+        });
+        await db.insert(valoConsentChanges).values({
+          workspaceId: workspace.workspaceId,
+          consent: "marketing",
+          choice: true,
+          noticeVersion: "0".repeat(64),
+          actorId: workspace.identityId,
         });
       }
       await db.insert(valoSavedTemplates).values(
@@ -455,12 +463,13 @@ test(
             valoSavedTemplates,
             valoRuleNotices,
             valoEditionNotices,
+            valoConsentChanges,
           ])
             assert.equal(
               (await db.select().from(table).where(eq(table.workspaceId, a.workspaceId))).length,
               0,
             );
-          for (const table of [valoRuleNotices, valoEditionNotices])
+          for (const table of [valoRuleNotices, valoEditionNotices, valoConsentChanges])
             assert.equal(
               (await db.select().from(table).where(eq(table.workspaceId, b.workspaceId))).length,
               1,
@@ -808,6 +817,7 @@ test(
         valoProfileVersions,
         valoRuleNotices,
         valoEditionNotices,
+        valoConsentChanges,
         valoMemberships,
       ])
         await db.delete(table).where(inArray(table.workspaceId, ids));

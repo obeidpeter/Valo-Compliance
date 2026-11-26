@@ -673,6 +673,20 @@
       "when": 1795667791165,
       "tag": "20261126043631_reviewed_guide_check_guards",
       "breakpoints": true
+    },
+    {
+      "idx": 96,
+      "version": "7",
+      "when": 1795675634861,
+      "tag": "20261126064714_consent_changes",
+      "breakpoints": true
+    },
+    {
+      "idx": 97,
+      "version": "7",
+      "when": 1795675644245,
+      "tag": "20261126064724_consent_change_grants",
+      "breakpoints": true
     }
   ]
 }

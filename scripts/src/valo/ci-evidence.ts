@@ -73,6 +73,18 @@ export function generatedTestNames(source: string): RegExp[] {
     );
 }
 
+/**
+ * Whether a file names a test only as a subtest (`t.test("…")`), never as a top-level `test("…")`.
+ * The job's check finds a citation by the top-level name of each test that ran (citationResult), so
+ * a cited subtest is never found there.
+ */
+export function namedOnlyAsSubtest(source: string, name: string): boolean {
+  const quoted = `(['"\`])${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\1`;
+  const asSubtest = new RegExp(`\\.test\\(\\s*${quoted}`).test(source);
+  const asTopLevel = new RegExp(`(?<![.\\w])test\\(\\s*${quoted}`).test(source);
+  return asSubtest && !asTopLevel;
+}
+
 /** What a reviewer can check without running anything: every citation names a requirement,
  * a CI job, an existing test file and a test with exactly that name, once. A name the file builds
  * from a template must fit the template (generatedTestNames). */
@@ -98,6 +110,10 @@ export function citationProblems(
         !generatedTestNames(source).some((name) => name.test(c.test))
       )
         problems.push(`${label}: ${c.file} names no test exactly like this`);
+      else if (namedOnlyAsSubtest(source, c.test))
+        problems.push(
+          `${label}: ${c.file} names this as a subtest; cite its top-level test, the only name the job's check reads`,
+        );
     }
     const key = `${c.requirement}\0${c.file}\0${c.test}`;
     if (seen.has(key)) problems.push(`${label}: cited twice for ${c.requirement}`);
