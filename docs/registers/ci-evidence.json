@@ -4209,6 +4209,13 @@
       "proves": "Signed in through a stand-in identity with synthetic data, the privacy screen gives a request's kind, state, steps and history in words, still says that a request received or partly done is not a confirmed deletion or a complete copy, and keeps the download's scope statement. This shows the screen's words, not that a request is verified or carried out in any system."
     },
     {
+      "requirement": "PRV-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/privacy/valo-privacy-requests.integration.test.ts",
+      "test": "a held request returns to where it was: a partly done data download or correction comes back partly done, with what was done kept",
+      "proves": "On a disposable database, a synthetic data download request that was prepared and a correction request that was recorded are each held and released, and each comes back partly done with its steps as they were and the download's prepared result kept, while a request held before anything was done comes back to its staff member."
+    },
+    {
       "requirement": "EDT-002",
       "job": "postgres",
       "file": "artifacts/api-server/src/scripts/tester-tasks.integration.test.ts",
