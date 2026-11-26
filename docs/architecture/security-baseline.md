@@ -129,8 +129,8 @@ but the counts reads keep (3.4.1, 3.4.5, 4.1.1, 15.3.6, 15.3.7, 3.5.3).
 
 | Status | Requirements |
 | --- | --- |
-| met | 57 |
-| partly met | 43 |
+| met | 58 |
+| partly met | 42 |
 | untested | 21 |
 | not met | 5 |
 | not applicable | 63 |
@@ -158,8 +158,8 @@ What is left falls to the plan's later rows and to the launch:
   storage and source downloads; strict equality in the linter; tests of the staff upload's refusals,
   the authorized party, TRACE and a folder address; a check of the built image for `.git`; time frames
   and an owner for advisories; a software bill of materials.
-- **Alerts that reach a person** (Phase 7): logs to a system of their own, an inventory of them, the
-  route in each request's log, and refused input recorded as a security event.
+- **Alerts that reach a person** (Phase 7): logs to a system of their own, an inventory of them, and
+  refused input recorded as a security event. Each request's log line now names its route (16.2.1).
 - **Documents**: the key policy and inventory, protection levels, field-level authorization rules,
   the ways in with the strength each needs, and the staff upload's limits; and, in the processor
   review, the host the identity provider's script sends its telemetry to (`clerk-telemetry.com`),

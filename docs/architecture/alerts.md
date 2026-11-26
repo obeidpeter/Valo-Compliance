@@ -88,11 +88,39 @@ input recorded as a security event."
 - **Each request counted.** The API counts its requests by minute: how many, how many failed with a
   server error, and how long they took, in fixed buckets of time that add up across processes. Each
   process writes its minute's counts once, outside any transaction.
+  - Built as `valo_request_minutes`: one row a minute, with the requests, the unexpected failures, and
+    how many took at most 100, 250 and 500 milliseconds, 1, 2.5, 5 and 10 seconds. Each count holds every
+    shorter one, so the counts of every process add up, and the table refuses counts that do not hold
+    together. It holds no address, identity or request content.
+  - Only the API's own requests count: not the health check, nor the identity provider's proxy. A
+    failure is an answer the error handler gives to an unexpected error; a 503 Valo means to give, such
+    as while a database update waits, is not one.
+  - Each API process keeps its counts in memory and writes its finished minutes once a minute, in one
+    statement, outside any transaction; the minute under way is written as the process stops. Counts the
+    database cannot take wait for the next write, an hour of minutes at most; an older one is dropped and
+    counted as dropped. A failing write is logged once, until one succeeds again. Minutes older than a
+    week are removed, at most once an hour (a development default). Production, which answers only the
+    health check, counts nothing.
 - **Alerts on them**: a server failure rate over a limit, with enough requests to mean something, and
   a 95th percentile time over NFR-003's second.
+  - Built over the last ten minutes, and only once there are a hundred requests or more; fewer read as
+    nothing. `REQUEST_FAILURES_DETECTED` when more than 10 in 1,000 failed unexpectedly, and
+    `REQUEST_TIME_DETECTED` when the time 95 in 100 took at most is over 1,000 milliseconds, read to the
+    counts' fixed times (10,001 means longer than ten seconds). Both are NFR-003's own limits: "p95 ≤1s
+    … <1% unexpected 5xx". Both fall to the site runbook.
 - **More backlogs**: reminder emails waiting past their time, and the scheduled jobs' queue.
+  - Built: `REMINDERS_BACKLOG` for a reminder still pending fifteen minutes past its time (a held one is
+    held on purpose), and `JOB_QUEUE_BACKLOG` for a scheduled job still waiting ten minutes past its
+    start. Both fall to the worker's runbook.
 - **The route in each request's log**: the route's pattern, such as `/workspace/documents/:id`, never
   the values in its address.
+  - Built: the line written as a request ends names the route it matched, such as
+    `/api/admin/privacy-cases/:id`, or `unmatched`. Every router is mounted on a fixed path, so the part
+    before the route holds no value; any part that is not a fixed word or a named parameter makes the
+    whole route `unrecognised`, so no value is written.
+- **One migration** adds the counts' table. The Replit development database takes it by hand
+  ([runbook](../valo/migration-request-minutes.md)); until it does, the API logs once that its counts
+  wait, and the two request readings cannot be taken, which raises their own alerts.
 
 ### Part 4: the logs themselves
 
@@ -113,7 +141,7 @@ input recorded as a security event."
 | Slice | What | State |
 | --- | --- | --- |
 | 1 | Part 1: the journal, the copy from the file, and the System area's list | Built |
-| 2 | Part 3: request counts, failure and time alerts, more backlogs, the route in each request's log | Not built |
+| 2 | Part 3: request counts, failure and time alerts, more backlogs, the route in each request's log | Built |
 | 3 | Part 2: spread-out abuse, refused input, money and AI spend, whole-workspace downloads | Not built |
 | 4 | Part 4: the log inventory, and the security baseline updated | Not built |
 
