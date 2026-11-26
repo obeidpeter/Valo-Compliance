@@ -45,7 +45,8 @@ The requirements, verbatim from the specification:
   - a table in the database schema is named by no activity and is not on the short list of tables that
     hold no personal data, each with its reason;
   - an activity names a table that does not exist;
-  - an activity names an outside service the processor review does not list;
+  - an activity names an outside service the processor review does not list, or one the review says
+    receives no customer data;
   - an optional activity has no consent, or a required one depends on a consent.
 - **Activities.** Accounts and sign-in; the business profile; documents, drafts and their files; the
   requirements check and its tasks; reminders; orders and payments; the drafting assistant; support;

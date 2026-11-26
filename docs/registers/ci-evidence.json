@@ -1014,7 +1014,7 @@
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/privacy/processing-inventory.test.ts",
       "test": "every outside service the inventory names is in the processor review",
-      "proves": "Every outside service the processing inventory names as a recipient is a service listed in the processor review."
+      "proves": "Every outside service the processing inventory names as a recipient is a service listed in the processor review, and none is one the review says receives no customer data."
     },
     {
       "requirement": "ADM-001",
