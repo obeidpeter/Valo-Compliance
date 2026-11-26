@@ -204,6 +204,11 @@ workflow run for the exact commit before reporting CI status.
 - The Replit development database has no migration ledger. New migrations are
   applied there one file at a time, following `docs/valo/phase1-migration-plan.md`.
   Never run the full migrator against it and never fabricate ledger rows.
+- Every table whose rows a trigger guards against deletion keeps a history digest (ADM-009,
+  `docs/architecture/audit-trail.md`). A migration that adds, drops, renames or retypes one of its
+  columns calls `valo_history_digest_reseed('<table>')` after the change, in the same migration; the
+  migration tests fail otherwise. Only migrations call it: the `history-reseed` repository rule keeps
+  product code from naming it.
 - Schema push is guarded (`lib/db/scripts/schema-push.mjs`). Never bypass it.
 
 ## 7. Files that must not change
