@@ -217,17 +217,26 @@ development default, not a reviewed threshold, under the security/privacy incide
   a guard, or change rows in a session the application never sees. So the database keeps a digest of
   every history as it is written, and a scheduled count compares it with the rows themselves.
   - **The digest.** For each history, in sixteen shards, the number of rows and the sum of a hash of each
-    row (`valo_history_digests`).
+    row. It is kept in two parts: the digest's rows (`valo_history_digests`), and the changes not yet
+    folded into them (`valo_history_digest_changes`).
     - A trigger after every insert, update and delete adds the new row's hash and takes away the old
-      row's, in the same transaction.
+      row's, in the same transaction, as changes of their own.
     - So every change the guards allow keeps the digest true: an erasure's redactions and removals, a
       synthetic workspace's cleanup, a status that moves on.
     - The row's hash is read in UTC, so the session's time zone cannot change it.
-    - Only that trigger may change a digest; a direct change, or TRUNCATE, is refused.
+    - Only that trigger may add a change. No change is altered, a direct change to the digest's rows is
+      refused, and neither part can be emptied with TRUNCATE.
+    - Removing changes folds them into the digest's rows in the same statement, so the digest stays as
+      it was.
     - The trigger runs as its owner, so a customer's write keeps the digest true without the customer
       role holding any privilege on it.
-  - **The count.** Once an hour the worker recounts every history in one snapshot and records which
-    digests no longer match (`valo_history_checks`, itself append-only).
+  - **No writer waits on another's.** Until 26 November each write updated one of its history's digest
+    rows and held it until its transaction ended. Two transactions that wrote rows in two shards, in
+    opposite orders, could each hold a row the other then waited for, and the database ended one of them
+    as a deadlock: two erasures did so in CI's database job. A change is now a row of its own, which no
+    other writer waits on. Only the fold writes the digest's rows, and it takes them in one order.
+  - **The count.** Once an hour the worker folds the changes in, then recounts every history in one
+    snapshot and records which digests no longer match (`valo_history_checks`, itself append-only).
     - A change made with the triggers off leaves its history's digest behind, and so does a session in
       replica mode.
     - A history whose digest trigger is missing or switched off is counted as a mismatch at once.
@@ -237,19 +246,12 @@ development default, not a reviewed threshold, under the security/privacy incide
       minutes old.
   - **The rule.** Every table whose rows a trigger guards against deletion keeps a digest, as it refuses
     TRUNCATE; the migration test checks this on the whole schema.
-  - **Writers that change many rows at once.** A transaction holds each digest row it has changed until
-    it ends, and takes them in the order its rows come. Two transactions that each change many history
-    rows can therefore each hold a digest row the other then waits for, and the database ends one of
-    them as a deadlock. Erasure is such a writer: each of its sections removes or redacts up to a
-    hundred history rows, and erasures of different cases run at once. So each section first waits for
-    any other erasure's section to finish (`ERASURE_SECTION_LOCK`, a transaction-scoped advisory lock
-    taken before anything else in its transaction). The erasure test holds that lock from another
-    connection and finds the next section waiting until it is released.
   - **A change to a history's columns.** A row's hash is of every column it holds, so a migration that
     adds, drops, renames or retypes a history's column changes every row's hash, and the count would
     find that history mismatched. Such a migration calls `valo_history_digest_reseed` for that history
     after the change, in its own transaction, and the history's digest starts again from its rows.
-    - It reseeds only a table that keeps a digest, and the digest's guard is on again before it returns.
+    - It reseeds only a table that keeps a digest. It folds that history's changes in first, so none is
+      counted twice, and the digest's guard is on again before it returns.
     - Only migrations call it: the repository rule `history-reseed` keeps product code from naming it.
     - The migration test runs the whole chain over rows written before it and finds every digest
       matching, so a migration that forgets to reseed fails it.
@@ -275,8 +277,18 @@ development default, not a reviewed threshold, under the security/privacy incide
   - every table whose rows a trigger guards against deletion keeps a digest.
 - The reseed migration's check: a column added to a history makes it mismatch, a reseed in the same
   transaction makes it match again with the guard back on, and a table that keeps no digest is refused.
+- The digest changes migration's check, on a fresh cluster:
+  - before it, two writers that add rows in two shards in opposite orders deadlock; after it, the same
+    writers finish without waiting;
+  - every digest is as it was, and a write adds its change as a row of its own;
+  - removing the changes folds them in and changes no digest;
+  - only a history's trigger adds a change, none is altered, and the changes cannot be emptied;
+  - a change made in replica mode is still found after a fold, and a reseed folds its history's changes
+    in first.
+- The worker's fold, on the real database, takes a synthetic event's change into the digest's rows. On a
+  database without the migration, it removes nothing.
 - After the whole chain of migrations, over rows written before them, every history matches its digest.
-- The index, digest and reseed migrations have their upgrade checks.
+- The index, digest, reseed and digest changes migrations have their upgrade checks.
 
 ## Slice 4: the staff viewer
 
