@@ -2238,6 +2238,114 @@ export const PreviewOwnerPriceResponse = zod.object({
 })
 
 
+/**
+ * Each commercial setting, with its default and any value in effect or scheduled to start (docs/architecture/commercial-settings.md, slice 3). Read-only. Development only.
+ * @summary The commercial settings and their values, for the development owner (ADM-006)
+ */
+export const listOwnerSettingsResponseItemsItemDefaultValueMin = 0;
+
+export const listOwnerSettingsResponseItemsItemMaxMin = 0;
+
+export const listOwnerSettingsResponseItemsItemValuesItemValueMin = 0;
+
+export const listOwnerSettingsResponseItemsItemValuesMax = 100;
+
+export const listOwnerSettingsResponseItemsMax = 20;
+
+
+
+export const ListOwnerSettingsResponse = zod.object({
+  "items": zod.array(zod.object({
+  "key": zod.enum(['drafting_workspace_daily', 'drafting_daily_in_all']),
+  "title": zod.string(),
+  "unit": zod.string(),
+  "defaultValue": zod.int().min(listOwnerSettingsResponseItemsItemDefaultValueMin).describe('The value while no value the owner recorded is in effect'),
+  "max": zod.int().min(listOwnerSettingsResponseItemsItemMaxMin),
+  "values": zod.array(zod.object({
+  "settingId": zod.uuid(),
+  "value": zod.int().min(listOwnerSettingsResponseItemsItemValuesItemValueMin),
+  "effectiveFrom": zod.coerce.date(),
+  "effectiveTo": zod.coerce.date().nullable()
+})).max(listOwnerSettingsResponseItemsItemValuesMax).describe('The value in effect and any scheduled to start, earliest first.')
+})).max(listOwnerSettingsResponseItemsMax)
+})
+
+
+/**
+ * Refused unless `confirm` is the checksum the preview gave for exactly these terms. The setting's open value closes when the new one starts.
+ * @summary Record the owner's value of a commercial setting
+ */
+export const recordOwnerSettingBodyValueRegExp = new RegExp('^\\d{1,7}$');
+export const recordOwnerSettingBodyFromMin = 3;
+export const recordOwnerSettingBodyFromMax = 40;
+
+export const recordOwnerSettingBodyReferenceMin = 3;
+export const recordOwnerSettingBodyReferenceMax = 160;
+
+export const recordOwnerSettingBodyConfirmRegExp = new RegExp('^[0-9a-f]{64}$');
+
+
+export const RecordOwnerSettingBody = zod.object({
+  "key": zod.enum(['drafting_workspace_daily', 'drafting_daily_in_all']),
+  "value": zod.string().regex(recordOwnerSettingBodyValueRegExp),
+  "from": zod.string().min(recordOwnerSettingBodyFromMin).max(recordOwnerSettingBodyFromMax),
+  "reference": zod.string().min(recordOwnerSettingBodyReferenceMin).max(recordOwnerSettingBodyReferenceMax).describe('Where the owner\'s approval is written'),
+  "confirm": zod.string().regex(recordOwnerSettingBodyConfirmRegExp).describe('The checksum the preview gave')
+})
+
+export const recordOwnerSettingResponseValueMin = 0;
+
+export const recordOwnerSettingResponseClosedItemValueMin = 0;
+
+export const recordOwnerSettingResponseClosedMax = 100;
+
+
+
+export const RecordOwnerSettingResponse = zod.object({
+  "settingId": zod.uuid(),
+  "key": zod.enum(['drafting_workspace_daily', 'drafting_daily_in_all']),
+  "value": zod.int().min(recordOwnerSettingResponseValueMin),
+  "from": zod.coerce.date(),
+  "closed": zod.array(zod.object({
+  "settingId": zod.uuid(),
+  "value": zod.int().min(recordOwnerSettingResponseClosedItemValueMin)
+})).max(recordOwnerSettingResponseClosedMax)
+})
+
+
+/**
+ * Writes nothing.
+ * @summary The exact terms of a setting's value and their checksum, which recording confirms
+ */
+export const previewOwnerSettingBodyValueRegExp = new RegExp('^\\d{1,7}$');
+export const previewOwnerSettingBodyFromMin = 3;
+export const previewOwnerSettingBodyFromMax = 40;
+
+
+
+export const PreviewOwnerSettingBody = zod.object({
+  "key": zod.enum(['drafting_workspace_daily', 'drafting_daily_in_all']),
+  "value": zod.string().regex(previewOwnerSettingBodyValueRegExp).describe('A whole number, such as 30'),
+  "from": zod.string().min(previewOwnerSettingBodyFromMin).max(previewOwnerSettingBodyFromMax).describe('now, or a time with its offset, such as 2026-12-01T00:00:00+01:00')
+})
+
+export const previewOwnerSettingResponseTermsValueMin = 0;
+
+export const previewOwnerSettingResponseChecksumRegExp = new RegExp('^[0-9a-f]{64}$');
+
+
+export const PreviewOwnerSettingResponse = zod.object({
+  "title": zod.string(),
+  "unit": zod.string(),
+  "terms": zod.object({
+  "key": zod.enum(['drafting_workspace_daily', 'drafting_daily_in_all']),
+  "value": zod.int().min(previewOwnerSettingResponseTermsValueMin),
+  "from": zod.string()
+}),
+  "checksum": zod.string().regex(previewOwnerSettingResponseChecksumRegExp)
+})
+
+
 export const GetWorkspaceDisputesResponse = zod.object({
   "concerns": zod.array(zod.object({
   "id": zod.string(),

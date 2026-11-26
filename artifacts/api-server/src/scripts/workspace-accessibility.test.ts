@@ -1077,6 +1077,33 @@ const answers: Record<string, unknown> = {
       },
     ],
   }),
+  "GET /admin/owner-settings": api.ListOwnerSettingsResponse.parse({
+    items: [
+      {
+        key: "drafting_workspace_daily",
+        title: "The drafting assistant's daily allowance for each workspace",
+        unit: "drafts a day",
+        defaultValue: 30,
+        max: 300,
+        values: [
+          {
+            settingId: "00000000-0000-4000-8000-00000000c001",
+            value: 12,
+            effectiveFrom: at(21),
+            effectiveTo: null,
+          },
+        ],
+      },
+      {
+        key: "drafting_daily_in_all",
+        title: "The drafting assistant's daily allowance in all",
+        unit: "drafts a day",
+        defaultValue: 120,
+        max: 1200,
+        values: [],
+      },
+    ],
+  }),
 };
 
 const answer: Api = async (route, method, path, query) => {
@@ -5693,6 +5720,93 @@ test("the owner's price screen previews a price's exact terms and records only w
     // Two previews of the same terms: the changed amount was never previewed.
     assert.deepEqual(previews, [terms, terms]);
     assert.deepEqual(recorded, [{ ...terms, reference: "synthetic-owner-approval-2", confirm: checksum }]);
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
+
+test("the owner's settings panel previews a value's exact terms and records only what was previewed", async () => {
+  const checksum = "d".repeat(64);
+  const previews: unknown[] = [],
+    recorded: unknown[] = [];
+  const setting: Api = async (route, method, path, query) => {
+    if (method === "POST" && path === "/admin/owner-settings/previews") {
+      const body = route.request().postDataJSON() as {
+        key: "drafting_workspace_daily";
+        value: string;
+        from: string;
+      };
+      previews.push(body);
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(
+          api.PreviewOwnerSettingResponse.parse({
+            title: "The drafting assistant's daily allowance for each workspace",
+            unit: "drafts a day",
+            terms: { key: body.key, value: Number(body.value), from: body.from },
+            checksum,
+          }),
+        ),
+      });
+    } else if (method === "POST" && path === "/admin/owner-settings") {
+      recorded.push(route.request().postDataJSON());
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(
+          api.RecordOwnerSettingResponse.parse({
+            settingId: "00000000-0000-4000-8000-00000000c002",
+            key: "drafting_workspace_daily",
+            value: 40,
+            from: at(25),
+            closed: [{ settingId: "00000000-0000-4000-8000-00000000c001", value: 12 }],
+          }),
+        ),
+      });
+    } else await answer(route, method, path, query);
+  };
+  const { page, unknown, errors, close } = await phone("/staff", setting);
+  try {
+    await ready(page);
+    await page.getByTestId("tab-staff-system").click();
+    const panel = page.getByRole("region", { name: "Commercial settings" });
+    const values = panel.getByRole("list", { name: "Each setting and its values" });
+    await expect(values).toContainText("12 drafts a day from 21 Nov 2026, 10:00");
+    await expect(values).toContainText("120 drafts a day, the default: you have recorded no value.");
+    const preview = panel.getByRole("button", { name: "Preview the exact value" });
+    await expect(preview).toBeDisabled();
+    await panel.getByLabel("Setting", { exact: true }).selectOption("drafting_workspace_daily");
+    await panel.getByLabel("Drafts a day, a whole number").fill("40");
+    await preview.click();
+    const shown = panel.getByTestId("owner-setting-preview");
+    await expect(shown).toContainText("SettingThe drafting assistant's daily allowance for each workspace");
+    await expect(shown).toContainText("Value40 drafts a day");
+    await expect(shown).toContainText(checksum);
+    // A changed value asks for a new preview: recording confirms only the terms previewed.
+    await panel.getByLabel("Drafts a day, a whole number").fill("41");
+    await expect(shown).toHaveCount(0);
+    await panel.getByLabel("Drafts a day, a whole number").fill("40");
+    await preview.click();
+    const record = panel.getByRole("button", { name: "Record this value" });
+    await expect(record).toBeDisabled();
+    await panel
+      .getByLabel("Where your approval is written, such as a decision's reference")
+      .fill("synthetic-owner-setting-approval");
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "the owner's settings panel with a preview"), []);
+    await record.click();
+    await expect(panel.getByRole("status")).toHaveText(
+      "Value recorded: 40 drafts a day for the drafting assistant's daily allowance for each workspace, from 25 Nov 2026, 10:00. The setting's earlier value closes then.",
+    );
+    const terms = { key: "drafting_workspace_daily", value: "40", from: "now" };
+    // Two previews of the same terms: the changed value was never previewed.
+    assert.deepEqual(previews, [terms, terms]);
+    assert.deepEqual(recorded, [
+      { ...terms, reference: "synthetic-owner-setting-approval", confirm: checksum },
+    ]);
     assert.deepEqual(errors, []);
     assert.deepEqual(unknown, []);
   } finally {

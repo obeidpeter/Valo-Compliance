@@ -588,6 +588,64 @@ paths:
         "403": { description: "Only the development owner, with recent verification" }
         "409": { description: The template cannot be priced now }
         "422": { description: A term is missing or malformed }
+  /admin/owner-settings:
+    get:
+      operationId: listOwnerSettings
+      tags: [staff]
+      summary: The commercial settings and their values, for the development owner (ADM-006)
+      description: >-
+        Each commercial setting, with its default and any value in effect or scheduled to start
+        (docs/architecture/commercial-settings.md, slice 3). Read-only. Development only.
+      responses:
+        "200":
+          description: The settings and their values.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OwnerSettingPage" }
+        "401": { description: Sign-in required }
+        "403": { description: "Only the development owner, with recent verification" }
+    post:
+      operationId: recordOwnerSetting
+      tags: [staff]
+      summary: Record the owner's value of a commercial setting
+      description: >-
+        Refused unless `confirm` is the checksum the preview gave for exactly these terms. The setting's
+        open value closes when the new one starts.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/OwnerSettingRecord" }
+      responses:
+        "200":
+          description: The value recorded, and the values it closed.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OwnerSettingRecorded" }
+        "401": { description: Sign-in required }
+        "403": { description: "Only the development owner, with recent verification" }
+        "409": { description: "The value cannot start then, or the checksum is not of these terms" }
+        "422": { description: A term is missing or malformed }
+  /admin/owner-settings/previews:
+    post:
+      operationId: previewOwnerSetting
+      tags: [staff]
+      summary: The exact terms of a setting's value and their checksum, which recording confirms
+      description: Writes nothing.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/OwnerSettingTerms" }
+      responses:
+        "200":
+          description: The exact terms and their checksum.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OwnerSettingPreview" }
+        "401": { description: Sign-in required }
+        "403": { description: "Only the development owner, with recent verification" }
+        "422": { description: A term is missing or malformed }
   /workspace/disputes: {"get":{"operationId":"getWorkspaceDisputes","tags":["disputes"],"responses":{"200":{"description":"Private durable test-mode workflow. Provider outcomes are not bank victory guarantees.","content":{"application/json":{"schema":{"$ref":"#/components/schemas/WorkspaceDisputes"}}}},"403":{"description":"Active authority, recent staff MFA or workspace membership is absent."},"409":{"description":"Version, hold, canonical state or operation acknowledgement requires review."}}}}
   /workspace/orders/{orderId}/concerns: {"post":{"operationId":"createPaymentConcern","tags":["disputes"],"responses":{"200":{"description":"Private durable test-mode workflow. Provider outcomes are not bank victory guarantees.","content":{"application/json":{"schema":{"$ref":"#/components/schemas/PaymentConcern"}}}},"403":{"description":"Active authority, recent staff MFA or workspace membership is absent."},"409":{"description":"Version, hold, canonical state or operation acknowledgement requires review."}},"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/PaymentConcernInput"}}}},"parameters":[{"name":"orderId","in":"path","required":true,"schema":{"type":"string","format":"uuid"}}]}}
   /workspace/concerns/{id}/respond: {"post":{"operationId":"respondPaymentConcern","tags":["disputes"],"responses":{"200":{"description":"Private durable test-mode workflow. Provider outcomes are not bank victory guarantees.","content":{"application/json":{"schema":{"$ref":"#/components/schemas/PaymentConcern"}}}},"403":{"description":"Active authority, recent staff MFA or workspace membership is absent."},"409":{"description":"Version, hold, canonical state or operation acknowledgement requires review."}},"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/PaymentConcernResponse"}}}},"parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string","format":"uuid"}}]}}
@@ -2726,6 +2784,96 @@ components:
             properties:
               priceId: { type: string, format: uuid }
               amountKobo: { type: integer, minimum: 1 }
+    OwnerSettingPage:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          maxItems: 20
+          items: { $ref: "#/components/schemas/OwnerSetting" }
+    OwnerSettingKey:
+      type: string
+      enum: [drafting_workspace_daily, drafting_daily_in_all]
+    OwnerSetting:
+      type: object
+      additionalProperties: false
+      required: [key, title, unit, defaultValue, max, values]
+      properties:
+        key: { $ref: "#/components/schemas/OwnerSettingKey" }
+        title: { type: string }
+        unit: { type: string }
+        defaultValue: { type: integer, minimum: 0, description: "The value while no value the owner recorded is in effect" }
+        max: { type: integer, minimum: 0 }
+        values:
+          description: The value in effect and any scheduled to start, earliest first.
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/OwnerSettingValue" }
+    OwnerSettingValue:
+      type: object
+      additionalProperties: false
+      required: [settingId, value, effectiveFrom, effectiveTo]
+      properties:
+        settingId: { type: string, format: uuid }
+        value: { type: integer, minimum: 0 }
+        effectiveFrom: { type: string, format: date-time }
+        effectiveTo: { type: [string, "null"], format: date-time }
+    OwnerSettingTerms:
+      type: object
+      additionalProperties: false
+      required: [key, value, from]
+      properties:
+        key: { $ref: "#/components/schemas/OwnerSettingKey" }
+        value: { type: string, pattern: "^\\d{1,7}$", description: "A whole number, such as 30" }
+        from: { type: string, minLength: 3, maxLength: 40, description: "now, or a time with its offset, such as 2026-12-01T00:00:00+01:00" }
+    OwnerSettingExactTerms:
+      type: object
+      additionalProperties: false
+      required: [key, value, from]
+      properties:
+        key: { $ref: "#/components/schemas/OwnerSettingKey" }
+        value: { type: integer, minimum: 0 }
+        from: { type: string }
+    OwnerSettingPreview:
+      type: object
+      additionalProperties: false
+      required: [title, unit, terms, checksum]
+      properties:
+        title: { type: string }
+        unit: { type: string }
+        terms: { $ref: "#/components/schemas/OwnerSettingExactTerms" }
+        checksum: { type: string, pattern: "^[0-9a-f]{64}$" }
+    OwnerSettingRecord:
+      type: object
+      additionalProperties: false
+      required: [key, value, from, reference, confirm]
+      properties:
+        key: { $ref: "#/components/schemas/OwnerSettingKey" }
+        value: { type: string, pattern: "^\\d{1,7}$" }
+        from: { type: string, minLength: 3, maxLength: 40 }
+        reference: { type: string, minLength: 3, maxLength: 160, description: Where the owner's approval is written }
+        confirm: { type: string, pattern: "^[0-9a-f]{64}$", description: The checksum the preview gave }
+    OwnerSettingRecorded:
+      type: object
+      additionalProperties: false
+      required: [settingId, key, value, from, closed]
+      properties:
+        settingId: { type: string, format: uuid }
+        key: { $ref: "#/components/schemas/OwnerSettingKey" }
+        value: { type: integer, minimum: 0 }
+        from: { type: string, format: date-time }
+        closed:
+          type: array
+          maxItems: 100
+          items:
+            type: object
+            additionalProperties: false
+            required: [settingId, value]
+            properties:
+              settingId: { type: string, format: uuid }
+              value: { type: integer, minimum: 0 }
     CustomerPurchases:
       type: object
       required: [available, message, orders, products, ownedDownloads, livePaymentsEnabled]
