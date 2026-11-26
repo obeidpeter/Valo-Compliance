@@ -130,17 +130,17 @@ but the counts reads keep (3.4.1, 3.4.5, 4.1.1, 15.3.6, 15.3.7, 3.5.3).
 | Status | Requirements |
 | --- | --- |
 | met | 61 |
-| partly met | 40 |
+| partly met | 41 |
 | untested | 21 |
-| not met | 4 |
+| not met | 3 |
 | not applicable | 63 |
 | identity provider | 54 |
 | host | 10 |
 
-- **Not met**: a key management policy (v5.0.0-11.1.1) and an inventory of keys and algorithms
-  (v5.0.0-11.1.2); protection levels for sensitive data, and requirements for each (v5.0.0-14.1.2);
-  and logs sent to a
-  system apart from the machine that wrote them (v5.0.0-16.4.3).
+- **Not met**: an inventory of keys and algorithms (v5.0.0-11.1.2); protection levels for sensitive
+  data, and requirements for each (v5.0.0-14.1.2); and logs sent to a system apart from the machine
+  that wrote them (v5.0.0-16.4.3). How each key is kept, rotated and revoked is now a runbook
+  (v5.0.0-11.1.1, partly met: no schedule sets when each is rotated).
 - **Not applicable** are mostly whole chapters Valo has nothing of: OAuth and OpenID (Valo is neither
   a server nor a client of its own; sign-in is the provider's), WebRTC, GraphQL and WebSockets; and
   LDAP, XPath, LaTeX, JNDI, memcache, SAML and encryption in Valo's own code.

@@ -251,7 +251,9 @@ logs in as `valo_workspace_login` with its current password; the login can log i
 insert into `valo_scope_keys`, where each process registers its signing key. Every
 customer request, export and reminder fails until it is fixed; no connection is leaked. Apply the
 migration and enable the login (see `docs/valo/migration-workspace-row-security.md`)
-before releasing code that expects them.
+before releasing code that expects them. The database refusing the login gives the same code: a
+rotated password the process has not been given yet, or an emergency revocation
+(`docs/valo/secret-rotation.md`).
 
 `VALO_PUBLISHER_LOGIN_UNAVAILABLE` means a content version could not be released because the
 publisher's own connection is missing or wrong. Check, in order: the publisher login migration is
@@ -261,7 +263,9 @@ password; and the login can log in (`lib/db/scripts/publisher-login.mjs` enables
 refused with error code `42501` and "published only by a session that logged in as
 valo_publisher_login" was attempted on another connection: the database publishes a version only
 for the publisher's login. Nothing else uses the login, so preparing, reviewing, holding,
-withdrawing and reading content are unaffected (see `docs/valo/migration-publisher-login.md`).
+withdrawing and reading content are unaffected (see `docs/valo/migration-publisher-login.md`). The
+database refusing the login, after a rotation or an emergency revocation, gives the same code
+(`docs/valo/secret-rotation.md`).
 
 `VALO_DRAFTER_LOGIN_UNAVAILABLE` means a candidate could not be prepared or saved because drafting's own
 connection is missing or wrong. Check, in order: the drafter login migration is applied;
@@ -272,7 +276,8 @@ the code on the preparation request it could not carry out; ask for it again onc
 candidate refused with error code `42501` and "added only by a session that logged in as
 valo_drafter_login" was added on another connection: the database adds content only for drafting's
 login. Holding, withdrawing, publishing and reading content do not use it (see
-`docs/valo/migration-drafter-login.md`).
+`docs/valo/migration-drafter-login.md`). The database refusing the login, after a rotation or an
+emergency revocation, gives the same code (`docs/valo/secret-rotation.md`).
 
 `VALO_REVIEWER_LOGIN_UNAVAILABLE` means an AI review could not record its attempt because review's own
 connection is missing or wrong. It stops the review before an attempt is reserved or a model is called.
@@ -284,7 +289,12 @@ as `valo_reviewer_login` with its current password; and the login can log in
 drafting attempt, was recorded on another connection: the database records each AI attempt only for its
 own login. An attempt is never removed and the table cannot be emptied. Preparing a candidate without
 reviews, publishing and reading content do not use the login (see
-`docs/valo/migration-reviewer-login.md`).
+`docs/valo/migration-reviewer-login.md`). The database refusing the login, after a rotation or an
+emergency revocation, gives the same code (`docs/valo/secret-rotation.md`).
+
+`db.connection_failed` in the API's or the worker's log is a pooled connection that failed while idle,
+with its login and code: the pool dropped it and the next query opens another. Many at once, with
+`57P01`, are sessions an operator ended, as in an emergency revocation, or a database restart.
 
 A write to a history that ended in a deadlock (`40P01`), on a database without the history digest
 changes migrations, met another writer on its history's digest rows: there each write holds the digest
