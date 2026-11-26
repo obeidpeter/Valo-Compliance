@@ -5474,6 +5474,20 @@
       "file": "scripts/src/valo/log-inventory.test.ts",
       "test": "the API's one logger writes only to its process's output, and every table the log inventory names is in the schema",
       "proves": "The API's source makes one logger, in platform/logger.ts, and one request logger, given it; the logger names no destination but the process's output and, in development, its readable printer; and every table the log inventory names is in the database's schema."
+    },
+    {
+      "requirement": "SEC-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/bundle-secrets.test.ts",
+      "test": "no file the browser is sent may hold a secret setting's value or a secret's shape (SEC-002, OPS-004)",
+      "proves": "The check run after each build of the web app finds a secret setting's value, by the setting's name only, in a static or public file, and a payment or identity provider's secret key, a private key or a connection string with a password by its shape; it passes publishable keys, other settings' values, values too short to mean anything and the server's own bundle, and tells when there is no build to read."
+    },
+    {
+      "requirement": "OPS-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/bundle-secrets.test.ts",
+      "test": "no file the browser is sent may hold a secret setting's value or a secret's shape (SEC-002, OPS-004)",
+      "proves": "The same check finds a key, or any secret setting's value, in a file the browser is sent, naming the setting or the key's shape and never the secret."
     }
   ]
 }
