@@ -33,7 +33,8 @@ test("actual export entries and worker startup reject before database, queue or 
       export const db=new Proxy({},{get:()=>hit});export const pool={end:hit};export const runInWorkspaceScope=hit;
       export const valoMemberships={},valoContentVersions={},valoDocuments={},valoDocumentRevisions={},valoExportJobs={},
       valoExportRequests={},valoFileAssets={},valoExportObjects={},valoEvents={},valoPrivacyTombstones={},
-      valoWorkspaceExports={},valoWorkspaceExportAttempts={},valoWorkspaces={},valoPrivacyCases={},valoPrivacyEvents={},valoProfileVersions={};`,
+      valoWorkspaceExports={},valoWorkspaceExportAttempts={},valoWorkspaces={},valoPrivacyCases={},valoPrivacyEvents={},valoProfileVersions={},
+      valoPrivacyHolds={},valoStaffAccessAudit={};`,
     ],
     [
       "drizzle-orm",
@@ -46,7 +47,7 @@ test("actual export entries and worker startup reject before database, queue or 
     ],
     [
       "@workspace/api-zod",
-      "export const CreateDocumentExportBody={strict(){return this},parse(x){return x}},CreateDocumentExportResponse={parse:x=>x},RequestWorkspaceDataExportBody=CreateDocumentExportBody,CancelWorkspaceDataExportBody=CreateDocumentExportBody,ActOnStaffPrivacyCaseBody=CreateDocumentExportBody;",
+      "export const CreateDocumentExportBody={strict(){return this},parse(x){return x}},CreateDocumentExportResponse={parse:x=>x},RequestWorkspaceDataExportBody=CreateDocumentExportBody,CancelWorkspaceDataExportBody=CreateDocumentExportBody,ActOnStaffPrivacyCaseBody=CreateDocumentExportBody,PlacePrivacyHoldBody=CreateDocumentExportBody,ReleasePrivacyHoldBody=CreateDocumentExportBody;",
     ],
     ["@workspace/valo-core", "export const sha256=x=>x;"],
     // The export and privacy code reach the workspace access checks through the workspaces module's index.
