@@ -399,6 +399,8 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-saved-templates
       - name: Prove durable source corrections, review due dates, staff authority and dispatch races
         run: pnpm --filter @workspace/api-server test:valo-source-controls-db
+      - name: Rehearse an incident's technical steps on synthetic data (SEC-008), with the services paused on their own
+        run: pnpm --filter @workspace/api-server test:valo-incident-rehearsal-db
       - name: Prove concrete editorial reviewer denial, retained snapshots and isolated lifecycle copies
         run: pnpm --filter @workspace/api-server test:valo-editorial-lifecycle-db
       - name: Prove a candidate that fails its gates stays held on every publication path
