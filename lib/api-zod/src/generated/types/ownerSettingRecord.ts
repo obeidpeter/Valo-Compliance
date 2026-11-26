@@ -9,7 +9,7 @@ import type { OwnerSettingKey } from './ownerSettingKey';
 
 export interface OwnerSettingRecord {
   key: OwnerSettingKey;
-  /** @pattern ^\d{1,7}$ */
+  /** @pattern ^(\d{1,7}|yes|no)$ */
   value: string;
   /**
      * @minLength 3

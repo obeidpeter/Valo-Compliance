@@ -1,0 +1,5 @@
+ALTER TABLE "valo_commercial_settings" DROP CONSTRAINT "valo_commercial_settings_value_check";--> statement-breakpoint
+ALTER TABLE "valo_edition_notices" ADD COLUMN "carries" boolean;--> statement-breakpoint
+ALTER TABLE "valo_orders" ADD COLUMN "carries_to_later_editions" boolean;--> statement-breakpoint
+ALTER TABLE "valo_edition_notices" ADD CONSTRAINT "valo_edition_notice_carries" CHECK ("valo_edition_notices"."carries" IS NULL OR ("valo_edition_notices"."kind" = 'replaced' AND "valo_edition_notices"."held"));--> statement-breakpoint
+ALTER TABLE "valo_commercial_settings" ADD CONSTRAINT "valo_commercial_settings_value_check" CHECK (CASE WHEN "valo_commercial_settings"."key" IN ('drafting_workspace_daily', 'drafting_daily_in_all') AND jsonb_typeof("valo_commercial_settings"."value") = 'number' THEN ("valo_commercial_settings"."value")::numeric >= 0 AND ("valo_commercial_settings"."value")::numeric = trunc(("valo_commercial_settings"."value")::numeric) WHEN "valo_commercial_settings"."key" = 'purchase_carries_to_later_editions' THEN jsonb_typeof("valo_commercial_settings"."value") = 'boolean' ELSE false END);

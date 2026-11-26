@@ -5,16 +5,22 @@ import { ValoProblem } from "../../platform/valo-problem";
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
-/** Use the same evidence as the file endpoint, including the original price, after an offer closes. */
+/**
+ * Use the same evidence as the file endpoint, including the original price, after an offer closes. Each
+ * edition says whether its purchase carries to the template's later editions, under the access rule its
+ * order recorded (docs/architecture/commercial-settings.md, slice 3b): an order made before the rule had
+ * a record carries.
+ */
 export function verifiedEditions(actor: WorkspaceActor) {
-  return sql`select distinct e.content_version_id as edition
+  return sql`select e.content_version_id as edition, bool_or(o.carries_to_later_editions is not false) as carries
     from public.valo_entitlements e
     join public.valo_orders o on o.id = e.order_id and o.workspace_id = e.workspace_id
     join public.valo_prices p on p.id = o.price_id and p.content_version_id = e.content_version_id
     where e.workspace_id = ${actor.workspaceId}::uuid and e.status = 'active'
       and o.status = 'verified_success' and length(o.provider_transaction_id) > 0
       and o.line->>'contentVersionId' = e.content_version_id::text
-      and o.line->>'licenceVersion' = p.licence_version and length(p.approval_reference) > 0`;
+      and o.line->>'licenceVersion' = p.licence_version and length(p.approval_reference) > 0
+    group by e.content_version_id`;
 }
 
 export async function lockCheckoutWorkspace(tx: Tx, workspaceId: string) {

@@ -101,6 +101,8 @@ export async function exerciseOwnerSettingRoutes(call: Call, editor: string) {
       [
         ["drafting_workspace_daily", 30, 300],
         ["drafting_daily_in_all", 120, 1200],
+        // The access rule each new order records (slice 3b): yes or no, with no most.
+        ["purchase_carries_to_later_editions", true, null],
       ],
     );
 

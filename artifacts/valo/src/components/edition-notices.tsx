@@ -33,11 +33,15 @@ export function editionNoticeWords(notice: EditionNotice) {
     lines.push(
       `${notice.kind === "withdrawn" ? "The reason given" : "What changed"}: ${reason}${/[.!?]$/.test(reason) ? "" : "."}`,
     );
+  // A replacement's notice says what the workspace's purchase now gives, under the access rule its order
+  // recorded (docs/architecture/commercial-settings.md, slice 3b).
   if (notice.held)
     lines.push(
-      notice.kind === "replaced"
-        ? `Your purchase carries to version ${notice.replacementVersion} at no further charge. ${purchases}`
-        : "It can no longer be downloaded or used to start a document. You can take the replacement when one is released, or ask for a refund under the refund policy.",
+      notice.kind === "withdrawn"
+        ? "It can no longer be downloaded or used to start a document. You can take the replacement when one is released, or ask for a refund under the refund policy."
+        : notice.carries === false
+          ? `Your purchase covers version ${notice.version} only: version ${notice.replacementVersion} is not included, and version ${notice.version} can no longer be downloaded.`
+          : `Your purchase carries to version ${notice.replacementVersion} at no further charge. ${purchases}`,
     );
   if (notice.documents === 1)
     lines.push(

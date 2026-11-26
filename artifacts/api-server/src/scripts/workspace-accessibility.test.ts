@@ -445,6 +445,7 @@ const answers: Record<string, unknown> = {
     available: true,
     message: "Synthetic test fixture: payments run in test mode only.",
     livePaymentsEnabled: false,
+    purchaseCarriesToLaterEditions: true,
     orders: [
       {
         id: "00000000-0000-4000-8000-00000000a101",
@@ -459,6 +460,7 @@ const answers: Record<string, unknown> = {
         licenceText: "Synthetic licence text.",
         taxTreatment: "Synthetic tax treatment.",
         contentVersionId: "00000000-0000-4000-8000-00000000a201",
+        carriesToLaterEditions: true,
         refundStatus: null,
         receiptReference: "RCT-SYNTH-1",
         refunds: [],
@@ -835,6 +837,7 @@ const answers: Record<string, unknown> = {
         replacementVersion: 2,
         reason: null,
         held: true,
+        carries: true,
         documents: 0,
         createdAt: at(18),
       },
@@ -847,6 +850,7 @@ const answers: Record<string, unknown> = {
         replacementVersion: null,
         reason: "A synthetic reason the customers who used this version read.",
         held: false,
+        carries: null,
         documents: 2,
         createdAt: at(19),
       },
@@ -1081,8 +1085,11 @@ const answers: Record<string, unknown> = {
     items: [
       {
         key: "drafting_workspace_daily",
+        kind: "count",
         title: "The drafting assistant's daily allowance for each workspace",
         unit: "drafts a day",
+        yes: null,
+        no: null,
         defaultValue: 30,
         max: 300,
         values: [
@@ -1096,10 +1103,24 @@ const answers: Record<string, unknown> = {
       },
       {
         key: "drafting_daily_in_all",
+        kind: "count",
         title: "The drafting assistant's daily allowance in all",
         unit: "drafts a day",
+        yes: null,
+        no: null,
         defaultValue: 120,
         max: 1200,
+        values: [],
+      },
+      {
+        key: "purchase_carries_to_later_editions",
+        kind: "yes-no",
+        title: "Whether a purchase carries to its template's later editions",
+        unit: null,
+        yes: "A purchase carries to its template's later editions, at no further charge",
+        no: "A purchase covers only the edition bought, while it stays released",
+        defaultValue: true,
+        max: null,
         values: [],
       },
     ],
@@ -3987,6 +4008,7 @@ test("a direct checkout shows only the chosen price and leaves an obsolete link 
           { offerId: retiredId, edition: ownedEdition, title: "Previously purchased template", downloadPath },
         ],
         livePaymentsEnabled: false,
+        purchaseCarriesToLaterEditions: true,
         orders: [],
         products: [offer, { ...offer, id: otherId, title: "Other synthetic template" }],
       }),
@@ -4002,6 +4024,10 @@ test("a direct checkout shows only the chosen price and leaves an obsolete link 
     await expect(page.getByText("Other synthetic template", { exact: false })).toHaveCount(0);
     await page.getByText("Licence · 1.0", { exact: true }).click();
     await expect(page.getByText(offer.licenceText, { exact: true })).toBeVisible();
+    // The access rule a purchase made now records, before the buyer accepts the licence (ADM-006).
+    await expect(page.getByTestId("product-later-editions")).toHaveText(
+      "Later editions of this template are included at no further charge.",
+    );
     const save = page.getByRole("button", { name: "Save test order" });
     await expect(save).toBeDisabled();
     await page
@@ -4051,6 +4077,7 @@ test("My Templates lists owned editions once, including older purchases and clos
     available: true,
     message: "Test purchases.",
     livePaymentsEnabled: false,
+    purchaseCarriesToLaterEditions: true,
     orders: [],
     products: [current, { ...current, id: id(200), title: "Another template" }],
     ownedDownloads: [
@@ -4139,6 +4166,8 @@ test("purchase history offers the exact owned file on a verified order and keeps
       id: "00000000-0000-4000-8000-00000000a102",
       reference: "ORD-SYNTH-2",
       contentVersionId: "00000000-0000-4000-8000-00000000a202",
+      // Made while the owner's rule said a purchase covers only the edition bought (ADM-006).
+      carriesToLaterEditions: false,
     },
     { ...paid, id: "00000000-0000-4000-8000-00000000a103", reference: "ORD-SYNTH-3", status: "reversed" },
     {
@@ -4166,6 +4195,14 @@ test("purchase history offers the exact owned file on a verified order and keeps
       downloadPath,
     );
     await expect(receipt).toBeVisible();
+    // Each order shows the access rule it recorded when it was made.
+    await expect(order.getByTestId("order-later-editions")).toHaveText("Included at no further charge");
+    await expect(
+      history
+        .getByRole("article")
+        .filter({ has: page.getByText("ORD-SYNTH-2", { exact: true }) })
+        .getByTestId("order-later-editions"),
+    ).toHaveText("Not included: this order covers the edition bought, while it stays released");
     listing.ownedDownloads = [];
     await page.reload();
     await expect(receipt).toBeVisible();
@@ -4189,6 +4226,7 @@ test("with nothing for sale and no order, the purchases screen says so in plain 
         message: "Synthetic test fixture: a note in the server's own words.",
         ownedDownloads: [],
         livePaymentsEnabled: false,
+        purchaseCarriesToLaterEditions: true,
         orders: [],
         products: [],
       }),
@@ -5731,10 +5769,27 @@ test("the owner's settings panel previews a value's exact terms and records only
   const checksum = "d".repeat(64);
   const previews: unknown[] = [],
     recorded: unknown[] = [];
+  const words = {
+    drafting_workspace_daily: {
+      kind: "count",
+      title: "The drafting assistant's daily allowance for each workspace",
+      unit: "drafts a day",
+      yes: null,
+      no: null,
+    },
+    purchase_carries_to_later_editions: {
+      kind: "yes-no",
+      title: "Whether a purchase carries to its template's later editions",
+      unit: null,
+      yes: "A purchase carries to its template's later editions, at no further charge",
+      no: "A purchase covers only the edition bought, while it stays released",
+    },
+  } as const;
+  const valueOf = (text: string) => (/^\d+$/.test(text) ? Number(text) : text === "yes");
   const setting: Api = async (route, method, path, query) => {
     if (method === "POST" && path === "/admin/owner-settings/previews") {
       const body = route.request().postDataJSON() as {
-        key: "drafting_workspace_daily";
+        key: keyof typeof words;
         value: string;
         from: string;
       };
@@ -5744,25 +5799,28 @@ test("the owner's settings panel previews a value's exact terms and records only
         contentType: "application/json",
         body: JSON.stringify(
           api.PreviewOwnerSettingResponse.parse({
-            title: "The drafting assistant's daily allowance for each workspace",
-            unit: "drafts a day",
-            terms: { key: body.key, value: Number(body.value), from: body.from },
+            ...words[body.key],
+            terms: { key: body.key, value: valueOf(body.value), from: body.from },
             checksum,
           }),
         ),
       });
     } else if (method === "POST" && path === "/admin/owner-settings") {
-      recorded.push(route.request().postDataJSON());
+      const body = route.request().postDataJSON() as { key: keyof typeof words; value: string };
+      recorded.push(body);
       await route.fulfill({
         status: 200,
         contentType: "application/json",
         body: JSON.stringify(
           api.RecordOwnerSettingResponse.parse({
             settingId: "00000000-0000-4000-8000-00000000c002",
-            key: "drafting_workspace_daily",
-            value: 40,
+            key: body.key,
+            value: valueOf(body.value),
             from: at(25),
-            closed: [{ settingId: "00000000-0000-4000-8000-00000000c001", value: 12 }],
+            closed:
+              body.key === "drafting_workspace_daily"
+                ? [{ settingId: "00000000-0000-4000-8000-00000000c001", value: 12 }]
+                : [],
           }),
         ),
       });
@@ -5797,15 +5855,39 @@ test("the owner's settings panel previews a value's exact terms and records only
       .fill("synthetic-owner-setting-approval");
     await settled(page);
     assert.deepEqual(await phoneProblems(page, "the owner's settings panel with a preview"), []);
+    // The check ends on a 320-pixel screen; the phone is 360 pixels wide again for the rule's check.
+    await page.setViewportSize({ width: 360, height: 640 });
     await record.click();
     await expect(panel.getByRole("status")).toHaveText(
       "Value recorded: 40 drafts a day for the drafting assistant's daily allowance for each workspace, from 25 Nov 2026, 10:00. The setting's earlier value closes then.",
     );
+    // The access rule is answered yes or no, each in its own words, not as a number.
+    await expect(values).toContainText(
+      "A purchase carries to its template's later editions, at no further charge, the default: you have recorded no value.",
+    );
+    await panel.getByLabel("Setting", { exact: true }).selectOption("purchase_carries_to_later_editions");
+    await expect(panel.getByLabel("Drafts a day, a whole number")).toHaveCount(0);
+    await expect(preview).toBeDisabled();
+    await panel
+      .getByRole("radio", { name: "A purchase covers only the edition bought, while it stays released" })
+      .check();
+    await preview.click();
+    await expect(shown).toContainText(
+      "ValueA purchase covers only the edition bought, while it stays released",
+    );
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "the owner's settings panel with the rule's preview"), []);
+    await record.click();
+    await expect(panel.getByRole("status")).toHaveText(
+      "Rule recorded from 25 Nov 2026, 10:00: A purchase covers only the edition bought, while it stays released.",
+    );
     const terms = { key: "drafting_workspace_daily", value: "40", from: "now" };
+    const rule = { key: "purchase_carries_to_later_editions", value: "no", from: "now" };
     // Two previews of the same terms: the changed value was never previewed.
-    assert.deepEqual(previews, [terms, terms]);
+    assert.deepEqual(previews, [terms, terms, rule]);
     assert.deepEqual(recorded, [
       { ...terms, reference: "synthetic-owner-setting-approval", confirm: checksum },
+      { ...rule, reference: "synthetic-owner-setting-approval", confirm: checksum },
     ]);
     assert.deepEqual(errors, []);
     assert.deepEqual(unknown, []);

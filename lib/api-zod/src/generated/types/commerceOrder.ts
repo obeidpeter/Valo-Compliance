@@ -22,6 +22,8 @@ export interface CommerceOrder {
   licenceText: string;
   taxTreatment: string;
   contentVersionId: string;
+  /** The access rule the order recorded when it was made, and keeps: whether the purchase carries to its template's later editions. An order made before the rule had a record carries. */
+  carriesToLaterEditions: boolean;
   /** @nullable */
   refundStatus: string | null;
   /** @nullable */

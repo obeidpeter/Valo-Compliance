@@ -1147,12 +1147,24 @@ export type OwnerSettingKey = typeof OwnerSettingKey[keyof typeof OwnerSettingKe
 export const OwnerSettingKey = {
   drafting_workspace_daily: 'drafting_workspace_daily',
   drafting_daily_in_all: 'drafting_daily_in_all',
+  purchase_carries_to_later_editions: 'purchase_carries_to_later_editions',
+} as const;
+
+/**
+ * A whole number, or yes or no
+ */
+export type OwnerSettingKind = typeof OwnerSettingKind[keyof typeof OwnerSettingKind];
+
+
+export const OwnerSettingKind = {
+  count: 'count',
+  'yes-no': 'yes-no',
 } as const;
 
 export interface OwnerSettingValue {
   settingId: string;
   /** @minimum 0 */
-  value: number;
+  value: number | boolean;
   effectiveFrom: string;
   /** @nullable */
   effectiveTo: string | null;
@@ -1160,15 +1172,33 @@ export interface OwnerSettingValue {
 
 export interface OwnerSetting {
   key: OwnerSettingKey;
+  kind: OwnerSettingKind;
   title: string;
-  unit: string;
+  /**
+     * What a whole number counts; none for yes or no
+     * @nullable
+     */
+  unit: string | null;
+  /**
+     * What yes means; none for a whole number
+     * @nullable
+     */
+  yes: string | null;
+  /**
+     * What no means; none for a whole number
+     * @nullable
+     */
+  no: string | null;
   /**
      * The value while no value the owner recorded is in effect
      * @minimum 0
      */
-  defaultValue: number;
-  /** @minimum 0 */
-  max: number;
+  defaultValue: number | boolean;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  max: number | null;
   /**
      * The value in effect and any scheduled to start, earliest first.
      * @maxItems 100
@@ -1184,8 +1214,8 @@ export interface OwnerSettingPage {
 export interface OwnerSettingTerms {
   key: OwnerSettingKey;
   /**
-     * A whole number, such as 30
-     * @pattern ^\d{1,7}$
+     * A whole number, such as 30, or yes or no
+     * @pattern ^(\d{1,7}|yes|no)$
      */
   value: string;
   /**
@@ -1199,13 +1229,19 @@ export interface OwnerSettingTerms {
 export interface OwnerSettingExactTerms {
   key: OwnerSettingKey;
   /** @minimum 0 */
-  value: number;
+  value: number | boolean;
   from: string;
 }
 
 export interface OwnerSettingPreview {
+  kind: OwnerSettingKind;
   title: string;
-  unit: string;
+  /** @nullable */
+  unit: string | null;
+  /** @nullable */
+  yes: string | null;
+  /** @nullable */
+  no: string | null;
   terms: OwnerSettingExactTerms;
   /** @pattern ^[0-9a-f]{64}$ */
   checksum: string;
@@ -1213,7 +1249,7 @@ export interface OwnerSettingPreview {
 
 export interface OwnerSettingRecord {
   key: OwnerSettingKey;
-  /** @pattern ^\d{1,7}$ */
+  /** @pattern ^(\d{1,7}|yes|no)$ */
   value: string;
   /**
      * @minLength 3
@@ -1236,14 +1272,14 @@ export interface OwnerSettingRecord {
 export type OwnerSettingRecordedClosedItem = {
   settingId: string;
   /** @minimum 0 */
-  value: number;
+  value: number | boolean;
 };
 
 export interface OwnerSettingRecorded {
   settingId: string;
   key: OwnerSettingKey;
   /** @minimum 0 */
-  value: number;
+  value: number | boolean;
   from: string;
   /** @maxItems 100 */
   closed: OwnerSettingRecordedClosedItem[];
@@ -1298,6 +1334,8 @@ export interface CommerceOrder {
   licenceText: string;
   taxTreatment: string;
   contentVersionId: string;
+  /** The access rule the order recorded when it was made, and keeps: whether the purchase carries to its template's later editions. An order made before the rule had a record carries. */
+  carriesToLaterEditions: boolean;
   /** @nullable */
   refundStatus: string | null;
   /** @nullable */
@@ -1335,6 +1373,8 @@ export interface CustomerPurchases {
   available: boolean;
   message: string;
   livePaymentsEnabled: boolean;
+  /** The access rule a purchase made now records: whether it carries to its template's later editions at no further charge, or covers only the edition bought, while it stays released (docs/architecture/commercial-settings.md, slice 3b). An order is made only with this rule accepted. */
+  purchaseCarriesToLaterEditions: boolean;
   hasMoreOrders?: boolean;
   orders: CommerceOrder[];
   products: TemplateOffer[];
@@ -1349,6 +1389,8 @@ export interface CommerceOrderInput {
      * @maxLength 100
      */
   acceptedLicenceVersion: string;
+  /** The access rule the buyer was shown, which must be the rule in effect when the order is made. */
+  acceptedCarriesToLaterEditions: boolean;
   requestKey: string;
 }
 
@@ -1930,8 +1972,13 @@ export interface EditionNotice {
      * @nullable
      */
   reason: string | null;
-  /** Whether the workspace holds the template through a purchase. */
+  /** Whether the workspace holds the edition through a purchase. */
   held: boolean;
+  /**
+     * For a replaced edition the workspace holds: whether its purchase carries to the replacement, under the access rule its order recorded. None otherwise, and on a notice written before orders recorded a rule, when every purchase carried.
+     * @nullable
+     */
+  carries: boolean | null;
   /**
      * How many of the workspace's documents were made from the edition.
      * @minimum 0

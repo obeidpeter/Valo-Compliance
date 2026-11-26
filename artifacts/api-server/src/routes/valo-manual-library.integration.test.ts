@@ -16,6 +16,7 @@ import {
 import { exercisePremiumPriceCommand } from "../test-support/premium-price-command";
 import { exerciseOwnerPriceRoutes } from "../test-support/owner-price-routes";
 import { exerciseOwnerSettingRoutes } from "../test-support/owner-setting-routes";
+import { exerciseOrderAccessRule } from "../test-support/order-access-rule";
 import { createOwnerPriceRouter } from "./valo-owner-prices";
 import { createOwnerSettingRouter } from "./valo-owner-settings";
 import { exerciseOverduePremiumTemplate } from "../test-support/manual-overdue-premium";
@@ -791,6 +792,10 @@ test(
     await t.test(
       "only the recently verified development owner previews and records a commercial setting's value, which closes the open one when it starts and which a customer request reads in effect",
       () => exerciseOwnerSettingRoutes(call, editor),
+    );
+    await t.test(
+      "each order records whether its purchase carries to the template's later editions, as the owner's rule was when it was made, and keeps it",
+      () => exerciseOrderAccessRule(call, editor),
     );
     await t.test(
       "only the recently verified development owner reaches the checker rule sign-off routes, and only from Valo's own pages",
@@ -1750,6 +1755,8 @@ test(
             replacementVersion: 2,
             reason: changeNote,
             held: false,
+            // The workspace made documents from the edition and bought nothing, so nothing carries.
+            carries: null,
             documents: 2,
             createdAt: undefined,
           },

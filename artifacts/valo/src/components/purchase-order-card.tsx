@@ -80,6 +80,15 @@ export function OrderCard({
           <dt className="text-muted-foreground">Tax treatment</dt>
           <dd>{order.taxTreatment}</dd>
         </div>
+        <div>
+          {/* The access rule this order recorded when it was made, and keeps (ADM-006). */}
+          <dt className="text-muted-foreground">Later editions</dt>
+          <dd data-testid="order-later-editions">
+            {order.carriesToLaterEditions
+              ? "Included at no further charge"
+              : "Not included: this order covers the edition bought, while it stays released"}
+          </dd>
+        </div>
       </dl>
       <details className="my-4 text-sm">
         <summary className="cursor-pointer py-2 font-medium">

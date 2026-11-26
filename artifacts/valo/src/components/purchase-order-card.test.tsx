@@ -20,6 +20,7 @@ const order: CommerceOrder = {
   licenceText: "Synthetic licence text.",
   taxTreatment: "Synthetic tax treatment.",
   contentVersionId: "00000000-0000-4000-8000-00000000a201",
+  carriesToLaterEditions: true,
   refundStatus: null,
   receiptReference: "RCT-SYNTH-1",
   refunds: [],
@@ -34,10 +35,10 @@ const bought: OwnedCheckoutDownload = {
   title: order.title,
   downloadPath: "/api/workspace/manual-premium-templates/00000000-0000-4000-8000-00000000a201/download",
 };
-const render = (download: OwnedCheckoutDownload | undefined) =>
+const render = (download: OwnedCheckoutDownload | undefined, shown: CommerceOrder = order) =>
   renderToStaticMarkup(
     <QueryClientProvider client={new QueryClient()}>
-      <OrderCard order={order} download={download} changed={async () => undefined} />
+      <OrderCard order={shown} download={download} changed={async () => undefined} />
     </QueryClientProvider>,
   );
 
@@ -57,4 +58,15 @@ test("a purchase whose edition was replaced downloads the new edition and says i
   assert.doesNotMatch(render(bought), /order-download-carried/);
   // With no edition to download, the order says so, and its receipt stays.
   assert.match(render(undefined), /This edition is no longer available to download/);
+});
+
+test("an order shows the access rule it recorded when it was made (ADM-006)", () => {
+  assert.match(render(bought), /Later editions<\/dt><dd[^>]*>Included at no further charge</);
+  // An order that covers only the edition bought says so; once that edition is replaced, its receipt stays.
+  const only = { ...order, carriesToLaterEditions: false };
+  assert.match(
+    render(bought, only),
+    /Later editions<\/dt><dd[^>]*>Not included: this order covers the edition bought, while it stays released</,
+  );
+  assert.match(render(undefined, only), /This edition is no longer available to download/);
 });

@@ -129,6 +129,13 @@ export const valoOrders = pgTable(
     checkoutUrl: text("checkout_url"),
     lastCheckedAt: timestamp("last_checked_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    /**
+     * Whether this purchase carries to its template's later editions: the owner's access rule in effect
+     * when the order was created, which the database records and keeps (docs/architecture/
+     * commercial-settings.md, slice 3b). None on an order made before the rule had a record, which
+     * carries, as every purchase did when it was made.
+     */
+    carriesToLaterEditions: boolean("carries_to_later_editions"),
   },
   (t) => [
     uniqueIndex("valo_order_reference_unique").on(t.reference),

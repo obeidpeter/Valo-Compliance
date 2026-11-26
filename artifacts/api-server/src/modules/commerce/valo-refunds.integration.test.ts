@@ -170,6 +170,18 @@ test(
         await lock.query("BEGIN");
         await lock.query("SELECT id FROM valo_orders WHERE id=$1 FOR UPDATE", [id]);
         work = run();
+        // The write's outcome is caught as soon as it starts. Once this lock is released, PostgreSQL may
+        // finish the waiting write, and its refusal reach the test, before the reply to this COMMIT does: a
+        // rejection with no handler yet would fail the test whatever its outcome.
+        let settled = false;
+        const outcome = work
+          .then(
+            () => ({ error: undefined as unknown }),
+            (error: unknown) => ({ error }),
+          )
+          .finally(() => {
+            settled = true;
+          });
         let observed = false;
         for (let n = 0; n < 80; n++) {
           const r = await pool.query(
@@ -183,8 +195,10 @@ test(
         }
         assert.ok(observed, "observed blocked resource write before revocation");
         await revoke();
+        assert.equal(settled, false, "the write still waits on the order when the revocation commits");
         await lock.query("COMMIT");
-        await assert.rejects(work, { status: 403 });
+        const { error } = await outcome;
+        assert.equal((error as { status?: number } | undefined)?.status, 403, String(error));
       } finally {
         await lock.query("ROLLBACK");
         lock.release();

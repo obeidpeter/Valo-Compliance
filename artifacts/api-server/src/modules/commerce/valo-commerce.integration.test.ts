@@ -97,6 +97,7 @@ test(
             priceId,
             requestKey: randomUUID(),
             acceptedLicenceVersion: fixtureLine.licenceVersion,
+            acceptedCarriesToLaterEditions: true,
           }),
           { status: 409 },
         );
@@ -105,6 +106,7 @@ test(
             priceId,
             requestKey: randomUUID(),
             acceptedLicenceVersion: fixtureLine.licenceVersion,
+            acceptedCarriesToLaterEditions: true,
             amountKobo: 1,
             currency: "USD",
           }),

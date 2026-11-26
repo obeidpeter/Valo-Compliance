@@ -12,7 +12,7 @@ export interface OwnerSettingRecorded {
   settingId: string;
   key: OwnerSettingKey;
   /** @minimum 0 */
-  value: number;
+  value: number | boolean;
   from: Date;
   /** @maxItems 100 */
   closed: OwnerSettingRecordedClosedItem[];

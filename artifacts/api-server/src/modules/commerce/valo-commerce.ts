@@ -19,6 +19,7 @@ import {
 import { z } from "zod";
 import { activeTemplatePrices, isFreeBaselineTemplate, liveOperationalVersions } from "../catalogue";
 import { authorizeWorkspaceRead, authorizeWorkspaceWrite, type WorkspaceActor } from "../workspaces";
+import { commercialSettingChoice } from "../commercial-settings";
 import { ValoProblem } from "../../platform/valo-problem";
 import { consumeQuota, quotaPolicy, quotaSubjectHash } from "../../lib/valo-quota";
 import {
@@ -87,6 +88,8 @@ function display(
     licenceText: order.line.licenceText,
     taxTreatment: order.line.taxTreatment,
     contentVersionId: order.line.contentVersionId,
+    // The access rule the order recorded when it was made; one made before the rule had a record carries.
+    carriesToLaterEditions: order.carriesToLaterEditions ?? true,
     refundStatus: refunds[0]?.status ?? null,
     refunds: refunds.map(refundView),
     ...refundBalance(order.amountKobo, refunds),
@@ -132,7 +135,7 @@ async function presentOrder(tx: Tx, order: typeof valoOrders.$inferSelect) {
 /** The released catalogue. It reads publication artifacts from storage and takes its own
  * pooled connections, so call it outside transactions: a caller that holds a transaction's
  * connection while it waits for another lets enough concurrent requests exhaust the pool. */
-type OwnedPrice = { offerId: string; edition: string; title: string };
+type OwnedPrice = { offerId: string; edition: string; title: string; carries: boolean };
 async function commercialCatalogue(ownedPrices: OwnedPrice[] = []) {
   const [released, prices] = await Promise.all([liveOperationalVersions(), activeTemplatePrices()]);
   const reviewedIds = new Set(released.filter((v) => !isFreeBaselineTemplate(v.templateId)).map((v) => v.id));
@@ -172,19 +175,19 @@ async function commercialCatalogue(ownedPrices: OwnedPrice[] = []) {
         manual: true,
       });
     const live = new Map(released.map((version) => [version.templateId, version]));
-    const bought = await db
-      .select({
-        id: valoContentVersions.id,
-        templateId: valoContentVersions.templateId,
-        version: valoContentVersions.version,
-      })
-      .from(valoContentVersions)
-      .where(
-        inArray(
-          valoContentVersions.id,
-          replaced.map(({ edition }) => edition),
-        ),
-      );
+    // On the reviewed route, only a purchase whose order recorded that it carries reaches the template's
+    // released version (docs/architecture/commercial-settings.md, slice 3b).
+    const carrying = replaced.filter(({ carries }) => carries).map(({ edition }) => edition);
+    const bought = carrying.length
+      ? await db
+          .select({
+            id: valoContentVersions.id,
+            templateId: valoContentVersions.templateId,
+            version: valoContentVersions.version,
+          })
+          .from(valoContentVersions)
+          .where(inArray(valoContentVersions.id, carrying))
+      : [];
     for (const row of bought) {
       const now = live.get(row.templateId);
       if (now && now.id !== row.id && reviewedIds.has(now.id))
@@ -225,18 +228,22 @@ export async function commerceProducts() {
 export async function ownedTemplateEditions(actor: WorkspaceActor) {
   const { owned, reviewed } = await db.transaction(async (tx) => {
     await authorizeWorkspaceRead(tx, actor);
-    const { rows } = await tx.execute<{ edition: string }>(sql`${verifiedEditions(actor)} order by edition`);
-    // A purchase carries to its template's released edition (docs/architecture/editions.md, slice 2):
-    // the staff library's through its owner's function, the reviewed route's by its template.
+    const { rows } = await tx.execute<{ edition: string; carries: boolean }>(
+      sql`${verifiedEditions(actor)} order by edition`,
+    );
+    // A purchase carries to its template's released edition (docs/architecture/editions.md, slice 2)
+    // under the access rule its order recorded (docs/architecture/commercial-settings.md, slice 3b): the
+    // staff library's through its owner's function, the reviewed route's by its template.
     const { rows: carried } = await tx.execute<{ edition: string }>(
       sql`select edition from public.valo_workspace_carried_editions()`,
     );
     const editions = rows.map((row) => row.edition);
-    const reviewed = editions.length
+    const carrying = rows.filter((row) => row.carries).map((row) => row.edition);
+    const reviewed = carrying.length
       ? await tx
           .select({ templateId: valoContentVersions.templateId })
           .from(valoContentVersions)
-          .where(inArray(valoContentVersions.id, editions))
+          .where(inArray(valoContentVersions.id, carrying))
       : [];
     return { owned: [...editions, ...carried.map((row) => row.edition)], reviewed };
   });
@@ -305,11 +312,13 @@ export async function purchases(actor: WorkspaceActor) {
       for (const event of receiptEvents) originalReceipts.add(event.id);
     }
     const ownedPrices = await tx.execute<OwnedPrice>(sql`
-      select p.id as "offerId", p.content_version_id as edition, p.title
+      select p.id as "offerId", p.content_version_id as edition, p.title, owned.carries
       from public.valo_prices p join (${verifiedEditions(actor)}) owned on owned.edition=p.content_version_id
       where p.effective_from<=now() and length(p.approval_reference)>0 order by p.id`);
     return {
       ownedPrices: ownedPrices.rows,
+      // The access rule a purchase made now records (slice 3b), which the buyer accepts with the licence.
+      purchaseCarriesToLaterEditions: await commercialSettingChoice(tx, "purchase_carries_to_later_editions"),
       available: true,
       livePaymentsEnabled: false,
       hasMoreOrders,
@@ -341,13 +350,20 @@ export async function createOrder(actor: WorkspaceActor, raw: unknown) {
     await assertSafetyActive(tx, "checkout");
     // Serialize one tenant's idempotency/price selection without trusting browser prices.
     await lockCheckoutWorkspace(tx, actor.workspaceId);
+    // The access rule a new order records (docs/architecture/commercial-settings.md, slice 3b), held to the
+    // end of this transaction: the buyer accepted it, and the database records the same rule on the order.
+    const carries = await commercialSettingChoice(tx, "purchase_carries_to_later_editions", { hold: true });
     const [old] = await tx
       .select()
       .from(valoOrders)
       .where(and(eq(valoOrders.workspaceId, actor.workspaceId), eq(valoOrders.requestKey, input.requestKey)));
     if (old) {
       await authorizeWorkspaceWrite(tx, actor);
-      if (old.priceId !== input.priceId || old.line.licenceVersion !== input.acceptedLicenceVersion)
+      if (
+        old.priceId !== input.priceId ||
+        old.line.licenceVersion !== input.acceptedLicenceVersion ||
+        (old.carriesToLaterEditions ?? true) !== input.acceptedCarriesToLaterEditions
+      )
         throw new ValoProblem(
           409,
           "This request key belongs to another choice. Your original order is unchanged.",
@@ -376,9 +392,18 @@ export async function createOrder(actor: WorkspaceActor, raw: unknown) {
     }
     if (input.acceptedLicenceVersion !== price.licenceVersion)
       throw new ValoProblem(409, "The licence changed. Review the current licence before continuing.");
+    if (input.acceptedCarriesToLaterEditions !== carries)
+      throw new ValoProblem(
+        409,
+        "What a purchase includes has changed. Review it before continuing. No order was created.",
+      );
     const existing = await openEditionOrder(tx, actor, price.contentVersionId, price.id);
     if (existing) {
-      if (existing.priceId !== price.id || existing.line.licenceVersion !== input.acceptedLicenceVersion)
+      if (
+        existing.priceId !== price.id ||
+        existing.line.licenceVersion !== input.acceptedLicenceVersion ||
+        (existing.carriesToLaterEditions ?? true) !== carries
+      )
         throw new ValoProblem(
           409,
           "An earlier order for this edition has different terms. Check it in your purchases.",
@@ -399,6 +424,8 @@ export async function createOrder(actor: WorkspaceActor, raw: unknown) {
           priceId: price.id,
           amountKobo: price.amountKobo,
           currency: price.currency,
+          // The database refuses any rule but the one in effect, which this transaction holds.
+          carriesToLaterEditions: carries,
           line: {
             title: price.title,
             contentVersionId: price.contentVersionId,

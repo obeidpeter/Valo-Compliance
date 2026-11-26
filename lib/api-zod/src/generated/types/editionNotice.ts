@@ -26,8 +26,13 @@ export interface EditionNotice {
      * @nullable
      */
   reason: string | null;
-  /** Whether the workspace holds the template through a purchase. */
+  /** Whether the workspace holds the edition through a purchase. */
   held: boolean;
+  /**
+     * For a replaced edition the workspace holds: whether its purchase carries to the replacement, under the access rule its order recorded. None otherwise, and on a notice written before orders recorded a rule, when every purchase carried.
+     * @nullable
+     */
+  carries: boolean | null;
   /**
      * How many of the workspace's documents were made from the edition.
      * @minimum 0

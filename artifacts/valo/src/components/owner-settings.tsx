@@ -13,6 +13,13 @@ import { ErrorState } from "./states";
 
 const field = "mt-1 block w-full rounded-lg border border-border bg-background p-2";
 
+type Words = { unit: string | null; yes: string | null; no: string | null };
+/** A value as the screen says it: a count with its unit, or what yes or no means for the setting. */
+const valueText = (value: number | boolean, words: Words) =>
+  typeof value === "boolean"
+    ? ((value ? words.yes : words.no) ?? (value ? "Yes" : "No"))
+    : `${formatCount(value)} ${words.unit ?? ""}`.trim();
+
 /**
  * The owner's commercial settings (docs/architecture/commercial-settings.md, slice 3; ADM-006): the
  * drafting assistant's two daily allowances, each with its default and the values the owner recorded.
@@ -70,11 +77,16 @@ export function OwnerSettings() {
       setPreview(null);
       await result.refetch();
       setNotice(
-        `Value recorded: ${formatCount(saved.value)} ${shown.unit} for ${shown.title.toLowerCase()}, from ${formatDateTime(saved.from)}.` +
+        (typeof saved.value === "boolean"
+          ? `Rule recorded from ${formatDateTime(saved.from)}: ${valueText(saved.value, shown)}.`
+          : `Value recorded: ${valueText(saved.value, shown)} for ${shown.title.toLowerCase()}, from ${formatDateTime(saved.from)}.`) +
           (saved.closed.length ? " The setting's earlier value closes then." : ""),
       );
     });
-  const ready = Boolean(key && /^\d{1,7}$/.test(value.trim()));
+  const chosen = result.data?.items.find((item) => item.key === key);
+  const ready = Boolean(
+    chosen && (chosen.kind === "yes-no" ? /^(yes|no)$/.test(value) : /^\d{1,7}$/.test(value.trim())),
+  );
   return (
     <section className="surface mt-8 p-5 sm:p-7" aria-labelledby="owner-settings-heading">
       <h2 className="font-display text-2xl" id="owner-settings-heading">
@@ -100,15 +112,14 @@ export function OwnerSettings() {
                   <ul className="mt-1 list-disc pl-5">
                     {item.values.map((recorded) => (
                       <li key={recorded.settingId}>
-                        {formatCount(recorded.value)} {item.unit} from{" "}
-                        {formatDateTime(recorded.effectiveFrom)}
+                        {valueText(recorded.value, item)} from {formatDateTime(recorded.effectiveFrom)}
                         {recorded.effectiveTo ? ` to ${formatDateTime(recorded.effectiveTo)}` : ""}
                       </li>
                     ))}
                   </ul>
                 ) : (
                   <p className="mt-1">
-                    {formatCount(item.defaultValue)} {item.unit}, the default: you have recorded no value.
+                    {valueText(item.defaultValue, item)}, the default: you have recorded no value.
                   </p>
                 )}
               </li>
@@ -124,7 +135,11 @@ export function OwnerSettings() {
                 id={id + "-key"}
                 className={field}
                 value={key}
-                onChange={(e) => edit(setKey)(e.target.value as OwnerSettingKey | "")}
+                onChange={(e) => {
+                  // A whole number and a yes or no are different answers: a new setting starts with none.
+                  setValue("");
+                  edit(setKey)(e.target.value as OwnerSettingKey | "");
+                }}
                 disabled={busy}
               >
                 <option value="">Choose a setting</option>
@@ -135,19 +150,38 @@ export function OwnerSettings() {
                 ))}
               </select>
             </div>
-            <div>
-              <label className="block text-sm font-medium" htmlFor={id + "-value"}>
-                Drafts a day, a whole number
-              </label>
-              <input
-                id={id + "-value"}
-                className={field}
-                inputMode="numeric"
-                value={value}
-                onChange={(e) => edit(setValue)(e.target.value)}
-                disabled={busy}
-              />
-            </div>
+            {chosen?.kind === "yes-no" ? (
+              <fieldset className="text-sm">
+                <legend className="font-medium">The rule</legend>
+                {(["yes", "no"] as const).map((answer) => (
+                  <label key={answer} className="mt-1 flex items-start gap-2">
+                    <input
+                      type="radio"
+                      name="owner-setting-answer"
+                      className="mt-1"
+                      checked={value === answer}
+                      onChange={() => edit(setValue)(answer)}
+                      disabled={busy}
+                    />
+                    {answer === "yes" ? chosen.yes : chosen.no}
+                  </label>
+                ))}
+              </fieldset>
+            ) : (
+              <div>
+                <label className="block text-sm font-medium" htmlFor={id + "-value"}>
+                  Drafts a day, a whole number
+                </label>
+                <input
+                  id={id + "-value"}
+                  className={field}
+                  inputMode="numeric"
+                  value={value}
+                  onChange={(e) => edit(setValue)(e.target.value)}
+                  disabled={busy}
+                />
+              </div>
+            )}
             <fieldset className="text-sm">
               <legend className="font-medium">When it starts</legend>
               <label className="mt-1 flex items-center gap-2">
@@ -205,9 +239,7 @@ export function OwnerSettings() {
                 </div>
                 <div>
                   <dt className="font-semibold">Value</dt>
-                  <dd>
-                    {formatCount(preview.terms.value)} {preview.unit}
-                  </dd>
+                  <dd>{valueText(preview.terms.value, preview)}</dd>
                 </div>
                 <div>
                   <dt className="font-semibold">Starts</dt>

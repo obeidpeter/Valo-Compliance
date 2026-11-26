@@ -13,7 +13,7 @@ export const valoCommercialSettings = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     key: text("key").notNull(),
-    value: jsonb("value").notNull().$type<number>(),
+    value: jsonb("value").notNull().$type<number | boolean>(),
     approvalReference: text("approval_reference").notNull(),
     effectiveFrom: timestamp("effective_from", { withTimezone: true }).notNull(),
     effectiveTo: timestamp("effective_to", { withTimezone: true }),
@@ -24,11 +24,11 @@ export const valoCommercialSettings = pgTable(
     uniqueIndex("valo_commercial_settings_open_unique")
       .on(t.key)
       .where(sql`${t.effectiveTo} IS NULL`),
-    // The drafting assistant's two daily allowances are whole numbers, none below nought. The code
-    // refuses a value far above today's as a likely typing error.
+    // The drafting assistant's two daily allowances are whole numbers, none below nought; the code
+    // refuses a value far above today's as a likely typing error. The access rule is yes or no.
     check(
       "valo_commercial_settings_value_check",
-      sql`CASE WHEN ${t.key} IN ('drafting_workspace_daily', 'drafting_daily_in_all') AND jsonb_typeof(${t.value}) = 'number' THEN (${t.value})::numeric >= 0 AND (${t.value})::numeric = trunc((${t.value})::numeric) ELSE false END`,
+      sql`CASE WHEN ${t.key} IN ('drafting_workspace_daily', 'drafting_daily_in_all') AND jsonb_typeof(${t.value}) = 'number' THEN (${t.value})::numeric >= 0 AND (${t.value})::numeric = trunc((${t.value})::numeric) WHEN ${t.key} = 'purchase_carries_to_later_editions' THEN jsonb_typeof(${t.value}) = 'boolean' ELSE false END`,
     ),
     check("valo_commercial_settings_approval_reference_check", sql`length(${t.approvalReference}) > 0`),
     check(

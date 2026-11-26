@@ -289,6 +289,7 @@ export * from './ownerRuleSourceWatchWatch';
 export * from './ownerSetting';
 export * from './ownerSettingExactTerms';
 export * from './ownerSettingKey';
+export * from './ownerSettingKind';
 export * from './ownerSettingPage';
 export * from './ownerSettingPreview';
 export * from './ownerSettingRecord';

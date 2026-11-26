@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import type { db, valoContentVersions } from "@workspace/db";
 import {
   baselineTemplates,
@@ -455,21 +455,30 @@ export async function requirePurchaseForPricedMaster(
   actor: WorkspaceActor,
   row: typeof valoContentVersions.$inferSelect,
 ) {
-  const { valoContentVersions, valoEntitlements, valoPrices } = await import("@workspace/db");
+  const { valoContentVersions, valoEntitlements, valoOrders, valoPrices } = await import("@workspace/db");
   // Baseline TPL-01..12 are always free; a price record cannot silently change that contract.
   if (isFreeBaselineTemplate(row.templateId)) return;
   // A purchase of any version of the template carries to this one at no further charge
   // (docs/architecture/editions.md, slice 2; delegated decision 3), so a later version needs no price
-  // of its own for its buyers.
+  // of its own for its buyers, unless the purchase's order recorded that it covers only the version
+  // bought (docs/architecture/commercial-settings.md, slice 3b).
   const [grant] = await tx
     .select({ id: valoEntitlements.id })
     .from(valoEntitlements)
     .innerJoin(valoContentVersions, eq(valoContentVersions.id, valoEntitlements.contentVersionId))
+    .innerJoin(
+      valoOrders,
+      and(
+        eq(valoOrders.id, valoEntitlements.orderId),
+        eq(valoOrders.workspaceId, valoEntitlements.workspaceId),
+      ),
+    )
     .where(
       and(
         eq(valoEntitlements.workspaceId, actor.workspaceId),
         eq(valoContentVersions.templateId, row.templateId),
         eq(valoEntitlements.status, "active"),
+        sql`(${valoEntitlements.contentVersionId} = ${row.id} or ${valoOrders.carriesToLaterEditions} is not false)`,
       ),
     )
     .limit(1)
