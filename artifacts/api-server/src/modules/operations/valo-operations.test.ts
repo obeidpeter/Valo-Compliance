@@ -77,6 +77,13 @@ test("internal probes measure failures independently and persist/deduplicate/rec
       readinessQueries.spreadRefusals,
       readinessQueries.limitedCallers,
       readinessQueries.refusedInput,
+      readinessQueries.checkouts,
+      readinessQueries.checkoutAmount,
+      readinessQueries.refunds,
+      readinessQueries.refundAmount,
+      readinessQueries.aiSpend,
+      readinessQueries.workspaceDownloads,
+      readinessQueries.staffCopies,
       readinessQueries.guardRefusals,
       readinessQueries.privilegedReading,
       readinessQueries.historyIntegrity,
@@ -167,10 +174,13 @@ test("every alert names its accountable roles and a runbook from the operating r
     const failing = await collectOperationalSample(async () => {
       throw Error("SYNTHETIC_PROBE_FAILURE");
     }, dir);
+    // Above every limit, the amounts in naira included.
+    const overEveryLimit = 1_000_000_000;
     const over = await collectOperationalSample(
-      async (sql) => ({ rows: [{ value: sql === readinessQueries.database ? 1 : 10000 }] }),
+      async (sql) => ({ rows: [{ value: sql === readinessQueries.database ? 1 : overEveryLimit }] }),
       dir,
     );
+    assert.ok(Object.values(over.limits).every((limit) => limit < overEveryLimit));
     const codes = new Set<string>();
     for (const sample of [failing, over])
       for (const owner of (await recordOperationalAlerts(sample, dir)).owners) {
@@ -589,6 +599,96 @@ test("refusals spread over many addresses, callers refused by a limit and one ad
     assert.match(readinessQueries.refusedInput, /GROUP BY subject_hash/);
     for (const name of ["spreadRefusals", "limitedCallers", "refusedInput"] as const)
       assert.match(readinessQueries[name], /interval '10 minutes'/);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { recursive: true, force: true });
+    if (old === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = old;
+  }
+});
+
+// SEC-005: "distributed abuse and financial-cost spikes trigger alerts"; and SEC-008's "bulk exports" and
+// "unusual payment/AI activity" (docs/architecture/alerts.md, part 2).
+test("money, the drafting assistant's use and whole-workspace copies of every workspace raise their own alerts under their runbooks, past their limits only", async () => {
+  const old = process.env.NODE_ENV;
+  process.env.NODE_ENV = "development";
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => {
+    throw Error("EXTERNAL_MESSAGES_FORBIDDEN");
+  };
+  const dir = await mkdtemp(join(tmpdir(), "valo-ops-activity-"));
+  const worker = new WorkerHealth();
+  worker.finish(worker.begin()!, true);
+  const names = [
+    "checkouts",
+    "checkoutAmount",
+    "refunds",
+    "refundAmount",
+    "aiSpend",
+    "workspaceDownloads",
+    "staffCopies",
+  ] as const;
+  try {
+    await recordWorkerHeartbeat(worker.snapshot(), dir);
+    type Readings = Partial<Record<(typeof names)[number], number>>;
+    const sample = (readings: Readings, unreadable?: keyof Readings) =>
+      collectOperationalSample(async (sql) => {
+        if (unreadable && sql === readinessQueries[unreadable]) throw Error("SYNTHETIC_PROBE_FAILURE");
+        const named = names.find((name) => readinessQueries[name] === sql);
+        return {
+          rows: [{ value: sql === readinessQueries.database ? 1 : named ? (readings[named] ?? 0) : 0 }],
+        };
+      }, dir);
+    const finance = { runbook: "Payment/entitlement failure", accountable: "Finance + engineering" };
+    const security = { runbook: "Security/privacy incident", accountable: "Incident lead + privacy owner" };
+    const limits = {
+      checkouts: 50,
+      checkoutAmount: 1_000_000,
+      refunds: 5,
+      refundAmount: 100_000,
+      aiSpend: 25,
+      workspaceDownloads: 10,
+      staffCopies: 5,
+    };
+    // At their limits, in an hour: fifty checkouts begun coming to a million naira, five refunds asked
+    // for and a hundred thousand naira authorised, a quarter of the drafting assistant's daily allowance,
+    // ten whole-workspace downloads and five staff copies of a workspace's data.
+    const quiet = await sample(limits);
+    assert.deepEqual((await recordOperationalAlerts(quiet, dir)).active, []);
+    assert.deepEqual(
+      names.map((name) => quiet.limits[name]),
+      names.map((name) => limits[name]),
+    );
+    // One more of each.
+    const raised = await recordOperationalAlerts(
+      await sample(Object.fromEntries(names.map((name) => [name, limits[name] + 1]))),
+      dir,
+    );
+    assert.deepEqual(raised.owners, [
+      { code: "CHECKOUTS_DETECTED", ...finance },
+      { code: "CHECKOUT_AMOUNT_DETECTED", ...finance },
+      { code: "REFUNDS_DETECTED", ...finance },
+      { code: "REFUND_AMOUNT_DETECTED", ...finance },
+      { code: "AI_SPEND_DETECTED", ...security },
+      { code: "WORKSPACE_DOWNLOADS_DETECTED", ...security },
+      { code: "STAFF_COPIES_DETECTED", ...security },
+    ]);
+    // A reading that cannot be taken is an alert of its own.
+    assert.deepEqual((await recordOperationalAlerts(await sample({}, "aiSpend"), dir)).owners, [
+      { code: "AI_SPEND_PROBE_UNAVAILABLE", ...security },
+    ]);
+    assert.deepEqual((await recordOperationalAlerts(await sample({}), dir)).active, []);
+    // The readings: every workspace's rows of the last hour; amounts in whole naira from kobo; the
+    // drafting assistant's drafts against its allowance in all, the owner's or its default.
+    for (const name of names) assert.match(readinessQueries[name], /interval '1 hour'/);
+    for (const name of names) assert.doesNotMatch(readinessQueries[name], /workspace_id/);
+    assert.match(readinessQueries.checkoutAmount, /sum\(amount_kobo\), 0\) \/ 100/);
+    assert.match(readinessQueries.refundAmount, /WHERE authorised_at > now\(\)/);
+    assert.match(readinessQueries.refunds, /WHERE created_at > now\(\)/);
+    assert.match(readinessQueries.aiSpend, /budget_reserved/);
+    assert.match(readinessQueries.aiSpend, /valo_commercial_setting\('drafting_daily_in_all'\)/);
+    assert.match(readinessQueries.aiSpend, /,\s+120\) AS allowance/);
+    assert.match(readinessQueries.staffCopies, /action='application_export_prepared'/);
   } finally {
     globalThis.fetch = originalFetch;
     await rm(dir, { recursive: true, force: true });

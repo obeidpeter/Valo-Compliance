@@ -940,6 +940,27 @@
       "proves": "With stubbed readings, a hundred refusals of every address together, ten callers refused by a limit and twenty refused inputs from one address in ten minutes raise nothing, one more of each raises SPREAD_REFUSALS_DETECTED, LIMITED_CALLERS_DETECTED and REFUSED_INPUT_DETECTED under the security/privacy incident runbook, and a reading that cannot be taken raises its own alert."
     },
     {
+      "requirement": "SEC-005",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/operations/activity-readings.integration.test.ts",
+      "test": "the money, drafting assistant and whole-workspace readings count every workspace's rows of the last hour, and no older one",
+      "proves": "In PostgreSQL, synthetic checkouts in two workspaces add three and ₦3,550 to the hour's checkout readings while one 61 minutes old adds nothing, and the drafting assistant's reading is the reserved drafts of the last hour in hundredths of its daily allowance in all, leaving out a draft that took nothing and one two hours old."
+    },
+    {
+      "requirement": "SEC-008",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/operations/activity-readings.integration.test.ts",
+      "test": "the money, drafting assistant and whole-workspace readings count every workspace's rows of the last hour, and no older one",
+      "proves": "In PostgreSQL, the hour's readings count two refunds asked for and ₦500 authorised, two whole-workspace downloads asked for and one copy of a workspace's data prepared by privacy staff, from every workspace, and leave out rows older than an hour and a privacy step that is not a copy."
+    },
+    {
+      "requirement": "SEC-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/operations/valo-operations.test.ts",
+      "test": "money, the drafting assistant's use and whole-workspace copies of every workspace raise their own alerts under their runbooks, past their limits only",
+      "proves": "With stubbed readings, fifty checkouts, a million naira, five refunds, a hundred thousand naira refunded, a quarter of the drafting assistant's daily allowance, ten whole-workspace downloads and five staff copies in an hour raise nothing, one more of each raises its own alert, the money ones under the payment runbook and the rest under the security/privacy incident runbook, and a reading that cannot be taken raises its own alert."
+    },
+    {
       "requirement": "SEC-008",
       "job": "foundation",
       "file": "artifacts/api-server/src/middlewares/valo-security-signals.test.ts",

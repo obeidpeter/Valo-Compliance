@@ -99,8 +99,25 @@ input recorded as a security event."
   it does, those refusals are answered as before and their counts are refused and logged.
 - **Money and AI spend** (SEC-005, SEC-008): checkouts and refunds of all workspaces together in an
   hour, by count and amount, and the AI budget's spend in an hour against its allowance.
+  - Built over the last hour, every workspace together, under the payment/entitlement runbook:
+    `CHECKOUTS_DETECTED` when more than fifty checkouts began, and `CHECKOUT_AMOUNT_DETECTED` when they
+    came to more than a million naira; `REFUNDS_DETECTED` when more than five refunds were asked for, and
+    `REFUND_AMOUNT_DETECTED` when the refunds authorised came to more than a hundred thousand naira.
+    Amounts are read in whole naira from the kobo each row keeps.
+  - The drafting assistant's spend is read against its allowance: the drafts of the last hour that took
+    from its daily allowance in all, in hundredths of that allowance, the owner's setting in effect or its
+    default. `AI_SPEND_DETECTED` when the last hour used more than a quarter of the day's allowance,
+    under the security/privacy incident runbook, as the drafting assistant's limit is. The finite
+    allocations of the operators' commands are approved and bounded one by one, and are not read here.
 - **Whole-workspace downloads** (SEC-008's bulk exports): data downloads of whole workspaces, and staff
   copies of a workspace's data, in an hour.
+  - Built over the last hour, every workspace together, under the security/privacy incident runbook:
+    `WORKSPACE_DOWNLOADS_DETECTED` when more than ten whole-workspace downloads were asked for, and
+    `STAFF_COPIES_DETECTED` when privacy staff prepared more than five copies of a workspace's data for
+    an export request.
+- The seven limits are development defaults, set against no measured traffic, and the readings need no
+  migration: they read the orders, refund requests, drafts, whole-workspace downloads and privacy
+  requests' histories Valo keeps already.
 
 ### Part 3: failures, time and backlogs
 
@@ -162,7 +179,7 @@ input recorded as a security event."
 | 1 | Part 1: the journal, the copy from the file, and the System area's list | Built |
 | 2 | Part 3: request counts, failure and time alerts, more backlogs, the route in each request's log | Built |
 | 3a | Part 2: spread-out abuse and refused input | Built |
-| 3b | Part 2: money and AI spend, whole-workspace downloads and staff copies | Not built |
+| 3b | Part 2: money and AI spend, whole-workspace downloads and staff copies | Built |
 | 4 | Part 4: the log inventory, and the security baseline updated | Not built |
 
 ## The owner's points

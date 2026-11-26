@@ -92,7 +92,10 @@ test("every alert reads in plain words, and one whose reading Valo cannot take s
     const failing = await collectOperationalSample(async () => {
       throw Error("SYNTHETIC_PROBE_FAILURE");
     }, dir);
-    const over = await reading(dir, () => 10000);
+    // Above every limit, the amounts in naira included.
+    const overEveryLimit = 1_000_000_000;
+    const over = await reading(dir, () => overEveryLimit);
+    assert.ok(Object.values(over.limits).every((limit) => limit < overEveryLimit));
     const codes = new Set([
       ...(await recordOperationalAlerts(failing, dir)).active,
       ...(await recordOperationalAlerts(over, dir)).active,
