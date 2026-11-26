@@ -198,6 +198,7 @@ checks, which are not provisioned yet.
 | `EXPORT_RETENTION_BACKLOG` | Any ready export past its retention date | Internal operations sample |
 | `WORKSPACE_CLEANUP_BACKLOG` | Any workspace export attempt overdue for cleanup or with a cleanup error | Internal operations sample |
 | `PAYMENTS_BACKLOG` | Any verified payment without its entitlement or receipt | Internal operations sample |
+| `PRIVACY_REQUESTS_BACKLOG` | Any privacy request still open 14 days after it was made: the date Valo aims to finish it by, Valo's own aim and not a time limit set by law | Internal operations sample (PRV-003) |
 | `DENIED_ACCESS_DETECTED` | One hashed address was refused (401 or 403) more than 20 times in ten minutes | Internal operations sample (SEC-008) |
 | `SIGNATURE_FAILURES_DETECTED` | Any payment webhook signature was rejected in the last ten minutes | Internal operations sample (SEC-008) |
 | `ROLE_CHANGES_DETECTED` | Any staff role was granted or revoked in the last hour | Internal operations sample (SEC-008) |

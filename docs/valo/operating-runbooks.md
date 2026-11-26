@@ -15,7 +15,7 @@ they differ.
 | Incorrect compliance content | Content owner + pipeline | Suspend affected versions/search/downloads/rules, preserve historical evidence, identify affected assessments/tasks, retrieve sources, rerun all EDP gates, publish corrections and notify when material. No released content exists; no correction drill is claimed. |
 | Security/privacy incident | Incident lead + privacy owner | Contain/isolate feature, revoke credentials through provider controls, preserve metadata/audit evidence, assess actual source-backed notice obligations, record decisions/remediation. Do not invent a statutory deadline or claim tested rotation/MFA. |
 | Provider enquiry dispute | Support | Acknowledge only a saved ticket; check sharing consent and actual routing/delivery; clarify scope and escalate. No appointment, verified provider or email delivery is implied. |
-| Deletion and recovery | Engineering + privacy owner | Verify requester, corrections/export/deletion/legal hold, approved retention and external deletion; after an authorised platform restore reapply deletion events and validate permissions. Never silently rewrite customer files. Full lifecycle/restore exercise is blocked. |
+| Deletion and recovery | Engineering + privacy owner | Verify requester, corrections/export/deletion/legal hold, approved retention and external deletion; after an authorised platform restore reapply deletion events and validate permissions. Never silently rewrite customer files. Full lifecycle/restore exercise is blocked. A privacy request still open after the date Valo aims to finish it by raises `PRIVACY_REQUESTS_BACKLOG`: finish it, or record in it why it is not finished. |
 
 ## Actual development export controls
 
