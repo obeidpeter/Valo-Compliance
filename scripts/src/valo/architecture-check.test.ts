@@ -5,7 +5,10 @@ import { dirname, join } from "node:path";
 import { test } from "node:test";
 import {
   FINITE_WORK_BINDING_ENTRIES,
+  HISTORY_RESEED,
   apiImportGraph,
+  historyReseedReport,
+  historyReseedViolations,
   cycleViolations,
   importCycles,
   inferenceBindingReport,
@@ -309,6 +312,20 @@ test("the web app writes dates, times, amounts and counts only through its forma
     webFormattingViolations(screen, "const first = a.localeCompare(b); const up = a.toLocaleUpperCase();\n"),
     [],
   );
+});
+
+test("only a migration names the function that reseeds a history's digest", () => {
+  const call = `await db.execute(sql\`select ${HISTORY_RESEED}('valo_events')\`);\n`;
+  const found = historyReseedViolations("artifacts/api-server/src/modules/operations/example.ts", call);
+  assert.deepEqual(found, [
+    "artifacts/api-server/src/modules/operations/example.ts:1 history-reseed only a migration reseeds a history's digest",
+  ]);
+  assert.deepEqual(
+    historyReseedViolations("artifacts/valo/src/components/example.tsx", "const a = 1;\n"),
+    [],
+  );
+  // The migrations are SQL, outside the product source the rule reads; the repository keeps the rule.
+  assert.deepEqual(historyReseedReport(), []);
 });
 
 test("the repository has no silent catches, no import cycles and no unreviewed binding checks", () => {

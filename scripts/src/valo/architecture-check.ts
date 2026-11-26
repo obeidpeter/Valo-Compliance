@@ -18,6 +18,7 @@ import ts from "typescript";
  * - module-boundary: see moduleBoundaryViolations.
  * - public-server: see publicServerViolations.
  * - web-formatting: see webFormattingViolations.
+ * - history-reseed: see historyReseedViolations.
  */
 
 export const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -546,6 +547,42 @@ export function webFormattingReport(root = repositoryRoot): string[] {
   );
 }
 
+export const HISTORY_RESEED = "valo_history_digest_reseed";
+const HISTORY_RESEED_RULE = "scripts/src/valo/architecture-check.ts";
+
+/**
+ * history-reseed (ADM-009, docs/architecture/audit-trail.md): only a migration that changes a
+ * history's columns reseeds its digest, in that migration's transaction. Product code never names the
+ * reseed function, so the application cannot rewrite a digest to hide a change to its history.
+ */
+export function historyReseedViolations(path: string, text: string): string[] {
+  if (path === HISTORY_RESEED_RULE || !text.includes(HISTORY_RESEED)) return [];
+  return text
+    .split("\n")
+    .flatMap((line, index) =>
+      line.includes(HISTORY_RESEED)
+        ? [`${path}:${index + 1} history-reseed only a migration reseeds a history's digest`]
+        : [],
+    );
+}
+
+export function historyReseedReport(root = repositoryRoot): string[] {
+  const roots = [
+    "artifacts/api-server/src",
+    "artifacts/valo/src",
+    "artifacts/valo/app",
+    "lib/valo-core/src",
+    "lib/valo-records/src",
+    "lib/db/src",
+    "scripts/src",
+  ];
+  return roots.flatMap((dir) =>
+    sourceFiles(join(root, dir), isProductSource).flatMap((file) =>
+      historyReseedViolations(posixRelative(root, file), readFileSync(file, "utf8")),
+    ),
+  );
+}
+
 export function silentCatchReport(root = repositoryRoot): string[] {
   const roots = [
     "artifacts/api-server/src",
@@ -573,6 +610,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1
     ...moduleBoundaryViolations(),
     ...publicServerViolations(),
     ...webFormattingReport(),
+    ...historyReseedReport(),
   ];
   for (const violation of violations) process.stdout.write(`${violation}\n`);
   process.stdout.write(`architecture check: ${violations.length} violation(s)\n`);
