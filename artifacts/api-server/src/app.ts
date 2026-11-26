@@ -1,17 +1,12 @@
 import express, { type Express } from "express";
 import { requestLogging } from "./platform/http-logging";
-import { clerkMiddleware } from "@clerk/express";
-import { publishableKeyFromHost } from "@clerk/shared/keys";
 import { requestComplexityLimit } from "./platform/request-complexity";
 import { notFound, onError } from "./platform/http-errors";
 import { securityHeaders } from "./platform/security-headers";
 import { setting } from "./platform/settings";
 export { onError } from "./platform/http-errors";
-import {
-  CLERK_PROXY_PATH,
-  clerkProxyMiddleware,
-  getClerkProxyHost,
-} from "./middlewares/clerkProxyMiddleware";
+import { CLERK_PROXY_PATH, clerkProxyMiddleware } from "./middlewares/clerkProxyMiddleware";
+import { identityMiddleware } from "./middlewares/identity";
 import valoRouter from "./routes/valo";
 import valoExportsRouter from "./routes/valo-exports";
 import router from "./routes";
@@ -21,7 +16,6 @@ import { paystackWebhookRouter } from "./routes/valo-paystack-webhook";
 import { securitySignals } from "./middlewares/valo-security-signals";
 import { requestCounting } from "./middlewares/valo-request-counts";
 import { configureProxyBoundary } from "./lib/valo-proxy-boundary";
-import { trustedSiteOrigin } from "./lib/valo-site-origin";
 
 const app: Express = express();
 configureProxyBoundary(app);
@@ -65,16 +59,7 @@ app.use(securitySignals());
 app.use(paystackWebhookRouter);
 app.use(express.json({ limit: "128kb", inflate: false }));
 app.use(requestComplexityLimit);
-app.use(
-  clerkMiddleware((req) => {
-    // Accept only session tokens issued for the trusted site origin (the same origin writes require).
-    const origin = trustedSiteOrigin();
-    return {
-      publishableKey: publishableKeyFromHost(getClerkProxyHost(req) ?? "", setting("CLERK_PUBLISHABLE_KEY")),
-      ...(origin ? { authorizedParties: [origin] } : {}),
-    };
-  }),
-);
+app.use(identityMiddleware());
 
 app.use(requestReadQuota);
 app.use("/api", router);
