@@ -31,6 +31,7 @@ import {
   valoOrders,
   valoEntitlements,
   valoPurchaseOutbox,
+  valoMessages,
   valoRefundRequests,
   valoPaymentReconciliations,
   valoPrivacyMessages,
@@ -44,6 +45,7 @@ import { valoDisputeInformation, valoDisputeActions } from "@workspace/db";
 import { ownedPaymentEvent } from "./valo-private-copy-inventory";
 import { valoPaymentConcerns, valoConcernMessages, valoPaymentConcernEvents } from "@workspace/db";
 import { setting } from "../../platform/settings";
+import { messagesReady } from "../messages";
 export const accessMessage =
   "Request received and saved. No account details have been confirmed. Replies are not yet dispatched from this development build.";
 const ack = (id: string) => ({
@@ -271,6 +273,34 @@ async function snapshotExport(
             .offset(offset),
         );
       }
+      // Each message Valo owed the workspace and what became of it (docs/architecture/messages.md). Whom it
+      // was for, the sender's own reference and the dispatcher's bookkeeping stay out: a message holds no
+      // words of its own, and the record it is about is exported above.
+      // A database the messages migration has not reached has none to list.
+      const messagesListed = await messagesReady(tx);
+      await collect("messages", async (offset) =>
+        !messagesListed
+          ? []
+          : tx
+              .select({
+                id: valoMessages.id,
+                kind: valoMessages.kind,
+                class: valoMessages.class,
+                subjectId: valoMessages.subjectId,
+                status: valoMessages.status,
+                reason: valoMessages.reason,
+                attempts: valoMessages.attempts,
+                sender: valoMessages.sender,
+                acceptedAt: valoMessages.acceptedAt,
+                createdAt: valoMessages.createdAt,
+                updatedAt: valoMessages.updatedAt,
+              })
+              .from(valoMessages)
+              .where(eq(valoMessages.workspaceId, actor.workspaceId))
+              .orderBy(valoMessages.id)
+              .limit(sink ? 500 : 5001)
+              .offset(offset),
+      );
       // Payment concern text and public status/history only. Provider evidence,
       // private staff audit, receipt bytes, intent payloads and authority stay private.
       await collect("paymentConcerns", (offset) =>

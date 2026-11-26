@@ -29,6 +29,7 @@ import {
   valoRuleNotices,
   valoEditionNotices,
   valoConsentChanges,
+  valoMessages,
 } from "@workspace/db";
 import { eq, inArray, sql } from "drizzle-orm";
 import { guardRefusal } from "../../platform/http-errors";
@@ -118,6 +119,15 @@ test(
           choice: true,
           noticeVersion: "0".repeat(64),
           actorId: workspace.identityId,
+        });
+        // A message Valo owed each workspace (docs/architecture/messages.md, slice 1a).
+        await db.insert(valoMessages).values({
+          id: randomUUID(),
+          workspaceId: workspace.workspaceId,
+          kind: "purchase_receipt",
+          class: "necessary",
+          recipientIdentityId: workspace.identityId,
+          subjectId: randomUUID(),
         });
       }
       await db.insert(valoSavedTemplates).values(
@@ -464,12 +474,13 @@ test(
             valoRuleNotices,
             valoEditionNotices,
             valoConsentChanges,
+            valoMessages,
           ])
             assert.equal(
               (await db.select().from(table).where(eq(table.workspaceId, a.workspaceId))).length,
               0,
             );
-          for (const table of [valoRuleNotices, valoEditionNotices, valoConsentChanges])
+          for (const table of [valoRuleNotices, valoEditionNotices, valoConsentChanges, valoMessages])
             assert.equal(
               (await db.select().from(table).where(eq(table.workspaceId, b.workspaceId))).length,
               1,
@@ -818,6 +829,7 @@ test(
         valoRuleNotices,
         valoEditionNotices,
         valoConsentChanges,
+        valoMessages,
         valoMemberships,
       ])
         await db.delete(table).where(inArray(table.workspaceId, ids));

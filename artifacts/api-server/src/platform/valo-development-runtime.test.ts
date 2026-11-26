@@ -34,7 +34,7 @@ test("actual export entries and worker startup reject before database, queue or 
       export const valoMemberships={},valoContentVersions={},valoDocuments={},valoDocumentRevisions={},valoExportJobs={},
       valoExportRequests={},valoFileAssets={},valoExportObjects={},valoEvents={},valoPrivacyTombstones={},
       valoWorkspaceExports={},valoWorkspaceExportAttempts={},valoWorkspaces={},valoPrivacyCases={},valoPrivacyEvents={},valoProfileVersions={},
-      valoPrivacyHolds={},valoStaffAccessAudit={};
+      valoPrivacyHolds={},valoStaffAccessAudit={},valoMessages={};
       // Listening for a pooled connection's failure opens no connection, so it is not an effect.
       export const onConnectionFailure=()=>()=>{};`,
     ],
@@ -98,6 +98,12 @@ test("actual export entries and worker startup reject before database, queue or 
       `const hit=async()=>{globalThis.guardEffects.services++;};
       export const processPaymentEvents=hit,reconcilePayments=hit,processRefundQueue=hit,
       reconcileKnownDisputes=hit,reconcileDisputeActions=hit;`,
+    ],
+    // The worker reaches the messages job through the messages module's index. The job itself is a
+    // service effect here; the choice of its sender, which the worker makes as it starts, is the real one.
+    [
+      "valo-message-dispatcher",
+      "export const dispatchDueMessages=async()=>{globalThis.guardEffects.services++},dispatchMessage=dispatchDueMessages;",
     ],
     // The worker reaches the daily source check through the sources module's index.
     ["sources", "export const reconcileSourceMonitoring=async()=>{globalThis.guardEffects.services++};"],
@@ -234,6 +240,28 @@ test("actual export entries and worker startup reject before database, queue or 
       assert.ok(record, child.stderr);
       assert.deepEqual(JSON.parse(record[1]!), zero);
     });
+    // The messages job's sender is chosen as the worker starts (docs/architecture/messages.md, part 2): a
+    // sender there is not, or the stand-in in production, stops the worker with nothing touched.
+    for (const [mode, sender, refusal] of [
+      ["development", "resend", /MessageSenderSettingInvalid: VALO_MESSAGE_SENDER/],
+      ["production", "stand-in", /MessageSenderStandInInProduction: VALO_MESSAGE_SENDER/],
+    ] as const)
+      await t.test(
+        `a ${mode} worker told to send messages through "${sender}" stops before any effect (WRK-003)`,
+        () => {
+          const child = spawnSync(process.execPath, [join(dir, "worker.mjs")], {
+            env: { NODE_ENV: mode, VALO_MESSAGE_SENDER: sender },
+            encoding: "utf8",
+            timeout: 10000,
+          });
+          assert.equal(child.error, undefined);
+          assert.equal(child.status, 1, child.stderr.slice(0, 1000));
+          assert.match(child.stderr, refusal);
+          const record = child.stdout.match(/GUARD_EFFECTS:(\{[^\n]+\})/);
+          assert.ok(record, child.stderr);
+          assert.deepEqual(JSON.parse(record[1]!), zero);
+        },
+      );
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

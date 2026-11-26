@@ -62,8 +62,12 @@ export const sourceControlInput = z.discriminatedUnion("action", [
       version: z.number().int().positive(),
     })
     .strict(),
-  z.object({ ...base, action: z.literal("pause_service"), service: z.enum(["ai", "checkout"]) }).strict(),
-  z.object({ ...base, action: z.literal("resume_service"), service: z.enum(["ai", "checkout"]) }).strict(),
+  z
+    .object({ ...base, action: z.literal("pause_service"), service: z.enum(["ai", "checkout", "messages"]) })
+    .strict(),
+  z
+    .object({ ...base, action: z.literal("resume_service"), service: z.enum(["ai", "checkout", "messages"]) })
+    .strict(),
 ]);
 /** Staff reads and writes use the shared authority checks: fresh MFA, an active and
  * unexpired assignment for this area, and both re-checked after any row-lock wait. */
@@ -129,7 +133,7 @@ export async function sourceControls(actor: SourceStaffActor, area: "content" | 
       area === "system"
         ? (
             await tx.execute(
-              sql`select key,enabled,reason,updated_at from valo_safety_switches where key in ('all_ai','checkout') order by key`,
+              sql`select key,enabled,reason,updated_at from valo_safety_switches where key in ('all_ai','checkout','messages') order by key`,
             )
           ).rows
         : [];
@@ -182,13 +186,40 @@ export async function sourceControls(actor: SourceStaffActor, area: "content" | 
  * (ADM-007). A pause refuses only new work of that service: free guidance, saved documents and
  * what customers already have stay available, because none of them reads the safety switches.
  */
-async function serviceImpact(tx: SourceTx, service: "ai" | "checkout", paused: boolean) {
-  if (!paused) return { restored: service === "ai" ? "AI drafting and review" : "new orders and checkout" };
+/** The safety switch each service's pause sets. Messages' switch stops every send (docs/architecture/messages.md). */
+const SERVICE_SWITCHES = { ai: "all_ai", checkout: "checkout", messages: "messages" } as const;
+async function serviceImpact(tx: SourceTx, service: keyof typeof SERVICE_SWITCHES, paused: boolean) {
+  if (!paused)
+    return {
+      restored: {
+        ai: "AI drafting and review",
+        checkout: "new orders and checkout",
+        messages: "sending messages",
+      }[service],
+    };
   if (service === "ai")
     return {
       refused: "new AI drafting and review",
       unaffected: "free guidance, saved documents and accepted drafts",
     };
+  if (service === "messages") {
+    // The messages code and the database schema it reads load here, when staff pause or resume messages,
+    // not with every reader of the source code.
+    const { messagesReady } = await import("../messages");
+    // A database the messages migration has not reached has none waiting.
+    const [waiting] = (await messagesReady(tx))
+      ? (
+          await tx.execute(
+            sql`select count(*)::int as n from valo_messages where status in ('queued','held','sending')`,
+          )
+        ).rows
+      : [];
+    return {
+      refused: "sending messages, such as receipts and refund notices; each waits until the pause is removed",
+      unaffected: "purchases, receipts on the purchases screen and every other service",
+      messagesWaiting: Number(waiting?.n ?? 0),
+    };
+  }
   const [open] = (
     await tx.execute(sql`select count(*)::int as n from valo_orders where status in ('created','pending')`)
   ).rows;
@@ -222,7 +253,7 @@ export async function actOnSourceControls(actor: SourceStaffActor, raw: unknown)
       current: unknown = {},
       target = "";
     if ("service" in input) {
-      target = input.service === "ai" ? "all_ai" : "checkout";
+      target = SERVICE_SWITCHES[input.service];
       previous = (
         await tx.execute(sql`select enabled,reason,actor_id from valo_safety_switches where key=${target}`)
       ).rows[0] ?? { configured: false };

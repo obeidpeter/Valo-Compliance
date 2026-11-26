@@ -199,6 +199,26 @@ export const processingInventory: readonly ProcessingActivity[] = [
     ],
   },
   {
+    id: "messages",
+    title: "Messages about your account",
+    purpose:
+      "To email you what you need to know about your account, such as the receipt for a purchase and a refund the payment provider processed.",
+    basis: "contract",
+    basisReason:
+      "Needed to give you what you bought and to tell you what happened to it. These messages carry no marketing.",
+    data: [
+      "which message Valo owes you, and the order or refund it is about",
+      "whether it is waiting, was taken for sending, or why it stopped",
+    ],
+    subjects: ["buyers"],
+    staff: null,
+    services: ["Replit"],
+    retention:
+      "Kept while your account is open. A verified deletion request removes them. These messages are not yet sent to real addresses.",
+    consent: null,
+    tables: ["valo_messages"],
+  },
+  {
     id: "ai_drafting",
     title: "The drafting assistant",
     purpose:

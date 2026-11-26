@@ -245,6 +245,10 @@ const PRIVATE_TABLES: Record<string, { cases: readonly string[] } | { reason: st
   valo_memberships: {
     reason: "Resolved by the server from the signed-in identity; no customer request names a membership.",
   },
+  valo_messages: {
+    reason:
+      "Messages the server queues when an order settles or a refund is processed, and the worker sends; no customer request names one.",
+  },
   valo_orders: {
     cases: [
       "POST /workspace/orders/{id}/checkout",
