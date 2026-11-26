@@ -8,3 +8,4 @@ export * from "./valo-staff-authority";
 export * from "./development-owner";
 export * from "./valo-staff-roles";
 export * from "./valo-staff-operations";
+export * from "./valo-audit-history";

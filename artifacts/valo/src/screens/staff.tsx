@@ -1,4 +1,5 @@
 import { StaffRoleAdministration } from "@/components/staff-role-administration";
+import { AuditHistory } from "@/components/audit-history";
 import { OwnerRegulatoryGuidance } from "@/components/owner-regulatory-guidance";
 import { OwnerCheckerRules } from "@/components/owner-checker-rules";
 import { MfaVerification } from "@/components/mfa-verification";
@@ -179,6 +180,7 @@ export default function StaffPage() {
             </p>
             {area === "finance" && <FinanceRefunds />}
             {area === "system" && <StaffRoleAdministration />}
+            {area === "system" && <AuditHistory />}
             {area === "content" && <RetainedDrafts />}
             {area === "content" && <ManualLibraryEditor onDirtyChange={setManualDirty} />}
             {(area === "content" || area === "system") && <SourceSafetyControls key={area} area={area} />}

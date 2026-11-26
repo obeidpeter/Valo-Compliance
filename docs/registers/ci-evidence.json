@@ -1199,6 +1199,27 @@
       "proves": "On the real database the worker's count keeps which histories it found mismatched, a second count within the hour keeps nothing, the alert's reading is the latest count's number of mismatches, and a kept count cannot be removed."
     },
     {
+      "requirement": "ADM-009",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/staff/valo-audit-history.test.ts",
+      "test": "audit history entries keep a refund's reason with finance, say plainly what a count found and fit the contract",
+      "proves": "The staff audit history shows a refund status change without its reason, says in words what each hourly count found and what each price change did, and cuts text longer than the contract's limits so that every entry fits the contract."
+    },
+    {
+      "requirement": "ADM-009",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/staff/valo-audit-history.integration.test.ts",
+      "test": "audit history: only a permanent system operator reads it, each read is recorded first, and reading changes no other history",
+      "proves": "On a disposable database only a permanent system operator with fresh MFA can read the staff, safety-control, price, refund and count histories; finance staff, break-glass access and stale sessions are refused and leave no row; each page read is first recorded in the access history with its actor, the history and page as its object and reason, and its time; no refund's reason is shown; and reading changes no other history."
+    },
+    {
+      "requirement": "ADM-009",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "the System area's audit history shows one history at a time and pages through it",
+      "proves": "On a phone, the System area's audit history shows one history at a time with each entry's action, time, actor, object and reason, pages through it, starts another history at its first page and has no automated WCAG 2.2 AA failure."
+    },
+    {
       "requirement": "AI-001",
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai.test.ts",

@@ -3,16 +3,17 @@ import {
   GetStaffRoleAdministrationResponse,
   VerifyStaffRoleTargetResponse,
   ChangeStaffRoleResponse,
+  GetAuditHistoryResponse,
 } from "@workspace/api-zod";
 import { sameOriginMutation } from "../middlewares/valo-identity";
-import { staffRoleService, type makeStaffRoleService } from "../modules/staff";
+import { auditHistory, staffRoleService, type makeStaffRoleService } from "../modules/staff";
 import type { StaffActor } from "../modules/staff";
 export function createStaffRoleRouter(
   authenticate: (req: Request) => Promise<StaffActor>,
   service: ReturnType<typeof makeStaffRoleService> = staffRoleService,
 ) {
   const r = Router();
-  r.use(["/admin/staff-roles", "/admin/staff-role-target"], (_req, res, next) => {
+  r.use(["/admin/staff-roles", "/admin/staff-role-target", "/admin/audit-history"], (_req, res, next) => {
     res.set("Cache-Control", "private, no-store");
     next();
   });
@@ -34,5 +35,9 @@ export function createStaffRoleRouter(
     });
     res.json(ChangeStaffRoleResponse.parse(receipt));
   });
+  // ADM-009: the histories no other staff screen shows, for permanent system operators.
+  r.get("/admin/audit-history", async (req, res) =>
+    res.json(GetAuditHistoryResponse.parse(await auditHistory(await authenticate(req), req.query))),
+  );
   return r;
 }
