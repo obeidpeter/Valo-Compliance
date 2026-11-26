@@ -28,7 +28,7 @@
     "test:valo-reflection-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --experimental-test-module-mocks --import tsx --test src/routes/valo-reflection.integration.test.ts",
     "test:valo-tenant-substitution": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --experimental-test-module-mocks --import tsx --test src/routes/valo-tenant-substitution.integration.test.ts",
     "test:valo-template-entitlement": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/modules/catalogue/valo-template-entitlement.integration.test.ts",
-    "test:valo-operations": "tsx --test src/platform/http-logging.test.ts src/platform/safe-error.test.ts src/platform/settings.test.ts src/platform/chromium.test.ts src/platform/session-verification.test.ts src/test-support/contract-operations.test.ts src/test-support/nested-connection-guard.test.ts src/modules/operations/valo-operations.test.ts src/modules/operations/alert-copy.test.ts src/platform/valo-recovery-effects.test.ts src/modules/tasks/valo-reminder-resend.test.ts",
+    "test:valo-operations": "tsx --test src/platform/http-logging.test.ts src/platform/safe-error.test.ts src/platform/settings.test.ts src/platform/chromium.test.ts src/platform/session-verification.test.ts src/test-support/contract-operations.test.ts src/test-support/nested-connection-guard.test.ts src/modules/operations/valo-operations.test.ts src/modules/operations/alert-copy.test.ts src/modules/operations/request-counts.test.ts src/platform/valo-recovery-effects.test.ts src/modules/tasks/valo-reminder-resend.test.ts",
     "test:valo-isolated-recovery": "NODE_ENV=development VALO_ISOLATED_RECOVERY=synthetic-local-only tsx src/scripts/isolated-recovery.ts",
     "valo:operations-probe": "NODE_ENV=development tsx src/scripts/operations-probe.ts",
     "test:valo-runtime-boundaries": "tsx --test src/platform/valo-development-runtime.test.ts src/lib/valo-request-scope.test.ts",
@@ -130,7 +130,7 @@
     "test:valo-support-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/modules/support/valo-support-lifecycle.integration.test.ts",
     "test:valo-catalogue-visibility-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development tsx --test src/modules/catalogue/valo-catalogue-visibility.integration.test.ts",
     "test:valo-security-signals-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development tsx --test src/lib/valo-security-signals.integration.test.ts",
-    "test:valo-operations-queue-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development tsx --test src/modules/operations/valo-operations-queue.integration.test.ts",
+    "test:valo-operations-queue-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development tsx --test --test-concurrency=1 src/modules/operations/valo-operations-queue.integration.test.ts src/modules/operations/request-counts.integration.test.ts",
     "test:valo-rule-release-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development tsx --test --test-concurrency=1 src/modules/editorial/valo-rule-release.integration.test.ts src/modules/editorial/owner-rule-signoff.integration.test.ts src/modules/rules/checker-challenge.integration.test.ts src/modules/rules/checker-challenge-run.integration.test.ts"
   },
   "dependencies": {

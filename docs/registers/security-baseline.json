@@ -3457,11 +3457,11 @@
     {
       "id": "v5.0.0-16.2.1",
       "level": 2,
-      "status": "partly met",
+      "status": "met",
       "bears_on": [
         "SEC-008"
       ],
-      "control": "Each log line has its time, the request's id, its method and its status, and each history row names who did what, and when.",
+      "control": "Each request's log line has its time, its id, its method, its status, how long it took and its route's pattern, never a value from its address; and each history row names who did what, and when.",
       "code": [
         "artifacts/api-server/src/platform/http-logging.ts"
       ],
@@ -3471,11 +3471,14 @@
           "test": "real HTTP request, parser and application error logs omit private markers but retain correlation/status"
         },
         {
+          "file": "artifacts/api-server/src/platform/http-logging.test.ts",
+          "test": "each request's log line names its route's pattern and never a value from the address"
+        },
+        {
           "file": "artifacts/api-server/src/modules/staff/valo-audit-history.integration.test.ts",
           "test": "audit history: only a permanent system operator reads it, each read is recorded first, and reading changes no other history"
         }
-      ],
-      "gap": "A request's log line does not name its route."
+      ]
     },
     {
       "id": "v5.0.0-16.2.2",

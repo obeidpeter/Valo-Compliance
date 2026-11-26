@@ -5327,6 +5327,41 @@
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
       "test": "the System area's alerts say in plain words what is active now and what changed, and fit a phone",
       "proves": "The staff page's System area lists the active alerts and the latest changes in plain words, each with its reading, its limit, the runbook to follow and the roles accountable, and the list passes the automated accessibility checks on a phone."
+    },
+    {
+      "requirement": "NFR-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/operations/request-counts.test.ts",
+      "test": "the API's own requests are counted after their answer, and only an unexpected failure counts as one",
+      "proves": "The API counts each of its own requests after its answer, leaving out the health check and the identity provider's proxy, and counts as a failure only an unexpected one, not a 503 Valo means to give."
+    },
+    {
+      "requirement": "NFR-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/operations/request-counts.test.ts",
+      "test": "counts the database cannot take wait for the next write, an hour of minutes at most",
+      "proves": "Each process writes its finished minutes in one statement that adds to what other processes wrote, and keeps counts the database cannot take for the next write, an hour of minutes at most."
+    },
+    {
+      "requirement": "NFR-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/operations/request-counts.integration.test.ts",
+      "test": "request counts: each process's minutes add up, the readings take the last ten minutes, a week is kept, and reminders and jobs are read from their own tables",
+      "proves": "On a real database, two processes' counts for a minute add up, counts that do not hold together are refused, the failure and time readings take the last ten minutes' counts once there are a hundred requests, and a week of minutes is kept."
+    },
+    {
+      "requirement": "NFR-010",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/operations/valo-operations.test.ts",
+      "test": "waiting reminders and jobs, and failing or slow requests, raise their own alerts under their runbooks, past their limits only",
+      "proves": "Reminder emails and scheduled jobs waiting past their time, and requests failing unexpectedly or slow past NFR-003's limits, each raise an alert naming its runbook and accountable roles, and none at the limits."
+    },
+    {
+      "requirement": "NFR-010",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/platform/http-logging.test.ts",
+      "test": "each request's log line names its route's pattern and never a value from the address",
+      "proves": "Each request's log line names the pattern of the route it matched, through nested routers and answers sent later, or says it matched none, and never writes a value from the address."
     }
   ]
 }

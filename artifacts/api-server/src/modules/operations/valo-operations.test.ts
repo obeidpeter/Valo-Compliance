@@ -70,14 +70,18 @@ test("internal probes measure failures independently and persist/deduplicate/rec
   worker.finish(worker.begin()!, true);
   try {
     await recordWorkerHeartbeat(worker.snapshot(), dir);
-    // The security readings, and the reading of privacy requests past Valo's own aim, are zero here;
-    // their alerts have their own tests.
+    // The security readings, the reading of privacy requests past Valo's own aim, and the readings of
+    // reminders, the job queue and the request counts are zero here; their alerts have their own tests.
     const security = new Set<string>([
       ...securityQueries,
       readinessQueries.guardRefusals,
       readinessQueries.privilegedReading,
       readinessQueries.historyIntegrity,
       readinessQueries.privacyRequests,
+      readinessQueries.reminders,
+      readinessQueries.jobQueue,
+      readinessQueries.requestFailures,
+      readinessQueries.requestTime,
     ]);
     const failures = await collectOperationalSample(async (sql) => {
       if (sql === readinessQueries.database) throw Error("SYNTHETIC_PRIVATE_DB_ERROR");
@@ -442,6 +446,74 @@ test("a privacy request open past the date Valo aims to finish it by raises an a
     // The reading counts requests not yet done, refused or cancelled, made more than Valo's own aim ago.
     assert.match(readinessQueries.privacyRequests, /status NOT IN \('fulfilled','rejected','cancelled'\)/);
     assert.ok(readinessQueries.privacyRequests.includes(`interval '${PRIVACY_REQUEST_AIM_DAYS} days'`));
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { recursive: true, force: true });
+    if (old === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = old;
+  }
+});
+
+// docs/architecture/alerts.md, part 3: reminder emails and scheduled jobs waiting past their time raise
+// backlogs under the worker's runbook; requests failing unexpectedly or slow raise alerts under the site's,
+// at NFR-003's own limits: fewer than 1 in 100 failing, and 95 in 100 within a second.
+test("waiting reminders and jobs, and failing or slow requests, raise their own alerts under their runbooks, past their limits only", async () => {
+  const old = process.env.NODE_ENV;
+  process.env.NODE_ENV = "development";
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => {
+    throw Error("EXTERNAL_MESSAGES_FORBIDDEN");
+  };
+  const dir = await mkdtemp(join(tmpdir(), "valo-ops-service-"));
+  const worker = new WorkerHealth();
+  worker.finish(worker.begin()!, true);
+  try {
+    await recordWorkerHeartbeat(worker.snapshot(), dir);
+    type Readings = Partial<Record<"reminders" | "jobQueue" | "requestFailures" | "requestTime", number>>;
+    const sample = (readings: Readings, unreadable?: keyof Readings) =>
+      collectOperationalSample(async (sql) => {
+        if (unreadable && sql === readinessQueries[unreadable]) throw Error("SYNTHETIC_PROBE_FAILURE");
+        const named = (Object.keys(readings) as (keyof Readings)[]).find(
+          (name) => readinessQueries[name] === sql,
+        );
+        return {
+          rows: [{ value: sql === readinessQueries.database ? 1 : named ? readings[named] : 0 }],
+        };
+      }, dir);
+    const queueOwner = { runbook: "Broken export / AI outage", accountable: "Engineering" };
+    const site = { runbook: "Site/database unavailable", accountable: "Engineering lead" };
+    // At their limits: nothing waiting, 10 failures in 1,000, and 95 in 100 within a second.
+    assert.deepEqual(
+      (await recordOperationalAlerts(await sample({ requestFailures: 10, requestTime: 1000 }), dir)).active,
+      [],
+    );
+    // Over them.
+    const raised = await recordOperationalAlerts(
+      await sample({ reminders: 3, jobQueue: 1, requestFailures: 11, requestTime: 2500 }),
+      dir,
+    );
+    assert.deepEqual(raised.owners, [
+      { code: "REMINDERS_BACKLOG", ...queueOwner },
+      { code: "JOB_QUEUE_BACKLOG", ...queueOwner },
+      { code: "REQUEST_FAILURES_DETECTED", ...site },
+      { code: "REQUEST_TIME_DETECTED", ...site },
+    ]);
+    // A reading that cannot be taken is an alert of its own.
+    assert.deepEqual((await recordOperationalAlerts(await sample({}, "requestTime"), dir)).owners, [
+      { code: "REQUEST_TIME_PROBE_UNAVAILABLE", ...site },
+    ]);
+    assert.deepEqual((await recordOperationalAlerts(await sample({}), dir)).active, []);
+    // The readings: reminders still pending fifteen minutes past their time; jobs still waiting ten
+    // minutes past their start; and the request counts of the last ten minutes, read as nothing below a
+    // hundred requests.
+    assert.match(readinessQueries.reminders, /status='pending'/);
+    assert.match(readinessQueries.reminders, /interval '15 minutes'/);
+    assert.match(readinessQueries.jobQueue, /valo_jobs\.job WHERE state IN \('created','retry'\)/);
+    assert.match(readinessQueries.jobQueue, /interval '10 minutes'/);
+    for (const name of ["requestFailures", "requestTime"] as const) {
+      assert.match(readinessQueries[name], /COALESCE\(sum\(requests\), 0\) < 100 THEN 0/);
+      assert.match(readinessQueries[name], /interval '10 minutes'/);
+    }
   } finally {
     globalThis.fetch = originalFetch;
     await rm(dir, { recursive: true, force: true });

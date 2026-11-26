@@ -2,6 +2,7 @@ import { initializeApplicationRuntime } from "./platform/valo-runtime-activation
 import app from "./app";
 import { logger } from "./platform/logger";
 import { setting } from "./platform/settings";
+import { startRequestCountWriter } from "./modules/operations";
 
 const rawPort = setting("PORT");
 
@@ -25,8 +26,13 @@ const server = app.listen(port, (err) => {
   logger.info({ port }, "Server listening");
 });
 
+// The request counts reach the database once a minute (docs/architecture/alerts.md, part 3). In
+// production, which serves only the health check, there is nothing to count.
+const stopCounting = setting("NODE_ENV") === "production" ? async () => {} : startRequestCountWriter(logger);
+
 for (const signal of ["SIGTERM", "SIGINT"] as const)
   process.once(signal, () => {
-    server.close(() => process.exit(0));
+    // The last minute's counts are written once no request is left.
+    server.close(() => void stopCounting().finally(() => process.exit(0)));
     setTimeout(() => process.exit(1), 75000).unref();
   });

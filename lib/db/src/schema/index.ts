@@ -34,6 +34,7 @@ export * from "./valo-history";
 export * from "./valo-rate-buckets";
 export * from "./valo-security-signals";
 export * from "./valo-operational-alerts";
+export * from "./valo-request-minutes";
 export * from "./valo-exports";
 export * from "./valo-export-objects";
 export * from "./valo-export-requests";
