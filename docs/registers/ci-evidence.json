@@ -2102,13 +2102,6 @@
       "proves": "The reviewers are given the differences found between the official copies of an Act for the sections a guide quotes, and every open question about the text even when it names a section the guide does not quote."
     },
     {
-      "requirement": "EDP-005",
-      "job": "postgres",
-      "file": "artifacts/api-server/src/lib/managed-callers-real-bindings.integration.test.ts",
-      "test": "actual managed callers with real PostgreSQL, source/candidate/case checks and zero-network SDK",
-      "proves": "In a disposable copy of the database, a guide prepared from a stored capture has its two reviews run through the real dispatcher with a stand-in for the model; each answer carries the five enhanced checks with a passage of the guide's own sources, and the real publisher releases the version with all five recorded as passed by both. The guide is released under the guidance policy as the owner approved it. The approvals of AI spending are made up inside the test, and the answers are controlled fixtures, not reviews."
-    },
-    {
       "requirement": "EDP-006",
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/publication/operational-mechanical.test.ts",
@@ -4542,7 +4535,7 @@
       "job": "foundation",
       "file": "lib/db/scripts/phase1-migrations.test.mjs",
       "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
-      "proves": "After the library saves and copies migration, the database records the staff-library release a document was copied from only from a released free template, when the document is written, and refuses any later change to it."
+      "proves": "After the library saves and copies migration, the database records the staff-library release a document was copied from only from a released free template, when the document is written, and refuses any later change to it. After the replaced reviewed versions migration, on the reviewed route a workspace holds a premium form's template only through a version that is not replaced: a purchase that carries to later versions holds it through the next one, one that covers only the version bought holds nothing once that version is replaced, a version never released replaces nothing, and once the replacing version is withdrawn neither holds it."
     },
     {
       "requirement": "EDT-010",
@@ -4662,6 +4655,27 @@
       "file": "artifacts/valo/src/components/edition-notices.test.tsx",
       "test": "a notice names the template, its version and what happened, says what it means for the purchase and the documents, and that downloaded files are not affected",
       "proves": "A notice of a replaced version says the purchase carries to the new version at no further charge and that the documents made from it are unchanged; a notice of a withdrawn version gives the reason and the remedies: the replacement when one is released, or a refund under the refund policy."
+    },
+    {
+      "requirement": "DOC-007",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/managed-callers-real-bindings.integration.test.ts",
+      "test": "actual managed callers with real PostgreSQL, source/candidate/case checks and zero-network SDK",
+      "proves": "In a disposable copy of the database, once the real publisher releases TPL-07's next version on two passing synthetic reviews, the version before it leaves the catalogue; its Word and PDF files and a new document from it are refused as replaced, the new version's file is served as its release recorded it, and a document made from the earlier version is unchanged and reads replaced, with the new version."
+    },
+    {
+      "requirement": "DOC-007",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/catalogue/valo-released-content-locking.test.ts",
+      "test": "template downloads read storage outside the transaction that holds the source lock",
+      "proves": "With the database, storage, policy files, rights evidence, publication evaluation, source lock and membership check replaced by test doubles, a download of a template version whose template released a later version before the source lock is refused as replaced, without reading the file."
+    },
+    {
+      "requirement": "DOC-007",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/catalogue/replaced-versions.test.ts",
+      "test": "a version is replaced once a later version of its template is released, withdrawn or not",
+      "proves": "A reviewed template's version is replaced, and no longer live, once a later version of the same template was released, whether that one is still published or was withdrawn since; a held or candidate version replaces nothing."
     },
     {
       "requirement": "EDT-002",
