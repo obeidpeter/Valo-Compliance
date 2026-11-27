@@ -1570,6 +1570,31 @@ in, on server-rendered pages and in the browser app. It fails when a control in 
 rest off the screen or behind a bar. The keyboard checks that run on every screen now also fail
 for a control left off the screen.
 
+### Found on the way: the message that confirms a save
+
+A message that confirms an action ("Profile saved", "Task created") shows for a few seconds over the
+page. Four things were wrong while it showed:
+
+- Its close button had no name for a screen reader. It also showed only under a mouse pointer, so a
+  phone showed none.
+- On a phone the message lay over the header.
+- On a desktop it lay over the foot of the screen, where the business profile holds its Save
+  button.
+- A control the keyboard moved to under the message was hidden (Focus Not Obscured, part of
+  NFR-006).
+
+No test ran with a message on screen. The automated checks found the unnamed button and the hidden
+controls when a test of another change ran them straight after a save.
+
+The message now shows at the top of the screen, under the header wherever the header is, on every
+width. Only the message itself takes a tap. Its close button is named "Close this message" and
+always shows. When the keyboard moves on, the message goes, so the control that takes the focus is
+not hidden under it. F8 still reaches the message, and Tab inside it moves to its close button.
+
+A new check saves the business profile on a phone and on a desktop. With the message showing, it
+checks each of these and runs the automated accessibility checks. A second reaches the message with
+F8 and closes it from the keyboard.
+
 ## How the ten heuristics are applied
 
 1. **Visibility of system status.** Keep "Saved"; add progress in the checker and on downloads.
