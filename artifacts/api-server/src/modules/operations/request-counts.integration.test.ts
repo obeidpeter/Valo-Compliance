@@ -2,17 +2,26 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { eq, inArray } from "drizzle-orm";
-import { db, pool, valoMessages, valoReminderOutbox, valoRequestMinutes, valoTasks } from "@workspace/db";
+import {
+  db,
+  pool,
+  valoMessages,
+  valoReminderOutbox,
+  valoRequestMinutes,
+  valoSupportCases,
+  valoTasks,
+} from "@workspace/db";
 import { collectOperationalSample, readinessQueries } from "./valo-operations";
 import { RequestCounts, removeOldRequestMinutes, writeRequestMinutes } from "./request-counts";
 import { EXPORT_QUEUE } from "../exports";
+import { createTicket } from "../support";
 import { resolveWorkspace } from "../workspaces";
 
 /**
  * NFR-003, NFR-010 (docs/architecture/alerts.md, part 3), on a real database: each process's request
  * counts add up by the minute, the table refuses counts that do not hold together, the readings take the
- * last ten minutes' counts, a week of minutes is kept, and the readings of reminders, the job queue and
- * messages count real rows. Every row is synthetic.
+ * last ten minutes' counts, a week of minutes is kept, and the readings of reminders, the job queue,
+ * messages and enquiries count real rows. Every row is synthetic.
  */
 const MINUTE = 60_000;
 const query = (text: string, values: unknown[]) => pool.query(text, values);
@@ -236,6 +245,54 @@ test(
             assert.deepEqual([await reading("messages"), await reading("failedMessages")], [waiting, failed]);
           } finally {
             await db.delete(valoMessages).where(eq(valoMessages.id, id));
+          }
+        },
+      );
+      // docs/architecture/messages.md, part 6 (SRV-002): an enquiry nobody has taken, and one waiting on Valo.
+      await t.test(
+        "an enquiry nobody has taken, and one waiting on Valo untouched for more than two days, are counted from the cases' table",
+        async () => {
+          const actor = await resolveWorkspace(`synthetic-alert-readings-${randomUUID()}`);
+          const readings = async () => [await reading("newEnquiries"), await reading("waitingEnquiries")];
+          const [fresh, waited] = (await readings()) as [number, number];
+          const { reference } = await createTicket(actor, {
+            category: "support",
+            scope: "Synthetic enquiry for the alert readings test.",
+            contactEmail: "synthetic-alert-readings@example.invalid",
+            sharingConsent: false,
+          });
+          const ticketId = reference.replace(/^VALO-/, "");
+          const set = async (values: Partial<typeof valoSupportCases.$inferInsert>) => {
+            const changed = await db
+              .update(valoSupportCases)
+              .set(values)
+              .where(eq(valoSupportCases.ticketId, ticketId))
+              .returning({ id: valoSupportCases.id });
+            assert.equal(changed.length, 1, "the enquiry's own case");
+          };
+          const hoursAgo = (hours: number) => new Date(Date.now() - hours * 60 * MINUTE);
+          try {
+            // Just received: nobody has taken it, and it has not waited past the aim.
+            assert.deepEqual(await readings(), [fresh + 1, waited]);
+            // Untouched for a little under two days, then a little over.
+            await set({ updatedAt: hoursAgo(47) });
+            assert.deepEqual(await readings(), [fresh + 1, waited]);
+            await set({ updatedAt: hoursAgo(49) });
+            assert.deepEqual(await readings(), [fresh + 1, waited + 1]);
+            // Taken by someone, and untouched since: no longer waiting to be taken, still waiting on Valo.
+            await set({ status: "in_progress", assignedTo: "synthetic-support-staff" });
+            assert.deepEqual(await readings(), [fresh, waited + 1]);
+            // Touched now: within the aim again.
+            await set({ updatedAt: new Date() });
+            assert.deepEqual(await readings(), [fresh, waited]);
+            // Waiting on its customer, or resolved: on no one at Valo, however long.
+            for (const status of ["awaiting_customer", "resolved"] as const) {
+              await set({ status, updatedAt: hoursAgo(500) });
+              assert.deepEqual(await readings(), [fresh, waited], status);
+            }
+          } finally {
+            // Left resolved, so that it waits on no one in any later reading.
+            await set({ status: "resolved", updatedAt: new Date() });
           }
         },
       );

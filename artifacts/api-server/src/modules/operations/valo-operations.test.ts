@@ -7,12 +7,13 @@ import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   ALERT_RUNBOOKS,
-  alertTitle,
   alertRunbook,
+  alertTitle,
   collectOperationalSample,
+  ENQUIRY_WAIT_HOURS,
+  readinessQueries,
   recordOperationalAlerts,
   recordWorkerHeartbeat,
-  readinessQueries,
 } from "./valo-operations";
 import { versionedEvidencePath } from "../../lib/versioned-evidence-path";
 import { PRIVACY_REQUEST_AIM_DAYS } from "../../lib/valo-privacy-state";
@@ -72,8 +73,8 @@ test("internal probes measure failures independently and persist/deduplicate/rec
   try {
     await recordWorkerHeartbeat(worker.snapshot(), dir);
     // The security readings, the reading of privacy requests past Valo's own aim, and the readings of
-    // reminders, the job queue, messages and the request counts are zero here; their alerts have their own
-    // tests.
+    // reminders, the job queue, messages, enquiries and the request counts are zero here; their alerts
+    // have their own tests.
     const security = new Set<string>([
       ...securityQueries,
       readinessQueries.spreadRefusals,
@@ -94,6 +95,8 @@ test("internal probes measure failures independently and persist/deduplicate/rec
       readinessQueries.jobQueue,
       readinessQueries.messages,
       readinessQueries.failedMessages,
+      readinessQueries.newEnquiries,
+      readinessQueries.waitingEnquiries,
       readinessQueries.requestFailures,
       readinessQueries.requestTime,
     ]);
@@ -605,6 +608,91 @@ test("messages waiting past their time, and a message that failed, raise their o
       readinessQueries.failedMessages,
       /status='failed' AND updated_at > now\(\) - interval '1 day'/,
     );
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { recursive: true, force: true });
+    if (old === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = old;
+  }
+});
+
+// SRV-002 (docs/architecture/messages.md, part 6): a new enquiry, or one waiting past its time, raises an
+// alert in the staff alert list.
+test("an enquiry nobody has taken, and one that has waited on Valo past its aim, raise their own alerts under the enquiries runbook, past their limits only", async () => {
+  const old = process.env.NODE_ENV;
+  process.env.NODE_ENV = "development";
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => {
+    throw Error("EXTERNAL_MESSAGES_FORBIDDEN");
+  };
+  const dir = await mkdtemp(join(tmpdir(), "valo-ops-enquiries-"));
+  const worker = new WorkerHealth();
+  worker.finish(worker.begin()!, true);
+  try {
+    await recordWorkerHeartbeat(worker.snapshot(), dir);
+    type Readings = Partial<Record<"newEnquiries" | "waitingEnquiries", number>>;
+    const sample = (readings: Readings, unreadable?: keyof Readings) =>
+      collectOperationalSample(async (sql) => {
+        if (unreadable && sql === readinessQueries[unreadable]) throw Error("SYNTHETIC_PROBE_FAILURE");
+        const named = (Object.keys(readings) as (keyof Readings)[]).find(
+          (name) => readinessQueries[name] === sql,
+        );
+        return {
+          rows: [{ value: sql === readinessQueries.database ? 1 : named ? readings[named] : 0 }],
+        };
+      }, dir);
+    const owner = { runbook: "Provider enquiry dispute", accountable: "Support" };
+    // No enquiry waiting on anyone at Valo raises nothing.
+    assert.deepEqual((await recordOperationalAlerts(await sample({}), dir)).active, []);
+    // One nobody has taken raises its alert alone: it has not waited past the aim yet.
+    assert.deepEqual((await recordOperationalAlerts(await sample({ newEnquiries: 1 }), dir)).owners, [
+      { code: "NEW_ENQUIRIES_DETECTED", ...owner },
+    ]);
+    // One that has waited past the aim raises the other as well.
+    const raised = await recordOperationalAlerts(await sample({ newEnquiries: 1, waitingEnquiries: 3 }), dir);
+    assert.deepEqual(raised.owners, [
+      { code: "NEW_ENQUIRIES_DETECTED", ...owner },
+      { code: "WAITING_ENQUIRIES_DETECTED", ...owner },
+    ]);
+    // Taken, with one still untouched past the aim: the first alert clears and the second stays.
+    const taken = await recordOperationalAlerts(await sample({ waitingEnquiries: 3 }), dir);
+    assert.deepEqual(taken.owners, [{ code: "WAITING_ENQUIRIES_DETECTED", ...owner }]);
+    // Each says in plain words what it is about, and what Valo could not read when its reading fails.
+    assert.equal(
+      alertTitle("NEW_ENQUIRIES_DETECTED"),
+      "An enquiry is waiting for someone at Valo to take it",
+    );
+    assert.equal(
+      alertTitle("WAITING_ENQUIRIES_DETECTED"),
+      "An enquiry has waited on Valo for more than two days",
+    );
+    assert.equal(
+      alertTitle("NEW_ENQUIRIES_PROBE_UNAVAILABLE"),
+      "Valo cannot read the enquiries nobody has taken",
+    );
+    assert.equal(
+      alertTitle("WAITING_ENQUIRIES_PROBE_UNAVAILABLE"),
+      "Valo cannot read the enquiries waiting on Valo",
+    );
+    // A reading that cannot be taken is an alert of its own, and clears the one it replaces.
+    assert.deepEqual((await recordOperationalAlerts(await sample({}, "waitingEnquiries"), dir)).owners, [
+      { code: "WAITING_ENQUIRIES_PROBE_UNAVAILABLE", ...owner },
+    ]);
+    assert.deepEqual((await recordOperationalAlerts(await sample({}, "newEnquiries"), dir)).owners, [
+      { code: "NEW_ENQUIRIES_PROBE_UNAVAILABLE", ...owner },
+    ]);
+    assert.deepEqual((await recordOperationalAlerts(await sample({}), dir)).active, []);
+    // The readings. Nobody has taken it: the case is open. Waiting on Valo: open or in progress, and
+    // untouched for longer than the aim, which the alert's words give in days. Never one that waits on
+    // its customer, or is resolved.
+    assert.match(readinessQueries.newEnquiries, /FROM valo_support_cases\s+WHERE status='open' LIMIT/);
+    assert.equal(ENQUIRY_WAIT_HOURS, 48);
+    assert.match(
+      readinessQueries.waitingEnquiries,
+      /status IN \('open','in_progress'\)\s+AND updated_at < now\(\) - interval '48 hours'/,
+    );
+    for (const query of [readinessQueries.newEnquiries, readinessQueries.waitingEnquiries])
+      assert.doesNotMatch(query, /awaiting_customer|resolved/);
   } finally {
     globalThis.fetch = originalFetch;
     await rm(dir, { recursive: true, force: true });

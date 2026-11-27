@@ -7,6 +7,12 @@ import { quotaLimit, type QuotaBucket } from "../../lib/valo-quota-policy";
 import { PRIVACY_REQUEST_AIM_DAYS } from "../../lib/valo-privacy-state";
 import { COMMERCIAL_SETTINGS } from "../commercial-settings";
 export const operationsDirectory = resolve("generated-artifacts/valo-operations");
+/**
+ * How long an enquiry may wait on Valo, with nobody there touching it, before its alert
+ * (docs/architecture/messages.md, part 6). It is Valo's own aim and a proposal for the owner: no reply
+ * time is promised to anyone.
+ */
+export const ENQUIRY_WAIT_HOURS = 48;
 /** Live windows of the named quota buckets that reached their limit, as configured: one caller using all
  * of it. */
 const atQuotaLimit = (buckets: readonly QuotaBucket[]) =>
@@ -50,6 +56,14 @@ export const readinessQueries = {
   // could be told from a second message.
   failedMessages: `SELECT count(*)::int AS value FROM (SELECT 1 FROM valo_messages
     WHERE status='failed' AND updated_at > now() - interval '1 day' LIMIT 10001) bounded`,
+  // docs/architecture/messages.md, part 6 (SRV-002): enquiries nobody at Valo has taken, and enquiries
+  // waiting on Valo that nobody there has touched for longer than its aim. An enquiry waiting on its
+  // customer, and a resolved one, wait on no one at Valo.
+  newEnquiries: `SELECT count(*)::int AS value FROM (SELECT 1 FROM valo_support_cases
+    WHERE status='open' LIMIT 10001) bounded`,
+  waitingEnquiries: `SELECT count(*)::int AS value FROM (SELECT 1 FROM valo_support_cases
+    WHERE status IN ('open','in_progress')
+      AND updated_at < now() - interval '${ENQUIRY_WAIT_HOURS} hours' LIMIT 10001) bounded`,
   // NFR-003, by the API's request counts of the last ten minutes, once there are a hundred requests or more
   // to mean something (fewer read as nothing): how many in 1,000 failed unexpectedly, and the time 95 in
   // 100 of them took at most, in milliseconds, by the counts' fixed times (10001: longer than ten seconds).
@@ -168,6 +182,11 @@ const SERVICE_METRICS = [
 ] as const;
 /** The reading of messages that failed (docs/architecture/messages.md) and the subject its alerts are named after. */
 const MESSAGE_METRICS = [["failedMessages", "FAILED_MESSAGES"]] as const;
+/** The readings of enquiries waiting on Valo (docs/architecture/messages.md, part 6) and the subjects their alerts are named after. */
+const SUPPORT_METRICS = [
+  ["newEnquiries", "NEW_ENQUIRIES"],
+  ["waitingEnquiries", "WAITING_ENQUIRIES"],
+] as const;
 type Metric = { status: "ok" | "unavailable"; value: number | null; elapsedMs: number };
 export type OperationalSample = {
   checkedAt: string;
@@ -182,6 +201,8 @@ export type OperationalSample = {
   jobQueue: Metric;
   messages: Metric;
   failedMessages: Metric;
+  newEnquiries: Metric;
+  waitingEnquiries: Metric;
   payments: Metric;
   requestFailures: Metric;
   requestTime: Metric;
@@ -215,6 +236,8 @@ export type OperationalSample = {
     jobQueue: number;
     messages: number;
     failedMessages: number;
+    newEnquiries: number;
+    waitingEnquiries: number;
     workerAgeMs: number;
     requestFailures: number;
     requestTime: number;
@@ -325,6 +348,9 @@ export async function collectOperationalSample(
       // Any message to a customer waiting past its time, and any that failed in the last day.
       messages: 0,
       failedMessages: 0,
+      // Any enquiry nobody has taken, and any waiting on Valo past its aim.
+      newEnquiries: 0,
+      waitingEnquiries: 0,
       workerAgeMs: 90000,
       // NFR-003's own: fewer than 1 in 100 requests failing unexpectedly, and 95 in 100 within a second.
       requestFailures: 10,
@@ -381,6 +407,8 @@ export const ALERT_RUNBOOKS = {
   JOB_QUEUE: { runbook: "Broken export / AI outage", accountable: "Engineering" },
   MESSAGES: { runbook: "Broken export / AI outage", accountable: "Engineering" },
   FAILED_MESSAGES: { runbook: "Broken export / AI outage", accountable: "Engineering" },
+  NEW_ENQUIRIES: { runbook: "Provider enquiry dispute", accountable: "Support" },
+  WAITING_ENQUIRIES: { runbook: "Provider enquiry dispute", accountable: "Support" },
   PAYMENTS: { runbook: "Payment/entitlement failure", accountable: "Finance + engineering" },
   REQUEST_FAILURES: { runbook: "Site/database unavailable", accountable: "Engineering lead" },
   REQUEST_TIME: { runbook: "Site/database unavailable", accountable: "Engineering lead" },
@@ -441,6 +469,14 @@ export const ALERT_WORDS = {
   FAILED_MESSAGES: {
     raised: "A message to a customer failed in the last day",
     reading: "the messages that failed",
+  },
+  NEW_ENQUIRIES: {
+    raised: "An enquiry is waiting for someone at Valo to take it",
+    reading: "the enquiries nobody has taken",
+  },
+  WAITING_ENQUIRIES: {
+    raised: "An enquiry has waited on Valo for more than two days",
+    reading: "the enquiries waiting on Valo",
   },
   PAYMENTS: { raised: "A paid order is missing its access or its receipt", reading: "paid orders" },
   REQUEST_FAILURES: {
@@ -525,6 +561,8 @@ const SUBJECT_READINGS: Partial<
   JOB_QUEUE: "jobQueue",
   MESSAGES: "messages",
   FAILED_MESSAGES: "failedMessages",
+  NEW_ENQUIRIES: "newEnquiries",
+  WAITING_ENQUIRIES: "waitingEnquiries",
   PAYMENTS: "payments",
   REQUEST_FAILURES: "requestFailures",
   REQUEST_TIME: "requestTime",
@@ -702,7 +740,12 @@ async function recordOperationalAlertsLocked(sample: OperationalSample, file: st
     if (metric.status !== "ok") active.push(code + "_PROBE_UNAVAILABLE");
     else if (metric.value! > (name === "payments" ? 0 : sample.limits[name])) active.push(code + "_BACKLOG");
   }
-  for (const [name, subject] of [...SERVICE_METRICS, ...MESSAGE_METRICS, ...SECURITY_METRICS]) {
+  for (const [name, subject] of [
+    ...SERVICE_METRICS,
+    ...MESSAGE_METRICS,
+    ...SUPPORT_METRICS,
+    ...SECURITY_METRICS,
+  ]) {
     const metric = sample[name];
     if (metric.status !== "ok") active.push(subject + "_PROBE_UNAVAILABLE");
     else if (metric.value! > sample.limits[name]) active.push(subject + "_DETECTED");
