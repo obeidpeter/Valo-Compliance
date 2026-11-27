@@ -310,6 +310,33 @@ test(
       );
 
       await t.test(
+        "a sender's answer without a reference is no acceptance: neither a blank one, nor one that the address is stopped, which only an optional message is given",
+        async () => {
+          const a = await workspace(),
+            now = new Date();
+          for (const answer of [{ providerMessageId: "  " }, { suppressed: true } as const]) {
+            const { message } = await settled(a);
+            const sender: MessageSender = { name: "synthetic-email-service", send: async () => answer };
+            assert.equal(await dispatchMessage(a.workspaceId, message.id, sender, now), "queued");
+            const after = await row(message.id);
+            // Every message of the outbox is a necessary one, owed whatever became of its address. It is
+            // not taken, and is offered again at its next time.
+            assert.deepEqual(
+              [
+                after.status,
+                after.reason,
+                after.attempts,
+                after.sender,
+                after.providerMessageId,
+                after.acceptedAt,
+              ],
+              ["queued", "SENDER_DID_NOT_TAKE", 1, null, null, null],
+            );
+          }
+        },
+      );
+
+      await t.test(
         "an attempt whose process stopped is offered again once its lease ends, and never past the sender's replay window",
         async () => {
           const a = await workspace();

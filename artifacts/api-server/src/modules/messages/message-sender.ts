@@ -11,23 +11,37 @@ export type OutgoingMessage = {
   messageId: string;
   idempotencyKey: string;
   kind: string;
+  /**
+   * True for a message its reader may stop, such as a reminder (part 4). Before it sends one, a sender
+   * asks whether Valo has stopped sending optional messages to the address (part 3), and sends nothing if
+   * it has, or if it cannot ask.
+   */
+  optional?: boolean | undefined;
   recipient: { identityId: string };
   subject: string;
   text: string;
+  /** Headers for the reader's mail program: an optional message's unsubscribe pair (part 4). */
+  headers?: Readonly<Record<string, string>> | undefined;
+  /** Labels the provider keeps with a message. None names a person or holds any of a message's words. */
+  tags?: readonly { name: string; value: string }[] | undefined;
   signal: AbortSignal;
 };
 
 /**
- * Takes one message and returns the reference it gave it, or throws. A reference means the sender took the
- * message, never that it reached anyone.
+ * What a sender answers. Its reference means it took the message, never that the message reached anyone.
+ * `suppressed` means it sent nothing, because the message is optional and Valo has stopped sending
+ * optional messages to its address. Only an optional message is answered so.
  */
+export type SenderAnswer = { providerMessageId: string } | { suppressed: true };
+
+/** Takes one message and answers as above, or throws. */
 export type MessageSender = {
   /** The name recorded on each message it takes. */
   name: string;
   /** How long the sender deduplicates by idempotency key. Past it, an attempt that may have been taken is
    * never made again, since it could send the message twice. */
   replayWindowMs?: number | undefined;
-  send(message: OutgoingMessage): Promise<{ providerMessageId: string }>;
+  send(message: OutgoingMessage): Promise<SenderAnswer>;
 };
 
 /**
@@ -48,7 +62,12 @@ export type KeptMessage = Omit<OutgoingMessage, "signal"> & { providerMessageId:
 export function standInSender(options: { keep?: boolean; refuse?: () => boolean } = {}) {
   const references = new Map<string, string>();
   const kept: KeptMessage[] = [];
-  const sender: MessageSender & { kept: readonly KeptMessage[] } = {
+  // It answers every message with a reference: it holds no address, so none is one Valo has stopped
+  // sending to.
+  const sender: Omit<MessageSender, "send"> & {
+    kept: readonly KeptMessage[];
+    send(message: OutgoingMessage): Promise<{ providerMessageId: string }>;
+  } = {
     name: STAND_IN_SENDER,
     kept,
     async send(message) {

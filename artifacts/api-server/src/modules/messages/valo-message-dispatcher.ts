@@ -262,7 +262,10 @@ async function offer(
       }),
       timeout,
     ]);
-    if (!taken.providerMessageId?.trim()) throw Error("MESSAGE_SENDER_REFERENCE_MISSING");
+    // Only an optional message is answered as one to an address Valo has stopped sending to, and the
+    // outbox holds none (message-policy.ts). So an answer without a reference is no answer.
+    if (!("providerMessageId" in taken) || !taken.providerMessageId?.trim())
+      throw Error("MESSAGE_SENDER_REFERENCE_MISSING");
     providerMessageId = taken.providerMessageId.slice(0, 200);
   } catch {
     // A refusal, a timeout or no answer: the sender may still have taken the message, so a retry offers it

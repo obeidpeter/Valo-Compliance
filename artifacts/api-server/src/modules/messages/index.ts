@@ -36,4 +36,5 @@ export {
   type KeptMessage,
   type MessageSender,
   type OutgoingMessage,
+  type SenderAnswer,
 } from "./message-sender";

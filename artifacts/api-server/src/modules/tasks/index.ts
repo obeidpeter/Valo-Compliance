@@ -4,7 +4,7 @@
  * artifacts/api-server/src/modules/tasks imports only this file (repository rule `module-boundary`);
  * tests may import the module's files directly.
  *
- * Used only inside the module, and not re-exported: valo-reminder-sender.ts.
+ * Used only inside the module, and not re-exported: valo-reminder-sender.ts and reminder-message.ts.
  */
 export * from "./reminder-unsubscribe";
 export * from "./valo-reminder-resend";
