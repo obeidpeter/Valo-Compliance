@@ -604,6 +604,38 @@ You receive this message because these changes affect what you saved, made or bo
 | 4c | Support: the daily message to the support role's members | Not built |
 | 5 | Material notices by email: one message a day to a workspace about the changes that affect it | Built |
 
+## The tests and the pause
+
+The pause is one row for every workspace. Five of the messages' database tests write it: each clears it
+as it starts and puts it back as it ends, and two turn it on for a moment to test it. The five ran beside
+each other, and beside 24 other files, in the step that proves tenant boundaries.
+
+**What was seen.** On one local run, the log's test failed: a message of its own was "held,
+MESSAGES_PAUSED" where the test expected "cancelled, ORDER_NOT_VERIFIED". Run again on the same commit,
+the step passed. Other test runs were using the machine during the first run. No hosted run has failed
+this way.
+
+**The cause.** While one file has the pause on, the dispatcher holds every message it is asked to offer,
+another file's too. It was reproduced directly. With one file's pause kept on for fifteen seconds, the
+log's test beside it fails, with a message held that it expected to be accepted. The same two files, run
+one after the other with the same pause, pass.
+
+**What changed.**
+
+- The five files run in a step of their own, one file at a time (`test:valo-messages-db`,
+  `--test-concurrency=1`), as the source controls' and the incident rehearsal's steps do. The step
+  follows the one they were part of, and runs whatever became of it.
+- The test inventory fails when a test file that writes a safety switch is run by a script that runs its
+  files side by side. It finds a file that writes one through the messages' fixture, through the staff
+  action that pauses a service, or in the table itself. A file that writes only its own workspace's
+  switch is recorded there with that reason. There is one.
+- The inventory takes a script as run in CI only when the workflow calls it, or a script the workflow
+  runs calls it. Before, a script that CI never runs vouched for the scripts it names: `test:valo-db`
+  names the new script, and would have hidden a missing step.
+
+**What the check does not see.** It reads the test files' own words. A test that wrote a switch through
+a helper of another name would not be found.
+
 ## The owner's points
 
 1. **A provider and a sender address**, and the approval to send. Until then nothing leaves Valo but the

@@ -213,7 +213,9 @@ non-root user). It never uses a database from your environment and passes the st
 none of your credentials. Add a database group to the workflow and it runs there too;
 `--keep-going` reports every failing step. Every test file must be run by a package
 script that CI calls; `scripts/src/valo/test-inventory.test.ts` fails otherwise,
-unless the exception and its reason are recorded there. A test that is skipped or a todo in every
+unless the exception and its reason are recorded there. A test file that writes a safety switch every
+workspace shares, such as a staff pause, is run by a script that runs one file at a time
+(`--test-concurrency=1`); that inventory fails otherwise. A test that is skipped or a todo in every
 job that runs it fails the evidence job, unless `scripts/src/valo/skipped-tests.ts` records why it
 cannot run in CI. Tests create only
 synthetic records and never call real providers. A green local run is not hosted CI; check the actual
