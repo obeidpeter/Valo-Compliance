@@ -164,6 +164,11 @@ Rules that apply now:
   it. Never turn the trigger off to change an order: a correction is a finance decision with its
   own record. A test goes beneath it only to plant the fault it is about, in a synthetic order of
   its own.
+- An order is made from the price book. The database refuses a new order unless the price or the
+  bundle's version it names is in effect and its amount, currency and whole line are that offer's
+  (`valo_orders_made_from_price_book`, `docs/architecture/order-safety.md`, slice 2). Take an
+  order's terms from `priceOrderTerms` or `bundleOrderTerms`, in tests as in the application. A
+  change to what a line holds changes the trigger in the same migration.
 - An order is made, and a payment started or its saved page handed out, only after the provider
   has been asked again about each earlier order of the workspace for the same edition that ended
   abandoned or failed (`afterALookAtEndedOrders`, `docs/architecture/order-safety.md`, slice 4).

@@ -249,8 +249,9 @@ its index loads no database client, model SDK or provider transport, and
 reconciliation, receipts and their recovery, refunds, payment concerns, disputes and the Paystack
 contract. Its `index.ts` re-exports what the routes, the worker and the privacy code use; the
 merchant transports, the dispute schema and the test fixtures stay internal. The routes stay in
-`src/routes`. Once an order is made, the database keeps its amount, its line and the price or
-bundle it names, whoever asks to change them ([order safety](order-safety.md)).
+`src/routes`. The database takes a new order only with the amount and the line of a price or a
+bundle's version in effect, and once an order is made it keeps its amount, its line and the price
+or bundle it names, whoever asks to change them ([order safety](order-safety.md)).
 
 `modules/rules` holds the released-rule registry the checker uses, saved assessments, their
 comparison and the admission check for a rule release. The rule release command itself lives in

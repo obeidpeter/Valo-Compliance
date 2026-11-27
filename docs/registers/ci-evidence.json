@@ -3093,7 +3093,7 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/commerce/valo-commerce.integration.test.ts",
       "test": "controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication",
-      "proves": "Order requests for a held product are refused, including one that adds its own amount and currency, and no order is saved; a payment result one kobo above a synthetic order's amount does not settle it; after a new price version the order's receipt still shows the amount and licence text it was created with; and the database refuses a change to a synthetic order's amount, currency, line, price, bundle, workspace, reference, request key, creation time or id, from the application's login and from a customer's workspace scope alike, while its status, checkout address, last check and provider transaction still change, and who placed it changes only to the mark the erasure's own statement writes."
+      "proves": "Order requests for a held product are refused, including one that adds its own amount and currency, and no order is saved; a payment result one kobo above a synthetic order's amount does not settle it; after a new price version the order's receipt still shows the amount and licence text it was created with; and the database refuses a change to a synthetic order's amount, currency, line, price, bundle, workspace, reference, request key, creation time or id, from the application's login and from a customer's workspace scope alike, while its status, checkout address, last check and provider transaction still change, and who placed it changes only to the mark the erasure's own statement writes. The database also refuses a new synthetic order unless it names a price in effect and has that price's amount, currency and whole line: eleven wrong amounts, currencies and lines, and a closed, a future and a missing price, are each refused from the application's login and from a customer's workspace scope, and an order with exactly its price's terms is made by both."
     },
     {
       "requirement": "PAY-001",
@@ -3107,7 +3107,14 @@
       "job": "foundation",
       "file": "lib/db/scripts/phase1-migrations.test.mjs",
       "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
-      "proves": "The order terms guard migration applies to a database that holds orders, with or without a migration ledger, and rolls back whole; afterwards each of fourteen changes to a synthetic order's amount, line, price, bundle, currency, workspace, reference, request key, creation time or id is refused, who placed it is refused every value but the erasure's mark, and its status, checkout address and provider transaction still change."
+      "proves": "The order terms guard migration applies to a database that holds orders, with or without a migration ledger, and rolls back whole; afterwards each of fourteen changes to a synthetic order's amount, line, price, bundle, currency, workspace, reference, request key, creation time or id is refused, who placed it is refused every value but the erasure's mark, and its status, checkout address and provider transaction still change. The order price book guard migration likewise keeps every row, an order from before it with a line that names nothing among them, and rolls back whole; afterwards a new synthetic order is refused with a wrong amount, currency or line, or from a closed, future or missing price, also inside a customer's workspace scope, and is made with its price's own terms."
+    },
+    {
+      "requirement": "PAY-001",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-manual-library.integration.test.ts",
+      "test": "manual publishing through staff HTTP routes and public readers",
+      "proves": "Against the real staff library, a synthetic order made directly for a bundle is taken by the database only with the amount and the line of the bundle's version in effect, naming the released edition of each of its templates once, in any order: a wrong amount, licence text or bundle name, a template left out, named twice or added, another title or edition for a template, the version once it has closed, an edition a later one has replaced, and a bundle whose template was withdrawn are each refused."
     },
     {
       "requirement": "PAY-002",
