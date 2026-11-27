@@ -192,6 +192,11 @@ Rules that apply now:
   `valo_payment_event_settlements_kept` refuses a settlement made any other way, and any change to
   or removal of one (`docs/architecture/reconciliation.md`, slice 3a). When the worker leaves an
   event for finance, its `failure` says why, with a name `paymentEventFinding` gives.
+- Paystack's own list of a day's payments is read only by `listProviderTransactions`, outside any
+  transaction, once the day has ended (`docs/architecture/reconciliation.md`, slice 3b). What it
+  finds is recorded only as provider events that wait for finance, keyed as the webhook keys them so
+  that a payment is recorded once whichever way it came. Never correct an order, a payment or a
+  grant from the list.
 - Only the operator commands in `FINITE_WORK_BINDING_ENTRIES` hand the inference
   dispatcher its work-binding checks (`provideFiniteWorkBindings`), and only the real
   `assertFiniteWorkBindings`; the `inference-bindings` repository rule enforces this.

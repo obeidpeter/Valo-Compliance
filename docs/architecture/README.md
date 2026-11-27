@@ -257,7 +257,9 @@ record, says differently about an order, and an order whose latest check found a
 an alert. Finance settles a difference in the staff console, with its reason in the staff access
 audit, and the database keeps a finished check. A Paystack event Valo could not match or process
 raises an alert of its own, and finance settles it the same way, in a row of its own that the
-database keeps ([reconciliation](reconciliation.md)).
+database keeps. Once a day has ended, the worker also reads Paystack's own list of that day's
+successful payments (`valo-payment-lists.ts`), and a payment on it that is no order's waits for
+finance as such an event does ([reconciliation](reconciliation.md)).
 
 `modules/rules` holds the released-rule registry the checker uses, saved assessments, their
 comparison and the admission check for a rule release. The rule release command itself lives in
