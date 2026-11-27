@@ -158,14 +158,14 @@ owner's to confirm. The rule changes are built in the three slices of [their des
 
 ### Phase 4: messages
 
-Built against a stand-in sender. Sending a real message stays switched off until the owner approves
-a provider and a sender.
+Built against a stand-in sender ([design](messages.md)). Sending a real message stays switched off until
+the owner approves a provider and a sender.
 
 | What is left | Requirements | Size |
 | --- | --- | --- |
-| A sender that reaches each customer's own verified address. Today's only sender refuses outside development and sends to one configured test address. Record delivery and bounces, which nothing writes (checked twice) | WRK-003 | M |
+| A sender that reaches each customer's own verified address. Today's only sender refuses outside development and sends to one configured test address. Record delivery and bounces, which nothing writes (checked twice). Built: one outbox for every message Valo owes, a worker task that offers each to a sender once, after checking again whatever could stop it, with retries, a staff pause, and a stand-in sender that sends nothing. Left: the customer's delivery log and an alert on failed messages; delivery and bounces; a sender that reaches a real address, which waits for the owner | WRK-003 | M |
 | An unsubscribe link and its endpoint, and marketing consent that a sender reads. Neither exists (checked twice) | WRK-004, PRO-002 | M |
-| Receipts and refund notices: they are queued and nothing sends them. A PDF receipt for the customer, who gets a JSON download today (checked twice) | PAY-009, PAY-008 | M |
+| Receipts and refund notices: they are queued and nothing sends them. A PDF receipt for the customer, who gets a JSON download today (checked twice). Built: a settled order and a processed refund each owe a message in the outbox, with its words, and the task hands it to the stand-in, which sends nothing. Left: the PDF receipt | PAY-009, PAY-008 | M |
 | An answer for someone who cannot sign in, a notice to staff of a new or ageing enquiry, and a visible state when one fails to go out | SRV-002, IAM-001 | M |
 | Correction notices by email as well as in the app | EDP-011 | S |
 

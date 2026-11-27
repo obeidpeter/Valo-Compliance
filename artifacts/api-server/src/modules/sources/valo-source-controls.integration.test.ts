@@ -490,6 +490,87 @@ test(
         assert.equal(await state.withSafetyDispatch("checkout", async () => "resumed"), "resumed");
       },
     );
+    // docs/architecture/messages.md, part 1: the pause of every send is a system control of its own.
+    await t.test(
+      "a messages pause is a system control that stops neither checkout nor AI, and records its reason, actor and how many messages wait",
+      async () => {
+        const refusedKey = randomUUID();
+        await assert.rejects(
+          controls.actOnSourceControls(fresh(staff), {
+            action: "pause_service",
+            service: "messages",
+            requestKey: refusedKey,
+            reason,
+          }),
+          { status: 403 },
+        );
+        assert.equal(
+          (
+            await db.execute(
+              sql`select 1 from valo_safety_control_audit where request_key=${refusedKey}::uuid`,
+            )
+          ).rows.length,
+          0,
+        );
+        const paused = await controls.actOnSourceControls(fresh(system), {
+          action: "pause_service",
+          service: "messages",
+          requestKey: randomUUID(),
+          reason,
+        });
+        try {
+          // Each switch is independent: checkout and AI still run while messages are paused.
+          assert.equal(
+            await state.withSafetyDispatch("checkout", async () => "checkout runs"),
+            "checkout runs",
+          );
+          assert.equal(await state.withSafetyDispatch("ai", async () => "AI runs"), "AI runs");
+          const [audit] = (
+            await db.execute(
+              sql`select actor_id,area,action,target,reason,current from valo_safety_control_audit where id=${paused.auditId}::uuid`,
+            )
+          ).rows as {
+            actor_id: string;
+            area: string;
+            action: string;
+            target: string;
+            reason: string;
+            current: { customerImpact: { refused: string; unaffected: string; messagesWaiting: unknown } };
+          }[];
+          assert.equal(audit?.actor_id, system.identityId);
+          assert.deepEqual(
+            [audit.area, audit.action, audit.target, audit.reason],
+            ["system", "pause_service", "messages", reason],
+          );
+          assert.match(audit.current.customerImpact.refused, /^sending messages/);
+          assert.match(audit.current.customerImpact.unaffected, /purchases/);
+          assert.equal(typeof audit.current.customerImpact.messagesWaiting, "number");
+          const [switched] = (
+            await db.execute(
+              sql`select enabled,reason,actor_id from valo_safety_switches where key='messages'`,
+            )
+          ).rows;
+          assert.deepEqual(
+            [switched?.enabled, switched?.reason, switched?.actor_id],
+            [false, reason, system.identityId],
+          );
+          // The staff screen's list shows the pause.
+          const listed = await controls.sourceControls(fresh(system), "system");
+          assert.equal(listed.services.find((service) => service.key === "messages")?.enabled, false);
+        } finally {
+          await controls.actOnSourceControls(fresh(system), {
+            action: "resume_service",
+            service: "messages",
+            requestKey: randomUUID(),
+            reason,
+          });
+        }
+        const [resumed] = (
+          await db.execute(sql`select enabled from valo_safety_switches where key='messages'`)
+        ).rows;
+        assert.equal(resumed?.enabled, true);
+      },
+    );
     await t.test("held versions cannot be manually restored or approved", async () => {
       await assert.rejects(
         controls.actOnSourceControls(fresh(staff), {

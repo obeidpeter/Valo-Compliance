@@ -35,6 +35,7 @@ import {
 } from "./valo-erasure-seal";
 import { ValoProblem } from "../../platform/valo-problem";
 import { cancelUnsentDisputeWork } from "../commerce";
+import { messagesReady } from "../messages";
 import { retireWorkspaceExports, workspaceExportScratch } from "./valo-workspace-export-jobs";
 import { copyPhases, erasePrivateCopyPhase, fencePrivateCopies } from "./valo-private-copy-inventory";
 import { erasureProgressReason } from "./valo-privacy-redactions";
@@ -73,10 +74,18 @@ const legacyPhases = [
 /**
  * Phases added after the copy phases: a workspace's notices that a requirements-check rule's version,
  * or a template edition, was replaced or withdrawn, and the history of its optional choices
- * (docs/architecture/processing-inventory.md, slices 5 and 4). Append only: every earlier phase keeps its index, so an erasure in progress resumes where
- * it stopped and runs these at its end. A finished erasure is not reopened.
+ * (docs/architecture/processing-inventory.md, slices 5 and 4), then the messages Valo owed it
+ * (docs/architecture/messages.md, slice 1a). The dispatcher sends no message of a workspace whose erasure
+ * has begun, so none is sent before this phase removes them. Append only: every earlier phase keeps its
+ * index, so an erasure in progress resumes where it stopped and runs these at its end. A finished erasure is
+ * not reopened.
  */
-const laterPhases = ["valo_rule_notices", "valo_edition_notices", "valo_consent_changes"] as const;
+const laterPhases = [
+  "valo_rule_notices",
+  "valo_edition_notices",
+  "valo_consent_changes",
+  "valo_messages",
+] as const;
 const phases = [...legacyPhases, ...copyPhases, ...laterPhases] as const;
 /** How many application phases a current erasure, or its replay, runs one at a time. */
 export const applicationErasurePhaseCount = phases.length;
@@ -335,6 +344,8 @@ async function eraseSection(
     accepted_document_id=NULL,status='privacy_erased',updated_at=now()
     WHERE ctid IN (SELECT ctid FROM valo_ai_drafts WHERE workspace_id=${workspaceId}::uuid
     AND status<>'privacy_erased' LIMIT 100)`);
+  // A database the messages migration has not reached holds no message to remove.
+  if (section === "valo_messages" && !(await messagesReady(tx))) return { rowCount: 0 };
   const table = sql.identifier(section);
   return tx.execute(sql`DELETE FROM ${table} WHERE ctid IN
     (SELECT ctid FROM ${table} WHERE workspace_id=${workspaceId}::uuid LIMIT 100)`);

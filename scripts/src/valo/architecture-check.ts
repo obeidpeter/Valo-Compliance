@@ -190,6 +190,7 @@ export const WORKSPACE_SCOPE_ENTRIES = [
   "artifacts/api-server/src/modules/exports/valo-exports.ts",
   "artifacts/api-server/src/modules/privacy/valo-privacy-processing.ts",
   "artifacts/api-server/src/modules/tasks/valo-reminder-worker.ts",
+  "artifacts/api-server/src/modules/messages/valo-message-dispatcher.ts",
   "artifacts/api-server/src/modules/privacy/valo-workspace-export-jobs.ts",
 ];
 

@@ -27,6 +27,7 @@ import {
 } from "./valo-refund-provider";
 import { setting } from "../../platform/settings";
 import { singleRow } from "../../platform/rows";
+import { queueMessage } from "../messages";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 type Refund = typeof valoRefundRequests.$inferSelect;
 export type FinanceActor = { identityId: string; recentMfa: boolean; verifiedAt: number };
@@ -474,6 +475,14 @@ export async function processRefund(
             kind: `refund_processed:${row.id}`,
           })
           .onConflictDoNothing();
+        // The refund notice, to whoever placed the order, owed only once the provider confirmed the refund
+        // (docs/architecture/messages.md, part 5).
+        await queueMessage(tx, {
+          workspaceId: order.workspaceId,
+          kind: "refund_processed",
+          recipientIdentityId: order.requestedBy,
+          subjectId: row.id,
+        });
       }
     });
   } catch (error) {

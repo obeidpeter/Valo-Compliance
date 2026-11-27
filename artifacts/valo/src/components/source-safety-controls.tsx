@@ -8,6 +8,13 @@ import { ErrorState, Skel } from "@/components/states";
 import { describeError } from "@/lib/api";
 import { formatDateTime, formatDay } from "@/lib/format";
 import { EditorialRecordPanel } from "@/components/editorial-record";
+/** The safety switch each service's pause sets, and what the screen calls the service. */
+const SERVICE_SWITCHES = { ai: "all_ai", checkout: "checkout", messages: "messages" } as const;
+const SERVICE_NAMES = {
+  ai: "AI assistance",
+  checkout: "New checkout",
+  messages: "Sending messages",
+} as const;
 export function SourceSafetyControls({ area }: { area: "content" | "system" }) {
   const [page, setPage] = useState(1),
     [reason, setReason] = useState(""),
@@ -84,15 +91,13 @@ export function SourceSafetyControls({ area }: { area: "content" | "system" }) {
             </p>
           )}
           {area === "system" ? (
-            <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              {(["ai", "checkout"] as const).map((service) => {
-                const flag = q.data.services.find(
-                    (s) => s.key === (service === "ai" ? "all_ai" : "checkout"),
-                  ),
+            <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {(["ai", "checkout", "messages"] as const).map((service) => {
+                const flag = q.data.services.find((s) => s.key === SERVICE_SWITCHES[service]),
                   paused = flag?.enabled === false;
                 return (
                   <div key={service} className="rounded-xl border p-4">
-                    <h3 className="font-medium">{service === "ai" ? "AI assistance" : "New checkout"}</h3>
+                    <h3 className="font-medium">{SERVICE_NAMES[service]}</h3>
                     <p className="my-3 text-sm">
                       {paused ? "Safety pause on" : "Safety pause off"}. Financial and release permissions
                       still apply.

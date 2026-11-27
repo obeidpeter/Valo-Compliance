@@ -4482,12 +4482,12 @@ export const ActOnSourceControlsBody = zod.union([zod.object({
   "requestKey": zod.uuid(),
   "reason": zod.string().min(actOnSourceControlsBodyFourReasonMin).max(actOnSourceControlsBodyFourReasonMax),
   "action": zod.enum(['pause_service']),
-  "service": zod.enum(['ai', 'checkout'])
+  "service": zod.enum(['ai', 'checkout', 'messages'])
 }),zod.object({
   "requestKey": zod.uuid(),
   "reason": zod.string().min(actOnSourceControlsBodyFiveReasonMin).max(actOnSourceControlsBodyFiveReasonMax),
   "action": zod.enum(['resume_service']),
-  "service": zod.enum(['ai', 'checkout'])
+  "service": zod.enum(['ai', 'checkout', 'messages'])
 })])
 
 export const ActOnSourceControlsResponse = zod.object({

@@ -49,8 +49,9 @@ The requirements, verbatim from the specification:
     receives no customer data;
   - an optional activity has no consent, or a required one depends on a consent.
 - **Activities.** Accounts and sign-in; the business profile; documents, drafts and their files; the
-  requirements check and its tasks; reminders; orders and payments; the drafting assistant; support;
-  privacy requests; security and abuse prevention; and staff work and its audit.
+  requirements check and its tasks; reminders; orders and payments; messages about the account, since
+  [messages](messages.md), slice 1a; the drafting assistant; support; privacy requests; security and
+  abuse prevention; and staff work and its audit.
 
 ### Part 2: the notice, made from the inventory
 

@@ -2260,7 +2260,7 @@ export type SourceControlAction = {
      */
   reason: string;
   action: 'pause_service';
-  service: 'ai' | 'checkout';
+  service: 'ai' | 'checkout' | 'messages';
 } | {
   requestKey: string;
   /**
@@ -2269,7 +2269,7 @@ export type SourceControlAction = {
      */
   reason: string;
   action: 'resume_service';
-  service: 'ai' | 'checkout';
+  service: 'ai' | 'checkout' | 'messages';
 };
 
 export type SourceControlResultResult = { [key: string]: unknown };

@@ -21,6 +21,8 @@ export const OPERATIONAL_DOMAINS = [
   "preparations",
   // The hourly count of every history against its digest (docs/architecture/audit-trail.md, slice 3).
   "historyIntegrity",
+  // Each message Valo owes, offered to the configured sender (docs/architecture/messages.md, slice 1a).
+  "messages",
 ] as const;
 export type OperationalDomain = (typeof OPERATIONAL_DOMAINS)[number];
 /**

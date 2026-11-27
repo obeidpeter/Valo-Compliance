@@ -285,6 +285,11 @@ export const SETTINGS = {
     group: "Email",
     description: "The only recipient test email may reach; must match the user's verified address.",
   },
+  VALO_MESSAGE_SENDER: {
+    group: "Email",
+    description:
+      "`stand-in` lets the worker hand each message Valo owes, such as a receipt, to the stand-in, which sends nothing. Unset, every message waits. Refused in production.",
+  },
 
   VALO_WORKER_HEALTH_PORT: {
     group: "Worker and monitoring",

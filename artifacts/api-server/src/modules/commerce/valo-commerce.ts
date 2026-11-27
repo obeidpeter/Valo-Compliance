@@ -39,6 +39,7 @@ import { refundBalance, TEST_REFUND_POLICY } from "./valo-refund-provider";
 import { setting } from "../../platform/settings";
 import { assertSafetyActive, withSafetyDispatch } from "../sources";
 import { singleRow } from "../../platform/rows";
+import { queueMessage } from "../messages";
 import {
   assertPayableOrder,
   lockCheckoutWorkspace,
@@ -740,6 +741,13 @@ export async function settleVerifiedOrder(id: string, data: VerifiedTransaction,
         .insert(valoPurchaseOutbox)
         .values({ id: randomUUID(), workspaceId: order.workspaceId, orderId: id })
         .onConflictDoNothing();
+      // The receipt message, to whoever placed the order (docs/architecture/messages.md, part 5).
+      await queueMessage(tx, {
+        workspaceId: order.workspaceId,
+        kind: "purchase_receipt",
+        recipientIdentityId: order.requestedBy,
+        subjectId: id,
+      });
     }
     if (status === "reversed")
       await tx.update(valoEntitlements).set({ status: "suspended" }).where(eq(valoEntitlements.orderId, id));
@@ -845,6 +853,14 @@ async function repairVerifiedFulfilment(
         status: receiptStatus,
       })
       .onConflictDoNothing();
+    // A recovered synthetic receipt stays held, so it owes no message.
+    if (receiptStatus === "pending")
+      await queueMessage(tx, {
+        workspaceId: order.workspaceId,
+        kind: "purchase_receipt",
+        recipientIdentityId: order.requestedBy,
+        subjectId: order.id,
+      });
     repaired = true;
   }
   if (repaired) await audit(tx, order.workspaceId, actorId, "payment.fulfilment_repaired", order.id);

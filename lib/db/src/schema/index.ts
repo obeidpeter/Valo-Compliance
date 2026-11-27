@@ -49,6 +49,7 @@ export * from "./valo-consent-changes";
 export * from "./valo-privacy-holds";
 export * from "./valo-reminder-preferences";
 export * from "./valo-reminder-outbox";
+export * from "./valo-messages";
 export * from "./valo-rule-releases";
 export * from "./valo-rule-notices";
 export * from "./valo-ai-drafts";

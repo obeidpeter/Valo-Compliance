@@ -17,6 +17,7 @@ import { executeExport, developmentExportsOnly } from "../modules/exports";
 import { closeRenderer } from "../lib/valo-render";
 import { logger } from "../platform/logger";
 import { reconcileDueReminders } from "../modules/tasks";
+import { configuredMessageSender, dispatchDueMessages } from "../modules/messages";
 import { recoverAbandonedExports, reconcileExportOrphans } from "../modules/exports";
 import { expireGeneratedExports } from "../modules/exports";
 import {
@@ -55,6 +56,9 @@ import { requestLimits } from "../lib/valo-quota-policy";
 // The worker's alerts read each request limit's setting: a value outside its bounds stops it here, before it
 // works (SEC-005).
 requestLimits();
+// The messages job's sender, from VALO_MESSAGE_SENDER: one for the worker's life, so its retries reach the
+// same sender. A value it cannot use stops the worker here, before it works.
+const messageSender = configuredMessageSender();
 // A database connection that fails while idle is logged, and the worker carries on.
 logConnectionFailures(logger);
 await initializeApplicationRuntime();
@@ -77,6 +81,7 @@ const runOperationalJob = operationalJobRunner(
     guidance: () => checkDueGuidance(),
     preparations: () => prepareRequestedCandidates(),
     historyIntegrity: () => countHistories(),
+    messages: () => dispatchDueMessages(messageSender),
   },
   (domain, healthy) => {
     operationalHealth.set(domain, healthy);
