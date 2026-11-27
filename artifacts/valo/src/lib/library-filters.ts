@@ -24,6 +24,7 @@ export const LIBRARY_CATEGORIES = [
   "Practical business guides",
   "Industry guidance",
   "Industry introductions",
+  "Industry packs",
   "Location guidance",
   "Industry directory",
   "Service enquiries",
