@@ -3236,6 +3236,55 @@
       "proves": "The assessment comparison helper explains a changed recommendation in sentences that name the changed answers by their question labels (Operates from premises and Employees in the test) and the rule's version change, and explains a rule that is new or no longer in the result; the saved-assessments page's source calls it under “Why results changed”."
     },
     {
+      "requirement": "PRO-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/workspaces/valo-profile-recheck.integration.test.ts",
+      "test": "PRO-003: a new requirements check is offered after the profile changes an answer the check reads, and the earlier result and the tasks are kept",
+      "proves": "For a synthetic workspace, run in its database scope as a customer request is: a profile version that changes only the business name and the marketing choice is saved and offers nothing; one that changes the state, the area, an activity and the employee count is answered with an offer of a new check that names the workspace's latest saved result and those four answers, and the workspace's summary gives the same offer; a new result saved from the new answers ends the offer, its comparison with the earlier result names the four changed answers, each result keeps its own time, the earlier result reads exactly as it was saved, and the two tasks the business made, one from that result and one of its own, read exactly as before. An answer given differently on the check's page is not offered until the profile changes it to something else."
+    },
+    {
+      "requirement": "PRO-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/workspaces/profile-recheck.test.ts",
+      "test": "PRO-003: a changed location, activity or employee count is offered for a new check, in the profile's order",
+      "proves": "The comparison that decides the offer lists a changed state, area, activities or employee count, each alone, and several changed answers in the order the profile asks them."
+    },
+    {
+      "requirement": "PRO-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/workspaces/profile-recheck.test.ts",
+      "test": "PRO-003: a change the check does not read offers nothing",
+      "proves": "The comparison lists nothing for a profile that is unchanged, or whose business name or marketing choice alone changed."
+    },
+    {
+      "requirement": "PRO-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/workspaces/profile-recheck.test.ts",
+      "test": "PRO-003: an answer the result was already worked out from is not offered again",
+      "proves": "When a result was worked out from an answer the check's page was given differently from the profile, the comparison lists nothing once the profile takes that answer, lists it when the profile moves to another, and lists nothing for the difference while the profile has not changed that answer."
+    },
+    {
+      "requirement": "PRO-003",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/recheck.test.ts",
+      "test": "PRO-003: the offer names the changed answers as a saved result names them, and the result's time on a Lagos clock",
+      "proves": "The offer's words name one changed answer, two and four by the names a saved result gives them, with the result's time on a Lagos clock, and say that saved results and tasks stay as they are."
+    },
+    {
+      "requirement": "PRO-003",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/recheck.test.ts",
+      "test": "PRO-003: the offer opens the check filled in from the profile, and the new result opens compared with the one it follows",
+      "proves": "The offer's link opens the check filled in from the profile and names the result it follows; only a saved result's own identifier is taken from the check's address; and a result saved from that check opens with the earlier one chosen to compare with, never with itself."
+    },
+    {
+      "requirement": "PRO-003",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "a new requirements check is offered where the server offers one: with the profile's save, on the home page and on the result it follows, and the result saved from it opens compared with that one",
+      "proves": "In a browser, with the API answered from synthetic data: the business profile's page shows no offer until a save is answered with one, then shows it in view, naming the changed answers and the result's time, and shows it when opened again; the home page lists it with what needs attention and beside the latest result; the result it follows shows it; no screen makes an offer the server did not make, even when the profile's version is newer than the one a result names; and the check the offer opens is filled in from the profile, and the result saved from it opens with the earlier result chosen to compare with, each under its own time."
+    },
+    {
       "requirement": "PRV-001",
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai.test.ts",
@@ -5950,6 +5999,20 @@
       "file": "artifacts/api-server/src/modules/operations/request-counts.integration.test.ts",
       "test": "request counts: each process's minutes add up, the readings take the last ten minutes, a week is kept, and reminders and jobs are read from their own tables",
       "proves": "On a real database, with a synthetic enquiry: just received, it is counted as one nobody has taken; untouched for more than 48 hours it is also counted as waiting on Valo, and for a little less it is not; once someone has taken it, it is no longer counted as untaken; touched again, waiting on its customer or resolved, it is not counted as waiting on Valo."
+    },
+    {
+      "requirement": "NFR-006",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "a new requirements check is offered where the server offers one: with the profile's save, on the home page and on the result it follows, and the result saved from it opens compared with that one",
+      "proves": "On an emulated phone, the business profile, the home page and a saved result, each showing the offer of a new requirements check, fit 360 and 320 pixels, move keyboard focus only to visible outlined controls clear of the bars that stay on screen, and have no automated WCAG 2.2 AA failure. This is an automated check, not a manual or assistive-technology review."
+    },
+    {
+      "requirement": "SEC-001",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/workspaces/valo-profile-recheck.integration.test.ts",
+      "test": "PRO-003: a new requirements check is offered after the profile changes an answer the check reads, and the earlier result and the tasks are kept",
+      "proves": "The offer of a new requirements check is read from the workspace's own profile versions and saved results: another synthetic workspace's later result and its newer profile version, which holds the very answers this workspace changes to, alter neither the result the offer names nor the answers it lists, and that workspace is offered nothing."
     }
   ]
 }
