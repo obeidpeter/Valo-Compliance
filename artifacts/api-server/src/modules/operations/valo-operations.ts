@@ -453,8 +453,8 @@ export const ALERT_WORDS = {
   },
   DENIED_ACCESS: { raised: "One address is being refused again and again", reading: "refused requests" },
   SIGNATURE_FAILURES: {
-    raised: "A message from the payment provider failed its signature check",
-    reading: "the payment provider's signatures",
+    raised: "A message from the payment or email provider failed its signature check",
+    reading: "the providers' signatures",
   },
   SPREAD_REFUSALS: {
     raised: "Requests from many addresses together are being refused",

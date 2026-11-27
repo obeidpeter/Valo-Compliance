@@ -246,6 +246,10 @@ const PRIVATE_TABLES: Record<string, { cases: readonly string[] } | { reason: st
   valo_memberships: {
     reason: "Resolved by the server from the signed-in identity; no customer request names a membership.",
   },
+  valo_message_deliveries: {
+    reason:
+      "What an email service reported about a message or a reminder, which the worker records from the service's signed reports; no customer request names one, and the lists that show it take no identifier. valo-email-events.integration.test.ts proves another workspace neither reads nor writes one.",
+  },
   valo_messages: {
     reason:
       "Messages the server queues when an order settles or a refund is processed, and the worker sends; no customer request names one, and the workspace's list of them takes no identifier.",

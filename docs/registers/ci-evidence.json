@@ -4702,15 +4702,15 @@
       "requirement": "WRK-003",
       "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
-      "test": "the messages screen says in plain words what has happened to each message and reminder, calls none of them sent or delivered, and says of a message Valo only recorded that nothing was emailed",
-      "proves": "In a real browser with controlled answers, the Messages page lists the workspace's messages and the reminders about its tasks together, newest first, each with its state in plain words. A message an email service accepted is not called sent or delivered, and one Valo only recorded is called not emailed and shows no tries. The page has no automated WCAG 2.2 AA failure and fits a phone. No assistive technology is used."
+      "test": "the messages screen says in plain words what has happened to each message and reminder, calls none of them sent, calls delivered only one the email service reported as delivered, and says of a message Valo only recorded that nothing was emailed",
+      "proves": "In a real browser with controlled answers, the Messages page lists the workspace's messages and the reminders about its tasks together, newest first, each with its state in plain words. A message an email service accepted is not called sent or delivered, and one Valo only recorded is called not emailed and shows no tries. Only a message the answers say the email service reported as delivered is called delivered, with that service named as the one saying so, the time of its report, and that Valo cannot see whether it was opened; one that came back says the address may be wrong, and one the email service could not send offers the way to report it. The page has no automated WCAG 2.2 AA failure and fits a phone. No assistive technology is used, and no email service reported anything here: the answers are the test's own."
     },
     {
       "requirement": "WRK-003",
       "job": "foundation",
       "file": "artifacts/valo/src/lib/message-words.test.ts",
-      "test": "no state of a message is called sent or delivered, and a message Valo only recorded is called not emailed",
-      "proves": "No state a message can be in has a name that holds sent or delivered; a message an email service took is named as accepted, with the words that this does not show it reached an inbox, and one Valo only recorded is named as not emailed, in words that claim no email."
+      "test": "no state of a message is called sent or delivered, a message Valo only recorded is called not emailed, and only the email service's report is called delivered",
+      "proves": "No state a message can be in has a name that holds sent or delivered; a message an email service took is named as accepted, with the words that this does not show it reached an inbox, and one Valo only recorded is named as not emailed, in words that claim no email. With no report from the email service a message's label is its state's; with a report of delivery the label is Delivered, and the words say that the email service reports it."
     },
     {
       "requirement": "SRV-002",

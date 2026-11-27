@@ -56,6 +56,8 @@ is that inventory, part 4 of [alerts that reach a person](../architecture/alerts
 | `security_signal.purge_failed` | The API's security signals | Expired signals could not be removed |
 | `clerk_proxy.upstream_failed` | The API's identity provider proxy | The identity provider could not be reached |
 | `payment.signature_rejected` | The API's payment webhook | A message from the payment provider failed its signature check |
+| `email.signature_rejected` | The API's email webhook | A delivery report failed its signature check |
+| `email.event_unreadable` | The API's email webhook | A signed delivery report was not in the form the email provider documents |
 | `price.recorded` | The owner's price screen | The owner recorded a price |
 | `bundle.recorded` | The owner's bundle screen | The owner recorded a bundle |
 | `commercial_setting.recorded` | The owner's settings screen | The owner recorded a commercial setting |

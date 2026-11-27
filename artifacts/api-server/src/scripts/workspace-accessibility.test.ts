@@ -484,6 +484,8 @@ const answers: Record<string, unknown> = {
       lastAttemptAt: null,
       reason: "Synthetic test fixture.",
       deliveredAt: null,
+      delivery: null,
+      deliveryAt: null,
     },
   ]),
   [`GET /workspace/purchases`]: api.GetCustomerPurchasesResponse.parse({
@@ -537,6 +539,8 @@ const answers: Record<string, unknown> = {
       lastAttemptAt: null,
       nextAttemptAt: at(13),
       acceptedAt: null,
+      delivery: null,
+      deliveryAt: null,
     },
   ]),
   [`GET /workspace/data-exports`]: api.ListWorkspaceDataExportsResponse.parse({
@@ -3642,6 +3646,8 @@ test("the reminders screen says in plain words whether emails are being sent and
     lastAttemptAt: null,
     reason: null,
     deliveredAt: null,
+    delivery: null,
+    deliveryAt: null,
     ...fields,
   });
   const records = api.ListRemindersResponse.parse([
@@ -3667,6 +3673,24 @@ test("the reminders screen says in plain words whether emails are being sent and
       attempts: 2,
       lastAttemptAt: at(23),
       nextAttemptAt: at(24),
+    }),
+    // What the email service reported about two reminders it had accepted.
+    reminder(6, {
+      status: "sent",
+      scheduledAt: at(19),
+      attempts: 1,
+      lastAttemptAt: at(19),
+      deliveredAt: at(19),
+      delivery: "delivered",
+      deliveryAt: at(19),
+    }),
+    reminder(7, {
+      status: "sent",
+      scheduledAt: at(18),
+      attempts: 1,
+      lastAttemptAt: at(18),
+      delivery: "bounced",
+      deliveryAt: at(18),
     }),
   ]);
   const preferences = (deliveryAvailable: boolean) =>
@@ -3742,6 +3766,23 @@ test("the reminders screen says in plain words whether emails are being sent and
       await expect(row(page, 5)).toContainText(
         "Tried 2 times. Last tried 23 Nov 2026, 10:00.Valo tries again after 24 Nov 2026, 10:00, if reminders are still on.",
       );
+      // The email service reported a delivery. Only then is a reminder called delivered, and the row says
+      // who says so and what Valo cannot see.
+      await expect(row(page, 6).locator(".pill")).toHaveText("Delivered");
+      await expect(row(page, 6)).toContainText(
+        "The email service reports that this message was delivered. Valo cannot see whether it was opened, or which folder it went to.",
+      );
+      await expect(row(page, 6)).toContainText("The email service reported this on 19 Nov 2026, 10:00.");
+      // One that came back says the address may be wrong. Valo's staff cannot clear that, so no report is offered.
+      await expect(row(page, 7).locator(".pill")).toHaveText("Not delivered");
+      await expect(row(page, 7)).toContainText(
+        "The email service reports that this message came back: the address did not take it. The email address may be wrong or no longer in use.",
+      );
+      await expect(row(page, 7)).toContainText("The email service reported this on 18 Nov 2026, 10:00.");
+      await expect(row(page, 7).getByRole("link", { name: "Report a problem" })).toHaveCount(0);
+      // No reminder but those is called delivered or not delivered.
+      for (const n of [1, 2, 3, 4, 5])
+        assert.doesNotMatch(await row(page, n).innerText(), /delivered/i, `reminder ${n}`);
 
       // None of the system's own words, and no note written for operators.
       const shown = (await page.locator("main").innerText()).replace(/\s+/g, " ");
@@ -4802,7 +4843,7 @@ test("purchase history offers the exact owned file on a verified order and keeps
 // WRK-003: "... and a delivery log." The workspace's log of every message, in the customer's words. No
 // message is called sent or delivered, and one Valo only recorded is said not to have been emailed
 // (docs/architecture/messages.md, slice 1b).
-test("the messages screen says in plain words what has happened to each message and reminder, calls none of them sent or delivered, and says of a message Valo only recorded that nothing was emailed", async () => {
+test("the messages screen says in plain words what has happened to each message and reminder, calls none of them sent, calls delivered only one the email service reported as delivered, and says of a message Valo only recorded that nothing was emailed", async () => {
   const message = (n: number, fields: Record<string, unknown>) => ({
     id: `00000000-0000-4000-8000-00000000d20${n}`,
     kind: "purchase_receipt",
@@ -4817,8 +4858,21 @@ test("the messages screen says in plain words what has happened to each message 
     lastAttemptAt: null,
     nextAttemptAt: null,
     acceptedAt: null,
+    delivery: null,
+    deliveryAt: null,
     ...fields,
   });
+  /** A message an email service accepted on `day`, and what that service reported about it since. */
+  const reported = (n: number, day: number, delivery: string) =>
+    message(n, {
+      status: "accepted",
+      attempts: 1,
+      createdAt: at(day),
+      lastAttemptAt: at(day),
+      acceptedAt: at(day),
+      delivery,
+      deliveryAt: at(day),
+    });
   const records = api.ListWorkspaceMessagesResponse.parse([
     message(1, { status: "held", reason: "SENDER_NOT_CONFIGURED", createdAt: at(24), nextAttemptAt: at(25) }),
     message(2, {
@@ -4860,6 +4914,9 @@ test("the messages screen says in plain words what has happened to each message 
       lastAttemptAt: at(19),
       nextAttemptAt: at(26),
     }),
+    reported(7, 18, "delivered"),
+    reported(8, 17, "bounced"),
+    reported(9, 16, "undelivered"),
   ]);
   const reminders = api.ListRemindersResponse.parse(answers["GET /workspace/reminders"]);
   const row = (page: Page, n: number) => page.getByTestId(`row-message-${records[n - 1]!.id}`);
@@ -4873,11 +4930,11 @@ test("the messages screen says in plain words what has happened to each message 
       await expect(page.getByRole("heading", { level: 1 })).toHaveText("Messages from Valo");
       await expect(page.getByTestId("text-messages-intro")).toHaveText(
         "Each message Valo owes this workspace about a purchase or a refund, and each reminder about a task, with what has happened to it. " +
-          "No message is shown as delivered: the most Valo knows is that an email service accepted it.",
+          "A message is shown as delivered only when the email service reports that it was. Until then, the most Valo knows is that an email service accepted it.",
       );
       // Newest first, the reminder among the messages.
       const rows = page.getByTestId("list-messages").locator("> li");
-      await expect(rows).toHaveCount(7);
+      await expect(rows).toHaveCount(10);
       assert.deepEqual(
         await rows.evaluateAll((items) => items.map((item) => item.getAttribute("data-testid"))),
         [`row-reminder-${reminders[0]!.id}`, ...records.map((record) => `row-message-${record.id}`)],
@@ -4936,6 +4993,30 @@ test("the messages screen says in plain words what has happened to each message 
       await expect(row(page, 6)).toContainText(
         "Tried 2 times. Last tried 19 Nov 2026, 10:00.Valo tries again after 26 Nov 2026, 10:00.",
       );
+      // The email service reported that it delivered this one. Only then is a message called delivered, and
+      // the row says who says so, when, and what Valo cannot see.
+      await expect(row(page, 7).locator(".pill")).toHaveText("Delivered");
+      await expect(row(page, 7)).toContainText(
+        "The email service reports that this message was delivered. Valo cannot see whether it was opened, or which folder it went to.",
+      );
+      await expect(row(page, 7)).toContainText("The email service reported this on 18 Nov 2026, 10:00.");
+      assert.doesNotMatch(await row(page, 7).innerText(), /\bsent\b|\bread\b/i);
+      // One that came back says the address may be wrong. Valo's staff cannot clear that, so no report is offered.
+      await expect(row(page, 8).locator(".pill")).toHaveText("Not delivered");
+      await expect(row(page, 8)).toContainText(
+        "The email service reports that this message came back: the address did not take it. The email address may be wrong or no longer in use.",
+      );
+      await expect(row(page, 8).getByRole("link", { name: "Report a problem" })).toHaveCount(0);
+      // One the email service could not send is Valo's to look at.
+      await expect(row(page, 9).locator(".pill")).toHaveText("Not delivered");
+      await expect(row(page, 9)).toContainText("The email service could not send this message.");
+      await expect(row(page, 9).getByRole("link", { name: "Report a problem" })).toHaveAttribute(
+        "href",
+        "/support",
+      );
+      // No message the email service made no report about is called delivered, or not delivered.
+      for (const n of [1, 2, 3, 4, 5, 6])
+        assert.doesNotMatch(await row(page, n).innerText(), /delivered/i, `message ${n}`);
       // The reminder, in the reminders' own words, with the way to its own page.
       const reminder = page.getByTestId(`row-reminder-${reminders[0]!.id}`);
       await expect(reminder).toContainText("Reminder: Synthetic task 1");
@@ -4965,7 +5046,7 @@ test("the messages screen says in plain words what has happened to each message 
   );
   try {
     await ready(page);
-    assert.deepEqual(await phoneProblems(page, "the messages, with seven in the log"), []);
+    assert.deepEqual(await phoneProblems(page, "the messages, with ten in the log"), []);
     assert.deepEqual(errors, []);
     assert.deepEqual(unknown, []);
   } finally {

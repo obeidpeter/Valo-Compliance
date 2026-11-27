@@ -32,6 +32,7 @@ import {
   valoEntitlements,
   valoPurchaseOutbox,
   valoMessages,
+  valoMessageDeliveries,
   valoRefundRequests,
   valoPaymentReconciliations,
   valoPrivacyMessages,
@@ -45,7 +46,7 @@ import { valoDisputeInformation, valoDisputeActions } from "@workspace/db";
 import { ownedPaymentEvent } from "./valo-private-copy-inventory";
 import { valoPaymentConcerns, valoConcernMessages, valoPaymentConcernEvents } from "@workspace/db";
 import { setting } from "../../platform/settings";
-import { messagesReady } from "../messages";
+import { emailEventsReady, messagesReady } from "../messages";
 export const accessMessage =
   "Request received and saved. No account details have been confirmed. Replies are not yet dispatched from this development build.";
 const ack = (id: string) => ({
@@ -298,6 +299,28 @@ async function snapshotExport(
               .from(valoMessages)
               .where(eq(valoMessages.workspaceId, actor.workspaceId))
               .orderBy(valoMessages.id)
+              .limit(sink ? 500 : 5001)
+              .offset(offset),
+      );
+      // What the email service last reported about each message or reminder it took (part 3 of that
+      // design): the record's id is a message's above, or a reminder delivery's. A database the delivery
+      // migration has not reached has none to list.
+      const deliveriesListed = await emailEventsReady(tx);
+      await collect("messageDeliveries", async (offset) =>
+        !deliveriesListed
+          ? []
+          : tx
+              .select({
+                source: valoMessageDeliveries.source,
+                recordId: valoMessageDeliveries.recordId,
+                delivery: valoMessageDeliveries.delivery,
+                detail: valoMessageDeliveries.detail,
+                reportedAt: valoMessageDeliveries.reportedAt,
+                updatedAt: valoMessageDeliveries.updatedAt,
+              })
+              .from(valoMessageDeliveries)
+              .where(eq(valoMessageDeliveries.workspaceId, actor.workspaceId))
+              .orderBy(valoMessageDeliveries.id)
               .limit(sink ? 500 : 5001)
               .offset(offset),
       );

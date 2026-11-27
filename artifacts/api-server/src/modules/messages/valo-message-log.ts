@@ -2,6 +2,7 @@ import { and, desc, eq, inArray } from "drizzle-orm";
 import { db, valoMessages, valoOrders, valoRefundRequests } from "@workspace/db";
 import { authorizeWorkspaceRead, type WorkspaceActor } from "../workspaces";
 import { STAND_IN_SENDER } from "./message-sender";
+import { deliveriesOf } from "./valo-email-events";
 import { messagesReady } from "./valo-messages";
 
 /** How many of a workspace's latest messages its log lists. */
@@ -21,7 +22,8 @@ export function logStatus(row: { status: string; sender: string | null }) {
  * workspace and what became of it, newest first, for any member who may read the workspace. It names the
  * order each message is about, and the refund for a refund notice. It says whether the message is for the
  * member asking, and never who else it is for. It gives no message text, no address, and nothing of the
- * sender's but whether one took the message.
+ * sender's but whether one took the message and what the email service has reported about it since. A
+ * delivery is that service's report alone, and only a message a sender that sends took can have one.
  *
  * A database the messages migration has not reached has none to list.
  */
@@ -65,6 +67,12 @@ export async function listWorkspaceMessages(actor: WorkspaceActor) {
           .where(and(eq(valoOrders.workspaceId, actor.workspaceId), inArray(valoOrders.id, orderIds)))
       : [];
     const orderReference = new Map(orders.map((order) => [order.id, order.reference]));
+    const reports = await deliveriesOf(
+      tx,
+      actor.workspaceId,
+      "message",
+      rows.filter((row) => row.status === "accepted" && row.sender !== STAND_IN_SENDER).map((row) => row.id),
+    );
     return rows.map((row) => {
       const refund = row.kind === "refund_processed" ? refundOf.get(row.subjectId) : undefined;
       const orderId = row.kind === "purchase_receipt" ? row.subjectId : (refund?.orderId ?? null);
@@ -84,6 +92,8 @@ export async function listWorkspaceMessages(actor: WorkspaceActor) {
         lastAttemptAt: row.lastAttemptAt?.toISOString() ?? null,
         nextAttemptAt: row.nextAttemptAt?.toISOString() ?? null,
         acceptedAt: row.acceptedAt?.toISOString() ?? null,
+        delivery: reports.get(row.id)?.delivery ?? null,
+        deliveryAt: reports.get(row.id)?.deliveryAt ?? null,
       };
     });
   });

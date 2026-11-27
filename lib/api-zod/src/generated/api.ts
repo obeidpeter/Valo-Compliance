@@ -6315,7 +6315,9 @@ export const ListWorkspaceMessagesResponseItem = zod.object({
   "createdAt": zod.string(),
   "lastAttemptAt": zod.string().nullable(),
   "nextAttemptAt": zod.string().nullable(),
-  "acceptedAt": zod.string().nullable()
+  "acceptedAt": zod.string().nullable(),
+  "delivery": zod.union([zod.enum(['delivered', 'delayed', 'bounced', 'complained', 'undelivered']).describe('What the email service last reported about a message it took. `delivered` means the address\'s email service took it, never that anyone read it; `delayed` that the email service is still trying; `bounced` that the address\'s email service refused it; `complained` that it was marked as spam; `undelivered` that the email service could not send it.'),zod.null()]),
+  "deliveryAt": zod.string().nullable()
 })
 export const ListWorkspaceMessagesResponse = zod.array(ListWorkspaceMessagesResponseItem)
 
@@ -10779,7 +10781,9 @@ export const ListRemindersResponseItem = zod.object({
   "nextAttemptAt": zod.string().nullable(),
   "lastAttemptAt": zod.string().nullable(),
   "reason": zod.string().nullable(),
-  "deliveredAt": zod.string().nullable()
+  "deliveredAt": zod.string().nullable(),
+  "delivery": zod.union([zod.enum(['delivered', 'delayed', 'bounced', 'complained', 'undelivered']).describe('What the email service last reported about a message it took. `delivered` means the address\'s email service took it, never that anyone read it; `delayed` that the email service is still trying; `bounced` that the address\'s email service refused it; `complained` that it was marked as spam; `undelivered` that the email service could not send it.'),zod.null()]),
+  "deliveryAt": zod.string().nullable()
 })
 export const ListRemindersResponse = zod.array(ListRemindersResponseItem)
 

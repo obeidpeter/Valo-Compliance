@@ -174,7 +174,7 @@ schemas:
       deliveryBlocker: { type: [string, "null"] }
   ReminderRecord:
     type: object
-    required: [id, taskId, scheduledAt, status, reason, deliveredAt, attempts, nextAttemptAt, lastAttemptAt]
+    required: [id, taskId, scheduledAt, status, reason, deliveredAt, attempts, nextAttemptAt, lastAttemptAt, delivery, deliveryAt]
     properties:
       id: { type: string }
       taskId: { type: string }
@@ -184,4 +184,9 @@ schemas:
       nextAttemptAt: { type: string, nullable: true }
       lastAttemptAt: { type: string, nullable: true }
       reason: { type: [string, "null"] }
+      # When the email service reported that the address's email service took the reminder, or null.
       deliveredAt: { type: [string, "null"] }
+      # What the email service last reported about a reminder it accepted, and its time for that. Null
+      # while it has reported nothing.
+      delivery: { anyOf: [{ $ref: "#/components/schemas/MessageDelivery" }, { type: "null" }] }
+      deliveryAt: { type: [string, "null"] }

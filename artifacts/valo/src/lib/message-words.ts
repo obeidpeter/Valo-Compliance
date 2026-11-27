@@ -1,8 +1,10 @@
 import type {
+  MessageDelivery,
   WorkspaceMessage,
   WorkspaceMessageKind,
   WorkspaceMessageStatus,
 } from "@workspace/api-client-react";
+import { deliveryNeedsHelp, deliveryWords } from "./delivery-words";
 
 /** What each kind of message is called. */
 export const MESSAGE_KIND: Record<WorkspaceMessageKind, string> = {
@@ -15,7 +17,8 @@ export const MESSAGE_KIND: Record<WorkspaceMessageKind, string> = {
  *
  * "Accepted by email service" is not "delivered": Valo knows the email service took the message, and
  * does not know that it reached an inbox. "Not emailed" is a message Valo only recorded while it was
- * not sending emails: nothing left Valo, so it is never called accepted.
+ * not sending emails: nothing left Valo, so it is never called accepted. No state is called delivered:
+ * that word is the email service's own report (delivery-words.ts), shown only when it made one.
  */
 export const MESSAGE_STATUS: Record<WorkspaceMessageStatus, { label: string; means: string }> = {
   queued: { label: "Waiting", means: "Not sent yet." },
@@ -57,16 +60,28 @@ const REASONS: Record<string, string> = {
 /** The reasons the customer cannot clear alone: the screen offers the way to report a problem. */
 const NEEDS_HELP = new Set(["ATTEMPT_LIMIT_REACHED", "REPLAY_WINDOW_PASSED"]);
 
-type Told = Pick<WorkspaceMessage, "status" | "reason">;
+type Told = Pick<WorkspaceMessage, "status" | "reason"> & { delivery?: MessageDelivery | null | undefined };
 
-/** What has happened to a message. A reason this screen does not know says only what the state means. */
-export function messageMeaning({ status, reason }: Told) {
-  return (reason && REASONS[reason]) || (MESSAGE_STATUS[status]?.means ?? "");
+/** What a message's row is labelled: the email service's report about it, or else its state. */
+export function messageLabel(message: Told) {
+  return deliveryWords(message)?.label ?? MESSAGE_STATUS[message.status]?.label ?? message.status;
+}
+
+/**
+ * What has happened to a message: what the email service reported about it, or else why it is in its
+ * state. A reason this screen does not know says only what the state means.
+ */
+export function messageMeaning(message: Told) {
+  return (
+    deliveryWords(message)?.means ||
+    (message.reason && REASONS[message.reason]) ||
+    (MESSAGE_STATUS[message.status]?.means ?? "")
+  );
 }
 
 /** Whether the customer needs someone at Valo to look at this message. */
-export function messageNeedsHelp({ reason }: Told) {
-  return reason !== null && NEEDS_HELP.has(reason);
+export function messageNeedsHelp(message: Told) {
+  return deliveryNeedsHelp(message) || (message.reason !== null && NEEDS_HELP.has(message.reason));
 }
 
 /** What a message is about, as its row's heading. */

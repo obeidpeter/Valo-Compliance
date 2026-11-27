@@ -1411,7 +1411,7 @@ paths:
       operationId: listWorkspaceMessages
       responses:
         "200":
-          description: The workspace's messages and what became of each; accepted is not delivered, and recorded is not emailed
+          description: The workspace's messages and what became of each; accepted is not delivered, recorded is not emailed, and a delivery is only what the email service reported
           content:
             application/json:
               schema: { type: array, items: { $ref: "#/components/schemas/WorkspaceMessage" } }
@@ -2349,6 +2349,10 @@ components:
         replacementVersion: { type: [integer, "null"], description: "The version that replaced it, for a replaced version." }
         reason: { type: string, description: "What changed, or why it was withdrawn, as the person who made the change wrote it." }
         changedAt: { type: string, description: "When the version was replaced or withdrawn, as an ISO 8601 time." }
+    MessageDelivery:
+      type: string
+      description: What the email service last reported about a message it took. `delivered` means the address's email service took it, never that anyone read it; `delayed` that the email service is still trying; `bounced` that the address's email service refused it; `complained` that it was marked as spam; `undelivered` that the email service could not send it.
+      enum: [delivered, delayed, bounced, complained, undelivered]
     RequirementRoute:
       type: object
       description: The authority's own official page for a requirement, as its rule records it. Absent when the rule records none, and in a result saved before routes were recorded.
@@ -4480,7 +4484,7 @@ components:
         problems: { type: array, maxItems: 200, items: { type: string, maxLength: 400 } }
     WorkspaceMessage:
       type: object
-      required: [id, kind, orderId, orderReference, refundReference, forYou, status, reason, attempts, createdAt, lastAttemptAt, nextAttemptAt, acceptedAt]
+      required: [id, kind, orderId, orderReference, refundReference, forYou, status, reason, attempts, createdAt, lastAttemptAt, nextAttemptAt, acceptedAt, delivery, deliveryAt]
       properties:
         id: { type: string, format: uuid }
         kind: { type: string, enum: [purchase_receipt, refund_processed] }
@@ -4499,6 +4503,10 @@ components:
         lastAttemptAt: { type: [string, "null"] }
         nextAttemptAt: { type: [string, "null"] }
         acceptedAt: { type: [string, "null"] }
+        # What the email service last reported about an accepted message, and its time for that. Null while it
+        # has reported nothing, and always for a message that was only recorded.
+        delivery: { anyOf: [{ $ref: "#/components/schemas/MessageDelivery" }, { type: "null" }] }
+        deliveryAt: { type: [string, "null"] }
     OperationalAlerts:
       type: object
       additionalProperties: false
@@ -6810,7 +6818,7 @@ components:
         deliveryBlocker: { type: [string, "null"] }
     ReminderRecord:
       type: object
-      required: [id, taskId, scheduledAt, status, reason, deliveredAt, attempts, nextAttemptAt, lastAttemptAt]
+      required: [id, taskId, scheduledAt, status, reason, deliveredAt, attempts, nextAttemptAt, lastAttemptAt, delivery, deliveryAt]
       properties:
         id: { type: string }
         taskId: { type: string }
@@ -6820,7 +6828,12 @@ components:
         nextAttemptAt: { type: string, nullable: true }
         lastAttemptAt: { type: string, nullable: true }
         reason: { type: [string, "null"] }
+        # When the email service reported that the address's email service took the reminder, or null.
         deliveredAt: { type: [string, "null"] }
+        # What the email service last reported about a reminder it accepted, and its time for that. Null
+        # while it has reported nothing.
+        delivery: { anyOf: [{ $ref: "#/components/schemas/MessageDelivery" }, { type: "null" }] }
+        deliveryAt: { type: [string, "null"] }
     Profile:
       type: object
       additionalProperties: false

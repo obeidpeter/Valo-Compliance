@@ -30,6 +30,20 @@ export interface RuleChange {
 }
 
 /**
+ * What the email service last reported about a message it took. `delivered` means the address's email service took it, never that anyone read it; `delayed` that the email service is still trying; `bounced` that the address's email service refused it; `complained` that it was marked as spam; `undelivered` that the email service could not send it.
+ */
+export type MessageDelivery = typeof MessageDelivery[keyof typeof MessageDelivery];
+
+
+export const MessageDelivery = {
+  delivered: 'delivered',
+  delayed: 'delayed',
+  bounced: 'bounced',
+  complained: 'complained',
+  undelivered: 'undelivered',
+} as const;
+
+/**
  * The authority's own official page for a requirement, as its rule records it. Absent when the rule records none, and in a result saved before routes were recorded.
  */
 export interface RequirementRoute {
@@ -3935,6 +3949,9 @@ export interface WorkspaceMessage {
   nextAttemptAt: string | null;
   /** @nullable */
   acceptedAt: string | null;
+  delivery: MessageDelivery | null;
+  /** @nullable */
+  deliveryAt: string | null;
 }
 
 export type OperationalAlertState = typeof OperationalAlertState[keyof typeof OperationalAlertState];
@@ -6003,6 +6020,9 @@ export interface ReminderRecord {
   reason: string | null;
   /** @nullable */
   deliveredAt: string | null;
+  delivery: MessageDelivery | null;
+  /** @nullable */
+  deliveryAt: string | null;
 }
 
 export type ProfileLegalForm = typeof ProfileLegalForm[keyof typeof ProfileLegalForm];

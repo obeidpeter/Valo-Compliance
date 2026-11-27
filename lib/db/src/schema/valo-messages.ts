@@ -51,6 +51,8 @@ export const valoMessages = pgTable(
     uniqueIndex("valo_message_once").on(t.workspaceId, t.kind, t.subjectId),
     index("valo_message_dispatch_idx").on(t.status, t.nextAttemptAt),
     index("valo_message_workspace_idx").on(t.workspaceId, t.createdAt),
+    // A delivery report names a message by the provider's reference alone.
+    index("valo_message_provider_idx").on(t.providerMessageId),
     check(
       "valo_message_shape",
       sql`(${t.kind}, ${t.class}) IN (('purchase_receipt', 'necessary'), ('refund_processed', 'necessary'))

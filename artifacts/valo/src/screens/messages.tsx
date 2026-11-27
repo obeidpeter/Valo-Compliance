@@ -17,16 +17,20 @@ import { WorkspaceNav } from "@/components/workspace-nav";
 import { EmptyState, ErrorState, Skel } from "@/components/states";
 import { live } from "@/lib/checker";
 import { formatDateTime } from "@/lib/format";
+import { deliveryWords } from "@/lib/delivery-words";
 import {
-  MESSAGE_STATUS,
+  messageLabel,
   messageMeaning,
   messageNeedsHelp,
   messageSubject,
   recordStays,
 } from "@/lib/message-words";
-import { REMINDER_STATUS, reminderMeaning, triedTimes } from "@/lib/reminder-words";
+import { reminderLabel, reminderMeaning, triedTimes } from "@/lib/reminder-words";
 
-/** The colour of each state's label. Green is kept for a message an email service accepted. */
+/**
+ * The colour of each state's label. Green is kept for a message an email service accepted. A report from
+ * the email service has a colour of its own (delivery-words.ts).
+ */
 const TONE: Record<WorkspaceMessageStatus, string> = {
   queued: "pill-ink",
   sending: "pill-ink",
@@ -52,8 +56,9 @@ type Entry =
 
 /**
  * The workspace's delivery log (WRK-003): every message Valo owes the workspace and what has happened to
- * it, with the reminders about its tasks, newest first. Nothing here is called sent or delivered: the
- * most the log says of a message is that an email service accepted it.
+ * it, with the reminders about its tasks, newest first. Nothing here is called sent. A message is called
+ * delivered only where the email service reported that it was; without that report, the most the log says
+ * is that an email service accepted it.
  */
 export default function MessagesPage() {
   const messages = useListWorkspaceMessages({
@@ -91,8 +96,8 @@ export default function MessagesPage() {
         <h1 className="font-display mt-2 text-4xl">Messages from Valo</h1>
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground" data-testid="text-messages-intro">
           Each message Valo owes this workspace about a purchase or a refund, and each reminder about a task,
-          with what has happened to it. No message is shown as delivered: the most Valo knows is that an email
-          service accepted it.
+          with what has happened to it. A message is shown as delivered only when the email service reports
+          that it was. Until then, the most Valo knows is that an email service accepted it.
         </p>
       </header>
       <section aria-labelledby="messages-h">
@@ -149,6 +154,16 @@ export default function MessagesPage() {
   );
 }
 
+/** When the email service made its report about a message or reminder, where it has made one. */
+function Reported({ entry }: { entry: Pick<WorkspaceMessage, "delivery" | "deliveryAt"> }) {
+  if (!entry.delivery || !entry.deliveryAt) return null;
+  return (
+    <p className="mt-1 text-xs text-muted-foreground">
+      The email service reported this on {formatDateTime(entry.deliveryAt)}.
+    </p>
+  );
+}
+
 function MessageRow({ message }: { message: WorkspaceMessage }) {
   return (
     <li
@@ -163,6 +178,7 @@ function MessageRow({ message }: { message: WorkspaceMessage }) {
           {message.refundReference ? " · Refund " + message.refundReference : ""}
         </p>
         <p className="mt-1 text-xs text-muted-foreground">{messageMeaning(message)}</p>
+        <Reported entry={message} />
         <p className="mt-1 text-xs text-muted-foreground">
           {recordStays(message)}{" "}
           <Link href="/workspace/purchases" className={LINK}>
@@ -190,9 +206,9 @@ function MessageRow({ message }: { message: WorkspaceMessage }) {
           </p>
         )}
       </div>
-      <span className={"pill w-fit " + (TONE[message.status] ?? "pill-ink")}>
+      <span className={"pill w-fit " + (deliveryWords(message)?.tone ?? TONE[message.status] ?? "pill-ink")}>
         <span className="dot" />
-        {MESSAGE_STATUS[message.status]?.label ?? message.status}
+        {messageLabel(message)}
       </span>
     </li>
   );
@@ -212,6 +228,7 @@ function ReminderRow({ reminder, title }: { reminder: ReminderRecord; title: str
           Planned for {formatDateTime(reminder.scheduledAt)}
         </p>
         <p className="mt-1 text-xs text-muted-foreground">{reminderMeaning(reminder)}</p>
+        <Reported entry={reminder} />
         <p className="mt-1 text-xs text-muted-foreground">
           Its times and tries are on your Reminders page.{" "}
           <Link href="/workspace/reminders" className={LINK}>
@@ -219,9 +236,13 @@ function ReminderRow({ reminder, title }: { reminder: ReminderRecord; title: str
           </Link>
         </p>
       </div>
-      <span className={"pill w-fit " + (REMINDER_TONE[reminder.status] ?? "pill-ink")}>
+      <span
+        className={
+          "pill w-fit " + (deliveryWords(reminder)?.tone ?? REMINDER_TONE[reminder.status] ?? "pill-ink")
+        }
+      >
         <span className="dot" />
-        {REMINDER_STATUS[reminder.status]?.label ?? reminder.status}
+        {reminderLabel(reminder)}
       </span>
     </li>
   );

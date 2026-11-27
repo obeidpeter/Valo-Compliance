@@ -208,7 +208,7 @@ test(
             assert.equal(mine.length, 3);
             assert.deepEqual(
               [mine[0]?.id, mine[0]?.state, mine[0]?.title],
-              [ids[2], "resolved", "A message from the payment provider failed its signature check"],
+              [ids[2], "resolved", "A message from the payment or email provider failed its signature check"],
             );
             assert.deepEqual(new Set(mine.slice(1).map((change) => change.id)), new Set([ids[0], ids[1]]));
             assert.ok(alerts.changes.length <= ALERT_CHANGES_SHOWN);

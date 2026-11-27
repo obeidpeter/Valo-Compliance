@@ -14,7 +14,7 @@ import { CustomerDisputeInformation, useDisputeDirty } from "@/components/disput
 import { describeError } from "@/lib/api";
 import { formatDateTime, formatNaira } from "@/lib/format";
 import { basePath } from "@/lib/env";
-import { MESSAGE_STATUS, messageMeaning } from "@/lib/message-words";
+import { messageLabel, messageMeaning } from "@/lib/message-words";
 
 const labels: Record<string, string> = {
   created: "Order saved — not paid",
@@ -39,7 +39,7 @@ function MessageState({ label, message }: { label: string; message: WorkspaceMes
     <>
       {label}:{" "}
       {message
-        ? `${MESSAGE_STATUS[message.status]?.label ?? message.status}. ${messageMeaning(message)}`
+        ? `${messageLabel(message)}. ${messageMeaning(message)}`
         : "none. Valo emailed nothing about it."}
     </>
   );

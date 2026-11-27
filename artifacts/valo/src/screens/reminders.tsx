@@ -22,7 +22,8 @@ import { describeError } from "@/lib/api";
 import { buildTasksIcs, downloadIcsFile } from "@/lib/calendar-export";
 import { formatDateTime } from "@/lib/format";
 import { live } from "@/lib/checker";
-import { REMINDER_STATUS, reminderMeaning, reminderNeedsHelp, triedTimes } from "@/lib/reminder-words";
+import { deliveryWords } from "@/lib/delivery-words";
+import { reminderLabel, reminderMeaning, reminderNeedsHelp, triedTimes } from "@/lib/reminder-words";
 import { useUnsavedNavigation } from "@/lib/use-unsaved-navigation";
 import { cn } from "@/lib/utils";
 
@@ -375,9 +376,13 @@ export default function RemindersPage() {
                     </p>
                     <p className="mt-0.5 text-xs text-muted-foreground">
                       Planned for {formatDateTime(r.scheduledAt)}
-                      {r.deliveredAt ? " · Delivered " + formatDateTime(r.deliveredAt) : ""}
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">{reminderMeaning(r)}</p>
+                    {r.delivery && r.deliveryAt && (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        The email service reported this on {formatDateTime(r.deliveryAt)}.
+                      </p>
+                    )}
                     {reminderNeedsHelp(r) && (
                       <Link
                         href="/support"
@@ -402,9 +407,9 @@ export default function RemindersPage() {
                       </p>
                     )}
                   </div>
-                  <span className={"pill w-fit " + (TONE[r.status] ?? "pill-ink")}>
+                  <span className={"pill w-fit " + (deliveryWords(r)?.tone ?? TONE[r.status] ?? "pill-ink")}>
                     <span className="dot" />
-                    {REMINDER_STATUS[r.status]?.label ?? r.status}
+                    {reminderLabel(r)}
                   </span>
                 </li>
               ))}

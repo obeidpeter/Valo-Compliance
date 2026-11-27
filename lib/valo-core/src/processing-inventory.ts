@@ -152,6 +152,7 @@ export const processingInventory: readonly ProcessingActivity[] = [
     data: [
       "your reminder setting and the days before a due date you chose",
       "the reminders waiting to be sent",
+      "what the email service reported about a reminder it took: that it was delivered, delayed, sent back or marked as spam",
     ],
     subjects: ["account holders"],
     staff: null,
@@ -209,14 +210,15 @@ export const processingInventory: readonly ProcessingActivity[] = [
     data: [
       "which message Valo owes you, and the order or refund it is about",
       "whether it is waiting, was taken for sending, or why it stopped",
+      "what the email service reported about a message it took: that it was delivered, delayed, sent back or marked as spam",
     ],
     subjects: ["buyers"],
     staff: null,
     services: ["Replit"],
     retention:
-      "Kept while your account is open. A verified deletion request removes them. These messages are not yet sent to real addresses.",
+      "Kept while your account is open. A verified deletion request removes them. The email service's own report is kept for 30 days after Valo records what it said. These messages are not yet sent to real addresses.",
     consent: null,
-    tables: ["valo_messages"],
+    tables: ["valo_messages", "valo_message_deliveries", "valo_email_events"],
   },
   {
     id: "ai_drafting",

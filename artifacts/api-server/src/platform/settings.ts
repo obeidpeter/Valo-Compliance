@@ -286,6 +286,12 @@ export const SETTINGS = {
     group: "Email",
     description: "The only recipient test email may reach; must match the user's verified address.",
   },
+  VALO_EMAIL_WEBHOOK_SECRET: {
+    group: "Email",
+    description:
+      "The email service's signing secret for its delivery reports (`whsec_…`; several separated by commas while one is replaced). Unset, POST /api/webhooks/email answers that it is not set up. Development only.",
+    secret: true,
+  },
   VALO_MESSAGE_SENDER: {
     group: "Email",
     description:

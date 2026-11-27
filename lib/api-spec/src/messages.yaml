@@ -5,14 +5,14 @@ paths:
       operationId: listWorkspaceMessages
       responses:
         "200":
-          description: The workspace's messages and what became of each; accepted is not delivered, and recorded is not emailed
+          description: The workspace's messages and what became of each; accepted is not delivered, recorded is not emailed, and a delivery is only what the email service reported
           content:
             application/json:
               schema: { type: array, items: { $ref: "#/components/schemas/WorkspaceMessage" } }
 schemas:
   WorkspaceMessage:
     type: object
-    required: [id, kind, orderId, orderReference, refundReference, forYou, status, reason, attempts, createdAt, lastAttemptAt, nextAttemptAt, acceptedAt]
+    required: [id, kind, orderId, orderReference, refundReference, forYou, status, reason, attempts, createdAt, lastAttemptAt, nextAttemptAt, acceptedAt, delivery, deliveryAt]
     properties:
       id: { type: string, format: uuid }
       kind: { type: string, enum: [purchase_receipt, refund_processed] }
@@ -31,3 +31,7 @@ schemas:
       lastAttemptAt: { type: [string, "null"] }
       nextAttemptAt: { type: [string, "null"] }
       acceptedAt: { type: [string, "null"] }
+      # What the email service last reported about an accepted message, and its time for that. Null while it
+      # has reported nothing, and always for a message that was only recorded.
+      delivery: { anyOf: [{ $ref: "#/components/schemas/MessageDelivery" }, { type: "null" }] }
+      deliveryAt: { type: [string, "null"] }

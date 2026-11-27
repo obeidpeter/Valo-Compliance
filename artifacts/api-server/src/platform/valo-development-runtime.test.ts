@@ -107,6 +107,12 @@ test("actual export entries and worker startup reject before database, queue or 
       "valo-message-dispatcher",
       "export const dispatchDueMessages=async()=>{globalThis.guardEffects.services++},dispatchMessage=dispatchDueMessages;",
     ],
+    // The job's other part records the email provider's delivery reports, and the log and the reminders
+    // read them: each is a service effect here too.
+    [
+      "valo-email-events",
+      "export const recordDeliveryReports=async()=>{globalThis.guardEffects.services++},deliveriesOf=recordDeliveryReports,emailEventsReady=recordDeliveryReports,recordEmailEvent=recordDeliveryReports;",
+    ],
     // The worker reaches the daily source check through the sources module's index.
     ["sources", "export const reconcileSourceMonitoring=async()=>{globalThis.guardEffects.services++};"],
     // It reaches a published guide's daily source check through the manual guidance module's index.

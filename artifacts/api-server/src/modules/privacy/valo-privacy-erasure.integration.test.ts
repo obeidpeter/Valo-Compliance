@@ -30,6 +30,7 @@ import {
   valoEditionNotices,
   valoConsentChanges,
   valoMessages,
+  valoMessageDeliveries,
 } from "@workspace/db";
 import { eq, inArray, sql } from "drizzle-orm";
 import { guardRefusal } from "../../platform/http-errors";
@@ -128,6 +129,15 @@ test(
           class: "necessary",
           recipientIdentityId: workspace.identityId,
           subjectId: randomUUID(),
+        });
+        // What an email service reported about one of each workspace's messages (slice 2a).
+        await db.insert(valoMessageDeliveries).values({
+          id: randomUUID(),
+          workspaceId: workspace.workspaceId,
+          source: "message",
+          recordId: randomUUID(),
+          delivery: "delivered",
+          reportedAt: new Date(),
         });
       }
       await db.insert(valoSavedTemplates).values(
@@ -475,12 +485,19 @@ test(
             valoEditionNotices,
             valoConsentChanges,
             valoMessages,
+            valoMessageDeliveries,
           ])
             assert.equal(
               (await db.select().from(table).where(eq(table.workspaceId, a.workspaceId))).length,
               0,
             );
-          for (const table of [valoRuleNotices, valoEditionNotices, valoConsentChanges, valoMessages])
+          for (const table of [
+            valoRuleNotices,
+            valoEditionNotices,
+            valoConsentChanges,
+            valoMessages,
+            valoMessageDeliveries,
+          ])
             assert.equal(
               (await db.select().from(table).where(eq(table.workspaceId, b.workspaceId))).length,
               1,
@@ -830,6 +847,7 @@ test(
         valoEditionNotices,
         valoConsentChanges,
         valoMessages,
+        valoMessageDeliveries,
         valoMemberships,
       ])
         await db.delete(table).where(inArray(table.workspaceId, ids));

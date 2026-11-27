@@ -30,6 +30,8 @@ export const valoReminderOutbox = pgTable(
     index("valo_reminder_dispatch_idx").on(t.status, t.scheduledAt),
     index("valo_reminder_workspace_idx").on(t.workspaceId, t.createdAt),
     index("valo_reminder_retry_idx").on(t.status, t.nextAttemptAt),
+    // A delivery report names a reminder by the provider's reference alone.
+    index("valo_reminder_provider_idx").on(t.providerMessageId),
     foreignKey({
       name: "valo_reminder_task_tenant_fk",
       columns: [t.workspaceId, t.taskId],

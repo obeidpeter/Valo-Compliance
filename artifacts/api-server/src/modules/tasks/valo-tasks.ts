@@ -470,22 +470,34 @@ export async function saveReminderPreferences(actor: WorkspaceActor, raw: unknow
   return getReminderPreferences(actor);
 }
 export async function listReminders(actor: WorkspaceActor) {
-  return workspaceReadTransaction(actor, async (tx) =>
-    ListRemindersResponse.parse(
-      (
-        await tx
-          .select()
-          .from(valoReminderOutbox)
-          .where(eq(valoReminderOutbox.workspaceId, actor.workspaceId))
-          .orderBy(desc(valoReminderOutbox.createdAt))
-          .limit(200)
-      ).map((row) => ({
+  // The delivery reports and the database schema they read load here, when a member reads the reminders,
+  // not with every reader of the tasks code.
+  const { deliveriesOf } = await import("../messages");
+  return workspaceReadTransaction(actor, async (tx) => {
+    const rows = await tx
+      .select()
+      .from(valoReminderOutbox)
+      .where(eq(valoReminderOutbox.workspaceId, actor.workspaceId))
+      .orderBy(desc(valoReminderOutbox.createdAt))
+      .limit(200);
+    // What the email service has reported about each reminder it accepted
+    // (docs/architecture/messages.md, part 3).
+    const reports = await deliveriesOf(
+      tx,
+      actor.workspaceId,
+      "reminder",
+      rows.filter((row) => row.status === "sent").map((row) => row.id),
+    );
+    return ListRemindersResponse.parse(
+      rows.map((row) => ({
         ...row,
         scheduledAt: row.scheduledAt.toISOString(),
         deliveredAt: row.deliveredAt?.toISOString() ?? null,
         nextAttemptAt: row.nextAttemptAt?.toISOString() ?? null,
         lastAttemptAt: row.lastAttemptAt?.toISOString() ?? null,
+        delivery: reports.get(row.id)?.delivery ?? null,
+        deliveryAt: reports.get(row.id)?.deliveryAt ?? null,
       })),
-    ),
-  );
+    );
+  });
 }

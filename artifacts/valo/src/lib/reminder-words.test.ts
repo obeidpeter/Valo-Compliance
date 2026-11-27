@@ -1,7 +1,14 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { ReminderRecordStatus } from "@workspace/api-client-react";
-import { REMINDER_STATUS, reminderMeaning, reminderNeedsHelp, triedTimes } from "./reminder-words";
+import { DELIVERY } from "./delivery-words";
+import {
+  REMINDER_STATUS,
+  reminderLabel,
+  reminderMeaning,
+  reminderNeedsHelp,
+  triedTimes,
+} from "./reminder-words";
 
 const STATUSES = Object.values(ReminderRecordStatus);
 /** Every reason the API's reminder code records, as it is spelt there. */
@@ -43,10 +50,20 @@ test("an accepted message is never called sent or delivered: the email service t
   const { label, means } = REMINDER_STATUS.sent;
   assert.equal(label, "Accepted by email service");
   assert.equal(means, "The email service accepted this message. That does not show it reached your inbox.");
-  for (const status of STATUSES)
+  for (const status of STATUSES) {
     assert.doesNotMatch(REMINDER_STATUS[status].label, /\bsent\b|\bdelivered\b/i, status);
+    // With no report from the email service, a reminder's label is its state's.
+    assert.equal(reminderLabel({ status, reason: null }), REMINDER_STATUS[status].label);
+  }
   // A message the service did not confirm is not called sent, and is not called lost either.
   assert.equal(REMINDER_STATUS.failed.label, "Not confirmed");
+  // Only the email service's own report calls a reminder delivered, and the row then says what it reported.
+  const reported = { status: "sent", reason: null, delivery: "delivered" } as const;
+  assert.equal(reminderLabel(reported), "Delivered");
+  assert.equal(reminderMeaning(reported), DELIVERY.delivered.means);
+  assert.equal(reminderLabel({ ...reported, delivery: "bounced" }), "Not delivered");
+  assert.equal(reminderNeedsHelp({ ...reported, delivery: "undelivered" }), true);
+  assert.equal(reminderNeedsHelp({ ...reported, delivery: "bounced" }), false);
 });
 
 test("a reason says why; a reason this screen does not know says only what the state means", () => {
