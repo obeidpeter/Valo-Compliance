@@ -626,6 +626,10 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-component-styles
       - name: Prove both journeys are one tap from the home page's hero, the mobile menu and the dock (WEB-001)
         run: pnpm --filter @workspace/api-server test:valo-primary-journeys-browser
+      # The harness the browser tests above share. A page they close, or an answer that fails, must
+      # not fail whichever test is running at the time.
+      - name: Check that a page closed while its answers are on their way, or an answer that fails, fails no other browser test
+        run: pnpm --filter @workspace/api-server test:valo-browser-harness
       - name: Check every test the evidence register cites for this job passed
         run: pnpm --filter @workspace/scripts valo:ci-evidence --job web-performance
       - name: Retain this job's test results for the evidence job

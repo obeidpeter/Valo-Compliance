@@ -21,6 +21,7 @@
     "test:valo-public-screens-accessibility": "tsx --test src/scripts/public-screens-accessibility.test.ts",
     "test:valo-public-server-pages": "tsx --test src/scripts/public-server-pages.test.ts",
     "test:valo-component-styles": "tsx --test src/scripts/component-styles.test.ts",
+    "test:valo-browser-harness": "tsx --test src/test-support/app-in-browser.test.ts",
     "test:valo-primary-journeys-browser": "tsx --test src/scripts/primary-journeys-browser.test.ts",
     "test:valo-load-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --experimental-test-module-mocks --import tsx --test src/routes/valo-load.integration.test.ts",
     "test:valo-cross-site-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --experimental-test-module-mocks --import tsx --test src/routes/valo-cross-site.integration.test.ts",
