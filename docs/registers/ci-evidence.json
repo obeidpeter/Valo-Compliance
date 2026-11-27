@@ -2869,7 +2869,7 @@
       "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/public-screens-accessibility.test.ts",
       "test": "on a phone, each public screen the primary-page checks leave out names itself in the page title, fits 360 and 320 pixels, moves keyboard focus only to visible outlined elements and has no automated WCAG 2.2 AA failure",
-      "proves": "For a signed-out visitor with synthetic data, the requirements check, the page for trouble signing in and the sign-in and sign-up frames each name themselves in the page title, do not scroll sideways at 360 or 320 pixels, move keyboard focus only to visible outlined elements that come to rest on screen and clear of the header, the phone's bottom bar and any other bar that stays on screen, going forward with Tab and back with Shift+Tab, and show no failing axe-core WCAG 2.0, 2.1 or 2.2 A or AA rule; the identity provider's own sign-in forms are not checked."
+      "proves": "For a signed-out visitor with synthetic data, the requirements check, the page for trouble signing in, the page an unsubscribe link opens and the sign-in and sign-up frames each name themselves in the page title, do not scroll sideways at 360 or 320 pixels, move keyboard focus only to visible outlined elements that come to rest on screen and clear of the header, the phone's bottom bar and any other bar that stays on screen, going forward with Tab and back with Shift+Tab, and show no failing axe-core WCAG 2.0, 2.1 or 2.2 A or AA rule; the identity provider's own sign-in forms are not checked."
     },
     {
       "requirement": "NFR-006",
@@ -3334,6 +3334,13 @@
       "proves": "On the compiled web server, the contact form in the page's HTML links the privacy notice before any script runs."
     },
     {
+      "requirement": "PRV-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/messages/unsubscribe-token.test.ts",
+      "test": "a link names no one: it holds neither the identity nor a plain checksum of it",
+      "proves": "The token of a reminder's unsubscribe link, which the processing inventory describes as holding no name or address, holds neither the identifier of the person it was made for nor a plain checksum of it, nor a mark made under the keyring's key itself: only a mark under a key made for these links. The key and identifiers are synthetic."
+    },
+    {
       "requirement": "PRO-002",
       "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
@@ -3346,6 +3353,13 @@
       "file": "artifacts/api-server/src/modules/tasks/valo-requirements.integration.test.ts",
       "test": "development saved assessments, task isolation, concurrency and reminder outbox",
       "proves": "On a disposable database, turning task reminders on and off again is each recorded once in the consent history, with the privacy notice's version and who made the change, while a save that keeps reminders on records nothing."
+    },
+    {
+      "requirement": "PRO-002",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-unsubscribe.integration.test.ts",
+      "test": "an unsubscribe link turns its workspace's reminders off without sign-in, records the choice, and does nothing else (WRK-004, PRO-002)",
+      "proves": "Against PostgreSQL, a choice made by an unsubscribe link is recorded in the workspace's consent history as one made in the app is: that reminders were turned off, as the workspace's owner, with the version of the privacy notice in force. A link used again records nothing more, and reminders turned on again in the app and stopped again by the link leave each change in the history in order. A link that is refused records nothing. The workspaces and links are synthetic."
     },
     {
       "requirement": "PRV-003",
@@ -3852,6 +3866,13 @@
       "proves": "Against PostgreSQL, each receipt file an account asks for is counted with the files it asks Valo to make, a refused one too, and at that limit no file is made and the answer says when to try again."
     },
     {
+      "requirement": "SEC-005",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-unsubscribe.integration.test.ts",
+      "test": "an unsubscribe link turns its workspace's reminders off without sign-in, records the choice, and does nothing else (WRK-004, PRO-002)",
+      "proves": "Against PostgreSQL over real HTTP, the eleventh use of one workspace's unsubscribe links in a minute is refused with 429, a Retry-After and a sentence that says how long to wait and that the try changed nothing, whichever way it comes and whoever the link was made for. The count is kept under a keyed checksum of the workspace, a refused try is not counted, another workspace's link is not held up, and a request that holds no link Valo signed is counted against no workspace."
+    },
+    {
       "requirement": "SEC-006",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/publication/publication-guards.integration.test.ts",
@@ -4122,7 +4143,7 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/messages/valo-email-suppression.integration.test.ts",
       "test": "an address whose email service sent a message back for good, or marked one as spam, gets no more optional messages, and only its checksum is kept (WRK-003, WRK-004)",
-      "proves": "Against PostgreSQL, a stop on an address is applied to optional messages alone, and just before the send: a due reminder to a stopped address is cancelled without its transport being called, while the receipt owed to the same member, a necessary message, is still offered to its sender and taken. The transport and the sender are the test's own; no message reached anyone. This is not an unsubscribe: no link or endpoint for one exists."
+      "proves": "Against PostgreSQL, a stop on an address is applied to optional messages alone, and just before the send: a due reminder to a stopped address is cancelled without its transport being called, while the receipt owed to the same member, a necessary message, is still offered to its sender and taken. The transport and the sender are the test's own; no message reached anyone. This is not an unsubscribe, which has its own tests."
     },
     {
       "requirement": "WRK-004",
@@ -4130,6 +4151,34 @@
       "file": "artifacts/api-server/src/modules/tasks/valo-reminder-resend.test.ts",
       "test": "a reminder to an address Valo has stopped sending to never reaches transport, and neither does one whose suppression cannot be checked",
       "proves": "The reminders' mailer asks whether Valo has stopped sending to the verified recipient's own address before it calls its transport. Where the answer is yes it sends nothing and says why; where the question cannot be answered it sends nothing either; and a recipient who is not the allowed one is refused before the question is asked. The transport is the test's own."
+    },
+    {
+      "requirement": "WRK-004",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-unsubscribe.integration.test.ts",
+      "test": "an unsubscribe link turns its workspace's reminders off without sign-in, records the choice, and does nothing else (WRK-004, PRO-002)",
+      "proves": "Over real HTTP against PostgreSQL, with synthetic workspaces and links the test makes under the run's own key: a request from the unsubscribe page, and a mail service's one-click request with no origin, session or readable body, each turn the link's workspace's reminders off. Opening the link's address changes nothing and sends the person to the page. What was waiting is cancelled, a reminder cancelled earlier keeps its own reason, and one already sent stays sent. Enforced before dispatch: the reminder that was due is then offered to a sender, which is handed nothing. The link stops reminders only, and only for its own workspace: the task is as it was, and another workspace's reminders stay on. A link that is not Valo's, was changed, was made for someone who is not the workspace's owner, or is for a workspace that is not there, whose owner's access is off or whose deletion is recorded is refused in the same words and changes nothing, and the page's address refuses a request from another site. One workspace's links are taken ten times a minute, and the next use is told when to try again. The mailer's transport is the test's own: no email service was called, and no message reached anyone."
+    },
+    {
+      "requirement": "WRK-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/tasks/valo-reminder-resend.test.ts",
+      "test": "a reminder carries its unsubscribe link in its words and in the headers a mail program reads, the same on every attempt, and never goes without one",
+      "proves": "The reminders' mailer puts the unsubscribe link in each reminder's words and in its List-Unsubscribe and List-Unsubscribe-Post headers, with the same token in both, and the body it would send is the same on every attempt. Where the link cannot be made, or is not in a token's form, it sends nothing. The transport is the test's own. The headers' form is the one the provider's documentation gives; no request has been checked against the provider."
+    },
+    {
+      "requirement": "WRK-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/messages/unsubscribe-token.test.ts",
+      "test": "a link changed anywhere is no link, and neither is anything that is not one",
+      "proves": "The token of an unsubscribe link is read only as Valo wrote it: one changed in any part, cut short, lengthened, given parts in another order, spelt another way or signed under a key's name the keyring does not hold reads as nothing, and so does anything that is not a token. Every key and identifier is synthetic."
+    },
+    {
+      "requirement": "WRK-004",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-screens-accessibility.test.ts",
+      "test": "the unsubscribe page stops nothing when it is opened, asks once when its button is pressed and says what was stopped; a link that does not work is said to in the server's words, and a link with no token offers no button",
+      "proves": "In a browser on an emulated phone, with the API answered in the page by synthetic data: opening the unsubscribe page asks the API nothing, so following the link stops no reminder. Pressing its button asks once, with the link's token and nothing else, and the page then says that reminder emails are off and what became of waiting reminders. A link the server refuses is said to in the server's words, with nothing called stopped, and a link with no token offers no button. Each state passes the automated WCAG 2.2 A and AA rules. It is not a manual or assistive-technology review."
     },
     {
       "requirement": "WRK-006",

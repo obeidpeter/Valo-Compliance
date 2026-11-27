@@ -219,3 +219,14 @@ tried again.
 
 To roll back before any address is suppressed, drop the function, the table, and the two columns with
 their check. Once an address is suppressed, keep the table: without it that address is emailed again.
+
+## Unsubscribe (slice 3a)
+
+There is no migration. The unsubscribe link uses tables the database already has, and the access
+customer requests already hold: the reminder setting, the consent history, the reminders, the
+workspace's history and the limit counters.
+
+**The key.** A link is signed under a key made from the privacy keyring's current key
+(`VALO_PRIVACY_KEYRING`, or the key derived from `SESSION_SECRET` where no keyring is set). Drop a key
+from the keyring, or change `SESSION_SECRET` with no keyring, and every link made under it stops
+working. Its page then says that the link does not work, and where reminders are turned off in Valo.

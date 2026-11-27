@@ -176,7 +176,7 @@ Built (slice 1a):
   key, its kind, the recipient as an identity, a subject and plain text. It returns its reference for the
   message. It is never handed an address: a real sender reads the identity's verified address as it
   sends. Headers and tags join the interface with the unsubscribe headers, and the reminder adapter moves
-  onto it, in slice 3.
+  onto it, in slice 3b.
 - **The stand-in.** It sends nothing to anyone. It gives each idempotency key one reference, as a provider
   that tells a retry from a new message would. It keeps what it was handed only in a test.
 - **The worker's sender** is chosen by `VALO_MESSAGE_SENDER` as the worker starts. Unset, there is none,
@@ -279,7 +279,7 @@ Built (slice 2b), suppression (`modules/messages/valo-email-suppression.ts`):
     offers the way to report a problem.
   - The outbox holds only necessary messages, a receipt and a refund's notice. A suppression does not
     stop them: they are still owed, and a receipt that came back still shows on the purchases screen.
-  - When an optional kind joins the outbox, its sender asks the same question. That is slice 3, which
+  - When an optional kind joins the outbox, its sender asks the same question. That is slice 3b, which
     moves the reminders onto the shared sender.
 - **Privacy.** The processing inventory and the privacy notice name the checksum, what it is for and how
   long it is kept. A suppression is about an address and names no account: a data download does not list
@@ -308,6 +308,73 @@ the owner approves, and belongs with the staff's tools in slice 4.
   optional message and still use everything: PRO-002's acceptance.
 - **Marketing.** R1 sends none. The class and the check exist, so the first marketing message cannot skip
   them.
+
+Built (slice 3a), for reminders, which are the one optional message there is:
+- **The link in each reminder** (`modules/tasks/valo-reminder-resend.ts`). The development mailer puts it
+  in the reminder twice: in its words, as the address of a page, and in the `List-Unsubscribe` and
+  `List-Unsubscribe-Post` headers, from which a mail program offers its own unsubscribe button.
+  - A reminder never goes without it. If the link cannot be made, nothing is sent.
+  - The headers' form is the one the provider's documentation gives, read on 27 November 2026. No
+    reminder has been sent with them and looked at in a mail program.
+- **The token** (`modules/messages/unsubscribe-token.ts`) says which kind of message it stops, and names
+  the workspace and the reminder that carried it.
+  - It does not name the person, as the design above said it would. It holds a keyed mark that tells
+    the person it was made for from anyone else, and that cannot be turned back into their identifier.
+    So a link names no one to whoever reads the address it sits in.
+  - It is signed under a key made for these links alone, from the privacy keyring's current key.
+  - It holds no time and nothing random. The same reminder gets the same link on every attempt, so a
+    retried send carries the same words as the first.
+  - It does not expire. It stops working when its key leaves the keyring.
+- **Two ways in** (`routes/valo-unsubscribe.ts`), which do the same thing:
+  - **The page**, `/unsubscribe`. Opening it changes nothing, so a mail program or a scanner that
+    follows the link stops no one's reminders. The page says what its button will do. Pressing the
+    button asks `POST /api/public/unsubscribe`, which is in the client contract and is sent as Valo's
+    own pages send a change.
+  - **A mail service's one-click request**, `POST /api/public/unsubscribe/one-click`. It is mounted
+    beside the webhooks, outside the client contract, sign-in and the check on where a request came
+    from: such a request comes from a mail service's own machines. Its body is not read. A mail
+    program that opens that address instead is sent to the page, with only a token's own characters
+    passed on.
+- **What a link does** (`modules/tasks/reminder-unsubscribe.ts`). It turns its workspace's reminders
+  off, as the owner would in the app, in that workspace's database scope.
+  - The choice is recorded in `valo_consent_changes` with the notice in force, as the owner's.
+  - Every reminder still waiting is cancelled. One cancelled earlier keeps its own reason, and one
+    already sent stays sent.
+  - The workspace's history names the reminder that carried the link (`reminders.stopped_by_link`).
+  - The days chosen are kept, for when reminders are turned on again. Nothing else changes.
+  - Used again, a link answers the same and changes nothing.
+- **Whom a link works for.** Reminders go to the workspace's owner. A link made for someone who is no
+  longer the owner stops nothing. Neither does a link for a workspace that takes no change of its
+  owner's: one that is gone, whose owner's access is off, or whose deletion is recorded. No reminder is
+  sent in that state either, since the worker makes the same checks before each one.
+- **Refusals are alike.** Every link Valo does not honour gets the same answer, which does not say why.
+  The log line says only that a link was refused, and holds nothing of the link.
+- **Before each send** (WRK-004's acceptance). The worker reads the opt-in again in the transaction that
+  claims each reminder, as it did before this slice. So a reminder planned before a link was used is not
+  sent after: it is cancelled, and no sender is handed it.
+- **A limit.** One workspace's links are taken ten times a minute (`VALO_LIMIT_UNSUBSCRIBE_LINK`), and
+  the next use is told when to try again. Nobody is signed in, and a mail service asks for many people
+  from the same addresses, so the count is by the link's workspace. It is taken only once the link's
+  signature has been checked.
+- **The page's address tells no one.** The token is in the page's address. That page alone is sent
+  with the `no-referrer` policy, so no request it makes names it: not to Valo's own servers, and not
+  to the sign-in service, which a launch would reach through Valo's own address. The API's log keeps a
+  request's route and never its address.
+- **Production** answers only the health check, as before. The rehearsal checks that the three
+  unsubscribe requests are refused there.
+- **Privacy.** The processing inventory and the privacy notice name the link. A choice made by a link is
+  in the workspace's consent history with the others, and an erasure removes it with them.
+- **A retry across a change.** A reminder first tried before this slice and retried after it carries
+  different words, and so does one retried after the keyring's current key changes. The provider's
+  documentation says it refuses a retry whose content differs from the first under the same key. Such
+  a reminder goes at most once and ends as not confirmed. No request has shown this.
+
+Not built (slice 3b):
+- **The reminders on the shared sender.** They still go through their own development mailer, and the
+  sender interface carries no headers yet.
+- **Consent read by the outbox's dispatcher.** The outbox holds only necessary messages. When an
+  optional kind joins it, its dispatcher reads that kind's consent as it sends, and its messages carry
+  this link. R1 sends no marketing, so nothing reads the marketing choice yet.
 
 ### 5. Receipts and refund notices (PAY-009, PAY-008)
 
@@ -428,7 +495,8 @@ carries its test-mode line.
 | 1b | The workspace's delivery log, the PDF receipt, and alerts on messages that wait or fail | Built |
 | 2a | Delivery and bounces: the webhook, the reports recorded on messages and reminders, and their words on the log | Built |
 | 2b | Suppression: a hard bounce or a complaint stops optional messages to that address | Built |
-| 3 | Unsubscribe: the links, the endpoint, consent read at dispatch, and the reminders on the shared sender | Not built |
+| 3a | Unsubscribe for reminders: the link in each reminder, its token, the page, the one-click address, and the choice recorded | Built |
+| 3b | The reminders on the shared sender, and consent read by the dispatcher for the first optional kind in the outbox | Not built |
 | 4 | Support: replies to someone who cannot sign in, staff notices and the states on the case | Not built |
 | 5 | Material notices by email | Not built |
 
@@ -443,3 +511,6 @@ carries its test-mode line.
 4. **The business details on the PDF receipt**: Valo's name and address as the owner approves them.
 5. **How long things are kept**: a settled delivery report for 30 days, and a suppressed address's
    checksum for 180 days after the last report about it. Both are proposals.
+6. **The unsubscribe link**: that it never expires while its key is kept, and that one workspace's links
+   are taken ten times a minute. Both are proposals. The page's words are among the messages' words in
+   point 3.

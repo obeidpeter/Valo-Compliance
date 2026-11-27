@@ -106,7 +106,8 @@ Rules that apply now:
   may call `runInWorkspaceScope`: the middleware with the workspace it resolved from
   the membership, a background job for one workspace with the workspace of the stored
   record it processes, reading that workspace's data in the scope and keeping its
-  bookkeeping outside. Never give the login or the scoped role another privilege or
+  bookkeeping outside, and the unsubscribe link's action with the workspace a link
+  Valo signed names. Never give the login or the scoped role another privilege or
   membership outside a reviewed migration, and in customer code never change the
   role, `search_path` or `valo.workspace_credential`, or use session-level `SET`
   (use `SET LOCAL`). A customer
@@ -175,6 +176,12 @@ Rules that apply now:
   address asks `addressSuppressed` of the recipient's address before it hands an optional message
   to a provider, and sends nothing when it cannot ask. Customer code reaches the list only through
   `valo_email_address_suppressed`, which answers yes or no.
+- An optional message never goes without its unsubscribe link, in its words and in its
+  `List-Unsubscribe` headers (`modules/messages/unsubscribe-token.ts`, `routes/valo-unsubscribe.ts`).
+  A link's token holds no identifier of a person, no time and nothing random, so a retried send
+  carries the same words. Opening a link changes nothing. Only a POST does: it turns that one kind of
+  message off for the link's workspace, as its owner, and records the choice. Answer every link Valo
+  does not honour alike, and log nothing of a link.
 - API code is moving into one folder per capability under
   `artifacts/api-server/src/modules/`. Code outside a module imports it only through
   its `index.ts`; the `module-boundary` repository rule enforces this, and tests may

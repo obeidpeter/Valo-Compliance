@@ -342,7 +342,10 @@ a sender. No sender reaches a real address. The provider's delivery reports arri
 records each on the message or reminder it is about, and `modules/tasks` reads a reminder's report from
 this module when a member lists the reminders. A permanent bounce or a complaint suppresses its address:
 only a keyed checksum of it is kept, and the reminders' mailer in `modules/tasks` asks this module
-whether an address is suppressed before each send.
+whether an address is suppressed before each send. The module also makes and reads the token of an
+optional message's unsubscribe link. The reminders' mailer puts that link in each reminder, and
+`modules/tasks/reminder-unsubscribe.ts` turns a workspace's reminders off from one, for the two routes
+in `routes/valo-unsubscribe.ts`: the page's, and a mail service's one-click request.
 
 The store that held workspaces, documents and support tickets together is split
 ([decision 0012](decisions/0012-split-the-store.md)):

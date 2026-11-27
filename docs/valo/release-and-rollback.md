@@ -334,6 +334,25 @@ A reminder that stays `failed` as not confirmed, on a database that has `valo_em
 not the function `valo_email_address_suppressed`, could not ask whether its address is suppressed, and
 was not sent. Apply the second suppression migration (see `docs/valo/migration-messages.md`).
 
+Each reminder holds a link that turns its workspace's reminders off without sign-in
+(`docs/architecture/messages.md`, part 4). The workspace's activity then has `reminders.stopped_by_link`
+for the reminder that carried the link, and its consent history has the choice, as the owner's.
+`unsubscribe.refused` in the API's log is a link Valo did not honour. The line does not say why, and
+holds nothing of the link. The causes are these:
+- it is not a link Valo made, or it was cut short;
+- its key has left the keyring: `SESSION_SECRET` was changed, or a key was dropped from
+  `VALO_PRIVACY_KEYRING`. That ends every link made under the key;
+- it was made for someone who is no longer the workspace's owner;
+- its workspace is gone, its owner's access is off, or its deletion is recorded.
+
+`quota.denied` with the bucket `unsubscribe-link` is one workspace's links used more than ten times in
+a minute (`VALO_LIMIT_UNSUBSCRIBE_LINK`).
+
+A reminder that ends `failed` as not confirmed just after this release, or just after the keyring's
+current key changed, may have been tried once before and once after. Its words differ across the
+change, because its link does, and the provider's documentation says it refuses a retry whose content
+differs from the first. The reminder went at most once.
+
 A customer request that answers the generic 503 with error code `42501` in its log
 ran a command `valo_workspace_scope` does not hold: the code started using a table,
 command or column before a migration granted it (`WORKSPACE_SCOPE_PRIVILEGES` in

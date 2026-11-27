@@ -90,7 +90,8 @@ The requirements, verbatim from the specification:
 - Tests: the defaults are today's ceilings; a configured value is the one a request meets.
 
 Built (slice 5), with a note of every limit ([request limits](../valo/request-limits.md)):
-- **The settings.** Each of the 23 ceilings has a setting of its own in the registry, `VALO_LIMIT_`
+- **The settings.** Each of the 23 ceilings there were then has a setting of its own in the registry,
+  as has the one added since for the unsubscribe link. Each is `VALO_LIMIT_`
   and its bucket's name, with today's ceiling as its default and its example (`lib/valo-quota-policy.ts`,
   `quotaLimit`). Unset or empty, a setting gives the default. Its value must be a whole number from 1
   to 10,000, written plainly.

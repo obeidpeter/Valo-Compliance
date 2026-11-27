@@ -28,11 +28,17 @@ setting of its own; unset or empty, it is the default.
 | `VALO_LIMIT_PUBLIC_SUPPORT`, `_DAY` | Support requests from people not signed in, from one contact address | 3 and 20 |
 | `VALO_LIMIT_PUBLIC_SUPPORT_SOCKET`, `_DAY` | The same, from one network address | 20 and 100 |
 | `VALO_LIMIT_PUBLIC_SUPPORT_ALL`, `_DAY` | The same, from everyone together | 100 and 1000 |
+| `VALO_LIMIT_UNSUBSCRIBE_LINK` | Uses of one workspace's unsubscribe links, by whoever holds one, a minute | 10 |
 
 A setting ending `_DAY` counts by the day, and the others by the minute. The table in code is
 `quotaPolicy` (`artifacts/api-server/src/lib/valo-quota-policy.ts`), and `.env.example` lists every
 setting. The drafting assistant's two daily allowances are not here: they are the owner's versioned
 commercial settings.
+
+The unsubscribe link's limit is not among the ceilings SEC-005 names. Its refusal follows the same rule
+as theirs: it says when to try again. Nobody is signed in to use a link, and a mail service asks for
+many people from the same addresses, so a link's uses are counted by the workspace it names, once its
+signature has been checked ([messages](../architecture/messages.md), part 4).
 
 ## Changing a limit
 
