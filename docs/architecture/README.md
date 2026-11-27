@@ -255,7 +255,9 @@ or bundle it names, whoever asks to change them ([order safety](order-safety.md)
 payment check (`valo-payment-reconciliation.ts`) names what the provider's answer, or Valo's own
 record, says differently about an order, and an order whose latest check found a difference raises
 an alert. Finance settles a difference in the staff console, with its reason in the staff access
-audit, and the database keeps a finished check ([reconciliation](reconciliation.md)).
+audit, and the database keeps a finished check. A Paystack event Valo could not match or process
+raises an alert of its own, and finance settles it the same way, in a row of its own that the
+database keeps ([reconciliation](reconciliation.md)).
 
 `modules/rules` holds the released-rule registry the checker uses, saved assessments, their
 comparison and the admission check for a rule release. The rule release command itself lives in

@@ -186,6 +186,12 @@ Rules that apply now:
   other change to a finished check but an erasure's rewrite of its finding
   (`docs/architecture/reconciliation.md`, slice 2). A test that needs a settled check settles it
   as finance would.
+- A provider event that the event worker left for finance is settled only through
+  `settlePaymentEvent`, as a row of `valo_payment_event_settlements` with why in the staff access
+  audit in the same transaction; the event itself is never changed for it, and the database's guard
+  `valo_payment_event_settlements_kept` refuses a settlement made any other way, and any change to
+  or removal of one (`docs/architecture/reconciliation.md`, slice 3a). When the worker leaves an
+  event for finance, its `failure` says why, with a name `paymentEventFinding` gives.
 - Only the operator commands in `FINITE_WORK_BINDING_ENTRIES` hand the inference
   dispatcher its work-binding checks (`provideFiniteWorkBindings`), and only the real
   `assertFiniteWorkBindings`; the `inference-bindings` repository rule enforces this.

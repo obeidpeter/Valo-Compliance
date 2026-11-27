@@ -199,6 +199,7 @@ checks, which are not provisioned yet.
 | `WORKSPACE_CLEANUP_BACKLOG` | Any workspace export attempt overdue for cleanup or with a cleanup error | Internal operations sample |
 | `PAYMENTS_BACKLOG` | Any verified payment without its entitlement or receipt | Internal operations sample |
 | `PAYMENT_DIFFERENCES_DETECTED` | Any order whose latest finished daily payment check found a difference: an amount, a transaction, a reversal, a grant, a receipt or a missing event, or no answer from the provider after three attempts | Internal operations sample (PAY-007) |
+| `UNMATCHED_PAYMENT_EVENTS_DETECTED` | Any Paystack event that the event worker left for finance, that finance has not settled: one that names no order or refund of Valo's, one whose answer differs from Valo's record, or one with no answer after five attempts | Internal operations sample (PAY-007) |
 | `PRIVACY_REQUESTS_BACKLOG` | Any privacy request still open 14 days after it was made: the date Valo aims to finish it by, Valo's own aim and not a time limit set by law | Internal operations sample (PRV-003) |
 | `REMINDERS_BACKLOG` | Any reminder email still pending fifteen minutes past its time | Internal operations sample (NFR-010) |
 | `JOB_QUEUE_BACKLOG` | Any scheduled job still waiting ten minutes past its start | Internal operations sample (NFR-010) |
