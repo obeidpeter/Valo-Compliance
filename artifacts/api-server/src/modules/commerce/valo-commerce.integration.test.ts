@@ -5,6 +5,7 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 import {
   db,
   pool,
+  runInWorkspaceScope,
   valoPrices,
   valoPriceChanges,
   valoOrders,
@@ -22,6 +23,7 @@ import { quotaSubjectHash } from "../../lib/valo-quota";
 import { setting } from "../../platform/settings";
 import { financeHeldFixture } from "./valo-finance-test-fixture";
 import { guardNestedConnections } from "../../test-support/nested-connection-guard";
+import { erasePrivateCopyPhase } from "../privacy/valo-private-copy-inventory";
 
 test(
   "controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication",
@@ -692,6 +694,109 @@ test(
           priceApproval: false,
           livePayments: false,
         }),
+      );
+      await t.test(
+        "an order keeps the offer, the line and the amount it was made with, whoever asks to change them, and still takes what happens to it",
+        async () => {
+          // PAY-001: the database keeps an order's terms. A change that reaches the row is refused by
+          // either route to it: the application's own login, and the role a customer's request acts as,
+          // which both hold the privilege to update an order.
+          const kept = await fixture();
+          const message = (error: Error) =>
+            String((error as { cause?: Error }).cause?.message ?? error.message);
+          const keepsTerms = (error: Error) =>
+            /An order keeps the offer, the line and the amount it was made with/.test(message(error));
+          const keepsWho = (error: Error) =>
+            /An order keeps who placed it, until an erasure removes them/.test(message(error));
+          const stored = async (id: string) =>
+            (await db.select().from(valoOrders).where(eq(valoOrders.id, id)))[0];
+          const inScope = <T>(run: () => Promise<T>) => runInWorkspaceScope(a.workspaceId, run);
+          const changes: Record<string, Partial<typeof valoOrders.$inferInsert>> = {
+            "its amount": { amountKobo: 1 },
+            "its currency": { currency: "USD" },
+            "its line": { line: { ...fixtureLine, title: "CONTROLLED TEST ONLY: another product" } },
+            "its price": { priceId: randomUUID() },
+            "a bundle in place of its price": { priceId: null, bundleId: randomUUID() },
+            // The table's own check would refuse this one too, with other words: the guard's come first.
+            "a bundle beside its price": { bundleId: randomUUID() },
+            "its workspace": { workspaceId: b.workspaceId },
+            "its reference": { reference: `valo-test-${randomUUID()}` },
+            "its request key": { requestKey: randomUUID() },
+            "the time it was made": { createdAt: new Date(0) },
+            "its own number": { id: randomUUID() },
+          };
+          for (const [what, change] of Object.entries(changes)) {
+            await assert.rejects(
+              db.update(valoOrders).set(change).where(eq(valoOrders.id, kept!.id)),
+              keepsTerms,
+              `the application's login changed ${what}`,
+            );
+            await assert.rejects(
+              inScope(async () => await db.update(valoOrders).set(change).where(eq(valoOrders.id, kept!.id))),
+              keepsTerms,
+              `a customer's request changed ${what}`,
+            );
+          }
+          // A change to several columns at once is refused when one of them is kept.
+          await assert.rejects(
+            db
+              .update(valoOrders)
+              .set({ status: "pending", amountKobo: 1 })
+              .where(eq(valoOrders.id, kept!.id)),
+            keepsTerms,
+          );
+          assert.deepEqual(await stored(kept!.id), kept);
+          // What happens to an order still changes, by both routes.
+          const checked = new Date(Math.floor(Date.now() / 1000) * 1000),
+            checkoutUrl = "https://checkout.example.test/synthetic",
+            providerTransactionId = `synthetic-${randomUUID()}`;
+          await inScope(async () => {
+            await db
+              .update(valoOrders)
+              .set({ status: "pending", checkoutUrl, lastCheckedAt: checked })
+              .where(eq(valoOrders.id, kept!.id));
+          });
+          await db
+            .update(valoOrders)
+            .set({ status: "needs_review", providerTransactionId })
+            .where(eq(valoOrders.id, kept!.id));
+          assert.deepEqual(await stored(kept!.id), {
+            ...kept,
+            status: "needs_review",
+            checkoutUrl,
+            lastCheckedAt: checked,
+            providerTransactionId,
+          });
+          // Who placed an order changes once, to the mark an erasure leaves in their place. The
+          // erasure's own statement does that, to a workspace made for it, and nothing else is put there.
+          const leaving = await resolveWorkspace(`synthetic-commerce-${randomUUID()}`);
+          workspaces.push(leaving.workspaceId);
+          const theirs = await fixture(leaving);
+          for (const requestedBy of [a.identityId, "", "privacy-erased-by-hand"])
+            await assert.rejects(
+              db.update(valoOrders).set({ requestedBy }).where(eq(valoOrders.id, theirs!.id)),
+              keepsWho,
+              `who placed the order became "${requestedBy}"`,
+            );
+          await db.transaction((tx) =>
+            erasePrivateCopyPhase(tx, leaving.workspaceId, "financial_contact", async () => undefined),
+          );
+          assert.deepEqual(await stored(theirs!.id), { ...theirs, requestedBy: "privacy-erased" });
+          await assert.rejects(
+            db
+              .update(valoOrders)
+              .set({ requestedBy: leaving.identityId })
+              .where(eq(valoOrders.id, theirs!.id)),
+            keepsWho,
+          );
+          await assert.rejects(
+            db
+              .update(valoOrders)
+              .set({ requestedBy: "privacy-erased", amountKobo: 1 })
+              .where(eq(valoOrders.id, theirs!.id)),
+            keepsTerms,
+          );
+        },
       );
       await t.test("checkout of a product that is not released is refused", async () => {
         const order = await fixture();

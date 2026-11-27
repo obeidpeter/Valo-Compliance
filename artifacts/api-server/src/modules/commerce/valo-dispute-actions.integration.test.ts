@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import { fork, spawnSync } from "node:child_process";
 import express from "express";
 import { GetFinanceDisputeResponse } from "@workspace/api-zod";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import {
   db,
   pool,
@@ -638,12 +638,27 @@ test(
           );
           const [original] = await db.select().from(valoOrders).where(eq(valoOrders.id, f.order));
           assert.ok(original);
+          // The database keeps an order's line (migration order_terms_guard). So the fault is put
+          // beneath its triggers, as a restore or a direct edit of the table would put it.
+          const beneathTheGuard = (line: typeof original.line) =>
+            db.transaction(async (tx) => {
+              await tx.execute(sql`SET LOCAL session_replication_role = replica`);
+              await tx.update(valoOrders).set({ line }).where(eq(valoOrders.id, f.order));
+            });
+          await assert.rejects(
+            () =>
+              db
+                .update(valoOrders)
+                .set({ line: { ...original.line, title: "Altered fixture source" } })
+                .where(eq(valoOrders.id, f.order)),
+            (error: unknown) =>
+              /An order keeps the offer, the line and the amount/.test(
+                String((error as { cause?: unknown }).cause ?? error),
+              ),
+          );
           try {
             // Fault injection into this newly owned synthetic row, not a repair.
-            await db
-              .update(valoOrders)
-              .set({ line: { ...original.line, title: "Altered fixture source" } })
-              .where(eq(valoOrders.id, f.order));
+            await beneathTheGuard({ ...original.line, title: "Altered fixture source" });
             await assert.rejects(
               () =>
                 controlDisputeAction(
@@ -658,7 +673,7 @@ test(
             assert.equal(calls.length, before);
             assert.equal((await row(a.id))!.attempts, 0);
           } finally {
-            await db.update(valoOrders).set({ line: original.line }).where(eq(valoOrders.id, f.order));
+            await beneathTheGuard(original.line);
           }
           const u = await fixture(),
             held = await action(u, "merchant_decision", {
