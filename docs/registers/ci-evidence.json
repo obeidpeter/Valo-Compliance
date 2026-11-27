@@ -5238,6 +5238,20 @@
       "proves": "Through the API, with Paystack stood in for, a status refresh of a pending premium order checks the payment on the server and grants the edition once it is verified, and a further checkout is refused with \"This purchase is already verified. Do not pay again.\"; and before another order for an edition, a payment for one or its saved payment page handed out again, the provider is asked about each earlier order of the workspace for it that ended abandoned or failed, so that one paid since is settled and granted with no second order or payment, a bundle's among them, one still unpaid lets the request go on, nothing new is made or started while the provider cannot be asked, and nobody else's order, one never offered to the provider, and anything without a merchant are not asked about."
     },
     {
+      "requirement": "PAY-006",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "back from the payment page, the purchases screen asks once for the status of the workspace's own order named in the address, says what the server found, and takes the reference out of the address",
+      "proves": "In a browser on a phone, with the server stood in for, the purchases screen opened with an order's reference in its address asks the server once for that order's status, says the payment is verified only when the server's answer says so, under the name the order below carries, shows the server's own sentence when it could not ask, asks nothing for an order already verified or for a reference no listed order has, and takes the reference out of the address, so that opening it again asks nothing; while the orders cannot be read it asks nothing, says so and keeps the reference, and asks once when they have been read."
+    },
+    {
+      "requirement": "PAY-006",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/payment-return.test.ts",
+      "test": "each status is said in words that claim only what the provider reported, and only a verified payment is called verified",
+      "proves": "The words the purchases screen uses for an order it was sent back for carry the order card's own name for each status, call a payment verified for the verified status alone, and say of an abandoned, failed, pending, reviewed, reversed or unknown status only what that status means."
+    },
+    {
       "requirement": "RUL-009",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/editorial/owner-rule-signoff.integration.test.ts",
