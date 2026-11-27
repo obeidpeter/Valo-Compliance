@@ -5,6 +5,7 @@ import {
   authenticPaystackBody,
   verifiedTransaction,
   assertOrderMatch,
+  orderDifferences,
   paystack,
   paystackEventFamily,
 } from "./valo-paystack-contract";
@@ -96,6 +97,70 @@ test("server verification rejects live domain, unsafe amounts and mismatched imm
     assert.throws(() => assertOrderMatch(order, verifiedTransaction.parse({ ...input, ...bad })), {
       status: 409,
     });
+});
+// PAY-007 (docs/architecture/reconciliation.md, slice 1): "alert on unmatched amounts". The daily check
+// names what the provider's answer says differently from the order, so that finance reads which it is.
+test("what the provider's answer says differently from an order is named: the amount, the transaction, or a reversal the provider does not hold", () => {
+  const order = {
+    id: randomUUID(),
+    workspaceId: randomUUID(),
+    reference: "valo-test-control",
+    amountKobo: 12345,
+    currency: "NGN",
+    status: "pending",
+    providerTransactionId: null as string | null,
+  };
+  const input = {
+    id: 123,
+    domain: "test",
+    reference: order.reference,
+    status: "success",
+    amount: 12345,
+    currency: "NGN",
+    metadata: { valoOrderId: order.id, workspaceId: order.workspaceId },
+  };
+  const answer = (patch: Record<string, unknown> = {}) => verifiedTransaction.parse({ ...input, ...patch });
+  // Nothing differs: whatever the provider says became of the payment, and for an order that already
+  // holds this transaction.
+  for (const status of ["success", "abandoned", "failed", "pending", "reversed"])
+    assert.deepEqual(orderDifferences(order, answer({ status })), []);
+  assert.deepEqual(orderDifferences({ ...order, providerTransactionId: "123" }, answer()), []);
+  // The amount, by a kobo either way, and the currency.
+  assert.deepEqual(orderDifferences(order, answer({ amount: 12346 })), ["AMOUNT_DIFFERENCE"]);
+  assert.deepEqual(orderDifferences(order, answer({ amount: 12344 })), ["AMOUNT_DIFFERENCE"]);
+  assert.deepEqual(orderDifferences({ ...order, currency: "USD" }, answer()), ["AMOUNT_DIFFERENCE"]);
+  // The transaction is another order's, another workspace's or another reference's, or it is not the
+  // one the order already holds.
+  for (const other of [
+    { reference: "another-order" },
+    { metadata: { ...input.metadata, valoOrderId: randomUUID() } },
+    { metadata: { ...input.metadata, workspaceId: randomUUID() } },
+  ])
+    assert.deepEqual(orderDifferences(order, answer(other)), ["TRANSACTION_DIFFERENCE"]);
+  assert.deepEqual(orderDifferences({ ...order, providerTransactionId: "124" }, answer()), [
+    "TRANSACTION_DIFFERENCE",
+  ]);
+  // Valo holds the order as reversed and the provider does not.
+  for (const status of ["success", "abandoned", "failed", "pending"])
+    assert.deepEqual(orderDifferences({ ...order, status: "reversed" }, answer({ status })), [
+      "REVERSAL_DIFFERENCE",
+    ]);
+  assert.deepEqual(orderDifferences({ ...order, status: "reversed" }, answer({ status: "reversed" })), []);
+  // Several at once are all named, in one order.
+  assert.deepEqual(
+    orderDifferences({ ...order, status: "reversed", providerTransactionId: "124" }, answer({ amount: 1 })),
+    ["AMOUNT_DIFFERENCE", "TRANSACTION_DIFFERENCE", "REVERSAL_DIFFERENCE"],
+  );
+  // Whatever the settlement's own comparison refuses is named here too.
+  for (const refused of [
+    { amount: 12346 },
+    { reference: "another-order" },
+    { metadata: { ...input.metadata, workspaceId: randomUUID() } },
+    { metadata: { ...input.metadata, valoOrderId: randomUUID() } },
+  ]) {
+    assert.throws(() => assertOrderMatch(order, answer(refused)), { status: 409 });
+    assert.notDeepEqual(orderDifferences(order, answer(refused)), []);
+  }
 });
 
 test("checkout asks Paystack only for a one-time charge, with no plan, split, subaccount or saved card", async () => {

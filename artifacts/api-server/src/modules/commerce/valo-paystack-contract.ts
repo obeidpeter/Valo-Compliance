@@ -84,6 +84,32 @@ export function assertOrderMatch(
       "The payment verification does not match this order. No purchase was granted; staff reconciliation is required.",
     );
 }
+/** What the provider's answer for an order's reference says differently from the order
+ * (docs/architecture/reconciliation.md, slice 1). `settleVerifiedOrder` refuses each of them; the daily
+ * check names them, so that finance reads which it is. */
+export function orderDifferences(
+  order: {
+    id: string;
+    workspaceId: string;
+    reference: string;
+    amountKobo: number;
+    currency: string;
+    status: string;
+    providerTransactionId: string | null;
+  },
+  data: VerifiedTransaction,
+) {
+  return [
+    ...(data.amount !== order.amountKobo || data.currency !== order.currency ? ["AMOUNT_DIFFERENCE"] : []),
+    ...(data.reference !== order.reference ||
+    data.metadata.valoOrderId !== order.id ||
+    data.metadata.workspaceId !== order.workspaceId ||
+    (order.providerTransactionId !== null && order.providerTransactionId !== data.id)
+      ? ["TRANSACTION_DIFFERENCE"]
+      : []),
+    ...(order.status === "reversed" && data.status !== "reversed" ? ["REVERSAL_DIFFERENCE"] : []),
+  ];
+}
 /**
  * The Paystack events Valo processes: one-time charges, refunds and disputes. Any other event,
  * such as a subscription, invoice, transfer or payment request, is stored as ignored and never

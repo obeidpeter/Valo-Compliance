@@ -561,6 +561,9 @@ export const valoPaymentReconciliations = pgTable(
     day: text("day").notNull(),
     status: text("status").notNull().default("pending"),
     attempts: integer("attempts").notNull().default(0),
+    // When the provider last gave no answer that could be used. A waiting row is not tried again within
+    // the hour (docs/architecture/reconciliation.md, slice 1).
+    lastAttemptAt: timestamp("last_attempt_at", { withTimezone: true }),
     finding: text("finding"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },

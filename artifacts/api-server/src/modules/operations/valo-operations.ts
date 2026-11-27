@@ -40,6 +40,11 @@ export const readinessQueries = {
   payments: `SELECT count(*)::int AS value FROM (SELECT 1 FROM valo_orders o WHERE o.status='verified_success' AND
     (NOT EXISTS(SELECT 1 FROM valo_entitlements e WHERE e.order_id=o.id AND e.workspace_id=o.workspace_id)
     OR NOT EXISTS(SELECT 1 FROM valo_purchase_outbox r WHERE r.order_id=o.id AND r.workspace_id=o.workspace_id AND r.kind='purchase_receipt')) LIMIT 10001) bounded`,
+  // docs/architecture/reconciliation.md, slice 1 (PAY-007): the orders whose latest finished daily check
+  // found a difference. A later check of the same order that matches ends it.
+  paymentDifferences: `SELECT count(*)::int AS value FROM (SELECT 1 FROM valo_payment_reconciliations r
+    WHERE r.status='needs_review' AND NOT EXISTS(SELECT 1 FROM valo_payment_reconciliations n
+      WHERE n.order_id=r.order_id AND n.day>r.day AND n.status<>'pending') LIMIT 10001) bounded`,
   // docs/architecture/alerts.md, part 3: reminder emails waiting more than fifteen minutes past their time,
   // and scheduled jobs waiting more than ten minutes past their start.
   reminders: `SELECT count(*)::int AS value FROM (SELECT 1 FROM valo_reminder_outbox WHERE status='pending'
@@ -182,6 +187,8 @@ const SERVICE_METRICS = [
 ] as const;
 /** The reading of messages that failed (docs/architecture/messages.md) and the subject its alerts are named after. */
 const MESSAGE_METRICS = [["failedMessages", "FAILED_MESSAGES"]] as const;
+/** The reading of the daily payment check's differences (docs/architecture/reconciliation.md) and the subject its alerts are named after. */
+const PAYMENT_METRICS = [["paymentDifferences", "PAYMENT_DIFFERENCES"]] as const;
 /** The readings of enquiries waiting on Valo (docs/architecture/messages.md, part 6) and the subjects their alerts are named after. */
 const SUPPORT_METRICS = [
   ["newEnquiries", "NEW_ENQUIRIES"],
@@ -204,6 +211,7 @@ export type OperationalSample = {
   newEnquiries: Metric;
   waitingEnquiries: Metric;
   payments: Metric;
+  paymentDifferences: Metric;
   requestFailures: Metric;
   requestTime: Metric;
   deniedAccess: Metric;
@@ -238,6 +246,7 @@ export type OperationalSample = {
     failedMessages: number;
     newEnquiries: number;
     waitingEnquiries: number;
+    paymentDifferences: number;
     workerAgeMs: number;
     requestFailures: number;
     requestTime: number;
@@ -351,6 +360,8 @@ export async function collectOperationalSample(
       // Any enquiry nobody has taken, and any waiting on Valo past its aim.
       newEnquiries: 0,
       waitingEnquiries: 0,
+      // Any order whose latest daily payment check found a difference.
+      paymentDifferences: 0,
       workerAgeMs: 90000,
       // NFR-003's own: fewer than 1 in 100 requests failing unexpectedly, and 95 in 100 within a second.
       requestFailures: 10,
@@ -410,6 +421,7 @@ export const ALERT_RUNBOOKS = {
   NEW_ENQUIRIES: { runbook: "Provider enquiry dispute", accountable: "Support" },
   WAITING_ENQUIRIES: { runbook: "Provider enquiry dispute", accountable: "Support" },
   PAYMENTS: { runbook: "Payment/entitlement failure", accountable: "Finance + engineering" },
+  PAYMENT_DIFFERENCES: { runbook: "Payment/entitlement failure", accountable: "Finance + engineering" },
   REQUEST_FAILURES: { runbook: "Site/database unavailable", accountable: "Engineering lead" },
   REQUEST_TIME: { runbook: "Site/database unavailable", accountable: "Engineering lead" },
   DENIED_ACCESS: { runbook: "Security/privacy incident", accountable: "Incident lead + privacy owner" },
@@ -479,6 +491,10 @@ export const ALERT_WORDS = {
     reading: "the enquiries waiting on Valo",
   },
   PAYMENTS: { raised: "A paid order is missing its access or its receipt", reading: "paid orders" },
+  PAYMENT_DIFFERENCES: {
+    raised: "A daily payment check found a difference",
+    reading: "the daily payment checks",
+  },
   REQUEST_FAILURES: {
     raised: "Too many requests failed unexpectedly, counted in 1,000 over ten minutes",
     reading: "the request counts",
@@ -564,6 +580,7 @@ const SUBJECT_READINGS: Partial<
   NEW_ENQUIRIES: "newEnquiries",
   WAITING_ENQUIRIES: "waitingEnquiries",
   PAYMENTS: "payments",
+  PAYMENT_DIFFERENCES: "paymentDifferences",
   REQUEST_FAILURES: "requestFailures",
   REQUEST_TIME: "requestTime",
   DENIED_ACCESS: "deniedAccess",
@@ -744,6 +761,7 @@ async function recordOperationalAlertsLocked(sample: OperationalSample, file: st
     ...SERVICE_METRICS,
     ...MESSAGE_METRICS,
     ...SUPPORT_METRICS,
+    ...PAYMENT_METRICS,
     ...SECURITY_METRICS,
   ]) {
     const metric = sample[name];

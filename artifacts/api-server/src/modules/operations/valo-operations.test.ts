@@ -97,6 +97,7 @@ test("internal probes measure failures independently and persist/deduplicate/rec
       readinessQueries.failedMessages,
       readinessQueries.newEnquiries,
       readinessQueries.waitingEnquiries,
+      readinessQueries.paymentDifferences,
       readinessQueries.requestFailures,
       readinessQueries.requestTime,
     ]);
@@ -608,6 +609,70 @@ test("messages waiting past their time, and a message that failed, raise their o
       readinessQueries.failedMessages,
       /status='failed' AND updated_at > now\(\) - interval '1 day'/,
     );
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { recursive: true, force: true });
+    if (old === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = old;
+  }
+});
+
+// PAY-007 (docs/architecture/reconciliation.md, slice 1): "alert on unmatched amounts, missing events and
+// fulfilment differences." An order whose latest daily payment check found a difference raises an alert
+// for finance and engineering. What the reading counts is tested against PostgreSQL with the check itself.
+test("an order whose latest daily payment check found a difference raises an alert under the payment runbook, and none while no check has", async () => {
+  const old = process.env.NODE_ENV;
+  process.env.NODE_ENV = "development";
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => {
+    throw Error("EXTERNAL_MESSAGES_FORBIDDEN");
+  };
+  const dir = await mkdtemp(join(tmpdir(), "valo-ops-payment-differences-"));
+  const worker = new WorkerHealth();
+  worker.finish(worker.begin()!, true);
+  try {
+    await recordWorkerHeartbeat(worker.snapshot(), dir);
+    const sample = (differences: number, unreadable = false) =>
+      collectOperationalSample(async (sql) => {
+        if (unreadable && sql === readinessQueries.paymentDifferences) throw Error("SYNTHETIC_PROBE_FAILURE");
+        return {
+          rows: [
+            {
+              value:
+                sql === readinessQueries.database
+                  ? 1
+                  : sql === readinessQueries.paymentDifferences
+                    ? differences
+                    : 0,
+            },
+          ],
+        };
+      }, dir);
+    const owner = { runbook: "Payment/entitlement failure", accountable: "Finance + engineering" };
+    // No difference raises nothing.
+    assert.deepEqual((await recordOperationalAlerts(await sample(0), dir)).active, []);
+    // One order with a difference raises the alert, with the count it was raised on.
+    const raised = await recordOperationalAlerts(await sample(1), dir);
+    assert.deepEqual(raised.owners, [{ code: "PAYMENT_DIFFERENCES_DETECTED", ...owner }]);
+    const journal = JSON.parse(await readFile(join(dir, "alerts.json"), "utf8")) as {
+      events: { code: string; state: string; reading: number; threshold: number }[];
+    };
+    assert.deepEqual(
+      journal.events.map(({ code, state, reading, threshold }) => ({ code, state, reading, threshold })),
+      [{ code: "PAYMENT_DIFFERENCES_DETECTED", state: "active", reading: 1, threshold: 0 }],
+    );
+    // It says in plain words what it is about, and what Valo could not read when its reading fails.
+    assert.equal(alertTitle("PAYMENT_DIFFERENCES_DETECTED"), "A daily payment check found a difference");
+    assert.equal(
+      alertTitle("PAYMENT_DIFFERENCES_PROBE_UNAVAILABLE"),
+      "Valo cannot read the daily payment checks",
+    );
+    // A reading that cannot be taken is an alert of its own, and clears the one it replaces.
+    assert.deepEqual((await recordOperationalAlerts(await sample(0, true), dir)).owners, [
+      { code: "PAYMENT_DIFFERENCES_PROBE_UNAVAILABLE", ...owner },
+    ]);
+    // Once no order's latest check has a difference, nothing is raised.
+    assert.deepEqual((await recordOperationalAlerts(await sample(0), dir)).active, []);
   } finally {
     globalThis.fetch = originalFetch;
     await rm(dir, { recursive: true, force: true });

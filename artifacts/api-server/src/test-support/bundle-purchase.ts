@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import {
   CreateCommerceOrderResponse,
   GetCustomerPurchasesResponse,
@@ -32,6 +32,9 @@ type Call = (
  * PAY-001 (docs/architecture/order-safety.md, slice 2): along the way, an order made directly for the
  * bundle is taken by the database only with the amount and the line of the bundle's version in effect,
  * naming the released edition of each of its templates.
+ *
+ * PAY-007 (docs/architecture/reconciliation.md, slice 1): and the daily check's look at a paid order finds
+ * the grant of each edition a bundle's order names.
  */
 export async function exerciseBundlePurchase(call: Call, editor: string) {
   const {
@@ -46,6 +49,7 @@ export async function exerciseBundlePurchase(call: Call, editor: string) {
   const { resolveWorkspace } = await import("../modules/workspaces");
   const { createOrder, settleVerifiedOrder } = await import("../modules/commerce");
   const { bundleOrderTerms } = await import("../modules/commerce/checkout-editions");
+  const { paidOrderFindings } = await import("../modules/commerce/valo-payment-reconciliation");
   const id = randomUUID(),
     mark = id.slice(0, 8),
     owner = "synthetic-bundle-buy-owner-" + id,
@@ -310,6 +314,19 @@ export async function exerciseBundlePurchase(call: Call, editor: string) {
     );
     for (const edition of [agreement.id, policy.id])
       assert.equal(await download(edition, buyer.identityId), 200);
+    // PAY-007: the daily check's look at this paid order finds nothing wanting. With either template's
+    // grant suspended and nothing on record to explain it, it reports a difference.
+    assert.deepEqual(await paidOrderFindings(made.id), []);
+    for (const edition of [agreement.id, policy.id]) {
+      const grant = and(
+        eq(valoEntitlements.orderId, made.id),
+        eq(valoEntitlements.contentVersionId, edition),
+      );
+      await db.update(valoEntitlements).set({ status: "suspended" }).where(grant);
+      assert.deepEqual(await paidOrderFindings(made.id), ["ENTITLEMENT_DIFFERENCE"]);
+      await db.update(valoEntitlements).set({ status: "active" }).where(grant);
+    }
+    assert.deepEqual(await paidOrderFindings(made.id), []);
     // Both templates are the workspace's own now, and the bundle is no longer offered to it.
     const bought = await purchases(buyer.identityId);
     const byEdition = (a: string[], b: string[]) => a[0]!.localeCompare(b[0]!);

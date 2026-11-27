@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, lte, or, sql } from "drizzle-orm";
 import {
   db,
   pool,
@@ -12,12 +12,20 @@ import {
   valoEntitlements,
   valoPurchaseOutbox,
   valoPaymentEvents,
+  valoPaymentDisputes,
+  valoPaymentReconciliations,
+  valoRefundRequests,
   valoEvents,
   valoMemberships,
 } from "@workspace/db";
 import { resolveWorkspace } from "../workspaces";
 import * as commerce from "./valo-commerce";
-import { reconcilePayments } from "./valo-payment-reconciliation";
+import {
+  PAYMENT_EVENT_GRACE_MINUTES,
+  RECONCILIATION_RETRY_MINUTES,
+  reconcilePayments,
+} from "./valo-payment-reconciliation";
+import { readinessQueries } from "../operations/valo-operations";
 import { endedEditionOrders, priceOrderTerms } from "./checkout-editions";
 import { purchaseReceiptFile } from "./purchase-receipt-file";
 import { PAYSTACK_API, verifiedTransaction } from "./valo-paystack-contract";
@@ -1029,6 +1037,347 @@ test(
           message: /unavailable for new checkout/,
         });
       });
+      // PAY-007: "Run daily transaction reconciliation and alert on unmatched amounts, missing events and
+      // fulfilment differences" (docs/architecture/reconciliation.md, slice 1). The daily check takes ten
+      // waiting rows at a time, of every workspace's orders, so it is run until no row at all is waiting to
+      // be tried. Other tests' orders get no answer from the stand-in, and then wait an hour like any other.
+      type Made = NonNullable<Awaited<ReturnType<typeof fixture>>>;
+      const dayFromNow = (days: number) =>
+        new Date(Date.now() + days * 86_400_000).toISOString().slice(0, 10);
+      /** These subtests count a day's checks, and the day is the database's. In the last seconds of a UTC
+       * day they wait for the next, so that no check they make falls on the other side of midnight. */
+      const clearOfMidnight = async () => {
+        const left = 86_400_000 - (Date.now() % 86_400_000);
+        if (left < 10_000) await new Promise((done) => setTimeout(done, left + 500));
+      };
+      /** An order the provider was offered: only such an order is checked. */
+      const offeredOrder = async () => {
+        const made = (await fixture())!;
+        await db.update(valoOrders).set({ status: "pending" }).where(eq(valoOrders.id, made.id));
+        return made;
+      };
+      const checksOf = (order: Made) =>
+        db
+          .select()
+          .from(valoPaymentReconciliations)
+          .where(eq(valoPaymentReconciliations.orderId, order.id))
+          .orderBy(asc(valoPaymentReconciliations.day));
+      /** An order's latest check: how it ended, what it found and how often the provider gave no answer. */
+      const check = async (order: Made) => {
+        const latest = (await checksOf(order)).at(-1);
+        return latest ? [latest.status, latest.finding, latest.attempts] : null;
+      };
+      /** Another day's check of an order, waiting to be made. */
+      const anotherCheck = (order: Made, days: number) =>
+        db.insert(valoPaymentReconciliations).values({
+          id: randomUUID(),
+          workspaceId: order.workspaceId,
+          orderId: order.id,
+          day: dayFromNow(days),
+        });
+      /** Puts an order's last attempt this many minutes back, as if that long had passed. */
+      const attemptedMinutesAgo = (order: Made, minutes: number) =>
+        db
+          .update(valoPaymentReconciliations)
+          .set({ lastAttemptAt: sql`now() - ${minutes} * interval '1 minute'` })
+          .where(eq(valoPaymentReconciliations.orderId, order.id));
+      async function runDailyCheck() {
+        for (let run = 0; run < 400; run++) {
+          await reconcilePayments();
+          const waiting = await db
+            .select({ id: valoPaymentReconciliations.id })
+            .from(valoPaymentReconciliations)
+            .where(
+              and(
+                eq(valoPaymentReconciliations.status, "pending"),
+                or(
+                  isNull(valoPaymentReconciliations.lastAttemptAt),
+                  lte(
+                    valoPaymentReconciliations.lastAttemptAt,
+                    sql`now() - ${RECONCILIATION_RETRY_MINUTES} * interval '1 minute'`,
+                  ),
+                ),
+              ),
+            )
+            .limit(1);
+          if (!waiting.length) return;
+        }
+        assert.fail("The daily check never came to the end of the rows waiting to be tried.");
+      }
+      const orderState = async (order: Made) => {
+        const [row] = await db.select().from(valoOrders).where(eq(valoOrders.id, order.id));
+        const grants = await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId, order.id));
+        return [row!.status, row!.providerTransactionId, grants.map((grant) => grant.status)] as const;
+      };
+      await t.test(
+        "the daily check settles a paid order and calls it matched, names an amount, a transaction or a reversal that differs without settling anything, and makes no check of an order the provider was never offered",
+        async () => {
+          await clearOfMidnight();
+          const paid = await offeredOrder(),
+            short = await offeredOrder(),
+            anothers = await offeredOrder(),
+            replaced = await offeredOrder(),
+            reversed = await offeredOrder(),
+            unoffered = (await fixture())!;
+          // One order already holds a transaction the provider called pending. One was paid and then reversed.
+          // Their transaction ids are drawn at random, as every id here is: the coverage run runs this test
+          // again on the same database, where an order's transaction id is held once.
+          const held = response(replaced, { status: "pending" });
+          await commerce.settleVerifiedOrder(replaced.id, held);
+          const undone = response(reversed);
+          await commerce.settleVerifiedOrder(reversed.id, undone);
+          await commerce.settleVerifiedOrder(reversed.id, { ...undone, status: "reversed" });
+          const answers = new Map([
+            [paid.reference, response(paid)],
+            [short.reference, response(short, { amount: short.amountKobo - 1 })],
+            [
+              anothers.reference,
+              response(anothers, { metadata: { valoOrderId: paid.id, workspaceId: paid.workspaceId } }),
+            ],
+            [replaced.reference, response(replaced, { id: String(Number(held.id) + 1) })],
+            [reversed.reference, undone],
+          ]);
+          const today = dayFromNow(0);
+          await withStandInMerchant(answers, async (verified) => {
+            await runDailyCheck();
+            assert.deepEqual(await check(paid), ["matched", null, 0]);
+            assert.deepEqual(await check(short), ["needs_review", "AMOUNT_DIFFERENCE", 0]);
+            assert.deepEqual(await check(anothers), ["needs_review", "TRANSACTION_DIFFERENCE", 0]);
+            assert.deepEqual(await check(replaced), ["needs_review", "TRANSACTION_DIFFERENCE", 0]);
+            assert.deepEqual(await check(reversed), ["needs_review", "REVERSAL_DIFFERENCE", 0]);
+            // One check a day, by the UTC date, and none of an order the provider was never offered.
+            for (const order of [paid, short, anothers, replaced, reversed])
+              assert.deepEqual(
+                (await checksOf(order)).map((row) => [row.day, row.lastAttemptAt]),
+                [[today, null]],
+              );
+            assert.equal(await check(unoffered), null);
+            // The paid order is settled as a status refresh settles it, with its grant and its receipt.
+            assert.deepEqual(await orderState(paid), [
+              "verified_success",
+              answers.get(paid.reference)!.id,
+              ["active"],
+            ]);
+            assert.equal(
+              (await db.select().from(valoPurchaseOutbox).where(eq(valoPurchaseOutbox.orderId, paid.id)))
+                .length,
+              1,
+            );
+            // An answer that differs settles nothing: each order is as it was.
+            assert.deepEqual(await orderState(short), ["pending", null, []]);
+            assert.deepEqual(await orderState(anothers), ["pending", null, []]);
+            assert.deepEqual(await orderState(replaced), ["pending", held.id, []]);
+            assert.deepEqual(await orderState(reversed), ["reversed", undone.id, ["suspended"]]);
+            // The provider answered for each, so none is asked about again that day.
+            await reconcilePayments();
+            for (const order of [paid, short, anothers, replaced, reversed])
+              assert.equal(verified.filter((reference) => reference === order.reference).length, 1);
+            assert.equal(verified.includes(unoffered.reference), false);
+          });
+        },
+      );
+      await t.test(
+        "a provider that gives no answer is tried again only an hour later and three times in all, the check then reads NO_ANSWER with the order left as it was, and an answer in between settles it",
+        async () => {
+          await clearOfMidnight();
+          const silent = await offeredOrder(),
+            late = await offeredOrder();
+          await withStandInMerchant(new Map(), async (verified) => {
+            const asked = (order: Made) =>
+              verified.filter((reference) => reference === order.reference).length;
+            await runDailyCheck();
+            assert.deepEqual(await check(silent), ["pending", null, 1]);
+            assert.ok((await checksOf(silent))[0]!.lastAttemptAt);
+            assert.equal(asked(silent), 1);
+            // Every waiting row has now been tried. Within the hour none is tried again, however often
+            // the check runs: not at once, and not a minute short of the hour.
+            const asks = verified.length;
+            await reconcilePayments();
+            await attemptedMinutesAgo(silent, RECONCILIATION_RETRY_MINUTES - 1);
+            await reconcilePayments();
+            assert.equal(verified.length, asks);
+            // An hour on it is tried once more, and an hour after that a third and last time.
+            await attemptedMinutesAgo(silent, RECONCILIATION_RETRY_MINUTES);
+            await reconcilePayments();
+            assert.deepEqual(await check(silent), ["pending", null, 2]);
+            assert.equal(asked(silent), 2);
+            await attemptedMinutesAgo(silent, RECONCILIATION_RETRY_MINUTES);
+            await reconcilePayments();
+            assert.deepEqual(await check(silent), ["needs_review", "NO_ANSWER", 3]);
+            assert.equal(asked(silent), 3);
+            // Ended, it is not asked about again, and the order is as it was.
+            await attemptedMinutesAgo(silent, 2 * RECONCILIATION_RETRY_MINUTES);
+            await reconcilePayments();
+            assert.equal(asked(silent), 3);
+            assert.deepEqual(await orderState(silent), ["pending", null, []]);
+            assert.equal(asked(late), 1);
+          });
+          // An answer that comes an hour later settles the other order, and its check matches.
+          await withStandInMerchant(new Map([[late.reference, response(late)]]), async () => {
+            await attemptedMinutesAgo(late, RECONCILIATION_RETRY_MINUTES);
+            await reconcilePayments();
+            assert.deepEqual(await check(late), ["matched", null, 1]);
+            assert.equal((await orderState(late))[0], "verified_success");
+          });
+        },
+      );
+      await t.test(
+        "a paid order's check looks for its grant, takes a refund in full or a dispute as the reason for a suspended one, puts back a grant nothing withholds, and reports an event that has not arrived an hour after payment",
+        async () => {
+          await clearOfMidnight();
+          const whole = await offeredOrder(),
+            refunded = await offeredOrder(),
+            partRefunded = await offeredOrder(),
+            disputed = await offeredOrder(),
+            withheld = await offeredOrder(),
+            ungranted = await offeredOrder(),
+            restored = await offeredOrder(),
+            unheard = await offeredOrder(),
+            heard = await offeredOrder(),
+            recent = await offeredOrder(),
+            both = await offeredOrder();
+          const all = [
+            whole,
+            refunded,
+            partRefunded,
+            disputed,
+            withheld,
+            ungranted,
+            restored,
+            unheard,
+            heard,
+            recent,
+            both,
+          ];
+          const suspend = (order: Made) =>
+            db
+              .update(valoEntitlements)
+              .set({ status: "suspended" })
+              .where(eq(valoEntitlements.orderId, order.id));
+          const refund = (order: Made, status: string, amountKobo: number) =>
+            db.insert(valoRefundRequests).values({
+              id: randomUUID(),
+              workspaceId: order.workspaceId,
+              orderId: order.id,
+              reason: "Synthetic refund for the daily check's test.",
+              status,
+              amountKobo,
+              reference: `valo-test-refund-${randomUUID()}`,
+            });
+          const paidMinutesAgo = (order: Made, minutes: number) =>
+            db
+              .update(valoOrders)
+              .set({ lastCheckedAt: sql`now() - ${minutes} * interval '1 minute'` })
+              .where(eq(valoOrders.id, order.id));
+          await withStandInMerchant(
+            new Map(all.map((order) => [order.reference, response(order)])),
+            async () => {
+              // Each is paid by its first check, which matches: granted, with its receipt, and paid just now.
+              await runDailyCheck();
+              for (const order of all) {
+                assert.deepEqual(await check(order), ["matched", null, 0]);
+                const [status, , grants] = await orderState(order);
+                assert.deepEqual([status, grants], ["verified_success", ["active"]]);
+              }
+              // A grant suspended after a refund of the whole amount, after a refund of a kobo less, with a
+              // dispute on record, and with nothing on record.
+              for (const order of [refunded, partRefunded, disputed, withheld, both]) await suspend(order);
+              await refund(refunded, "processed", refunded.amountKobo);
+              await refund(partRefunded, "processed", partRefunded.amountKobo - 1);
+              await db.insert(valoPaymentDisputes).values({
+                id: randomUUID(),
+                workspaceId: disputed.workspaceId,
+                orderId: disputed.id,
+                providerId: `synthetic-dispute-${randomUUID()}`,
+                status: "awaiting-merchant-feedback",
+              });
+              // A grant that is gone: one with a refused refund request on record, which is not put back,
+              // and one with nothing on record, which is.
+              for (const order of [ungranted, restored])
+                await db.delete(valoEntitlements).where(eq(valoEntitlements.orderId, order.id));
+              await refund(ungranted, "rejected", 1);
+              // Paid an hour ago without an event, with one, and a minute short of the hour without one.
+              for (const order of [unheard, heard, both])
+                await paidMinutesAgo(order, PAYMENT_EVENT_GRACE_MINUTES);
+              await paidMinutesAgo(recent, PAYMENT_EVENT_GRACE_MINUTES - 1);
+              await charge(heard.reference);
+              // The next day's check of each.
+              for (const order of all) await anotherCheck(order, 1);
+              await runDailyCheck();
+              assert.deepEqual(await check(whole), ["matched", null, 0]);
+              assert.deepEqual(await check(refunded), ["matched", null, 0]);
+              assert.deepEqual(await check(disputed), ["matched", null, 0]);
+              assert.deepEqual(await check(partRefunded), ["needs_review", "ENTITLEMENT_DIFFERENCE", 0]);
+              assert.deepEqual(await check(withheld), ["needs_review", "ENTITLEMENT_DIFFERENCE", 0]);
+              assert.deepEqual(await check(ungranted), ["needs_review", "ENTITLEMENT_DIFFERENCE", 0]);
+              assert.deepEqual((await orderState(ungranted))[2], []);
+              assert.deepEqual(await check(restored), ["matched", null, 0]);
+              assert.deepEqual((await orderState(restored))[2], ["active"]);
+              assert.deepEqual(await check(unheard), ["needs_review", "EVENT_MISSING", 0]);
+              assert.deepEqual(await check(heard), ["matched", null, 0]);
+              assert.deepEqual(await check(recent), ["matched", null, 0]);
+              assert.deepEqual(await check(both), [
+                "needs_review",
+                "ENTITLEMENT_DIFFERENCE;EVENT_MISSING",
+                0,
+              ]);
+              // Nothing the check found was changed by it: a suspended grant stays suspended.
+              for (const order of [refunded, partRefunded, disputed, withheld, both])
+                assert.deepEqual((await orderState(order))[2], ["suspended"]);
+            },
+          );
+        },
+      );
+      await t.test(
+        "the payment differences reading counts each order whose latest finished check found a difference, once, until a later check of it matches",
+        async () => {
+          const reading = async () =>
+            Number(
+              (await db.execute<{ value: number }>(sql.raw(readinessQueries.paymentDifferences))).rows[0]!
+                .value,
+            );
+          const first = (await fixture())!,
+            second = (await fixture())!;
+          const checked = (order: Made, days: number, status: string, finding: string | null) =>
+            db.insert(valoPaymentReconciliations).values({
+              id: randomUUID(),
+              workspaceId: order.workspaceId,
+              orderId: order.id,
+              day: dayFromNow(days),
+              status,
+              finding,
+            });
+          const before = await reading();
+          // A check still waiting, and one that matched, count nothing.
+          await checked(first, 1, "matched", null);
+          await checked(second, 1, "pending", null);
+          assert.equal(await reading(), before);
+          // A difference counts its order once, however many days it is found on.
+          await checked(first, 2, "needs_review", "AMOUNT_DIFFERENCE");
+          assert.equal(await reading(), before + 1);
+          await checked(first, 3, "needs_review", "AMOUNT_DIFFERENCE");
+          assert.equal(await reading(), before + 1);
+          // A later check that is still waiting does not hide it.
+          await checked(first, 4, "pending", null);
+          assert.equal(await reading(), before + 1);
+          // Another order's difference is counted beside it.
+          await checked(second, 2, "needs_review", "NO_ANSWER");
+          assert.equal(await reading(), before + 2);
+          // A later check that matches ends the first order's, and a difference found after that counts again.
+          await db
+            .update(valoPaymentReconciliations)
+            .set({ status: "matched" })
+            .where(
+              and(
+                eq(valoPaymentReconciliations.orderId, first.id),
+                eq(valoPaymentReconciliations.day, dayFromNow(4)),
+              ),
+            );
+          assert.equal(await reading(), before + 1);
+          await checked(first, 5, "needs_review", "EVENT_MISSING");
+          assert.equal(await reading(), before + 2);
+        },
+      );
       await t.test("no commerce call takes a second pooled connection inside a transaction", () => {
         assert.deepEqual(guard.violations, []);
       });
