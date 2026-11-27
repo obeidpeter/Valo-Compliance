@@ -82,7 +82,10 @@ test(
       ListWorkspaceMessagesResponse.parse(await listWorkspaceMessages(actor)).find(
         (message) => message.id === id,
       )!;
-    const at = (minutesAgo: number) => new Date(Math.floor(Date.now() / 1000) * 1000 - minutesAgo * 60_000);
+    // One reading of the clock for the whole test. A report's time is compared with the same time made
+    // again, and a clock read each time gave a later second once a second's boundary fell between them.
+    const started = Math.floor(Date.now() / 1000) * 1000;
+    const at = (minutesAgo: number) => new Date(started - minutesAgo * 60_000);
     // Inside a transaction, the job and the log use only that transaction's connection.
     const guard = guardNestedConnections({ db, pool });
     try {

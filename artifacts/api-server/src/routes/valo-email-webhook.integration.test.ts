@@ -116,8 +116,11 @@ test(
             [body + " ", good],
             [body, { ...good, "svix-id": newId() }],
             [body, { ...good, "svix-signature": "v1," + Buffer.alloc(32).toString("base64") }],
-            [body, signature(body, id, Date.now() - 301_000)],
-            [body, signature(body, id, Date.now() + 301_000)],
+            // Signed a minute outside the five there are, either way. The edge of the five minutes is the
+            // unit test's, which has a clock of its own: here a request signed a second beyond it, and a
+            // second late in arriving, would be inside them.
+            [body, signature(body, id, Date.now() - 360_000)],
+            [body, signature(body, id, Date.now() + 360_000)],
             [body, signature(body, id, Date.now(), Buffer.from("synthetic-http-another-key-00000"))],
             // Signed, and sent as something other than JSON: the body is not read at all.
             [body, { ...good, "Content-Type": "text/plain" }],
