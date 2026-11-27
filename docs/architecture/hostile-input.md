@@ -241,6 +241,21 @@ The payloads live in one test-support list. They cover:
 - **Slice 3: what the HTML rule reviews.** Two places hand a browser HTML: the PDF renderer, which
   escapes every text, and the reader of an official source's page, with scripts off and every request
   refused.
+- **Afterwards: a page closed in mid-answer.** The stored-markup test once stopped with "Route is
+  already handled!", on a local run of a later change that touches neither the test nor its harness.
+  Run again on the same commit, it passed.
+  - **The cause.** The test passes each request a page makes to the real API: it fetches the answer,
+    then hands it to the page. A page closed between those two steps left the browser without the
+    answer it was to hand over. The harness took that failure for a request the test had no answer
+    for, and answered the request itself. A request can be answered once, so that second answer
+    failed too, and nothing caught it: it failed whichever test was running, and named no cause. It was
+    reproduced by closing a page a moment before its answers were handed over.
+  - **What changed.** The harness leaves a request alone once the test has closed its page, and does
+    not throw when its own answer cannot be given because one had begun. On an open page it still
+    names a failed answer among the page's unanswered requests, which each test checks.
+  - **Its test** (`test-support/app-in-browser.test.ts`, the web job) closes pages at that instant,
+    with the answers handed over at once and a little later. With the harness as it was, it fails
+    with the same error.
 
 ## The owner's points
 
