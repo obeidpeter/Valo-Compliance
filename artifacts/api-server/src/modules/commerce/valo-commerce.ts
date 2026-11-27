@@ -42,11 +42,13 @@ import { singleRow } from "../../platform/rows";
 import { queueMessage } from "../messages";
 import {
   assertPayableOrder,
+  bundleOrderTerms,
   endedEditionOrders,
   lockCheckoutWorkspace,
   openEditionOrder,
   orderEditions,
   orderLineEditions,
+  priceOrderTerms,
   verifiedEditions,
 } from "./checkout-editions";
 import { bundleForOrder, bundleOffers } from "./bundle-orders";
@@ -533,18 +535,9 @@ async function priceOrder(
           requestedBy: actor.identityId,
           requestKey: input.requestKey,
           reference: `valo-test-${id}`,
-          priceId: price.id,
-          amountKobo: price.amountKobo,
-          currency: price.currency,
+          ...priceOrderTerms(price),
           // The database refuses any rule but the one in effect, which this transaction holds.
           carriesToLaterEditions: carries,
-          line: {
-            title: price.title,
-            contentVersionId: price.contentVersionId,
-            licenceVersion: price.licenceVersion,
-            licenceText: price.licenceText,
-            taxTreatment: price.taxTreatment,
-          },
         })
         .returning(),
     );
@@ -638,22 +631,9 @@ async function createBundleOrder(
           requestedBy: actor.identityId,
           requestKey: input.requestKey,
           reference: `valo-test-${id}`,
-          bundleId: version.id,
-          amountKobo: version.amountKobo,
-          currency: version.currency,
+          ...bundleOrderTerms(version, templates),
           // The database refuses any rule but the one in effect, which this transaction holds.
           carriesToLaterEditions: carries,
-          line: {
-            title: version.title,
-            bundle: version.bundleKey,
-            licenceVersion: version.licenceVersion,
-            licenceText: version.licenceText,
-            taxTreatment: version.taxTreatment,
-            editions: templates.map((template) => ({
-              contentVersionId: template.edition,
-              title: template.title,
-            })),
-          },
         })
         .returning(),
     );

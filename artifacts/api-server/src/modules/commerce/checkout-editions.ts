@@ -40,6 +40,48 @@ export const orderEditions = (line: ValoOrderLine) =>
 /** What an order buys: a template's price or a bundle's version. */
 export type OrderOffer = { priceId: string | null; bundleId: string | null };
 
+/** What an order takes from the price it is made from: which price, the amount, the currency and the line. */
+export function priceOrderTerms(price: typeof valoPrices.$inferSelect) {
+  return {
+    priceId: price.id,
+    amountKobo: price.amountKobo,
+    currency: price.currency,
+    line: {
+      title: price.title,
+      contentVersionId: price.contentVersionId,
+      licenceVersion: price.licenceVersion,
+      licenceText: price.licenceText,
+      taxTreatment: price.taxTreatment,
+    },
+  };
+}
+
+/**
+ * What an order takes from the bundle's version it is made from, and the released edition of each of
+ * the bundle's templates: which version, the amount, the currency and the line.
+ */
+export function bundleOrderTerms(
+  version: typeof valoBundles.$inferSelect,
+  templates: { edition: string; title: string }[],
+) {
+  return {
+    bundleId: version.id,
+    amountKobo: version.amountKobo,
+    currency: version.currency,
+    line: {
+      title: version.title,
+      bundle: version.bundleKey,
+      licenceVersion: version.licenceVersion,
+      licenceText: version.licenceText,
+      taxTreatment: version.taxTreatment,
+      editions: templates.map((template) => ({
+        contentVersionId: template.edition,
+        title: template.title,
+      })),
+    },
+  };
+}
+
 /** Whether an order's line names any of these editions. */
 const namesAny = (editions: string[]) =>
   sql`(${valoOrders.line}->>'contentVersionId' in ${editions} or exists (
