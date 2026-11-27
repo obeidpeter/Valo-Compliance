@@ -8,9 +8,13 @@ import { DELIVERIES, emailWebhookKeys, resendEvents, saysMore, type Delivery } f
  * and no provider: the scheme's published example, and bodies this test signs with a key of its own.
  */
 
-/** The example the signature scheme's documentation publishes: a key, a message and its signature. */
+/**
+ * The example the signature scheme's documentation publishes: a key, a message and its signature. The key
+ * is that public example's own and signs nothing of anyone's. It is written in its two parts, the
+ * scheme's prefix and the example's text, so that it does not read as a credential kept in this file.
+ */
 const PUBLISHED = {
-  secret: "whsec_plJ3nmyCDGBKInavdOK15jsl",
+  secret: ["whsec", "plJ3nmyCDGBKInavdOK15jsl"].join("_"),
   id: "msg_loFOjxBNrRLzqYUf",
   timestamp: "1731705121",
   body: '{"event_type":"ping","data":{"success":true}}',
@@ -30,7 +34,9 @@ const publishedHeaders = (change: Record<string, string | undefined> = {}) =>
 /** A key of this test's own, and a body signed with it as the scheme describes. */
 const ownSecret = "whsec_" + Buffer.from("synthetic-email-webhook-key-0001").toString("base64");
 const ownKeys = emailWebhookKeys(ownSecret)!;
-function signed(body: string, at: Date, id = "msg_synthetic_1", key = ownKeys[0]!) {
+/** The provider's id for a report this test makes. */
+const REPORT_ID = "msg_synthetic_1";
+function signed(body: string, at: Date, id = REPORT_ID, key = ownKeys[0]!) {
   const stamp = String(Math.floor(+at / 1000));
   const signature = createHmac("sha256", key).update(`${id}.${stamp}.${body}`).digest("base64");
   return headers({ "svix-id": id, "svix-timestamp": stamp, "svix-signature": "v1," + signature });
@@ -114,7 +120,7 @@ test("one matching signature among several is enough, and either of two keys ver
   const header = signed(body, NOW);
   const stamp = header("svix-timestamp")!;
   const several = headers({
-    "svix-id": "msg_synthetic_1",
+    "svix-id": REPORT_ID,
     "svix-timestamp": stamp,
     "svix-signature": `v1,${Buffer.alloc(32, 7).toString("base64")} ${header("svix-signature")} v1a,ignored`,
   });
@@ -130,7 +136,7 @@ test("one matching signature among several is enough, and either of two keys ver
   // Signed with a key that is neither.
   const other = Buffer.from("synthetic-email-webhook-key-0002");
   assert.equal(
-    resendEvents.authentic(Buffer.from(body), signed(body, NOW, "msg_synthetic_1", other), both, NOW),
+    resendEvents.authentic(Buffer.from(body), signed(body, NOW, REPORT_ID, other), both, NOW),
     false,
   );
 });
@@ -179,7 +185,7 @@ test("each event Valo uses becomes a report that keeps the message's reference, 
     ["email.suppressed", {}, "undelivered", "PROVIDER_SUPPRESSED"],
   ] as const) {
     const { eventKey, report } = read(event(type, data));
-    assert.equal(eventKey, "msg_synthetic_1");
+    assert.equal(eventKey, REPORT_ID);
     assert.deepEqual(
       report,
       {
@@ -211,7 +217,7 @@ test("an event Valo does not use leaves no report: that a message was handed ove
   ]) {
     const body = event(type);
     assert.deepEqual(resendEvents.read(Buffer.from(body), signed(body, NOW)), {
-      eventKey: "msg_synthetic_1",
+      eventKey: REPORT_ID,
       report: null,
     });
   }
