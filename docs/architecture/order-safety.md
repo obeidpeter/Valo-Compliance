@@ -45,7 +45,7 @@ asks the provider and records the answer. The provider's webhook does the same. 
 | --- | --- | --- |
 | 1 | An order keeps the terms it was made with | Built |
 | 2 | An order is made from the price book, checked by the database as it is made | Not built |
-| 3 | The status is asked for when the customer returns from the provider's page | Not built |
+| 3 | The status is asked for when the customer returns from the provider's page | Built |
 | 4 | An abandoned or failed order is asked about again before a second order for its edition | Built |
 
 ## Slice 1: an order keeps its terms
@@ -95,12 +95,35 @@ Seventeen files besides the application's own make orders directly: tests, their
 journey script and the migration test. Each has to be read first. One whose order is not the price
 book's needs a price that says what it means.
 
-## Slice 3: the status on return (not built)
+## Slice 3: the status on return
 
-The provider sends the customer back to the purchases screen with the order's reference in the address.
-The slice has that screen ask for the status of the workspace's own order with that reference, once, and
-say what it found. The reference is only a way to find the order. The server asks the provider, as the
-button does.
+**When the customer comes back from the provider's page, the purchases screen asks for their order's
+status itself.** It reads the order's reference from the address it is opened with, under either of two
+names, `reference` and `trxref`. Coming back is still not proof of payment: the reference only finds
+the order, and the server asks the provider, as the order's own button does.
+
+- **Whose order.** The workspace's own, among the orders the screen has listed. The reference is
+  compared with each one whole. A reference no listed order has finds nothing, and the screen says so.
+- **Asked once.** The server is asked once for an order that could still have been paid: one saved,
+  awaiting payment, not completed or failed. An order already verified, awaiting staff or reversed is
+  shown as it is, and the server is asked nothing.
+- **What the screen says.** While it asks, that it is asking. Then what the server found, under the
+  name the order's card gives that status, so that the notice and the order below it read alike. Only a
+  verified payment is called verified. Where the server could not ask, its own sentence is shown, with
+  the order's own button to try again.
+- **Where the orders cannot be read**, the order is not looked for, and the screen says so. The
+  reference stays in the address until they can be read.
+- **The reference leaves the address** once the order has been looked for, so that opening the address
+  again, or going back to it, asks nothing more. Anything else in the address stays.
+- **The list is read again** after the answer, so the order below says what the notice says.
+
+**What this does not do.**
+
+- **It does not look past the orders listed.** The screen lists a workspace's hundred most recent
+  orders. A reference of an older one finds nothing here, and the order's own page of history is not
+  built.
+- **It waits for the customer to come back.** A customer who closes the provider's page is settled by
+  the webhook or the day's reconciliation, as before, or by slice 4 when they order again.
 
 ## Slice 4: before a second order
 
@@ -141,5 +164,8 @@ provider said so when it was last asked, and may have been paid since.
 
 - **Nothing has run against Paystack.** Whether an abandoned transaction can still be paid, and how an
   unpaid one verifies, are among the points the first run in test mode settles (finishing plan, Phase 5,
-  first row). Slice 4 is built against the stand-in until then, and slice 3 will be.
-- **Slices 2 and 3**, as above.
+  first row). Slices 3 and 4 are built against a stand-in until then.
+- **What the provider adds to the address when it sends a customer back has not been seen.** The two
+  names the screen reads are the ones expected of it. Its documentation could not be read from where
+  this was built, so the first run in test mode has to confirm them.
+- **Slice 2**, as above.

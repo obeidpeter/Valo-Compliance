@@ -4779,6 +4779,177 @@ test("a bundle on sale lists its templates and terms, and a bundle's order downl
   }
 });
 
+// PAY-006 (docs/architecture/order-safety.md, slice 3): coming back from the payment page is not proof of
+// payment. The purchases screen asks the server once about the workspace's own order named in the address,
+// says what the server found, and takes the reference out of the address.
+test("back from the payment page, the purchases screen asks once for the status of the workspace's own order named in the address, says what the server found, and takes the reference out of the address", async () => {
+  const order = (n: number, reference: string, title: string, verified: boolean) => {
+    const edition = "00000000-0000-4000-8000-00000000c" + String(n).padStart(3, "0");
+    return {
+      id: "00000000-0000-4000-8000-00000000d" + String(n).padStart(3, "0"),
+      reference,
+      title,
+      amountKobo: 250000,
+      currency: "NGN",
+      status: verified ? ("verified_success" as const) : ("pending" as const),
+      createdAt: at(20),
+      lastCheckedAt: verified ? at(21) : null,
+      licenceVersion: "synthetic-licence-1",
+      licenceText: "Synthetic licence.",
+      taxTreatment: "Synthetic tax treatment.",
+      contentVersionId: edition,
+      editions: [{ contentVersionId: edition, title }],
+      carriesToLaterEditions: true,
+      refundStatus: null,
+      receiptReference: verified ? "RCT-SYNTH-" + String(n) : null,
+      refunds: [],
+      refundableKobo: verified ? 250000 : 0,
+      refundedKobo: 0,
+      refundPolicy: "Synthetic refund policy.",
+      disputeStatus: null,
+    };
+  };
+  const waiting = order(1, "ORD-SYNTH-RETURN", "Synthetic agreement", false);
+  const earlier = order(2, "ORD-SYNTH-EARLIER", "Synthetic policy", true);
+  const refresh = `/workspace/orders/${waiting.id}/refresh`;
+  // The server, stood in for: it says what the provider said of the order when it was last asked, and
+  // can be made unable to ask.
+  const server = { paid: false, down: false, unread: false, asked: [] as string[] };
+  const returning: Api = async (route, method, path, query) => {
+    const json = (status: number, body: unknown) =>
+      route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) });
+    if (method === "POST" && /^\/workspace\/orders\/[^/]+\/refresh$/.test(path)) {
+      server.asked.push(path);
+      if (server.down)
+        return json(503, {
+          error:
+            "Paystack did not respond. Keep this order and refresh its status before starting another payment.",
+        });
+      server.paid = true;
+      return json(
+        200,
+        api.RefreshCommerceOrderResponse.parse(order(1, waiting.reference, waiting.title, true)),
+      );
+    }
+    if (method === "GET" && path === "/workspace/purchases") {
+      if (server.unread) return json(500, { error: "Synthetic failure: the orders cannot be read." });
+      return json(
+        200,
+        api.GetCustomerPurchasesResponse.parse({
+          available: true,
+          message: "Synthetic purchases.",
+          livePaymentsEnabled: false,
+          purchaseCarriesToLaterEditions: true,
+          bundles: [],
+          orders: [order(1, waiting.reference, waiting.title, server.paid), earlier],
+          products: [],
+          ownedDownloads: [],
+        }),
+      );
+    }
+    await answer(route, method, path, query);
+  };
+  const back = (search: string) => phone("/workspace/purchases" + search, returning);
+
+  // An address with the order's reference under both names, as the provider is expected to send the
+  // customer back. The server is asked once, and the screen says what it answered.
+  const paid = await back("?trxref=ORD-SYNTH-RETURN&reference=ORD-SYNTH-RETURN");
+  try {
+    await ready(paid.page);
+    const notice = paid.page.getByTestId("payment-return");
+    await expect(notice).toHaveText(
+      "Test purchase verifiedYour payment for Synthetic agreement is verified. Its order is below.",
+    );
+    assert.equal(await notice.getAttribute("role"), "status");
+    assert.deepEqual(server.asked, [refresh]);
+    // The order below reads as the notice does, once the list has been read again: the notice's title,
+    // this order and the earlier one.
+    await expect(paid.page.getByText("Test purchase verified", { exact: true })).toHaveCount(3);
+    // The reference has left the address, so opening the address again asks nothing.
+    assert.equal(new URL(paid.page.url()).search, "");
+    await settled(paid.page);
+    assert.deepEqual(await phoneProblems(paid.page, "the purchases screen back from the payment page"), []);
+    await paid.page.reload();
+    await ready(paid.page);
+    await expect(paid.page.getByRole("heading", { name: "Your orders" })).toBeVisible();
+    await expect(paid.page.getByTestId("payment-return")).toHaveCount(0);
+    assert.deepEqual(server.asked, [refresh]);
+    assert.deepEqual(paid.errors, []);
+    assert.deepEqual(paid.unknown, []);
+  } finally {
+    await paid.close();
+  }
+
+  // When the server cannot ask, the screen says so in the server's own words and points at the order's
+  // own button. Nothing is called verified.
+  Object.assign(server, { paid: false, down: true, asked: [] });
+  const unasked = await back("?reference=ORD-SYNTH-RETURN");
+  try {
+    await ready(unasked.page);
+    const notice = unasked.page.getByTestId("payment-return");
+    await expect(notice).toHaveText(
+      'Your payment could not be checked just nowPaystack did not respond. Keep this order and refresh its status before starting another payment. Use "Check payment status" on the order for Synthetic agreement below.',
+    );
+    assert.deepEqual(server.asked, [refresh]);
+    await expect(unasked.page.getByText("Awaiting verified payment", { exact: true })).toBeVisible();
+    assert.equal(new URL(unasked.page.url()).search, "");
+    assert.deepEqual(unasked.unknown, []);
+  } finally {
+    await unasked.close();
+  }
+
+  // An order already verified is not asked about again, and a reference no listed order has is nobody's
+  // here: the server is asked nothing for either.
+  Object.assign(server, { paid: false, down: false, asked: [] });
+  for (const [search, words] of [
+    [
+      "?reference=ORD-SYNTH-EARLIER",
+      "Test purchase verifiedYour payment for Synthetic policy is verified. Its order is below.",
+    ],
+    [
+      "?trxref=ORD-SYNTH-ANOTHER-WORKSPACE",
+      "No order found for this paymentNo order listed here has the reference this page was opened with. Your orders are below.",
+    ],
+  ] as const) {
+    const shown = await back(search);
+    try {
+      await ready(shown.page);
+      await expect(shown.page.getByTestId("payment-return")).toHaveText(words);
+      assert.equal(new URL(shown.page.url()).search, "");
+      assert.deepEqual(shown.errors, []);
+      assert.deepEqual(shown.unknown, []);
+    } finally {
+      await shown.close();
+    }
+  }
+  assert.deepEqual(server.asked, []);
+
+  // When the orders cannot be read, the order is not looked for and the screen says so. The reference
+  // stays in the address until they can be read: "Try again" reads them, and the order is asked about
+  // once.
+  Object.assign(server, { paid: false, down: false, unread: true, asked: [] });
+  const unread = await back("?reference=ORD-SYNTH-RETURN");
+  try {
+    await ready(unread.page);
+    const notice = unread.page.getByTestId("payment-return");
+    await expect(notice).toHaveText(
+      'Your payment has not been checked yetYour orders could not be read, so the order you have come back from paying for has not been looked for. Use "Try again" below.',
+    );
+    assert.deepEqual(server.asked, []);
+    assert.equal(new URL(unread.page.url()).search, "?reference=ORD-SYNTH-RETURN");
+    server.unread = false;
+    await unread.page.getByTestId("button-retry").click();
+    await expect(notice).toHaveText(
+      "Test purchase verifiedYour payment for Synthetic agreement is verified. Its order is below.",
+    );
+    assert.deepEqual(server.asked, [refresh]);
+    assert.equal(new URL(unread.page.url()).search, "");
+    assert.deepEqual(unread.unknown, []);
+  } finally {
+    await unread.close();
+  }
+});
+
 test("My Templates lists owned editions once, including older purchases and closed offers", async () => {
   const id = (suffix: number) => "00000000-0000-4000-8000-" + String(suffix).padStart(12, "0");
   const edition = (n: number, title: string, reviewed = false) => ({
