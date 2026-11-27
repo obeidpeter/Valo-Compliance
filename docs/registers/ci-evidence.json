@@ -5929,6 +5929,27 @@
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
       "test": "the messages screen says in plain words what has happened to each message and reminder, calls none of them sent, calls delivered only one the email service reported as delivered, and says of a message Valo only recorded that nothing was emailed",
       "proves": "In a real browser with controlled answers, the Messages page heads a message about a day's changes with that day, says that the notices themselves are on the Workspace page, and links there and not to Purchases. The answers are the test's own."
+    },
+    {
+      "requirement": "SRV-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/operations/valo-operations.test.ts",
+      "test": "an enquiry nobody has taken, and one that has waited on Valo past its aim, raise their own alerts under the enquiries runbook, past their limits only",
+      "proves": "With synthetic readings, any enquiry nobody has taken and any enquiry waiting on Valo past 48 hours raise their own alerts, each named in plain words and owned by the enquiries runbook and the support role, and a reading that cannot be taken raises an alert of its own. It does not show a failed dispatch of a reply: no reply is sent by email yet."
+    },
+    {
+      "requirement": "NFR-010",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/operations/valo-operations.test.ts",
+      "test": "an enquiry nobody has taken, and one that has waited on Valo past its aim, raise their own alerts under the enquiries runbook, past their limits only",
+      "proves": "With synthetic readings, the two alerts on enquiries name the enquiries runbook and the support role as accountable, as a row of the operating runbooks does."
+    },
+    {
+      "requirement": "SRV-002",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/operations/request-counts.integration.test.ts",
+      "test": "request counts: each process's minutes add up, the readings take the last ten minutes, a week is kept, and reminders and jobs are read from their own tables",
+      "proves": "On a real database, with a synthetic enquiry: just received, it is counted as one nobody has taken; untouched for more than 48 hours it is also counted as waiting on Valo, and for a little less it is not; once someone has taken it, it is no longer counted as untaken; touched again, waiting on its customer or resolved, it is not counted as waiting on Valo."
     }
   ]
 }

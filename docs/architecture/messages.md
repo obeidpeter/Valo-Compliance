@@ -471,6 +471,34 @@ carries its test-mode line.
 - **A visible failed dispatch.** Each reply shows its state on the case: queued, accepted, delivered,
   bounced or failed. A failed one is counted for the alerts: SRV-002's acceptance.
 
+Built (slice 4a), the alerts, which send nothing:
+- **Two readings of the support cases** (`modules/operations/valo-operations.ts`), taken with the
+  others each minute:
+  - an enquiry nobody has taken: its case is open. A new enquiry is, and one is again when its
+    customer replies and nobody is assigned to it;
+  - an enquiry waiting on Valo past its time: its case is open or in progress, and nobody has
+    touched it for more than 48 hours.
+
+  An enquiry that waits on its customer, and a resolved one, wait on no one at Valo, and are not
+  counted.
+- **Two alerts**, `NEW_ENQUIRIES_DETECTED` and `WAITING_ENQUIRIES_DETECTED`, each raised by any such
+  enquiry and cleared when there is none. They fall to the enquiries runbook and the support role,
+  and read in plain words. A reading that cannot be taken raises an alert of its own.
+- **Who sees them.** The alert list is the system operator's. Support staff do not read it: they
+  have the cases themselves, in their own queue. So an alert tells the operator that an enquiry is
+  waiting, and the second that one has waited too long. No one is emailed or paged by either.
+- **The 48 hours** are Valo's own aim, and a proposal (the owner's point 8). No reply time is
+  promised to anyone.
+
+Not built (slices 4b and 4c):
+- **A reply by email to someone who cannot sign in**, with its states on the case and a failed one
+  counted for the alerts. An access request has no workspace and no verified identity, so its reply
+  cannot wait in `valo_messages`: it needs an outbox of its own, a sender that is handed the address
+  the person typed, and a limit for each address. That is slice 4b.
+- **"Enquiry received" saying whether a reply will come by email.** It says today that replies are
+  not sent from this build, which is true until slice 4b.
+- **The daily message to the support role's members.** That is slice 4c.
+
 ### 7. Notices by email (EDP-011)
 
 - **A material notice by email.** A correction, edition or rule notice marked material owes a necessary
@@ -571,7 +599,9 @@ You receive this message because these changes affect what you saved, made or bo
 | 2b | Suppression: a hard bounce or a complaint stops optional messages to that address | Built |
 | 3a | Unsubscribe for reminders: the link in each reminder, its token, the page, the one-click address, and the choice recorded | Built |
 | 3b | The reminders on the shared sender, and consent read by the dispatcher for the first optional kind in the outbox | Not built |
-| 4 | Support: replies to someone who cannot sign in, staff notices and the states on the case | Not built |
+| 4a | Support: alerts on an enquiry nobody has taken, and on one waiting on Valo past its time | Built |
+| 4b | Support: a reply by email to someone who cannot sign in, and its states on the case | Not built |
+| 4c | Support: the daily message to the support role's members | Not built |
 | 5 | Material notices by email: one message a day to a workspace about the changes that affect it | Built |
 
 ## The owner's points
@@ -593,3 +623,5 @@ You receive this message because these changes affect what you saved, made or bo
      template, and not a template replaced by a later edition;
    - when: from 07:00 Lagos time the morning after, and a week back at most;
    - that it is a necessary message, which nobody can unsubscribe from.
+8. **How long an enquiry may wait** on Valo before its alert: 48 hours with nobody touching it. A
+   proposal, and Valo's own aim: no reply time is promised to anyone.

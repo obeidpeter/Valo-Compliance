@@ -203,6 +203,8 @@ checks, which are not provisioned yet.
 | `JOB_QUEUE_BACKLOG` | Any scheduled job still waiting ten minutes past its start | Internal operations sample (NFR-010) |
 | `MESSAGES_BACKLOG` | Any message to a customer still queued fifteen minutes past its time, or still marked as being sent fifteen minutes after its attempt's lease ended; a held one is not counted | Internal operations sample (WRK-003) |
 | `FAILED_MESSAGES_DETECTED` | Any message to a customer that failed in the last day | Internal operations sample (WRK-003) |
+| `NEW_ENQUIRIES_DETECTED` | Any enquiry nobody has taken: its case is open | Internal operations sample (SRV-002) |
+| `WAITING_ENQUIRIES_DETECTED` | Any enquiry waiting on Valo, open or in progress, that nobody has touched for more than 48 hours: Valo's own aim, and no promise to anyone | Internal operations sample (SRV-002) |
 | `REQUEST_FAILURES_DETECTED` | More than 10 in 1,000 of the API's requests failed unexpectedly in the last ten minutes, once there are a hundred requests or more | Internal operations sample (NFR-003) |
 | `REQUEST_TIME_DETECTED` | 95 in 100 of the API's requests in the last ten minutes did not all finish within a second, once there are a hundred requests or more | Internal operations sample (NFR-003) |
 | `DENIED_ACCESS_DETECTED` | One hashed address was refused (401 or 403) more than 20 times in ten minutes | Internal operations sample (SEC-008) |

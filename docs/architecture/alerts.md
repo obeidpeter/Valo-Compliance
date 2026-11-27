@@ -153,6 +153,10 @@ input recorded as a security event."
     after its attempt's lease ended (a held one is held on purpose), and `FAILED_MESSAGES_DETECTED` for a
     message that failed in the last day. Both fall to the worker's runbook. The day is a development
     default.
+  - Built too, with the messages ([design](messages.md), slice 4a): `NEW_ENQUIRIES_DETECTED` for an
+    enquiry nobody has taken, and `WAITING_ENQUIRIES_DETECTED` for one waiting on Valo that nobody
+    has touched for more than 48 hours. Both fall to the enquiries runbook and the support role. The
+    48 hours are a proposal.
 - **The route in each request's log**: the route's pattern, such as `/workspace/documents/:id`, never
   the values in its address.
   - Built: the line written as a request ends names the route it matched, such as
