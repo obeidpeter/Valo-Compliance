@@ -3177,7 +3177,7 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/commerce/valo-commerce.integration.test.ts",
       "test": "controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication",
-      "proves": "A synthetic order given a pending, abandoned or failed payment result is left in that state with no entitlement, and a later successful result for the same order settles it; another workspace's refresh of the order is refused as not found, and without a configured merchant a refresh is refused as unavailable. A pending synthetic order whose payment succeeded while the customer was away is recovered by a status refresh that checks it with a stood-in Paystack on the server, and a checkout for it is then refused as already verified."
+      "proves": "A synthetic order given a pending, abandoned or failed payment result is left in that state with no entitlement, and a later successful result for the same order settles it; another workspace's refresh of the order is refused as not found, and without a configured merchant a refresh is refused as unavailable. A pending synthetic order whose payment succeeded while the customer was away is recovered by a status refresh that checks it with a stood-in Paystack on the server, and a checkout for it is then refused as already verified. The look for a workspace's orders that ended abandoned or failed, run on the application's own login, which sees every workspace's orders, returns only that workspace's orders for the editions asked about that the provider was offered, the five latest first."
     },
     {
       "requirement": "PAY-007",
@@ -5235,7 +5235,7 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/routes/valo-manual-library.integration.test.ts",
       "test": "manual publishing through staff HTTP routes and public readers",
-      "proves": "Through the API, with Paystack stood in for, a status refresh of a pending premium order checks the payment on the server and grants the edition once it is verified, and a further checkout is refused with \"This purchase is already verified. Do not pay again.\""
+      "proves": "Through the API, with Paystack stood in for, a status refresh of a pending premium order checks the payment on the server and grants the edition once it is verified, and a further checkout is refused with \"This purchase is already verified. Do not pay again.\"; and before another order for an edition, a payment for one or its saved payment page handed out again, the provider is asked about each earlier order of the workspace for it that ended abandoned or failed, so that one paid since is settled and granted with no second order or payment, a bundle's among them, one still unpaid lets the request go on, nothing new is made or started while the provider cannot be asked, and nobody else's order, one never offered to the provider, and anything without a merchant are not asked about."
     },
     {
       "requirement": "RUL-009",

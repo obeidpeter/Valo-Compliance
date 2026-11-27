@@ -164,6 +164,11 @@ Rules that apply now:
   it. Never turn the trigger off to change an order: a correction is a finance decision with its
   own record. A test goes beneath it only to plant the fault it is about, in a synthetic order of
   its own.
+- An order is made, and a payment started or its saved page handed out, only after the provider
+  has been asked again about each earlier order of the workspace for the same edition that ended
+  abandoned or failed (`afterALookAtEndedOrders`, `docs/architecture/order-safety.md`, slice 4).
+  A new path that makes an order or starts a payment runs through it. The provider is asked
+  outside any transaction, and where it cannot be asked nothing new is made or started.
 - Only the operator commands in `FINITE_WORK_BINDING_ENTRIES` hand the inference
   dispatcher its work-binding checks (`provideFiniteWorkBindings`), and only the real
   `assertFiniteWorkBindings`; the `inference-bindings` repository rule enforces this.
