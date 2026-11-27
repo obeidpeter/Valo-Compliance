@@ -17,6 +17,7 @@ import {
 } from "@workspace/db";
 import { resolveWorkspace } from "../workspaces";
 import * as commerce from "./valo-commerce";
+import { reconcilePayments } from "./valo-payment-reconciliation";
 import { endedEditionOrders, priceOrderTerms } from "./checkout-editions";
 import { purchaseReceiptFile } from "./purchase-receipt-file";
 import { PAYSTACK_API, verifiedTransaction } from "./valo-paystack-contract";
@@ -507,7 +508,7 @@ test(
             "this proof is explicitly credential-free",
           );
           await commerce.processPaymentEvents();
-          await commerce.reconcilePayments();
+          await reconcilePayments();
           const [row] = await db
             .select()
             .from(valoPaymentEvents)
