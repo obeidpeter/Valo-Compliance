@@ -1173,7 +1173,8 @@ export const ListPublicCatalogueResponse = zod.object({
 })),
   "total": zod.int(),
   "page": zod.int(),
-  "heldTemplates": zod.int()
+  "heldTemplates": zod.int(),
+  "closest": zod.boolean().optional().describe('True when no item has every word of the search, and the items listed are the ones that have the most of its words (docs/architecture/public-search.md). Absent otherwise.')
 })
 
 
@@ -1440,7 +1441,8 @@ export const ListOperationalRecommendationsResponse = zod.object({
 })),
   "total": zod.int(),
   "page": zod.int(),
-  "heldTemplates": zod.int()
+  "heldTemplates": zod.int(),
+  "closest": zod.boolean().optional().describe('True when no item has every word of the search, and the items listed are the ones that have the most of its words (docs/architecture/public-search.md). Absent otherwise.')
 })
 
 

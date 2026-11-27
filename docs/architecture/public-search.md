@@ -43,8 +43,9 @@ order entries were released in, so a result that depends on it is not counted.
 
 ## What a search reads now
 
-A search still finds an item only when the item has every word that says what is wanted. What
-changed is how a word is read (`modules/catalogue/search-words.ts`, `valo-catalogue.ts`).
+A search finds the items that have every word that says what is wanted. What changed first is how a
+word is read (`modules/catalogue/search-words.ts`, `valo-catalogue.ts`). What a search lists when no
+item has every word came second, and is under "The closest items" below.
 
 - **A plural is its singular**, in the search and in the item: "invoices" finds "Invoice", and
   "policy" finds "policies". A possessive is the word itself.
@@ -81,11 +82,11 @@ search finds. It says nothing about what an item covers.
 
 ## What was measured afterwards
 
-| Set | When it was written | Found at its first run | Found now |
-| --- | --- | --- | --- |
-| The curated 50 | Before any change | 29 | 50 |
-| A second 50 | After the changes made for the first | 41 | 47 |
-| A third 50, worded more loosely | After the changes made for the second | 29 | 42 |
+| Set | When it was written | Found at its first run | Found with the words read as above | Found with the closest items |
+| --- | --- | --- | --- | --- |
+| The curated 50 | Before any change | 29 | 50 | 50 |
+| A second 50 | After the changes made for the first | 41 | 47 | 50 |
+| A third 50, worded more loosely | After the changes made for the second | 29 | 42 | 45 |
 
 **The first number of each row is the honest one for searches the search has not met.** The curated
 set was the one the changes were made against. The second and third were each written after the
@@ -98,12 +99,33 @@ search was last changed and run once before anything was changed for them.
 - **The third set's first run** led to the rule that a title's phrase counts whole words only, with
   which it found 30, and then to 21 more words and one phrase, with which it finds 42.
 
-**The eleven searches still missed** are named in the test, which fails if any of them starts to pass
-or another starts to fail. Each has a word that the title and description of its item do not have:
-"refund policy", "unfair contract terms", "data subject request", "privacy notice for customers", "data
-access request", "tax consultant", "NAFDAC permit", "employment letter", "customer receipts", "minutes
-and actions" and "filing documents". Since an item must have every wanted word, each of these finds
-nothing at all, or nothing useful.
+**With the words read as above, eleven searches were still missed.** Each has a word that the title
+and description of its item do not have: "refund policy", "unfair contract terms", "data subject
+request", "privacy notice for customers", "data access request", "tax consultant", "NAFDAC permit",
+"employment letter", "customer receipts", "minutes and actions" and "filing documents". Since an item
+had to have every wanted word, each of these found nothing at all, or nothing useful.
+
+## The closest items
+
+**When no item has every word a search must have, the catalogue lists the items that have the most of
+them**, and its answer says so (`closest`). The library then says "Nothing has all the words you
+typed. These have some of them." above the results.
+
+- **Which items.** Those that have at least one of the words and lack the fewest. An item that has
+  two of three words is listed, and one that has one of them is not.
+- **A business word does not count.** "Zebra company" lists nothing, though many items say "company".
+- **Nothing is the closest to a word no item has.** A search for "zebra" finds nothing, as before.
+- **The filters still apply**, and the order is by the same score.
+- **A search an item answers in full is as it was.** The closest items are listed only where the
+  results would have been empty.
+
+**Six of the eleven are now found**: all three of the second set, and "data access request", "minutes
+and actions" and "NAFDAC permit" of the third. **Five are still missed**, and are named in the test,
+which fails if one of them starts to pass or another starts to fail:
+
+- "customer receipts": an item has both words, and it is not the guide the search was written for.
+- "employment letter", "privacy notice for customers", "filing documents" and "tax consultant": other
+  items have as many of the search's words as its own item has, or more.
 
 ## The filters
 
@@ -135,9 +157,8 @@ Every entry in that test is synthetic and is withdrawn at its end.
 
 - **No pass threshold is agreed, and the searches are the builder's.** The owner agrees both. Until
   then WEB-003's acceptance is not met, whatever the tests show.
-- **A search with one word that no item has finds nothing.** Ten of the eleven misses are of this
-  kind. Showing the closest items instead, and saying so, is the next slice: it changes the catalogue's
-  answer and the library's page.
+- **The closest items are found by counting words.** A search whose words are all in some item, but
+  that means another, is not helped.
 - **The lists grow only by hand.** Nothing records the searches that found nothing, so the words
   visitors really use are not known. Recording them is a privacy decision for the owner.
 - **Only an item's title and the first 260 characters of its description are read.** A word deeper in

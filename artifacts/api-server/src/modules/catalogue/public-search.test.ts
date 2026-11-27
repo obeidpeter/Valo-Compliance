@@ -278,23 +278,23 @@ test("50 curated searches across templates, guides to the rules, articles, indus
   assert.deepEqual(missed(curated), []);
 });
 
-test("of two further sets of 50 searches across the five kinds, 47 and 42 find their item in the first three results, and the eleven that do not are the ones named", () => {
+test("of two further sets of 50 searches across the five kinds, 50 and 45 find their item in the first three results, and the five that do not are the ones named", () => {
   for (const set of [second, third]) {
     assert.equal(set.length, 50);
     assert.deepEqual(byKind(set), spread);
   }
   assert.equal(new Set([...curated, ...second, ...third].map(([q]) => q.toLowerCase())).size, 150);
-  // Each has a word that no title or description of its item has, and an item must have every word.
-  assert.deepEqual(missed(second), ["data subject request", "refund policy", "unfair contract terms"]);
+  // Where no item has every word of a search, the items that have the most of its words are listed,
+  // and its item is among the first three of them: so 3 of the second set and 3 of the third are found.
+  assert.deepEqual(missed(second), []);
+  // The five still missed: other items have every word of one of them, or as many of its words as its
+  // own item has.
   assert.deepEqual(missed(third), [
     "employment letter",
     "privacy notice for customers",
-    "data access request",
     "customer receipts",
-    "minutes and actions",
     "filing documents",
     "tax consultant",
-    "NAFDAC permit",
   ]);
 });
 
@@ -379,8 +379,12 @@ const entry = (id: string, title: string, summary = "", more: Partial<ReleasedLi
   summary,
   ...more,
 });
-const order = (items: ReleasedLibraryItem[], q: string) =>
-  paginateReleasedItems(items, { q }).items.map((item) => item.id);
+/** What a search lists, in order. An item is marked "~" when it is only among the closest: no item
+ * has every word, and it has the most of them. */
+const order = (items: ReleasedLibraryItem[], q: string) => {
+  const found = paginateReleasedItems(items, { q });
+  return found.items.map((item) => (found.closest ? "~" : "") + item.id);
+};
 
 test("a search reads a plural as its singular either way, a possessive as the word, and a word still being typed as the start of one", () => {
   const items = [
@@ -397,7 +401,7 @@ test("a search reads a plural as its singular either way, a possessive as the wo
   const form = [entry("form", "Customer complaint form", "A record of it.")];
   assert.deepEqual(order(form, "customer's complaint"), ["form"]);
   assert.deepEqual(order(form, "customer\u2019s complaint"), ["form"]);
-  assert.deepEqual(order(form, "customer s complaint"), []);
+  assert.deepEqual(order(form, "customer s complaint"), ["~form"]);
   // Each letter typed narrows the same result, with no letter at which it goes.
   for (const typed of ["p", "po", "pol", "poli", "polic", "polici", "policie", "policies"])
     assert.deepEqual(order(items, typed), ["many"], typed);
@@ -416,7 +420,8 @@ test("the small words of a question are left out of a search that has other word
   // No item has "how", and the search still finds the two that have "write" and "quotation".
   assert.deepEqual(order(items, "how to write a quotation"), ["guide"]);
   assert.deepEqual(order(items, "what is a quotation"), ["form", "guide"]);
-  assert.deepEqual(order(items, "how long should I keep a quotation for"), []);
+  // No item has "keep": the two that have "quotation" are the closest, and "long" is not asked of them.
+  assert.deepEqual(order(items, "how long should I keep a quotation for"), ["~guide", "~form"]);
   assert.deepEqual(order(items, "how much is the quotation"), ["form", "guide"]);
   // A search of small words alone is a search for them.
   assert.deepEqual(order(items, "how to"), ["about"]);
@@ -493,8 +498,10 @@ test("a word that says only that the searcher is a business rules no item out, c
   // It counts for the title that has it, though that title is listed after one that has not.
   const both = [entry("plain", "Annual returns"), entry("for", "Annual returns of a company")];
   assert.deepEqual(order(both, "company annual returns"), ["for", "plain"]);
-  // Every other word must be found.
-  assert.deepEqual(order(items, "construction permit"), []);
+  // Every other word must be found, or the item is only among the closest.
+  assert.deepEqual(order(items, "construction permit"), ["~page"]);
+  // A business word alone does not make an item one of the closest.
+  assert.deepEqual(order(items, "zebra company"), []);
 });
 
 test("a word in -ing or -ed finds the word it comes from, when that leaves four letters or more", () => {
@@ -547,12 +554,43 @@ test("a search reads an item's kind and its industry, and never the words that s
   assert.deepEqual(order(items, "all"), []);
 });
 
-test("an item is found only when it has every word that says what is wanted, and a search of marks alone lists everything", () => {
-  const items = [entry("a", "Tax records", "How long to keep them."), entry("b", "Tax return")];
+test("an item that has every wanted word is found; when none has, the items that have the most of them are listed as the closest; and a search of marks alone lists everything", () => {
+  const items = [
+    entry("a", "Tax records", "How long to keep them."),
+    entry("b", "Tax return"),
+    entry("c", "Leave policy", "", { type: "template" }),
+  ];
   assert.deepEqual(order(items, "tax"), ["a", "b"]);
   assert.deepEqual(order(items, "tax records"), ["a"]);
-  assert.deepEqual(order(items, "tax records abroad"), []);
+  // No item has "abroad". One has the other two words, and one has one of them: the first is the closest.
+  assert.deepEqual(order(items, "tax records abroad"), ["~a"]);
+  assert.deepEqual(order(items, "tax zebra"), ["~a", "~b"]);
+  assert.deepEqual(order(items, "zebra leave policies"), ["~c"]);
+  // An item that has none of the words is never among them, and nothing is the closest to a word no item has.
   assert.deepEqual(order(items, "zebra"), []);
-  assert.deepEqual(order(items, "?!"), ["a", "b"]);
-  assert.deepEqual(order(items, "   "), ["a", "b"]);
+  assert.deepEqual(order(items, "zebra quagga"), []);
+  // The answer says which it is, counts what it lists, and the filters still narrow it.
+  const full = paginateReleasedItems(items, { q: "tax records" }),
+    closest = paginateReleasedItems(items, { q: "tax zebra" });
+  assert.equal("closest" in full, false);
+  assert.deepEqual(
+    { closest: closest.closest, total: closest.total, page: closest.page },
+    {
+      closest: true,
+      total: 2,
+      page: 1,
+    },
+  );
+  // Three that each have one of the three words are equally close, and stay in the list's order.
+  assert.deepEqual(order(items, "tax leave zebra"), ["~a", "~b", "~c"]);
+  assert.deepEqual(
+    paginateReleasedItems(items, { q: "tax leave zebra", type: "template" }).items.map((item) => item.id),
+    ["c"],
+  );
+  assert.equal(paginateReleasedItems(items, { q: "tax leave zebra", type: "template" }).closest, true);
+  assert.equal(paginateReleasedItems(items, { q: "tax zebra", type: "template" }).total, 0);
+  // With no search there is nothing to be the closest to.
+  assert.equal("closest" in paginateReleasedItems(items), false);
+  assert.deepEqual(order(items, "?!"), ["a", "b", "c"]);
+  assert.deepEqual(order(items, "   "), ["a", "b", "c"]);
 });

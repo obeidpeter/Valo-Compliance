@@ -71,9 +71,9 @@ function runAt(title: readonly string[], run: readonly string[]) {
   return -1;
 }
 /**
- * How well an item answers a search (docs/architecture/public-search.md): -1 when it does not have
- * every word that says what is wanted, more the more of them its title has, and most when its title
- * is the search, begins with it or has its words together.
+ * How well an item answers a search (docs/architecture/public-search.md): how many of the words it
+ * must have it has and lacks, and a score that is more the more of the wanted words its title has,
+ * and most when its title is the search, begins with it or has its words together.
  *
  * A word is found where the item has a word that begins with it, another word for the same thing, or
  * the word the site files it under. An item's title, description, category, industry and kind are all
@@ -96,42 +96,46 @@ export function searchScore(q: string) {
           item.type,
         ].join(" "),
       );
-    let score = 0;
+    let score = 0,
+      has = 0,
+      lacks = 0;
     for (const word of wanted) {
       const same = sameAs(word) ?? [word],
         filed = filedUnder(word);
       const sameIn = (text: typeof whole) => same.every((w) => text.things.has(w)),
         filedIn = (text: typeof whole) => !!filed && filed.every((w) => text.things.has(w));
       if (!begins(whole, word) && !sameIn(whole) && !filedIn(whole)) {
-        if (needed.has(word)) return -1;
+        if (needed.has(word)) lacks++;
         continue;
       }
+      if (needed.has(word)) has++;
       score += sameIn(title) ? 30 : filedIn(title) ? 20 : begins(title, word) ? 10 : 1;
     }
     const names = [said(title.words), said(title.words, false)];
-    return (
-      score +
-      Math.max(
-        ...phrases.map((phrase, i) => {
-          const name = names[i]!,
-            at = runAt(name, phrase);
-          return at < 0 ? 0 : at > 0 ? 100 : name.length === phrase.length ? 1000 : 200;
-        }),
-      )
+    const together = Math.max(
+      ...phrases.map((phrase, i) => {
+        const name = names[i]!,
+          at = runAt(name, phrase);
+        return at < 0 ? 0 : at > 0 ? 100 : name.length === phrase.length ? 1000 : 200;
+      }),
     );
+    return { has, lacks, score: score + together };
   };
 }
-export const relevance = (item: ReleasedLibraryItem, q: string) => searchScore(q)(item);
+/** An item's score for a search, or -1 when it lacks a word it must have. */
+export function relevance(item: ReleasedLibraryItem, q: string) {
+  const found = searchScore(q)(item);
+  return found.lacks ? -1 : found.score;
+}
 export function paginateReleasedItems(released: ReleasedLibraryItem[], query: CatalogueQuery = {}) {
   const page = Number.isSafeInteger(query.page) && query.page! > 0 ? query.page! : 1;
   const q = query.q?.trim().slice(0, 120) ?? "";
   const numbers = query.templateIds ? new Set(query.templateIds.split(",")) : undefined;
-  const score = q ? searchScore(q) : () => 0;
-  const ranked = released
-    .map((item, index) => ({ item, index, score: score(item) }))
+  const found = q ? searchScore(q) : () => ({ has: 0, lacks: 0, score: 0 });
+  const within = released
+    .map((item, index) => ({ item, index, ...found(item) }))
     .filter(
-      ({ item, score }) =>
-        score >= 0 &&
+      ({ item }) =>
         (!query.type || query.type === "all" || item.type === query.type) &&
         (!query.industry ||
           item.industry === "All industries" ||
@@ -140,6 +144,12 @@ export function paginateReleasedItems(released: ReleasedLibraryItem[], query: Ca
         (!query.access || query.access === "all" || item.access === query.access) &&
         (!numbers || (item.templateNumber !== undefined && numbers.has(item.templateNumber))),
     );
+  const every = within.filter((row) => row.lacks === 0);
+  // Nothing has every word it must have: the closest items are those that have at least one of them
+  // and lack the fewest (docs/architecture/public-search.md).
+  const some = every.length ? [] : within.filter((row) => row.has > 0);
+  const fewest = Math.min(...some.map((row) => row.lacks));
+  const ranked = every.length ? every : some.filter((row) => row.lacks === fewest);
   ranked.sort((a, b) => {
     if (query.sort === "name")
       return a.item.title.localeCompare(b.item.title, "en-NG") || a.item.id.localeCompare(b.item.id);
@@ -155,6 +165,7 @@ export function paginateReleasedItems(released: ReleasedLibraryItem[], query: Ca
     total: ranked.length,
     page,
     heldTemplates: Math.max(0, 40 - released.filter((i) => i.type === "template").length),
+    ...(some.length ? { closest: true } : {}),
   };
 }
 export function templateCategory(id: string) {

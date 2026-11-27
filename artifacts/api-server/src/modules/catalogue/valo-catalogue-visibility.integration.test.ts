@@ -97,6 +97,7 @@ test(
   async () => {
     assert.equal(process.env.NODE_ENV, "development");
     const marker = `quokka${randomUUID().replaceAll("-", "").slice(0, 12)}`,
+      first = `bilby${randomUUID().replaceAll("-", "").slice(0, 12)}`,
       later = `numbat${randomUUID().replaceAll("-", "").slice(0, 12)}`;
     const editor = {
         identityId: `synthetic-search-editor-${marker}`,
@@ -150,10 +151,12 @@ test(
     });
     const release = (itemId: string, revision: { version: number; digest: string }) =>
       actOnManualRevision(editor, itemId, { action: "publish", ...exact(revision) });
+    // What a search lists. An item is marked "~" when it is only among the closest: no item has every
+    // word of the search, and it has the most of them.
     const ids = async (query: CatalogueQuery) => {
       const found = await releasedCatalogue(query);
       assert.equal(found.total, found.items.length);
-      return found.items.map((item) => `${item.type}:${item.id}`).sort();
+      return found.items.map((item) => `${found.closest ? "~" : ""}${item.type}:${item.id}`).sort();
     };
     const template = randomUUID(),
       guide = randomUUID(),
@@ -179,7 +182,7 @@ test(
       );
       const checklist = await draft(guide, {
         kind: "practical_guide",
-        title: `Synthetic ${marker} opening checklist`,
+        title: `Synthetic ${marker} ${first} opening checklist`,
         industry: "restaurants-hospitality",
       });
       await release(guide, checklist);
@@ -307,7 +310,14 @@ test(
           reason: withdrawalReason,
         });
       assert.deepEqual(await ids({ q: later }), [`article:${reworded.id}`]);
-      assert.deepEqual(await ids({ q: `${marker} opening` }), []);
+      assert.deepEqual(await ids({ q: first }), []);
+      // Where no released entry has every word, the closest are released entries too: the draft that was
+      // never released has both of these words, and the three that are listed have one.
+      assert.deepEqual(await ids({ q: `${marker} unreleased` }), [
+        `~article:${reworded.id}`,
+        `~guidance:${signedDraft.id}`,
+        `~template:${form.id}`,
+      ]);
       // Withdrawn, the template and the signed article leave the search.
       await released[0]!();
       await released[2]!();

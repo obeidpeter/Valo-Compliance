@@ -335,6 +335,11 @@ export function Library({
           <ErrorState error={cat.error} onRetry={() => cat.refetch()} />
         ) : d && d.items.length > 0 ? (
           <>
+            {d.closest && (
+              <p className="mb-2 text-sm font-medium" data-testid="text-closest">
+                Nothing has all the words you typed. These have some of them.
+              </p>
+            )}
             <p className="mb-4 text-sm text-muted-foreground" data-testid="text-result-count">
               {formatCount(d.total)} result{d.total === 1 ? "" : "s"}
               {d.total > pageSize && `, page ${formatCount(d.page)}`}

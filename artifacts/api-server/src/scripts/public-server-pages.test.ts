@@ -662,13 +662,84 @@ test("the library's filters, sort and page live in its address: the server rende
       await page.waitForURL(/[?&]page=2\b/);
       // The page's policy allows no eval, so the cards are counted with a locator.
       await expect(page.locator(cards)).toHaveCount(3);
-      await page.getByTestId("input-search").fill("not-found-fixture");
+      // One word that no item has. A search of several words now lists the items that have some of them.
+      await page.getByTestId("input-search").fill("notfoundzebra");
       await page.getByTestId("button-search").click();
       await page.getByTestId("status-empty").waitFor();
       assert.ok(!new URL(page.url()).searchParams.has("page"), "a new search starts from the first page");
       await page.getByTestId("button-clear-filters").click();
       await expect(page.locator(cards)).toHaveCount(20);
       assert.equal(new URL(page.url()).search, "", "clearing the filters empties the address");
+      assert.deepEqual(unknown, [], "every API call the page made has a test answer");
+      assert.deepEqual(errors, []);
+    } finally {
+      await close();
+    }
+  } finally {
+    catalogueItems = null;
+  }
+});
+
+// WEB-003 (docs/architecture/public-search.md): an item must have every word of a search, so one word
+// that no item has used to find nothing. The catalogue now lists the items that have the most of the
+// words, and says that it has; the library says so too.
+test("when nothing has every word of a search the library lists the items that have the most of them and says so, in the server's HTML and on a phone; a search an item answers in full says nothing of the kind, and one no item has a word of finds nothing", async () => {
+  const titled = (n: number, title: string) => ({
+    ...items[0]!,
+    id: `00000000-0000-4000-b000-${String(n).padStart(12, "0")}`,
+    slug: `synthetic-closest-${n}`,
+    title,
+    summary: "A made-up entry.",
+    href: `/library/synthetic-closest-${n}`,
+  });
+  catalogueItems = [
+    titled(1, "Synthetic leave policy"),
+    titled(2, "Synthetic privacy notice"),
+    titled(3, "Synthetic invoice"),
+  ];
+  const said = "Nothing has all the words you typed. These have some of them.";
+  const cards = 'li[data-testid^="card-item-"]';
+  try {
+    // No item has "zebra". One has the other two words, and one has neither.
+    const html = (await (await fetch(web.origin + "/library?q=privacy+notice+zebra")).text()).replaceAll(
+      "<!-- -->",
+      "",
+    );
+    assert.ok(html.includes(`data-testid="text-closest">${said}<`), "the server's HTML says so");
+    assert.deepEqual(
+      [...html.matchAll(/data-testid="card-item-([^"]+)"/g)].map((match) => match[1]),
+      [catalogueItems[1]!.id],
+    );
+    assert.match(html, /data-testid="text-result-count">1 result</);
+    // A search an item answers in full, and the plain page, say nothing of the kind.
+    for (const address of ["/library?q=privacy+notice", "/library"])
+      assert.ok(!(await (await fetch(web.origin + address)).text()).includes("text-closest"), address);
+
+    const { page, unknown, errors, messages, close } = await web.phone("/library?q=privacy+notice+zebra");
+    try {
+      await ready(page);
+      await expect(page.getByTestId("text-closest")).toHaveText(said);
+      await expect(page.locator(cards)).toHaveCount(1);
+      assert.deepEqual(await phoneProblems(page, "/library with the closest items"), []);
+      // Two that have one word each of two are equally close: both are listed.
+      await page.getByTestId("input-search").fill("leave invoice zebra");
+      await page.getByTestId("button-search").click();
+      await expect(page.locator(cards)).toHaveCount(2);
+      await expect(page.getByTestId("text-closest")).toHaveText(said);
+      // A search an item answers in full.
+      await page.getByTestId("input-search").fill("leave policies");
+      await page.getByTestId("button-search").click();
+      await expect(page.locator(cards)).toHaveCount(1);
+      await expect(page.getByTestId("text-closest")).toHaveCount(0);
+      // A search no item has a word of.
+      await page.getByTestId("input-search").fill("zebra quagga");
+      await page.getByTestId("button-search").click();
+      await page.getByTestId("status-empty").waitFor();
+      await expect(page.getByTestId("text-closest")).toHaveCount(0);
+      assert.deepEqual(
+        [...errors, ...messages].filter((message) => HYDRATION.test(message)),
+        [],
+      );
       assert.deepEqual(unknown, [], "every API call the page made has a test answer");
       assert.deepEqual(errors, []);
     } finally {

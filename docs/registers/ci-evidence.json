@@ -887,8 +887,8 @@
       "requirement": "WEB-003",
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/catalogue/public-search.test.ts",
-      "test": "of two further sets of 50 searches across the five kinds, 47 and 42 find their item in the first three results, and the eleven that do not are the ones named",
-      "proves": "Two further sets of 50 searches, each first run before anything was changed for it, now find 47 and 42 of their items; the eleven they miss are named, so that a search that starts to pass or to fail fails the test."
+      "test": "of two further sets of 50 searches across the five kinds, 50 and 45 find their item in the first three results, and the five that do not are the ones named",
+      "proves": "Two further sets of 50 searches, each first run before anything was changed for it, now find 50 and 45 of their items, six of them among the closest items to a search that no item has every word of; the five they miss are named, so that a search that starts to pass or to fail fails the test."
     },
     {
       "requirement": "WEB-003",

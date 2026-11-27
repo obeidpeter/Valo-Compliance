@@ -2902,6 +2902,9 @@ components:
         total: { type: integer }
         page: { type: integer }
         heldTemplates: { type: integer }
+        closest:
+          type: boolean
+          description: True when no item has every word of the search, and the items listed are the ones that have the most of its words (docs/architecture/public-search.md). Absent otherwise.
     DisputeHistory: {"type":"object","additionalProperties":false,"required":["id","action","reason","actorType","createdAt"],"properties":{"id":{"type":"string"},"action":{"type":"string"},"reason":{"type":"string"},"actorType":{"type":"string","enum":["customer","finance","worker"]},"createdAt":{"type":"string"}}}
     PaymentConcern: {"type":"object","additionalProperties":false,"required":["id","orderId","orderReference","message","status","latestReply","version","createdAt","updatedAt","history"],"properties":{"id":{"type":"string"},"orderId":{"type":"string"},"orderReference":{"type":"string"},"message":{"type":"string"},"status":{"type":"string","enum":["open","needs_information","responded","closed"]},"latestReply":{"type":["string","null"]},"version":{"type":"integer"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"history":{"type":"array","items":{"$ref":"#/components/schemas/DisputeHistory"}}}}
     PaymentConcernInput: {"type":"object","additionalProperties":false,"required":["requestKey","message","acknowledgement"],"properties":{"requestKey":{"type":"string","format":"uuid"},"message":{"type":"string","minLength":20,"maxLength":2000},"acknowledgement":{"type":"boolean","enum":[true]}}}
