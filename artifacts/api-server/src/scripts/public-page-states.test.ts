@@ -7,6 +7,7 @@ import { createRequire } from "node:module";
 import { resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { chromium, devices, type Browser, type Page, type Route } from "playwright";
+import { expect } from "@playwright/test";
 import axe from "axe-core";
 import {
   GetBuildStatusResponse,
@@ -295,6 +296,292 @@ test("a public page whose data fails to load shows an alert with a retry button,
       }
       await page.getByTestId("status-error").first().waitFor({ state: "detached", timeout: 30_000 });
       assert.deepEqual(unknown, [], `${path}: every API call has a test answer`);
+    } finally {
+      await close();
+    }
+  }
+});
+
+// The industries page reads the industries and, for the count under each, the published guides.
+test("the industries page waiting for its data shows a loading placeholder, then lists every industry and says of each that it has no guides when none is published; a search that names no industry says so and offers the whole list again", async () => {
+  const industries = coveragePlan().industries;
+  const rows = (page: Page) => page.locator('[data-testid^="row-industry-"]');
+  let release!: () => void;
+  const released = new Promise<void>((done) => (release = done));
+  const empty = answer(false);
+  const { page, unknown, close } = await phone("/industries", async (route, apiPath) => {
+    await released;
+    await empty(route, apiPath);
+  });
+  try {
+    await page.locator("main .animate-pulse").first().waitFor({ state: "visible" });
+    assert.equal(await page.getByTestId("status-error").count(), 0, "no error while loading");
+    assert.equal(await rows(page).count(), 0, "no industry is listed before the list arrives");
+    release();
+    await expect(rows(page)).toHaveCount(industries.length);
+    await expect(page.locator("main .animate-pulse")).toHaveCount(0);
+    for (const row of await rows(page).allInnerTexts()) assert.match(row, /\nNo guides yet$/, row);
+    assert.deepEqual((await wcagFailures(page)).failures, [], "/industries with no guide published");
+
+    // A search that names no industry.
+    await page.getByTestId("input-industry-search").fill("no such industry");
+    const none = page.locator("main [role='status']").filter({ hasText: "No industries match" });
+    await expect(none).toContainText("No industries match “no such industry”.");
+    await expect(rows(page)).toHaveCount(0);
+    assert.deepEqual((await wcagFailures(page)).failures, [], "/industries with no industry matching");
+    await none.getByRole("button", { name: "Show all industries" }).click();
+    await expect(rows(page)).toHaveCount(industries.length);
+    await expect(page.getByTestId("input-industry-search")).toHaveValue("");
+    assert.deepEqual(unknown, [], "/industries: every API call has a test answer");
+  } finally {
+    release();
+    await close();
+  }
+
+  // With guides published, an industry says how many it has. The three synthetic guides are filed
+  // under the first three industries, one each.
+  {
+    const { page, close } = await phone("/industries", answer(true));
+    try {
+      await expect(rows(page)).toHaveCount(industries.length);
+      const said = await rows(page).allInnerTexts();
+      assert.deepEqual(
+        said.map((row) => row.split("\n").at(-1)),
+        industries.map((_, index) => (index < 3 ? "1 guide" : "No guides yet")),
+      );
+    } finally {
+      await close();
+    }
+  }
+});
+
+// The pricing page's one read, made in the browser when the web server could not make it.
+test("the pricing page waiting to learn whether payments are on shows a placeholder, then says what the API answered; when the API refuses or cannot be reached it says they are switched off, and shows no error", async () => {
+  const said = (page: Page) => page.getByTestId("text-payments-status");
+  for (const [live, words] of [
+    [false, "Switched off"],
+    [true, "Enabled"],
+  ] as const) {
+    let release!: () => void;
+    const released = new Promise<void>((done) => (release = done));
+    const { page, unknown, close } = await phone("/pricing", async (route, apiPath) => {
+      if (apiPath !== "/public/status") throw Error("no test answer");
+      await released;
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(
+          GetBuildStatusResponse.parse({
+            ...(answers(true)["/public/status"] as object),
+            livePaymentsEnabled: live,
+          }),
+        ),
+      });
+    });
+    try {
+      await page.locator("main .animate-pulse").first().waitFor({ state: "visible" });
+      assert.equal(await said(page).count(), 0, "nothing is said before the answer");
+      release();
+      await expect(said(page)).toHaveText(words);
+      await expect(page.locator("main .animate-pulse")).toHaveCount(0);
+      assert.deepEqual((await wcagFailures(page)).failures, [], `/pricing saying "${words}"`);
+      assert.deepEqual(unknown, [], "/pricing: every API call has a test answer");
+    } finally {
+      release();
+      await close();
+    }
+  }
+  for (const failure of ["refuses", "cannot be reached"] as const) {
+    const { page, close } = await phone("/pricing", (route) =>
+      failure === "refuses"
+        ? route.fulfill({
+            status: 500,
+            contentType: "application/json",
+            body: '{"error":"Synthetic failure"}',
+          })
+        : route.abort(),
+    );
+    try {
+      await expect(said(page)).toHaveText("Switched off");
+      await expect(page.locator("main .animate-pulse")).toHaveCount(0);
+      assert.equal(await page.getByTestId("status-error").count(), 0, "the page shows no error");
+      assert.deepEqual((await wcagFailures(page)).failures, [], `/pricing when the API ${failure}`);
+    } finally {
+      await close();
+    }
+  }
+});
+
+/** The primary pages whose content is whole in the server's HTML, with what each shows. The two
+ * forms need a signed-in account, and the sign-in service is not reachable in this test. */
+const WHOLE: { path: string; heading: string; shows: string; form?: true }[] = [
+  { path: "/services", heading: "Ask about a service", shows: "main ul li", form: true },
+  { path: "/support", heading: "Report a problem", shows: 'main a[href="/account-access"]', form: true },
+  { path: "/help", heading: "Questions and answers", shows: '[data-testid^="faq-"]' },
+  { path: "/privacy", heading: "What Valo does with your data", shows: '[data-testid^="privacy-entry-"]' },
+  { path: "/terms", heading: "Terms of use, not yet approved", shows: "main h2" },
+];
+
+test("the services, support, help, privacy and terms pages wait for nothing and have nothing that can fail to load: with the API failing each shows its whole content, and until the sign-in service answers each form's place shows the way to sign in or to write without an account", async () => {
+  for (const { path, heading, shows, form } of WHOLE) {
+    const calls: string[] = [];
+    const { page, close } = await phone(path, async (route, apiPath) => {
+      calls.push(apiPath);
+      await route.fulfill({
+        status: 500,
+        contentType: "application/json",
+        body: '{"error":"Synthetic failure"}',
+      });
+    });
+    try {
+      // The support page is drawn by the browser app, once its own files have loaded.
+      await expect(page.locator("main h1")).toHaveText(heading, { timeout: 30_000 });
+      await expect(page.locator(shows).first()).toBeVisible();
+      if (form) {
+        const signedOut = page.getByTestId("ticket-signed-out");
+        await expect(signedOut).toContainText("Sign in to send this");
+        for (const [name, href] of [
+          ["Sign in", "/sign-in"],
+          ["Create an account", "/sign-up"],
+          ["Write without an account", "/contact"],
+        ] as const)
+          await expect(signedOut.getByRole("link", { name, exact: true })).toHaveAttribute("href", href);
+      }
+      await delay(1000); // Time for a read to start, were there one.
+      assert.equal(await page.locator("main .animate-pulse").count(), 0, `${path} shows no placeholder`);
+      assert.equal(await page.locator("main [aria-busy='true']").count(), 0, `${path} is not waiting`);
+      assert.equal(await page.getByTestId("status-error").count(), 0, `${path} shows no error`);
+      assert.deepEqual(calls, [], `${path} asks the API for nothing`);
+      assert.deepEqual((await wcagFailures(page)).failures, [], path);
+    } finally {
+      await close();
+    }
+  }
+});
+
+// WEB-002: "search/filter URLs must be shareable."
+test("the guides, industries and help pages keep their search and filter in the address: a copied address opens the same view, and Back undoes a change", async () => {
+  const [first, second] = coveragePlan().industries;
+  const at = (page: Page) => page.url().slice(origin.length);
+
+  // The guides. The second synthetic guide is filed under the second industry alone.
+  {
+    const shared = `/resources?q=guidance+2&industry=${second!.slug}`;
+    const { page, unknown, close } = await phone(shared, answer(true));
+    try {
+      const box = page.getByTestId("input-guide-search"),
+        industry = page.locator("#guide-industry"),
+        count = page.getByTestId("text-resource-count");
+      // A shared address opens the view it names.
+      await expect(count).toHaveText("1 guide");
+      await expect(box).toHaveValue("guidance 2");
+      await expect(industry).toHaveValue(second!.slug);
+      await expect(page.locator('[data-testid^="card-resource-"]')).toHaveCount(1);
+      await expect(box).toHaveAttribute("maxlength", "120");
+      await delay(500);
+      assert.equal(at(page), shared, "opening a view does not change its address");
+      // A changed filter is in the address at once.
+      await industry.selectOption(first!.slug);
+      await expect(count).toHaveText("0 guides");
+      await expect.poll(() => at(page)).toBe(`/resources?q=guidance+2&industry=${first!.slug}`);
+      // With nothing searched for and no filter, the page has its plain address.
+      await page.getByRole("button", { name: "Show all guides" }).click();
+      await expect(count).toHaveText("3 guides");
+      await expect(box).toHaveValue("");
+      await expect.poll(() => at(page)).toBe("/resources");
+      // What is typed filters the page at once, and is in the address a moment later. A space typed
+      // at the end is not part of the search, and stays in the box for the next word.
+      await box.fill("guidance ");
+      await expect.poll(() => at(page)).toBe("/resources?q=guidance");
+      await delay(500);
+      await expect(box).toHaveValue("guidance ");
+      await box.press("End");
+      await box.press("3");
+      await expect(box).toHaveValue("guidance 3");
+      await expect(count).toHaveText("1 guide");
+      await expect.poll(() => at(page)).toBe("/resources?q=guidance+3");
+      // Back undoes each change, and refills the box.
+      await page.goBack();
+      await expect.poll(() => at(page)).toBe("/resources?q=guidance");
+      await expect(box).toHaveValue("guidance");
+      await expect(count).toHaveText("3 guides");
+      await page.goBack();
+      await expect.poll(() => at(page)).toBe("/resources");
+      await expect(box).toHaveValue("");
+      await page.goBack();
+      await expect.poll(() => at(page)).toBe(`/resources?q=guidance+2&industry=${first!.slug}`);
+      await expect(box).toHaveValue("guidance 2");
+      await expect(industry).toHaveValue(first!.slug);
+      await expect(count).toHaveText("0 guides");
+      assert.deepEqual(unknown, [], "/resources: every API call has a test answer");
+    } finally {
+      await close();
+    }
+  }
+
+  // The industries, searched by a word of the first industry's name.
+  {
+    const word = first!.slug.split("-")[0]!;
+    const named = (text: string) =>
+      coveragePlan().industries.filter((industry) =>
+        `${industry.title} ${industry.slug.replaceAll("-", " ")}`.toLowerCase().includes(text),
+      ).length;
+    // An address written with spaces around its search opens as it is: the page puts no address of
+    // its own after it, which the Back button would only return to again.
+    const padded = `/industries?q=%20${word}%20`;
+    const { page, unknown, close } = await phone(padded, answer(true));
+    try {
+      const box = page.getByTestId("input-industry-search"),
+        rows = page.locator('[data-testid^="row-industry-"]');
+      await expect(box).toHaveValue(word);
+      await expect(box).toHaveAttribute("maxlength", "120");
+      await expect(rows).toHaveCount(named(word));
+      await expect(page.getByTestId("row-industry-" + first!.slug)).toBeVisible();
+      assert.ok(named(word) < coveragePlan().industries.length, "the word does not name every industry");
+      await delay(500);
+      assert.equal(at(page), padded);
+      await box.fill("no such industry");
+      await expect(page.getByRole("button", { name: "Show all industries" })).toBeVisible();
+      await expect.poll(() => at(page)).toBe("/industries?q=no+such+industry");
+      await page.getByRole("button", { name: "Show all industries" }).click();
+      await expect(rows).toHaveCount(coveragePlan().industries.length);
+      await expect.poll(() => at(page)).toBe("/industries");
+      await page.goBack();
+      await expect(box).toHaveValue("no such industry");
+      await page.goBack();
+      await expect(box).toHaveValue(word);
+      await expect(rows).toHaveCount(named(word));
+      assert.deepEqual(unknown, [], "/industries: every API call has a test answer");
+    } finally {
+      await close();
+    }
+  }
+
+  // The help page's questions. Its page is the same for everyone, and the search is applied in the browser.
+  {
+    const { page, unknown, close } = await phone("/help?q=reminder", answer(true));
+    try {
+      const box = page.getByTestId("input-help-search"),
+        said = page.getByTestId("status-help-matches"),
+        shown = page.locator('[data-testid^="faq-"]:visible');
+      await expect(box).toHaveValue("reminder");
+      await expect(box).toHaveAttribute("maxlength", "120");
+      await expect(said).toHaveText(/^Showing \d+ of \d+ questions\.$/);
+      const [, matches, total] = /^Showing (\d+) of (\d+)/.exec(await said.innerText())!;
+      assert.ok(+matches! >= 1 && +matches! < +total!, `some questions and not all: ${matches} of ${total}`);
+      await expect(shown).toHaveCount(+matches!);
+      for (const question of await shown.allInnerTexts()) assert.match(question, /reminder/i);
+      await box.fill("no such question");
+      await expect(said).toContainText('No questions match "no such question".');
+      await expect.poll(() => at(page)).toBe("/help?q=no+such+question");
+      await page.getByTestId("button-clear-help-search").click();
+      await expect(shown).toHaveCount(+total!);
+      await expect.poll(() => at(page)).toBe("/help");
+      await page.goBack();
+      await page.goBack();
+      await expect(box).toHaveValue("reminder");
+      await expect(shown).toHaveCount(+matches!);
+      assert.deepEqual(unknown, [], "/help: every API call has a test answer");
     } finally {
       await close();
     }

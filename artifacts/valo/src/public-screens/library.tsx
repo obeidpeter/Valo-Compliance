@@ -27,6 +27,7 @@ import {
   libraryHref,
   typeName,
 } from "@/lib/library-filters";
+import { clippedSearch, SEARCH_LENGTH } from "@/lib/page-filters";
 import { fromServer } from "@/lib/server-data";
 import { ANY_DOCUMENT, signUpFor } from "@/lib/start";
 
@@ -53,14 +54,23 @@ export function Library({
   // The server's results are for the address the page was first opened at.
   const serverResults = search === initialSearch ? initialCatalogue : undefined;
   const [draft, setDraft] = useState(q);
+  // The search the box itself last put in the address, a moment after the visitor stopped typing.
+  // Any other change to the address's search, such as the Back button's, refills the box. The box's
+  // own does not: a space typed at the end of a word stays there for the next word.
+  const typed = useRef(q);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const identity = useIdentity();
   const signedIn = identity.status === "signed-in";
-  useEffect(() => setDraft(q), [q]);
   useEffect(() => {
-    const trimmed = draft.trim().slice(0, 120);
+    if (q === typed.current) return;
+    typed.current = q;
+    setDraft(q);
+  }, [q]);
+  useEffect(() => {
+    const trimmed = clippedSearch(draft);
     if (trimmed === q) return;
     const handle = window.setTimeout(() => {
+      typed.current = trimmed;
       setLocation(libraryHref(filters, { q: trimmed }));
     }, 300);
     return () => window.clearTimeout(handle);
@@ -102,7 +112,7 @@ export function Library({
   }
   function submit(e: FormEvent) {
     e.preventDefault();
-    go({ q: draft.trim().slice(0, 120) });
+    go({ q: clippedSearch(draft) });
   }
   const filtered = !!(
     q ||
@@ -137,7 +147,7 @@ export function Library({
             ref={searchInputRef}
             type="search"
             value={draft}
-            maxLength={120}
+            maxLength={SEARCH_LENGTH}
             aria-keyshortcuts="/"
             onChange={(e) => setDraft(e.target.value)}
             placeholder="Search by name, topic or keyword (press /)"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { ArrowLeft, BookOpen, ExternalLink, FileX, Search, X } from "lucide-react";
 import {
   useListReleasedResources,
@@ -23,9 +23,14 @@ import { describeError } from "@/lib/describe-error";
 import { formatCount, formatDay } from "@/lib/format";
 import { industryName } from "@/lib/library-filters";
 import { fromServer } from "@/lib/server-data";
+import { SEARCH_LENGTH } from "@/lib/page-filters";
+import { useAddressFilters } from "@/lib/use-address-filters";
 import { ANY_DOCUMENT, signUpFor } from "@/lib/start";
 import { updatedLine } from "@/lib/library-change";
 import { pageHeadings, relatedTemplatesHint, sourceLine } from "@/lib/guidance-record";
+
+/** The guides page's filter beside its search (WEB-002: both are kept in its address). */
+const GUIDE_FILTERS = ["industry"] as const;
 
 /** The released resources, starting from what the server read; the browser reads them itself when
  * the server could not, and every 15 seconds after (decision 0011). */
@@ -34,8 +39,9 @@ export function Resources({ initial }: { initial?: ReleasedResource[] | undefine
     query: { queryKey: getListReleasedResourcesQueryKey(), ...liveContent, ...fromServer(initial) },
   });
   const items = q.data ?? [];
-  const [selectedIndustry, setIndustry] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
+  const address = useAddressFilters("/resources", GUIDE_FILTERS);
+  const selectedIndustry = address.filters.industry,
+    searchQuery = address.draft;
   const searchRef = useRef<HTMLInputElement>(null);
   const industries = [...new Set(items.flatMap((r) => r.industrySlugs))].sort();
   const hasGeneral = items.some((r) => r.industrySlugs.length === 0);
@@ -104,7 +110,8 @@ export function Resources({ initial }: { initial?: ReleasedResource[] | undefine
                   aria-keyshortcuts="/"
                   placeholder="Search by topic or keyword (press /)"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  maxLength={SEARCH_LENGTH}
+                  onChange={(e) => address.setDraft(e.target.value)}
                   data-testid="input-guide-search"
                 />
               </div>
@@ -118,7 +125,7 @@ export function Resources({ initial }: { initial?: ReleasedResource[] | undefine
                   className="field min-w-[12rem]"
                   id="guide-industry"
                   value={selected}
-                  onChange={(e) => setIndustry(e.target.value)}
+                  onChange={(e) => address.go({ industry: e.target.value })}
                 >
                   <option value="">All industries</option>
                   {hasGeneral && <option value="general">General business</option>}
@@ -134,10 +141,7 @@ export function Resources({ initial }: { initial?: ReleasedResource[] | undefine
               <button
                 type="button"
                 className="btn btn-ghost btn-sm"
-                onClick={() => {
-                  setSearchQuery("");
-                  setIndustry("");
-                }}
+                onClick={address.clear}
                 data-testid="button-clear-guide-filters"
               >
                 <X className="h-4 w-4" aria-hidden="true" /> Clear
@@ -162,14 +166,7 @@ export function Resources({ initial }: { initial?: ReleasedResource[] | undefine
           ) : (
             <div className="surface p-6 text-sm text-muted-foreground" role="status">
               <p>No guides match your current search or filter.</p>
-              <button
-                type="button"
-                className="btn btn-ghost btn-sm mt-3"
-                onClick={() => {
-                  setSearchQuery("");
-                  setIndustry("");
-                }}
-              >
+              <button type="button" className="btn btn-ghost btn-sm mt-3" onClick={address.clear}>
                 Show all guides
               </button>
             </div>

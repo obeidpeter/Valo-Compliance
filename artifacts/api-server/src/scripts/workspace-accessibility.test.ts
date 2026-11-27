@@ -3954,6 +3954,142 @@ test("a saved request reads 'Enquiry received' with what has not happened, and t
   }
 });
 
+// WEB-002: "keyboard, empty, loading, error and mobile states are covered for every primary route."
+// The support page as a signed-in customer has it: the list of their own requests, and the form.
+test("signed in, the support page says its list of requests is loading, says when there are none and offers another try when the list cannot be read; its form says what is missing, keeps what was typed when a save fails and says so, and saves on the next try", async () => {
+  const none = api.ListCustomerSupportCasesResponse.parse({
+    cases: [],
+    page: 1,
+    pageSize: 25,
+    hasMore: false,
+    notice: "Synthetic test fixture: a note in the server's own words.",
+  });
+  const failure = { status: 500, contentType: "application/json", body: '{"error":"Synthetic failure"}' };
+  const typed = "Synthetic request: the file would not open.";
+
+  // The list while it is read, and with nothing in it.
+  {
+    let release = () => {};
+    const held = new Promise<void>((done) => (release = done));
+    const { page, errors, unknown, close } = await phone("/support", async (route, method, path, query) => {
+      if (method === "GET" && path === "/workspace/support-cases") {
+        await held;
+        await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(none) });
+      } else await answer(route, method, path, query);
+    });
+    try {
+      const requests = page.getByTestId("customer-support-cases");
+      const loading = requests.getByRole("status");
+      await expect(loading).toHaveText("Loading your support requests…");
+      await expect(requests.getByRole("button", { name: "Refresh requests" })).toBeDisabled();
+      // The form does not wait for the list.
+      await expect(page.getByTestId("form-ticket")).toBeVisible();
+      assert.equal(await requests.getByTestId("status-error").count(), 0, "no error while the list is read");
+      assert.deepEqual((await wcagFailures(page)).failures, [], "/support while its list is read");
+      release();
+      await expect(requests).toContainText(
+        "No requests on this page. To make one, use the form above, then refresh this list.",
+      );
+      await expect(loading).toHaveCount(0);
+      await expect(requests.getByRole("button", { name: "Refresh requests" })).toBeEnabled();
+      assert.deepEqual(await phoneProblems(page, "/support with no requests"), []);
+      assert.deepEqual(errors, []);
+      assert.deepEqual(unknown, []);
+    } finally {
+      release();
+      await close();
+    }
+  }
+
+  // The list when it cannot be read, and the form.
+  {
+    let listFails = true,
+      saveFails = true,
+      release = () => {};
+    const sent: unknown[] = [];
+    const { page, errors, unknown, close } = await phone("/support", async (route, method, path, query) => {
+      if (method === "GET" && path === "/workspace/support-cases")
+        await route.fulfill(
+          listFails ? failure : { status: 200, contentType: "application/json", body: JSON.stringify(none) },
+        );
+      else if (method === "POST" && path === "/workspace/support") {
+        sent.push(route.request().postDataJSON());
+        if (saveFails) return route.fulfill(failure);
+        // The next try is held, so that the form can be read while it saves.
+        await new Promise<void>((done) => (release = done));
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify(
+            api.CreateSupportTicketResponse.parse({
+              reference: "VALO-SUP-SYNTHETIC-3",
+              message: "Synthetic test fixture: a note in the server's own words.",
+              dispatchStatus: "awaiting_staff",
+            }),
+          ),
+        });
+      } else await answer(route, method, path, query);
+    });
+    try {
+      const requests = page.getByTestId("customer-support-cases");
+      const alert = requests.getByTestId("status-error");
+      await expect(alert).toHaveAttribute("role", "alert");
+      await expect(alert).toContainText("We could not load this");
+      assert.equal(await requests.getByRole("status").count(), 0, "the list is not still said to be loading");
+      assert.deepEqual((await wcagFailures(page)).failures, [], "/support when its list cannot be read");
+      listFails = false;
+      await alert.getByTestId("button-retry").click();
+      await expect(requests).toContainText("No requests on this page.");
+      await expect(alert).toHaveCount(0);
+
+      // Nothing typed: the form says what is missing, and sends nothing.
+      const form = page.getByTestId("form-ticket"),
+        box = page.getByTestId("input-scope"),
+        save = page.getByTestId("button-submit-ticket");
+      await expect(form).toContainText("At least 10 characters.");
+      await expect(box).toHaveAttribute("aria-invalid", "false");
+      await save.click();
+      await expect(form).toContainText("Describe what you need in at least 10 characters.");
+      await expect(box).toHaveAttribute("aria-invalid", "true");
+      assert.equal(sent.length, 0, "an incomplete request is not sent");
+      assert.deepEqual((await wcagFailures(page)).failures, [], "/support with its form's problems shown");
+
+      // A save that fails says so, and keeps what was typed.
+      await box.fill(typed);
+      await expect(box).toHaveAttribute("aria-invalid", "false");
+      await save.click();
+      const failed = page.getByTestId("text-ticket-error");
+      await expect(failed).toHaveAttribute("role", "alert");
+      await expect(failed).toHaveText("Synthetic failure");
+      await expect(box).toHaveValue(typed);
+      await expect(save).toBeEnabled();
+      await expect(page.getByTestId("ticket-receipt")).toHaveCount(0);
+      assert.equal(sent.length, 1);
+      assert.deepEqual((await wcagFailures(page)).failures, [], "/support after a save that failed");
+
+      // The next try: the button cannot be pressed twice while it saves, and the receipt follows.
+      saveFails = false;
+      await save.click();
+      await expect(save).toBeDisabled();
+      await expect(box).toHaveValue(typed);
+      await expect.poll(() => sent.length).toBe(2);
+      release();
+      await expect(page.getByTestId("ticket-receipt")).toContainText("Enquiry received");
+      await expect(page.getByTestId("text-ticket-reference")).toHaveText("VALO-SUP-SYNTHETIC-3");
+      await expect(failed).toHaveCount(0);
+      assert.deepEqual(
+        sent.map((body) => (body as { scope: string }).scope),
+        [typed, typed],
+      );
+      assert.deepEqual(errors, []);
+      assert.deepEqual(unknown, []);
+    } finally {
+      release();
+      await close();
+    }
+  }
+});
+
 // PRV-003: "Provide request verification, correction/export/deletion and legal-hold handling." The
 // customer reads where a request stands in words, and every limit the screen stated is still
 // stated: a request that is received or partly done is not a deletion, or a complete copy.

@@ -158,9 +158,10 @@ The payloads live in one test-support list. They cover:
   also `no-store`.
 - **A fix.** The API's security headers move ahead of reading the body, so that every answer carries
   them, including the 400 for a malformed body.
-- **The web app.** The pages the server draws that read a query, the library's search and the
-  services page's category, are fetched with hostile values. The HTML holds them only escaped, and a
-  browser that loads them runs nothing.
+- **The web app.** The pages the server draws that read a query are fetched with hostile values: the
+  library's search and filters, the search of the guides, industries and help pages, the guides'
+  industry filter, and the services page's category. The HTML holds them only escaped, and a browser
+  that loads them runs nothing.
 - **Injection.** SQL text and wildcards saved through the API come back byte for byte. A search for
   `%`, `_` or `\`, or for SQL text, finds only what holds that text.
 

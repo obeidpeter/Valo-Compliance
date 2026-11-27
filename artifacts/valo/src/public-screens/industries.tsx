@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { ArrowLeft, ArrowRight, FileText, Scale, Search, X } from "lucide-react";
 import {
   useGetPublicCoverage,
@@ -20,6 +20,8 @@ import { industryTemplatesParams } from "@/lib/catalogue-requests";
 import { formatCount } from "@/lib/format";
 import { industryName } from "@/lib/library-filters";
 import { fromServer } from "@/lib/server-data";
+import { SEARCH_LENGTH } from "@/lib/page-filters";
+import { useAddressFilters } from "@/lib/use-address-filters";
 import { ANY_DOCUMENT, signUpFor } from "@/lib/start";
 
 /** What an industry page starts from: the reads the server made, each missing if it failed. */
@@ -39,7 +41,9 @@ export function Industries({ initial }: { initial: IndustryReads }) {
   });
   const counts = new Map<string, number>();
   (res.data ?? []).forEach((r) => r.industrySlugs.forEach((s) => counts.set(s, (counts.get(s) ?? 0) + 1)));
-  const [query, setQuery] = useState("");
+  // WEB-002: the search is kept in the page's address.
+  const address = useAddressFilters("/industries");
+  const query = address.draft;
   const searchRef = useRef<HTMLInputElement>(null);
   const allIndustries = coverage.data?.industries ?? [];
   const trimmed = query.trim().toLowerCase();
@@ -88,7 +92,8 @@ export function Industries({ initial }: { initial: IndustryReads }) {
                   aria-keyshortcuts="/"
                   placeholder="Find an industry (press /)"
                   value={query}
-                  onChange={(e) => setQuery(e.target.value)}
+                  maxLength={SEARCH_LENGTH}
+                  onChange={(e) => address.setDraft(e.target.value)}
                   data-testid="input-industry-search"
                 />
               </div>
@@ -96,7 +101,7 @@ export function Industries({ initial }: { initial: IndustryReads }) {
                 <button
                   type="button"
                   className="btn btn-ghost btn-sm"
-                  onClick={() => setQuery("")}
+                  onClick={address.clear}
                   data-testid="button-clear-industry-search"
                 >
                   <X className="h-4 w-4" aria-hidden="true" /> Clear
@@ -132,7 +137,7 @@ export function Industries({ initial }: { initial: IndustryReads }) {
           ) : (
             <div className="surface p-6 text-sm text-muted-foreground" role="status">
               <p>No industries match &ldquo;{query.trim()}&rdquo;.</p>
-              <button type="button" className="btn btn-ghost btn-sm mt-3" onClick={() => setQuery("")}>
+              <button type="button" className="btn btn-ghost btn-sm mt-3" onClick={address.clear}>
                 Show all industries
               </button>
             </div>

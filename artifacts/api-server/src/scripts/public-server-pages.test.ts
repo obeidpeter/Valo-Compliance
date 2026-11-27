@@ -679,13 +679,114 @@ test("the library's filters, sort and page live in its address: the server rende
   }
 });
 
+// Found while the guides, industries and help pages were given the same behaviour (WEB-002): the
+// address follows what is typed a moment later, and the box then took back a space typed at the end
+// of a word, so that "tax return" typed with a pause became "taxreturn".
+test("the library's search box keeps a space typed at the end of a word while its address follows, so the next word can be typed, and Back refills the box", async () => {
+  const { page, unknown, errors, close } = await web.phone("/library");
+  try {
+    await ready(page);
+    const box = page.getByTestId("input-search");
+    await box.fill("Synthetic ");
+    await page.waitForURL(/[?&]q=Synthetic$/);
+    await delay(500);
+    await expect(box).toHaveValue("Synthetic ");
+    await box.press("End");
+    await box.press("b");
+    await expect(box).toHaveValue("Synthetic b");
+    await page.waitForURL(/[?&]q=Synthetic\+b$/);
+    await page.goBack();
+    await page.waitForURL(/[?&]q=Synthetic$/);
+    await expect(box).toHaveValue("Synthetic");
+    await expect(box).toHaveAttribute("maxlength", "120");
+    assert.deepEqual(unknown, [], "every API call the page made has a test answer");
+    assert.deepEqual(errors, []);
+  } finally {
+    await close();
+  }
+  // An address written with spaces around its search opens as it is. The page puts no address of its
+  // own after it, which the Back button would only return to again.
+  const padded = "/library?q=%20Synthetic%20";
+  const opened = await web.phone(padded);
+  try {
+    await ready(opened.page);
+    await expect(opened.page.getByTestId("input-search")).toHaveValue("Synthetic");
+    await delay(800);
+    assert.equal(opened.page.url(), web.origin + padded);
+    assert.deepEqual(opened.errors, []);
+  } finally {
+    await opened.close();
+  }
+});
+
+// WEB-002: "search/filter URLs must be shareable." What a shared address asks for is in the server's
+// own HTML, before any script runs. The browser's side, with the Back button, is checked in
+// public-page-states.test.ts.
+test("the server renders the view a guides, industries or help address asks for: the box holds the search, the filter is chosen, and the guides and industries listed are the ones found", async () => {
+  const page = async (address: string) =>
+    (await (await fetch(web.origin + address)).text()).replaceAll("<!-- -->", "");
+  const listed = (html: string, prefix: string) =>
+    [...html.matchAll(new RegExp(`data-testid="${prefix}([^"]+)"`, "g"))].map((match) => match[1]);
+  const box = (html: string, id: string) => new RegExp(`<input[^>]*data-testid="${id}"[^>]*>`).exec(html)![0];
+  const [first, second] = industries;
+
+  // The guides. The second synthetic guide is filed under the second industry alone.
+  const every = await page("/resources");
+  assert.deepEqual(
+    listed(every, "card-resource-"),
+    resources.map((resource) => resource.id),
+  );
+  assert.match(box(every, "input-guide-search"), / value=""/);
+  const guides = await page(`/resources?q=guidance+2&industry=${second!.slug}`);
+  assert.deepEqual(listed(guides, "card-resource-"), [resources[1]!.id]);
+  assert.match(guides, /data-testid="text-resource-count">1 guide</);
+  assert.match(box(guides, "input-guide-search"), / value="guidance 2"/);
+  assert.ok(guides.includes(`<option value="${second!.slug}" selected="">`), "the industry is chosen");
+  assert.equal(guides.split('selected=""').length - 1, 1, "and no other");
+  assert.ok(every.includes('<option value="" selected="">All industries<'), "the plain page chooses none");
+  // One the address's search does not find under that industry.
+  const none = await page(`/resources?q=guidance+2&industry=${first!.slug}`);
+  assert.deepEqual(listed(none, "card-resource-"), []);
+  assert.match(none, /data-testid="text-resource-count">0 guides</);
+  assert.ok(none.includes("No guides match your current search or filter."));
+
+  // The industries, searched by a word of the first industry's address name.
+  const word = first!.slug.split("-")[0]!;
+  const named = industries
+    .filter((industry) =>
+      `${industry.title} ${industry.slug.replaceAll("-", " ")}`.toLowerCase().includes(word),
+    )
+    .map((industry) => industry.slug);
+  assert.ok(named.includes(first!.slug) && named.length < industries.length, "some industries, not all");
+  const found = await page(`/industries?q=${word}`);
+  assert.deepEqual(listed(found, "row-industry-"), named);
+  assert.match(box(found, "input-industry-search"), new RegExp(` value="${word}"`));
+  assert.deepEqual(
+    listed(await page("/industries"), "row-industry-"),
+    industries.map((industry) => industry.slug),
+  );
+
+  // The help page keeps every question in the server's HTML, for a visitor without scripts, and
+  // fills the box; the browser then shows the questions the search finds.
+  const help = await page("/help?q=reminder");
+  assert.match(box(help, "input-help-search"), / value="reminder"/);
+  assert.equal(
+    listed(help, "faq-").length,
+    listed(await page("/help"), "faq-").length,
+    "every question is in the server's HTML",
+  );
+});
+
 test("hostile markup in a page's address is drawn only as text: the server's HTML holds it escaped, and the page runs none of it (SEC-003)", async () => {
-  // docs/architecture/hostile-input.md, part 3: the two pages the server draws that read their address,
+  // docs/architecture/hostile-input.md, part 3: the five pages the server draws that read their address,
   // each given hostile markup in every value it reads and in a name of its own.
   const hostile = encodeURIComponent(SHORT_MARKUP);
   const addresses = [
     `/library?q=${hostile}&category=${hostile}&industry=${hostile}&sort=${hostile}&page=${hostile}&${hostile}=${hostile}`,
     `/services?category=${hostile}&${hostile}=${hostile}`,
+    `/resources?q=${hostile}&industry=${hostile}&${hostile}=${hostile}`,
+    `/industries?q=${hostile}&${hostile}=${hostile}`,
+    `/help?q=${hostile}&${hostile}=${hostile}`,
   ];
   for (const address of addresses) {
     const html = await (await fetch(web.origin + address)).text();
@@ -701,11 +802,23 @@ test("hostile markup in a page's address is drawn only as text: the server's HTM
       await close();
     }
   }
-  // The library's search box holds the search it was given, as text, up to the 120 characters it takes.
-  const { page, close } = await web.phone(`/library?q=${hostile}`);
+  // Each page's search box holds the search it was given, as text, up to the 120 characters it takes.
+  for (const path of ["/library", "/resources", "/industries", "/help"]) {
+    const { page, close } = await web.phone(`${path}?q=${hostile}`);
+    try {
+      await ready(page);
+      await expect(page.getByRole("searchbox").first()).toHaveValue(SHORT_MARKUP.slice(0, 120));
+    } finally {
+      await close();
+    }
+  }
+  // A search that finds nothing is said back to the visitor, as text.
+  const { page, close } = await web.phone(`/industries?q=${hostile}`);
   try {
     await ready(page);
-    await expect(page.getByRole("searchbox").first()).toHaveValue(SHORT_MARKUP.slice(0, 120));
+    await expect(page.locator("main [role='status']")).toContainText(
+      `No industries match “${SHORT_MARKUP.slice(0, 120)}”.`,
+    );
   } finally {
     await close();
   }
