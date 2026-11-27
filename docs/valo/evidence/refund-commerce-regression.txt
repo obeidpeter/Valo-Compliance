@@ -1,0 +1,28 @@
+
+> @workspace/api-server@0.0.0 test:valo-commerce /home/runner/workspace/artifacts/api-server
+> NODE_ENV=development tsx --test src/lib/valo-commerce.integration.test.ts
+
+▶ controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication
+  ✔ held content and browser price/currency additions cannot create an order (68.770213ms)
+  ✔ saved controlled order is not a receipt or entitlement; no browser-success grant exists (24.478547ms)
+  ✔ other tenants cannot read a receipt, refresh, checkout, settle or request a refund (29.611436ms)
+  ✔ mismatched amount and workspace never grant; data outside test mode is rejected (6.782027ms)
+  ✔ concurrent controlled callback/webhook results grant one entitlement, one receipt outbox and one settlement event (90.577178ms)
+  ✔ receipt/licence history is private and independent of a later price edit (15.427228ms)
+  ✔ duplicate refund requests persist once without completing a refund or deleting owned work (32.229792ms)
+  ✔ a failed fulfilment constraint rolls back settlement and outbox atomically (12.768433ms)
+  ✔ pending, abandoned and failed provider controls do not grant; a late success can recover (85.580996ms)
+  ✔ reversal suspends reuse without deleting financial or customer history (65.817314ms)
+  ✔ membership revoked while settlement waits on an order lock prevents the eventual customer write (35.643953ms)
+  ✔ durable event deduplication ignores whitespace and delivery retries without retaining card data (10.517863ms)
+{"scope":"Controlled database payment mechanics, not Paystack execution","realProviderCalls":0,"publishedFixtures":0,"priceApproval":false,"livePayments":false}
+  ✔ no merchant setup means no provider calls, false match, consumed event attempt or claimed delivery (17.971866ms)
+✔ controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication (595.728313ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3035.82244

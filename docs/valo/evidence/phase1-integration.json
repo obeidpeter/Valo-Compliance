@@ -1,0 +1,66 @@
+{
+  "recordedOn": "2026-11-15",
+  "scope": "PR #23, including the ancestor PR #28 export changes; isolated local validation, not launch acceptance",
+  "integrationCommit": "fb033e55caad88750cd1af58c3ccba3b247a4ccf",
+  "additionalValidatedChange": "Correct the erasure recovery fixture to restore removed tracking rows, bind the positive object key to its attempt, and use fileURLToPath for its worker",
+  "developmentBaseline": "3a44b02834fa9b152c42209dc5971bc2c103d829",
+  "includedExportHead": "69d33dce438342ace568c1fabc637f7f0d1ecc12",
+  "localEnvironment": {
+    "os": "Windows",
+    "node": "24.22.1",
+    "pnpmInstall": "10.26.1, frozen lockfile, lifecycle scripts disabled locally",
+    "postgresql": "16.14, invocation-owned localhost clusters only",
+    "browser": "locked Playwright Chromium 1254 headless shell",
+    "pdfReader": "Poppler 26.09.0 pdftotext",
+    "nativeBuildBinaries": "Integrity-verified Windows binaries matching locked esbuild, Tailwind oxide and Lightning CSS versions, installed only in local tooling/node_modules",
+    "ciTarget": "Node 22 on Linux; local results do not replace hosted CI"
+  },
+  "passed": {
+    "frozenInstall": true,
+    "fullWorkspaceTypecheck": true,
+    "nextProductionBuild": true,
+    "affectedUnitTests": {"tests": 99, "pass": 99, "fail": 0, "skip": 0},
+    "combinedExportDisputePrivacyTests": {"tests": 53, "pass": 53, "fail": 0, "skip": 0},
+    "migrationProof": {"tests": 5, "pass": 5, "fail": 0, "skip": 0},
+    "erasureRecoveryTests": {"tests": 9, "pass": 8, "fail": 0, "skip": 1, "skipReason": "Native-provider lane deliberately unconfigured; portable recovery and actual killed-worker checks ran"},
+    "privacyHttpTests": {"tests": 7, "pass": 7, "fail": 0},
+    "handoverTests": {"tests": 3, "pass": 3, "fail": 0},
+    "disputeBrowserChecks": 13,
+    "workspaceExportBrowserChecks": 5
+  },
+  "migrationProof": {
+    "baselineEntries": 29,
+    "finalEntries": 31,
+    "preservedAppliedSqlAndJournal": true,
+    "cleanDrizzleChainAndRerun": true,
+    "trackedUpgradePreservedExistingRows": true,
+    "unjournalledAdditiveUpgradePreservedExistingRows": true,
+    "cleanAndUpgradeSchemasEquivalent": true,
+    "interruptedTailRolledBack": true,
+    "inventedMigrationLedger": false
+  },
+  "hostedCiAtRecording": {
+    "status": "blocked before any job steps",
+    "pullRequestRun": "https://github.com/obeidpeter/Valo-Compliance/actions/runs/43727023110",
+    "pushRun": "https://github.com/obeidpeter/Valo-Compliance/actions/runs/43727018217",
+    "githubAnnotation": "The job was not started because recent account payments have failed or your spending limit needs to be increased. Please check the 'Billing & plans' section in your settings",
+    "retriedAfterOwnerReportedActionsAvailable": true,
+    "retriedJobsExecutedSteps": 0,
+    "authoritativeCurrentStatus": "Use the final PR head's GitHub checks; this is historical evidence, not a passing check"
+  },
+  "remainingValidation": [
+    "All four hosted Linux CI jobs must execute and pass on the final candidate",
+    "POSIX file-mode assertions in customer-access and portable erasure could not pass on Windows; they remain enabled for Linux CI",
+    "Nine shell-driver fixture checks need the supported Linux environment; no pass is inferred from their Windows harness startup failures",
+    "Inspect and rehearse against a restored copy of the actual native database before applying the documented upgrade"
+  ],
+  "externalEffects": {
+    "nativeDatabaseTouched": false,
+    "productionDatabaseTouched": false,
+    "merchantCalls": 0,
+    "paidInferenceCalls": 0,
+    "externalMessages": 0,
+    "merged": false,
+    "deployed": false
+  }
+}

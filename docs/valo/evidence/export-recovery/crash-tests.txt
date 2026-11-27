@@ -1,0 +1,25 @@
+
+> @workspace/api-server@0.0.0 test:valo-export-recovery /home/runner/workspace/artifacts/api-server
+> tsx --test src/lib/valo-export-recovery.integration.test.ts
+
+▶ real process death, PostgreSQL lease fencing and native private storage recovery
+  ✔ SIGKILL on final attempt at claiming (3698.865352ms)
+  ✔ SIGKILL on final attempt at claimed (2810.987811ms)
+  ✔ SIGKILL on final attempt at rendering (2221.841462ms)
+  ✔ SIGKILL on final attempt at uploading (3378.365146ms)
+  ✔ SIGKILL on final attempt at uploaded (3971.003455ms)
+  ✔ SIGKILL on final attempt at completing (3612.804495ms)
+  ✔ SIGKILL on final attempt at completed (2425.348949ms)
+  ✔ first attempt recovers automatically, only one recovery wins and live leases are not stolen (2325.80829ms)
+  ✔ explicit retry cycles remain bounded and source revision remains saved (124.269897ms)
+  ✔ stale queued transport deliveries become retryable even if claim never committed (54.490481ms)
+  ✔ real dispatcher restart detects final-attempt abandonment and completes explicit retry (11474.057964ms)
+✔ real process death, PostgreSQL lease fencing and native private storage recovery (38017.906467ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 40545.21573

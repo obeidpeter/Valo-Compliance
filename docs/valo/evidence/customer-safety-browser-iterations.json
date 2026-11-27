@@ -1,0 +1,135 @@
+{
+  "scope": "Retained iteration diagnostics, not pinned code revisions or release acceptance",
+  "note": "Includes runner ordering/canonical fixture/input formatting/hidden-control/focus-trigger corrections and the pristine Apply-button defect. The exact final implementation is bound separately.",
+  "reports": [
+    {
+      "name": "review-editor-order-failure.json",
+      "rawHash": "547b37d93c7ebec9310bc21d44e091debcefdc8232f8ddf050bfe5b5da9e20fa",
+      "checks": [
+        {
+          "name": "real_editor_navigation_financial_restore_undo_and_concurrent_session",
+          "status": "fail",
+          "diagnostic": "{\"state\":{\"path\":\"blank\",\"headings\":0,\"width\":1280,\"scroll\":1280,\"focus\":\"BODY\",\"focusOutline\":\"rgb(0, 0, 0) none 3px\",\"focusId\":\"\",\"focusVisible\":false,\"alerts\":[],\"overflow\":[]},\"location\":\"    at api (/home/runner/workspace/artifacts/api-server/src/scripts/customer-experience-journey.ts:41:16)\"}"
+        },
+        {
+          "name": "managed_verified_customer_can_open_private_routes",
+          "status": "pass"
+        }
+      ],
+      "cleanupErrors": 0
+    },
+    {
+      "name": "review-editor-canonical-fixture-failure.json",
+      "rawHash": "6dc55b649ee2c1d231b9f6ba89cb74935ad492f69fca8db6880504a7a16ef3fb",
+      "checks": [
+        {
+          "name": "managed_verified_customer_can_open_private_routes",
+          "status": "pass"
+        },
+        {
+          "name": "real_editor_navigation_financial_restore_undo_and_concurrent_session",
+          "status": "fail",
+          "diagnostic": "{\"state\":{\"path\":\"/workspace/privacy\",\"headings\":1,\"width\":1280,\"scroll\":1280,\"focus\":\"BODY\",\"focusOutline\":\"rgb(39, 36, 33) none 3px\",\"focusId\":\"\",\"focusVisible\":false,\"alerts\":[],\"overflow\":[]},\"location\":\"    at editorSafetyJourney (/home/runner/workspace/artifacts/api-server/src/scripts/customer-experience-journey.ts:100:93)\"}"
+        }
+      ],
+      "cleanupErrors": 0
+    },
+    {
+      "name": "review-editor-display-fixture-failure.json",
+      "rawHash": "f1ad87ef4c27ee6846232310fddcb44ad029e1669c884bfbe2acf2f0473966c0",
+      "checks": [
+        {
+          "name": "managed_verified_customer_can_open_private_routes",
+          "status": "pass"
+        },
+        {
+          "name": "real_editor_navigation_financial_restore_undo_and_concurrent_session",
+          "status": "fail",
+          "diagnostic": "{\"state\":{\"path\":\"/workspace/documents/082944e2-680d-4b49-8eb1-c57533476200\",\"headings\":1,\"width\":1280,\"scroll\":1280,\"focus\":\"BODY\",\"focusOutline\":\"rgb(39, 36, 33) none 3px\",\"focusId\":\"\",\"focusVisible\":false,\"alerts\":[],\"overflow\":[]},\"location\":\"    at editorSafetyJourney (/home/runner/workspace/artifacts/api-server/src/scripts/customer-experience-journey.ts:128:58)\"}"
+        }
+      ],
+      "cleanupErrors": 0
+    },
+    {
+      "name": "review-editor-apply-and-task-fixture-failure.json",
+      "rawHash": "4649ad0e585912ba03df9b336f3caae6b014e6bcd107e5c7137c8b43b6c56bd1",
+      "checks": [
+        {
+          "name": "managed_verified_customer_can_open_private_routes",
+          "status": "pass"
+        },
+        {
+          "name": "real_editor_navigation_financial_restore_undo_and_concurrent_session",
+          "status": "fail",
+          "diagnostic": "{\"state\":{\"path\":\"/workspace/documents/bd152b97-e086-4503-babc-4f184b87cbcc\",\"headings\":1,\"width\":1280,\"scroll\":1280,\"focus\":\"BODY\",\"focusOutline\":\"rgb(39, 36, 33) none 3px\",\"focusId\":\"\",\"focusVisible\":false,\"alerts\":[],\"overflow\":[]},\"location\":\"    at editorSafetyJourney (/home/runner/workspace/artifacts/api-server/src/scripts/customer-experience-journey.ts:130:63)\"}"
+        },
+        {
+          "name": "real_task_notes_survive_filters_background_refresh_and_revision_conflict",
+          "status": "fail",
+          "diagnostic": "{\"state\":{\"path\":\"/workspace/tasks\",\"headings\":1,\"width\":1280,\"scroll\":1280,\"focus\":\"BUTTON\",\"focusOutline\":\"rgb(39, 36, 33) none 3px\",\"focusId\":\"\",\"focusVisible\":false,\"alerts\":[],\"overflow\":[]},\"location\":\"    at <anonymous> (/home/runner/workspace/artifacts/api-server/src/scripts/customer-experience-journey.ts:280:30)\"}"
+        }
+      ],
+      "cleanupErrors": 0
+    },
+    {
+      "name": "review-task-focus-trigger-failure.json",
+      "rawHash": "7b081c1e75fa366b7315d809c512c4fe78fcfd583f3dd50b6901bbdf7794086a",
+      "checks": [
+        {
+          "name": "managed_verified_customer_can_open_private_routes",
+          "status": "pass"
+        },
+        {
+          "name": "real_editor_navigation_financial_restore_undo_and_concurrent_session",
+          "status": "pass"
+        },
+        {
+          "name": "real_task_notes_survive_filters_background_refresh_and_revision_conflict",
+          "status": "fail",
+          "diagnostic": "{\"state\":{\"path\":\"/workspace/tasks\",\"headings\":1,\"width\":1280,\"scroll\":1280,\"focus\":\"BUTTON\",\"focusOutline\":\"rgb(39, 36, 33) none 3px\",\"focusId\":\"\",\"focusVisible\":false,\"alerts\":[],\"overflow\":[]},\"location\":\"    at <anonymous> (/home/runner/workspace/artifacts/api-server/src/scripts/customer-experience-journey.ts:282:56)\"}"
+        }
+      ],
+      "cleanupErrors": 0
+    },
+    {
+      "name": "review-task-native-focus-diagnostic.json",
+      "rawHash": "58f066c96ed6cc5966f86d0ed943910b064ff29a2b21d9e07708ac0184d81d0e",
+      "checks": [
+        {
+          "name": "managed_verified_customer_can_open_private_routes",
+          "status": "pass"
+        },
+        {
+          "name": "real_editor_navigation_financial_restore_undo_and_concurrent_session",
+          "status": "pass"
+        },
+        {
+          "name": "real_task_notes_survive_filters_background_refresh_and_revision_conflict",
+          "status": "fail",
+          "diagnostic": "{\"state\":{\"path\":\"/workspace/tasks\",\"headings\":1,\"width\":1280,\"scroll\":1280,\"focus\":\"BUTTON\",\"focusOutline\":\"rgb(39, 36, 33) none 3px\",\"focusId\":\"\",\"focusVisible\":false,\"alerts\":[],\"overflow\":[]},\"location\":\"    at <anonymous> (/home/runner/workspace/artifacts/api-server/src/scripts/customer-experience-journey.ts:289:56)\"}"
+        }
+      ],
+      "cleanupErrors": 0
+    },
+    {
+      "name": "review-hidden-switch-pointer-diagnostic.json",
+      "rawHash": "e342cd2ed8c94bd855830c244e610962468d814022a060313cc19eb415476c02",
+      "checks": [
+        {
+          "name": "managed_verified_customer_can_open_private_routes",
+          "status": "pass"
+        },
+        {
+          "name": "real_editor_navigation_financial_restore_undo_and_concurrent_session",
+          "status": "pass"
+        },
+        {
+          "name": "real_task_notes_survive_filters_background_refresh_and_revision_conflict",
+          "status": "fail",
+          "diagnostic": "{\"state\":{\"path\":\"/workspace/reminders\",\"headings\":1,\"width\":1280,\"scroll\":1280,\"focus\":\"BODY\",\"focusOutline\":\"rgb(39, 36, 33) none 3px\",\"focusId\":\"\",\"focusVisible\":false,\"alerts\":[],\"overflow\":[]},\"location\":\"    at <anonymous> (/home/runner/workspace/artifacts/api-server/src/scripts/customer-experience-journey.ts:298:47)\"}"
+        }
+      ],
+      "cleanupErrors": 0
+    }
+  ]
+}

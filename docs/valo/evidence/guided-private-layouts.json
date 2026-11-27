@@ -1,0 +1,699 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-11-14T15:26:31.581Z",
+  "sourceRevision": "fcd167bac3174a54b8c35eb97d1bfbdddc444286",
+  "sourceFiles": [
+    {
+      "path": "lib/valo-core/src/guided.ts",
+      "sha256": "5a7cc5d7581ddff01cfc8e219b2c82cd6e3779e52fae300d55575d11332102d8"
+    },
+    {
+      "path": "lib/valo-core/src/guided-specs-v1.ts",
+      "sha256": "b5e209ebe32512c8d0f5860f742212715f8cacc4a35fcaddfc0e133481c70383"
+    },
+    {
+      "path": "lib/valo-core/src/guided-runtime-v1.ts",
+      "sha256": "e91734faa67057268d3139cded1a820152eda46c66b4ca5d17372134911cf94b"
+    },
+    {
+      "path": "lib/valo-core/src/money.ts",
+      "sha256": "e4ee734ee5e91cc3f9d58680d788160e3d386c0eb6fa5f2debf48fb9ea5107ef"
+    },
+    {
+      "path": "lib/valo-core/package.json",
+      "sha256": "84210d4ec68a7fec22fbbe3e9e488c7fde7a24220bcbe8b433ac984f6c6ccbab"
+    },
+    {
+      "path": "artifacts/valo/src/components/guided-fields.tsx",
+      "sha256": "925bba318a8c2f499e06316903ffc8f1d4283f58fe1feabca722ade706aa2d3e"
+    },
+    {
+      "path": "artifacts/valo/src/components/guided-draft-starter.tsx",
+      "sha256": "2044fb9fb19bda33961232a9db181bd05279f597ad1b94fb62d504f6cc30bcc7"
+    },
+    {
+      "path": "artifacts/valo/src/screens/workspace.tsx",
+      "sha256": "abf4ac2d1139fd0960459023cb531f7490df051c7cdcc0ec3019901eeecd2f30"
+    },
+    {
+      "path": "artifacts/valo/src/screens/document-editor.tsx",
+      "sha256": "1081ea7ecd657bfe5c18a674c99f0cbd61bc286e44f3c183cc0ee998a84b2976"
+    },
+    {
+      "path": "artifacts/valo/src/lib/api.ts",
+      "sha256": "b0319d7163221941e78c82291c00f176b7b8e6c87a06d2324835d8a5cb92f8a5"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/valo-validation.ts",
+      "sha256": "1252235d5d52c9918cb6cb330462ef228ba475a0b9cb2591616166f8c2d6d5ce"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/valo-store.ts",
+      "sha256": "4e7e8bd412653cd3c9bf05eec150a7a0d1377d6049d1596e7a7486c456e9d787"
+    },
+    {
+      "path": "artifacts/api-server/package.json",
+      "sha256": "360da7a6b8ca8548a913723e4f097f1bdd6520ee0e014ce3a31aa18280066c20"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/valo-render.ts",
+      "sha256": "70af8b4483e8b3e275c8e1c198e9ddc1473f52745cc9605b8e7d8c35b3ba1df0"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/valo-revision-codec.ts",
+      "sha256": "1767d973c0222fe3149ba04096647a424adc4ff0bc806f1d5091d6408379a0cc"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/valo-exports.ts",
+      "sha256": "0ae86c3d494b60120665e480f347115bc24ebe89d8cbbea8b7f6606c01912583"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/valo-private-storage.ts",
+      "sha256": "61c60ded56d36768cf0f00cf6e43117e3fc7e7a3ed61af68b7726d8835986ecb"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/valo-guided.test.ts",
+      "sha256": "caa1b174eaf09264f779dca707e646e65b266cd5d2224363cef7f36a26f6cba0"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/valo-guided-test-fixtures.ts",
+      "sha256": "f182a06a140c77455ab929b7c26e8379cb378e7af64a83ad0c19dc4db9d416ab"
+    },
+    {
+      "path": "artifacts/api-server/src/scripts/customer-guided-journeys.ts",
+      "sha256": "41b0be26d61c6900695903f5da902f62e8c1c78da51123ed6f2c50b28d1da086"
+    },
+    {
+      "path": "artifacts/api-server/src/scripts/customer-experience-journey.ts",
+      "sha256": "b845e0caea610917d35e8cba2155621b90648c6d47b9ec3fc037abd33ec1c6d8"
+    }
+  ],
+  "environment": "synthetic-development-only",
+  "engineeringControls": {
+    "records": 37,
+    "pass": 37,
+    "fail": 0,
+    "skip": 0,
+    "logPath": "docs/valo/evidence/guided-private-layouts.raw.txt",
+    "sha256": "023099f258413fb87bc1525e93204750e8111f1103840081bb1de2adc6b566fe",
+    "scope": "Typed forms, incomplete raw preservation, conditional terms, actual 24 DOCX/PDF renders, tamper rejection, decimal arithmetic and frozen historical-codec fixtures. Not an editorial or customer-AI acceptance suite."
+  },
+  "typecheck": {
+    "result": "pass",
+    "log": "\n> workspace@0.0.0 typecheck /home/runner/workspace\n> pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck\n\n\n> workspace@0.0.0 typecheck:libs /home/runner/workspace\n> tsc --build\n\nScope: 4 of 11 workspace projects\nartifacts/api-server typecheck$ tsc -p tsconfig.json --noEmit\nartifacts/mockup-sandbox typecheck$ tsc -p tsconfig.json --noEmit\nartifacts/valo typecheck$ tsc -p tsconfig.json --noEmit\nscripts typecheck$ tsc -p tsconfig.json --noEmit\nscripts typecheck: Done\nartifacts/valo typecheck: Done\nartifacts/mockup-sandbox typecheck: Done\nartifacts/api-server typecheck: Done\n",
+    "sha256": "6dae4af028f38ac5d5da438946ef17f14111f39d020f1f87bb3719a1d18ac818"
+  },
+  "broaderApi": {
+    "records": 150,
+    "pass": 149,
+    "fail": 0,
+    "skip": 1,
+    "logPath": "docs/valo/evidence/guided-broader-api.raw.txt",
+    "sha256": "33e33aa2bf055e4ef96e5c292d8d8eb253afbf821d2e724465ea3135718cd51a",
+    "scope": "Existing API regression command now includes the guided tests. Overlaps the targeted 37-record command; do not add the two counts."
+  },
+  "browser": {
+    "checkedAt": "2026-11-14T15:19:46.716Z",
+    "syntheticDevelopmentOnly": true,
+    "checks": [
+      {
+        "name": "managed_verified_customer_can_open_private_routes",
+        "status": "pass"
+      },
+      {
+        "name": "real_guided_TPL-01_questions_saved_revision_private_DOCX_PDF",
+        "status": "pass"
+      },
+      {
+        "name": "real_guided_TPL-02_questions_saved_revision_private_DOCX_PDF",
+        "status": "pass"
+      },
+      {
+        "name": "real_guided_TPL-03_questions_saved_revision_private_DOCX_PDF",
+        "status": "pass"
+      },
+      {
+        "name": "real_guided_TPL-04_questions_saved_revision_private_DOCX_PDF",
+        "status": "pass"
+      },
+      {
+        "name": "real_guided_TPL-05_questions_saved_revision_private_DOCX_PDF",
+        "status": "pass"
+      },
+      {
+        "name": "real_guided_TPL-08_questions_saved_revision_private_DOCX_PDF",
+        "status": "pass"
+      },
+      {
+        "name": "real_guided_TPL-12_questions_saved_revision_private_DOCX_PDF",
+        "status": "pass"
+      },
+      {
+        "name": "real_guided_TPL-13_questions_saved_revision_private_DOCX_PDF",
+        "status": "pass"
+      },
+      {
+        "name": "real_guided_TPL-14_questions_saved_revision_private_DOCX_PDF",
+        "status": "pass"
+      },
+      {
+        "name": "real_guided_TPL-15_questions_saved_revision_private_DOCX_PDF",
+        "status": "pass"
+      },
+      {
+        "name": "real_guided_TPL-16_questions_saved_revision_private_DOCX_PDF",
+        "status": "pass"
+      },
+      {
+        "name": "real_guided_TPL-17_questions_saved_revision_private_DOCX_PDF",
+        "status": "pass"
+      }
+    ],
+    "guidedDetails": [
+      {
+        "templateId": "TPL-01",
+        "status": "pass",
+        "revision": 4,
+        "savedHash": "40df8fbf365ef04bb6da442111e0e6022c0bd4ec48ae83c5d3c59c4ca2748289",
+        "formats": [
+          {
+            "format": "docx",
+            "jobId": "45ed5876-86ab-4abd-9583-71810f5f7ee0",
+            "revision": 4,
+            "sourceHash": "40df8fbf365ef04bb6da442111e0e6022c0bd4ec48ae83c5d3c59c4ca2748289",
+            "checksum": "0c0217cf82dbcb6f0bcc24a5c4a997635b3a89b598cac093d6f54639c4248398",
+            "size": 12167,
+            "actualPrivateDownloadStatus": 200,
+            "mechanicalReaderExit": 0
+          },
+          {
+            "format": "pdf",
+            "jobId": "a12f4444-3290-49d0-a9e1-bf1f3b412642",
+            "revision": 4,
+            "sourceHash": "40df8fbf365ef04bb6da442111e0e6022c0bd4ec48ae83c5d3c59c4ca2748289",
+            "checksum": "2a595e6d57c28ae75fe0f325453927e58533c6ee51474c2a633fb2f118e991f3",
+            "size": 48565,
+            "actualPrivateDownloadStatus": 200,
+            "mechanicalReaderExit": 0
+          }
+        ],
+        "actualManagedCustomerUI": true,
+        "actualAPISaveReload": true,
+        "mobileWidth": 360,
+        "bodyValuesSynthetic": true,
+        "catalogueMasterUsed": false,
+        "publicationClaimed": false
+      },
+      {
+        "templateId": "TPL-02",
+        "status": "pass",
+        "revision": 2,
+        "savedHash": "23c150e44caa0f1216ebf4d137ffaa16c55a47253d276853592e0cdb9b3f4c63",
+        "formats": [
+          {
+            "format": "docx",
+            "jobId": "0621345e-b7ec-427d-8db9-6e0162e8cf9b",
+            "revision": 2,
+            "sourceHash": "23c150e44caa0f1216ebf4d137ffaa16c55a47253d276853592e0cdb9b3f4c63",
+            "checksum": "fbd08f4da9b31166749c3d3b48de49e94ebe25f7c4306306aef7d3405c47c6b8",
+            "size": 12220,
+            "actualPrivateDownloadStatus": 200,
+            "mechanicalReaderExit": 0
+          },
+          {
+            "format": "pdf",
+            "jobId": "d11e1635-6a12-4391-b3eb-647bfb1cb6c9",
+            "revision": 2,
+            "sourceHash": "23c150e44caa0f1216ebf4d137ffaa16c55a47253d276853592e0cdb9b3f4c63",
+            "checksum": "640c8909591bb24525e15370955e6952fc4b4cb92d2c80b0f187d6dacbbf87ec",
+            "size": 48662,
+            "actualPrivateDownloadStatus": 200,
+            "mechanicalReaderExit": 0
+          }
+        ],
+        "actualManagedCustomerUI": true,
+        "actualAPISaveReload": true,
+        "mobileWidth": 360,
+        "bodyValuesSynthetic": true,
+        "catalogueMasterUsed": false,
+        "publicationClaimed": false
+      },
+      {
+        "templateId": "TPL-03",
+        "status": "pass",
+        "revision": 2,
+        "savedHash": "6c3b8ca447056649a105647efe9f6be0b31519b369ecb6753115d6a04d7b6b22",
+        "formats": [
+          {
+            "format": "docx",
+            "jobId": "66b22dbe-77ff-4559-9a9e-3774f3c75bd4",
+            "revision": 2,
+            "sourceHash": "6c3b8ca447056649a105647efe9f6be0b31519b369ecb6753115d6a04d7b6b22",
+            "checksum": "8629342c6effc94040f8112fe7598eade4a9a780c7f16f3629731e06c2e342ab",
+            "size": 12008,
+            "actualPrivateDownloadStatus": 200,
+            "mechanicalReaderExit": 0
+          },
+          {
+            "format": "pdf",
+            "jobId": "d2c9ece6-5adc-4b0e-9c66-9d6dcdd92c9a",
+            "revision": 2,
+            "sourceHash": "6c3b8ca447056649a105647efe9f6be0b31519b369ecb6753115d6a04d7b6b22",
+            "checksum": "45d32dcb378f3333d3ccce0da4563903d3ee28ea6571e6caae620ad3aa6d5698",
+            "size": 46390,
+            "actualPrivateDownloadStatus": 200,
+            "mechanicalReaderExit": 0
+          }
+        ],
+        "actualManagedCustomerUI": true,
+        "actualAPISaveReload": true,
+        "mobileWidth": 360,
+        "bodyValuesSynthetic": true,
+        "catalogueMasterUsed": false,
+        "publicationClaimed": false
+      },
+      {
+        "templateId": "TPL-04",
+        "status": "pass",
+        "revision": 2,
+        "savedHash": "b8948d26fda7a87c70d29539808e235ef1629e2f5b6372edd94cac969059625d",
+        "formats": [
+          {
+            "format": "docx",
+            "jobId": "b2d5f44c-cb2c-480e-8443-2844f7199cde",
+            "revision": 2,
+            "sourceHash": "b8948d26fda7a87c70d29539808e235ef1629e2f5b6372edd94cac969059625d",
+            "checksum": "ec9eaa60b280343157eec2d824f1b85bb94d90fedd94c2c715fab8aaf47b7574",
+            "size": 12239,
+            "actualPrivateDownloadStatus": 200,
+            "mechanicalReaderExit": 0
+          },
+          {
+            "format": "pdf",
+            "jobId": "aab64969-612e-46dc-b816-46883d5ed2ce",
+            "revision": 2,
+            "sourceHash": "b8948d26fda7a87c70d29539808e235ef1629e2f5b6372edd94cac969059625d",
+            "checksum": "44a6ac19b64ed60f41c6b05ff912eef752b2a6fe6987378fb2d92ab8c22358f2",
+            "size": 48971,
+            "actualPrivateDownloadStatus": 200,
+            "mechanicalReaderExit": 0
+          }
+        ],
+        "actualManagedCustomerUI": true,
+        "actualAPISaveReload": true,
+        "mobileWidth": 360,
+        "bodyValuesSynthetic": true,
+        "catalogueMasterUsed": false,
+        "publicationClaimed": false
+      },
+      {
+        "templateId": "TPL-05",
+        "status": "pass",
+        "revision": 2,
+        "savedHash": "858dd3c6c2a19a9258961497c94f0244a86af08cf16612aaa2dd569efc6f04a8",
+        "formats": [
+          {
+            "format": "docx",
+            "jobId": "3e41d419-c5d9-4085-8788-2c656a94b8a0",
+            "revision": 2,
+            "sourceHash": "858dd3c6c2a19a9258961497c94f0244a86af08cf16612aaa2dd569efc6f04a8",
+            "checksum": "7dd32c6709992323fa3472c49d9e1a3718e7b411e86f0e94d1930e8ee406412b",
+            "size": 12080,
+            "actualPrivateDownloadStatus": 200,
+            "mechanicalReaderExit": 0
+          },
+          {
+            "format": "pdf",
+            "jobId": "cc887095-8a77-49bb-9208-495431116606",
+            "revision": 2,
+            "sourceHash": "858dd3c6c2a19a9258961497c94f0244a86af08cf16612aaa2dd569efc6f04a8",
+            "checksum": "112dde792fcaf0277a96a907f842ee5cd62b0332ae18938a68130dfc3504e90c",
+            "size": 45706,
+            "actualPrivateDownloadStatus": 200,
+            "mechanicalReaderExit": 0
+          }
+        ],
+        "actualManagedCustomerUI": true,
+        "actualAPISaveReload": true,
+        "mobileWidth": 360,
+        "bodyValuesSynthetic": true,
+        "catalogueMasterUsed": false,
+        "publicationClaimed": false
+      },
+      {
+        "templateId": "TPL-08",
+        "status": "pass",
+        "revision": 2,
+        "savedHash": "f8f24365c3d71e8e73adc400cc14d1649b97de4bb5474aba89c06ca456402e49",
+        "formats": [
+          {
+            "format": "docx",
+            "jobId": "56a083c7-5b7b-41ab-a119-bcde7069f97c",
+            "revision": 2,
+            "sourceHash": "f8f24365c3d71e8e73adc400cc14d1649b97de4bb5474aba89c06ca456402e49",
+            "checksum": "1023133a67047109b672ff34a5c3cd8f21b6fc252e3bb333e7bbc84f28d538f8",
+            "size": 12128,
+            "actualPrivateDownloadStatus": 200,
+            "mechanicalReaderExit": 0
+          },
+          {
+            "format": "pdf",
+            "jobId": "7160b1bd-3300-4b97-aa90-76315fc888a2",
+            "revision": 2,
+            "sourceHash": "f8f24365c3d71e8e73adc400cc14d1649b97de4bb5474aba89c06ca456402e49",
+            "checksum": "2ce6391bf528c543daf9e676983834d8e41c2ae27146ce475ad6a3121811f576",
+            "size": 46232,
+            "actualPrivateDownloadStatus": 200,
+            "mechanicalReaderExit": 0
+          }
+        ],
+        "actualManagedCustomerUI": true,
+        "actualAPISaveReload": true,
+        "mobileWidth": 360,
+        "bodyValuesSynthetic": true,
+        "catalogueMasterUsed": false,
+        "publicationClaimed": false
+      },
+      {
+        "templateId": "TPL-12",
+        "status": "pass",
+        "revision": 2,
+        "savedHash": "1378c0bb19b3ea87d059d63c621c2e694c704406e85c3de4d9b4e04d120a5573",
+        "formats": [
+          {
+            "format": "docx",
+            "jobId": "e9536e81-8a9a-4beb-a7d7-c59e29b78e0a",
+            "revision": 2,
+            "sourceHash": "1378c0bb19b3ea87d059d63c621c2e694c704406e85c3de4d9b4e04d120a5573",
+            "checksum": "5692eb263ce4b2a1daf73f02beaa1bd87e78ff4adddb44c67272c2103bc599a9",
+            "size": 12230,
+            "actualPrivateDownloadStatus": 200,
+            "mechanicalReaderExit": 0
+          },
+          {
+            "format": "pdf",
+            "jobId": "0c8cca55-f372-49f6-853e-e4f547711cde",
+            "revision": 2,
+            "sourceHash": "1378c0bb19b3ea87d059d63c621c2e694c704406e85c3de4d9b4e04d120a5573",
+            "checksum": "d708aea19f2ac10d9f81094ac8e3bcbc3de67e2161b8d0a44bd07ce52a9a2771",
+            "size": 48889,
+            "actualPrivateDownloadStatus": 200,
+            "mechanicalReaderExit": 0
+          }
+        ],
+        "actualManagedCustomerUI": true,
+        "actualAPISaveReload": true,
+        "mobileWidth": 360,
+        "bodyValuesSynthetic": true,
+        "catalogueMasterUsed": false,
+        "publicationClaimed": false
+      },
+      {
+        "templateId": "TPL-13",
+        "status": "pass",
+        "revision": 4,
+        "savedHash": "3875856223c8f7dbe163db665d19f7d822cbc474ee9c1d4cf63df63d0340cdbb",
+        "formats": [
+          {
+            "format": "docx",
+            "jobId": "0f402122-6a0b-4d3f-b8f7-04944d03f7ca",
+            "revision": 4,
+            "sourceHash": "3875856223c8f7dbe163db665d19f7d822cbc474ee9c1d4cf63df63d0340cdbb",
+            "checksum": "cb397ba884158c5e8f9c6ea8d80a9ae27a4ee1c43969cb6c6523f6c7a98161d1",
+            "size": 12608,
+            "actualPrivateDownloadStatus": 200,
+            "mechanicalReaderExit": 0
+          },
+          {
+            "format": "pdf",
+            "jobId": "d883479b-aa5d-4ba7-a00c-562c19b88e85",
+            "revision": 4,
+            "sourceHash": "3875856223c8f7dbe163db665d19f7d822cbc474ee9c1d4cf63df63d0340cdbb",
+            "checksum": "34ec5a5902fa65a05279fa1bf2e9e5844be97679f98230ba9f58ab51d3a4db53",
+            "size": 50218,
+            "actualPrivateDownloadStatus": 200,
+            "mechanicalReaderExit": 0
+          }
+        ],
+        "actualManagedCustomerUI": true,
+        "actualAPISaveReload": true,
+        "mobileWidth": 360,
+        "bodyValuesSynthetic": true,
+        "catalogueMasterUsed": false,
+        "publicationClaimed": false
+      },
+      {
+        "templateId": "TPL-14",
+        "status": "pass",
+        "revision": 4,
+        "savedHash": "bf0e453d07236086b5b810d9ff06d7d9a28871dfb64c37a64ddcaad71786f9a3",
+        "formats": [
+          {
+            "format": "docx",
+            "jobId": "7b956732-7f2d-4f4b-9071-52230c9ecedd",
+            "revision": 4,
+            "sourceHash": "bf0e453d07236086b5b810d9ff06d7d9a28871dfb64c37a64ddcaad71786f9a3",
+            "checksum": "bfe3ac42de479d5407627fe239ce4e3b72b82607455f4ec3c919b9ec8806b4d8",
+            "size": 12664,
+            "actualPrivateDownloadStatus": 200,
+            "mechanicalReaderExit": 0
+          },
+          {
+            "format": "pdf",
+            "jobId": "4a92a6ca-d148-448c-b7d2-cf1238169202",
+            "revision": 4,
+            "sourceHash": "bf0e453d07236086b5b810d9ff06d7d9a28871dfb64c37a64ddcaad71786f9a3",
+            "checksum": "ece1a0293a911624170bba675641b0030d2038a1d3d3000d42a09e8abce1689a",
+            "size": 50714,
+            "actualPrivateDownloadStatus": 200,
+            "mechanicalReaderExit": 0
+          }
+        ],
+        "actualManagedCustomerUI": true,
+        "actualAPISaveReload": true,
+        "mobileWidth": 360,
+        "bodyValuesSynthetic": true,
+        "catalogueMasterUsed": false,
+        "publicationClaimed": false
+      },
+      {
+        "templateId": "TPL-15",
+        "status": "pass",
+        "revision": 4,
+        "savedHash": "2aeaa23dba0712dd60da72b5792b7584d7bd56979d081ecfd931f5517a98d30e",
+        "formats": [
+          {
+            "format": "docx",
+            "jobId": "2839c343-d0fe-4657-a9cb-c9e6e0792739",
+            "revision": 4,
+            "sourceHash": "2aeaa23dba0712dd60da72b5792b7584d7bd56979d081ecfd931f5517a98d30e",
+            "checksum": "a83ca8c3b37e5c58eb47ead4164836bd2b157e6fbc9c4595389cbef280d71876",
+            "size": 12217,
+            "actualPrivateDownloadStatus": 200,
+            "mechanicalReaderExit": 0
+          },
+          {
+            "format": "pdf",
+            "jobId": "6da66c40-6331-498a-8ee1-83686afd7c0e",
+            "revision": 4,
+            "sourceHash": "2aeaa23dba0712dd60da72b5792b7584d7bd56979d081ecfd931f5517a98d30e",
+            "checksum": "6a3b253aac9b1802d1d54e5c726ef5e6bd726746dc1de4f6201e6a52074f15a0",
+            "size": 49125,
+            "actualPrivateDownloadStatus": 200,
+            "mechanicalReaderExit": 0
+          }
+        ],
+        "actualManagedCustomerUI": true,
+        "actualAPISaveReload": true,
+        "mobileWidth": 360,
+        "bodyValuesSynthetic": true,
+        "catalogueMasterUsed": false,
+        "publicationClaimed": false
+      },
+      {
+        "templateId": "TPL-16",
+        "status": "pass",
+        "revision": 4,
+        "savedHash": "b0a107ff1ecc8086c62a9d3fbeb1b50413ecb9435bab6a69157a51ce0015d34f",
+        "formats": [
+          {
+            "format": "docx",
+            "jobId": "e822a056-2de8-452c-af73-266f9ee57020",
+            "revision": 4,
+            "sourceHash": "b0a107ff1ecc8086c62a9d3fbeb1b50413ecb9435bab6a69157a51ce0015d34f",
+            "checksum": "206ad7b09383701977524f60025fde4c574a58cd73691b432b66506e20e6aaf6",
+            "size": 12504,
+            "actualPrivateDownloadStatus": 200,
+            "mechanicalReaderExit": 0
+          },
+          {
+            "format": "pdf",
+            "jobId": "37ed8d88-a337-4ef8-beb2-91d49e47dcf9",
+            "revision": 4,
+            "sourceHash": "b0a107ff1ecc8086c62a9d3fbeb1b50413ecb9435bab6a69157a51ce0015d34f",
+            "checksum": "00b430aa477c75b76c2e0f352f1f3a29134d923773c4ccb42d9a3472e6e86945",
+            "size": 51115,
+            "actualPrivateDownloadStatus": 200,
+            "mechanicalReaderExit": 0
+          }
+        ],
+        "actualManagedCustomerUI": true,
+        "actualAPISaveReload": true,
+        "mobileWidth": 360,
+        "bodyValuesSynthetic": true,
+        "catalogueMasterUsed": false,
+        "publicationClaimed": false
+      },
+      {
+        "templateId": "TPL-17",
+        "status": "pass",
+        "revision": 4,
+        "savedHash": "336a6769c01c63898625c94009d50f87a1493f95d626ad0d6440d24176913a54",
+        "formats": [
+          {
+            "format": "docx",
+            "jobId": "cc0aa71f-f03f-4fbd-abcd-1b2c6133152b",
+            "revision": 4,
+            "sourceHash": "336a6769c01c63898625c94009d50f87a1493f95d626ad0d6440d24176913a54",
+            "checksum": "3247602f828db6c0f0407ec2cb5381862efe430158326321c76a275b13a22969",
+            "size": 12536,
+            "actualPrivateDownloadStatus": 200,
+            "mechanicalReaderExit": 0
+          },
+          {
+            "format": "pdf",
+            "jobId": "87c8a919-dd74-4a87-a2b4-a374370736eb",
+            "revision": 4,
+            "sourceHash": "336a6769c01c63898625c94009d50f87a1493f95d626ad0d6440d24176913a54",
+            "checksum": "0173028aaa05d64e657b4485d105fcab2b6fc065429c92ee1da7765e1803e18d",
+            "size": 50369,
+            "actualPrivateDownloadStatus": 200,
+            "mechanicalReaderExit": 0
+          }
+        ],
+        "actualManagedCustomerUI": true,
+        "actualAPISaveReload": true,
+        "mobileWidth": 360,
+        "bodyValuesSynthetic": true,
+        "catalogueMasterUsed": false,
+        "publicationClaimed": false
+      }
+    ],
+    "selection": "managed-identity-twelve-private-guided-drafts",
+    "actualManagedIdentityUsed": true,
+    "realEmailDeliveryClaimed": false,
+    "actualNewPublications": 0,
+    "fixtureDisclosure": "Actual managed synthetic customer verification, twelve private answer-form layouts, actual typed UI answers, saved/reloaded revisions and private durable export requests. No application response interception, published catalogue master, professional review, real email or commerce execution. Word/PDF checks use mechanical readers, not an actual Microsoft Word/manual assistive-technology session.",
+    "r1Accepted": false,
+    "r2Accepted": false,
+    "cleanupErrors": 0,
+    "cleanup": "Owned synthetic identity and application rows removed; provider usage history untouched.",
+    "rawReportSha256": "456f93c264a01a5fc7b861c7c4e1282eb5d10fc744ada43f2b3764ef7cac6ed7"
+  },
+  "retainedInitialRun": {
+    "report": {
+      "checkedAt": "2026-11-14T15:13:06.463Z",
+      "syntheticDevelopmentOnly": true,
+      "checks": [
+        {
+          "name": "managed_verified_customer_can_open_private_routes",
+          "status": "pass"
+        },
+        {
+          "name": "real_guided_TPL-01_questions_saved_revision_private_DOCX_PDF",
+          "status": "fail",
+          "diagnostic": "{\"state\":{\"path\":\"/workspace/documents/8c54d1dd-d905-4de5-967d-21fa0a1aaa70\",\"headings\":1,\"width\":1280,\"scroll\":1280,\"focus\":\"BODY\",\"focusOutline\":\"rgb(39, 36, 33) none 3px\",\"focusId\":\"\",\"focusVisible\":false,\"alerts\":[],\"overflow\":[]},\"location\":\"    at api (/home/runner/workspace/artifacts/api-server/src/scripts/customer-experience-journey.ts:52:16)\"}"
+        },
+        {
+          "name": "real_guided_TPL-02_questions_saved_revision_private_DOCX_PDF",
+          "status": "fail",
+          "diagnostic": "{\"state\":{\"path\":\"/workspace/documents/7151917b-703a-4efe-b000-ab592cf21784\",\"headings\":1,\"width\":1280,\"scroll\":1280,\"focus\":\"BODY\",\"focusOutline\":\"rgb(39, 36, 33) none 3px\",\"focusId\":\"\",\"focusVisible\":false,\"alerts\":[],\"overflow\":[]},\"location\":\"    at api (/home/runner/workspace/artifacts/api-server/src/scripts/customer-experience-journey.ts:52:16)\"}"
+        },
+        {
+          "name": "real_guided_TPL-03_questions_saved_revision_private_DOCX_PDF",
+          "status": "fail",
+          "diagnostic": "{\"state\":{\"path\":\"/workspace/documents/2348e93f-97f7-485d-b033-2547b8ddacbb\",\"headings\":1,\"width\":1280,\"scroll\":1280,\"focus\":\"BODY\",\"focusOutline\":\"rgb(39, 36, 33) none 3px\",\"focusId\":\"\",\"focusVisible\":false,\"alerts\":[],\"overflow\":[]},\"location\":\"    at api (/home/runner/workspace/artifacts/api-server/src/scripts/customer-experience-journey.ts:52:16)\"}"
+        },
+        {
+          "name": "real_guided_TPL-04_questions_saved_revision_private_DOCX_PDF",
+          "status": "fail",
+          "diagnostic": "{\"state\":{\"path\":\"/workspace/documents/402b8281-cea4-479a-b4e9-4cd7ff94e68b\",\"headings\":1,\"width\":1280,\"scroll\":1280,\"focus\":\"BODY\",\"focusOutline\":\"rgb(39, 36, 33) none 3px\",\"focusId\":\"\",\"focusVisible\":false,\"alerts\":[],\"overflow\":[]},\"location\":\"    at api (/home/runner/workspace/artifacts/api-server/src/scripts/customer-experience-journey.ts:52:16)\"}"
+        },
+        {
+          "name": "real_guided_TPL-05_questions_saved_revision_private_DOCX_PDF",
+          "status": "fail",
+          "diagnostic": "{\"state\":{\"path\":\"/workspace/documents/7b36f03e-ad54-4b2a-8627-f1bd07dac6d5\",\"headings\":1,\"width\":1280,\"scroll\":1280,\"focus\":\"BODY\",\"focusOutline\":\"rgb(39, 36, 33) none 3px\",\"focusId\":\"\",\"focusVisible\":false,\"alerts\":[],\"overflow\":[]},\"location\":\"    at api (/home/runner/workspace/artifacts/api-server/src/scripts/customer-experience-journey.ts:52:16)\"}"
+        },
+        {
+          "name": "real_guided_TPL-08_questions_saved_revision_private_DOCX_PDF",
+          "status": "fail",
+          "diagnostic": "{\"state\":{\"path\":\"/workspace/documents/14815aca-4a24-4900-9c9e-1e6bd9d16f53\",\"headings\":1,\"width\":1280,\"scroll\":1280,\"focus\":\"BODY\",\"focusOutline\":\"rgb(39, 36, 33) none 3px\",\"focusId\":\"\",\"focusVisible\":false,\"alerts\":[],\"overflow\":[]},\"location\":\"    at api (/home/runner/workspace/artifacts/api-server/src/scripts/customer-experience-journey.ts:52:16)\"}"
+        },
+        {
+          "name": "real_guided_TPL-12_questions_saved_revision_private_DOCX_PDF",
+          "status": "fail",
+          "diagnostic": "{\"state\":{\"path\":\"/workspace/documents/d62bb7db-2353-4701-8efd-f5948239e366\",\"headings\":1,\"width\":1280,\"scroll\":1280,\"focus\":\"BODY\",\"focusOutline\":\"rgb(39, 36, 33) none 3px\",\"focusId\":\"\",\"focusVisible\":false,\"alerts\":[],\"overflow\":[]},\"location\":\"    at api (/home/runner/workspace/artifacts/api-server/src/scripts/customer-experience-journey.ts:52:16)\"}"
+        },
+        {
+          "name": "real_guided_TPL-13_questions_saved_revision_private_DOCX_PDF",
+          "status": "fail",
+          "diagnostic": "{\"state\":{\"path\":\"/workspace/documents/1d0167cf-4f28-4a80-91f1-8d5511b92379\",\"headings\":1,\"width\":1280,\"scroll\":1280,\"focus\":\"BODY\",\"focusOutline\":\"rgb(39, 36, 33) none 3px\",\"focusId\":\"\",\"focusVisible\":false,\"alerts\":[],\"overflow\":[]},\"location\":\"    at api (/home/runner/workspace/artifacts/api-server/src/scripts/customer-experience-journey.ts:52:16)\"}"
+        },
+        {
+          "name": "real_guided_TPL-14_questions_saved_revision_private_DOCX_PDF",
+          "status": "fail",
+          "diagnostic": "{\"state\":{\"path\":\"/workspace/documents/dd9e2d60-cc04-4c6e-a34f-90167fe8d22a\",\"headings\":1,\"width\":1280,\"scroll\":1280,\"focus\":\"BODY\",\"focusOutline\":\"rgb(39, 36, 33) none 3px\",\"focusId\":\"\",\"focusVisible\":false,\"alerts\":[],\"overflow\":[]},\"location\":\"    at api (/home/runner/workspace/artifacts/api-server/src/scripts/customer-experience-journey.ts:52:16)\"}"
+        },
+        {
+          "name": "real_guided_TPL-15_questions_saved_revision_private_DOCX_PDF",
+          "status": "fail",
+          "diagnostic": "{\"state\":{\"path\":\"/workspace/documents/a95eb605-22fc-4b2e-a0d6-19f4c498eccc\",\"headings\":1,\"width\":1280,\"scroll\":1280,\"focus\":\"BODY\",\"focusOutline\":\"rgb(39, 36, 33) none 3px\",\"focusId\":\"\",\"focusVisible\":false,\"alerts\":[],\"overflow\":[]},\"location\":\"    at api (/home/runner/workspace/artifacts/api-server/src/scripts/customer-experience-journey.ts:52:16)\"}"
+        },
+        {
+          "name": "real_guided_TPL-16_questions_saved_revision_private_DOCX_PDF",
+          "status": "fail",
+          "diagnostic": "{\"state\":{\"path\":\"/workspace/documents/db48af24-9a7d-48cb-8779-7bbb98d88f14\",\"headings\":1,\"width\":1280,\"scroll\":1280,\"focus\":\"BODY\",\"focusOutline\":\"rgb(39, 36, 33) none 3px\",\"focusId\":\"\",\"focusVisible\":false,\"alerts\":[],\"overflow\":[]},\"location\":\"    at api (/home/runner/workspace/artifacts/api-server/src/scripts/customer-experience-journey.ts:52:16)\"}"
+        },
+        {
+          "name": "real_guided_TPL-17_questions_saved_revision_private_DOCX_PDF",
+          "status": "fail",
+          "diagnostic": "{\"state\":{\"path\":\"/workspace/documents/a5ca0d04-b00c-4b5a-b53d-b9b58b606940\",\"headings\":1,\"width\":1280,\"scroll\":1280,\"focus\":\"BODY\",\"focusOutline\":\"rgb(39, 36, 33) none 3px\",\"focusId\":\"\",\"focusVisible\":false,\"alerts\":[],\"overflow\":[]},\"location\":\"    at api (/home/runner/workspace/artifacts/api-server/src/scripts/customer-experience-journey.ts:52:16)\"}"
+        }
+      ],
+      "guidedDetails": [],
+      "selection": "managed-identity-twelve-private-guided-drafts",
+      "actualManagedIdentityUsed": true,
+      "realEmailDeliveryClaimed": false,
+      "actualNewPublications": 0,
+      "fixtureDisclosure": "Actual managed synthetic customer verification, twelve private answer-form layouts, actual typed UI answers, saved/reloaded revisions and private durable export requests. No application response interception, published catalogue master, professional review, real email or commerce execution. Word/PDF checks use mechanical readers, not an actual Microsoft Word/manual assistive-technology session.",
+      "r1Accepted": false,
+      "r2Accepted": false,
+      "cleanupErrors": 0,
+      "cleanup": "Owned synthetic identity and application rows removed; provider usage history untouched."
+    },
+    "sha256": "4ce65f921ff42039a78eaa31e3b7a4e0ce924a72a8ddfcc515d629ba190c8e62",
+    "finding": "Harness requested a nonexistent individual-export status URL after the actual DOCX download. Corrected to the documented document-export listing; no application status endpoint or assertion was weakened."
+  },
+  "publication": {
+    "newEligibleTemplates": 0,
+    "newGuidance": 0,
+    "newRules": 0,
+    "catalogueMastersUsed": 0,
+    "reason": "Question-led personal business drafts do not clear source/rights/editorial publication gates or count as catalogue masters."
+  },
+  "acceptance": {
+    "R1Accepted": false,
+    "R2Accepted": false,
+    "sourceRule80Accepted": false,
+    "customerAI60Accepted": false,
+    "editorial60Accepted": false,
+    "publicLaunchEnabled": false,
+    "livePaymentsEnabled": false
+  },
+  "limits": [
+    "No actual Microsoft Word/manual screen-reader or real-device session was performed.",
+    "No catalogue template entitlement, eligible master publication, specialist review, new AI-provider quality run, PSP execution or email delivery was claimed.",
+    "The private answer forms preserve user-supplied business facts and terms; they are not legal-validity or statutory-compliance determinations.",
+    "Privacy fulfilment/erasure, publication/content floors, remaining acceptance and R2 are still incomplete; missing credentials are not the only remaining work."
+  ]
+}

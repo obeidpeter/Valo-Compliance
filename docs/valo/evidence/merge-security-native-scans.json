@@ -1,0 +1,50 @@
+{
+  "executedAt": "2026-11-14T19:30:59.485Z",
+  "savedRevision": "8b60e345ecf54a87cca13b9eaf3d257430876f81",
+  "scans": [
+    {
+      "scanner": "dependencies",
+      "status": "ok",
+      "counts": {
+        "critical": 0,
+        "high": 0,
+        "info": 0,
+        "low": 0,
+        "moderate": 0
+      },
+      "findings": []
+    },
+    {
+      "scanner": "privacy",
+      "status": "ok",
+      "counts": {},
+      "findings": []
+    },
+    {
+      "scanner": "static",
+      "status": "ok",
+      "counts": {
+        "HIGH": 1
+      },
+      "findings": [
+        {
+          "id": "javascript.express.file.fs-express.fs-express",
+          "severity": "HIGH",
+          "location": {
+            "end": {
+              "col": 63,
+              "line": 48
+            },
+            "lines": "",
+            "path": "/home/runner/workspace/artifacts/api-server/src/scripts/chatgpt-permission-proof.ts",
+            "start": {
+              "col": 19,
+              "line": 48
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "independentAssessmentApproval": false
+}

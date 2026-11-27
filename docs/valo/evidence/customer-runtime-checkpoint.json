@@ -1,0 +1,60 @@
+{
+  "recordedAt": "2026-11-14T17:37:19.626Z",
+  "baseCommit": "786d9a1055b98502bbfe53a7757f988bb58bbfbb",
+  "codeHashes": {
+    "artifacts/api-server/src/lib/valo-customer-ai.ts": "75f686a21a8e30728a32fd931789c18f6368b914f969062b93e730bebb719313",
+    "artifacts/api-server/src/scripts/customer-source-suite.ts": "a8f14bcb5c575b30a61735c7a3e90051b557de8c2abc58ac929d704c05aa4858",
+    "lib/valo-core/src/workflow-evidence.ts": "0c7a115d297030d1a992393dc955f2c3766f5a9b08af7884e2e035fc316c9ede",
+    "artifacts/api-server/src/scripts/customer-native-boundaries.ts": "8c7f933bc698cb4638d02edb2af2a08d104ae3b89b5efc463201fd3e049a87ba"
+  },
+  "validation": {
+    "api": {
+      "tests": 162,
+      "passed": 161,
+      "skipped": 1,
+      "failed": 0,
+      "logHash": "25ede1687cd044ff25f2eccf5668da426cf0c00be4cec071f9cb8e36c0dc65a6"
+    },
+    "developmentDatabase": {
+      "tests": 61,
+      "passed": 61,
+      "failed": 0,
+      "logHash": "e124cef2cb20901c0569de273f7465d63489de76e5a80c71eb8b4c93b9b8ebcf"
+    },
+    "typecheck": true,
+    "traceValidation": {
+      "tests": 10,
+      "passed": 10
+    }
+  },
+  "customer60": {
+    "controlled": 7,
+    "declaredFollowupGeneration": 1,
+    "asWrittenGeneration": 0,
+    "partialProvider": 3,
+    "blocked": 49,
+    "failed": 0,
+    "accepted": false,
+    "newProviderAttemptsInRetainedFourTaskRun": 3,
+    "reusedRunProviderAttempts": 0,
+    "actualBillingUnknown": true,
+    "workspaceUsageAtLastPreflight": 5,
+    "workspaceConfiguredDaily": 30
+  },
+  "editorial": {
+    "latestMetadataCheck": {
+      "checked_at": "2026-11-14T17:36:41.011Z",
+      "used": 6
+    },
+    "configuredDaily": 6,
+    "requiredForCandidate": 2,
+    "changed": false
+  },
+  "R1Accepted": false,
+  "R2Accepted": false,
+  "publishedEligible": 0,
+  "launchEnabled": false,
+  "livePaymentsEnabled": false,
+  "productionRecoveryProved": false,
+  "actualEmailSent": false
+}

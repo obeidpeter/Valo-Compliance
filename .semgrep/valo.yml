@@ -1,0 +1,6 @@
+rules:
+  - id: valo-no-runtime-eval
+    languages: [javascript, typescript]
+    pattern: eval(...)
+    message: Runtime eval is forbidden in application and worker code.
+    severity: ERROR

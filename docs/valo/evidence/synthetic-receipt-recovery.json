@@ -1,0 +1,17 @@
+{
+  "executedAt": "2026-11-14T21:49:33.657Z",
+  "historicalReportedMissing": 94,
+  "observedMissingBefore": 94,
+  "repaired": 76,
+  "failed": 18,
+  "remaining": 18,
+  "orderHistoryUnchanged": true,
+  "orderHistoryHash": "42c979b74b202bfa3e0e75c1b7aa8a8fab5498fb07122bad3cca6ae3cfb7df49",
+  "receiptsHeld": true,
+  "concurrentAndRepeatedRepair": true,
+  "providerCalls": 0,
+  "emailSends": 0,
+  "realSettlements": 0,
+  "R1Accepted": false,
+  "R2Accepted": false
+}

@@ -1,0 +1,62 @@
+{
+  "recordedAt": "2026-11-13T18:04:04.935Z",
+  "scope": "Part 4 source inventory reconciliation and functioning held-coverage discovery; not legal publication or release acceptance",
+  "sourceChecks": {
+    "formalIds": 127,
+    "documentSourceRows": 27,
+    "regulatorySourceRows": 79,
+    "allSourceTitleLookupsPassed": true,
+    "coverageLayers": 5,
+    "roadmapExpansionRows": 6,
+    "unchangedR1TemplateCount": 40,
+    "directMatches": 5,
+    "composites": 1,
+    "distinctSupplementaryCandidates": 21,
+    "furtherDistinctPurposeProposals": 19,
+    "overlapNotes": 5,
+    "identifiedTypesIncludingProposals": 80,
+    "publishedTemplates": 0,
+    "publishedGuidance": 0
+  },
+  "observed": {
+    "strictTypecheck": "pass",
+    "nextProductionBuild": "pass",
+    "foundationRegressionTests": 60,
+    "newInventoryRegressionTests": 6,
+    "httpScenarios": 12,
+    "httpRunnerReportedTestsIncludingParent": 13,
+    "formalEvaluationExecutions": {
+      "rules": 0,
+      "customerAi": 0,
+      "editorial": 0
+    },
+    "mobileIndustryViewport": {
+      "width": 360,
+      "height": 900,
+      "verified": "First viewport rendered with held states and no visible horizontal overflow"
+    },
+    "desktopLibraryViewport": {
+      "width": 1280,
+      "height": 900,
+      "verified": "Canonical packaged-food-manufacturing URL restored the selected industry filter and honest empty released catalogue"
+    }
+  },
+  "rawLogs": {
+    "part4-source-validation": "\n> @workspace/scripts@0.0.0 valo:sync-specification /home/runner/workspace/scripts\n> tsx ./src/valo/sync-specification.ts\n\nValidated 127 exact requirements, 27 document titles, 79 regulatory titles, 10 UAT packs, six gates, five coverage layers and six expansion boundaries. No publication or gate accepted.\n",
+    "part4-typecheck": "\n> workspace@0.0.0 typecheck /home/runner/workspace\n> pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck\n\n\n> workspace@0.0.0 typecheck:libs /home/runner/workspace\n> tsc --build\n\nScope: 4 of 10 workspace projects\nartifacts/api-server typecheck$ tsc -p tsconfig.json --noEmit\nartifacts/mockup-sandbox typecheck$ tsc -p tsconfig.json --noEmit\nartifacts/valo typecheck$ tsc -p tsconfig.json --noEmit\nscripts typecheck$ tsc -p tsconfig.json --noEmit\nscripts typecheck: Done\nartifacts/api-server typecheck: Done\nartifacts/mockup-sandbox typecheck: Done\nartifacts/valo typecheck: Done\n",
+    "part4-foundation": "\n> @workspace/scripts@0.0.0 test:valo /home/runner/workspace/scripts\n> tsx --test ./src/valo/*.test.ts\n\n✔ the 27 document rows keep original numbering and exactly five direct, one composite and 21 new mappings (2.772885ms)\n✔ 79 regulatory source rows preserve category IDs and ordinal positions without universal applicability (1.056071ms)\n✔ SCUML aliases and facility/sector overlaps are traced, not counted as separate releases (3.23069ms)\n✔ 19 extra candidates have distinct purposes, existing comparison targets and no publication credit (2.023123ms)\n✔ the exact 20-industry taxonomy and six deeper-pack targets have no invented review dates (0.391772ms)\n✔ R2 metadata remains locked, R3 excluded, and management files never pad the template total (0.269271ms)\n✔ canonical hashing is property-order independent (3.922115ms)\n✔ complete synthetic attestations establish eligibility, never publication (17.946184ms)\n✔ holds changed body (3.944406ms)\n✔ holds changed applicability scope (7.895302ms)\n✔ holds changed assumptions (8.6278ms)\n✔ holds changed claim wording (4.346541ms)\n✔ holds changed content version (2.015235ms)\n✔ holds changed source-check date (3.312769ms)\n✔ holds changed source text (5.217822ms)\n✔ holds policy not approved (4.98374ms)\n✔ holds policy changed after binding (1.737265ms)\n✔ holds jurisdiction outside policy (2.071874ms)\n✔ holds risk outside policy (9.988345ms)\n✔ holds unresolved contract clause (5.065835ms)\n✔ holds missing evidence (4.791927ms)\n✔ holds future source check (1.206643ms)\n✔ holds unknown rights (0.576363ms)\n✔ holds no commercial-use rights (2.476108ms)\n✔ holds withdrawn manifest (0.584905ms)\n✔ holds source hostname suffix attack (0.640697ms)\n✔ holds source credentials attack (0.600968ms)\n✔ holds source HTTP (0.545685ms)\n✔ holds held operative text (4.515068ms)\n✔ holds unresolved amendments (0.687579ms)\n✔ holds expired evidence (2.807474ms)\n✔ holds historical concession (4.277349ms)\n✔ holds wrong source jurisdiction (0.565987ms)\n✔ holds fabricated quote (0.489949ms)\n✔ holds invented numerical claim (2.073741ms)\n✔ holds review reuses draft run (0.685302ms)\n✔ holds missing challenge review (0.510452ms)\n✔ holds review disagreement (3.283515ms)\n✔ holds review saw other verdict (1.772304ms)\n✔ holds stale review (0.453805ms)\n✔ holds failed deterministic arithmetic (1.01544ms)\n✔ holds missing deterministic check (4.454669ms)\n✔ holds missing PDF (0.796562ms)\n✔ holds PDF missing disclosure (0.466093ms)\n✔ holds PDF bound to old version (2.683186ms)\n✔ holds forged rights binding (3.707156ms)\n✔ enhanced content requires every controlling-text check (1.063996ms)\n✔ empty or untyped input holds instead of throwing (3.143471ms)\n✔ unknown schema fields cannot smuggle an override (0.457096ms)\n✔ invalid server clock holds (0.985214ms)\n✔ baseline preserves all 40 original identifiers and exact capability counts (2.031132ms)\n✔ inventory metadata never counts as published content (0.349782ms)\n✔ missing formal requirements remain explicit and uninvented (2.958551ms)\n✔ 27 mappings, 79 held source rows and the SCUML alias remain distinct from publication (0.501334ms)\n✔ implementation path alone never verifies a requirement (0.800333ms)\n✔ passing test alone never verifies a requirement (0.29164ms)\n✔ a blocked gate cannot be accepted even with passing evidence (0.904549ms)\n✔ R2, launch, live commerce and real confidential data remain disabled (0.256755ms)\n✔ all ten UAT packs and six original gate IDs remain unaccepted with exact release expectations (3.806099ms)\n✔ part three formal families preserve 51 exact criteria without expanding R3 scope (1.943511ms)\nℹ tests 60\nℹ suites 0\nℹ pass 60\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1211.184359\n",
+    "part4-next-build": "\n> @workspace/valo@0.0.0 build /home/runner/workspace/artifacts/valo\n> next build\n\n   ▲ Next.js 15.5.29\n\n   Creating an optimized production build ...\n ✓ Compiled successfully in 9.6s\n   Linting and checking validity of types ...\n   Collecting page data ...\n   Generating static pages (0/3) ...\n ✓ Generating static pages (3/3)\n   Finalizing page optimization ...\n   Collecting build traces ...\n\nRoute (app)                                 Size  First Load JS\n┌ ○ /_not-found                            998 B         104 kB\n└ ƒ /[[...slug]]                         1.34 kB         104 kB\n+ First Load JS shared by all             103 kB\n  ├ chunks/786-7f3cfc83f3dc7457.js       46.3 kB\n  ├ chunks/f0943945-0282d7bc5ab078dc.js  54.2 kB\n  └ other shared chunks (total)          2.02 kB\n\n\n○  (Static)   prerendered as static content\nƒ  (Dynamic)  server-rendered on demand\n\n",
+    "part4-http": "\n> @workspace/api-server@0.0.0 test:valo-http /home/runner/workspace/artifacts/api-server\n> tsx --test src/lib/valo-http.test.ts\n\n▶ running development HTTP API fails closed and reports factual release status\n  ✔ published search excludes all held templates and private documents (541.881975ms)\n  ✔ release status does not accept P0, R2 or live payments (29.457853ms)\n  ✔ real development reads receive durable quota metadata without trusting client identity headers (19.180656ms)\n  ✔ malformed and oversized bodies fail explicitly, without reflecting submitted content (144.987108ms)\n  ✔ unauthenticated private endpoints reject reads without shared-cache retention (41.995871ms)\n  ✔ cross-origin and missing-origin mutations are rejected before any save (25.225665ms)\n  ✔ same-origin does not bypass identity verification (10.389163ms)\n  ✔ the detailed matrix retains all exact criteria without marking them accepted (35.838376ms)\n  ✔ content traceability does not promote research inventory to publications (37.16972ms)\n  ✔ the original UAT and gate register does not claim execution or sign-offs (16.745377ms)\n  ✔ public coverage serves exactly 20 held industries and six pack targets, not fictional guidance (13.193892ms)\n  ✔ every supplied inventory row has explicit evidence and coverage states; expansion stays disabled (28.436122ms)\n✔ running development HTTP API fails closed and reports factual release status (950.820625ms)\nℹ tests 13\nℹ suites 0\nℹ pass 13\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1378.334676\n"
+  },
+  "sourceSha256": "7d96bac7992fd4e04f4e6b7e1a9520e7cb69c34571dc8fd32cf37cdebcb0ed5c  docs/specification/essential-business-documents.txt\n97afb417f68173fd8ec621e4b041d3e85e3407ae04f6773ba892cccbf5328a28  docs/registers/content-inventory.json\na03e9767774f1e5c3fbf9af6e7a7d8113a21a0e1a01ae2721902abd90d2e6f53  docs/registers/coverage-expansion.json\nde7a51cf30fb6a4b9c139d095de4365b4b5d460d73772bdcd30b8c6498ec0917  scripts/src/valo/sync-specification.ts\n331cfd3c7a6f015be92fb16f41c1848fd741ded1d9945aa3802aa55a6478eefe  scripts/src/valo/coverage.test.ts\n2a39ca5a894fcad44f2f67c72def6e585113116c26268ff6669788dde386dcd2  lib/valo-core/src/catalogue.ts\ndd2f04224f153688f6c972b8bb301048d29c7a1f72a1a54c21478911d32dd514  lib/valo-core/src/coverage.ts\n5e8676af8dee21055fd9762be20956802dc01b939acf633c6e9d21cbac9dbfe2  lib/valo-core/src/coverage-expansion.generated.ts\n962da48741b2dd34bbe5d7c1d47aeeaaaa345887b4a3c6ed2670c77c564604ee  lib/valo-core/src/traceability.ts\n2717418200ac10aead80be23059ac3f1ca2a1fb29be21d728dd54973267303d5  lib/api-spec/openapi.yaml\n99af6546d93c471d44e6bd95209d12e08e65814df86ed794a119a77926398f91  artifacts/api-server/src/routes/valo.ts\n1799a7183b768adee442814304758878dcd006d1a736b9b0f89a8df7305b2897  artifacts/api-server/src/lib/valo-http.test.ts\nc75bbccd03ed5eebc0ac8305483ca8f22b6f3e620b32fe6e889a3f52bc3dbc34  artifacts/valo/src/screens/industries.tsx\n730513e86bc36e7b7998fd253897498ea316bc4720e7492410a0579aacaa4533  artifacts/valo/src/screens/library.tsx\nf7a2c20b300eddb2ae1bceabcebd21d02530188c83b409ccdc6e24df8a46ac96  artifacts/valo/src/screens/development.tsx\n",
+  "limitations": [
+    "60 foundation tests are NOT the separate formal 60-case editorial evaluation. All formal evaluation execution counts remain zero.",
+    "An initial new unit assertion compared the six deeper-pack set in taxonomy order against a differently ordered source list; corrected to compare set membership. Exact ordered 20-category taxonomy remains separately asserted.",
+    "Inventory source and classification are not authoritative operative text, a current fee, AI review, commercial-use rights or publication evidence.",
+    "78 research keys after the explicit SCUML alias do not establish 78 distinct publishable obligations; umbrella overlaps remain.",
+    "Screenshots did not interact with menus, pagination or expand inventory rows; those paths were checked through code and actual API assertions, not claimed as full E2E.",
+    "No signed-in browser journey, actual AI/PSP integration, provider verification, private export, restore, security/privacy sign-off, complete accessibility audit or R1 gate is proved by this increment.",
+    "Development capture hot-reload warnings persisted; no production approval follows from successful rendering or build.",
+    "R2 remains locked, R3 excluded, live payments/public launch/recurring billing/confidential customer data off; source synchronization remains on its recorded repository visibility hold."
+  ]
+}

@@ -1,0 +1,53 @@
+▶ erasure holds, bounded recovery and accepted-upload process death
+  ✖ 13 objects and 205 restored profile rows resume across killed workers without repeated object traversal (3269.677143ms)
+  ✔ application replay authenticates the entire inventory and case before revocation or profile deletion (2515.585222ms)
+  ✔ distinct advisory locks cannot exhaust a one-connection shared data pool (36.252884ms)
+  ✔ holds and revoked roles stop the next object, while an in-flight result remains recorded (6773.023542ms)
+  ✔ actual export worker cleans an upload finishing after its tracking/job rows were erased (1947.415064ms)
+  ✔ native private upload spans complete erasure and is removed by automatic maintenance (3052.916265ms)
+  ✔ SIGKILL before upload acknowledgement leaves a durable automatic late-write cleanup path (9231.698441ms)
+✖ erasure holds, bounded recovery and accepted-upload process death (26907.856315ms)
+ℹ Killed-upload completion used native private App Storage.
+▶ resumable physical development erasure with retained exclusions and replay
+  ✔ unacknowledged, wrong-role and stale requests cannot delete content (87.895089ms)
+  ✔ quarantine persists before physical deletion and denies workspace resurrection (106.911505ms)
+  ✔ object failure is retained and blocks content purge; repeated deletion is retryable (813.329055ms)
+  ✔ ready, pending and cleanup objects are inventoried once before rows disappear and stale workers stay fenced (400.291951ms)
+  ✔ resume physically removes only scoped rows, keeping explicit unfulfilled records and another tenant (2064.07349ms)
+  ✔ restored membership and late-written objects are re-deleted from retained tombstones (3041.033684ms)
+  ✔ native private storage deletion and repeated late-write replay remove actual synthetic bytes (1936.963762ms)
+  ✔ sealed key tampering and corrupted completion proof stop before deletion (285.599381ms)
+  ✔ non-development and every nonempty deployment marker stop before deletion I/O (2.503315ms)
+  ✔ even a deleted membership cannot recreate an identity with a deletion tombstone (19.323237ms)
+✔ resumable physical development erasure with retained exclusions and replay (10412.236396ms)
+▶ isolated privacy signing-key rotation — no real secret rotation
+  ✔ legacy version is pinned only after its retained signature verifies (23.381775ms)
+  ✔ new version signs while old and legacy signatures still verify (17.148833ms)
+  ✔ missing historical material holds both history verification and identity matching (7.890987ms)
+  ✔ reusing a pinned version name with another key cannot silently re-sign history (10.709721ms)
+  ✔ unsent notices are held idempotently without rewriting accepted outcomes or another tenant (16.889187ms)
+✔ isolated privacy signing-key rotation — no real secret rotation (176.978506ms)
+ℹ tests 25
+ℹ suites 0
+ℹ pass 23
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 51764.77343
+
+✖ failing tests:
+
+test at src/lib/valo-erasure-hardening.integration.test.ts:1:4867
+✖ 13 objects and 205 restored profile rows resume across killed workers without repeated object traversal (3269.677143ms)
+  ReferenceError [Error]: spawn is not defined
+      at start (/home/runner/workspace/artifacts/api-server/src/lib/valo-erasure-hardening.integration.test.ts:90:21)
+      at TestContext.<anonymous> (/home/runner/workspace/artifacts/api-server/src/lib/valo-erasure-hardening.integration.test.ts:104:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async TestContext.<anonymous> (/home/runner/workspace/artifacts/api-server/src/lib/valo-erasure-hardening.integration.test.ts:77:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+undefined
+/home/runner/workspace/artifacts/api-server:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: node --import tsx --test --test-concurrency=1 src/lib/valo-erasure-hardening.integration.test.ts src/lib/valo-privacy-erasure.integration.test.ts src/lib/valo-privacy-keys.integration.test.ts

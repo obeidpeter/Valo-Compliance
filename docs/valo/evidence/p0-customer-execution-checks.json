@@ -1,0 +1,28 @@
+{
+  "scope": "Partial synthetic development checkpoint; no release gate accepted",
+  "browserReport": "docs/valo/evidence/p0-customer-journey.json",
+  "browserReportHash": "020bd6f0b5d975b446012b22fd859167671c37d0fdef3d923287340da6cc3642",
+  "executed": {
+    "browserChecks": 11,
+    "foundationTests": 67,
+    "apiUnitTests": 14
+  },
+  "typescriptExitCode": 0,
+  "nextBuildExitCode": 0,
+  "localLogSha256": {
+    "types": "151371b6a273ced174a84e3443da0dbef0cbf535de44b36571c290bdc382f7c3",
+    "apiUnit": "1fc9862f9af5222926fcd756b1e5e4c087d002ca199e9167d31e4e4c991e6c38",
+    "foundation": "8ee4492521cbdea4514e2835f87dbc718dc0e661ea8bf39297a2031d762f35a2",
+    "nextBuild": "b8a351da50982f1d83e78535381b257642183a1f475cd99b76ddd81fc63b75e5"
+  },
+  "formalSuites": {
+    "sourceBackedRules": 0,
+    "customerAI": 0,
+    "editorial": 0
+  },
+  "p0Accepted": false,
+  "r1Accepted": false,
+  "r2Unlocked": false,
+  "publicLaunchEnabled": false,
+  "livePaymentsEnabled": false
+}

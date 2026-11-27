@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "status": "disabled-partial-preparation-not-spending-authority",
+  "history": {
+    "executedAt": "2026-11-15T04:18:01.221Z",
+    "snapshotStillCurrent": true,
+    "potentialChargeRecords": 57,
+    "reportedUsageRecords": 37,
+    "unknownRecords": 20,
+    "unboundedLiabilities": 20,
+    "projectedExposure": {
+      "potentialChargeRecords": 57,
+      "metadataReportedUsageRecords": 37,
+      "retainedReceiptRefinements": 10,
+      "unresolvedLiabilities": 10,
+      "projectedUsageEstimateNanoUsd": "232829850",
+      "inclusiveRemainingNanoUsd": null,
+      "actualBillingVerified": false,
+      "ledgerWrites": 0,
+      "sourceRowsChanged": 0,
+      "modelCapacityAssumptionsApplied": 0,
+      "note": "No unsupported model-cap assumptions were applied. Missing per-attempt request/model evidence remains held; committed code alone does not prove what was dispatched. These are potential charges and usage estimates, not verified paid calls."
+    },
+    "verifiedRetainedArtifacts": 10,
+    "proposedReceiptResolutions": 10,
+    "unresolvedPublicationAttempts": 1,
+    "databaseWrites": 0,
+    "providerCalls": 0,
+    "enabledBatches": 0,
+    "availableBalance": null
+  },
+  "prepared": {
+    "packageId": "finite-package:0ff9688e8f52082282197a3cae9d909165839e322e57fd6bcb70a2569fd29ca1",
+    "scope": "one finite additional allocation with automatic exact submanifest admission",
+    "ownerApproved": false,
+    "executableScope": "one exact operational review pair per verified saved candidate",
+    "candidateCount": 1,
+    "proposalCount": 1,
+    "proposals": [
+      {
+        "manifestHash": "95b33128ba47948143affc8e8fbd1f49e8e3cf4cd94b58fd0422bde88b6ee96a",
+        "attemptCount": 2,
+        "expiresAt": "2026-11-15T05:18:38.919Z",
+        "work": [
+          {
+            "key": "operational:9e995218-f5b0-4d6e-8f91-51e11582f7b4:8f2f6188bad5839c2bd7419824bafcdd2c5c4ccff0d403f6594d8989d2e5b978:factual:attempt-1",
+            "lane": "publication",
+            "role": "factual",
+            "candidateHash": "360c378ebbba824da3cdfabc82b76e670bb8cfcb5c5502045e8d31a339d4875e",
+            "candidateVersionId": "9e995218-f5b0-4d6e-8f91-51e11582f7b4",
+            "sourceHashes": [],
+            "caseHash": "a10ebe9d248a36492f1e9e6e218b1a052c0fae2937560e5de580701a7e4ba639",
+            "model": "gpt-5.4-mini",
+            "maxCompletionTokens": 8192
+          },
+          {
+            "key": "operational:9e995218-f5b0-4d6e-8f91-51e11582f7b4:8f2f6188bad5839c2bd7419824bafcdd2c5c4ccff0d403f6594d8989d2e5b978:challenge:attempt-1",
+            "lane": "publication",
+            "role": "challenge",
+            "candidateHash": "360c378ebbba824da3cdfabc82b76e670bb8cfcb5c5502045e8d31a339d4875e",
+            "candidateVersionId": "9e995218-f5b0-4d6e-8f91-51e11582f7b4",
+            "sourceHashes": [],
+            "caseHash": "a10ebe9d248a36492f1e9e6e218b1a052c0fae2937560e5de580701a7e4ba639",
+            "model": "gpt-5.4-mini",
+            "maxCompletionTokens": 8192
+          }
+        ]
+      }
+    ],
+    "holds": [],
+    "privateReportArtifact": {
+      "id": "8feaf1cb-95cd-464e-9e99-5a5f0f878654",
+      "hash": "a407b919d41ce11a8ef33486e0983d27a82d4315f3a5dca165b21a7127491c7b",
+      "extension": "json"
+    },
+    "providerCalls": 0,
+    "approvalRowsWritten": 0,
+    "nonpublicationCorpora": "Original 80/60/60 case rosters are frozen in the proposed package; executable preparers remain held."
+  },
+  "limitations": [
+    "Potential charges are not verified paid calls or billing receipts.",
+    "Receipt refinements are proposed, not committed accounting changes.",
+    "No finite inclusive remaining balance established while prior liabilities remain unresolved.",
+    "This is a proposed additional allocation, not silently substituted for the originally inclusive allocation.",
+    "Only one exact operational pair is currently executable; other authored-corpus preparers remain an implementation gap.",
+    "No owner approval, quota increase, batch admission or provider execution was performed."
+  ]
+}

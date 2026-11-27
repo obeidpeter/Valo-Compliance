@@ -1,0 +1,24 @@
+▶ real development access intake, privacy isolation and staff boundaries
+  ✔ no login or account lookup is needed; confirmation is saved, never dispatched (25.400622ms)
+  ✔ idempotent retry preserves one record; altered reuse fails (23.045467ms)
+  ✔ honeypot and invalid email fail without saving (2.445929ms)
+  ✔ concurrent verified-or-unverified contacts cannot create unlimited anonymous tickets (116.794772ms)
+  ✔ different contacts receive the same non-enumerating wording (21.626413ms)
+  ✔ privacy requests really persist and do not claim deletion (56.425113ms)
+  ✔ workspace JSON export includes saved revisions but excludes another business (76.450658ms)
+  ✔ JSON v2 includes owned file/job metadata, never private locators or queue identifiers (86.536535ms)
+  ✔ activity export is restricted to this requester and workspace (24.316198ms)
+  ✔ an over-limit metadata section fails explicitly rather than returning a truncated download (307.301467ms)
+  ✔ large scoped download spans pages without truncation, private fields or another tenant; scratch is removed (3014.176699ms)
+  ✔ download consumer failure removes private scratch instead of leaving a prepared result (67.191666ms)
+  ✔ revoked membership cannot retrieve exports or saved privacy requests (9.831386ms)
+  ✔ no staff permission, missing MFA and cross-area substitution all fail (32.794833ms)
+✔ real development access intake, privacy isolation and staff boundaries (4074.02984ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6730.946498

@@ -1,0 +1,31 @@
+{
+  "before": {
+    "anonymous": {
+      "fullName": "obeidpeter/Valo-Compliance",
+      "private": false,
+      "status": 200
+    },
+    "authenticated": {
+      "admin": true,
+      "fullName": "obeidpeter/Valo-Compliance",
+      "private": false,
+      "push": true,
+      "status": 200
+    },
+    "checkedAt": "2026-11-13T20:57:27.279Z"
+  },
+  "change": {
+    "checkedAt": "2026-11-13T20:58:34.740Z",
+    "fullName": "obeidpeter/Valo-Compliance",
+    "private": true,
+    "status": 200
+  },
+  "verification": {
+    "anonymousStatus": 404,
+    "applicationSourcePushed": false,
+    "authenticatedStatus": 200,
+    "checkedAt": "2026-11-13T21:01:05.077Z",
+    "private": true,
+    "repository": "obeidpeter/Valo-Compliance"
+  }
+}

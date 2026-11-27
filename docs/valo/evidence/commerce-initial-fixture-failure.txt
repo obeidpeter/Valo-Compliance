@@ -1,0 +1,55 @@
+✖ controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication (125.141404ms)
+✔ timestamped raw-body authentication, replay bounds and rotation (1.86737ms)
+✔ server verification rejects live domain, unsafe amounts and mismatched immutable order facts (4.137071ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 2
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4211.990564
+
+✖ failing tests:
+
+test at src/lib/valo-commerce.integration.test.ts:11:1
+✖ controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication (125.141404ms)
+  Error: Failed query: delete from "valo_publication_policies" where "valo_publication_policies"."id" = $1
+  params: synthetic-commerce-held-9f0bee4e-bf46-47f3-bd9b-ff3149134238
+      at NodePgPreparedQuery.queryWithCache (/home/runner/workspace/node_modules/.pnpm/drizzle-orm@0.45.4_@opentelemetry+api@1.10.0_@types+pg@8.23.1_pg@8.23.1/node_modules/src/pg-core/session.ts:73:11)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.<anonymous> (/home/runner/workspace/artifacts/api-server/src/lib/valo-commerce.integration.test.ts:148:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    query: 'delete from "valo_publication_policies" where "valo_publication_policies"."id" = $1',
+    params: [ 'synthetic-commerce-held-9f0bee4e-bf46-47f3-bd9b-ff3149134238' ],
+    cause: error: Publication evidence is append-only
+        at /home/runner/workspace/node_modules/.pnpm/pg-pool@3.14.0_pg@8.23.1/node_modules/pg-pool/index.js:45:11
+        at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+        at async <anonymous> (/home/runner/workspace/node_modules/.pnpm/drizzle-orm@0.45.4_@opentelemetry+api@1.10.0_@types+pg@8.23.1_pg@8.23.1/node_modules/src/node-postgres/session.ts:149:14)
+        at async NodePgPreparedQuery.queryWithCache (/home/runner/workspace/node_modules/.pnpm/drizzle-orm@0.45.4_@opentelemetry+api@1.10.0_@types+pg@8.23.1_pg@8.23.1/node_modules/src/pg-core/session.ts:71:12)
+        at async TestContext.<anonymous> (/home/runner/workspace/artifacts/api-server/src/lib/valo-commerce.integration.test.ts:148:5)
+        at async Test.run (node:internal/test_runner/test:1409:7)
+        at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+      length: 161,
+      severity: 'ERROR',
+      code: 'P0001',
+      detail: undefined,
+      hint: undefined,
+      position: undefined,
+      internalPosition: undefined,
+      internalQuery: undefined,
+      where: 'PL/pgSQL function valo_publication_immutable() line 4 at RAISE',
+      schema: undefined,
+      table: undefined,
+      column: undefined,
+      dataType: undefined,
+      constraint: undefined,
+      file: 'pl_exec.c',
+      line: '3925',
+      routine: 'exec_stmt_raise'
+    }
+  }
+undefined
+/home/runner/workspace/artifacts/api-server:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: tsx --test src/lib/valo-paystack-contract.test.ts src/lib/valo-commerce.integration.test.ts

@@ -1,0 +1,43 @@
+
+> @workspace/api-server@0.0.0 test:valo-erasure-db /home/runner/workspace/artifacts/api-server
+> VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/lib/valo-erasure-hardening.integration.test.ts src/lib/valo-privacy-erasure.integration.test.ts
+
+▶ erasure holds, bounded recovery and accepted-upload process death
+  ✔ distinct advisory locks cannot exhaust a one-connection shared data pool (71.700587ms)
+  ✔ holds and revoked roles stop the next object, while an in-flight result remains recorded (5826.282985ms)
+  ✔ actual export worker cleans an upload finishing after its tracking/job rows were erased (1394.589512ms)
+  ✖ SIGKILL before upload acknowledgement leaves a durable automatic late-write cleanup path (13558.831369ms)
+✖ erasure holds, bounded recovery and accepted-upload process death (20941.116937ms)
+▶ resumable physical development erasure with retained exclusions and replay
+  ✔ unacknowledged, wrong-role and stale requests cannot delete content (42.049676ms)
+  ✔ quarantine persists before physical deletion and denies workspace resurrection (71.222057ms)
+  ✔ object failure is retained and blocks content purge; repeated deletion is retryable (746.113411ms)
+  ✔ ready, pending and cleanup objects are inventoried once before rows disappear and stale workers stay fenced (398.095306ms)
+  ✔ resume physically removes only scoped rows, keeping explicit unfulfilled records and another tenant (1092.673744ms)
+  ✔ restored membership and late-written objects are re-deleted from retained tombstones (1766.06795ms)
+  ✔ native private storage deletion and repeated late-write replay remove actual synthetic bytes (1710.454062ms)
+  ✔ sealed key tampering and corrupted completion proof stop before deletion (132.502448ms)
+  ✔ non-development and every nonempty deployment marker stop before deletion I/O (3.149197ms)
+  ✔ even a deleted membership cannot recreate an identity with a deletion tombstone (15.19663ms)
+✔ resumable physical development erasure with retained exclusions and replay (7677.356712ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 14
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 25285.443528
+
+✖ failing tests:
+
+test at src/lib/valo-erasure-hardening.integration.test.ts:1:11346
+✖ SIGKILL before upload acknowledgement leaves a durable automatic late-write cleanup path (13558.831369ms)
+  Error: Controlled upload child exited before its barrier; code 0
+      at ChildProcess.<anonymous> (/home/runner/workspace/artifacts/api-server/src/lib/valo-erasure-hardening.integration.test.ts:179:63)
+      at ChildProcess.wrapper (node:events:639:12)
+      at ChildProcess.emit (node:events:514:28)
+      at ChildProcess._handle.onexit (node:internal/child_process:324:12)
+/home/runner/workspace/artifacts/api-server:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @workspace/api-server@0.0.0 test:valo-erasure-db: `VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/lib/valo-erasure-hardening.integration.test.ts src/lib/valo-privacy-erasure.integration.test.ts`
+Exit status 1

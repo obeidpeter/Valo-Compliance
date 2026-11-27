@@ -1,0 +1,27 @@
+# Only source code is formatted. Documents, data and generated output are left byte-for-byte.
+**/*.md
+**/*.json
+**/*.yaml
+**/*.yml
+**/*.sql
+**/*.txt
+**/*.toml
+**/*.css
+**/*.html
+**/*.py
+**/*.sh
+
+# Hash-pinned or generated files must never be reformatted.
+docs/
+lib/db/drizzle/
+**/generated/
+**/*.generated.ts
+lib/valo-core/src/checker-business-name.ts
+lib/valo-core/src/checker-source-candidates.ts
+
+# Build output, dependencies and run artefacts.
+node_modules/
+**/dist/
+**/.next/
+**/generated-artifacts/
+attached_assets/

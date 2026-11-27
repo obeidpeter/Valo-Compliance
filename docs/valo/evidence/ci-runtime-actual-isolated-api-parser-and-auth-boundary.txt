@@ -1,0 +1,24 @@
+✔ Express resolves a patched compatible body-parser release (3.474204ms)
+✔ bounded JSON preserves unknown values and saved content without mutation (0.375782ms)
+✔ oversized collections fail before validating their elements (1.066875ms)
+✔ deep, broad and high-node-count JSON fails within fixed budgets (1.117206ms)
+✔ validation responses cap error count, path and message lengths (2.611185ms)
+▶ isolated real API rejects compressed/oversized JSON and remains alive
+  ✔ valid gzip is rejected without decompression (97.308376ms)
+  ✔ truncated gzip cannot terminate the API (17.992184ms)
+  ✔ gzip with hostile trailing data cannot terminate the API (22.02479ms)
+  ✔ deflate cannot enter a decoder lifecycle (16.140547ms)
+  ✔ brotli cannot enter a decoder lifecycle (14.991415ms)
+  ✔ structural collection limit remains enforced (23.563638ms)
+  ✔ ordinary 128 KiB size limit remains enforced (14.542715ms)
+  ✔ malformed uncompressed JSON remains a safe 400 (13.940036ms)
+  ✔ normal JSON reaches authentication and cannot create an anonymous document (87.706143ms)
+✔ isolated real API rejects compressed/oversized JSON and remains alive (3728.169408ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3906.06822

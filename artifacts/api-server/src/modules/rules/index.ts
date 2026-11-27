@@ -1,0 +1,29 @@
+/**
+ * The rules module's public entry: the released-rule registry the checker uses, saved assessments,
+ * their comparison and the admission check for a rule release. Code outside
+ * artifacts/api-server/src/modules/rules imports only this file (repository rule
+ * `module-boundary`); tests may import the module's files directly.
+ *
+ * The rule release command lives in the editorial module (modules/editorial/valo-rule-release.ts),
+ * because it binds sources through the sources module's storage; loading that here would load it
+ * into every reader of assessments.
+ */
+export * from "./valo-assessments";
+export { listRuleNotices, markRuleNoticeRead } from "./rule-notices";
+export {
+  CHECKER_CORPUS_PATH,
+  checkerChallengeManifest,
+  checkerChallengeTwin,
+  checkerChallengeVerdictSchema,
+  prepareCheckerChallengeManifest,
+  rebuildCheckerChallengeManifest,
+  type CheckerChallengeVerdict,
+} from "./checker-challenge";
+/** Loads the challenge runner, and the managed inference it calls, only when challenges run: the
+ * customer path and its tests read this module without either. */
+export async function executeCheckerChallenges(
+  ...args: Parameters<typeof import("./checker-challenge-run").executeCheckerChallenges>
+) {
+  return (await import("./checker-challenge-run")).executeCheckerChallenges(...args);
+}
+export { corpusDifferences, runCorpusAgainstReleased } from "./checker-corpus";

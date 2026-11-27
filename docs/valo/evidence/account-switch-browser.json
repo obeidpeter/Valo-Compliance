@@ -1,0 +1,50 @@
+{
+  "startedAt": "2026-11-14T12:43:06.987Z",
+  "controlledIdentity": true,
+  "controlledApi": true,
+  "realClerkSessions": 0,
+  "compiledProductCssSha256": "aa7eeb7251d632ec4cf45f67fc160c511b7023dce604ae42badcee1c87306dbc",
+  "actualComponents": [
+    "screens/profile.tsx",
+    "screens/checker.tsx",
+    "components/account-state-boundary.tsx"
+  ],
+  "checks": [
+    "Legacy cache-only control reproduced copied A form state after identity B",
+    "Identity remount removed old profile fields before B form use",
+    "B profile submission contained no A form marker",
+    "Late old-account workspace response could not repopulate B form/cache",
+    "Public checker copied facts reset on controlled sign-out",
+    "Controlled page lifecycle scrubbed private subtree and reloaded fresh form state",
+    "360px profile reflow and native keyboard focus advance passed"
+  ],
+  "status": "passed_controlled_component_regression_not_real_identity_acceptance",
+  "sourceHashes": [
+    {
+      "path": "artifacts/valo/src/components/account-state-boundary.tsx",
+      "sha256": "ee86f02b906e6d41606d1fc594c8d1eafcec3242d94c3cb1757992070adb504a"
+    },
+    {
+      "path": "artifacts/valo/src/App.tsx",
+      "sha256": "671e5b948dc69e1ae506ef2674de5c67608089d2d0dae064e251d8eee57264a0"
+    },
+    {
+      "path": "artifacts/valo/src/screens/profile.tsx",
+      "sha256": "e67866dc9b52e43e83a9fe5b907c60017f731a9d3e48263a4ef3ddad68cfc673"
+    },
+    {
+      "path": "artifacts/valo/src/screens/checker.tsx",
+      "sha256": "6e34188dfc06955c45746d7b294f3a50ee940c4e7f94a42c7742e052ab174707"
+    }
+  ],
+  "implementationRevision": "92fadef424e625b31840441b5bde157c6c480134",
+  "acceptedR1": false,
+  "realManagedAccountSwitchVerified": false,
+  "nativeBfCacheVerified": false,
+  "independentReviewOfNewCode": false,
+  "initialHarnessFailures": [
+    "Unprocessed CSS import replaced by actual compiled product CSS.",
+    "Used the already-installed Chromium binary.",
+    "Corrected selectors and legal-form fixture values against actual UI/contract; no application gate was waived."
+  ]
+}

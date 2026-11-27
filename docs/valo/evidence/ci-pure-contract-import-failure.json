@@ -1,0 +1,11 @@
+{
+  "revision": "efbbd9142d86c2dae74fc0e9ea15687a67c0b759",
+  "run": "https://github.com/obeidpeter/Valo-Compliance/actions/runs/43582346778",
+  "postgresJob": "success",
+  "foundationJob": "failure",
+  "failedStep": "Run API input-safety tests",
+  "error": "DATABASE_URL must be set. Did you forget to provision a database?",
+  "cause": "Pure Paystack contract imported ValoProblem from the datastore module, which initialised the database during import.",
+  "fix": "Shared safe domain error moved into a credential-free module; datastore re-exports the same constructor. Regression executes both real HMAC/order-match contract tests in a child with no database/provider credentials.",
+  "productionExploitClaim": false
+}

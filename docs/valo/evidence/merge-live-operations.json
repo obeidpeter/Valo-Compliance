@@ -1,0 +1,57 @@
+{
+  "level": 30,
+  "time": 1794683929304,
+  "pid": 165046,
+  "hostname": "repl",
+  "event": "operations.probe",
+  "sample": {
+    "database": {
+      "status": "ok",
+      "value": 1,
+      "elapsedMs": 70
+    },
+    "exports": {
+      "status": "ok",
+      "value": 0,
+      "elapsedMs": 63
+    },
+    "cleanup": {
+      "status": "ok",
+      "value": 0,
+      "elapsedMs": 62
+    },
+    "payments": {
+      "status": "ok",
+      "value": 94,
+      "elapsedMs": 60
+    },
+    "checkedAt": "2026-11-14T19:18:49.218Z",
+    "scope": "development-project-local",
+    "worker": {
+      "status": "healthy",
+      "ageMs": 2566
+    },
+    "limits": {
+      "exports": 100,
+      "cleanup": 0,
+      "workerAgeMs": 90000
+    }
+  },
+  "alerts": {
+    "active": [
+      "PAYMENTS_BACKLOG"
+    ],
+    "emitted": 0,
+    "sequence": 1
+  },
+  "externalMessagesSent": 0,
+  "productionReadiness": false,
+  "retention35Days": "unresolved",
+  "readinessAccepted": false,
+  "classification": {
+    "syntheticOrdersMissingReceipt": 94,
+    "missingGrant": 0,
+    "unclassifiedOrders": 0
+  },
+  "classificationSource": "Executed development aggregate query; no provider settlement or repairs attempted"
+}

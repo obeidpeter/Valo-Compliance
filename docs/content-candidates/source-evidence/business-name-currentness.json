@@ -1,0 +1,40 @@
+[
+  {
+    "id": "cac_process",
+    "url": "https://www.cac.gov.ng/services/business-name",
+    "finalURL": "https://www.cac.gov.ng/services/business-name",
+    "httpStatus": 200,
+    "retrievedAt": "2026-11-14T08:34:59.771995+00:00",
+    "bytes": 33421,
+    "rawSHA256": "c394ab07ed9e7b1004b72d9f592cffc66a4369a4f62127ecf188f80f4d0548b8",
+    "rawPath": "analysis/business_name_sources/cac_process.html",
+    "role": "currentness_or_procedure_context_not_controlling_statute"
+  },
+  {
+    "id": "cac_home",
+    "url": "https://icrp.cac.gov.ng/",
+    "finalURL": "https://icrp.cac.gov.ng/",
+    "httpStatus": 200,
+    "retrievedAt": "2026-11-14T08:35:01.710111+00:00",
+    "bytes": 47015,
+    "rawSHA256": "46c71a80d78b05d704cc0383123b4382948b6263dc7bbc6d4953d7e9bb0fe837",
+    "rawPath": "analysis/business_name_sources/cac_home.html",
+    "role": "currentness_or_procedure_context_not_controlling_statute"
+  },
+  {
+    "id": "nilds_bill_record",
+    "url": "https://ir.nilds.gov.ng/handle/123456789/1868?show=full",
+    "error": "The read operation timed out"
+  },
+  {
+    "id": "bfa_assent",
+    "url": "https://fmino.gov.ng/president-muhammadu-buhari-assents-to-the-business-facilitation-miscellaneous-provisions-bill-2022-and-other-bills/",
+    "finalURL": "https://fmino.gov.ng/president-muhammadu-buhari-assents-to-the-business-facilitation-miscellaneous-provisions-bill-2022-and-other-bills/",
+    "httpStatus": 200,
+    "retrievedAt": "2026-11-14T08:35:03.203529+00:00",
+    "bytes": 290805,
+    "rawSHA256": "9387b1e0af77aa838fbda42dfc24720cdb2da6096a365bc0e8b3acd8fa273b89",
+    "rawPath": "analysis/business_name_sources/bfa_assent.html",
+    "role": "currentness_or_procedure_context_not_controlling_statute"
+  }
+]

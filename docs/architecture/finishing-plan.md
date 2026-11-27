@@ -1,0 +1,337 @@
+# Finishing plan
+
+Status: **approved** by the owner on 24 November 2026, in the words "Implement all (make the best
+decisions for me)". The owner left the decisions this plan added to the coding agent. They are
+recorded, with their reasons, under
+[Decisions made under the owner's delegation](#decisions-made-under-the-owners-delegation). Work
+starts with phase 0. Approving the plan approves no spending, launch, live payment, real customer
+data or real message (AGENTS.md section 1): those stay with the owner, and the rows that need one
+say so.
+
+The owner asked for a plan of everything left to implement to finish the platform, apart from the
+owner's own tasks. This is that plan. It covers release R1, the commercial core, and then R2. R3
+stays excluded. It sits beside the [maintainability and scale plan](plan.md), which is nearly done
+and whose open rows are taken up here.
+
+## How it was made
+
+On 24 November 2026 the code at commit `c8a3238` was read against all 127 requirements in
+`docs/registers/requirements.json`, family by family, together with the roadmap, the plan, the
+known issues and the decision records. Nothing was run for it: every finding comes from reading
+code and tests, and a finding is not a test result.
+
+The findings this plan leans on most were then checked a second time in the code. Those rows end
+with "(checked twice)". Every row is checked again when its work starts, and a row that turns out
+to be built already is struck out, not built again.
+
+Sizes are rough and relative: **S** is under a day of an engineer's work, **M** a few days, **L** a
+week or more. They are estimates from reading, not commitments or dates.
+
+## What "finished" means here
+
+- **R1** is the 127 requirements of `docs/specification/VALO-TRD-001-v1.1.txt` and the roadmap's
+  content targets. A requirement is finished when its code exists and a test in CI shows it.
+- A requirement is **accepted** only by the owner, with evidence from a deployed system: the six
+  gates, the ten user-test packs and the three evaluation suites. Acceptance is not in this plan.
+  The plan builds what acceptance will need.
+- **R2** is what the roadmap lists for growth: team access, more guided documents, a provider
+  directory, bundles, attachments.
+
+## Where the platform stands
+
+Built and tested in development: the public site and its redesign, sign-in, the workspace, twelve
+fill-in forms with Word and PDF files, the requirements check's engine, tasks and reminders, support
+requests, test-mode checkout with refunds and disputes, privacy requests, the staff console, the two
+editorial routes (the reviewed route of decision 0014, and in development the staff library of
+decision 0018 with the owner's sign-offs of decisions 0018 and 0020), source monitoring, backups in
+development, and a CI of seven jobs.
+
+What is left falls into five kinds:
+
+1. **Routes in use lag the reviewed route.** Notices, disclosures, holds, saved items and
+   recommendations were built for content released by the reviewed route. The staff library and the
+   owner's sign-off, which is how content is released today, lack many of them.
+2. **Parts of a requirement no code does yet.** The largest: a fill-in form's file is a list of its
+   questions and answers, not the template's own wording; no file can be made without the draft
+   notice; the requirements check's questions are fixed in the web app; a privacy request cannot be
+   completed.
+3. **Things that exist only in development or test mode.** Email, payments, document files, the
+   drafting assistant and production itself.
+4. **Evidence a requirement asks for that no test gives.**
+5. **R2**, of which only a design for team access exists.
+
+## The work
+
+### Phase 0: corrections and loose ends
+
+Small, and none needs a decision. This is where work starts.
+
+**Done on 24 November 2026.** Every row below is built, tested and merged into the integration
+branch: the release notice
+([#243](https://github.com/obeidpeter/Valo-Compliance/pull/243)), the guide reviews
+([#245](https://github.com/obeidpeter/Valo-Compliance/pull/245)), the support requests and
+checkout's daily limit ([#244](https://github.com/obeidpeter/Valo-Compliance/pull/244)), the
+records ([#246](https://github.com/obeidpeter/Valo-Compliance/pull/246)), the NAFDAC rule
+([#247](https://github.com/obeidpeter/Valo-Compliance/pull/247)) and the tests
+([#248](https://github.com/obeidpeter/Valo-Compliance/pull/248)). The NAFDAC rule, like the other
+three, is released only when the owner signs it.
+
+| What is left | Requirements | Size |
+| --- | --- | --- |
+| A rule released on the owner's sign-off shows no notice of how it was released on a customer's result, while the sign-off panel says "Shown with it". Show the notice on the result, in the saved result and in its download (checked twice) | EDP-008 | S |
+| The reviewed route still admits a guide's two AI reviews, but its publisher now refuses every guide: a guide is released only on the owner's sign-off (decision 0018). Paid reviews of a guide would therefore release nothing. Stop admitting guide reviews unless that route is chosen for guides again, and correct `plan.md` and `docs/valo/guidance-preparation.md`, which still say the route releases a guide (checked twice) | CMP-008, EDP-004 | S |
+| The workspace's quick jump to "Support requests" opens a page that does not exist. Fix it and list a customer's support requests in the workspace (checked twice) | WRK-001, WRK-006 | S |
+| Checkout's daily limit shares a counter's name with its per-minute limit, so ten checkouts in a day would raise the payment-activity alert | SEC-005 | S |
+| Records: list staff-library versions in the release record; cite the staff-library and owner-rule tests in the evidence register; add the backup store to the processor review; remove an advisory exception that no longer applies; count the price and rule-release code in the coverage areas | OPS-005, OPS-006, SEC-007, NFR-011 | S |
+| Tests for behaviour already built: the editor's conflict, offline and undo states; a download's headers; checkout and payment-status success; the payment event worker; a new rule version flagging tasks; the reply to an unsupported drafting request; content staff refused a payment setting | EDT-003, EDT-004, EDT-008, PAY-002, PAY-004, PAY-006, RUL-009, AI-001, ADM-001, NFR-009 | M |
+| The NAFDAC rule, the fourth research note. NAFDAC's site serves the Act (Cap F33) unchanged since 14 November. Register it as a watched source, write its amendment record from real searches, and prepare the rule and its scenarios for the owner's sign-off | RUL-008 | M |
+
+### Phase 1: documents worth paying for
+
+**Done on 25 November 2026.** Every row below is built, tested and merged into the integration
+branch:
+- the forms that produce the document
+  ([#249](https://github.com/obeidpeter/Valo-Compliance/pull/249) to
+  [#258](https://github.com/obeidpeter/Valo-Compliance/pull/258));
+- the finished file ([#259](https://github.com/obeidpeter/Valo-Compliance/pull/259));
+- the previews ([#260](https://github.com/obeidpeter/Valo-Compliance/pull/260));
+- the library templates as full entries
+  ([#261](https://github.com/obeidpeter/Valo-Compliance/pull/261) and
+  [#262](https://github.com/obeidpeter/Valo-Compliance/pull/262));
+- the editions ([#263](https://github.com/obeidpeter/Valo-Compliance/pull/263) and
+  [#264](https://github.com/obeidpeter/Valo-Compliance/pull/264));
+- the editor ([#265](https://github.com/obeidpeter/Valo-Compliance/pull/265) to
+  [#267](https://github.com/obeidpeter/Valo-Compliance/pull/267)).
+
+What is left of them is the owner's, as each design's points for the owner say:
+- the new words;
+- the licence text that states [delegated decision 3](#decisions-made-under-the-owners-delegation);
+- one file of each kind opened in Microsoft Word and in a standard PDF reader, which CI cannot do.
+  Until then EDT-006 is not accepted.
+
+| What is left | Requirements | Size |
+| --- | --- | --- |
+| **Forms that produce the document.** A form's file prints each question with its answer. For an invoice that is close to the document; for the five agreements it is not an agreement. Join each form to its template: the answers fill the template's own wording and layout, with clause choices where the template has them. This needs a second version of the forms. The freeze of 21 November is released for it, on the terms of [delegated decision 1](#decisions-made-under-the-owners-delegation) (checked twice). The design, with its slices, is [forms-v2.md](forms-v2.md): a form fills only wording released in the staff library, never the retained drafts | EDT-001, EDT-002, EDT-006 | L |
+| With it: a document made from a form records its template and version; the five premium forms check for a purchase, which they do not today; a template's page starts its form; questions carry examples and are filled from the business profile; the server checks answer types (checked twice for the purchase check) | DOC-005, EDT-001, PRO-003 | M |
+| **A finished file.** Every file carries "INCOMPLETE DRAFT" on each page, complete or not, and the Word files filed from the retained drafts carry "BLANK DEVELOPMENT TEMPLATE". Check completeness on the server when a file is asked for, and print a complete document without the draft notice (checked twice). The design, with its slices, is [finished-file.md](finished-file.md) | EDT-005, EDT-006, EDT-009 | M |
+| **Library templates as full entries.** A template released from the staff library has a title, text and file only. Give it what the reviewed route's entries have: saving, recommendations, "make my own copy" in the workspace, what it is for, what it needs, its limits, related guidance, and a statement of how it was written and checked (the wording is the owner's to approve). The design, with its slices, is [library-entries.md](library-entries.md) | DOC-001, DOC-003, DOC-006, DOC-009, EDP-008 | M |
+| **Editions** ([design](editions.md)). Warn when a newer edition exists. When an edition is replaced or withdrawn, tell the people who bought or used it, with what they can do. What a buyer keeps is [delegated decision 3](#decisions-made-under-the-owners-delegation) | DOC-007, EDT-010, EDP-011, PAY-009 | M |
+| **Previews.** A real preview for each template instead of two generic lines; a free library template shows a preview, not its whole text; a test that no built page holds premium text | DOC-004 | S to M |
+| **The editor** ([design](editor.md)): a lock on a template's fixed wording; a check that the preview and the files say the same; a check that Word opens the file; table headings repeated across pages | EDT-002, EDT-003, EDT-006 | M |
+
+### Phase 2: a requirements check people can complete
+
+**The questions were done on 25 November 2026**
+([#268](https://github.com/obeidpeter/Valo-Compliance/pull/268) to
+[#271](https://github.com/obeidpeter/Valo-Compliance/pull/271)), apart from one part that waits on
+the owner. The local government area stays free text until a usable official copy of its list can
+be read; the design's fifth point for the owner asks for one.
+
+**The results were done on 25 November 2026**
+([#272](https://github.com/obeidpeter/Valo-Compliance/pull/272) to
+[#275](https://github.com/obeidpeter/Valo-Compliance/pull/275)), apart from one part. A rule released
+on the reviewed route shows when it was AI reviewed only as the day it was published: the route's
+review records hold no time of their own ([the design's third point for the owner](results.md#the-owners-points)).
+The other new words, the prepared rules' official pages and any fee or deadline they record are the
+owner's to confirm. The rule changes are built in the three slices of [their design](rule-changes.md).
+
+| What is left | Requirements | Size |
+| --- | --- | --- |
+| **The questions** ([design](requirements-questions.md)). The check's steps and nineteen questions are fixed in the web app. The prepared rules read none of them: they read an "optional details" panel of up to 23 fields with no skipping, not filled from the earlier answers. Hold the questionnaire as data, ask each released rule's questions in the main flow with skipping, give sector, product type and local government fixed choices, and let the earlier answers feed the rules (checked twice) | RUL-001 | L |
+| **Results** ([design](results.md)). Show the documents a rule recommends, which the engine returns and no screen shows; record a fee and a deadline with "confirm with the authority"; link each authority's own official route; say what a place or activity is not covered for; show the source-check, review and publication dates separately (checked twice for the recommended documents) | RUL-006, CMP-001, CMP-003, CMP-004, CMP-006, CMP-007, EDP-012 | M |
+| **Rule changes** ([design](rule-changes.md)). A new version or a withdrawal records its reason and who it affects, flags saved results and tasks made under the old one, and tells those customers. The owner's panel withdraws a rule with no reason recorded today | CMP-005, EDP-011, ADM-007, RUL-009 | M |
+| **The 80 scenarios through the live check** ([design](checker-scenarios.md)). The runner executes the research notes' calculations in their own format, not the check with released rules. Map the scenarios to the check's answers and run them against signed rules. Build the preparer for the separate AI run that challenges the expected results; running it needs AI spend | RUL-008 | M |
+
+### Phase 3: editorial work on the routes in use
+
+| What is left | Requirements | Size |
+| --- | --- | --- |
+| **Withdrawal and replacement in the staff library** ([design](library-holds.md)): the customers affected, shown to staff before a withdrawal, a hold short of withdrawal, and complaints that can point at a library item or a signed rule. A withdrawal's reason and the notice to customers are built with editions in phase 1 ([editions](editions.md)) | ADM-007, ADM-008, EDP-011 | M |
+| **Keeping published guidance current** ([design](guidance-currency.md)). A regulatory guide stops showing 30 days after its last source check, and only a command or a button rechecks it. Schedule the recheck, give other library content a review date, and put a correction note on content that was republished | EDP-011, CMP-005, CMP-007 | M |
+| **The guidance record** ([design](guidance-record.md)). Of a draft's editorial lines only "applicability" is kept. Keep the authority, the action and evidence, the effective dates and the related documents, and show them | CMP-001 | M |
+| **The source register** ([design](source-register.md)). Sources are a list in code; staff can only start watching one. Let staff keep the register (authority, jurisdiction, instrument, version in force), and let a changed source or a complaint open review work that ends in a prepared candidate. Today such work waits in a row that nothing reads | ADM-003, ADM-008, CMP-007 | M to L |
+| **The reviewer's record** ([design](reviewer-record.md); decision 0016, taken under delegated decision 6 below): a reviewer role, a record that cannot be edited, a queue, and the three suites reading it. Built: the role and the record of expected outcomes, each suite's run kept for review with decisions on it, and the score of a kept run with the record. It waits on the owner: a reviewer named and granted, and the AI budget for the runs that call a model | EDP-010, RUL-008, AI-008 | L |
+| **The editorial cases.** Seventeen of the 31 case-bound candidates are unbuilt and each names a text it lacks; the suite's ceiling today is 43 of 60 against a bar of 57. Build them as their texts are retained. The guides' captures now name some of those passages (NDPA sections 24 and 29, GAID 2025 article 27, NAFDAC guideline sections), but only by place and checksum: their words are read from a capture of the official address. So such a candidate would be prepared from the deployed source store, as a guide is. Built: the scorer for the 60 drafting cases ([design](drafting-rubric.md)). It scores each case on the draft the app kept for it and leaves every pass to the reviewer. The customer AI suite reads it and keeps each run for the reviewer with the rubric's result, and the suite's binding now gives the app every fact of every case. On the app's own drafts the rubric fails 4 cases where the app falls short and leaves 47 for the reviewer. Next, in Phase 6: the app's own gaps it found | EDP-010, AI-008 | L |
+| **The audit trail** ([design](audit-trail.md)). Alert on an attempt to change it and on heavy privileged reading; a viewer for staff; a guard on the events table; the restore and backup-removal tools record who ran them and why. Built: the guards. A workspace's activity and a privacy case's history are append-only, outside an erasure and a synthetic workspace's cleanup. Every table that refuses deletes refuses TRUNCATE. Each staff read names what it read. The application login still owns these tables and can disable a guard; the hourly count below finds a change made that way, unless the digest was changed with it. Built too: the restore and backup-removal tools refuse to run without the operator's name and reason, and write both, before and after they act, to a hash-chained operator's journal. And three alerts: a database guard's refusal of an application request; a staff member reading more than a hundred distinct things in an hour; and a history changed outside the application, found by an hourly count against a digest the database keeps as each history is written. Since 26 November each write adds its change to the digest as a row of its own, so writers no longer wait on, or deadlock over, the digest's rows; the count folds the changes in first. Until 26 November the database refused the count of a guard's refusal, so the first alert could not be raised; a migration lets it take the count, and a database test counts a real refusal. And a staff viewer in the System area, for a permanent system operator: the staff reads, safety controls, price changes, refund changes and hourly counts, newest first, a page at a time. Each read is itself recorded, and no refund's reason is shown. Later, with Phase 8's migration login: the histories owned by a role the application login cannot use | ADM-009 | M |
+| **Commercial settings** ([design](commercial-settings.md)). A staff screen for prices in place of a command; one-off bundles; quotas and access rules as versioned settings instead of constants; a price carried to a template's next edition. Built: the owner's price screen in the System area. Only the recently verified development owner previews a premium template's price, sees its exact terms and their checksum, and records exactly those terms, with their own sign-in as the approval's author. A price the owner marks as carrying is recorded for each next edition as a Content editor releases it, with the same terms and approval reference and a link to the price it came from, and the price on sale then closes. The drafting assistant's two daily allowances are versioned settings the owner records on the same screen, read by every drafting request from their start. So is the access rule: each new order records whether its purchase carries to the template's later editions, which its buyer is shown and accepts, and keeps it after the owner's rule changes; every reader of a carried purchase, and every edition notice, follows the order's own rule. For one-off bundles, a purchase's terms are now checked by one database function that every reader calls, and the owner records a bundle's versions on the same screen: two to ten of the staff library's released premium templates at one price, each version with its licence, tax treatment and effective dates, never changed in place, closed by the next version when it starts and kept in a change log. Checkout offers a bundle while each of its templates is on sale, to a workspace that holds none of them; its order copies the bundle's terms and each template's edition, its settlement grants each edition once, and the order keeps its amount, licence and editions after the owner's next version. The row is built; what the owner records with it stays theirs to decide | ADM-006 | L |
+| **The reviewed route, which stays** ([delegated decision 2](#decisions-made-under-the-owners-delegation); [design](reviewed-route.md)): preparers for the 23 templates without one, which state law and so need sources and a claim map each; a bundle builder and a release request for rules; a restore command; closing a replaced version's file to new downloads, with a test against a released version ([editions](editions.md)); and, for guides, the owner's source check on this route, which decision 0018 requires. Running their reviews needs the owner's AI budget. Built: a replaced version closes. Once a later version of a template is released, the version before it leaves the catalogue for good, even if the later one is withdrawn; its file and a new document from it are refused, and a document made from it reads replaced. A database test releases a template's next version through the real publisher and shows it. Also built: the owner's source check for a guide. The database keeps the development owner's check of one prepared guide's sources and refuses it from anyone else; a guide's reviews are admitted and sent, and the guide released, only within a day of such a check. A database test releases a guide through the real publisher on it, with stand-in reviews. The owner checks in Staff → System → Guides on the reviewed route, which shows each prepared guide's text, its sentences with their passages, where each source's copy stands and what holds it. Next: a rule's bundle and its reviews | EDP-003 to EDP-006, ADM-004, ADM-005 | L |
+
+### Phase 4: messages
+
+Built against a stand-in sender ([design](messages.md)). Sending a real message stays switched off until
+the owner approves a provider and a sender.
+
+| What is left | Requirements | Size |
+| --- | --- | --- |
+| A sender that reaches each customer's own verified address. Today's only sender refuses outside development and sends to one configured test address. Record delivery and bounces, which nothing writes (checked twice). Built: one outbox for every message Valo owes, a worker task that offers each to a sender once, after checking again whatever could stop it, with retries, a staff pause, and a stand-in sender that sends nothing. Built too: the workspace's delivery log, on a Messages page and beside each order, in which no message is called sent or delivered and one the stand-in took is called not emailed; and alerts on messages that wait past their time or fail. Left: delivery and bounces; a sender that reaches a real address, which waits for the owner | WRK-003 | M |
+| An unsubscribe link and its endpoint, and marketing consent that a sender reads. Neither exists (checked twice) | WRK-004, PRO-002 | M |
+| Receipts and refund notices: they are queued and nothing sends them. A PDF receipt for the customer, who gets a JSON download today (checked twice). Built: a settled order and a processed refund each owe a message in the outbox, with its words, and the task hands it to the stand-in, which sends nothing. Built too: the receipt as a PDF from the purchases screen, made from the order's record each time it is asked for, under its notice of what it is not. Left: Valo's business details on it, which wait for the owner | PAY-009, PAY-008 | M |
+| An answer for someone who cannot sign in, a notice to staff of a new or ageing enquiry, and a visible state when one fails to go out | SRV-002, IAM-001 | M |
+| Correction notices by email as well as in the app | EDP-011 | S |
+
+### Phase 5: payments ready for real money
+
+| What is left | Requirements | Size |
+| --- | --- | --- |
+| **A first run against Paystack's test mode.** No call to Paystack has ever run: tests stand in for it. Needs the owner's test key. It settles two open points: which signature the webhook carries, and how an unpaid transaction verifies | PAY-002, PAY-003, PAY-004 | S to M |
+| **Order safety.** Re-verify an abandoned or failed order before a second order for the same edition; check the status when the customer returns from Paystack; guard an order's line, amount and price in the database | PAY-001, PAY-006 | M |
+| **Reconciliation.** Alert on a reconciliation that needs review; a finance action that resolves one, with its trail; a listing from the provider's side as well as Valo's | PAY-007 | M |
+| **Live mode, behind the owner's switch.** The code accepts only a test key and Paystack's test domain, and its receipts and screens say "test". Build live mode so that it is refused until production runs with the owner's recorded approval: wording without "test", a tax amount as the owner's treatment requires, the webhook's address and secret in a runbook (checked twice) | PAY-002, PAY-009, PAY-010 | M |
+
+### Phase 6: the drafting assistant
+
+| What is left | Requirements | Size |
+| --- | --- | --- |
+| **A customer's own request.** A request from the site can never reach a model: approved AI work must be tied to one of the frozen evaluation cases. The known-issues record says only a budget is missing; the path is missing too. Write the decision record for a standing daily allowance, then build it, off until the owner records an amount ([delegated decision 4](#decisions-made-under-the-owners-delegation)) (checked twice) | AI-001, AI-007 | L |
+| Follow-up questions in plain words, with a way to answer and ask again; today they are field names. Wider recognition of a legal request the assistant must not take, with a reply that names where to go | AI-001 | M |
+| The assistant's notice in plain words (redesign decision 13); the provider's storage setting stated on each request; a staff switch for the customer assistant alone; the time a draft takes, measured; a paid download during an AI outage, tested | AI-009, PRV-002, NFR-004 | S to M |
+
+### Phase 7: privacy and security
+
+| What is left | Requirements | Size |
+| --- | --- | --- |
+| **Finishing a privacy request** ([design](privacy-requests.md)). A request reaches "partly fulfilled" and can go no further: nothing records the steps at the sign-in provider, the processors or the retention review. Add them, completion, a due date with an ageing alert, and a hold that stands on its own (checked twice). Built: releasing a hold returns a partly done data download or correction to partly done, where it was; staff record each outside step, with the words the person who asked reads, and mark a request done; the staff queue shows the date Valo aims to finish each open request by, as Valo's own aim, and one open past it raises an alert; a hold of its own on a workspace, apart from any request, stops Valo's own deletion of its data until another member of privacy staff releases it | PRV-003 | L |
+| **The processing inventory** ([design](processing-inventory.md)). No inventory file exists, and the privacy page is a four-paragraph development note. Write the inventory, derive the notice from it, and test both against the database schema and the processor list. Show the notice where data is collected and record the version shown; version the marketing consent; keep the reminder opt-in's history; remove a workspace's edition notices in its erasure ([editions](editions.md)). Built: the inventory (`lib/valo-core/src/processing-inventory.ts`), a draft for the privacy owner. Each activity records its purpose, a proposed lawful basis, the data, whom it is about, who receives it, its retention and its tables. A test checks it against every table in the database schema and every service in the processor review. The privacy page is made from it (`lib/valo-core/src/privacy-notice.ts`): what the service needs apart from what a person may choose, marketing among the choices, and a version that is the checksum of its words. It says it is a draft until the privacy owner approves that version. Erasure removes a workspace's edition and rule notices. Each business profile version keeps the notice's version, and the profile's marketing choice links the notice. Each change to the marketing choice and the reminder opt-in is kept with who, when and the notice's version (`valo_consent_changes`). The sign-up page, the support form, the drafting assistant's agreement and the contact forms link the notice. Not built: keeping the notice's version on the records those make, which keep the versions of their own words; it needs a migration on each path (the design's owner point 5) | PRV-001, PRO-002 | M |
+| **An incident and breach procedure** ([design](incident-response.md)) with a rehearsal script. Built: the procedure (`docs/valo/incident-procedure.md`), with Valo's own lever for each step; a tabletop script (`docs/valo/incident-tabletop.md`); a rehearsal of the tabletop's technical steps on synthetic data in CI; and a check that neither gives a time limit for telling the authority or the people affected. Not done: the tabletop itself, which the owner holds with the people named for each role | SEC-008, PRV-003 | S to M |
+| **The security baseline** ([design](security-baseline.md)). No mapping to OWASP ASVS exists, only scans and tests. Write control, code and cited test for each, with a check that the citations exist. Built: a register (`docs/registers/security-baseline.json`) that maps each of OWASP ASVS 5.0.0's 253 requirements at Levels 1 and 2, the level the specification proposes, to Valo's control, its code and the tests and CI steps that show it, or to the gap that is left or the reason it does not apply: 57 met, 43 partly met, 21 untested, 5 not met, 63 not applicable, 54 the identity provider's and 10 the host's. A check in CI holds it to the standard's list and to the repository: each path and named function exists, each test is cited in the CI evidence register and each step runs. Not done: the gaps, which the hardening and alerts rows take up with the documents the map finds missing; the launch review of the identity provider's and the host's settings; and an independent assessment, which the register names as these requirements' owner (the design's owner points) | SEC-001 to SEC-008 | M |
+| Tests in CI that store hostile markup and render it, reflect it, inject it and cross sites; a rule against raw-HTML output; two test files that run nowhere ([design](hostile-input.md)). Built: a test in CI sends every change in the contract as a page on another site could, and finds each refused, even for staff who hold its role, counted for the security alerts, and nothing saved; it also runs the checks of the two preview probes that need no preview, against the API itself. A browser test in CI saves hostile markup through the real API in every text a customer types that the app shows back, and in a member of staff's answer, and finds each screen, the customer's and the staff's, showing it as text with none of it run. A test in CI sends hostile text to every operation in the contract and finds every answer in JSON, with `nosniff` and no framing, and none a failure of the server's own; the pages the server draws hold hostile text from their address only escaped, and run none of it; SQL text is kept as text, and searches read `%`, `_` and `\` literally. The API sets its security headers before anything else can answer, answers an unknown address in JSON, and refuses a NUL character, which had made it fail. The linter refuses raw HTML in JSX, and two repository rules refuse HTML put into a page and SQL built from text outside reviewed places. Not done: an independent assessment, which the register names as SEC-003's owner (the design's owner point 1) | SEC-003 | M |
+| **Alerts that reach a person** ([design](alerts.md)). Alerts are written to a file on the worker and no screen reads them. A staff alert list; signals for abuse spread over many callers, for AI and payment cost, and for bulk data exports; alerts on error rate, latency and backlogs; the route in each request's log (checked twice); and, from the security baseline, logs sent to a system of their own, an inventory of them, and refused input recorded as a security event. Built: a journal of alerts in the database, which keeps each alert raised or cleared as it was written; after each reading the worker copies to it every change its file holds and the journal does not, and counts any the file dropped first; the staff page's System area lists the alerts active now and the latest changes, in plain words, with the reading, its limit, the runbook and the roles accountable, for system operators and emergency system access. The API counts its own requests by the minute, with their unexpected failures and times, and the worker raises an alert on more than 10 in 1,000 failing or 95 in 100 taking longer than a second (NFR-003's limits), and on reminder emails and scheduled jobs waiting past their time; each request's log line names its route's pattern, never a value from its address. Each refusal by a limit and each refused input is counted by keyed address, as refusals of access are, and the worker raises an alert on refusals of every address together over a hundred in ten minutes, on more than ten callers refused by a limit, and on more than twenty refused inputs from one address. Over each hour, of every workspace together, it raises an alert on checkouts begun and what they came to, on refunds asked for and what those authorised came to, on the drafting assistant's use against its daily allowance, on whole-workspace downloads asked for, and on copies of a workspace's data prepared by privacy staff. Built too: the log inventory, with every record's form, destination, readers and keeping and every event by name, and a test that keeps it to the code. Not done: a system of their own for the logs; and sending an alert to a person, which needs the owner's approval and a provider (the design's owner points) | SEC-008, SEC-005, NFR-010 | M |
+| **Logins of their own for drafting and review**, as the publisher has ([design](service-logins.md)). Built: drafting's own login, `valo_drafter_login`, which may become the drafter role and nothing else; the database adds a content version or a prepared candidate only in a session that logged in as it, so the application's login, which the API holds, is refused even as the drafter role; the three drafting paths add content on its connection, each preparation checks first that it can log in, and a repository rule keeps other code from naming it; the self-hosted supervisor gives it to the worker alone, and the publisher's connection to neither process; the tests add their synthetic content through it. Built too: review's own login, `valo_reviewer_login`, which may become the reviewer role and nothing else; the database records and updates an AI review's attempt only in a session that logged in as it, and a drafting attempt only in one that logged in as the drafting login, so neither service can record the other's and the API can record neither; no attempt is removed and the table cannot be emptied, so it keeps a history digest; only the review's record names its connection, the commands that run reviews check it before anything is paid for or recorded, and the supervisor gives it to neither serving process. Not built, and recorded in the design as the gap: the operator's development editorial proof records its runs, and the finite dispatcher its ledger, on the application's login | SEC-006 | M |
+| **Small hardening** ([design](small-hardening.md)): scan the built browser bundle for secrets; a rotation runbook with a rehearsal; limits as settings; an owner and an expiry on each advisory exception; a scheduled scan; and the gaps the security baseline finds for this row, which [its design](security-baseline.md#what-the-map-finds) lists. Built: after each build of the web app, a check finds no secret setting's value and no secret's shape in what the browser is sent, with a canary it must find first. Built too: a rotation runbook for every secret, and a rehearsal in CI that rotates, revokes in an emergency and restores each of the four database logins on a cluster of its own; a login the database refuses now fails with its own code, and a connection that fails while idle is logged instead of stopping the process. Built too: strict equality in the linter and a repository rule against starting a shell; a policy that loads and runs nothing on every API answer; and checks of the web server's own headers and content types, and of folders and TRACE on both servers. Built too: every anonymous probe of private storage refuses redirects; tests of the staff upload's refusals, with a note of its limits; and a test that a sign-in token made for another site signs no one in. Built too: an owner and a date on each advisory record, with moderate and low advisories recorded and fixed within 30 or 90 days, or the merge fails; a weekly run of the scans, which starts once the workflow reaches `main`; a bill of materials from the lockfile on each merge; and a check that neither image holds `.git`. Built too: each request limit a setting of its own, today's ceiling by default, which the API and the worker read as they start, refusing a value outside 1 to 10,000. Not built, by design: HSTS on static files and subdomains, which waits for the production domain; and the owner's decisions the design lists, among them the advisories' time frames and the limits' production values | SEC-002, SEC-005, SEC-007, OPS-004 | S each |
+
+### Phase 8: launch engineering
+
+Outside development the API starts only as a rehearsal that answers the health check, and 21 module
+files refuse to run outside development (checked twice). None of this phase opens production: it
+makes opening it a reviewed, rehearsed change.
+
+| What is left | Requirements | Size |
+| --- | --- | --- |
+| **Staging and launch profiles.** Only development and a rehearsal exist. Add the two profiles; decide, feature by feature, what each development-only guard becomes in production; run the scheduled jobs there; a migration command with a login of its own; a check that each environment holds its own identity keys | OPS-001, OPS-002, OPS-003 | L |
+| **Packaging.** The supervisor does not start the web app, and the API image lacks the migrations and the operations scripts. Add them, a test that the images start, and a base image pinned by digest | OPS-002, OPS-005 | M |
+| **Backup and restore for production.** The backup cycle refuses anything but development, and no drill runs capture, archive, restore and replay end to end or asserts a recovery time. Build it with a drill that asserts the recovery point and time | NFR-005, OPS-008 | L |
+| **Rollback.** Run the previous release against the new schema in CI, and check that a migration only adds | OPS-008 | M |
+| **Compatibility probes** for the host: identity callbacks, the domain, outbound provider calls, the browser binary, the database's connection limit. Running them needs the host | OPS-007 | M |
+| **Measurement.** A monthly availability report and its schedule; page timing from real visits; a trigger for the 30-minute load run; Firefox and WebKit runs with a supported-version list | NFR-001, NFR-002, NFR-003, NFR-007 | M |
+| **The launch change**, prepared and reviewed but applied only on the owner's approval: the production gate, the search-engine block and the development notices | KI-001 | S |
+| **The acceptance pack.** The ten user-test packs as scripted journeys where a script can run them; the evidence for each gate gathered by a command; the registers refreshed | UAT-01 to UAT-10 | M |
+
+### Phase 9: the site
+
+| What is left | Requirements | Size |
+| --- | --- | --- |
+| Filters on the guides, industries and help pages kept in the address so a view can be shared; loading, empty and error states tested on the remaining primary pages | WEB-002 | S |
+| Search judged on guidance, articles, industries and services as well as templates | WEB-003 | S |
+| The offer to check requirements again after any change to the business profile, and tests that tasks survive a new result | PRO-003 | S |
+| Sign-in tested against the provider's test instance: verification, an expired link, recovery, sign-out, staff second factor. Needs test-instance credentials in CI | IAM-001, IAM-002 | M |
+| The remaining words: 215 server sentences about payments, privacy requests and the drafting assistant, which wait on redesign decisions 13 to 15, and the staff screens | NFR-008 | M |
+
+### R2
+
+After R1 is live, as the roadmap orders it. Each starts with the owner's decisions.
+
+| What is left | Source | Size |
+| --- | --- | --- |
+| **Team access:** roles, grants to named content, invitations. The design is in [r2-team-access.md](r2-team-access.md) with five decisions for the owner | Roadmap W21–24; TRD roles | L |
+| **More fill-in forms:** twelve more to reach the roadmap's 24, then the rest of the 28 that are files only; easier repeat use; saved requirements | Roadmap W21–28 | L |
+| **The provider directory:** provider records, a verification workflow, verified profiles, and requests for a quote or availability. No provider record exists today, and R1 rightly lists none | SRV-003, SRV-004 | L |
+| **Bundles and subscription trials.** Recurring billing stays off until cancellation, refunds and failed renewals are tested | Roadmap W25–28; PAY-010 | L |
+| **Attachments** on tasks, with malware quarantine, safe preview and retention | Roadmap; WRK-005 | L |
+| Scoped drafting for selected contracts; the NGO experience; state and FCT packs, which the guidance policy bars until the owner decides | Roadmap; CMP-003 | L each |
+
+## What only the owner can do
+
+The plan does not include these. Each phase names the ones it waits on.
+
+- **Content:** file and publish the drafts; check and sign the regulatory guides and the rules.
+- **Decisions already asked for:** the guidance policy's wording; the drafting assistant's sentence;
+  premium prices, licence text and tax treatment; decisions 0016 and 0017; the five decisions on
+  team access.
+- **Decisions this plan added:** left to the coding agent on 24 November 2026, and made below.
+  The owner can reverse any of them; the work that follows one says which.
+- **The test with five business owners**, and a person for the manual accessibility review.
+- **Money:** AI budgets; hosting, database, storage, backups, monitoring and a domain; an email
+  provider.
+- **Accounts and keys:** a Paystack test key now and a live key at launch; the identity provider's
+  production instance and test credentials for CI; an email sender.
+- **Readers:** a legal read of the privacy and terms pages, the privacy notice, the refund policy
+  and the licence text; an independent reviewer for the three suites; an outside security
+  assessment.
+- **Replit:** apply the migrations; adopt the migration ledger or give access to do it.
+- **Launch:** approve the launch change, the merge to `main`, opening traffic and live payments.
+
+## Decisions made under the owner's delegation
+
+On 24 November 2026 the owner approved this plan with "Implement all (make the best decisions for
+me)". The coding agent made the decisions the plan had put to the owner, as follows. Each follows
+the specification where it already says something, and none of them approves spending, a launch,
+live payments, real customer data or a real message.
+
+1. **The forms' questions.** The freeze of 21 November (redesign decision 6) is released for the
+   second version of the forms, on these terms. A question the second version keeps is carried over
+   in the first version's words, so nothing is reworded on a guess before the test. New questions
+   are only those the template's own wording needs, such as a clause choice. Documents already
+   made keep the first version. The test with five business owners then judges the second version,
+   and its findings reword what confuses people, as decision 6 intended. Reason: the forms cannot
+   produce the document without the template's wording (EDT-001, EDT-006), the test has no date,
+   and decision 6 froze wording, not the documents a form produces.
+2. **The reviewed route stays.** It is the route the specification describes (EDP-001 to EDP-012,
+   CMP-008, ADM-005) and the only one that may release content outside development: the staff
+   library and the owner's sign-offs are development routes with a review budget of nothing
+   (decisions 0018 and 0020). Its code and tests are kept working, and the last row of phase 3 is
+   built. Running its reviews needs the owner's AI budget. Whether the development routes are also
+   taken to production is a launch decision for the owner (phase 8).
+3. **What a buyer keeps.** Following DOC-007, EDT-010, PAY-008, PAY-009 and decision 0018:
+   - A customer's saved drafts and the documents made from them stay the customer's, and an update
+     never changes them.
+   - When an edition is **replaced**, the purchase carries to the new edition of the same template
+     at no further charge. The replaced file closes to new downloads, as decision 0018 says; its
+     record stays, and the buyer is told what changed.
+   - When an edition is **withdrawn** as unsafe, nobody can download it again or start a new
+     document from it. The buyer is told why and what they can do: take the replacement when one
+     is released, or ask for a refund under the refund policy, whose terms are the owner's. Drafts
+     made from it can still be opened and downloaded, with a notice that the template was
+     withdrawn.
+   - A **refund** ends new downloads of the bought file, and leaves the drafts.
+   - Nothing says that closing access takes back a file already downloaded (EDT-010).
+
+   The licence text that states this is still the owner's to approve.
+4. **A daily allowance for customers' drafting.** Its decision record is written and its path is
+   built, switched off. The amount is an AI budget, which only the owner sets (AGENTS.md
+   section 1). Until the owner records one, the allowance is nothing and no customer request
+   reaches a model.
+5. **The premium drafts' text stays where it is.** It is frozen content (AGENTS.md section 7) and is
+   already in the repository's public history, which cannot be rewritten (section 1). The
+   repository is public by the owner's decision 0006. The site itself still never serves a premium
+   text without a purchase (DOC-004), which phase 1's previews row tests.
+6. **The reviewer's record** (decision 0016, [design](reviewer-record.md)), decided on 25 November
+   2026. The proposal is built as written, and its points for the owner are taken as follows:
+   - the reviewer stays the owner's to name and grant;
+   - the reviewer role excludes the content role, emergency grants included;
+   - a reviewer confirms or rejects, always with why, and a corrected case is a new corpus version;
+   - one role covers the three corpora;
+   - a confirmation claims only that a case's expected outcome follows from its cited sources, in the
+     proposal's words, which the owner confirms.
+
+   Reason: the three suites cannot count a case until something records a person's decision, and every
+   answer is the proposal's own. Nothing here names a reviewer or accepts a case.
+
+## Order
+
+Phase 0 first. Then phases 1 and 2, which decide whether a customer gets what the site offers.
+Phases 3, 4 and 7 follow in slices, most valuable first. Phases 5 and 6 move when their inputs
+arrive: a Paystack test key, and the decision on customers' drafting. Phase 8 starts when a hosting
+decision is near, since most of it is proved only on a host. Phase 9's small rows fill gaps between
+the others. R2 follows R1's launch.
+
+Work lands as it does now: one pull request at a time into the integration branch, each with its
+tests, merged only when hosted CI passes on its exact commit.
+
+## What this plan does not do
+
+- No R3.
+- No acceptance of a requirement, a gate or a user-test pack.
+- No new content written: the 19 further templates proposed for R2, and any state or local
+  guidance, wait for the owner.
+- No spending, launch, live payment, real customer data or real message without the owner's
+  approval.

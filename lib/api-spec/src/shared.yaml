@@ -1,0 +1,206 @@
+# Schemas that more than one module, or a shared response, uses.
+schemas:
+  RuleChange:
+    type: object
+    additionalProperties: false
+    required: [ruleId, version, kind, replacementVersion, reason, changedAt]
+    properties:
+      ruleId: { type: string }
+      version: { type: integer, description: "The version that changed: the one a saved result lists, or a task was made from." }
+      kind: { type: string, enum: [replaced, withdrawn] }
+      replacementVersion: { type: [integer, "null"], description: "The version that replaced it, for a replaced version." }
+      reason: { type: string, description: "What changed, or why it was withdrawn, as the person who made the change wrote it." }
+      changedAt: { type: string, description: "When the version was replaced or withdrawn, as an ISO 8601 time." }
+  RequirementRoute:
+    type: object
+    description: The authority's own official page for a requirement, as its rule records it. Absent when the rule records none, and in a result saved before routes were recorded.
+    required: [authority, url]
+    properties:
+      authority: { type: string }
+      url: { type: string }
+  TemplateOffer:
+    type: object
+    required: [id, title, amountKobo, currency, licenceVersion, licenceText, taxTreatment]
+    properties:
+      id: { type: string, format: uuid }
+      title: { type: string }
+      amountKobo: { type: integer }
+      currency: { type: string }
+      licenceVersion: { type: string }
+      licenceText: { type: string }
+      taxTreatment: { type: string }
+  PublicSourceReference:
+    type: object
+    required: [url, title, locator]
+    properties:
+      url: { type: string }
+      title: { type: string }
+      locator: { type: string }
+      issuingBody: { type: string, description: "The body that issued the text, as the source check a staff-library guide was released on recorded it (docs/architecture/guidance-record.md). Absent where it did not." }
+      effectiveFrom: { type: string, description: "For an Act or a regulator's document, the day its text took effect, as an ISO 8601 time, as that check recorded it. Absent for a web page, which says what it says when it is read, and where the check did not record it." }
+  AccessSupportAck:
+    type: object
+    required: [reference, message, delivery]
+    properties:
+      reference: { type: string }
+      message: { type: string }
+      delivery: { type: string, enum: [not_dispatched] }
+  CustomerAITask:
+    type: string
+    enum: [invoice, quotation, payment_reminder, business_proposal]
+  FinancialLine:
+    type: object
+    additionalProperties: false
+    required: [description, quantity, unitPriceKobo]
+    properties:
+      description: { type: string, minLength: 1, maxLength: 200 }
+      quantity: { type: string, pattern: "^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$" }
+      unitPriceKobo: { type: string, pattern: "^[0-9]{1,24}$" }
+      currency: { type: string, minLength: 3, maxLength: 3 }
+  FinancialInput:
+    type: object
+    additionalProperties: false
+    required: [kind, lines, taxAmountKobo, taxLabel, discountKobo, amountDueKobo]
+    properties:
+      kind: { $ref: "#/components/schemas/CustomerAITask" }
+      lines: { type: array, maxItems: 40, items: { $ref: "#/components/schemas/FinancialLine" } }
+      taxAmountKobo: { type: [string, "null"], pattern: "^[0-9]{1,24}$" }
+      taxLabel: { type: string, maxLength: 80 }
+      discountKobo: { type: [string, "null"], pattern: "^[0-9]{1,24}$" }
+      deliveryKobo: { type: string, pattern: "^[0-9]{1,24}$" }
+      discountPercent: { type: string, pattern: "^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$" }
+      taxPercent: { type: string, pattern: "^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$" }
+      taxBaseKobo: { type: string, pattern: "^[0-9]{1,24}$" }
+      currency: { type: string, minLength: 3, maxLength: 3 }
+      requestedTotalKobo: { type: string, pattern: "^[0-9]{1,24}$" }
+      disputedKobo: { type: string, pattern: "^[0-9]{1,24}$" }
+      optionalLines:
+        type: array
+        maxItems: 40
+        items:
+          type: object
+          additionalProperties: false
+          required: [description, quantity, unitPriceKobo, selected]
+          properties:
+            description: { type: string, minLength: 1, maxLength: 240 }
+            quantity: { type: string, pattern: "^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$" }
+            unitPriceKobo: { type: string, pattern: "^[0-9]{1,24}$" }
+            selected: { type: boolean }
+            currency: { type: string, pattern: "^[A-Z]{3}$" }
+      amountDueKobo: { type: [string, "null"], pattern: "^[0-9]{1,24}$" }
+      paymentRecord:
+        type: object
+        additionalProperties: false
+        required: [invoiceAmountKobo, payments]
+        properties:
+          invoiceAmountKobo: { type: string, pattern: "^[0-9]{1,24}$" }
+          duplicatesConfirmed: { type: boolean }
+          payments:
+            type: array
+            maxItems: 40
+            items:
+              type: object
+              additionalProperties: false
+              required: [reference, amountKobo]
+              properties:
+                reference: { type: string, minLength: 1, maxLength: 80 }
+                amountKobo: { type: string, pattern: "^[0-9]{1,24}$" }
+  ApiProblem:
+    type: object
+    required: [error, code, message, requestId]
+    properties:
+      error: { type: string }
+      code: { type: string }
+      message: { type: string }
+      requestId: { type: string }
+      currentRevision: { type: integer }
+  Answer:
+    type: string
+    enum: [yes, no, unknown, unanswered, not_applicable]
+  DocumentBlock:
+    type: object
+    additionalProperties: false
+    required: [id, type, text, rows]
+    properties:
+      id: { type: string, minLength: 1, maxLength: 80 }
+      type: { type: string, enum: [paragraph, list, table, heading] }
+      text: { type: string, maxLength: 8000 }
+      rows:
+        type: array
+        maxItems: 100
+        items: { type: array, maxItems: 10, items: { type: string, maxLength: 1000 } }
+      level: { type: integer, enum: [2, 3], description: "A heading's level. Only a form document (forms v2) has headings." }
+      headerRows: { type: integer, enum: [1], description: "A table's first row is its heading row, repeated at the top of each page. Only a table has one." }
+  CanonicalDocument:
+    type: object
+    additionalProperties: false
+    required: [fields, blocks, selectedClauses, formatting]
+    properties:
+      fields:
+        type: object
+        additionalProperties: false
+        required: [issuerName, recipientName, documentNumber, issueDate, dueDate, notes]
+        properties:
+          issuerName: { type: string, maxLength: 160 }
+          recipientName: { type: string, maxLength: 160 }
+          documentNumber: { type: string, maxLength: 80 }
+          issueDate: { type: string, maxLength: 10 }
+          dueDate: { type: string, maxLength: 10 }
+          notes: { type: string, maxLength: 5000 }
+      blocks: { type: array, maxItems: 100, items: { $ref: "#/components/schemas/DocumentBlock" } }
+      selectedClauses:
+        type: array
+        maxItems: 40
+        description: "The passages a form document's answers keep, as question=option. Empty for every other document."
+        items: { type: string, maxLength: 120, pattern: "^[a-z][A-Za-z0-9]*=[a-z0-9_]+$" }
+      formAnswers: { $ref: "#/components/schemas/FormAnswers" }
+      financialInput: { $ref: "#/components/schemas/FinancialInput" }
+      formatting:
+        type: object
+        additionalProperties: false
+        required: [font, accent]
+        properties:
+          font: { type: string, enum: [sans, serif] }
+          accent: { type: string, enum: [forest, charcoal] }
+  FormAnswers:
+    type: object
+    additionalProperties: false
+    description: "A form document's answers (forms v2). Its blocks are exactly what these answers make from the form text of the edition it was started with."
+    required: [schemaVersion, templateId, values, tables]
+    properties:
+      schemaVersion: { type: integer, enum: [2] }
+      templateId: { type: string, pattern: "^TPL-[0-9]{2}$" }
+      values: { type: object, maxProperties: 100, additionalProperties: { type: string, maxLength: 4400 } }
+      tables:
+        type: object
+        maxProperties: 10
+        additionalProperties:
+          type: array
+          maxItems: 100
+          items: { type: object, maxProperties: 20, additionalProperties: { type: string, maxLength: 4400 } }
+  DocumentForm:
+    type: object
+    description: "The form a document was started with: its version, the released edition whose form text it fills, and that text's SHA-256. It never changes."
+    required: [version, edition, digest]
+    properties:
+      version: { type: integer, enum: [2] }
+      edition: { type: string, format: uuid }
+      digest: { type: string, pattern: "^[0-9a-f]{64}$" }
+  BusinessDocument:
+    type: object
+    required: [id, revisionId, title, revision, content, contentHash, createdAt, updatedAt, status, templateVersion, form]
+    properties:
+      revisionId: { type: string, format: uuid }
+      id: { type: string }
+      title: { type: string }
+      revision: { type: integer }
+      content: { $ref: "#/components/schemas/CanonicalDocument" }
+      contentHash: { type: string }
+      createdAt: { type: string }
+      updatedAt: { type: string }
+      status: { type: string, enum: [business_draft] }
+      templateVersion: { type: ["string", "null"] }
+      form:
+        anyOf:
+          - { $ref: "#/components/schemas/DocumentForm" }
+          - { type: "null" }

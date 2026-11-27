@@ -1,0 +1,21 @@
+▶ durable reminder delivery controls; controlled transport, not real email
+  ✔ turning reminders off needs no selected offset and cancels before dispatch (54.401426ms)
+  ✔ twenty-five held source reminders cannot starve an eligible later reminder (788.970454ms)
+  ✔ no configured provider holds the reminder and consumes no attempt (40.638141ms)
+  ✔ parallel scheduler invocations send once; acceptance is not inbox delivery (57.764718ms)
+  ✔ failed acceptance persists its attempt and waits; retry keeps the same message reference (58.787642ms)
+  ✔ five failed attempts remain bounded even with repeated scheduler runs (220.955474ms)
+  ✔ SIGKILL during dispatch preserves the claim; expiry recovers without losing the attempt (1948.679802ms)
+  ✔ abandoned final attempt becomes visibly failed instead of permanently running (32.821866ms)
+  ✔ expired or unknown first acceptance time holds before any new provider invocation (75.492235ms)
+  ✔ opt-out before dispatch cancels failed work without sending (51.789595ms)
+✔ durable reminder delivery controls; controlled transport, not real email (3477.88813ms)
+✔ actual task pages exceed 200 without losing totals, filters or tenant scope (349.41208ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6085.313581

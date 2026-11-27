@@ -1,0 +1,345 @@
+# The audit trail
+
+Part of the finishing plan's Phase 3 row "The audit trail", for ADM-009.
+
+The requirement, verbatim from the specification:
+- ADM-009: "Record sensitive access, publication, role change, refund and recovery actions with actor,
+  object, reason and timestamp. Accept: application users cannot modify audit history; tampering and
+  excessive privileged access generate alerts."
+
+## What there was
+
+**The histories.** Most sensitive actions already write a row the database will not change:
+
+| Action | History | Guard |
+| --- | --- | --- |
+| A staff read | `valo_staff_access_audit` | No update; deletes only of synthetic test identities' rows; no TRUNCATE (0036) |
+| A role change | `valo_staff_role_changes` | No update or delete; no TRUNCATE (0032, 0036) |
+| A reviewed publication, hold or withdrawal | `valo_publication_audit` | No update or delete (0007) |
+| A source hold or safety control | `valo_safety_control_audit` | No update or delete (0037) |
+| A refund's status | `valo_refund_transitions` | No update or delete, except an erasure replacing a reason with the projection it recorded first (0016, 0029) |
+| A dispute, a payment concern, a support case | their transition and event tables | No update or delete (0025, 0031, 0039) |
+| A staff-library release, hold or withdrawal | `valo_manual_changes`, `valo_manual_holds`, `valo_manual_withdrawals` and the others | No update or delete |
+| A rule's sign-off or change | `valo_rule_owner_signoffs`, `valo_rule_changes` | No update or delete; no TRUNCATE |
+
+**The gaps.**
+1. Two histories had no guard at all:
+   - `valo_events`, each workspace's activity;
+   - `valo_privacy_events`, each privacy case's history. Its hash chain shows a changed row only when the case is next read.
+2. TRUNCATE skips row triggers, and only seven tables refused it, so most histories could be emptied in
+   one statement.
+3. A staff access row said why a person read something but not what they read. Only the refund,
+   reconciliation, dispute-hold and editorial-record reads named it, in their reason's words.
+4. The operator tools record no operator and no reason:
+   - restoring a backup and removing old backups;
+   - the reviewed route's publisher, whose row names a fixed service label and gives the manifest's digest
+     as its reason;
+   - the recovery controls.
+5. Nothing raises an alert when someone tries to change a history, and nothing counts privileged reading.
+   A refused change reaches the error handler as an unexpected failure: it is logged and answered with a
+   503.
+6. Staff have no screen for the access history, the safety-control history, price changes or refund
+   transitions.
+
+**The limit every guard shares.** The application's own database login owns every table. A trigger stops
+every login that cannot disable it, the customer role among them, and the application's own code, which
+never disables one. But the owning login can disable a trigger, or switch triggers off for its session.
+Until the histories belong to an owner the application cannot act as (slice 5), a guard is a rule the
+application keeps, not one it cannot break. The integrity checks in slice 3 are there to show it was
+broken.
+
+## The slices
+
+1. **Guards** (built): the two unguarded histories, TRUNCATE on every history, and the object of each
+   staff read.
+2. **Operator actions**: the restore and backup-removal tools record who ran them, on what, and why, in
+   the operator's journal. The reviewed publisher's operator is the reviewed route's row (Phase 3): it
+   names a fixed service label today, and the route's own rebuild carries the operator and their reason
+   into its publication record. The recovery controls run only on a disposable synthetic target.
+3. **Alerts**:
+   - an attempt to change a history, refused by its guard, becomes a security signal and an alert
+     (built);
+   - privileged reading above a threshold raises an alert (built);
+   - a periodic integrity check finds a history row that is gone or changed, however that happened
+     (built).
+4. **A staff viewer** for the histories that have none (built).
+5. **Later, with Phase 8's migration login**: the histories owned by a role the application login cannot
+   use, so that it can no longer disable their guards.
+
+## Slice 1: the guards
+
+**A workspace's activity** (`valo_events`) is never changed. Its rows are removed in only two cases:
+- a verified deletion request removes them at its activity step: a deletion case for the workspace,
+  verified and processing, whose erasure is at `activity_text`;
+- the cleanup of a workspace that belongs to a synthetic test identity (`synthetic-` or
+  `privacy-fixture-`), which tests and fixtures remove. This is the exception 0036 made for staff
+  access rows.
+
+**A privacy case's history** (`valo_privacy_events`) is never removed, except with a synthetic test
+identity's workspace. A row changes only as an erasure replaces its reason with the projection the erasure
+recorded first in `valo_privacy_redactions`, as a refund transition's may (0029). Every other column must
+stay as it was.
+
+**TRUNCATE.** Every table whose rows a trigger guards against deletion now refuses TRUNCATE too. That is
+the 7 that already did and 29 more, the two above among them. A cascade that would reach one of them is
+refused with it. The migration test checks the rule on the whole schema, not on a list, so a new history
+that refuses deletes but not TRUNCATE fails the build.
+
+**What each staff read names.** `valo_staff_access_audit.object` holds a list's kind alone, or a record's
+kind and ID:
+
+| Read | Object |
+| --- | --- |
+| The staff overview of an area | `staff_overview:<area>` |
+| Staff assignments | `staff_assignments`, or `staff_assignments:<identity>` for one person's |
+| Source and safety controls | `source_controls:<area>` |
+| A version's publication record | `content_version:<id>`, `rule_version:<id>` |
+| The privacy queue, one privacy case | `privacy_cases`, `privacy_case:<id>` |
+| The support queue, its assignees, one case | `support_cases`, `support_assignees`, `support_case:<id>` |
+| The library entries a support reply may cite | `library_entries` |
+| Content escalations, one escalation | `support_escalations`, `support_escalation:<id>` |
+| The refund queue, one refund | `refunds`, `refund:<id>` |
+| Payment concerns, one concern | `payment_concerns`, `payment_concern:<id>` |
+| One dispute, one dispute action, a test dispute's order | `dispute:<id>`, `dispute_action:<id>`, `order:<id>` |
+
+- A check constraint holds the form: a lower-case kind, then optionally a colon and up to 200 characters
+  without spaces.
+- Rows written before the column existed read `unrecorded`, since nobody can now say what they read.
+- The column has no default, so every new row must name its object.
+
+**What did not change.** The customer role's privileges are the same: it never deletes or changes either
+history. No row is rewritten: adding the column changes no existing row's values, and the guards are new
+triggers. Erasure keeps working as it did, through the two exceptions above.
+
+## Tests
+
+- **The migration test**, for each new migration, tracked and unjournalled:
+  - the upgrade keeps every row, including the activity and privacy histories, and an interrupted
+    migration leaves rows and schema as they were;
+  - an earlier access row reads `unrecorded`, and a new row without an object, or with a malformed one, is
+    refused;
+  - an activity row is never changed. It is removed only by a deletion request at its activity step, not
+    before it and not while the request is held, or with a synthetic workspace;
+  - a privacy history row is not removed with a real workspace. A reason changes only to the recorded
+    projection, and a change to anything else is refused even then;
+  - every table that guards its rows against deletion refuses TRUNCATE, and a cascade from the workspaces
+    table is refused.
+- **The erasure test** now shows the guard refusing a change to a case's history. It makes its corrupt
+  copy in one transaction with the guard off, as a damaged restore could hold one, and the replay still
+  refuses it.
+- **Two staff reads** record their object: a privacy case read over HTTP, and the finance overview.
+
+## Slice 2: the operator's journal
+
+The tools that restore or remove backups act outside the database, so their record is a file: the
+operator's journal (`scripts/ops/operator_journal.py`).
+
+- **Who and why.** `backup_removal.py` and `recovery_restore.py` refuse to run without `--operator`
+  and `--reason`:
+  - the operator is a short handle, such as a sign-in name, never an email address;
+  - the reason is one line of 20 to 1000 characters.
+- **Where.** The journal is one file, `operator-journal.jsonl`, in the directory `VALO_OPERATOR_JOURNAL`
+  names:
+  - the directory must be absolute and private to the account running the tool;
+  - it is kept apart from the backup plan's folder and from a restore's new directory.
+- **Before and after.**
+  - Once its inputs are checked, and before it changes anything, a tool appends a `started` entry: who,
+    why, what it acts on (`backup_plan:<sha256>`, `recovery_archive:<sha256>`), and what it is about to
+    do (the snapshots it will remove, the directory it will unpack into).
+  - It acts only once that entry is on disk.
+  - It then appends `completed`, with its receipt, or `failed`, with the code of the refusal.
+  - The receipt it prints names the operator, the reason and the hashes of both entries.
+  - A refusal before acting records nothing, since nothing was attempted.
+- **The chain.**
+  - Each entry holds the SHA-256 of the one before it and its own, in a canonical form.
+  - `verify` reads the whole journal before every write. An entry changed, reordered or removed
+    anywhere but at the end breaks the chain, and the tool stops before acting.
+  - Removing the last entries leaves a chain that still holds, but the receipt the operator kept names
+    the hash of its last entry.
+  - `python3 scripts/ops/operator_journal.py verify` checks a journal by hand.
+  - Two operators writing at once are serialised by a lock, so they never take the same place in the
+    chain.
+- **What it is not.** The journal lives on the host the tools run on. An account that can write it can
+  replace it whole; the chain then shows nothing. Keeping a copy off the host, beside the backups, is
+  part of the off-host recovery work that waits on the owner's provider approval
+  (`docs/valo/phase2-infrastructure-setup.md`).
+
+**Tests** (`scripts/ops/test_*.py`, run by the postgres job's recovery step, with a real restic
+repository):
+- the journal's own tests:
+  - an operator and a reason are required in its form;
+  - the directory must be private;
+  - each entry holds the one before it;
+  - a changed, removed or reformatted entry breaks the chain and stops every later write;
+  - two writers at once leave an intact chain;
+- backup removal:
+  - nothing is read or removed without who and why, a journal, or a journal apart from the plan;
+  - a refusal before acting records nothing;
+  - a removal that fails once started is recorded as failed;
+  - a broken journal stops the next removal before anything is removed;
+  - a real removal records who, why and what before and after, and its receipt names both entries;
+- the restore:
+  - nothing is unpacked without who, why and a journal;
+  - a refused archive records nothing;
+  - a restore records its archive, directory, operator and reason before and after.
+
+The evidence register cites only the tests whose results the workflow keeps, and it keeps none for
+these Python tests, so they are named here rather than cited.
+
+## Slice 3: the alerts
+
+The three alerts are built. Each is a reading in the worker's operations sample, raised above a
+development default, not a reviewed threshold, under the security/privacy incident runbook.
+
+- **A guard's refusal** (`GUARD_REFUSALS_DETECTED`, above zero in ten minutes).
+  - The error handler recognises a refusal a database guard raised. That is an error, or a cause in its
+    chain, whose code is `P0001` or `23514` and whose context names the PL/pgSQL function that raised
+    it. A check constraint, a key or a timeout names no function.
+  - The request is still answered with the same 503. It is counted as a `guard_refusal` security
+    signal, and only the guard's name is logged, never its message or the query.
+  - Until 26 November 2026 no such count was kept, so the alert could not be raised: the signals table's
+    kind check took only the first two kinds and refused the third. The tests stood in for the
+    database. The migration `20261126141258_security_signal_guard_refusal` lets the table take it
+    ([runbook](../valo/migration-security-signal-kinds.md)), and a database test now counts a real
+    guard's refusal.
+  - The application never sends a change a guard refuses, so each refusal is a fault or an attempt to
+    change a history, and either is worth an alert.
+  - A guard also refuses some changes that are not to a history, such as a release missing what it
+    needs. The alert counts those too. Such a refusal reaches the handler only when the application
+    failed to check first, which is a fault as well.
+- **Heavy privileged reading** (`PRIVILEGED_READING_DETECTED`).
+  - The reading is the most distinct objects one staff member read in the last hour, from the access
+    history.
+  - More than a hundred raise it. Reading one list again and again counts once, so a page that
+    refreshes does not raise it.
+  - An index on the access history's time keeps the reading cheap.
+- **A change outside the application: the history digests.** Someone with the owning login can disable
+  a guard, or change rows in a session the application never sees. So the database keeps a digest of
+  every history as it is written, and a scheduled count compares it with the rows themselves.
+  - **The digest.** For each history, in sixteen shards, the number of rows and the sum of a hash of each
+    row. It is kept in two parts: the digest's rows (`valo_history_digests`), and the changes not yet
+    folded into them (`valo_history_digest_changes`).
+    - A trigger after every insert, update and delete adds the new row's hash and takes away the old
+      row's, in the same transaction, as changes of their own.
+    - So every change the guards allow keeps the digest true: an erasure's redactions and removals, a
+      synthetic workspace's cleanup, a status that moves on.
+    - The row's hash is read in UTC, so the session's time zone cannot change it.
+    - Only that trigger may add a change. No change is altered, a direct change to the digest's rows is
+      refused, and neither part can be emptied with TRUNCATE.
+    - Removing changes folds them into the digest's rows in the same statement, so the digest stays as
+      it was.
+    - The trigger runs as its owner, so a customer's write keeps the digest true without the customer
+      role holding any privilege on it.
+  - **No writer waits on another's.** Until 26 November each write updated one of its history's digest
+    rows and held it until its transaction ended. Two transactions that wrote rows in two shards, in
+    opposite orders, could each hold a row the other then waited for, and the database ended one of them
+    as a deadlock: two erasures did so in CI's database job. A change is now a row of its own, which no
+    other writer waits on. Only the fold writes the digest's rows, and it takes them in one order.
+  - **The count.** Once an hour the worker folds the changes in, then recounts every history in one
+    snapshot and records which digests no longer match (`valo_history_checks`, itself append-only).
+    - A change made with the triggers off leaves its history's digest behind, and so does a session in
+      replica mode.
+    - A history whose digest trigger is missing or switched off is counted as a mismatch at once.
+    - `HISTORY_INTEGRITY_DETECTED` is raised while the latest count found any mismatch.
+    - Its probe is unavailable when no count is under two hours old.
+    - The worker asks every minute, as its other tasks do, and counts only when no count is under 55
+      minutes old.
+  - **The rule.** Every table whose rows a trigger guards against deletion keeps a digest, as it refuses
+    TRUNCATE; the migration test checks this on the whole schema.
+  - **A change to a history's columns.** A row's hash is of every column it holds, so a migration that
+    adds, drops, renames or retypes a history's column changes every row's hash, and the count would
+    find that history mismatched. Such a migration calls `valo_history_digest_reseed` for that history
+    after the change, in its own transaction, and the history's digest starts again from its rows.
+    - It reseeds only a table that keeps a digest. It folds that history's changes in first, so none is
+      counted twice, and the digest's guard is on again before it returns.
+    - Only migrations call it: the repository rule `history-reseed` keeps product code from naming it.
+    - The migration test runs the whole chain over rows written before it and finds every digest
+      matching, so a migration that forgets to reseed fails it.
+  - **What it cannot show.** The owning login could change a row and its digest together. Only slice 5,
+    an owner the application cannot act as, closes that.
+
+**Tests.**
+- The three alerts are raised and resolved on stubbed readings. An integrity reading with no recent
+  count makes its probe unavailable.
+- The handler counts a guard's refusal, and not a check constraint's, a key's or a timeout's. It logs
+  only the guard's name.
+- The real refusal of a change to a privacy case's history is read as that guard's.
+- A real guard's refusal, sent through the real error handler and counter, is counted on a real
+  database and raises the reading; and the table takes every kind the API counts.
+- The readings run on a real database. The hourly count keeps what it found once an hour, the alert
+  reads the latest count, and a kept count cannot be removed.
+- The migration test, on a fresh cluster:
+  - each digest starts from the rows already held;
+  - a customer's write in another time zone, and a removal a guard allows, keep it true;
+  - a change made in replica mode is found, and matches again once put back;
+  - a digest trigger switched off is found;
+  - a digest cannot be changed or removed directly, and a kept count cannot be changed;
+  - every table whose rows a trigger guards against deletion keeps a digest.
+- The reseed migration's check: a column added to a history makes it mismatch, a reseed in the same
+  transaction makes it match again with the guard back on, and a table that keeps no digest is refused.
+- The digest changes migration's check, on a fresh cluster:
+  - before it, two writers that add rows in two shards in opposite orders deadlock; after it, the same
+    writers finish without waiting;
+  - every digest is as it was, and a write adds its change as a row of its own;
+  - removing the changes folds them in and changes no digest;
+  - only a history's trigger adds a change, none is altered, and the changes cannot be emptied;
+  - a change made in replica mode is still found after a fold, and a reseed folds its history's changes
+    in first.
+- The worker's fold, on the real database, takes a synthetic event's change into the digest's rows. On a
+  database without the migration, it removes nothing.
+- After the whole chain of migrations, over rows written before them, every history matches its digest.
+- The index, digest, reseed and digest changes migrations have their upgrade checks.
+
+## Slice 4: the staff viewer
+
+The System area has an audit history panel. It shows the four histories that had no staff screen (gap 6)
+and the hourly counts, one at a time, newest first, fifty to a page.
+
+| Choice | History | What an entry shows |
+| --- | --- | --- |
+| Staff reads | `valo_staff_access_audit` | Who read, in which area, what they read and why |
+| Safety controls | `valo_safety_control_audit` | Who, the area and the action, the target and the reason |
+| Price changes | `valo_price_changes` | The database login that made it, what it did (created, closed or deleted) and the price's id |
+| Refund changes | `valo_refund_transitions` | Who, the refund's new status and the refund's id; never the reason |
+| History counts | `valo_history_checks` | Each hourly count, and the histories it found no longer matching their digests |
+
+- **Who may read it.** Only a current permanent system assignment with fresh MFA, the authority that
+  administers staff roles. Break-glass access, the other staff roles and a session without fresh MFA are
+  refused, and a refused read records nothing.
+- **Each read is recorded first.** Before anything is read, the page's read is written to the access
+  history:
+  - area `system`;
+  - object `audit_history:<kind>`;
+  - reason "Read page N of the <kind> history".
+
+  So reading the histories shows in the history of reads, and counts towards heavy privileged reading.
+- **What it never shows.** A refund's reason may hold a customer's own words, so it stays with finance.
+- **Nothing in it changes a history.** The endpoint only reads, apart from its own access row. A longer
+  text than the page carries ends in an ellipsis, and the row itself keeps all of it.
+
+**Tests.**
+- **Each history's entries** (unit):
+  - a refund's reason never reaches the page;
+  - a count says plainly what it found;
+  - a price change says what it did in words;
+  - long text is cut to the contract's limits, and every entry fits the contract.
+- **On a real database, in the staff roles step:**
+  - Finance staff, break-glass access, an identity with no assignment, a session without fresh MFA and a
+    verification over 30 seconds old are refused, and leave no row.
+  - An unknown history, page or field is refused.
+  - A read is recorded before the page is read, naming the history and the page.
+  - Pages run newest first, fifty to a page.
+  - Every history's page fits the contract on the real tables, after a real hourly count.
+  - No refund's reason is shown.
+  - Reading adds one row to the access history for each history read, and changes no other history.
+- **Over HTTP:** the route answers only a fresh staff session, is never cached, and refuses an unknown
+  history with 422.
+- **In the browser, on a phone:**
+  - the panel shows one history at a time;
+  - it pages through it, and starts another history at its first page;
+  - it has no automated WCAG 2.2 AA failure.
+
+## What comes next
+
+Slice 5 waits on Phase 8's migration login: the histories owned by a role the application login cannot
+use, so that it can no longer disable their guards.

@@ -1,0 +1,749 @@
+# Source controls, editorial records and correction notices.
+paths:
+  /admin/source-controls: {"get": {"operationId": "getSourceControls", "tags": ["staff"], "parameters": [{"name": "area", "in": "query", "required": true, "schema": {"type": "string", "enum": ["content", "system"]}}, {"name": "page", "in": "query", "schema": {"type": "integer", "minimum": 1, "maximum": 10000, "default": 1}}], "responses": {"200": {"description": "Current authorized result. No publication or spending approval is granted.", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SourceControls"}}}}, "401": {"description": "Sign-in required"}, "403": {"description": "Active area role and recent MFA required"}, "409": {"description": "Changed version or request-key conflict"}}}}
+  /admin/source-controls/action: {"post": {"operationId": "actOnSourceControls", "tags": ["staff"], "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SourceControlAction"}}}}, "responses": {"200": {"description": "Current authorized result. No publication or spending approval is granted.", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SourceControlResult"}}}}, "401": {"description": "Sign-in required"}, "403": {"description": "Active area role and recent MFA required"}, "409": {"description": "Changed version or request-key conflict"}}}}
+  /admin/source-register:
+    get:
+      operationId: listSourceRegister
+      tags: [staff]
+      summary: The source register, for content staff
+      description: >-
+        Each official source as staff keep it, with every earlier version and its watch
+        (docs/architecture/source-register.md, slice 1, ADM-003). Development only.
+      responses:
+        '200': { description: 'The register. Nothing is published or fetched.', content: { application/json: { schema: { $ref: '#/components/schemas/SourceRegister' } } } }
+        '401': { description: Sign-in required }
+        '403': { description: An active Content editor with recent MFA is required }
+        '503': { description: The register migration has not been applied }
+    post:
+      operationId: addSourceRegisterEntry
+      tags: [staff]
+      summary: Add an official source to the register
+      description: >-
+        A source a Content editor names, at an https address on a host the approved guidance policy
+        lists, as its first version with why, and its daily check when asked
+        (docs/architecture/source-register.md, slice 2). Nothing is published; the daily check fetches
+        it with every check it makes of a source kept in the repository.
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/SourceRegisterAddition' } } }
+      responses:
+        '200': { description: 'The register with the source added.', content: { application/json: { schema: { $ref: '#/components/schemas/SourceRegister' } } } }
+        '401': { description: Sign-in required }
+        '403': { description: An active Content editor with recent MFA is required }
+        '409': { description: The register holds this address already }
+        '422': { description: 'The address is not on a policy host, is a source kept in the repository, a field is invalid, or why is missing' }
+        '503': { description: The register migration has not been applied }
+  /admin/source-register/file:
+    post:
+      operationId: fileSourceRegister
+      tags: [staff]
+      summary: File the regulatory sources kept in the repository into the register
+      description: >-
+        Files each regulatory source lead kept in the repository that the register does not hold yet,
+        as its first version, with what the claim maps and amendment records say of it. Filing again
+        files nothing more.
+      responses:
+        '200': { description: 'The register after filing.', content: { application/json: { schema: { $ref: '#/components/schemas/SourceRegister' } } } }
+        '401': { description: Sign-in required }
+        '403': { description: An active Content editor with recent MFA is required }
+        '503': { description: The register migration has not been applied }
+  /admin/source-register/{sourceId}/versions:
+    post:
+      operationId: reviseSourceRegisterEntry
+      tags: [staff]
+      summary: Record the next version of a source's entry
+      description: >-
+        Its corrected fields, or its retirement or return, with why. The title and address stay its
+        own, and no version is ever changed or removed.
+      parameters:
+        - { name: sourceId, in: path, required: true, schema: { type: string, minLength: 1, maxLength: 100 } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/SourceRegisterRevision' } } }
+      responses:
+        '200': { description: 'The register after the new version.', content: { application/json: { schema: { $ref: '#/components/schemas/SourceRegister' } } } }
+        '401': { description: Sign-in required }
+        '403': { description: An active Content editor with recent MFA is required }
+        '404': { description: The source is not in the register }
+        '409': { description: The entry changed since it was read }
+        '422': { description: 'A field is invalid, nothing changed, or why is missing' }
+  /admin/editorial-records/{kind}/{id}:
+    get:
+      operationId: getEditorialRecord
+      tags: [staff]
+      summary: One version's publication record, for content staff
+      description: >-
+        The stored bundle's current check, the drafting and review runs, check counts, safety holds
+        and publication audit of one content or rule version (ADM-002). Read-only: it approves,
+        publishes and holds nothing.
+      parameters:
+        - { name: kind, in: path, required: true, schema: { type: string, enum: [content, rule] } }
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Current authorized record. No publication or spending approval is granted.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EditorialRecord" }
+        "401": { description: Sign-in required }
+        "403": { description: Active content role and recent MFA required }
+        "404": { description: No such version }
+  /admin/source-review:
+    get:
+      operationId: listSourceReview
+      tags: [staff]
+      summary: Review work with its owner, for content staff
+      description: >-
+        The open rows of review work oldest first, each with the version held, why, since when, what
+        opened it, who is accountable and what was checked on it, and the rows closed lately with how
+        they closed (docs/architecture/source-register.md, slice 3). Development only.
+      responses:
+        '200': { description: 'The queue. Nothing is published or sent.', content: { application/json: { schema: { $ref: '#/components/schemas/SourceReviewQueue' } } } }
+        '401': { description: Sign-in required }
+        '403': { description: An active Content editor with recent MFA is required }
+        '503': { description: The review migration has not been applied }
+  /admin/source-review/{workId}/notes:
+    post:
+      operationId: noteSourceReview
+      tags: [staff]
+      summary: Record what was checked on open review work
+      description: >-
+        A Content editor's note of what was checked, recorded on an open row and never changed or
+        removed. It closes nothing: a row closes when a later release replaces its version or the
+        version is withdrawn.
+      parameters:
+        - { name: workId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/SourceReviewNote' } } }
+      responses:
+        '200': { description: 'The queue with the note.', content: { application/json: { schema: { $ref: '#/components/schemas/SourceReviewQueue' } } } }
+        '401': { description: Sign-in required }
+        '403': { description: An active Content editor with recent MFA is required }
+        '404': { description: The review work is not in the queue }
+        '409': { description: The review work has closed }
+        '422': { description: What was checked is missing or too long }
+  /admin/source-review/{workId}/prepare:
+    post:
+      operationId: prepareSourceReview
+      tags: [staff]
+      summary: Ask for the next candidate of a held template or guide from its review work
+      description: >-
+        A Content editor asks, from an open row on a held template or guide that has a preparer, for its
+        next candidate (docs/architecture/source-register.md, slice 4). The worker takes a fresh copy of
+        the AI provider's terms and runs the preparer the template's or guide's command runs, with its
+        mechanical checks, and the row then says what came of it. A candidate that passes waits for its
+        two reviews, which run only under an AI allocation the owner approves. Nothing is sent or
+        published. Development only.
+      parameters:
+        - { name: workId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '202': { description: 'The queue, with the request waiting for the worker.', content: { application/json: { schema: { $ref: '#/components/schemas/SourceReviewQueue' } } } }
+        '401': { description: Sign-in required }
+        '403': { description: An active Content editor with recent MFA is required }
+        '404': { description: The review work is not in the queue }
+        '409': { description: 'The review work has closed, or a candidate is already being prepared from it' }
+        '422': { description: The row is not on a template or guide that has a preparer }
+        '503': { description: The review preparation migration has not been applied }
+  /admin/owner-rules/review-work:
+    get:
+      operationId: listOwnerReviewWork
+      tags: [staff]
+      summary: Review work on the rules the development owner signed
+      description: >-
+        The open rows of review work on the rules the owner signed, oldest first, and those closed
+        lately (docs/architecture/source-register.md, slice 3). Development only.
+      responses:
+        '200': { description: 'The owner''s queue.', content: { application/json: { schema: { $ref: '#/components/schemas/SourceReviewQueue' } } } }
+        '401': { description: Sign-in required }
+        '403': { description: 'Only the development owner, with recent verification' }
+        '503': { description: The review migration has not been applied }
+  /admin/owner-rules/review-work/{workId}/notes:
+    post:
+      operationId: noteOwnerReviewWork
+      tags: [staff]
+      summary: Record what the owner checked on review work of a rule the owner signed
+      parameters:
+        - { name: workId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/SourceReviewNote' } } }
+      responses:
+        '200': { description: 'The owner''s queue with the note.', content: { application/json: { schema: { $ref: '#/components/schemas/SourceReviewQueue' } } } }
+        '401': { description: Sign-in required }
+        '403': { description: 'Only the development owner, with recent verification' }
+        '404': { description: The review work is not on a rule the owner signed }
+        '409': { description: The review work has closed }
+        '422': { description: What was checked is missing or too long }
+  /admin/owner-rules:
+    get:
+      operationId: listOwnerRules
+      tags: [staff]
+      summary: Requirements-checker rules prepared for the development owner's sign-off (decision 0020)
+      description: >-
+        Each rule as the owner would sign it now: what it tells a customer, its sources and their
+        checks, its scenarios, how many saved results it would change, and what holds it. Read-only.
+      responses:
+        "200":
+          description: The prepared rules. Nothing is released.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OwnerRulePage" }
+        "403": { description: Recently verified development owner required }
+  /admin/owner-rules/{ruleId}/source-watches:
+    post:
+      operationId: watchOwnerRuleSources
+      tags: [staff]
+      summary: Have the daily source check watch a prepared rule's official sources
+      parameters:
+        - { name: ruleId, in: path, required: true, schema: { type: string, pattern: "^[A-Za-z0-9._-]{1,100}$" } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/OwnerRuleSourceWatch" }
+      responses:
+        "200":
+          description: The rule, with its sources watched. Nothing is fetched or released.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OwnerRuleItem" }
+        "403": { description: Recently verified development owner required }
+        "404": { description: No rule is prepared under that name }
+  /admin/owner-rules/{ruleId}/decisions:
+    post:
+      operationId: decideOwnerRule
+      tags: [staff]
+      summary: Sign and release a prepared rule's version, or withdraw a released one
+      parameters:
+        - { name: ruleId, in: path, required: true, schema: { type: string, pattern: "^[A-Za-z0-9._-]{1,100}$" } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/OwnerRuleDecision" }
+      responses:
+        "200":
+          description: The released or withdrawn version
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OwnerRuleReceipt" }
+        "403": { description: Recently verified development owner required }
+        "404": { description: No rule is prepared under that name }
+        "409": { description: "The rule, its sources or its release changed, or something holds it" }
+        "422": { description: A confirmation or the reason is missing }
+  /admin/reviewed-guides:
+    get:
+      operationId: listReviewedGuides
+      tags: [staff]
+      summary: Guides on the reviewed route awaiting the development owner's check of their sources
+      description: >-
+        Each prepared guide awaiting its reviews, newest first, with its whole text, each claim with the
+        passage it rests on, where each of its sources' copies stands now, what holds it, and the owner's
+        latest check of it (docs/architecture/reviewed-route.md, part 2). Read-only. Development only.
+      responses:
+        "200":
+          description: The prepared guides. Nothing is recorded, reviewed or released.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReviewedGuidePage" }
+        "401": { description: Sign-in required }
+        "403": { description: Recently verified development owner required }
+        "503": { description: The reviewed guide checks migrations have not been applied }
+  /admin/reviewed-guides/{versionId}/checks:
+    post:
+      operationId: checkReviewedGuide
+      tags: [staff]
+      summary: Record the development owner's check of a prepared guide's official sources
+      description: >-
+        The owner confirms the guide they read by its candidate's checksum. Its sources are checked again
+        against today's copies, and the check is recorded only if every one holds. A guide's reviews are
+        admitted, and the guide released, only within a day of such a check. Nothing is reviewed or
+        released here.
+      parameters:
+        - { name: versionId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReviewedGuideCheckRequest" }
+      responses:
+        "200":
+          description: The check, as the database recorded it.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReviewedGuideCheckReceipt" }
+        "401": { description: Sign-in required }
+        "403": { description: Recently verified development owner required }
+        "404": { description: The guide is not awaiting its reviews }
+        "409": { description: "The guide changed, its review date has passed, or one of its sources does not hold" }
+        "422": { description: The guide's checksum is missing }
+        "503": { description: The reviewed guide checks migrations have not been applied }
+  /workspace/correction-notices: {"get": {"operationId": "getCorrectionNotices", "tags": ["workspace"], "parameters": [{"name": "page", "in": "query", "schema": {"type": "integer", "minimum": 1, "maximum": 10000, "default": 1}}], "responses": {"200": {"description": "Current authorized result. No publication or spending approval is granted.", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/CorrectionNotices"}}}}, "401": {"description": "Sign-in required"}, "403": {"description": "Active area role and recent MFA required"}, "409": {"description": "Changed version or request-key conflict"}}}}
+schemas:
+  SourceControlAction: {"oneOf": [{"type": "object", "required": ["requestKey", "reason", "action", "sourceId"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["watch_source"]}, "sourceId": {"type": "string", "minLength": 1, "maxLength": 100}}, "additionalProperties": false}, {"type": "object", "required": ["requestKey", "reason", "action", "kind", "id", "version"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["hold_version"]}, "kind": {"type": "string", "enum": ["content", "rule"]}, "id": {"type": "string", "format": "uuid"}, "version": {"type": "integer", "minimum": 1}}, "additionalProperties": false}, {"type": "object", "required": ["requestKey", "reason", "action", "kind", "id", "version"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["withdraw_version"]}, "kind": {"type": "string", "enum": ["content", "rule"]}, "id": {"type": "string", "format": "uuid"}, "version": {"type": "integer", "minimum": 1}}, "additionalProperties": false}, {"type": "object", "required": ["requestKey", "reason", "action", "service"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["pause_service"]}, "service": {"type": "string", "enum": ["ai", "checkout", "messages"]}}, "additionalProperties": false}, {"type": "object", "required": ["requestKey", "reason", "action", "service"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["resume_service"]}, "service": {"type": "string", "enum": ["ai", "checkout", "messages"]}}, "additionalProperties": false}]}
+  SourceControlResult: {"type": "object", "required": ["auditId", "replayed", "result"], "properties": {"auditId": {"type": "string", "format": "uuid"}, "replayed": {"type": "boolean"}, "result": {"type": "object", "additionalProperties": true}}}
+  SourceControlVersion: {"type": "object", "required": ["kind", "id", "key", "version", "status", "reviewBy", "safetyHeld"], "properties": {"kind": {"type": "string", "enum": ["content", "rule"]}, "id": {"type": "string", "format": "uuid"}, "key": {"type": "string"}, "version": {"type": "integer"}, "status": {"type": "string"}, "reviewBy": {"type": ["string", "null"]}, "safetyHeld": {"type": "boolean"}}}
+  SourceControlWatch: {"type": "object", "required": ["sourceId", "url", "risk", "checkedAt", "failureCode", "nextCheckAt", "stoppedAt"], "properties": {"sourceId": {"type": "string"}, "url": {"type": "string"}, "risk": {"type": "string"}, "checkedAt": {"type": ["string", "null"]}, "failureCode": {"type": ["string", "null"]}, "nextCheckAt": {"type": "string", "format": "date-time"}, "stoppedAt": {"type": ["string", "null"], "description": "When the daily check stopped because the source register retired the source."}}}
+  SourceReviewNote:
+    type: object
+    required: [note]
+    additionalProperties: false
+    properties:
+      note: { type: string, maxLength: 1000, description: 'What was checked, in 20 to 1,000 characters.' }
+  SourceReviewItem:
+    type: object
+    required: [id, targetKind, targetKey, targetVersion, reason, sourceId, openedBy, opener, accountable, createdAt, notes, preparable, preparation]
+    properties:
+      id: { type: string }
+      targetKind: { type: string, enum: [content, rule] }
+      targetKey: { type: string }
+      targetVersion: { type: integer }
+      reason: { type: string }
+      sourceId: { type: [string, 'null'] }
+      openedBy: { type: string }
+      opener: { type: string, enum: [daily_check, check_overdue, source_retired, staff, review_due, lifecycle, publisher, derived, other] }
+      accountable: { type: string, enum: [content, owner], description: 'A Content editor, or the development owner for a rule the owner signed.' }
+      createdAt: { type: string }
+      notes:
+        type: array
+        items:
+          type: object
+          required: [note, recordedBy, createdAt]
+          properties:
+            note: { type: string }
+            recordedBy: { type: string }
+            createdAt: { type: string }
+      preparable: { type: boolean, description: 'Whether a new candidate can be asked for from this row: a template or guide that has a preparer (slice 4).' }
+      preparation: { description: 'The latest request to prepare a candidate from this row, or null.', anyOf: [{ $ref: '#/components/schemas/SourceReviewPreparation' }, { type: 'null' }] }
+  SourceReviewPreparation:
+    type: object
+    required: [status, requestedBy, requestedAt, completedAt, candidateVersion, reasons]
+    properties:
+      status:
+        type: string
+        enum: [pending, running, prepared, held, not_ready, failed, closed]
+        description: >-
+          pending and running: the worker has it. prepared: the candidate waits for its two reviews. held:
+          a template's candidate failed a check and was saved as a held version. not_ready: a guide's
+          candidate was not ready, and nothing was kept. failed: the preparation stopped, and nothing was
+          kept. closed: the review work closed before the request ran.
+      requestedBy: { type: string }
+      requestedAt: { type: string }
+      completedAt: { type: [string, 'null'] }
+      candidateVersion: { type: [integer, 'null'], description: 'The version the candidate was prepared as.' }
+      reasons: { type: array, items: { type: string }, description: 'What the checks named, or the code the preparation stopped with.' }
+  SourceReviewClosed:
+    type: object
+    required: [id, targetKind, targetKey, targetVersion, reason, outcome, completedAt]
+    properties:
+      id: { type: string }
+      targetKind: { type: string, enum: [content, rule] }
+      targetKey: { type: string }
+      targetVersion: { type: integer }
+      reason: { type: string }
+      outcome: { type: string, enum: [superseded, withdrawn] }
+      completedAt: { type: [string, 'null'] }
+  SourceReviewQueue:
+    type: object
+    required: [open, closed]
+    properties:
+      open: { type: array, items: { $ref: '#/components/schemas/SourceReviewItem' } }
+      closed: { type: array, items: { $ref: '#/components/schemas/SourceReviewClosed' } }
+  SourceControlReview: {"type": "object", "required": ["id", "status", "targetKind", "targetKey", "targetVersion", "reason", "createdAt"], "properties": {"id": {"type": "string", "format": "uuid"}, "status": {"type": "string"}, "targetKind": {"type": "string"}, "targetKey": {"type": "string"}, "targetVersion": {"type": "integer"}, "reason": {"type": "string"}, "createdAt": {"type": "string", "format": "date-time"}}}
+  SourceControlService: {"type": "object", "required": ["key", "enabled", "reason", "updatedAt"], "properties": {"key": {"type": "string"}, "enabled": {"type": "boolean"}, "reason": {"type": "string"}, "updatedAt": {"type": "string", "format": "date-time"}}}
+  SourceControlChoice: {"type": "object", "required": ["id", "title"], "properties": {"id": {"type": "string"}, "title": {"type": "string"}}}
+  SourceRegisterFields:
+    type: object
+    required: [version, title, authority, jurisdiction, instrument, versionInForce, effectiveFrom, status, reason, createdBy, createdAt]
+    properties:
+      version: { type: integer, minimum: 1 }
+      title: { type: string }
+      authority: { type: [string, 'null'], description: 'The body that issues the text. Empty until it is known.' }
+      jurisdiction: { type: string, description: 'Nigeria, or one of the states the requirements check lists.' }
+      instrument: { type: [string, 'null'], enum: [act, regulatory_document, official_page, null] }
+      versionInForce: { type: [string, 'null'], description: 'The edition in force, as the text names it.' }
+      effectiveFrom: { type: [string, 'null'], pattern: '^\d{4}-\d{2}-\d{2}$', description: 'The day the version in force took effect. An official page has none.' }
+      status: { type: string, enum: [active, retired] }
+      reason: { type: string, description: 'Why this version was recorded.' }
+      createdBy: { type: string }
+      createdAt: { type: string }
+  SourceRegisterEntry:
+    allOf:
+      - $ref: '#/components/schemas/SourceRegisterFields'
+      - type: object
+        required: [sourceId, url, origin, earlier, restingVersions, watch]
+        properties:
+          sourceId: { type: string }
+          url: { type: string }
+          origin: { type: string, enum: [repository, staff], description: 'Whether it is a source kept in the repository, or one staff added.' }
+          earlier: { type: array, description: 'Its earlier versions, newest first.', items: { $ref: '#/components/schemas/SourceRegisterFields' } }
+          restingVersions: { type: integer, minimum: 0, description: 'How many versions bound to it are not held yet: what retiring it holds.' }
+          watch:
+            description: Its daily check as it last ran, or null while it is not watched.
+            anyOf:
+              - type: object
+                required: [checkedAt, failureCode, nextCheckAt, stoppedAt]
+                properties:
+                  checkedAt: { type: [string, 'null'] }
+                  failureCode: { type: [string, 'null'] }
+                  nextCheckAt: { type: [string, 'null'] }
+                  stoppedAt: { type: [string, 'null'], description: 'When the daily check stopped because the source was retired.' }
+              - { type: 'null' }
+  SourceRegister:
+    type: object
+    required: [entries, unfiled, jurisdictions, hosts]
+    properties:
+      entries: { type: array, items: { $ref: '#/components/schemas/SourceRegisterEntry' } }
+      unfiled: { type: integer, minimum: 0, description: 'How many regulatory sources kept in the repository are not filed yet.' }
+      jurisdictions: { type: array, items: { type: string } }
+      hosts: { type: array, description: 'The hosts the approved guidance policy lists, where staff may add a source.', items: { type: string } }
+  SourceRegisterAddition:
+    type: object
+    required: [title, url, authority, jurisdiction, instrument, versionInForce, effectiveFrom, reason, watch]
+    additionalProperties: false
+    properties:
+      title: { type: string, maxLength: 300 }
+      url: { type: string, maxLength: 2000 }
+      authority: { type: [string, 'null'], maxLength: 200 }
+      jurisdiction: { type: string, maxLength: 60 }
+      instrument: { type: [string, 'null'], enum: [act, regulatory_document, official_page, null] }
+      versionInForce: { type: [string, 'null'], maxLength: 200 }
+      effectiveFrom: { type: [string, 'null'], pattern: '^\d{4}-\d{2}-\d{2}$' }
+      reason: { type: string, maxLength: 1000, description: 'Why, in 20 to 1,000 characters.' }
+      watch: { type: boolean, description: 'Whether its daily check starts now.' }
+  SourceRegisterRevision:
+    type: object
+    required: [baseVersion, authority, jurisdiction, instrument, versionInForce, effectiveFrom, status, reason]
+    additionalProperties: false
+    properties:
+      baseVersion: { type: integer, minimum: 1, description: 'The latest version, as read.' }
+      authority: { type: [string, 'null'], maxLength: 200 }
+      jurisdiction: { type: string, maxLength: 60 }
+      instrument: { type: [string, 'null'], enum: [act, regulatory_document, official_page, null] }
+      versionInForce: { type: [string, 'null'], maxLength: 200 }
+      effectiveFrom: { type: [string, 'null'], pattern: '^\d{4}-\d{2}-\d{2}$' }
+      status: { type: string, enum: [active, retired] }
+      reason: { type: string, maxLength: 1000, description: 'Why, in 20 to 1,000 characters.' }
+  SourceControls: {"type": "object", "required": ["area", "page", "hasMore", "notice", "versions", "sources", "review", "services", "sourceChoices"], "properties": {"area": {"type": "string", "enum": ["content", "system"]}, "page": {"type": "integer"}, "hasMore": {"type": "boolean"}, "notice": {"type": "string"}, "versions": {"type": "array", "items": {"$ref": "#/components/schemas/SourceControlVersion"}}, "sources": {"type": "array", "items": {"$ref": "#/components/schemas/SourceControlWatch"}}, "review": {"type": "array", "items": {"$ref": "#/components/schemas/SourceControlReview"}}, "services": {"type": "array", "items": {"$ref": "#/components/schemas/SourceControlService"}}, "sourceChoices": {"type": "array", "items": {"$ref": "#/components/schemas/SourceControlChoice"}}}}
+  EditorialRun:
+    type: object
+    required: [runId, model, promptVersion]
+    properties:
+      runId: { type: string }
+      model: { type: string }
+      promptVersion: { type: string }
+  EditorialReview:
+    type: object
+    required: [role, runId, model, promptVersion, verdict, findings, receivedOtherVerdict]
+    properties:
+      role: { type: string, enum: [factual, challenge] }
+      runId: { type: string }
+      model: { type: string }
+      promptVersion: { type: string }
+      verdict: { type: string, enum: [pass, hold] }
+      findings:
+        description: The review's findings, at most 20, each cut to 600 characters.
+        type: array
+        items: { type: string }
+      receivedOtherVerdict: { type: boolean }
+  EditorialCheckCounts:
+    type: object
+    required: [passed, failed, notRun]
+    properties:
+      passed: { type: integer }
+      failed: { type: integer }
+      notRun: { type: integer }
+  EditorialRecord:
+    type: object
+    required:
+      [kind, id, key, version, status, reviewBy, publishedAt, withdrawnReason, candidateHash, manifestStatus,
+       check, draftRun, reviews, mechanicalChecks, enhancedChecks, audit, safetyHolds, notice]
+    properties:
+      kind: { type: string, enum: [content, rule] }
+      id: { type: string, format: uuid }
+      key: { type: string }
+      version: { type: integer }
+      status: { type: string }
+      reviewBy: { type: [string, "null"] }
+      publishedAt: { type: [string, "null"] }
+      withdrawnReason: { type: [string, "null"] }
+      candidateHash: { type: [string, "null"] }
+      manifestStatus: { type: [string, "null"] }
+      check:
+        description: What the stored bundle passes or holds on at checkedAt. The publisher rechecks every gate before a release.
+        type: object
+        required: [checkedAt, decision, reasons]
+        properties:
+          checkedAt: { type: string, format: date-time }
+          decision: { type: string, enum: [eligible, hold] }
+          reasons: { type: array, items: { type: string } }
+      draftRun:
+        oneOf:
+          - { $ref: "#/components/schemas/EditorialRun" }
+          - { type: "null" }
+      reviews: { type: array, items: { $ref: "#/components/schemas/EditorialReview" } }
+      mechanicalChecks: { $ref: "#/components/schemas/EditorialCheckCounts" }
+      enhancedChecks: { $ref: "#/components/schemas/EditorialCheckCounts" }
+      audit:
+        type: array
+        items:
+          type: object
+          required: [action, actor, reason, at]
+          properties:
+            action: { type: string }
+            actor: { type: string }
+            reason: { type: string }
+            at: { type: string, format: date-time }
+      safetyHolds:
+        type: array
+        items:
+          type: object
+          required: [action, reason, phase, createdAt, completedAt]
+          properties:
+            action: { type: string }
+            reason: { type: string }
+            phase: { type: string }
+            createdAt: { type: string, format: date-time }
+            completedAt: { type: [string, "null"] }
+      notice: { type: string }
+  CorrectionNotice: {"type": "object", "required": ["id", "entityKind", "entityId", "message", "createdAt"], "properties": {"id": {"type": "string", "format": "uuid"}, "entityKind": {"type": "string"}, "entityId": {"type": "string", "format": "uuid"}, "message": {"type": "string"}, "createdAt": {"type": "string", "format": "date-time"}}}
+  CorrectionNotices: {"type": "object", "required": ["page", "hasMore", "notices"], "properties": {"page": {"type": "integer"}, "hasMore": {"type": "boolean"}, "notices": {"type": "array", "items": {"$ref": "#/components/schemas/CorrectionNotice"}}}}
+  OwnerRulePage:
+    type: object
+    required: [items]
+    properties:
+      items: { type: array, items: { $ref: "#/components/schemas/OwnerRuleItem" } }
+  OwnerRuleReferral:
+    type: object
+    required: [reference, version, status, reason, held, referredAt]
+    properties:
+      reference: { type: string }
+      version: { type: integer, minimum: 1 }
+      status: { type: string, enum: [queued, acknowledged] }
+      reason: { type: string }
+      held:
+        type: boolean
+        description: Whether content staff held that version through the source controls, which keeps it out of the requirements check.
+      referredAt: { type: string, format: date-time }
+  OwnerRuleItem:
+    type: object
+    required:
+      [ruleId, title, reason, nextStep, appliesWhen, jurisdiction, validFrom, validTo, risk, scope, limitations, assumptions, disclosure, version, manifestHash, live, holds, checks, sources, scenarios, profilesRun, changedProfiles, referrals]
+    properties:
+      ruleId: { type: string }
+      title: { type: string }
+      reason:
+        description: What the rule tells a customer when it applies; null when a fixed calculation words it for each customer's answers (see each scenario).
+        type: [string, "null"]
+      nextStep:
+        description: The next step the rule suggests when it applies; null when a fixed calculation words it for each customer's answers.
+        type: [string, "null"]
+      appliesWhen: { type: string }
+      jurisdiction: { type: string }
+      validFrom: { type: string }
+      validTo: { type: [string, "null"] }
+      risk: { type: string }
+      scope: { type: string }
+      limitations: { type: string }
+      assumptions: { type: array, items: { type: string } }
+      disclosure: { type: string }
+      version: { type: integer, minimum: 1 }
+      manifestHash: { type: string, pattern: "^[a-f0-9]{64}$" }
+      live:
+        anyOf:
+          - type: object
+            required: [version, manifestHash]
+            properties: { version: { type: integer }, manifestHash: { type: string } }
+          - { type: "null" }
+      holds: { type: array, items: { type: string } }
+      checks: { type: array, items: { $ref: "#/components/schemas/OwnerRuleCheck" } }
+      sources: { type: array, items: { $ref: "#/components/schemas/OwnerRuleSource" } }
+      scenarios: { type: array, items: { $ref: "#/components/schemas/OwnerRuleScenario" } }
+      profilesRun: { type: integer, minimum: 0 }
+      changedProfiles: { type: integer, minimum: 0 }
+      referrals:
+        type: array
+        description: Support referrals not yet resolved that point at a version of this rule the owner signed, newest first (docs/architecture/library-holds.md, slice 3).
+        items: { $ref: "#/components/schemas/OwnerRuleReferral" }
+      officialRoute:
+        $ref: "#/components/schemas/RequirementRoute"
+      figures:
+        type: array
+        description: Each fee, deadline, rate or threshold the rule records, with the passage it rests on, as a customer would see it. Absent when it records none.
+        items: { $ref: "#/components/schemas/OwnerRuleFigure" }
+  OwnerRuleFigure:
+    type: object
+    required: [kind, words, source]
+    properties:
+      kind: { type: string, enum: [fee, deadline, rate, threshold] }
+      words: { type: string }
+      source: { type: string, description: "The source's title and where in it the words are." }
+  OwnerRuleCheck:
+    type: object
+    required: [id, label]
+    properties:
+      id: { $ref: "#/components/schemas/OwnerRuleCheckId" }
+      label: { type: string }
+  OwnerRuleCheckId:
+    type: string
+    enum: [controlling_text, amendments, effective_dates, exceptions, jurisdiction]
+  OwnerRuleSource:
+    type: object
+    required:
+      [title, url, locator, quote, watched, checkedAt, failure, current, passage, recordedLocator, effectiveFrom, amendments]
+    properties:
+      title: { type: string }
+      url: { type: [string, "null"] }
+      locator: { type: string }
+      quote: { type: string }
+      watched: { type: boolean }
+      checkedAt: { type: [string, "null"] }
+      failure: { type: [string, "null"] }
+      current: { type: boolean }
+      passage: { type: [string, "null"] }
+      recordedLocator: { type: [string, "null"] }
+      effectiveFrom: { type: [string, "null"] }
+      amendments:
+        anyOf:
+          - { $ref: "#/components/schemas/OwnerRuleAmendmentRecord" }
+          - { type: "null" }
+  OwnerRuleAmendmentRecord:
+    type: object
+    required: [searchedAt, places, read, notRead, open, limits]
+    properties:
+      searchedAt: { type: [string, "null"] }
+      places: { type: array, items: { type: string } }
+      read: { type: array, items: { type: string } }
+      notRead: { type: array, items: { type: string } }
+      open: { type: array, items: { type: string } }
+      limits: { type: string }
+  OwnerRuleScenario:
+    type: object
+    required: [id, critical, expectedLabel, actualLabel, actualReason, actualNextStep, passed]
+    properties:
+      id: { type: string }
+      critical: { type: boolean }
+      expectedLabel: { type: [string, "null"] }
+      actualLabel: { type: [string, "null"] }
+      actualReason:
+        description: What the requirements check would tell the customer for these answers, were this version released; null when the rule gives no result for them.
+        type: [string, "null"]
+      actualNextStep: { type: [string, "null"] }
+      passed: { type: boolean }
+  OwnerRuleSourceWatch:
+    type: object
+    required: [watch]
+    properties:
+      watch: { type: string, enum: [official_sources] }
+  OwnerRuleDecision:
+    type: object
+    required: [action, version, manifestHash, confirmedChecks, confirmed]
+    properties:
+      action: { type: string, enum: [sign, withdraw] }
+      version: { type: integer, minimum: 1 }
+      manifestHash: { type: string, pattern: "^[a-f0-9]{64}$" }
+      confirmedChecks: { type: array, maxItems: 5, items: { $ref: "#/components/schemas/OwnerRuleCheckId" } }
+      confirmed: { type: boolean, enum: [true] }
+      reason:
+        type: string
+        minLength: 20
+        maxLength: 1000
+        description: Why the released version is withdrawn, or what changed in the version signed to replace it. The businesses that saved a result or made a task under the old version are told it (docs/architecture/rule-changes.md). Required for a withdrawal, and for a sign-off while a version is released.
+  OwnerRuleReceipt:
+    type: object
+    required: [ruleId, version, state, superseded]
+    properties:
+      ruleId: { type: string }
+      version: { type: integer }
+      state: { type: string, enum: [published, withdrawn] }
+      superseded: { type: array, items: { type: integer } }
+  ReviewedGuidePage:
+    type: object
+    required: [items]
+    properties:
+      items: { type: array, items: { $ref: "#/components/schemas/ReviewedGuideItem" } }
+  ReviewedGuideItem:
+    type: object
+    required:
+      [versionId, guideId, title, version, candidateHash, preparedAt, reviewBy, saved, text, claims, sources, holds, lastCheck]
+    properties:
+      versionId: { type: string, format: uuid }
+      guideId: { type: string }
+      title: { type: string }
+      version: { type: integer, minimum: 1 }
+      candidateHash:
+        type: string
+        pattern: "^[a-f0-9]{64}$"
+        description: The checksum of the exact guide shown. The owner's check confirms it.
+      preparedAt: { type: string, format: date-time }
+      reviewBy: { type: string, format: date-time }
+      saved:
+        type: boolean
+        description: Whether its reviews have run and the guide is saved, waiting for a current check before its release.
+      text:
+        type: array
+        description: The guide's whole text, part by part, as its page and files print it.
+        items: { type: string }
+      claims: { type: array, items: { $ref: "#/components/schemas/ReviewedGuideClaim" } }
+      sources: { type: array, items: { $ref: "#/components/schemas/ReviewedGuideSource" } }
+      holds:
+        type: array
+        description: What stops the owner checking it now, in plain words. Empty when nothing does.
+        items: { type: string }
+      lastCheck:
+        anyOf:
+          - { $ref: "#/components/schemas/ReviewedGuideLastCheck" }
+          - { type: "null" }
+  ReviewedGuideClaim:
+    type: object
+    required: [text, kind, sourceId, locator, quote, held]
+    properties:
+      text: { type: string, description: The guide's sentence. }
+      kind: { type: string, enum: [source_statement, interpretation, optional_practice] }
+      sourceId: { type: string }
+      locator: { type: string, description: Where in its source the quoted words are. }
+      quote: { type: string }
+      held: { type: boolean, description: "Whether today's copy of its source lacks the words it quotes." }
+  ReviewedGuideSource:
+    type: object
+    required: [id, title, url, passage, checkedAt, state]
+    properties:
+      id: { type: string }
+      title: { type: string }
+      url: { type: string }
+      passage: { type: string, description: The source's words the guide rests on. }
+      checkedAt:
+        type: [string, "null"]
+        format: date-time
+        description: When the daily source check last read the source's address, if it has.
+      state:
+        type: string
+        enum: [holds, no_copy, changed, not_current, unreadable, passage_missing, quote_missing]
+        description: Where the copy this guide is bound to stands now.
+  ReviewedGuideLastCheck:
+    type: object
+    required: [checkedAt, countsUntil, counts]
+    properties:
+      checkedAt: { type: string, format: date-time }
+      countsUntil: { type: string, format: date-time }
+      counts:
+        type: boolean
+        description: Whether the check still admits the guide's reviews and its release.
+  ReviewedGuideCheckRequest:
+    type: object
+    required: [confirmCandidateHash]
+    additionalProperties: false
+    properties:
+      confirmCandidateHash: { type: string, pattern: "^[a-f0-9]{64}$" }
+  ReviewedGuideCheckReceipt:
+    type: object
+    required: [versionId, guide, version, candidateHash, checkedAt, sources]
+    properties:
+      versionId: { type: string, format: uuid }
+      guide: { type: string }
+      version: { type: integer, minimum: 1 }
+      candidateHash: { type: string, pattern: "^[a-f0-9]{64}$" }
+      checkedAt: { type: string, format: date-time }
+      sources: { type: integer, minimum: 1 }

@@ -1,0 +1,69 @@
+
+> @workspace/api-server@0.0.0 test:valo-finite-entry /home/runner/workspace/artifacts/api-server
+> node --experimental-test-module-mocks --import tsx --test src/lib/inference-manifest.test.ts src/lib/inference-allocation-package.test.ts src/lib/inference-history-reconciliation.test.ts src/lib/inference-history-classification.test.ts src/lib/inference-history-exposure.test.ts src/lib/inference-price-evidence.test.ts src/lib/inference-work-shape.test.ts src/lib/managed-inference-entry.test.ts src/lib/managed-operational-recovery.test.ts src/lib/inference-operational-preparation.test.ts
+
+✔ package freezes actual inventory and the original three case rosters without approving them (179.612469ms)
+✔ delegated membership cannot broaden the content inventory or enable unsupported preparers (61.281219ms)
+✔ package allocation, lane ceilings and allowed roles are immutable policy decisions (279.021585ms)
+✔ historical disabled artifact retains exact source pins but cannot authorize the clarified allocation boundary (69.489026ms)
+✔ matches drafting prompt separately; reconciles real receipt shape and exact held review IDs without removing old entries (33.394631ms)
+✔ future importer preserves actual model/usage and never double-subtracts excluded customer faults (7.308902ms)
+✔ missing/wrong historical drafting prompt or changed artifact bytes never discharges an unknown charge (7.620373ms)
+✔ failed draft or partial metadata is never zero cost merely because dependent reviews did not run (56.636189ms)
+✔ hash-bound editorial reports must match actual run ID, role, input and response rather than aggregate totals (2.281283ms)
+✔ changed source inventory, stale ledger, duplicate receipt and changed historical resolutions are rejected (2.299417ms)
+✔ verified retained receipts refine the projection but never mark potential charges as paid or mutate old entries (3.557587ms)
+✔ exposure projection refuses stale history and changed receipt cost evidence (9.550571ms)
+✔ missing evidence preserves every unbounded liability without a fictional maximum-model substitution (3.290205ms)
+✔ proposes one exact retained receipt with auditable old state and leaves every liability untouched (7.458827ms)
+✔ mutated actual artifact bytes are held even if summary and reference claim a receipt (16.623754ms)
+✔ exact approved returned model and actual valid usage are required (3.216342ms)
+✔ legacy missing request hash requires an unambiguous candidate and role, never row order (7.798418ms)
+✔ request hash disambiguates repeated candidate-role attempts only when it actually matches (0.460186ms)
+✔ conflicting historical usage or provider identity is never overwritten (1.100661ms)
+✔ receipt reused for another ledger row or conflicting retained artifacts remains held (2.072723ms)
+✔ duplicate reference to the same private artifact is not a second independent receipt (2.167823ms)
+✔ one source identity with conflicting metadata cannot produce a reconciliation (6.763038ms)
+✔ preparation binds distinct exact requests to one pair and fixed additional allocation (6.354572ms)
+✔ proposal discloses exact two-attempt reservation and never authorizes dispatch (1.43912ms)
+✔ stale/future/held preparation cannot produce an approvable roster (0.849448ms)
+✔ duplicate reviewer request or role cannot claim independent two-role work (2.85983ms)
+✔ changed candidate binding, path traversal and raised output budget are held (1.160719ms)
+✔ the saved manifest owns its request and source structures (0.710855ms)
+✔ changing a plan artifact creates distinct work identity without implicit retry (2.259419ms)
+(node:86572) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:86572) DeprecationWarning: mock.module(): options.namedExports is deprecated. Use options.exports instead.
+✔ actual preparation and saved-readiness callers bind another form without authoring, review, approval or publication (2078.490756ms)
+✔ multi-candidate reports require exact selection and retain old single-pair compatibility (29.05769ms)
+✔ official retained model and managed-route evidence support exact policy, not actual billing (126.288637ms)
+✔ different prices, model, context, completion ceiling or evidence version cannot claim the verified bound (1.045965ms)
+✔ publication cannot be relabeled to another corpus (1.360104ms)
+✔ editorial_evaluation cannot be relabeled to another corpus (0.867287ms)
+✔ checker_challenge cannot be relabeled to another corpus (0.178133ms)
+✔ customer cannot be relabeled to another corpus (0.172107ms)
+✔ customer context cannot carry a hidden publication plan or private candidate (0.495326ms)
+✔ checker challenge is not an independent factual review or review pair (0.173188ms)
+(node:86599) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:86599) DeprecationWarning: mock.module(): options.namedExports is deprecated. Use options.exports instead.
+▶ default managed entry and customer organizer use actual finite dispatch and real corpus bindings
+  ✔ disabled default entry imports neither database configuration nor SDK (353.492311ms)
+  ✔ all nonempty deployment markers block before database or SDK initialization (1018.315615ms)
+  ✔ approved context reaches the actual default entry and settles the exact work (517.524806ms)
+  ✔ request, actual source hash and actual case binding mismatches make zero SDK calls (21.559774ms)
+  ✔ actual default customer organizer uses two separately approved attempts after invalid schema (34.278814ms)
+  ✔ actual default customer organizer stops after one invalid response without a retry grant (19.662203ms)
+✔ default managed entry and customer organizer use actual finite dispatch and real corpus bindings (3297.561591ms)
+(node:86606) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:86606) DeprecationWarning: mock.module(): options.namedExports is deprecated. Use options.exports instead.
+✔ actual operational caller recovers an artifact failure from settled receipts without new attempts or SDK calls (196.934745ms)
+ℹ tests 47
+ℹ suites 0
+ℹ pass 47
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5160.515376

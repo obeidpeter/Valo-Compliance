@@ -1,0 +1,21 @@
+- [Valo acceptance constraints](valo-acceptance.md) — R1 gates precede R2; evidence, not inventory titles or model verdicts, determines acceptance.
+- [GitHub write permissions](github-write-permissions.md) — metadata push rights do not prove connector permission to activate workflow files.
+- [Infrastructure proof pitfalls](infrastructure-proof.md) — native storage SDK, consistent ORM peers and actual constraints must be proved, not inferred from setup/exit codes.
+- [Migration proof](migration-proof.md) — clean CI must execute journalled SQL; existing-database adoption needs measured schema evidence, not fabricated history.
+- [Saved document hashes](document-hash-compatibility.md) — JSONB key order differs; preserve historic digests with version-aware reconstruction.
+- [Managed identity browser tests](clerk-browser-testing.md) — match test tooling to the actual FAPI; a bot challenge is not automatically missing identity setup.
+- [AI evaluation cost evidence](ai-evaluation-cost-evidence.md) — synthetic inputs can incur real provider usage; cleanup must preserve usage history and quota accounting.
+- [Operational publication](operational-publication.md) — citations follow actual claims; owner authority is already given, sales approval is separate, and real review holds cannot be overridden.
+- [Customer trust boundaries](customer-trust-boundaries.md) — configured exact origin, durable write caps and commit-ordered membership revocation; findings are not exploit claims.
+- [Customer experience](customer-experience.md) — public access help must not depend on sign-in; product pages describe actual behavior, not proof milestones.
+- [Export interruption](export-interruption.md) — transport retries do not repair application state; fenced leases and pre-upload reservations preserve recovery.
+- [PDF reader validation](pdf-geometry.md) — allow small A4 rounding; running headers/footers can interrupt extracted paragraphs.
+- [Browser evaluation boundaries](browser-evaluation-boundaries.md) — distinguish callback semantics, unavailable test tooling and controlled identity from actual product/browser evidence.
+- [Supply-chain controls](supply-chain-controls.md) — npm cooldown uses days, pnpm minutes; a frozen install is not proof of every negative policy boundary.
+- [Privacy erasure and recovery](privacy-erasure.md) — preserve metering and immutable records while deleting private content; old backups need a post-cutoff deletion journal.
+- [Paystack outcome boundaries](payment-status-evidence.md) — merchant responses and terminal-looking dispute statuses do not establish final bank outcomes.
+- [Recovery evidence](recovery-evidence.md) — later aggregate success cannot establish original per-record failure causes.
+- [Workspace export consistency](workspace-export-consistency.md) — fixed data snapshots cannot freeze authorization; incomplete attempts restart a new dated snapshot, never splice pages.
+- [Isolated unit processes](isolated-unit-processes.md) — clear inherited Node test context; child exit zero alone does not prove tests ran.
+- [Project review updates](project-review-updates.md) — replace current PR snapshots, link retained evidence and check exact-commit ancestry before reporting integration state.
+- [Embedded preview checks](embedded-preview-hydration.md) — standalone browser checks cannot rule out hydration failures caused by iframe-only preview instrumentation.

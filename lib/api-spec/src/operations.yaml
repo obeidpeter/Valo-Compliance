@@ -1,0 +1,50 @@
+# Operational alerts, for the staff who answer them.
+paths:
+  /admin/operations/alerts:
+    get:
+      operationId: getOperationalAlerts
+      tags: [admin]
+      responses:
+        "200":
+          description: >-
+            System operators only, emergency access included, with recent MFA (SEC-008, NFR-010). The alerts active
+            now, newest first, and the latest changes to them, raised and cleared, newest first. An alert names the
+            runbook to follow and the roles accountable, and holds no request content, address or identity.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OperationalAlerts" }
+        "403": { description: Missing a system assignment or recent MFA. }
+schemas:
+  OperationalAlerts:
+    type: object
+    additionalProperties: false
+    required: [active, changes]
+    properties:
+      active:
+        type: array
+        maxItems: 100
+        items: { $ref: "#/components/schemas/OperationalAlert" }
+      changes:
+        type: array
+        maxItems: 50
+        items: { $ref: "#/components/schemas/OperationalAlert" }
+  OperationalAlert:
+    type: object
+    additionalProperties: false
+    required: [id, code, title, state, at, reading, threshold, runbook, accountable]
+    properties:
+      id: { type: string, format: uuid }
+      code: { type: string, pattern: '^[A-Z][A-Z_]{2,80}$' }
+      title: { type: string, maxLength: 300 }
+      state: { type: string, enum: [active, resolved] }
+      at: { type: string, format: date-time }
+      reading:
+        description: What the alert's reading found, where it has one.
+        type: [integer, "null"]
+        minimum: 0
+      threshold:
+        description: The limit the reading is measured against, where it has one.
+        type: [integer, "null"]
+        minimum: 0
+      runbook: { type: [string, "null"], maxLength: 200 }
+      accountable: { type: [string, "null"], maxLength: 200 }

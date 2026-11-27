@@ -1,0 +1,23 @@
+{
+  "checkedAt": "2026-11-14T04:25:48.783Z",
+  "syntheticDevelopmentOnly": true,
+  "checks": [
+    {
+      "name": "managed_verified_customer_can_open_private_routes",
+      "status": "pass"
+    },
+    {
+      "name": "real_manual_reminder_records_past_due_dates_and_mobile_keyboard_flow",
+      "status": "pass"
+    }
+  ],
+  "selection": "managed-identity-reminder-only",
+  "actualManagedIdentityUsed": true,
+  "realEmailDeliveryClaimed": false,
+  "actualNewPublications": 0,
+  "fixtureDisclosure": "No intercepted content fixture groups were executed in this managed-identity/reminder subset.",
+  "r1Accepted": false,
+  "r2Accepted": false,
+  "cleanupErrors": 0,
+  "cleanup": "Owned synthetic identity and application rows removed; provider usage history untouched."
+}

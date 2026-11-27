@@ -1,0 +1,29 @@
+{
+  "syntheticOnly": true,
+  "startedAt": "2026-11-13T22:51:21.518Z",
+  "checks": [
+    {
+      "name": "anonymous_progressive_checker_has_real_gaps_and_no_false_exemption",
+      "status": "pass"
+    },
+    {
+      "name": "managed_verified_account_and_consented_saved_profile_assessment",
+      "status": "pass"
+    },
+    {
+      "name": "assessment_comparison_keeps_profile_history",
+      "status": "pass"
+    },
+    {
+      "name": "task_creation_reload_and_user_completion_are_real",
+      "status": "fail"
+    }
+  ],
+  "managedIdentityUsed": true,
+  "actualEmailDeliveryTested": false,
+  "sourceBackedRulesPublished": 0,
+  "r1Accepted": false,
+  "financialExports": [],
+  "finishedAt": "2026-11-13T22:52:11.885Z",
+  "syntheticAppRowsRetained": true
+}

@@ -1,0 +1,51 @@
+
+> @workspace/api-server@0.0.0 test:valo-disputes /home/runner/workspace/artifacts/api-server
+> NODE_ENV=development node --import tsx --test src/lib/valo-dispute-provider.test.ts src/lib/valo-paystack-http.integration.test.ts
+
+▶ dispute transport: official operations with controlled HTTP, not merchant execution
+  ✔ disabled and recovery paths have zero outbound effects (1.976372ms)
+  ✔ scope checks cover dispute, environment, reference, transaction, currency and amount (11.382548ms)
+  ✔ full and partial accept are exact integer-subunit requests, not outcome assertions (11.848219ms)
+  ✔ declines require provider filename; no guessed evidence IDs or delivery dates (18.683111ms)
+  ✔ upload acknowledges empty 204 using a separate no-Authorization client (23.777857ms)
+  ✔ destination expiry, host, credentials, traversal and overlong validity are rejected (0.717031ms)
+  ✔ bad/expired destination and arbitrary bytes never reach object upload (1.160331ms)
+  ✔ structured evidence uses exact fields and matches the returned dispute (2.240365ms)
+  ✔ fraud declines require structured evidence; API success never implies bank victory (8.548126ms)
+  ✔ fraud acceptance can refund without fabricated evidence or delivery details (1.777273ms)
+  ✔ timeout after acceptance makes only one mutation attempt (2.583863ms)
+  ✔ terminal, pending and bank-feedback states prevent a new mutation (6.470553ms)
+✔ dispute transport: official operations with controlled HTTP, not merchant execution (97.03811ms)
+{"level":40,"time":1794707849176,"pid":54240,"hostname":"repl","req":{"id":1,"method":"POST"},"event":"payment.signature_rejected"}
+{"level":30,"time":1794707849183,"pid":54240,"hostname":"repl","req":{"id":1,"method":"POST"},"res":{"statusCode":401},"responseTime":10,"msg":"request completed"}
+{"level":40,"time":1794707849195,"pid":54240,"hostname":"repl","req":{"id":2,"method":"POST"},"event":"payment.signature_rejected"}
+{"level":30,"time":1794707849196,"pid":54240,"hostname":"repl","req":{"id":2,"method":"POST"},"res":{"statusCode":401},"responseTime":2,"msg":"request completed"}
+{"level":40,"time":1794707849206,"pid":54240,"hostname":"repl","req":{"id":3,"method":"POST"},"event":"payment.signature_rejected"}
+{"level":30,"time":1794707849207,"pid":54240,"hostname":"repl","req":{"id":3,"method":"POST"},"res":{"statusCode":401},"responseTime":2,"msg":"request completed"}
+{"level":40,"time":1794707849211,"pid":54240,"hostname":"repl","req":{"id":4,"method":"POST"},"event":"payment.signature_rejected"}
+{"level":30,"time":1794707849211,"pid":54240,"hostname":"repl","req":{"id":4,"method":"POST"},"res":{"statusCode":401},"responseTime":1,"msg":"request completed"}
+{"level":40,"time":1794707849217,"pid":54240,"hostname":"repl","req":{"id":5,"method":"POST"},"event":"payment.signature_rejected"}
+{"level":30,"time":1794707849218,"pid":54240,"hostname":"repl","req":{"id":5,"method":"POST"},"res":{"statusCode":401},"responseTime":2,"msg":"request completed"}
+▶ isolated real HTTP signature/durability controls — synthetic signing key, NOT Paystack delivery
+  ✔ missing, altered, replayed, malformed and legacy-only signatures fail before persistence (111.932266ms)
+{"level":30,"time":1794707849277,"pid":54240,"hostname":"repl","req":{"id":6,"method":"POST"},"res":{"statusCode":200},"responseTime":15,"msg":"request completed"}
+{"level":30,"time":1794707849291,"pid":54240,"hostname":"repl","req":{"id":7,"method":"POST"},"res":{"statusCode":200},"responseTime":5,"msg":"request completed"}
+  ✔ correct raw bytes persist a minimal event before acknowledgement; delivery retry is duplicate (39.064823ms)
+{"level":30,"time":1794707849303,"pid":54240,"hostname":"repl","req":{"id":8,"method":"POST"},"res":{"statusCode":415},"responseTime":2,"msg":"request completed"}
+Attention: Clerk collects telemetry data from its SDKs when connected to development instances.
+The data collected is used to inform Clerk's product roadmap.
+To learn more, including how to opt-out from the telemetry program, visit: https://clerk.com/docs/telemetry.
+
+{"level":30,"time":1794707849320,"pid":54240,"hostname":"repl","req":{"id":9,"method":"GET"},"res":{"statusCode":200},"responseTime":14,"msg":"request completed"}
+  ✔ hostile compressed webhook input is rejected and the same server remains alive (24.190281ms)
+{"level":30,"time":1794707849343,"pid":54240,"hostname":"repl","req":{"id":10,"method":"GET"},"res":{"statusCode":401},"responseTime":20,"msg":"request completed"}
+  ✔ raw webhook route does not bypass normal private authentication (25.784757ms)
+✔ isolated real HTTP signature/durability controls — synthetic signing key, NOT Paystack delivery (220.498956ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 7008.110829

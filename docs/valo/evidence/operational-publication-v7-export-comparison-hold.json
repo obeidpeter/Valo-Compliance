@@ -1,0 +1,121 @@
+{
+  "id": "435135c4-fe46-4155-a591-4ec2cc36c359",
+  "version": 7,
+  "candidateHash": "50ce532fcbfced5cf00395b0b67425023961507ccd4269a14e013562be70c7e6",
+  "policyHash": "dfa73f081effb374f07b64595e44f8557fd9c4c0ee1e173ae4b1f117f3d1fd82",
+  "eligibility": {
+    "decision": "hold",
+    "reasons": [
+      "manifest_not_eligible",
+      "review_required:factual",
+      "review_required:challenge"
+    ]
+  },
+  "release": {
+    "id": "435135c4-fe46-4155-a591-4ec2cc36c359",
+    "status": "held",
+    "reasons": [
+      "manifest_not_eligible",
+      "review_required:factual",
+      "review_required:challenge",
+      "OPERATIONAL_EXPORT_VALIDATION_FAILED"
+    ],
+    "decision": "held"
+  },
+  "reviews": [],
+  "exportReport": {
+    "version": "operational-export-inspection-2",
+    "candidateHash": "50ce532fcbfced5cf00395b0b67425023961507ccd4269a14e013562be70c7e6",
+    "passed": false,
+    "hashes": {
+      "docx": "ce54bed02b971cd43d1346ce45e5a5ea02546079c80e49ec2440120f646c860c",
+      "pdf": "633a96a8d6ec6ddff2a468243ac23d49c790f140d26fce7e94dd1c6924ba09c4"
+    },
+    "formats": {
+      "docx": {
+        "parsed": true,
+        "completeContent": true,
+        "disclosureIncluded": true,
+        "scopeIncluded": true,
+        "limitationsIncluded": true,
+        "sourceDateIncluded": true,
+        "missingTextHashes": []
+      },
+      "pdf": {
+        "parsed": true,
+        "completeContent": false,
+        "disclosureIncluded": true,
+        "scopeIncluded": true,
+        "limitationsIncluded": true,
+        "sourceDateIncluded": true,
+        "missingTextHashes": [
+          "07ec95e11c978d520d959896f0bdac8a063bea679800ca5a12ccfbad8b272654"
+        ]
+      }
+    },
+    "checks": [
+      {
+        "name": "docx_reader_and_active_content",
+        "passed": true
+      },
+      {
+        "name": "pdf_reader_a4_geometry",
+        "passed": true
+      },
+      {
+        "name": "pdf_text_within_pages",
+        "passed": true
+      },
+      {
+        "name": "docx_complete_content_and_disclosures",
+        "passed": true
+      },
+      {
+        "name": "pdf_complete_content_and_disclosures",
+        "passed": false
+      }
+    ],
+    "geometry": {
+      "pages": 3,
+      "width": 595.91998,
+      "height": 842.88,
+      "tolerancePoints": 2
+    },
+    "manualWordApplicationReview": false,
+    "manualAccessibilityReview": false
+  },
+  "attestations": {
+    "provenance": {
+      "id": "689cfc4c-a09f-4598-97ff-27196ca52abd",
+      "hash": "ca86669b7135efcf90e11917358425ccded28b3b01c8106773da5b92fe426720",
+      "extension": "json"
+    },
+    "rights": {
+      "id": "4b8a81e9-f6f3-4000-9084-12e6091a47fc",
+      "hash": "5e9a1e0dbff6c535dee1e265df0524f2bcf3deca36ab13363608f03a983b8ab8",
+      "extension": "json"
+    },
+    "rightsApplicabilityHash": "c9e085b6a2d064c6c5d4c109563eb2253c8ad7129c8d965be7ff006bc8ecdaf1",
+    "reviews": [],
+    "exports": {
+      "docx": {
+        "id": "bf7650b8-5df8-429a-b9ab-f6cb58ad3764",
+        "hash": "ce54bed02b971cd43d1346ce45e5a5ea02546079c80e49ec2440120f646c860c",
+        "extension": "docx"
+      },
+      "pdf": {
+        "id": "58891e8f-032d-4dee-accd-a4959b57f446",
+        "hash": "633a96a8d6ec6ddff2a468243ac23d49c790f140d26fce7e94dd1c6924ba09c4",
+        "extension": "pdf"
+      }
+    },
+    "exportReport": {
+      "id": "6a3d5206-1538-4bbf-96de-ce9453763097",
+      "hash": "10db8c932ba93f0c7cc96eefdac6a957ecddbe8346e59d9f7084ea57387def6b",
+      "extension": "json"
+    }
+  },
+  "rightsScope": "Provider permissions and coordinator-attributed original operational provenance checked for this free synthetic-development release only. Upstream execution IDs are unrecorded; no copyright, exclusivity or non-infringement guarantee. No sales or accepted Valo commercial licence.",
+  "commercialLicenceAccepted": false,
+  "providerFailure": "OPERATIONAL_EXPORT_VALIDATION_FAILED"
+}

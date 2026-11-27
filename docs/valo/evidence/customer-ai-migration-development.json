@@ -1,0 +1,13 @@
+{
+  "environment": "development",
+  "migration": "0006_customer_ai_drafting.sql",
+  "executedAt": "2026-11-13T22:16:18.314Z",
+  "result": {
+    "exitCode": 0,
+    "exitReason": null,
+    "output": "BEGIN\nCREATE TABLE\nCREATE TABLE\nALTER TABLE\nALTER TABLE\nALTER TABLE\nCREATE INDEX\nCREATE INDEX\nCREATE INDEX\nCREATE INDEX\nCREATE INDEX\nCOMMIT\n",
+    "success": true
+  },
+  "productionCompatibilityAccepted": false,
+  "schemaAcceptance": false
+}

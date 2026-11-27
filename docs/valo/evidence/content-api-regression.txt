@@ -1,0 +1,66 @@
+
+> @workspace/api-server@0.0.0 test:valo /home/runner/workspace/artifacts/api-server
+> tsx --test src/lib/valo-validation.test.ts src/lib/valo-quota.test.ts src/lib/valo-render.test.ts src/lib/valo-customer-ai.test.ts src/lib/valo-site-origin.test.ts src/lib/valo-catalogue.test.ts src/lib/valo-catalogue-pages.test.ts src/lib/request-complexity.test.ts src/editorial/original-content-adapter.test.ts
+
+✔ seven exact baseline forms have editable bounded canonical layouts, not authoring metadata (178.024822ms)
+✔ twelve guides retain original prose and remove draft status lines (23.40704ms)
+✔ twenty exact industry pages and six packs retain the independently supplied mappings (15.899765ms)
+✔ handoff sections and embedded engineering metadata cannot enter a document (2.441806ms)
+✔ wide tables preserve each original field and blank without inventing records (5.181703ms)
+✔ bounded JSON preserves unknown values and saved content without mutation (2.48076ms)
+✔ oversized collections fail before validating their elements (4.299148ms)
+✔ deep, broad and high-node-count JSON fails within fixed budgets (0.905683ms)
+✔ validation responses cap error count, path and message lengths (11.481208ms)
+﹣ isolated real API rejects compressed/oversized JSON and remains alive (0.083101ms) # SKIP
+✔ fixed20-row catalogue contract: 45 items, page1 (1.99553ms)
+✔ fixed20-row catalogue contract: 45 items, page2 (9.053731ms)
+✔ fixed20-row catalogue contract: 45 items, page3 (0.113632ms)
+✔ fixed20-row catalogue contract: 45 items, page4 (8.285656ms)
+✔ fixed20-row catalogue contract: 40 items, page2 (0.099687ms)
+✔ fixed20-row catalogue contract: 0 items, page1 (0.069046ms)
+✔ synthetic already-eligible catalogue metadata produces nonzero counts, filters and pagination (0.652749ms)
+✔ rights applicability is evidence-dependent, not an unconditional development hold (5.655415ms)
+✔ invoice manual fallback preserves supplied facts without AI consent (8.20861ms)
+✔ quotation manual fallback preserves supplied facts without AI consent (0.847331ms)
+✔ payment_reminder manual fallback preserves supplied facts without AI consent (0.806558ms)
+✔ business_proposal manual fallback preserves supplied facts without AI consent (1.269043ms)
+✔ fractional quantity rounds once, without floating point (0.167674ms)
+✔ large kobo remains exact beyond Number precision (0.872009ms)
+✔ discount cannot exceed supplied subtotal (1.081848ms)
+✔ zero quantity is rejected rather than treated as missing or positive (0.892086ms)
+✔ AI requires separate notice acceptance; manual drafting remains independent (1.82779ms)
+✔ calendar errors and mismatched task schemas are rejected (0.671468ms)
+✔ missing facts are named, never invented (2.717114ms)
+✔ scope and permission injection are blocked across all four tasks (0.415608ms)
+✔ only bounded redacted selected notes enter model context (0.522075ms)
+✔ short identifiers cannot cascade replacement or expand model notes without bound (0.32263ms)
+✔ model cannot duplicate or omit a supplied note index (1.664206ms)
+✔ JSONB key-order reconstruction preserves new financial revision hashes (3.476901ms)
+✔ invalid provider structure gets one bounded retry, never fake success (4.305591ms)
+✔ injected transport outage preserves manual fallback without logging private input (0.321513ms)
+✔ fixture source hash identifies exactly sixty separate customer cases (19.299846ms)
+✔ retained real-provider payloads remain byte-reproducible after redaction hardening (148.51905ms)
+✔ quota defaults preserve the requested initial ceilings (1.322659ms)
+✔ quota subjects are pseudonymised, domain-separated and keyed (0.461993ms)
+✔ missing quota configuration fails rather than silently using memory or an unkeyed IP hash (1.673926ms)
+✔ controlled HTML treats markup, local-file and metadata addresses as inert text (2.282596ms)
+✔ DOCX contains editable OOXML, actual table cells, bullets, draft notice and naira (49.37088ms)
+✔ renderer rejects unknown formatting, arbitrary clause inputs and invalid dates (1.198192ms)
+✔ trusted site comes only from server configuration; production never falls back to a development hostname (0.6281ms)
+✔ origin comparison includes scheme, port and exact serialized origin (0.413147ms)
+✔ all 36 states and FCT are allowed without inventing nationwide rules (3.911556ms)
+✔ profile unknown, unanswered and false remain distinct; marketing is optional (0.477817ms)
+✔ profile rejects invented state, blank name and fractional revision (1.189939ms)
+✔ incomplete manual drafts persist without invented names or dates (1.093071ms)
+✔ impossible and reversed dates are rejected (2.505951ms)
+✔ arbitrary clauses, HTML nodes, network embeds and duplicate IDs are not accepted (1.617157ms)
+✔ updates require a positive integer expected revision (1.634981ms)
+✔ service enquiry consent cannot be assumed; support does not require sharing (0.301814ms)
+ℹ tests 54
+ℹ suites 0
+ℹ pass 53
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 1
+ℹ todo 0
+ℹ duration_ms 3148.107444

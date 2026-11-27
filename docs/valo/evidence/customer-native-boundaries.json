@@ -1,0 +1,111 @@
+{
+  "executedAt": "2026-11-14T17:30:51.328Z",
+  "records": [
+    {
+      "caseID": "CAI-CAND-QUO-14",
+      "caseHash": "1f47729dfbb17497167b832ab7db17428cdbf00f9122a7fd4ac4dda673126fc6",
+      "originalInputHash": "9d9979a32de74b65eb070b4b9cea6ec28de6887fd2b0efc7923fe9913258dd94",
+      "originalMissing": [
+        "documentNumber",
+        "issueDate"
+      ],
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {
+          "documentNumber": "SYNTHETIC-EVAL-CAI-CAND-QUO-14",
+          "issueDate": "2026-11-13"
+        },
+        "hash": "7bf4251af649fe9dcf883c6ab1f36d4c67f926c898b7a7cb9accb10ca65f5a5c"
+      },
+      "mappedInputHash": "8f778a0836e554c2ae38d333b770e7572e1fd156b35a8ab2c4faa9bf2a24570c",
+      "status": "control_pass",
+      "targetBoundaryReached": true,
+      "actualOutboundCalls": 0,
+      "observation": {
+        "workspaceLimit": 30,
+        "workspaceReservations": 32,
+        "actualConfiguredLimitReached": true,
+        "aiEnabledBeforeDenial": true,
+        "temporaryNoOutboundReservations": 30
+      },
+      "manual": {
+        "savedRevision": 5,
+        "financialFactsUnchanged": true,
+        "manualWritePassed": true,
+        "downloads": [
+          {
+            "format": "docx",
+            "hash": "36555475c0128baee6d0b1734a10666dfcb9095bb0ed11777000279310fed9c7",
+            "privateHistoricalDownloadUnchanged": true
+          },
+          {
+            "format": "pdf",
+            "hash": "34613bbf9eddeec966c127548b9b9139d9ad31df2fad43b7f95ce17ee933a4ee",
+            "privateHistoricalDownloadUnchanged": true
+          }
+        ]
+      }
+    },
+    {
+      "caseID": "CAI-CAND-REM-15",
+      "caseHash": "fc77ef962b7c335acb96bbf48dfa31fd7ee813b40376b905ac8ca71662414132",
+      "originalInputHash": "979a5a3c8932873a45fe8824b74841b98aed1a4899691e9595c61d95893de9dd",
+      "originalMissing": [
+        "issueDate",
+        "dueDate"
+      ],
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {
+          "issueDate": "2026-11-13",
+          "dueDate": "2026-11-01"
+        },
+        "hash": "fe161da4c8caf25ef3ba50b5f9bd7b17d64e9c49a37120b3e3035622feaae307"
+      },
+      "mappedInputHash": "2b6416e9593c0701396f666f9c74e96864791149a2a21ac0d087163f15851104",
+      "status": "control_pass",
+      "targetBoundaryReached": true,
+      "actualOutboundCalls": 0,
+      "observation": {
+        "workspaceScopedPause": true,
+        "globalSwitchUntouched": true,
+        "quotaAvailable": true,
+        "actualDisabledStateObserved": true
+      },
+      "manual": {
+        "savedRevision": 6,
+        "financialFactsUnchanged": true,
+        "manualWritePassed": true,
+        "downloads": [
+          {
+            "format": "docx",
+            "hash": "36555475c0128baee6d0b1734a10666dfcb9095bb0ed11777000279310fed9c7",
+            "privateHistoricalDownloadUnchanged": true
+          },
+          {
+            "format": "pdf",
+            "hash": "34613bbf9eddeec966c127548b9b9139d9ad31df2fad43b7f95ce17ee933a4ee",
+            "privateHistoricalDownloadUnchanged": true
+          }
+        ]
+      }
+    }
+  ],
+  "codeHashes": {
+    "artifacts/api-server/src/lib/valo-customer-ai.ts": "75f686a21a8e30728a32fd931789c18f6368b914f969062b93e730bebb719313",
+    "artifacts/api-server/src/lib/valo-customer-ai-domain.ts": "9d0a5d940d39ea1b39889319b78b2d68e593e2fe74e392426424070c0c5165ec",
+    "artifacts/api-server/src/lib/valo-customer-case-binding.ts": "010cc0654cc6e5ad2c0e9b254eb03c1db6bd28986beac88d9dd9e2609dac5f14",
+    "artifacts/api-server/src/scripts/customer-native-boundaries.ts": "8c7f933bc698cb4638d02edb2af2a08d104ae3b89b5efc463201fd3e049a87ba"
+  },
+  "actualOutboundCalls": 0,
+  "identitiesCreated": 0,
+  "quotaLimitsChanged": false,
+  "cleanupSucceeded": true,
+  "realProviderHistoryPreserved": true,
+  "source80Accepted": false,
+  "customer60Accepted": false,
+  "editorial60Accepted": false,
+  "scope": "Actual development database denial boundaries and private document/download services; controlled fixtures, not provider-quality cases or managed-browser verification."
+}

@@ -1,0 +1,36 @@
+
+> @workspace/api-server@0.0.0 test:valo-erasure-db /home/runner/workspace/artifacts/api-server
+> VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/lib/valo-erasure-hardening.integration.test.ts src/lib/valo-privacy-erasure.integration.test.ts
+
+▶ erasure holds, bounded recovery and accepted-upload process death
+  ✔ 13 objects and 205 restored profile rows resume across killed workers without repeated object traversal (17001.420318ms)
+  ✔ application replay authenticates the entire inventory and case before revocation or profile deletion (2520.546859ms)
+  ✔ distinct advisory locks cannot exhaust a one-connection shared data pool (36.854091ms)
+  ✔ holds and revoked roles stop the next object, while an in-flight result remains recorded (6493.117227ms)
+  ✔ actual export worker cleans an upload finishing after its tracking/job rows were erased (1799.502298ms)
+  ﹣ native private upload spans complete erasure and is removed by automatic maintenance (0.405292ms) # Native-provider lane not selected; portable race/recovery checks remain active.
+  ✔ SIGKILL before upload acknowledgement leaves a durable automatic late-write cleanup path (4794.459121ms)
+✔ erasure holds, bounded recovery and accepted-upload process death (32702.910966ms)
+ℹ {"boundedReplay":{"objects":13,"deleteCalls":13,"duplicateDeletes":0,"restoredProfiles":205,"removedProfiles":205,"killedWorkers":2,"maxObjectsPerBatch":10,"maxRowsPerBatch":100,"finalWorkerFullInventoryChecks":1,"finalWorkerCachedChecks":29}}
+ℹ Killed-upload completion used controlled object transport; native storage unconfigured.
+▶ resumable physical development erasure with retained exclusions and replay
+  ✔ unacknowledged, wrong-role and stale requests cannot delete content (81.589271ms)
+  ✔ quarantine persists before physical deletion and denies workspace resurrection (98.617543ms)
+  ✔ object failure is retained and blocks content purge; repeated deletion is retryable (325.401631ms)
+  ✔ ready, pending and cleanup objects are inventoried once before rows disappear and stale workers stay fenced (33.813871ms)
+  ✔ resume physically removes only scoped rows, keeping explicit unfulfilled records and another tenant (1833.125487ms)
+  ✔ restored membership and late-written objects are re-deleted from retained tombstones (2930.342058ms)
+  ✔ selected storage backend deletes actual synthetic bytes after late write and repeated replay (450.038496ms)
+  ✔ sealed key tampering and corrupted completion proof stop before deletion (185.638404ms)
+  ✔ non-development and every nonempty deployment marker stop before deletion I/O (4.930553ms)
+  ✔ even a deleted membership cannot recreate an identity with a deletion tombstone (15.926299ms)
+✔ resumable physical development erasure with retained exclusions and replay (6616.943195ms)
+ℹ {"backend":"controlled-private-filesystem","nativeProviderProof":false,"productionProof":false,"syntheticOnly":true,"storageOperations":{"writes":3,"reads":7,"deletes":12}}
+ℹ tests 19
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 1
+ℹ todo 0
+ℹ duration_ms 37210.691572

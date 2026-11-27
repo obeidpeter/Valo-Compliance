@@ -1,0 +1,28 @@
+
+> @workspace/api-server@0.0.0 test:valo-inference-budget /home/runner/workspace/artifacts/api-server
+> tsx --test src/lib/inference-budget.test.ts
+
+✔ exact proposal arithmetic and implicit customer 4096-token bound (18.982006ms)
+✔ real dispatch is disabled with no switch or SDK access (20.971499ms)
+✔ all four current application dispatch sites use the shared held transport (17.471468ms)
+✔ byte estimates, changed instructions/schema and insufficient proofs cannot admit (1.181127ms)
+✔ unknown pilot and unreconciled usage hold all lanes, import is idempotent (1.174847ms)
+✔ reservation precedes dispatch, timeout keeps maximum and cannot be cancelled (0.860437ms)
+✔ settlement is exact/idempotent, never releases unknown on elapsed time (1.854174ms)
+✔ duplicate identity binds the entire request and scope (4.220719ms)
+✔ atomic serialized racing reservations stop at lane limits without overspend (101.904367ms)
+✔ depleted global allowance overrides every lane and prior pilot consumes headroom (0.80396ms)
+✔ reported bound breaches suspend admission; malformed/negative balances fail closed (0.412712ms)
+✔ whole-context fallback rounds upward and needs no exact tokenization (2.239405ms)
+✔ finite context batch stops safely without requiring all 458 attempts or a daily delay (11.413975ms)
+✔ independent pair reservation is all-or-nothing and binds exact distinct requests (1.059608ms)
+✔ concurrency two includes unknown outcomes, with no timeout release or automatic retry (0.616662ms)
+✔ fallback does not admit tools, multiple completions or streaming (5.871226ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 987.092232

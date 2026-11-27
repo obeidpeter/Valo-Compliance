@@ -1,0 +1,18 @@
+▶ exact erasure inventory and recovery signing
+  ✔ ordered inventory rejects same-workspace replacement, omission, addition and duplicates (2.833106ms)
+  ✔ scope, identity and completion binding changes and unsigned legacy records hold closed (3.057974ms)
+  ✔ old proofs verify with retained material while new progress uses the new pinned signer (1.435395ms)
+  ✔ persisted progress cannot skip a phase, change cursor or cross an inventory version (1.064157ms)
+✔ exact erasure inventory and recovery signing (12.490188ms)
+✔ privacy states preserve verification and irreversible terminal boundaries (3.561552ms)
+✔ privacy stale writes are rejected, not overwritten (0.244606ms)
+✔ all six exact privacy systems need genuine complete dispositions (0.72523ms)
+✔ privacy audit binds exact actor, tenant, state and reason; JSONB order is stable (3.518497ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 591.724395

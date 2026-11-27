@@ -1,0 +1,120 @@
+// Lint rules for the whole repository (decision 0009). `pnpm run lint` runs them, with type
+// information, and CI fails on any finding. An exception names the rule and gives a reason:
+//   // oxlint-disable-next-line <plugin>/<rule> -- <reason>
+// An exception that no longer suppresses anything fails the run too.
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc", "import", "promise", "node", "react", "nextjs", "jsx-a11y"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error"
+  },
+  "options": {
+    "typeAware": true,
+    "denyWarnings": true,
+    "reportUnusedDisableDirectives": "error"
+  },
+  "ignorePatterns": [
+    // Generated from the API contract; never edited by hand.
+    "lib/api-zod/src/generated/**",
+    "lib/api-client-react/src/generated/**",
+    // Written by Next.js.
+    "artifacts/valo/next-env.d.ts"
+  ],
+  "rules": {
+    // Promises: a promise nobody awaits must be marked with `void`, or handled.
+    "typescript/no-floating-promises": [
+      "error",
+      {
+        // node:test runs top-level tests itself, and fails a test that ends before its subtests.
+        "allowForKnownSafeCalls": [
+          { "from": "package", "name": ["test", "describe", "it", "suite"], "package": "node:test" }
+        ]
+      }
+    ],
+    // React ignores what an event handler returns; the handlers' own bodies are still checked.
+    "typescript/no-misused-promises": ["error", { "checksVoidReturn": { "attributes": false } }],
+    // Only where leaving out `await` changes which errors a try or catch sees.
+    "typescript/return-await": ["error", "error-handling-correctness-only"],
+    "typescript/only-throw-error": "error",
+    "typescript/prefer-promise-reject-errors": "error",
+
+    // React: the rules of hooks.
+    "react/rules-of-hooks": "error",
+    // SEC-003 (docs/architecture/hostile-input.md, part 4): Valo has no rich text, so no component puts
+    // text into the page as HTML. The repository rule raw-html covers the browser's own HTML sinks.
+    "react/no-danger": "error",
+    "react/no-danger-with-children": "error",
+
+    // Strict equality (small hardening, part 4): `==` and `!=` only against null, which also matches
+    // undefined.
+    "eslint/eqeqeq": ["error", "always", { "null": "ignore" }],
+
+    // Configured for this codebase.
+    "eslint/no-unused-vars": [
+      "error",
+      // Leaving out a property with a rest pattern is how the code drops private fields.
+      { "ignoreRestSiblings": true, "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }
+    ],
+    "import/no-unassigned-import": ["error", { "allow": ["**/*.css"] }],
+    // Labels wrap their control and text a few elements deep.
+    "jsx-a11y/label-has-associated-control": ["error", { "depth": 4 }],
+    // A scrolling region takes focus so the keyboard can scroll it.
+    "jsx-a11y/no-noninteractive-tabindex": ["error", { "roles": ["tabpanel", "region"] }],
+
+    // Off: the automatic JSX runtime needs no React import.
+    "react/react-in-jsx-scope": "off",
+    // Off: these describe what the React Compiler can optimise. The app does not use it, and the
+    // patterns they report (a ref that holds the latest callback, state reset when the route
+    // changes) are deliberate.
+    "react/refs": "off",
+    "react/immutability": "off",
+    "react/purity": "off",
+    "react/set-state-in-effect": "off",
+    "react/memo-dependencies": "off",
+    "react/exhaustive-effect-dependencies": "off",
+    // Off: ARIA roles on generic elements are valid, and the browser checks find these regions by
+    // role. Swapping in <output>, <fieldset> or <search> would change the layout.
+    "jsx-a11y/prefer-tag-over-role": "off",
+    // Off: Express 5 passes a rejected handler promise to the error handler.
+    "oxc/no-async-endpoint-handlers": "off",
+    // Off: type assertions are made where the value was validated or parsed, and `!` marks an
+    // element or group that noUncheckedIndexedAccess cannot see is there, guarded by the code around it.
+    "typescript/no-unnecessary-type-assertion": "off",
+    "typescript/no-unsafe-type-assertion": "off",
+    // Off: comparisons with true or false, and String() or Number() on values already typed so,
+    // are fail-closed checks on stored or parsed data whose declared type nothing enforces.
+    "typescript/no-unnecessary-boolean-literal-compare": "off",
+    "typescript/no-unnecessary-type-conversion": "off",
+    // Off: it reports values typed unknown that a check narrowed to {}, such as database columns.
+    "typescript/no-base-to-string": "off",
+    // Off: noImplicitReturns already reports a missing return; an effect returns a cleanup only
+    // when it set something up.
+    "typescript/consistent-return": "off",
+    // Off: errors are rethrown as safe codes on purpose, without the original, which may carry
+    // private detail.
+    "eslint/preserve-caught-error": "off",
+    // Off: literals are split on purpose, so secret scanners do not match synthetic fixtures.
+    "eslint/no-useless-concat": "off",
+    // Off: pg and other CommonJS packages are imported as one default object.
+    "import/no-named-as-default": "off",
+    "import/no-named-as-default-member": "off",
+    // Off: style only.
+    "eslint/no-shadow": "off",
+    "eslint/no-underscore-dangle": "off",
+    "unicorn/consistent-function-scoping": "off",
+    "unicorn/no-array-sort": "off",
+    "unicorn/no-array-reverse": "off",
+    "unicorn/prefer-add-event-listener": "off",
+    "promise/always-return": "off"
+  },
+  "overrides": [
+    {
+      // This file's exact bytes are the business-name candidate's version, bound to its recorded
+      // evaluation and to checker-rich.ts, so an inline exception would change them. It takes an
+      // initial as the word's first code point, which drops a separate combining mark.
+      "files": ["lib/valo-core/src/checker-business-name.ts"],
+      "rules": { "typescript/no-misused-spread": "off" }
+    }
+  ]
+}

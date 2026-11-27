@@ -1,0 +1,199 @@
+# An independent reviewer's decisions on the acceptance cases (decision 0016, docs/architecture/reviewer-record.md).
+paths:
+  /admin/acceptance-cases:
+    get:
+      operationId: listAcceptanceCases
+      tags: [staff]
+      summary: One corpus's acceptance cases, with the latest decision on each case's current hash
+      description: >-
+        For an active reviewer with recent MFA only. Each case gives its expected outcome, its critical
+        failure conditions, its sources and the hash the suites bind it by. A decision holds only for the
+        hash it names. Nothing here accepts a case or a requirement. Development only.
+      parameters:
+        - { name: corpus, in: query, required: true, schema: { type: string, enum: [editorial, checker, customer_ai] } }
+      responses:
+        '200': { description: 'The corpus''s cases. Nothing is accepted.', content: { application/json: { schema: { $ref: '#/components/schemas/AcceptanceCases' } } } }
+        '401': { description: Sign-in required }
+        '403': { description: An active reviewer with recent MFA is required }
+        '404': { description: There is no such corpus }
+        '503': { description: The acceptance review migration has not been applied }
+  /admin/acceptance-cases/decisions:
+    post:
+      operationId: recordAcceptanceDecision
+      tags: [staff]
+      summary: Confirm or reject a case's expected outcome, for the case's hash as the reviewer read it
+      description: >-
+        One decision, kept for good: a later decision is a new row, and the database never changes or
+        removes one. A case that changed since the reviewer read it is refused.
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/AcceptanceDecision' } } }
+      responses:
+        '201': { description: 'The corpus''s cases with the decision recorded.', content: { application/json: { schema: { $ref: '#/components/schemas/AcceptanceCases' } } } }
+        '401': { description: Sign-in required }
+        '403': { description: An active reviewer with recent MFA is required }
+        '404': { description: The case is not in the corpus }
+        '409': { description: The case changed since the reviewer read it }
+        '422': { description: Why is missing or too long }
+        '503': { description: The acceptance review migration has not been applied }
+  /admin/acceptance-runs:
+    get:
+      operationId: listAcceptanceRun
+      tags: [staff]
+      summary: The latest run of a corpus's suite kept for a reviewer, with what it left for a reviewer
+      description: >-
+        For an active reviewer with recent MFA only. A suite's command keeps a run: every case with the
+        suite's status for it, and for each case the suite cannot score itself, what the reviewer reads.
+        A decision on a run holds only for the case as kept. Nothing here accepts a case or a requirement.
+        Development only.
+      parameters:
+        - { name: corpus, in: query, required: true, schema: { type: string, enum: [editorial, checker, customer_ai] } }
+      responses:
+        '200': { description: 'The latest kept run, or none. Nothing is accepted.', content: { application/json: { schema: { $ref: '#/components/schemas/AcceptanceRunView' } } } }
+        '401': { description: Sign-in required }
+        '403': { description: An active reviewer with recent MFA is required }
+        '404': { description: There is no such corpus }
+        '503': { description: The acceptance runs migration has not been applied }
+  /admin/acceptance-runs/decisions:
+    post:
+      operationId: recordAcceptanceRunDecision
+      tags: [staff]
+      summary: Record whether a kept run met a case, for the case as kept
+      description: >-
+        One decision, kept for good: met or not met, with why, bound to the run and the hash of the case
+        as the reviewer read it. A case the run left nothing on, or a hash that is not the case as kept,
+        is refused.
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/AcceptanceRunDecision' } } }
+      responses:
+        '201': { description: 'The kept run with the decision recorded.', content: { application/json: { schema: { $ref: '#/components/schemas/AcceptanceRunView' } } } }
+        '401': { description: Sign-in required }
+        '403': { description: An active reviewer with recent MFA is required }
+        '404': { description: 'The run, or the case in it, is not there to decide on' }
+        '409': { description: 'The case or the run is not as the reviewer read it' }
+        '422': { description: Why is missing or too long }
+        '503': { description: The acceptance runs migration has not been applied }
+schemas:
+  AcceptanceDecision:
+    type: object
+    required: [corpus, caseId, caseHash, answer, reason]
+    additionalProperties: false
+    properties:
+      corpus: { type: string, enum: [editorial, checker, customer_ai] }
+      caseId: { type: string, pattern: '^[A-Z0-9][A-Z0-9-]{2,63}$' }
+      caseHash: { type: string, pattern: '^[a-f0-9]{64}$' }
+      answer: { type: string, enum: [confirmed, rejected] }
+      reason: { type: string, maxLength: 2000, description: 'Why, in 20 to 2,000 characters.' }
+  AcceptanceCaseDecision:
+    type: object
+    required: [answer, reason, reviewer, createdAt]
+    properties:
+      answer: { type: string, enum: [confirmed, rejected] }
+      reason: { type: string }
+      reviewer: { type: string, description: 'The reviewer''s staff identity.' }
+      createdAt: { type: string }
+  AcceptanceCase:
+    type: object
+    required: [id, hash, title, expected, critical, sources, decision, decisions]
+    properties:
+      id: { type: string }
+      hash: { type: string, description: 'The SHA-256 of the case''s row as key-sorted JSON, as the suites bind it.' }
+      title: { type: string }
+      expected: { type: array, items: { type: string }, description: 'The expected outcome.' }
+      critical: { type: array, items: { type: string }, description: 'The critical failure conditions.' }
+      sources: { type: array, items: { type: string } }
+      decision: { description: 'The latest decision on this hash, or null.', anyOf: [{ $ref: '#/components/schemas/AcceptanceCaseDecision' }, { type: 'null' }] }
+      decisions: { type: integer, minimum: 0, description: 'How many decisions this hash has had.' }
+  AcceptanceCases:
+    type: object
+    required: [corpus, claim, cases, confirmed, rejected]
+    properties:
+      corpus: { type: string, enum: [editorial, checker, customer_ai] }
+      claim: { type: string, description: 'What a confirmation claims.' }
+      cases: { type: array, items: { $ref: '#/components/schemas/AcceptanceCase' } }
+      confirmed: { type: integer, minimum: 0 }
+      rejected: { type: integer, minimum: 0 }
+  AcceptanceRunDecision:
+    type: object
+    required: [corpus, runId, caseId, caseHash, resultHash, answer, reason]
+    additionalProperties: false
+    properties:
+      corpus: { type: string, enum: [editorial, checker, customer_ai] }
+      runId: { type: string, format: uuid }
+      caseId: { type: string, pattern: '^[A-Z0-9][A-Z0-9-]{2,63}$' }
+      caseHash: { type: string, pattern: '^[a-f0-9]{64}$' }
+      resultHash: { type: string, pattern: '^[a-f0-9]{64}$', description: 'The hash of the case as kept in the run, as the reviewer read it.' }
+      answer: { type: string, enum: [met, not_met] }
+      reason: { type: string, maxLength: 2000, description: 'Why, in 20 to 2,000 characters.' }
+  AcceptanceRunSection:
+    type: object
+    required: [heading, lines]
+    properties:
+      heading: { type: string }
+      lines: { type: array, items: { type: string } }
+  AcceptanceRunCaseDecision:
+    type: object
+    required: [answer, reason, reviewer, createdAt]
+    properties:
+      answer: { type: string, enum: [met, not_met] }
+      reason: { type: string }
+      reviewer: { type: string, description: 'The reviewer''s staff identity.' }
+      createdAt: { type: string }
+  AcceptanceRunCase:
+    type: object
+    required: [caseId, caseHash, title, status, reason, sections, resultHash, current, decision, decisions]
+    properties:
+      caseId: { type: string }
+      caseHash: { type: string }
+      title: { type: string }
+      status: { type: string, description: 'The suite''s own status for the case.' }
+      reason: { type: ['string', 'null'] }
+      sections: { description: 'What the run left for a reviewer, or null when it left nothing to judge.', anyOf: [{ type: array, items: { $ref: '#/components/schemas/AcceptanceRunSection' } }, { type: 'null' }] }
+      resultHash: { type: string, description: 'The hash of the case as kept.' }
+      current: { type: boolean, description: 'Whether the case as kept is of the corpus''s current words.' }
+      decision: { description: 'The latest decision on the case as kept, or null.', anyOf: [{ $ref: '#/components/schemas/AcceptanceRunCaseDecision' }, { type: 'null' }] }
+      decisions: { type: integer, minimum: 0 }
+  AcceptanceRunStatus:
+    type: object
+    required: [status, count]
+    properties:
+      status: { type: string }
+      count: { type: integer, minimum: 0 }
+  AcceptanceRunScore:
+    type: object
+    description: >-
+      The run scored with the reviewer's record. A case counts only when its expected outcome is confirmed
+      for its hash and, where the suite cannot score it, the run is recorded as met for the case as kept; a
+      rejected expected outcome takes the case out of the score. Nothing here accepts a requirement.
+    required: [scored, counted, excluded, notCounted, required, critical, meetsBar, recordHash]
+    properties:
+      scored: { type: integer, minimum: 0, description: 'The cases left in the score.' }
+      counted: { type: integer, minimum: 0 }
+      excluded: { type: integer, minimum: 0, description: 'The cases whose expected outcome was rejected.' }
+      notCounted: { type: integer, minimum: 0 }
+      required: { type: integer, minimum: 0, description: 'How many scored cases the requirement asks to count.' }
+      critical: { type: integer, minimum: 0, description: 'The cases the suite marks a critical failure.' }
+      meetsBar: { type: boolean, description: 'Whether the counted cases reach the bar with no critical failure. Not acceptance.' }
+      recordHash: { type: string, description: 'The hash of every row of the record the score used.' }
+  AcceptanceRun:
+    type: object
+    required: [id, keptBy, createdAt, resultsHash, summary, cases, statuses, left, met, notMet, score]
+    properties:
+      id: { type: string }
+      keptBy: { type: string }
+      createdAt: { type: string }
+      resultsHash: { type: string }
+      summary: { type: array, items: { type: string } }
+      cases: { type: integer, minimum: 0 }
+      statuses: { type: array, items: { $ref: '#/components/schemas/AcceptanceRunStatus' } }
+      left: { type: array, items: { $ref: '#/components/schemas/AcceptanceRunCase' }, description: 'The cases the run left for a reviewer.' }
+      met: { type: integer, minimum: 0 }
+      notMet: { type: integer, minimum: 0 }
+      score: { $ref: '#/components/schemas/AcceptanceRunScore' }
+  AcceptanceRunView:
+    type: object
+    required: [corpus, run]
+    properties:
+      corpus: { type: string, enum: [editorial, checker, customer_ai] }
+      run: { description: 'The latest kept run, or null when none is kept.', anyOf: [{ $ref: '#/components/schemas/AcceptanceRun' }, { type: 'null' }] }

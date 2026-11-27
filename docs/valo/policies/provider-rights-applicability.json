@@ -1,0 +1,18 @@
+{
+  "version": "managed-operational-rights-1",
+  "status": "unverified",
+  "accountPlan": "unverified",
+  "accountTerms": null,
+  "integration": "replit_managed_openai",
+  "provider": "openai",
+  "commercialUseScope": null,
+  "checkedAt": null,
+  "evidence": [],
+  "limitations": [
+    "Configured integration and actual model receipts establish use, not which account contract applies.",
+    "Replit Commercial Agreement clauses cannot be assumed applicable to this workspace.",
+    "Generic OpenAI terms alone do not establish the Replit-managed integration's contractual commercial-use chain.",
+    "Earlier immutable candidate records contain quoted terms but lack actual account/contract applicability evidence.",
+    "No copyright, exclusivity, non-infringement, customer-sales licence or professional-review assurance is made."
+  ]
+}

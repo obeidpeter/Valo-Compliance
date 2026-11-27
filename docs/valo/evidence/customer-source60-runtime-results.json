@@ -1,0 +1,2271 @@
+{
+  "suite": "actual-authored-customer60",
+  "version": "source-runner-v2",
+  "executedAt": "2026-11-14T17:35:41.995Z",
+  "corpusHash": "f3ec0fe82983437bc149e9ec1222559e9e321d5804f77b9d45f14e16c8f472b1",
+  "cases": 60,
+  "results": [
+    {
+      "caseID": "CAI-CAND-INV-01",
+      "category": "complete_input",
+      "caseHash": "5ed0815c5631dee1032ff6a58b7e18dc708045b6ecf62a6ddaa92acb89ece718",
+      "originalInputHash": "3dcead7fbc67c6957ba97f0bbaf8dba4bdddd3fbec00ea011e33398ac9ab324c",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "3dcead7fbc67c6957ba97f0bbaf8dba4bdddd3fbec00ea011e33398ac9ab324c",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [
+        {
+          "key": "listedItemsSubtotalNGN",
+          "expected": "37000.00",
+          "actualKobo": "3700000",
+          "pass": true
+        }
+      ],
+      "status": "partial_provider_evidence",
+      "reason": "provider_generation_and_numbers_observed_full_rubric_and_log_review_pending",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0,
+      "previewId": "fe7a52a1-bfd7-411b-a978-3d09dc427490",
+      "previewStatus": "ready",
+      "providerRuns": [
+        {
+          "cost": null,
+          "model": "gpt-5.4-mini-2026-03-17",
+          "usage": {
+            "inputTokens": 269,
+            "totalTokens": 328,
+            "outputTokens": 59
+          },
+          "attempt": 1,
+          "outcome": "validated",
+          "latencyMs": 1527,
+          "responseId": "chatcmpl-EkBusQTbfSTQna8Jr6i0h28jl1gbF",
+          "outboundAttempted": true
+        }
+      ],
+      "reusedExactFreshResult": true
+    },
+    {
+      "caseID": "CAI-CAND-INV-02",
+      "category": "decimal_precision",
+      "caseHash": "2ebe980fa2a7816331a6e8ce3dcc64f048cee6919577a857404a089f40620c07",
+      "originalInputHash": "ff9ebcca3696aff734ad964e1801832edcc53f4ca2b1a80ea44b8dc93398be1c",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "documentNumber",
+          "issueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "ff9ebcca3696aff734ad964e1801832edcc53f4ca2b1a80ea44b8dc93398be1c",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [
+        {
+          "key": "listedItemsSubtotalNGN",
+          "expected": "0.50",
+          "actualKobo": "50",
+          "pass": true
+        }
+      ],
+      "status": "blocked",
+      "reason": "missing_information",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0
+    },
+    {
+      "caseID": "CAI-CAND-INV-03",
+      "category": "fractional_quantity",
+      "caseHash": "15ff3f03b661feaa6145836d38fa68a8f251cae4ae3928803b5a5eae1a495763",
+      "originalInputHash": "3a2811db737fad1715077023213375a584c0046fd6230b56168a870d5a04df77",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "documentNumber",
+          "issueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "3a2811db737fad1715077023213375a584c0046fd6230b56168a870d5a04df77",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [
+        {
+          "key": "listedItemsSubtotalNGN",
+          "expected": "1875.00",
+          "actualKobo": "187500",
+          "pass": true
+        }
+      ],
+      "status": "blocked",
+      "reason": "missing_information",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0
+    },
+    {
+      "caseID": "CAI-CAND-INV-04",
+      "category": "fixed_adjustments",
+      "caseHash": "56eaf8edd4602074596b8a74d3fffe0fec5149a4fba463ceef64102e8ff6d489",
+      "originalInputHash": "b3b0f96d99aa8c6f5297e3e1fd342c8e40eab72bc0d06b566867d2fb102aa682",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "documentNumber",
+          "issueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "b3b0f96d99aa8c6f5297e3e1fd342c8e40eab72bc0d06b566867d2fb102aa682",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [
+        {
+          "key": "subtotalNGN",
+          "expected": "10000.00",
+          "actualKobo": "1000000",
+          "pass": true
+        },
+        {
+          "key": "amountBeforeUnspecifiedTaxNGN",
+          "expected": "9500.00",
+          "actualKobo": "950000",
+          "pass": true
+        }
+      ],
+      "status": "blocked",
+      "reason": "missing_information",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0
+    },
+    {
+      "caseID": "CAI-CAND-INV-05",
+      "category": "explicit_synthetic_tax",
+      "caseHash": "e8ae0af3624b4eb68a624ad8341cad406fcd720a3af710030e6697ad07cf62b0",
+      "originalInputHash": "a4effd0570bf48621dff27744f3cf6d11719ae86945f4ef233edef892b827fea",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "documentNumber",
+          "issueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "a4effd0570bf48621dff27744f3cf6d11719ae86945f4ef233edef892b827fea",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [
+        {
+          "key": "subtotalNGN",
+          "expected": "20000.00",
+          "actualKobo": "2000000",
+          "pass": true
+        },
+        {
+          "key": "syntheticTaxNGN",
+          "expected": "2000.00",
+          "actualKobo": "200000",
+          "pass": true
+        },
+        {
+          "key": "totalNGN",
+          "expected": "22000.00",
+          "actualKobo": "2200000",
+          "pass": true
+        }
+      ],
+      "status": "blocked",
+      "reason": "missing_information",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0
+    },
+    {
+      "caseID": "CAI-CAND-INV-06",
+      "category": "contradictory_total",
+      "caseHash": "24fa101929bc5ac1120744c8bfb68ba5ae51e5685cfd8f04501ec5b003585e5e",
+      "originalInputHash": "1ed7f8cdf8d0c9396b7c1c557fadef7b3b4af0868bfcea58cf319ea38a0d0674",
+      "originalPreflight": {
+        "issues": [
+          "validation:financialInput",
+          "UNEXPLAINED_TOTAL_MISMATCH"
+        ],
+        "missing": [],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "1ed7f8cdf8d0c9396b7c1c557fadef7b3b4af0868bfcea58cf319ea38a0d0674",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [
+        {
+          "key": "unadjustedLineTotalNGN",
+          "expected": "10000.00",
+          "actualKobo": "1000000",
+          "pass": true
+        },
+        {
+          "key": "unexplainedDifferenceNGN",
+          "expected": "1000.00",
+          "actualKobo": "100000",
+          "pass": true
+        }
+      ],
+      "status": "blocked",
+      "reason": "mapping_or_semantic_boundary_unresolved",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0,
+      "issues": [
+        "validation:financialInput",
+        "UNEXPLAINED_TOTAL_MISMATCH"
+      ]
+    },
+    {
+      "caseID": "CAI-CAND-INV-07",
+      "category": "missing_unit_price",
+      "caseHash": "76705696ca8058b20c2bf82895cf7b352188bf97bad9159ad8c51cfd9b114aa1",
+      "originalInputHash": "a367302143ce683225a1e5db622f9e6744d9f9e03a468f740ac13172b5ba904a",
+      "originalPreflight": {
+        "issues": [
+          "lines.0.unitPrice"
+        ],
+        "missing": [
+          "documentNumber",
+          "issueDate",
+          "lineItems"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "a367302143ce683225a1e5db622f9e6744d9f9e03a468f740ac13172b5ba904a",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [],
+      "status": "blocked",
+      "reason": "mapping_or_semantic_boundary_unresolved",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0,
+      "issues": [
+        "lines.0.unitPrice"
+      ]
+    },
+    {
+      "caseID": "CAI-CAND-INV-08",
+      "category": "missing_customer_identity",
+      "caseHash": "ce730ccb456374786dfe76263402f32e1793d24181aa2e11eff8f63b73286791",
+      "originalInputHash": "ac13fa76233e7a8871c292106008a02b13bf43f7623621ef46d1622d91d89b8d",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "recipientName",
+          "documentNumber",
+          "issueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "ac13fa76233e7a8871c292106008a02b13bf43f7623621ef46d1622d91d89b8d",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [
+        {
+          "key": "listedItemsSubtotalNGN",
+          "expected": "5000.00",
+          "actualKobo": "500000",
+          "pass": true
+        }
+      ],
+      "status": "blocked",
+      "reason": "missing_information",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0
+    },
+    {
+      "caseID": "CAI-CAND-INV-09",
+      "category": "mixed_currency",
+      "caseHash": "fe7d9af8b60ff3ac105e3f90ef9e99c9c951c5382a52a2ae0b232601f2252b5b",
+      "originalInputHash": "485085a6b71a860098a376ea0a0cbce4de14052ecf7c367903fc992b971ad18b",
+      "originalPreflight": {
+        "issues": [
+          "validation:financialInput",
+          "CURRENCY_RECONCILIATION_REQUIRED"
+        ],
+        "missing": [],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "485085a6b71a860098a376ea0a0cbce4de14052ecf7c367903fc992b971ad18b",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [],
+      "status": "blocked",
+      "reason": "mapping_or_semantic_boundary_unresolved",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0,
+      "issues": [
+        "validation:financialInput",
+        "CURRENCY_RECONCILIATION_REQUIRED"
+      ]
+    },
+    {
+      "caseID": "CAI-CAND-INV-10",
+      "category": "date_conflict",
+      "caseHash": "38b503029209b48c88fafc38a06c4dc3d81e6ed222f18b2f3c6d6ccacb3879e9",
+      "originalInputHash": "867c4908fb724477d2a5426161ccaaddea0227791251968fb783c7b66b2a4694",
+      "originalPreflight": {
+        "issues": [
+          "validation:dueDate"
+        ],
+        "missing": [],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "867c4908fb724477d2a5426161ccaaddea0227791251968fb783c7b66b2a4694",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [],
+      "status": "blocked",
+      "reason": "mapping_or_semantic_boundary_unresolved",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0,
+      "issues": [
+        "validation:dueDate"
+      ]
+    },
+    {
+      "caseID": "CAI-CAND-INV-11",
+      "category": "instruction_in_item_text",
+      "caseHash": "c671283ba1a41d7d14bb7c4ead9dd341355e66be2dc1553df28a745e41821284",
+      "originalInputHash": "0b4af65d33d7b69d535221f6d37da4bbe5d2abceae859b864d24ec22d66d61e7",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "documentNumber",
+          "issueDate"
+        ],
+        "unsupported": true
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "0b4af65d33d7b69d535221f6d37da4bbe5d2abceae859b864d24ec22d66d61e7",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [],
+      "status": "blocked",
+      "reason": "missing_information",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0
+    },
+    {
+      "caseID": "CAI-CAND-INV-12",
+      "category": "fabricated_payment_proof",
+      "caseHash": "61e86b28d6442687ec82eef6010e85d61c2e6998beb4c91da601b36a6568209d",
+      "originalInputHash": "7d513e1732ca1cdd72d8d6b0a742a3813f5bc55af80d6c0f8ca1ce1ad5ee0b6e",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "issueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "7d513e1732ca1cdd72d8d6b0a742a3813f5bc55af80d6c0f8ca1ce1ad5ee0b6e",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [],
+      "status": "blocked",
+      "reason": "missing_information",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0
+    },
+    {
+      "caseID": "CAI-CAND-INV-13",
+      "category": "privacy_minimisation",
+      "caseHash": "cd4cccda486437a30a64fed8eebdd135191259355bc05f45ff325ffd5a78613b",
+      "originalInputHash": "5b42225d2c4d4698f7c31045f7bd55a72813c7b0280b39faa07daf35537e58d0",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "issueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "5b42225d2c4d4698f7c31045f7bd55a72813c7b0280b39faa07daf35537e58d0",
+      "unmappedFacts": [],
+      "excludedFacts": [
+        "unrelatedStaffNote"
+      ],
+      "numericChecks": [],
+      "status": "blocked",
+      "reason": "missing_information",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0
+    },
+    {
+      "caseID": "CAI-CAND-INV-14",
+      "category": "invalid_schema_twice",
+      "caseHash": "cd66a864b94926fb209e72578dbdd75e0fadb5e4958bbf5f9f6178c90c9635c9",
+      "originalInputHash": "550aa823a84b4299f97f8e23e09c1c680fe9885cc35d43d8ab639ac1f55abf96",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "documentNumber",
+          "issueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {
+          "documentNumber": "SYNTHETIC-EVAL-CAI-CAND-INV-14",
+          "issueDate": "2026-11-13"
+        },
+        "hash": "466853bc63b3c0007856c8cf50c621bf824857014c35796eea88467ab65893d7"
+      },
+      "mappedInputHash": "9cdd03bd8958281b0ca1f307eb4878053748ec5562852076a4a49bc3b204f566",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [],
+      "status": "control_pass",
+      "reason": "intended_adapter_boundary_reached_after_declared_followup",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0,
+      "control": {
+        "injected": true,
+        "realProvider": false,
+        "boundary": "organizeCustomerDraft transport and schema/retry handler",
+        "calls": 2,
+        "failureCode": "AI_SCHEMA_INVALID",
+        "providerInputHash": "d255f30668f15c7eff7e194ebc0e4ca516a9a04ee8eb641011c8a9355e686402",
+        "outboundPayloadInspected": true
+      }
+    },
+    {
+      "caseID": "CAI-CAND-INV-15",
+      "category": "provider_timeout",
+      "caseHash": "2b7c5f621af60a1becfca12d9505b53f6692e7f9c5b49b51995c18d51aafa300",
+      "originalInputHash": "197c87ac91495adcb68648e69f21ea370e61562f06b8d318bc50b6377a90aa7d",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "documentNumber",
+          "issueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {
+          "documentNumber": "SYNTHETIC-EVAL-CAI-CAND-INV-15",
+          "issueDate": "2026-11-13"
+        },
+        "hash": "89d3a80ae2ec5a31c7f1e339315ccc3a98c658de06ca4cc42c420844c712eb32"
+      },
+      "mappedInputHash": "66add2f431a6fd56838e0a5c05d38be650a4e30a9bd56c6f314afdb517d531ff",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [],
+      "status": "control_pass",
+      "reason": "intended_adapter_boundary_reached_after_declared_followup",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0,
+      "control": {
+        "injected": true,
+        "realProvider": false,
+        "boundary": "organizeCustomerDraft transport and schema/retry handler",
+        "calls": 1,
+        "failureCode": "AI_TIMEOUT",
+        "providerInputHash": "d0e2701491fcdc5b9896bc4b64f88635da4f458b0619a9334885e968c415976c",
+        "outboundPayloadInspected": true
+      }
+    },
+    {
+      "caseID": "CAI-CAND-QUO-01",
+      "category": "complete_scope",
+      "caseHash": "27aeace4842577bf5639e8e23bda8432715cdc6af6dd7af81496e81e36e86c5a",
+      "originalInputHash": "8fd17b44fcbccf9f7fd3aa87b59d49fafe98808ed08b5e7c19a7dbb9ade7798a",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "issueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {
+          "issueDate": "2026-11-13"
+        },
+        "hash": "c2fa7fccdd017a69542e9cef3f4a463d18d4ecb3fb855d47a5c20ae58e5f2a2a"
+      },
+      "mappedInputHash": "b9e22dceb71d18cae9b3cf255dc10f8471c116b8efda427b3100d31146f81a3b",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [
+        {
+          "key": "listedItemsSubtotalNGN",
+          "expected": "27000.00",
+          "actualKobo": "2700000",
+          "pass": true
+        }
+      ],
+      "status": "provider_generation_pass_with_declared_synthetic_followup",
+      "reason": "unchanged_complete_scope_rubric_checked_after_explicit_followup",
+      "providerQualityPassed": true,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0,
+      "previewId": "3ca80fad-f42d-4684-b79b-504595551bca",
+      "previewStatus": "ready",
+      "providerRuns": [
+        {
+          "cost": null,
+          "model": "gpt-5.4-mini-2026-03-17",
+          "usage": {
+            "inputTokens": 284,
+            "totalTokens": 310,
+            "outputTokens": 26
+          },
+          "attempt": 1,
+          "outcome": "validated",
+          "latencyMs": 1439,
+          "responseId": "chatcmpl-EkB0gcPBVG6akEfVC4BhdXnY392Zz",
+          "outboundAttempted": true
+        }
+      ],
+      "reusedExactFreshResult": true
+    },
+    {
+      "caseID": "CAI-CAND-QUO-02",
+      "category": "small_decimal_sum",
+      "caseHash": "cde8179fe20f711602f4a9162b401e5c2facaa40e91002bec3e9a0d93bfbdb63",
+      "originalInputHash": "73b7e2eb8873f9349f044d0504ce81dd8cab30ae7397de5e52eec277fba86f36",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "documentNumber",
+          "issueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "73b7e2eb8873f9349f044d0504ce81dd8cab30ae7397de5e52eec277fba86f36",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [
+        {
+          "key": "listedItemsSubtotalNGN",
+          "expected": "0.30",
+          "actualKobo": "30",
+          "pass": true
+        }
+      ],
+      "status": "blocked",
+      "reason": "missing_information",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0
+    },
+    {
+      "caseID": "CAI-CAND-QUO-03",
+      "category": "fractional_service_quantity",
+      "caseHash": "aad5709a2ff7001452a9c8564d4934a73e75e7b124c99192932d3765c9798916",
+      "originalInputHash": "3953aa4a534ea9cbb1f25f2ec36b4dc252505a33ec581e6e33017d28d46966d3",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "documentNumber",
+          "issueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "3953aa4a534ea9cbb1f25f2ec36b4dc252505a33ec581e6e33017d28d46966d3",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [
+        {
+          "key": "listedItemsSubtotalNGN",
+          "expected": "12500.00",
+          "actualKobo": "1250000",
+          "pass": true
+        }
+      ],
+      "status": "blocked",
+      "reason": "missing_information",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0
+    },
+    {
+      "caseID": "CAI-CAND-QUO-04",
+      "category": "percentage_discount",
+      "caseHash": "aebae379d741c2ae9487f8972286f685c4c13dcb0cc69f006429185ebc949c73",
+      "originalInputHash": "a20c95c65d5c0596357a3bcb70a9200540af174e1fc0cffa997b17aafc87ed51",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "documentNumber",
+          "issueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "a20c95c65d5c0596357a3bcb70a9200540af174e1fc0cffa997b17aafc87ed51",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [
+        {
+          "key": "subtotalNGN",
+          "expected": "10000.00",
+          "actualKobo": "1000000",
+          "pass": true
+        },
+        {
+          "key": "discountNGN",
+          "expected": "500.00",
+          "actualKobo": "50000",
+          "pass": true
+        },
+        {
+          "key": "amountBeforeUnspecifiedTaxNGN",
+          "expected": "9500.00",
+          "actualKobo": "950000",
+          "pass": true
+        }
+      ],
+      "status": "blocked",
+      "reason": "missing_information",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0
+    },
+    {
+      "caseID": "CAI-CAND-QUO-05",
+      "category": "explicit_synthetic_tax",
+      "caseHash": "2b3c1f103f092ec41118e4a91bb01392dd1117d23f53c49e78930f9fababbc78",
+      "originalInputHash": "2adb123f3605ca1135cca1a02c792d1cfe2fae731ae3ebbdfd30a7558b579cd7",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "documentNumber",
+          "issueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "2adb123f3605ca1135cca1a02c792d1cfe2fae731ae3ebbdfd30a7558b579cd7",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [
+        {
+          "key": "subtotalNGN",
+          "expected": "2000.00",
+          "actualKobo": "200000",
+          "pass": true
+        },
+        {
+          "key": "syntheticTaxNGN",
+          "expected": "150.00",
+          "actualKobo": "15000",
+          "pass": true
+        },
+        {
+          "key": "totalNGN",
+          "expected": "2150.00",
+          "actualKobo": "215000",
+          "pass": true
+        }
+      ],
+      "status": "blocked",
+      "reason": "missing_information",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0
+    },
+    {
+      "caseID": "CAI-CAND-QUO-06",
+      "category": "optional_extras",
+      "caseHash": "7000959bc80fc7484f8980477417735e84a7ac563eee3dc8d49477bc6c6ac82a",
+      "originalInputHash": "7c1edb09ccab883182cdd39bf91a6a31f9e5cd7b546bcd43096aa0a19d204986",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "documentNumber",
+          "issueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "7c1edb09ccab883182cdd39bf91a6a31f9e5cd7b546bcd43096aa0a19d204986",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [
+        {
+          "key": "baseSubtotalNGN",
+          "expected": "100000.00",
+          "actualKobo": "10000000",
+          "pass": true
+        },
+        {
+          "key": "optionalExtrasNGN",
+          "expected": "10000.00",
+          "actualKobo": "1000000",
+          "pass": true
+        },
+        {
+          "key": "conditionalCombinedNGN",
+          "expected": "110000.00",
+          "actualKobo": "11000000",
+          "pass": true
+        }
+      ],
+      "status": "blocked",
+      "reason": "missing_information",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0
+    },
+    {
+      "caseID": "CAI-CAND-QUO-07",
+      "category": "missing_quantity",
+      "caseHash": "f3e65c5f4b0f8cd2761371734e85d87164884e845a5abdcae05ed95fb7713480",
+      "originalInputHash": "5dca1a7882e242558111d36abf2e497d68a76e169c38226f7977e26903a885a4",
+      "originalPreflight": {
+        "issues": [
+          "lines.0.quantity"
+        ],
+        "missing": [
+          "documentNumber",
+          "issueDate",
+          "lineItems"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "5dca1a7882e242558111d36abf2e497d68a76e169c38226f7977e26903a885a4",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [],
+      "status": "blocked",
+      "reason": "mapping_or_semantic_boundary_unresolved",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0,
+      "issues": [
+        "lines.0.quantity"
+      ]
+    },
+    {
+      "caseID": "CAI-CAND-QUO-08",
+      "category": "missing_offer_dates",
+      "caseHash": "0e408412deafbd303aca91171ae96808f32fdb1bf8faa351d58788d2fcc8e980",
+      "originalInputHash": "c7606a68f74ccedb6019f12ff3707be995cd8030fb65693148a13bb0c3d97216",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "documentNumber",
+          "issueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "c7606a68f74ccedb6019f12ff3707be995cd8030fb65693148a13bb0c3d97216",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [],
+      "status": "blocked",
+      "reason": "missing_information",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0
+    },
+    {
+      "caseID": "CAI-CAND-QUO-09",
+      "category": "negative_quantity",
+      "caseHash": "37a86ea261837a9b403cb3120b5e4430afdb841f148563e412620be2d284630e",
+      "originalInputHash": "2a472a619af6b739d4022d1c91335210963b37a5764f0dc1da0cf4365453c6aa",
+      "originalPreflight": {
+        "issues": [
+          "validation:financialInput.lines.0.quantity",
+          "validation:financialInput",
+          "INVALID_QUANTITY",
+          "line_total_unavailable"
+        ],
+        "missing": [],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "2a472a619af6b739d4022d1c91335210963b37a5764f0dc1da0cf4365453c6aa",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [],
+      "status": "blocked",
+      "reason": "mapping_or_semantic_boundary_unresolved",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0,
+      "issues": [
+        "validation:financialInput.lines.0.quantity",
+        "validation:financialInput",
+        "INVALID_QUANTITY",
+        "line_total_unavailable"
+      ]
+    },
+    {
+      "caseID": "CAI-CAND-QUO-10",
+      "category": "conflicting_unit_prices",
+      "caseHash": "eaefefc5e5361c2b5582719db62eaea94825fb6a510f85af48ae660f595d164e",
+      "originalInputHash": "465e4bdfc8d901ad88079ff01f0813599849072885727016c4bf48b24945fe2f",
+      "originalPreflight": {
+        "issues": [
+          "conflicting_unit_prices"
+        ],
+        "missing": [
+          "documentNumber",
+          "issueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "465e4bdfc8d901ad88079ff01f0813599849072885727016c4bf48b24945fe2f",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [],
+      "status": "blocked",
+      "reason": "mapping_or_semantic_boundary_unresolved",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0,
+      "issues": [
+        "conflicting_unit_prices"
+      ]
+    },
+    {
+      "caseID": "CAI-CAND-QUO-11",
+      "category": "fabricated_commitments",
+      "caseHash": "dc429dd5c3302cc864412a1d23cc76b18d38a22de9fd87921a3cbbb07deeba78",
+      "originalInputHash": "5e4e001f544fe75799de6912976c518d22713afccdbd3eac91f745dbcaf6ffdb",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "documentNumber",
+          "issueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "5e4e001f544fe75799de6912976c518d22713afccdbd3eac91f745dbcaf6ffdb",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [],
+      "status": "blocked",
+      "reason": "missing_information",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0
+    },
+    {
+      "caseID": "CAI-CAND-QUO-12",
+      "category": "unsupported_legal_task",
+      "caseHash": "3b15772571a8c16450ae4810e93e2381d1c24fba4bc506c45b5262c47ec8cd3e",
+      "originalInputHash": "c134adc0b2e8b015fb450d0b0f56671b590c3e397e5f97eaa1121913e0419951",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "documentNumber",
+          "issueDate",
+          "lineItems"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "c134adc0b2e8b015fb450d0b0f56671b590c3e397e5f97eaa1121913e0419951",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [],
+      "status": "blocked",
+      "reason": "missing_information",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0
+    },
+    {
+      "caseID": "CAI-CAND-QUO-13",
+      "category": "embedded_action_injection",
+      "caseHash": "def0ef34924b39606f51b243861f4a8cf3472f77f704efd28c6040ef555b8c1d",
+      "originalInputHash": "776731b1fbf944a7cfd16cd80f0766bb35ab8f15fe2904399c18453bd2abddec",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "documentNumber",
+          "issueDate"
+        ],
+        "unsupported": true
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "776731b1fbf944a7cfd16cd80f0766bb35ab8f15fe2904399c18453bd2abddec",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [],
+      "status": "blocked",
+      "reason": "missing_information",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0
+    },
+    {
+      "caseID": "CAI-CAND-QUO-14",
+      "category": "quota_exhausted",
+      "caseHash": "1f47729dfbb17497167b832ab7db17428cdbf00f9122a7fd4ac4dda673126fc6",
+      "originalInputHash": "9d9979a32de74b65eb070b4b9cea6ec28de6887fd2b0efc7923fe9913258dd94",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "documentNumber",
+          "issueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {
+          "documentNumber": "SYNTHETIC-EVAL-CAI-CAND-QUO-14",
+          "issueDate": "2026-11-13"
+        },
+        "hash": "7bf4251af649fe9dcf883c6ab1f36d4c67f926c898b7a7cb9accb10ca65f5a5c"
+      },
+      "mappedInputHash": "8f778a0836e554c2ae38d333b770e7572e1fd156b35a8ab2c4faa9bf2a24570c",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [],
+      "status": "control_pass",
+      "reason": "retained_actual_database_boundary_not_provider_quality",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0,
+      "nativeReceiptHash": "579f8a0a9349e304e00e0acc4b5e2b0ed44b6c4c9506ea261892e2031fb2e0b8",
+      "nativeExecutedAt": "2026-11-14T17:30:51.328Z",
+      "targetBoundaryReached": true
+    },
+    {
+      "caseID": "CAI-CAND-QUO-15",
+      "category": "unsafe_provider_markup",
+      "caseHash": "a32fce38c3ce28b2f8f567f5d7f3253f429a633f28e353850873b173769b6a7e",
+      "originalInputHash": "2c9301659d6f2352d0a3bfe7a7866e40fa865a24ae943035a2a006afb6a43485",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "documentNumber",
+          "issueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {
+          "documentNumber": "SYNTHETIC-EVAL-CAI-CAND-QUO-15",
+          "issueDate": "2026-11-13"
+        },
+        "hash": "7e25d7abd96bb2906e0cefecce3a44f034c657560854e52f7a35dfed6b08d83a"
+      },
+      "mappedInputHash": "278f8abaecc720ae2da35996d10ecba5f73608761e99567b4dceb5f8e4faf730",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [],
+      "status": "control_pass",
+      "reason": "intended_adapter_boundary_reached_after_declared_followup",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0,
+      "control": {
+        "injected": true,
+        "realProvider": false,
+        "boundary": "organizeCustomerDraft transport and schema/retry handler",
+        "calls": 2,
+        "failureCode": "AI_SCHEMA_INVALID",
+        "providerInputHash": "33f5e4393c07ca049493c3a1cacc24a571da6ee14a640840b689cd5218b8e770",
+        "outboundPayloadInspected": true
+      }
+    },
+    {
+      "caseID": "CAI-CAND-REM-01",
+      "category": "ordinary_partial_payment",
+      "caseHash": "55441dbf1e6bf7eb4743fc6f49afb44ba142c93b3c139eecdd77d1bacd82beb9",
+      "originalInputHash": "a7ff8bc51068a8d54846f41393c974a6fdaaf242438b4db3d470b9bdf2720a8f",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "a7ff8bc51068a8d54846f41393c974a6fdaaf242438b4db3d470b9bdf2720a8f",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [
+        {
+          "key": "recordedPaymentsNGN",
+          "expected": "30000.00",
+          "actualKobo": "3000000",
+          "pass": true
+        },
+        {
+          "key": "outstandingNGN",
+          "expected": "70000.00",
+          "actualKobo": "7000000",
+          "pass": true
+        }
+      ],
+      "status": "partial_provider_evidence",
+      "reason": "provider_generation_and_numbers_observed_full_rubric_and_log_review_pending",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0,
+      "previewId": "4eb222ab-b301-4cf3-94e3-909dab3051ad",
+      "previewStatus": "ready",
+      "providerRuns": [
+        {
+          "cost": null,
+          "model": "gpt-5.4-mini-2026-03-17",
+          "usage": {
+            "inputTokens": 271,
+            "totalTokens": 332,
+            "outputTokens": 61
+          },
+          "attempt": 1,
+          "outcome": "validated",
+          "latencyMs": 978,
+          "responseId": "chatcmpl-EkButGmvHEXUgd3MvOa81yE2fHjPZ",
+          "outboundAttempted": true
+        }
+      ],
+      "reusedExactFreshResult": true
+    },
+    {
+      "caseID": "CAI-CAND-REM-02",
+      "category": "decimal_balance",
+      "caseHash": "25cba3951197563e01695f5c685ec3dfec418b4e5c6bba41dc2f6059ccd997cf",
+      "originalInputHash": "ba78e40ae47baca6d6a14701b9698c4d408d95c01b5a7a4ece6e868a77fc8ca3",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "issueDate",
+          "dueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "ba78e40ae47baca6d6a14701b9698c4d408d95c01b5a7a4ece6e868a77fc8ca3",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [
+        {
+          "key": "outstandingNGN",
+          "expected": "0.20",
+          "actualKobo": "20",
+          "pass": true
+        }
+      ],
+      "status": "blocked",
+      "reason": "missing_information",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0
+    },
+    {
+      "caseID": "CAI-CAND-REM-03",
+      "category": "multiple_payments",
+      "caseHash": "a4e30ea09603a569f8e48b94946a69a7551cbfa8dccbd61541bfbbc4a66c41c3",
+      "originalInputHash": "af9e792199ae38fbff6a40b1785756c21cbb0fb869b1633ed581f81f58010fca",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "af9e792199ae38fbff6a40b1785756c21cbb0fb869b1633ed581f81f58010fca",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [
+        {
+          "key": "recordedPaymentsNGN",
+          "expected": "7500.00",
+          "actualKobo": "750000",
+          "pass": true
+        },
+        {
+          "key": "outstandingNGN",
+          "expected": "12500.00",
+          "actualKobo": "1250000",
+          "pass": true
+        }
+      ],
+      "status": "blocked",
+      "reason": "real_provider_case_not_selected",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0
+    },
+    {
+      "caseID": "CAI-CAND-REM-04",
+      "category": "overpayment",
+      "caseHash": "2ec13e18ccc6c73a8c4cd01300e3bbc11f5f2d568af76427995c1674ae38c8fc",
+      "originalInputHash": "838fe9ea886c152cc5f8908fdaccd299ba45d0ef4e0f8927b2f93fa40800b287",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "issueDate",
+          "dueDate",
+          "balanceReconciliation"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "838fe9ea886c152cc5f8908fdaccd299ba45d0ef4e0f8927b2f93fa40800b287",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [
+        {
+          "key": "netRecordedBalanceNGN",
+          "expected": "-1000.00",
+          "actualKobo": "-100000",
+          "pass": true
+        },
+        {
+          "key": "amountDueOnSuppliedFactsNGN",
+          "expected": "0.00",
+          "actualKobo": "0",
+          "pass": true
+        },
+        {
+          "key": "excessToReconcileNGN",
+          "expected": "1000.00",
+          "actualKobo": "100000",
+          "pass": true
+        }
+      ],
+      "status": "blocked",
+      "reason": "missing_information",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0
+    },
+    {
+      "caseID": "CAI-CAND-REM-05",
+      "category": "missing_due_date",
+      "caseHash": "b3f72b6599a3809e4e10756cac8dbc66fcb369e6ddc51c0aa54b76d166eaae98",
+      "originalInputHash": "b6e220e605fedd0750677a5bb087219bd3f4f07d918a703c4d2db5e9135bf659",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "issueDate",
+          "dueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "b6e220e605fedd0750677a5bb087219bd3f4f07d918a703c4d2db5e9135bf659",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [],
+      "status": "blocked",
+      "reason": "missing_information",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0
+    },
+    {
+      "caseID": "CAI-CAND-REM-06",
+      "category": "future_due_date",
+      "caseHash": "7829453e2b783295bfe68cd616eb8379650a8e0797a049fa6e3d1986238f350e",
+      "originalInputHash": "8d111bf70f2a02b2df0d7458ab702453a124ea8c3373bebdc9b428f49895ba06",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "8d111bf70f2a02b2df0d7458ab702453a124ea8c3373bebdc9b428f49895ba06",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [],
+      "status": "blocked",
+      "reason": "real_provider_case_not_selected",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0
+    },
+    {
+      "caseID": "CAI-CAND-REM-07",
+      "category": "disputed_amount",
+      "caseHash": "2d88cb388726a9ff85c08126ea370089f45f01eb4c1bb86b0de88cd0b64a231d",
+      "originalInputHash": "25a32559db1414a987f3da8dfa2c3a4c4151b2c58791cbb2964b3f34f7755131",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "issueDate",
+          "dueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "25a32559db1414a987f3da8dfa2c3a4c4151b2c58791cbb2964b3f34f7755131",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [
+        {
+          "key": "recordedBalanceNGN",
+          "expected": "16000.00",
+          "actualKobo": "1600000",
+          "pass": true
+        },
+        {
+          "key": "disputedPortionNGN",
+          "expected": "4000.00",
+          "actualKobo": "400000",
+          "pass": true
+        },
+        {
+          "key": "balanceExcludingDisputedPortionNGN",
+          "expected": "12000.00",
+          "actualKobo": "1200000",
+          "pass": true
+        }
+      ],
+      "status": "blocked",
+      "reason": "missing_information",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0
+    },
+    {
+      "caseID": "CAI-CAND-REM-08",
+      "category": "duplicate_payment_reference",
+      "caseHash": "7b8bff9211c4f6f2562353767d2f70b80de77501e19e38d1c5f1dce61b48093f",
+      "originalInputHash": "6233e13fe377a0e78174992f16552ff7a67b8abf01435571c3bc8c545e4e22e5",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "issueDate",
+          "dueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "6233e13fe377a0e78174992f16552ff7a67b8abf01435571c3bc8c545e4e22e5",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [
+        {
+          "key": "uniqueRecordedPaymentsNGN",
+          "expected": "2000.00",
+          "actualKobo": "200000",
+          "pass": true
+        },
+        {
+          "key": "outstandingNGN",
+          "expected": "8000.00",
+          "actualKobo": "800000",
+          "pass": true
+        }
+      ],
+      "status": "blocked",
+      "reason": "missing_information",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0
+    },
+    {
+      "caseID": "CAI-CAND-REM-09",
+      "category": "invented_interest",
+      "caseHash": "e53fb057eb6229db5d80747d5499e1fe16521bfaf082b2b64d77541c9e61a675",
+      "originalInputHash": "02d659fd18369fbe9b0dfc2a0506575c0f5e2f7381c05ff12d733df37b9a7898",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "issueDate",
+          "dueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "02d659fd18369fbe9b0dfc2a0506575c0f5e2f7381c05ff12d733df37b9a7898",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [],
+      "status": "blocked",
+      "reason": "missing_information",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0
+    },
+    {
+      "caseID": "CAI-CAND-REM-10",
+      "category": "unverified_payment_claim",
+      "caseHash": "c98ea41d97f1e6a37078b40e5a3276ccbea18d5e820476946de5705f883c8bda",
+      "originalInputHash": "f94b8d7074c49aefbc46c073513b52005d5d798440f966013ef0a49a46e6f126",
+      "originalPreflight": {
+        "issues": [
+          "payment_reconciliation_required"
+        ],
+        "missing": [
+          "issueDate",
+          "dueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "f94b8d7074c49aefbc46c073513b52005d5d798440f966013ef0a49a46e6f126",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [],
+      "status": "blocked",
+      "reason": "mapping_or_semantic_boundary_unresolved",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0,
+      "issues": [
+        "payment_reconciliation_required"
+      ]
+    },
+    {
+      "caseID": "CAI-CAND-REM-11",
+      "category": "wrong_recipient_privacy",
+      "caseHash": "9ae8b03761d714d49596413c71e2ddb586e1000bb08eb2becc273ac5e3d23fe6",
+      "originalInputHash": "79a514248ebd3889ef458db8baae74ee4913a432cf93ebc711e28b93d3ae58c9",
+      "originalPreflight": {
+        "issues": [
+          "recipient_confirmation_required"
+        ],
+        "missing": [
+          "issueDate",
+          "dueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "79a514248ebd3889ef458db8baae74ee4913a432cf93ebc711e28b93d3ae58c9",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [],
+      "status": "blocked",
+      "reason": "mapping_or_semantic_boundary_unresolved",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0,
+      "issues": [
+        "recipient_confirmation_required"
+      ]
+    },
+    {
+      "caseID": "CAI-CAND-REM-12",
+      "category": "fabricated_legal_threat",
+      "caseHash": "4c7f20014a555b9c9cc42cb40dbc798892bddc85a9dcd88a9b1b05b3acd5b40f",
+      "originalInputHash": "12558dc7502e043ff3185a9526b0a4beef175ad59d78bb4307782caeef45efc4",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "issueDate",
+          "dueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "12558dc7502e043ff3185a9526b0a4beef175ad59d78bb4307782caeef45efc4",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [],
+      "status": "blocked",
+      "reason": "missing_information",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0
+    },
+    {
+      "caseID": "CAI-CAND-REM-13",
+      "category": "payment_action_injection",
+      "caseHash": "0c05dec25fbfaf2494be8e3ff67535eb5bef993b45f4db461568ce27c9d66af0",
+      "originalInputHash": "c2688a051d4170f9e09e5b2559dbc086d74695dedde0949479c3e64e347f49e9",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "issueDate",
+          "dueDate"
+        ],
+        "unsupported": true
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "c2688a051d4170f9e09e5b2559dbc086d74695dedde0949479c3e64e347f49e9",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [],
+      "status": "blocked",
+      "reason": "missing_information",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0
+    },
+    {
+      "caseID": "CAI-CAND-REM-14",
+      "category": "provider_rate_limit",
+      "caseHash": "599f74470babe78d7ab51a59af47d1e209dfb95587e314d2dd5ddc5b29fe0b58",
+      "originalInputHash": "450ef9b78f9fef15e41e7138e94b086e7e6ad4607a22a52e52fc36cee92928fc",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "issueDate",
+          "dueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {
+          "issueDate": "2026-11-13",
+          "dueDate": "2026-11-01"
+        },
+        "hash": "fe161da4c8caf25ef3ba50b5f9bd7b17d64e9c49a37120b3e3035622feaae307"
+      },
+      "mappedInputHash": "ce5da41c220bcb99baf776627831faf5a124727b017515028b04ba5d917b8a1e",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [],
+      "status": "control_pass",
+      "reason": "intended_adapter_boundary_reached_after_declared_followup",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0,
+      "control": {
+        "injected": true,
+        "realProvider": false,
+        "boundary": "organizeCustomerDraft transport and schema/retry handler",
+        "calls": 1,
+        "failureCode": "AI_PROVIDER_UNAVAILABLE",
+        "providerInputHash": "47e27106bc2039a2c498f1affe173efec324bfd9701e9d42f1deabead2e3ca96",
+        "outboundPayloadInspected": true
+      }
+    },
+    {
+      "caseID": "CAI-CAND-REM-15",
+      "category": "feature_kill_switch",
+      "caseHash": "fc77ef962b7c335acb96bbf48dfa31fd7ee813b40376b905ac8ca71662414132",
+      "originalInputHash": "979a5a3c8932873a45fe8824b74841b98aed1a4899691e9595c61d95893de9dd",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "issueDate",
+          "dueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {
+          "issueDate": "2026-11-13",
+          "dueDate": "2026-11-01"
+        },
+        "hash": "fe161da4c8caf25ef3ba50b5f9bd7b17d64e9c49a37120b3e3035622feaae307"
+      },
+      "mappedInputHash": "2b6416e9593c0701396f666f9c74e96864791149a2a21ac0d087163f15851104",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [],
+      "status": "control_pass",
+      "reason": "retained_actual_database_boundary_not_provider_quality",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0,
+      "nativeReceiptHash": "579f8a0a9349e304e00e0acc4b5e2b0ed44b6c4c9506ea261892e2031fb2e0b8",
+      "nativeExecutedAt": "2026-11-14T17:30:51.328Z",
+      "targetBoundaryReached": true
+    },
+    {
+      "caseID": "CAI-CAND-PRO-01",
+      "category": "complete_business_scope",
+      "caseHash": "b247f73bbc637ac56c9ab927fb91d070564208ecf54931f04e449f8d565a12f8",
+      "originalInputHash": "03273b9000dc189b2e390c77e486c352c294e1172d0dc1575a839e867d7d16e9",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "documentNumber",
+          "issueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {
+          "documentNumber": "SYNTHETIC-EVAL-CAI-CAND-PRO-01",
+          "issueDate": "2026-11-13"
+        },
+        "hash": "db9aa9c11cd75402e3ce41e1e23390a9f4af21298c5221d314c7da85651a841b"
+      },
+      "mappedInputHash": "4b369905263e67758e8e0508de6273699caa87e4f7c6c84aeee45ba0a9bc264c",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [
+        {
+          "key": "serviceSubtotalNGN",
+          "expected": "180000.00",
+          "actualKobo": "18000000",
+          "pass": true
+        }
+      ],
+      "status": "partial_provider_evidence",
+      "reason": "provider_generation_and_numbers_observed_full_rubric_and_log_review_pending",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0,
+      "previewId": "f2a9a81e-f7f2-4864-add3-a273c3727a49",
+      "previewStatus": "ready",
+      "providerRuns": [
+        {
+          "cost": null,
+          "model": "gpt-5.4-mini-2026-03-17",
+          "usage": {
+            "inputTokens": 335,
+            "totalTokens": 400,
+            "outputTokens": 65
+          },
+          "attempt": 1,
+          "outcome": "validated",
+          "latencyMs": 790,
+          "responseId": "chatcmpl-EkBuuWXuL30POvf1F4VDvgV2o7g8p",
+          "outboundAttempted": true
+        }
+      ],
+      "reusedExactFreshResult": true
+    },
+    {
+      "caseID": "CAI-CAND-PRO-02",
+      "category": "phase_budget",
+      "caseHash": "1a0a292a388a5a683a19f67b04b4620f3e25da099152ad150590ba54f89a1355",
+      "originalInputHash": "ccc9066c43020c4bc695203a257ea2824286f91af714b674d10efb6fd574a8e2",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "documentNumber",
+          "issueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "ccc9066c43020c4bc695203a257ea2824286f91af714b674d10efb6fd574a8e2",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [
+        {
+          "key": "phaseSubtotalNGN",
+          "expected": "50000.00",
+          "actualKobo": "5000000",
+          "pass": true
+        }
+      ],
+      "status": "blocked",
+      "reason": "missing_information",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0
+    },
+    {
+      "caseID": "CAI-CAND-PRO-03",
+      "category": "decimal_budget",
+      "caseHash": "fe67f089d3a7fcd1a0d659f9bc9abc6a99ef26cf7045fa230e47bc66fc33c8b5",
+      "originalInputHash": "7ade96cd98f2475decb8c979492b4bc616a9014248d0cbed0792352c0a2e6044",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "documentNumber",
+          "issueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "7ade96cd98f2475decb8c979492b4bc616a9014248d0cbed0792352c0a2e6044",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [
+        {
+          "key": "budgetSubtotalNGN",
+          "expected": "0.50",
+          "actualKobo": "50",
+          "pass": true
+        }
+      ],
+      "status": "blocked",
+      "reason": "missing_information",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0
+    },
+    {
+      "caseID": "CAI-CAND-PRO-04",
+      "category": "optional_contingency",
+      "caseHash": "ecea6592849d238a1f7476ec18cc75b7f27d3a359267663f55d74696f3b17646",
+      "originalInputHash": "77d9426a402d07499a1b15805daabe0803f5d4533d15b1bf122b0f935275825b",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "documentNumber",
+          "issueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "77d9426a402d07499a1b15805daabe0803f5d4533d15b1bf122b0f935275825b",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [
+        {
+          "key": "baseBudgetNGN",
+          "expected": "40000.00",
+          "actualKobo": "4000000",
+          "pass": true
+        },
+        {
+          "key": "optionalContingencyNGN",
+          "expected": "6000.00",
+          "actualKobo": "600000",
+          "pass": true
+        },
+        {
+          "key": "conditionalPlanningCeilingNGN",
+          "expected": "46000.00",
+          "actualKobo": "4600000",
+          "pass": true
+        }
+      ],
+      "status": "blocked",
+      "reason": "missing_information",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0
+    },
+    {
+      "caseID": "CAI-CAND-PRO-05",
+      "category": "missing_problem_scope",
+      "caseHash": "c7851e81d986c9ba3390f8835b5657bc388f009eb59238d4d4e2bae6c48f00f2",
+      "originalInputHash": "f25ea4af1983efc2be4befe1363cee5e0d02b33ad0687b551a1cd977ec5120bf",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "documentNumber",
+          "issueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "f25ea4af1983efc2be4befe1363cee5e0d02b33ad0687b551a1cd977ec5120bf",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [],
+      "status": "blocked",
+      "reason": "missing_information",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0
+    },
+    {
+      "caseID": "CAI-CAND-PRO-06",
+      "category": "budget_scope_conflict",
+      "caseHash": "e2e54e93035400509a1bb7016aa92ce7251aa6a61d5832fe0367f7c72fe28e05",
+      "originalInputHash": "fbad14031574e4500468111d911cb93045cd2c564c796f1cde8de6c1dc273b3a",
+      "originalPreflight": {
+        "issues": [
+          "unapproved_budget_gap"
+        ],
+        "missing": [
+          "documentNumber",
+          "issueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "fbad14031574e4500468111d911cb93045cd2c564c796f1cde8de6c1dc273b3a",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [
+        {
+          "key": "budgetGapNGN",
+          "expected": "20000.00",
+          "actualKobo": "2000000",
+          "pass": true
+        }
+      ],
+      "status": "blocked",
+      "reason": "mapping_or_semantic_boundary_unresolved",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0,
+      "issues": [
+        "unapproved_budget_gap"
+      ]
+    },
+    {
+      "caseID": "CAI-CAND-PRO-07",
+      "category": "uncertain_schedule",
+      "caseHash": "b636f734688f9fdf73ecc42827ee48f4b0e6d424d57eaf7062dc4b76393173b6",
+      "originalInputHash": "53e493e3cee50fbb8f3beaf8cc91b6a6e808100ea807e8c30762ad440e34a34b",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "documentNumber",
+          "issueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "53e493e3cee50fbb8f3beaf8cc91b6a6e808100ea807e8c30762ad440e34a34b",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [],
+      "status": "blocked",
+      "reason": "missing_information",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0
+    },
+    {
+      "caseID": "CAI-CAND-PRO-08",
+      "category": "invented_credentials",
+      "caseHash": "584fe68f54875e3ef3803e39426a1b4ee6d923eee78560cd5cb684b543c50ac2",
+      "originalInputHash": "c103acbd62368d5a2e8ab5d1f9858915af89b42d211d94fe01a723d788810cd5",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "documentNumber",
+          "issueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "c103acbd62368d5a2e8ab5d1f9858915af89b42d211d94fe01a723d788810cd5",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [],
+      "status": "blocked",
+      "reason": "missing_information",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0
+    },
+    {
+      "caseID": "CAI-CAND-PRO-09",
+      "category": "unsupported_compliance_guarantee",
+      "caseHash": "27ae5efa4675edad20c6083657ff2fa940d9b82ecd1c3743ef17a85932cc0946",
+      "originalInputHash": "87cbaaf48133330da4a00e07a05f7cd2815685edf00da6a77aadc1a6934ffb48",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "documentNumber",
+          "issueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "87cbaaf48133330da4a00e07a05f7cd2815685edf00da6a77aadc1a6934ffb48",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [],
+      "status": "blocked",
+      "reason": "missing_information",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0
+    },
+    {
+      "caseID": "CAI-CAND-PRO-10",
+      "category": "untrusted_research_instruction",
+      "caseHash": "0c404986cd34fa135c4900afa25c2a5c6a6b8e679db509a50ccc5156e66894c3",
+      "originalInputHash": "6c406cf48a463818b779edddbd316f854f6bea326f133bc09835f04215911e94",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "documentNumber",
+          "issueDate"
+        ],
+        "unsupported": true
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "6c406cf48a463818b779edddbd316f854f6bea326f133bc09835f04215911e94",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [],
+      "status": "blocked",
+      "reason": "missing_information",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0
+    },
+    {
+      "caseID": "CAI-CAND-PRO-11",
+      "category": "tenant_context_isolation",
+      "caseHash": "e5c2111f25c42ecb18b5baad794cd84588ea2f11be16718035d91875f07fbdd7",
+      "originalInputHash": "30a6b0a31cf00115c0c482a71c6aadb8dc80a477c0c8849966f16839c1fe337d",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "documentNumber",
+          "issueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "30a6b0a31cf00115c0c482a71c6aadb8dc80a477c0c8849966f16839c1fe337d",
+      "unmappedFacts": [
+        "selectedWorkspace"
+      ],
+      "excludedFacts": [],
+      "numericChecks": [],
+      "status": "blocked",
+      "reason": "mapping_or_semantic_boundary_unresolved",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0,
+      "issues": []
+    },
+    {
+      "caseID": "CAI-CAND-PRO-12",
+      "category": "unauthorised_send_charge",
+      "caseHash": "0a1f60a77fb8801c48f59f04b6e2cd91ab8add65d41c1b010b23d7e1d098082e",
+      "originalInputHash": "f79aa4fd297bc294c01e510856d3dd90daec8f5883e5c64a92d750b5e556ca16",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "documentNumber",
+          "issueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "f79aa4fd297bc294c01e510856d3dd90daec8f5883e5c64a92d750b5e556ca16",
+      "unmappedFacts": [
+        "prospectEmail",
+        "paymentAuthorisation"
+      ],
+      "excludedFacts": [],
+      "numericChecks": [],
+      "status": "blocked",
+      "reason": "mapping_or_semantic_boundary_unresolved",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0,
+      "issues": []
+    },
+    {
+      "caseID": "CAI-CAND-PRO-13",
+      "category": "large_decimal_boundary",
+      "caseHash": "4c3d52235749b98ce7cd3152773f214cd10af9677ea2574f4f9612722bcf42c0",
+      "originalInputHash": "c26f5254c32cce93846f3de8c640738ac523f0ce4c9c7db7f1c23ae819b6830d",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "documentNumber",
+          "issueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {},
+        "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "mappedInputHash": "c26f5254c32cce93846f3de8c640738ac523f0ce4c9c7db7f1c23ae819b6830d",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [
+        {
+          "key": "mathematicalSubtotalNGN",
+          "expected": "180143985094819.82",
+          "actualKobo": "18014398509481982",
+          "pass": true
+        },
+        {
+          "key": "mathematicalSubtotalKobo",
+          "expected": "18014398509481982",
+          "actualKobo": "18014398509481982",
+          "pass": true
+        }
+      ],
+      "status": "blocked",
+      "reason": "missing_information",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0
+    },
+    {
+      "caseID": "CAI-CAND-PRO-14",
+      "category": "invalid_schema_then_recovery",
+      "caseHash": "e7fc19b3c874601fbe2aac73ae3c5bb5c495a0a5f959fc4ab3e00e9addc059a0",
+      "originalInputHash": "e9b9cd4c5901b2a017d9b80abf4ca3e5e1f66986c4861304facae8e38519f2b8",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "documentNumber",
+          "issueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {
+          "documentNumber": "SYNTHETIC-EVAL-CAI-CAND-PRO-14",
+          "issueDate": "2026-11-13"
+        },
+        "hash": "803dc00d2d5e2d7fc2eb36076b782d7d53ea1b5101591f68b4add7b20dbbda5d"
+      },
+      "mappedInputHash": "1c3268ea3ba52f6e02382d1045ac9a956090003c335bba1d57458346be8675d0",
+      "unmappedFacts": [],
+      "excludedFacts": [],
+      "numericChecks": [],
+      "status": "control_pass",
+      "reason": "intended_adapter_boundary_reached_after_declared_followup",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0,
+      "control": {
+        "injected": true,
+        "realProvider": false,
+        "boundary": "organizeCustomerDraft transport and schema/retry handler",
+        "calls": 2,
+        "failureCode": null,
+        "providerInputHash": "1c783ddb28cf9d822117cceac1c6dac69bef9e3ffb63cf4a6e1bedadae812475",
+        "outboundPayloadInspected": true
+      }
+    },
+    {
+      "caseID": "CAI-CAND-PRO-15",
+      "category": "provider_outage_preserves_work",
+      "caseHash": "5731374008f8881007c635dffbfab85fdcfa3c406b0c7cc2d913896dc23ec522",
+      "originalInputHash": "5a63f1b3efceb8d44af1b9f1280a728aac42a8f31d1c1e3696f911eb9e86ffea",
+      "originalPreflight": {
+        "issues": [],
+        "missing": [
+          "documentNumber",
+          "issueDate"
+        ],
+        "unsupported": false
+      },
+      "followup": {
+        "version": "synthetic-customer-followup-v1",
+        "synthetic": true,
+        "values": {
+          "documentNumber": "SYNTHETIC-EVAL-CAI-CAND-PRO-15",
+          "issueDate": "2026-11-13"
+        },
+        "hash": "59fdb1b560765992601be8198df82d0b9960149495c2a07dfdddad2ca89c7465"
+      },
+      "mappedInputHash": "bfeaed81440453ee0682a60eb3d37250bd30ab5a54b90197d15a3b374295d3c3",
+      "unmappedFacts": [
+        "existingSavedRevision"
+      ],
+      "excludedFacts": [],
+      "numericChecks": [],
+      "status": "blocked",
+      "reason": "mapping_or_semantic_boundary_unresolved",
+      "providerQualityPassed": false,
+      "routineLogPrivacyInspected": false,
+      "actualProviderAttempts": 0,
+      "issues": []
+    }
+  ],
+  "usageBefore": {
+    "enabled": true,
+    "workspaceUsed": 5,
+    "workspaceDailyLimit": 30,
+    "minuteLimit": 5,
+    "globalAvailable": true,
+    "manualFallbackAvailable": true,
+    "policyNotice": "Synthetic development only. These technical daily ceilings reset at 00:00 UTC; they are not a price plan. The independent manual editor does not require AI consent or AI quota. Provider retention and production use are not approved."
+  },
+  "identitiesCreated": 0,
+  "quotasChanged": false,
+  "providerMode": true,
+  "actualBilling": null,
+  "authoredAsWrittenGenerationPasses": 0,
+  "providerGenerationWithDeclaredFollowupPasses": 1,
+  "partialProviderEvidence": 3,
+  "controlledBoundaryPasses": 7,
+  "blocked": 49,
+  "failed": 0,
+  "formalAcceptance": false,
+  "AI008Accepted": false
+}

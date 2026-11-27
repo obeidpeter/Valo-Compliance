@@ -1,0 +1,141 @@
+{
+  "recordedAt": "2026-11-14T20:13:08.777Z",
+  "parentRevision": "1e99c4a80e71bbf817b1656c800448bab3bf7888",
+  "scope": "Scoped JSON v2 customer access; not full privacy fulfilment",
+  "schemaVersion": 2,
+  "checks": [
+    {
+      "label": "real development PostgreSQL suite",
+      "tests": 65,
+      "passed": 65,
+      "retained": "docs/valo/evidence/privacy-data-v2-db.txt"
+    },
+    {
+      "label": "controlled privacy staff/owner domain flow",
+      "tests": 0,
+      "passed": 0,
+      "retained": "docs/valo/evidence/privacy-data-v2-cases.txt"
+    },
+    {
+      "label": "workspace typecheck",
+      "tests": 0,
+      "passed": 0,
+      "retained": "docs/valo/evidence/privacy-data-v2-types.txt"
+    }
+  ],
+  "sourceHashes": [
+    {
+      "path": "artifacts/api-server/src/lib/valo-customer-access.ts",
+      "sha256": "aa691ac02e0e9bc43331f22745b6e513322f348319ebfccee0bfbb6aa89fa837"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/valo-privacy-processing.ts",
+      "sha256": "9192831972bebdf5b31dc3341e16d4bb101be5d7022020bd0abcabb74e17a9f9"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/valo-customer-access.integration.test.ts",
+      "sha256": "21aad84b465712f26a158d5a4c99bfdb8db58d063d77e4181536ac72b57c42b5"
+    },
+    {
+      "path": "artifacts/api-server/src/scripts/privacy-data-browser.ts",
+      "sha256": "5e77c53db046f2873944c86fefc060f30cb94b8cb94613801adbe00dde84503b"
+    },
+    {
+      "path": "artifacts/valo/src/screens/account.tsx",
+      "sha256": "5e7109dc5b31e603869c12a44ab67bd97110118441f77d68a67349a428165cb6"
+    }
+  ],
+  "browserChecks": [
+    "360px actual privacy component disclosed scope; keyboard initiated a real JSON download with metadata",
+    "A delayed previous-account response caused no download after the controlled account switch",
+    "Next account downloaded only B metadata; no 360px horizontal page overflow"
+  ],
+  "controlledIdentityOnly": true,
+  "physicalErasureImplemented": false,
+  "externalProcessorExportImplemented": false,
+  "largeWorkspaceStreamingImplemented": false,
+  "newProviderQualityCases": 0,
+  "R1Accepted": false,
+  "R2Accepted": false,
+  "publicLaunchEnabled": false,
+  "livePaymentsEnabled": false,
+  "privacyCaseResult": {
+    "checkedAt": "2026-11-14T20:02:14.413Z",
+    "checks": [
+      {
+        "name": "atomic_request_idempotency_and_payload_mismatch",
+        "status": "pass"
+      },
+      {
+        "name": "owner_verification_cancellation_history_and_stale_write",
+        "status": "pass"
+      },
+      {
+        "name": "tenant_substitution_and_revoked_membership_fail",
+        "status": "pass"
+      },
+      {
+        "name": "fresh_mfa_privacy_role_and_revocation_required",
+        "status": "pass"
+      },
+      {
+        "name": "unverified_hold_release_cannot_fake_verification_or_assignment",
+        "status": "pass"
+      },
+      {
+        "name": "scoped_export_result_is_real_private_repeatable_and_not_full_fulfilment",
+        "status": "pass"
+      },
+      {
+        "name": "actual_current_profile_correction_is_bound_and_history_preserved",
+        "status": "pass"
+      },
+      {
+        "name": "altered_state_or_audit_prevents_result_and_processing",
+        "status": "pass"
+      },
+      {
+        "name": "durable_request_limits_preserve_prior_work",
+        "status": "pass"
+      },
+      {
+        "name": "erasure_is_honestly_disabled_not_fabricated_as_complete",
+        "status": "pass"
+      }
+    ],
+    "passed": 10,
+    "failed": 0,
+    "cleanupErrors": 0,
+    "actualDevelopmentPostgres": true,
+    "staffMfaAndIdentity": "controlled domain fixtures, not real privileged Clerk sessions",
+    "realEmailSent": false,
+    "providerErasureExecuted": false,
+    "completePrivacyFulfilment": false
+  },
+  "previousSavedApplicationCI": [
+    {
+      "conclusion": "success",
+      "event": "pull_request",
+      "head": "1e99c4a80e71bbf817b1656c800448bab3bf7888",
+      "id": 43634630987,
+      "url": "https://github.com/obeidpeter/Valo-Compliance/actions/runs/43634630987"
+    },
+    {
+      "conclusion": "success",
+      "event": "push",
+      "head": "1e99c4a80e71bbf817b1656c800448bab3bf7888",
+      "id": 43634626219,
+      "url": "https://github.com/obeidpeter/Valo-Compliance/actions/runs/43634626219"
+    }
+  ],
+  "workspaceTypecheckPassed": true,
+  "realStaticScan": {
+    "phase": "repository",
+    "canaryDetected": true,
+    "exitCode": 0,
+    "passed": true,
+    "source": "Semgrep p/ci plus committed Valo rules; raw source/matches excluded",
+    "findings": [],
+    "errors": []
+  }
+}

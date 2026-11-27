@@ -1,0 +1,12 @@
+[Unit]
+Description=Hourly Valo development backup
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+RandomizedDelaySec=120
+AccuracySec=60
+Unit=valo-development-backup.service
+
+[Install]
+WantedBy=timers.target

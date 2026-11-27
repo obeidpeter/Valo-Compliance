@@ -1,0 +1,27 @@
+
+> @workspace/api-server@0.0.0 test:valo-http /home/runner/workspace/artifacts/api-server
+> tsx --test src/lib/valo-http.test.ts
+
+▶ running development HTTP API fails closed and reports factual release status
+  ✔ source references report actual snapshots, not baseline approval or private storage locators (186.413765ms)
+  ✔ published search excludes all held templates and private documents (30.055861ms)
+  ✔ release status does not accept P0, R2 or live payments (24.963278ms)
+  ✔ real development reads receive durable quota metadata without trusting client identity headers (19.4426ms)
+  ✔ malformed and oversized bodies fail explicitly, without reflecting submitted content (27.673201ms)
+  ✔ unauthenticated private endpoints reject reads without shared-cache retention (63.794926ms)
+  ✔ cross-origin and missing-origin mutations are rejected before any save (17.366202ms)
+  ✔ same-origin does not bypass identity verification (10.629695ms)
+  ✔ the detailed matrix retains all exact criteria without marking them accepted (24.653553ms)
+  ✔ content traceability does not promote research inventory to publications (37.344344ms)
+  ✔ the UAT and gate register distinguishes partial execution from acceptance (13.591959ms)
+  ✔ public coverage serves exactly 20 held industries and six pack targets, not fictional guidance (20.238761ms)
+  ✔ every supplied inventory row has explicit evidence and coverage states; expansion stays disabled (31.853106ms)
+✔ running development HTTP API fails closed and reports factual release status (512.633955ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1153.574152

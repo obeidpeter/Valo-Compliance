@@ -1,0 +1,76 @@
+{
+  "kind": "scoped_provider_permission_evidence",
+  "componentStatus": "verified",
+  "record": {
+    "version": "chatgpt-original-operational-provider-permission-1",
+    "status": "verified",
+    "accountPlan": "not_classified_or_required_for_documented_free_paid_output_permission",
+    "accountTerms": null,
+    "integration": "chatgpt",
+    "provider": "openai",
+    "commercialUseScope": "chatgpt_original_operational_provider_permission_only",
+    "authoringRoute": "coordinator_chatgpt",
+    "sourceBinding": {
+      "path": "docs/content-candidates/operational-template-candidates.md",
+      "hash": "07b23152ea8f3588644b5f996bc900a6fb5942022b61605ce8565a21c7d3494c",
+      "notePath": "docs/content-candidates/chatgpt-content-provenance-rights.md",
+      "noteHash": "57080e5d1a4105c3b3545b8e94f65662eb8e1d5ce08f2b88154fcfc345aca616"
+    },
+    "checkedAt": "2026-11-14T04:34:04.708Z",
+    "limitations": [
+      "Provider permission is not copyright eligibility, uniqueness, exclusivity, non-infringement or third-party clearance.",
+      "Regional variants are retained without claiming residence or account-contract classification.",
+      "Original ChatGPT prose only; no Replit/API authoring receipt or application-code rights are inferred.",
+      "Independent final-candidate checks remain mandatory. Customer licence acceptance and sales approval remain false."
+    ],
+    "evidence": [
+      {
+        "kind": "provider",
+        "url": "https://openai.com/policies/terms-of-use/",
+        "hash": "9511877208da1e934ce4e37a2f44d25e8962e7b3e6fdb691ea9df385f1bccfd2",
+        "locator": "Content → Ownership of content",
+        "quote": "We hereby assign to you all our right, title, and interest, if any, in and to Output.",
+        "applicabilityEvidence": "Retained regional ownership-allocation comparison, including 'if any'; NOT an assertion of user residence, governing region, negotiated account contract or business-plan indemnity."
+      },
+      {
+        "kind": "provider",
+        "url": "https://openai.com/policies/eu-terms-of-use/",
+        "hash": "f1c390954f757dc3e09ae237a4143ec9c6f701355d8d0e2c0fad2fbdb1e06a77",
+        "locator": "Content → Ownership of content",
+        "quote": "We hereby assign to you all our right, title, and interest, if any, in and to Output.",
+        "applicabilityEvidence": "Retained regional ownership-allocation comparison, including 'if any'; NOT an assertion of user residence, governing region, negotiated account contract or business-plan indemnity."
+      },
+      {
+        "kind": "provider",
+        "url": "https://help.openai.com/en/articles/6783457-what-is-chatgpt",
+        "hash": "5133180236aaa723fa0dfc34c8abf26dfcc015e0a16a423f646683fdaf5e3311",
+        "locator": "Can I use output from ChatGPT for commercial uses?",
+        "quote": "regardless of whether output was generated through a free or paid plan",
+        "applicabilityEvidence": "Direct ChatGPT commercial-output permission, explicitly free or paid; subject to policies/terms. No copyright, exclusivity or third-party clearance guarantee."
+      },
+      {
+        "kind": "provider",
+        "url": "https://openai.com/policies/service-terms/",
+        "hash": "a3e41b2e7e6e470e2e518e2cd85f92f1cb82568d3b6233a3d58f82a6ba271c18",
+        "locator": "Service-specific terms; scope must not be inferred as an account-plan assertion",
+        "quote": "ChatGPT Enterprise, Edu, Healthcare and Business",
+        "applicabilityEvidence": "Context and exclusions only: NOT evidence of API/Enterprise indemnity or that any named business plan governs these ChatGPT drafts."
+      },
+      {
+        "kind": "provider",
+        "url": "https://openai.com/policies/sharing-publication-policy/",
+        "hash": "f56e82aaeb8e1f545fc055aa08413f1ad1136240d2f0fb5aa2c1d42814b80184",
+        "locator": "Scoped publication contexts; ChatGPT prose must not be misclassified as API-authored prose",
+        "quote": "Content co-authored with the OpenAI API",
+        "applicabilityEvidence": "Context-specific publication requirements retained. Original attributed ChatGPT prose is NOT represented as API-authored content or human-reviewed content."
+      }
+    ]
+  },
+  "hash": "da81893bcedbce31f6806d72fb1a74bc619206ee90baf4d99c8b389bb914e6b4",
+  "verified": true,
+  "copyrightCertified": false,
+  "thirdPartyRightsCertified": false,
+  "customerLicenceAccepted": false,
+  "publicationEligible": false,
+  "evidenceReport": "docs/valo/evidence/chatgpt-permission-publication-proof.json"
+}

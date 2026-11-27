@@ -1,0 +1,113 @@
+{
+  "executedAt": "2026-11-13T23:52:27.291Z",
+  "id": "258811a8-c35d-4702-b699-25562d75ec8f",
+  "version": 1,
+  "candidateHash": "497398a77039fb005acb3e68702a07a6dd900ed0c5cdad466cc4ed47a5468290",
+  "policyHash": "dfa73f081effb374f07b64595e44f8557fd9c4c0ee1e173ae4b1f117f3d1fd82",
+  "eligibility": {
+    "decision": "hold",
+    "reasons": [
+      "manifest_not_eligible",
+      "review_not_clear:factual",
+      "review_not_clear:challenge"
+    ]
+  },
+  "release": {
+    "id": "258811a8-c35d-4702-b699-25562d75ec8f",
+    "decision": "held"
+  },
+  "reviews": [
+    {
+      "role": "factual",
+      "providerResponseId": "chatcmpl-EjvM8tAmJmY1mo0fVF5tweyRH5ox4",
+      "model": "gpt-5.4-mini-2026-03-17",
+      "verdict": "hold",
+      "findings": [
+        "The template includes a disclosure stating it was 'not reviewed by a Nigerian legal, tax or sector specialist'; that is acceptable as a limitation, but it does not support any substantive regulatory claim. The template still uses the phrase 'Scope: ... Optional operational practice; no legal applicability determination,' which is fine, but the same document also says 'A completed count does not confirm product quality or fitness for use.' This is a general operational statement and not a regulatory issue.",
+        "The rights/provenance section relies on provider-use permission excerpts from OpenAI terms/help text. Provider permission may support reuse, but it does not establish exclusivity, copyright clearance against third-party material, or accepted customer licence/sales terms. The candidate's own conclusion correctly notes this, so no correction is needed; however, the provenance claim 'Original ChatGPT prose supplied by coordinator' is unverified upstream and should not be treated as authoritative provenance.",
+        "The line 'Source/provenance checked: 2026-11-13T23:52:16.151Z' is a self-reported timestamp without external evidentiary support. It is not itself a material defect, but it should not be presented as independent verification.",
+        "No authoritative evidence was supplied for any material Nigerian regulatory claim. The document avoids making such claims, so there is no missing operative evidence for a legal assertion."
+      ],
+      "missingEvidence": [
+        "Independent evidence of upstream authorship/provenance beyond the coordinator-supplied statement.",
+        "Authoritative evidence only if any future version asserts Nigerian statutory or regulatory applicability."
+      ]
+    },
+    {
+      "role": "challenge",
+      "providerResponseId": "chatcmpl-EjvM8l8oRHwTLCedH6oAisKudlQVH",
+      "model": "gpt-5.4-mini-2026-03-17",
+      "verdict": "hold",
+      "findings": [
+        "Rights/provenance overclaim: the submission says 'Original supplied ChatGPT prose' and relies on provider permissions, but this does not establish exclusivity, copyright clearance against third-party claims, or acceptance of any customer licence/sales terms. The conclusion is too strong for the evidence provided.",
+        "Scope-risk limitation: the template states 'no legal applicability determination' and 'optional operational practice,' which is fine, but it still includes legal/regulatory-sounding assurances about 'no statutory duty' and 'no legal-validity assurance' without authoritative operative evidence. Those should remain explicitly unverified, not implicitly settled.",
+        "Disclosure gap: the draft says it was not reviewed by a Nigerian legal, tax or sector specialist. That is good disclosure, but the document still uses firm operational guidance language ('Do not mix pieces, cartons, litres or kilograms', 'A negative balance is a discrepancy to investigate') that could be read as prescriptive procedure. This is acceptable only if clearly framed as internal best practice, not compliance advice. That framing is not consistently repeated.",
+        "Source/provenance date concern: 'Source/provenance checked: 2026-11-13T23:52:16.151Z' is in the future relative to the current review date and therefore undermines trust in the provenance statement. It should be corrected or explained."
+      ],
+      "missingEvidence": [
+        "Authoritative evidence that any legal or regulatory claim in the template is valid for the intended Nigerian use case, if such claims are to remain.",
+        "Evidence supporting the provenance timestamp and how it was generated, since it appears future-dated relative to review time.",
+        "Evidence that provider permissions are sufficient for the intended commercial/customer distribution posture, beyond the narrow platform reuse permission quoted."
+      ]
+    }
+  ],
+  "exportReport": {
+    "candidateHash": "497398a77039fb005acb3e68702a07a6dd900ed0c5cdad466cc4ed47a5468290",
+    "passed": true,
+    "hashes": {
+      "docx": "ba6ea5ffed87feaf3b3c5c568f59c53a1afb98aaa2180e9f41be42a15288d903",
+      "pdf": "2ebb10908ed83ef2effa541fdb48fc5d4e978f5111691bb8080fbaecd94db566"
+    },
+    "checks": [
+      "Actual DOCX ZIP/XML parsed; required text present",
+      "Actual Chromium A4 PDF parsed with pdftotext; required text present",
+      "Renderer network disabled"
+    ],
+    "manualWordApplicationReview": false,
+    "manualAccessibilityReview": false
+  },
+  "attestations": {
+    "provenance": {
+      "id": "3139f084-04de-4551-a4fd-7cf7dc0eca7e",
+      "hash": "4ff452df79547e9790c34421ea5bc0c0eb3fb34e0d54ea12c9f08b5ce3aa2495",
+      "extension": "json"
+    },
+    "rights": {
+      "id": "57106e4c-4a82-4925-b049-db417ab1db4a",
+      "hash": "cc1ea01594925cd5b240978580cdc6b1bcdaeae77543e79bb2a5302161691492",
+      "extension": "json"
+    },
+    "reviews": [
+      {
+        "id": "a8932398-723b-4757-962b-6f3137f5b084",
+        "hash": "20cb8ef982f7f9b1884756dcd0a652ddc8a31ac9ea5e2c846f5b311e2d994ec1",
+        "extension": "json"
+      },
+      {
+        "id": "06d042ab-490b-4d3c-ab41-61d13334ce70",
+        "hash": "f549ccf32b8bcd3fcaa78d91addfde16df59d2000b682da20a9ff51059e70cd2",
+        "extension": "json"
+      }
+    ],
+    "exports": {
+      "docx": {
+        "id": "f468343e-7ff6-408a-b111-cf8de8201165",
+        "hash": "ba6ea5ffed87feaf3b3c5c568f59c53a1afb98aaa2180e9f41be42a15288d903",
+        "extension": "docx"
+      },
+      "pdf": {
+        "id": "b93b6895-31ec-40b4-874b-52f5c9e91458",
+        "hash": "2ebb10908ed83ef2effa541fdb48fc5d4e978f5111691bb8080fbaecd94db566",
+        "extension": "pdf"
+      }
+    },
+    "exportReport": {
+      "id": "daf05321-0991-4d54-83c6-03c9ba5b2b56",
+      "hash": "f8d599d9dae1eeec059a27aaa5e0f6b30e96d39d9ec30ef55ff2a77dd5ab779d",
+      "extension": "json"
+    }
+  },
+  "rightsScope": "Original supplied ChatGPT prose with provider reuse permission; no third-party form or official text is copied. Not a copyright/exclusivity guarantee.",
+  "commercialLicenceAccepted": false,
+  "scope": "Development only; no public launch, sales, R1 acceptance or professional verification"
+}

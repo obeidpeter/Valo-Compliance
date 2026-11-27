@@ -1,0 +1,63 @@
+{
+  "version": "coordinator-source-challenge-v1",
+  "origin": "Independent preparation transmitted by the user on 2026-11-14",
+  "formalPipelineProviderReceipt": false,
+  "providerRunId": null,
+  "acceptedOracleReplacement": false,
+  "originalCorpusPath": "docs/evaluation-candidates/checker.json",
+  "originalCorpusSha256": "5e333b3f472263e16f767b3165e29c1b1e210fdbac922873d1ffc086027ae1a0",
+  "originalCorpusUnmodified": true,
+  "customerEligibility": false,
+  "findings": [
+    {
+      "caseIds": ["CHK-CAND-NDPA-018"],
+      "source": "NDPA section 2(2)(a), PDF7/A723",
+      "finding": "The original negative does not explicitly negate Nigerian domicile/residence and every processor connection. A precomputed jurisdiction conclusion is not a substitute.",
+      "disposition": "Retain original-oracle disagreement; request explicit facts or report uncertainty."
+    },
+    {
+      "caseIds": ["CHK-CAND-NTAA-009"],
+      "source": "NTAA section147; NASS PDF73/A329 and NRS PDF70/A328",
+      "finding": "Company includes any association, whether incorporated in or outside Nigeria. Lack of CAMA incorporation alone is insufficient for this negative. Precise ordinary-partnership classification remains unresolved.",
+      "disposition": "More information needed, not a conclusion that a company return is owed."
+    },
+    {
+      "caseIds": ["CHK-CAND-NAFDAC-009", "CHK-CAND-NAFDAC-013", "CHK-CAND-NAFDAC-016"],
+      "source": "Food, Drugs and Related Products (Registration, Etc.) Act section1(1); retained source bindings",
+      "finding": "National registration relevance is distinct from eligibility for a local-manufacturer process.",
+      "disposition": "Candidate explicitly assesses national relevance. Original route/proposition ambiguity remains disputed; no replacement oracle or publication approval."
+    },
+    {
+      "caseIds": ["CHK-CAND-NAFDAC-017"],
+      "source": "Food, Drugs and Related Products (Registration, Etc.) Act section1(2)",
+      "finding": "This scenario already stipulates a matching valid sample permit and satisfied conditions.",
+      "disposition": "Distinguish the narrow conditional exception from continuing permit conditions; do not ask supplied facts again. Preserve disagreement with the original label."
+    },
+    {
+      "caseIds": ["CHK-CAND-NDPA-009"],
+      "source": "NDPA sections3(1), 27(1), 27(3); exact captured passage locators in candidate binding",
+      "finding": "Commercial reuse defeats a solely-household claim, but does not establish a new collection event.",
+      "disposition": "Separate privacy-policy relevance from the timing of information before new collection. No invented deadline."
+    },
+    {
+      "caseIds": ["CHK-CAND-NTAA-012"],
+      "source": "NTAA section147",
+      "finding": "Foreign-company facts declare incorporation outside Nigeria; Nigerian management is not a resolved tax-residence classification.",
+      "disposition": "Retain May apply, record the declared formation facts and unresolved residence/classification."
+    },
+    {
+      "caseIds": ["CHK-CAND-NTAA-013"],
+      "source": "NTAA sections11 and147",
+      "finding": "Narrow domestic-candidate exclusion does not establish nonresident return or withholding treatment.",
+      "disposition": "Ignore stipulated final-tax conclusions as proof of that treatment; make the exclusions of scope explicit."
+    },
+    {
+      "caseFamily": "CHK-CAND-CAMA-001 through CHK-CAND-CAMA-020",
+      "source": "CAMA sections814, 868 and broader section863 context",
+      "finding": "All twenty cases concern the naming trigger with underlying name, partner and court-exception facts.",
+      "disposition": "Never generalise these outcomes into registration exemptions, general compliance or state/local coverage."
+    }
+  ],
+  "earlierUnresolvedFindings": "docs/valo/source-checker-oracle-v2-proposed.md",
+  "independentPreparationIsNotFormalAcceptance": true
+}

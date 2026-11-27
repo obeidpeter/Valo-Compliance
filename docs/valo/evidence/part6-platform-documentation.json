@@ -1,0 +1,40 @@
+{
+  "checkedAt": "2026-11-13T18:59:29.086Z",
+  "purpose": "Official documentation discovery, not contracted-account capability or gate approval",
+  "results": [
+    {
+      "relevantPages": [
+        {
+          "title": "How Publish updates your production database",
+          "url": "https://docs.replit.com/features/data-and-storage/publish-database-changes"
+        },
+        {
+          "title": "Data recovery",
+          "url": "https://docs.replit.com/features/data-and-storage/data-recovery"
+        }
+      ],
+      "response": "When you publish an app, Replit automatically applies schema changes (tables, columns, indexes, constraints, views, and row-level security) to the production database. However, certain objects—specifically functions, procedures, triggers, domains, and grants—are not supported for automatic migration and will block publishing if they are dependencies of other schema objects. To manage these, you must apply them manually via the SQL console. For data recovery, production databases offer point-in-time recovery (PITR) with a default 7-day retention, which can be extended to 28 days for Pro, Teams, and Enterprise plans, alongside scheduled daily backups that also support up to 28 days of retention depending on your plan."
+    },
+    {
+      "relevantPages": [
+        {
+          "title": "App Storage",
+          "url": "https://docs.replit.com/features/data-and-storage/object-storage"
+        },
+        {
+          "title": "Security",
+          "url": "https://docs.replit.com/legal-and-security-info/security"
+        },
+        {
+          "title": "Deployment types",
+          "url": "https://docs.replit.com/features/publishing/deployment-types"
+        },
+        {
+          "title": "Project geography",
+          "url": "https://docs.replit.com/features/publishing/project-geography"
+        }
+      ],
+      "response": "App Storage buckets are private by default, scoped exclusively to the Replit project where they are created, and cannot be shared across different projects. Replit apps are hosted on infrastructure primarily located in the United States, with an optional hosting region in the European Union for customers who opt in. When publishing, you can choose between Autoscale deployments (which scale resources based on variable traffic) and Reserved VM deployments (which provide dedicated, always-on resources)."
+    }
+  ]
+}

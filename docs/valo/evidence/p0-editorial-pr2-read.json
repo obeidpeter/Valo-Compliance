@@ -1,0 +1,39 @@
+{
+  "checkedAt": "2026-11-13T20:00:00.045Z",
+  "observed": {
+    "checks": {
+      "runs": [
+        {
+          "conclusion": "success",
+          "headSha": "f95758b1d9467dff3cddc4ea330eed2d05d06071",
+          "name": "Foundation typecheck and unit tests",
+          "status": "completed",
+          "url": "https://github.com/obeidpeter/Valo-Compliance/actions/runs/43468231220/job/132032988843"
+        },
+        {
+          "conclusion": "success",
+          "headSha": "f95758b1d9467dff3cddc4ea330eed2d05d06071",
+          "name": "Foundation typecheck and unit tests",
+          "status": "completed",
+          "url": "https://github.com/obeidpeter/Valo-Compliance/actions/runs/43468222888/job/132032958716"
+        }
+      ],
+      "status": 200
+    },
+    "pr": {
+      "base": "main",
+      "body": "## Status\nEarly R1/P0 foundation only, not the completed application. P0 is unpassed, R1 is not accepted and R2 remains locked. No launch, live payments or real confidential customer data.\n\n## Verified source\n- The initial application synchronization matched 141 tracked files to the Replit source snapshot blob-for-blob. The subsequent specification integration preserved every application blob.\n- Original README-only main commit preserved; main unchanged.\n- Executable EDP-001–EDP-012 traceability, 40 held baseline catalogue records and 19 provisional additions. All 127 exact formal requirements, the full original source extracts, and the 27/79 inventory mapping are now present on this development branch. Integrating the remaining requirements into executable tracking is still application work.\n- Requirements/content/conflict/platform-source registers, operational/evaluation documentation and factual README.\n- Full candidate metadata is bound to review evidence. The fail-closed validator is not a live publisher.\n\n## Actual local checks\n- Full workspace TypeScript checks passed.\n- 51 foundation unit tests passed; zero failures or skips.\n- Formal 80-rule, 60-customer-AI and 60-editorial acceptance suites remain unexecuted.\n\n## Blocked safeguards\n- CI authorization restored after secure reconnection; the single retry succeeded. Active workflow: .github/workflows/valo-foundation.yml. Both push and pull-request activation runs passed locked installation, full typechecking, foundation tests and readiness. Evidence: docs/valo/evidence/ci-activation.json. No required-check or protection settings changed.\n- Owner reports saved main protection is not enforced under the current private-repository account plan. Enforcement remains blocked. No plan upgrade, transfer, visibility change, force-push or protection bypass.\n\n## Application work still required\nVerified customer login/recovery, tenant business/document persistence, application UI, private dual exports, actual AI review pipeline, worker/queue and restore proof remain incomplete. The missing-source blocker is resolved at repository level. The Replit workspace must consume the complete baseline, reconcile executable registers and finish the frontend compatibility decision against the original preferred architecture. Keep this PR in draft; do not merge as a completed Valo application.\n\n## Specification integration checkpoint\n\nMerge commit `8c5c8013944bed70183c40784fb6ef49f30768fc` brings all 10 original specification/register files from PR #1 into this development branch and preserves both histories. Each source file matches its original Git blob. Only the two README documents changed among previously existing files; application code was preserved. Missing documents must no longer be treated as a repository-level blocker. Replit has been instructed to incorporate this update while preserving local work.\n\nThe exact merge head has successful [push CI](https://github.com/obeidpeter/Valo-Compliance/actions/runs/43471993771) and [PR CI](https://github.com/obeidpeter/Valo-Compliance/actions/runs/43472005442). This verifies foundation checks for the combined branch, not P0, R1 or R2 completion. No application feature or formal acceptance suite is claimed by the documentation integration.",
+      "draft": true,
+      "head": "feature/valo-p0-foundation",
+      "headSha": "8c5c8013944bed70183c40784fb6ef49f30768fc",
+      "status": 200,
+      "url": "https://github.com/obeidpeter/Valo-Compliance/pull/2"
+    },
+    "repo": {
+      "private": false,
+      "status": 200
+    }
+  },
+  "sourceBaselineAlreadyInLocalHistory": true,
+  "missingSpecificationBlocker": false
+}

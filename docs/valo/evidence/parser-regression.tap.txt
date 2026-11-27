@@ -1,0 +1,101 @@
+TAP version 13
+# Subtest: Express resolves a patched compatible body-parser release
+ok 1 - Express resolves a patched compatible body-parser release
+  ---
+  duration_ms: 4.525251
+  type: 'test'
+  ...
+# Subtest: bounded JSON preserves unknown values and saved content without mutation
+ok 2 - bounded JSON preserves unknown values and saved content without mutation
+  ---
+  duration_ms: 0.511124
+  type: 'test'
+  ...
+# Subtest: oversized collections fail before validating their elements
+ok 3 - oversized collections fail before validating their elements
+  ---
+  duration_ms: 0.56686
+  type: 'test'
+  ...
+# Subtest: deep, broad and high-node-count JSON fails within fixed budgets
+ok 4 - deep, broad and high-node-count JSON fails within fixed budgets
+  ---
+  duration_ms: 1.066042
+  type: 'test'
+  ...
+# Subtest: validation responses cap error count, path and message lengths
+ok 5 - validation responses cap error count, path and message lengths
+  ---
+  duration_ms: 7.346307
+  type: 'test'
+  ...
+# Subtest: isolated real API rejects compressed/oversized JSON and remains alive
+    # Subtest: valid gzip is rejected without decompression
+    ok 1 - valid gzip is rejected without decompression
+      ---
+      duration_ms: 187.890346
+      type: 'test'
+      ...
+    # Subtest: truncated gzip cannot terminate the API
+    ok 2 - truncated gzip cannot terminate the API
+      ---
+      duration_ms: 63.511739
+      type: 'test'
+      ...
+    # Subtest: gzip with hostile trailing data cannot terminate the API
+    ok 3 - gzip with hostile trailing data cannot terminate the API
+      ---
+      duration_ms: 49.00911
+      type: 'test'
+      ...
+    # Subtest: deflate cannot enter a decoder lifecycle
+    ok 4 - deflate cannot enter a decoder lifecycle
+      ---
+      duration_ms: 56.664285
+      type: 'test'
+      ...
+    # Subtest: brotli cannot enter a decoder lifecycle
+    ok 5 - brotli cannot enter a decoder lifecycle
+      ---
+      duration_ms: 39.780096
+      type: 'test'
+      ...
+    # Subtest: structural collection limit remains enforced
+    ok 6 - structural collection limit remains enforced
+      ---
+      duration_ms: 66.269293
+      type: 'test'
+      ...
+    # Subtest: ordinary 128 KiB size limit remains enforced
+    ok 7 - ordinary 128 KiB size limit remains enforced
+      ---
+      duration_ms: 32.152075
+      type: 'test'
+      ...
+    # Subtest: malformed uncompressed JSON remains a safe 400
+    ok 8 - malformed uncompressed JSON remains a safe 400
+      ---
+      duration_ms: 109.961107
+      type: 'test'
+      ...
+    # Subtest: normal JSON reaches authentication and cannot create an anonymous document
+    ok 9 - normal JSON reaches authentication and cannot create an anonymous document
+      ---
+      duration_ms: 60.375621
+      type: 'test'
+      ...
+    1..9
+ok 6 - isolated real API rejects compressed/oversized JSON and remains alive
+  ---
+  duration_ms: 4331.5462
+  type: 'test'
+  ...
+1..6
+# tests 15
+# suites 0
+# pass 15
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4810.868486

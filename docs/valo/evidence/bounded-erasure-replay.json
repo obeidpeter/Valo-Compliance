@@ -1,0 +1,169 @@
+{
+  "version": 1,
+  "status": "partial-development-engineering-proof",
+  "sourceBindings": {
+    "artifacts/api-server/src/lib/valo-erasure-hardening.integration.test.ts": "8bf12d6538c52e8e4606ef78900d86277b28e63c095279e68cade72eda7ae603",
+    "artifacts/api-server/src/lib/valo-erasure-inventory-cache.ts": "7e973c204502eb8371fa2935f2249c39600f2fbee3e8aa9bf1d5ce3c04adba7e",
+    "artifacts/api-server/src/lib/valo-privacy-erasure.ts": "ffbdc50d4c640a374cb2078270b8571094f94318d95dd3884798951036289c45",
+    "artifacts/api-server/src/scripts/erasure-replay-batch-child.ts": "b81a32ea306b5c260e85a69b875720da7cc84e40bbc08abeb5f6c5e5cbdddcb7",
+    "lib/db/drizzle/0022_privacy_erasure_hardening.sql": "8766ba62ee2065953ff62ba68cece0e914b2de6d17ab4dac728551f4b7b9052e"
+  },
+  "boundedReplay": {
+    "objects": 13,
+    "objectDeleteCalls": 13,
+    "duplicateDeletes": 0,
+    "restoredProfiles": 205,
+    "removedProfiles": 205,
+    "killedWorkers": 2,
+    "maxObjectsPerBatch": 10,
+    "maxRowsPerBatch": 100,
+    "finalWorkerFullInventoryChecks": 1,
+    "finalWorkerCachedChecks": 29,
+    "transport": "controlled deletion callback; separate native SDK late-write tests are included in native32"
+  },
+  "tests": {
+    "nativeErasureKeysHttp": {
+      "pass": 32,
+      "fail": 0,
+      "skip": 0
+    },
+    "sealLockCacheControls": {
+      "pass": 13,
+      "fail": 0,
+      "skip": 0
+    },
+    "largeDownloadHttp": {
+      "pass": 11,
+      "fail": 0,
+      "skip": 0
+    },
+    "finiteBudgetDispatch": {
+      "pass": 23,
+      "fail": 0,
+      "skip": 0,
+      "transport": "controlled",
+      "newPaidInferenceCalls": 0
+    },
+    "typecheck": "passed",
+    "gracefulFinalWorkerRecheck": {
+      "pass": 8,
+      "fail": 0,
+      "skip": 0,
+      "subsetOfNative32": true
+    }
+  },
+  "restore": {
+    "startedAt": "2026-11-15T04:10:41.766Z",
+    "scope": "disposable local synthetic PostgreSQL and local fixture objects",
+    "managedDatabaseRead": false,
+    "productionRestoreProved": false,
+    "appStorageRestoreProved": false,
+    "externalCredentialsInherited": false,
+    "externalMessagesSent": 0,
+    "charges": 0,
+    "refunds": 0,
+    "deletionScope": "Completed independently retained synthetic erasure receipt, physical application replay and local object cleanup; external providers excluded",
+    "retention35Days": "unresolved",
+    "checks": {
+      "exactSnapshotCutoff": true,
+      "sourceDatabaseRejectedAsReplayTarget": true,
+      "alteredJournalRejected": true,
+      "alteredJournalRejectedWithoutEffects": true,
+      "changedReceiptRejection": {
+        "code": "ERASURE_SEAL_INVALID",
+        "locations": [
+          {
+            "file": "valo-erasure-seal.ts",
+            "line": 45
+          },
+          {
+            "file": "valo-privacy-erasure.ts",
+            "line": 59
+          },
+          {
+            "file": "valo-privacy-erasure.ts",
+            "line": 73
+          },
+          {
+            "file": "valo-privacy-erasure.ts",
+            "line": 283
+          },
+          {
+            "file": "valo-privacy-erasure.ts",
+            "line": 299
+          }
+        ]
+      },
+      "changedReceiptRejectedWithWholeImportRolledBack": true,
+      "originalPreCutoffAuditRedactedWithAuthenticWitness": true,
+      "idempotentDeletionTombstoneAndRevocationReplay": true,
+      "publisherCannotReadPrivateRevisions": true,
+      "tenantObjectChecksums": 3,
+      "tamperedObjectDetected": true,
+      "controlledObjectFailure": {
+        "batches": 1,
+        "remaining": true,
+        "failed": 1,
+        "physicalApplicationReplayComplete": false,
+        "externalSystemsFulfilled": false
+      },
+      "objectDeletionCrash": {
+        "boundaryReached": true,
+        "killReported": true
+      },
+      "physicalApplicationPurgeWithStorageFailureAndProcessRestart": true,
+      "queuePayloadPurgedBeforeTrackingRows": true,
+      "otherTenantsPreserved": true,
+      "preCutoffPrivacyCopiesNotResurrected": true,
+      "customerAccess": {
+        "authorisationChecksCreatedNoRows": true,
+        "versionedIdentityBinding": true,
+        "revokedIdentitiesDenied": 2,
+        "activeDocumentRecovered": 1,
+        "crossTenantDenied": 1
+      }
+    },
+    "phase": "completed",
+    "cutoffAt": "2026-11-15T04:11:05.726Z",
+    "localWalCutoff": "0/1F666E8",
+    "dumpElapsedMs": 603,
+    "snapshotHash": "178be2eb7fd681d9a1e79a5716940663096fc12a27e66a9652eac5fc7d3b69d8",
+    "restoreStartedAt": "2026-11-15T04:11:13.047Z",
+    "physicalApplicationReplayComplete": true,
+    "externalSystemsFulfilled": false,
+    "restoreCompletedAt": "2026-11-15T04:11:48.243Z",
+    "restoreAndValidationElapsedMs": 35197,
+    "recoveryCutoffAgeMs": 42517,
+    "passed": true,
+    "elapsedMs": 67803,
+    "completedAt": "2026-11-15T04:11:49.562Z"
+  },
+  "guardPolicy": {
+    "source": "reviewed 0022 SQL",
+    "memoryEntriesMaximum": 64,
+    "maximumReuseMs": 300000,
+    "checkedEveryDispatch": [
+      "current signed case and scope",
+      "completion seal and historical keys",
+      "live database guard/catalog fingerprint"
+    ],
+    "freshChecks": [
+      "new process",
+      "restore/import receipt",
+      "guard/function/catalog revision change",
+      "changed seal",
+      "expired attestation"
+    ],
+    "unknownGuard": "full verification, never automatic trust",
+    "databaseAdministratorScope": "Not a replacement for trusted database administration; recovery import must force full independent receipt validation."
+  },
+  "acceptance": {
+    "R1": false,
+    "R2": false,
+    "fullAccountErasure": false,
+    "productionRecovery": false,
+    "AppStorageBackupRestore": false,
+    "formal80_60_60Executed": false,
+    "spendingApprovalChanged": false
+  }
+}

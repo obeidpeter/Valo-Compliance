@@ -1,0 +1,14 @@
+[
+  {
+    "case": "hostile-origin",
+    "status": 403
+  },
+  {
+    "case": "mismatched-scheme",
+    "status": 403
+  },
+  {
+    "case": "mismatched-port",
+    "status": 403
+  }
+]

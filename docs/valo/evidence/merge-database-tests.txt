@@ -1,0 +1,80 @@
+
+> @workspace/api-server@0.0.0 test:valo-db /home/runner/workspace/artifacts/api-server
+> NODE_ENV=development tsx --test src/lib/inference-budget.integration.test.ts src/lib/valo-store.integration.test.ts src/lib/valo-quota.integration.test.ts src/lib/valo-requirements.integration.test.ts src/lib/valo-customer-ai.integration.test.ts src/lib/valo-customer-access.integration.test.ts src/lib/valo-reminder-delivery.integration.test.ts src/lib/valo-task-pages.integration.test.ts
+
+✔ isolated PostgreSQL global ledger serializes races and preserves unknown/retry liability (2747.018479ms)
+▶ real development access intake, privacy isolation and staff boundaries
+  ✔ no login or account lookup is needed; confirmation is saved, never dispatched (153.46132ms)
+  ✔ idempotent retry preserves one record; altered reuse fails (55.854168ms)
+  ✔ honeypot and invalid email fail without saving (7.643321ms)
+  ✔ concurrent verified-or-unverified contacts cannot create unlimited anonymous tickets (247.591878ms)
+  ✔ different contacts receive the same non-enumerating wording (41.39135ms)
+  ✔ privacy requests really persist and do not claim deletion (150.511236ms)
+  ✔ workspace JSON export includes saved revisions but excludes another business (410.989314ms)
+  ✔ revoked membership cannot retrieve exports or saved privacy requests (16.030959ms)
+  ✔ no staff permission, missing MFA and cross-area substitution all fail (43.968518ms)
+✔ real development access intake, privacy isolation and staff boundaries (1773.629342ms)
+▶ development AI persistence, private ownership, atomic acceptance and quotas
+  ✔ missing information persists privately without an outbound call (46.548924ms)
+  ✔ other tenant IDs and forged actor membership fail (145.787258ms)
+  ✔ consent and request shape are checked before persistence (6.511982ms)
+  ✔ same request is idempotent; changed facts cannot reuse its key (42.199379ms)
+  ✔ concurrent acceptance creates one real document and one revision (118.624747ms)
+  ✔ changed acceptance cannot silently overwrite the existing document (35.682893ms)
+  ✔ derived totals cannot be altered or their financial model stripped (19.34412ms)
+  ✔ database composite FK independently rejects a foreign accepted document (75.388387ms)
+  ✔ interrupted request becomes an honest manual fallback, not a fabricated completion (105.06788ms)
+  ✔ disabled shared spending gate rejects concurrent requests without consuming daily allowance (1115.78333ms)
+✔ development AI persistence, private ownership, atomic acceptance and quotas (2247.115281ms)
+▶ synthetic PostgreSQL quotas are atomic, durable and scoped
+  ✔ concurrent callers cannot exceed one shared database cap (675.532543ms)
+  ✔ another subject and operation have independent allowances (97.510499ms)
+  ✔ durable state is visible through a separate database connection (16.658789ms)
+  ✔ expiry cleanup removes only expired windows, leaving current usage intact (35.451232ms)
+  ✔ invalid bucket, identity and ceilings never mutate storage (1.419256ms)
+✔ synthetic PostgreSQL quotas are atomic, durable and scoped (837.267962ms)
+▶ durable reminder delivery controls; controlled transport, not real email
+  ✔ turning reminders off needs no selected offset and cancels before dispatch (355.345913ms)
+  ✔ twenty-five held source reminders cannot starve an eligible later reminder (1389.678769ms)
+  ✔ no configured provider holds the reminder and consumes no attempt (30.73394ms)
+  ✔ parallel scheduler invocations send once; acceptance is not inbox delivery (78.188762ms)
+  ✔ failed acceptance persists its attempt and waits; retry keeps the same message reference (115.862831ms)
+  ✔ five failed attempts remain bounded even with repeated scheduler runs (207.462249ms)
+  ✔ SIGKILL during dispatch preserves the claim; expiry recovers without losing the attempt (1313.381161ms)
+  ✔ abandoned final attempt becomes visibly failed instead of permanently running (37.063813ms)
+  ✔ expired or unknown first acceptance time holds before any new provider invocation (137.975363ms)
+  ✔ opt-out before dispatch cancels failed work without sending (72.229738ms)
+✔ durable reminder delivery controls; controlled transport, not real email (4177.188776ms)
+▶ development saved assessments, task isolation, concurrency and reminder outbox
+  ✔ explicit consent required; anonymous bodies cannot supply rules (7.656717ms)
+  ✔ saved profile assessment preserves unknowns and real coverage gaps (66.582056ms)
+  ✔ other tenants cannot read or compare assessment identifiers (47.804522ms)
+  ✔ profile changes create dated comparisons without rewriting old assessments (154.953113ms)
+  ✔ manual task creation works without falsely published requirements (67.242364ms)
+  ✔ all cross-tenant task writes and origin substitutions are denied (34.617267ms)
+  ✔ two concurrent task edits cannot silently overwrite notes (253.193825ms)
+  ✔ unconfirmed and invalid calendar dates are rejected (0.835433ms)
+  ✔ reminders default off and opt-in schedules are durable, held not sent (106.629219ms)
+  ✔ scheduler retries and preference updates preserve idempotent reminder identities (125.761676ms)
+  ✔ dispatch checks opt-out before any adapter invocation (96.305537ms)
+  ✔ source withdrawal flags a historical task without changing user completion (30.731233ms)
+  ✔ archiving a task preserves assessments and cancels reminders (42.976334ms)
+✔ development saved assessments, task isolation, concurrency and reminder outbox (1475.971718ms)
+▶ development PostgreSQL tenant, concurrency, history and durable-ticket proof
+  ✔ server membership resolution is idempotent and tenants are separate (29.472176ms)
+  ✔ profile correction appends history, preserves declined marketing and rejects stale saves (110.122538ms)
+  ✔ document and revision identifiers cannot expose a different tenant (25.255354ms)
+  ✔ two concurrent tabs produce exactly one new revision and one conflict (62.449064ms)
+  ✔ restore appends a new revision without rewriting the original (77.620414ms)
+  ✔ enquiry acknowledgement follows a durable save, not an appointment or email claim (50.513338ms)
+  ✔ suspended membership is not automatically restored (45.230394ms)
+✔ development PostgreSQL tenant, concurrency, history and durable-ticket proof (840.993527ms)
+✔ actual task pages exceed 200 without losing totals, filters or tenant scope (418.618178ms)
+ℹ tests 62
+ℹ suites 0
+ℹ pass 62
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 7261.920743

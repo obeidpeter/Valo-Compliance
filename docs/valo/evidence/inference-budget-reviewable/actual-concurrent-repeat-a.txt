@@ -1,0 +1,1 @@
+{"applied":true,"entries":57,"reported":48,"noOutbound":6,"unknown":3,"unbounded":3,"classifications":57,"ownerApproval":false,"newInferenceCalls":0,"path":"/home/runner/workspace/generated-artifacts/valo-completion/inference-budget/verified-history-a627f1b7-2025-45df-9af6-76e714101b03.json"}

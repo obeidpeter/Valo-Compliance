@@ -1,0 +1,253 @@
+{
+  "checkedAt": "2026-11-13T21:19:40.416Z",
+  "results": [
+    {
+      "data": {
+        "createdAt": "2026-11-13T16:34:22Z",
+        "forks": 0,
+        "ownerType": "User",
+        "private": true,
+        "visibility": "private"
+      },
+      "hasNext": false,
+      "path": "/repos/obeidpeter/Valo-Compliance",
+      "status": 200
+    },
+    {
+      "data": [
+        {
+          "name": "docs/specification-baseline",
+          "sha": "871899483093363ec69d765e2d16fa1d88e0836e"
+        },
+        {
+          "name": "feature/valo-p0-foundation",
+          "sha": "9095e1afd4a51b08423a71bd7fbf7fa257fabc7e"
+        },
+        {
+          "name": "main",
+          "sha": "650e60d855da5fab61b98f3ec7d89c4c29c7fc57"
+        }
+      ],
+      "hasNext": false,
+      "path": "/repos/obeidpeter/Valo-Compliance/branches?per_page=100",
+      "status": 200
+    },
+    {
+      "data": {
+        "count": 0
+      },
+      "hasNext": false,
+      "path": "/repos/obeidpeter/Valo-Compliance/tags?per_page=100",
+      "status": 200
+    },
+    {
+      "data": {
+        "base": "650e60d855da5fab61b98f3ec7d89c4c29c7fc57",
+        "draft": true,
+        "head": "9095e1afd4a51b08423a71bd7fbf7fa257fabc7e",
+        "state": "open"
+      },
+      "hasNext": false,
+      "path": "/repos/obeidpeter/Valo-Compliance/pulls/2",
+      "status": 200
+    },
+    {
+      "data": {
+        "clones": [
+          {
+            "count": 0,
+            "timestamp": "2026-10-31T00:00:00Z",
+            "uniques": 0
+          },
+          {
+            "count": 0,
+            "timestamp": "2026-11-01T00:00:00Z",
+            "uniques": 0
+          },
+          {
+            "count": 0,
+            "timestamp": "2026-11-02T00:00:00Z",
+            "uniques": 0
+          },
+          {
+            "count": 0,
+            "timestamp": "2026-11-03T00:00:00Z",
+            "uniques": 0
+          },
+          {
+            "count": 0,
+            "timestamp": "2026-11-04T00:00:00Z",
+            "uniques": 0
+          },
+          {
+            "count": 0,
+            "timestamp": "2026-11-05T00:00:00Z",
+            "uniques": 0
+          },
+          {
+            "count": 0,
+            "timestamp": "2026-11-06T00:00:00Z",
+            "uniques": 0
+          },
+          {
+            "count": 0,
+            "timestamp": "2026-11-07T00:00:00Z",
+            "uniques": 0
+          },
+          {
+            "count": 0,
+            "timestamp": "2026-11-08T00:00:00Z",
+            "uniques": 0
+          },
+          {
+            "count": 0,
+            "timestamp": "2026-11-09T00:00:00Z",
+            "uniques": 0
+          },
+          {
+            "count": 0,
+            "timestamp": "2026-11-10T00:00:00Z",
+            "uniques": 0
+          },
+          {
+            "count": 0,
+            "timestamp": "2026-11-11T00:00:00Z",
+            "uniques": 0
+          },
+          {
+            "count": 0,
+            "timestamp": "2026-11-12T00:00:00Z",
+            "uniques": 0
+          },
+          {
+            "count": 0,
+            "timestamp": "2026-11-13T00:00:00Z",
+            "uniques": 0
+          }
+        ],
+        "count": 0,
+        "uniques": 0
+      },
+      "hasNext": false,
+      "path": "/repos/obeidpeter/Valo-Compliance/traffic/clones",
+      "status": 200
+    },
+    {
+      "data": {
+        "count": 0,
+        "uniques": 0,
+        "views": [
+          {
+            "count": 0,
+            "timestamp": "2026-10-31T00:00:00Z",
+            "uniques": 0
+          },
+          {
+            "count": 0,
+            "timestamp": "2026-11-01T00:00:00Z",
+            "uniques": 0
+          },
+          {
+            "count": 0,
+            "timestamp": "2026-11-02T00:00:00Z",
+            "uniques": 0
+          },
+          {
+            "count": 0,
+            "timestamp": "2026-11-03T00:00:00Z",
+            "uniques": 0
+          },
+          {
+            "count": 0,
+            "timestamp": "2026-11-04T00:00:00Z",
+            "uniques": 0
+          },
+          {
+            "count": 0,
+            "timestamp": "2026-11-05T00:00:00Z",
+            "uniques": 0
+          },
+          {
+            "count": 0,
+            "timestamp": "2026-11-06T00:00:00Z",
+            "uniques": 0
+          },
+          {
+            "count": 0,
+            "timestamp": "2026-11-07T00:00:00Z",
+            "uniques": 0
+          },
+          {
+            "count": 0,
+            "timestamp": "2026-11-08T00:00:00Z",
+            "uniques": 0
+          },
+          {
+            "count": 0,
+            "timestamp": "2026-11-09T00:00:00Z",
+            "uniques": 0
+          },
+          {
+            "count": 0,
+            "timestamp": "2026-11-10T00:00:00Z",
+            "uniques": 0
+          },
+          {
+            "count": 0,
+            "timestamp": "2026-11-11T00:00:00Z",
+            "uniques": 0
+          },
+          {
+            "count": 0,
+            "timestamp": "2026-11-12T00:00:00Z",
+            "uniques": 0
+          },
+          {
+            "count": 0,
+            "timestamp": "2026-11-13T00:00:00Z",
+            "uniques": 0
+          }
+        ]
+      },
+      "hasNext": false,
+      "path": "/repos/obeidpeter/Valo-Compliance/traffic/views",
+      "status": 200
+    },
+    {
+      "data": {
+        "count": 0
+      },
+      "hasNext": false,
+      "path": "/repos/obeidpeter/Valo-Compliance/forks?per_page=100",
+      "status": 200
+    },
+    {
+      "data": {
+        "message": "Secret scanning is disabled on this repository."
+      },
+      "hasNext": false,
+      "path": "/repos/obeidpeter/Valo-Compliance/secret-scanning/alerts?per_page=100",
+      "status": 404
+    },
+    {
+      "data": [
+        {
+          "createdAt": "2026-11-13T16:34:22Z",
+          "type": "PublicEvent"
+        },
+        {
+          "createdAt": "2026-11-13T16:41:22Z",
+          "type": "PullRequestEvent"
+        },
+        {
+          "createdAt": "2026-11-13T16:37:26Z",
+          "type": "PullRequestEvent"
+        }
+      ],
+      "hasNext": false,
+      "path": "/repos/obeidpeter/Valo-Compliance/events?per_page=100",
+      "status": 200
+    }
+  ],
+  "unsignedStatus": 404
+}

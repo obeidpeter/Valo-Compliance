@@ -1,0 +1,109 @@
+{
+  "suite": "supplied-customer-AI-source-pilot",
+  "sourceCommit": "d51a1c3407dcd8c6e6b52b5cb8203400c65d79e0",
+  "executedAt": "2026-11-14T11:43:31.948Z",
+  "sourceFile": "docs/evaluation-candidates/customer-ai.json",
+  "sourceSHA256": "8c828ad115a855da9d725aaa8ecb76d91e36daa4a9142571c0a45d306ec995e2",
+  "executed": 2,
+  "passed": 2,
+  "failed": 0,
+  "budgetBefore": {
+    "workspace": 1,
+    "workspaceDailyLimit": 30,
+    "global": 3,
+    "globalDailyLimit": 120
+  },
+  "sameExistingEvaluationTenant": true,
+  "actualBilling": null,
+  "identityAndHTTPMiddlewareTested": false,
+  "AI008Accepted": false,
+  "full60CaseSuiteExecuted": false,
+  "R1Accepted": false,
+  "R2Accepted": false,
+  "limits": "Two exact supplied candidates through real server services. Invoice requires actual provider receipts; quotation must ask for its absent date without calling AI. Both save/edit/reload and deliberately watermarked private exports. Not browser identity, all four task quality, sixty-case acceptance, publication or legal accuracy.",
+  "results": [
+    {
+      "caseID": "CAI-CAND-INV-01",
+      "caseHash": "5ed0815c5631dee1032ff6a58b7e18dc708045b6ecf62a6ddaa92acb89ece718",
+      "status": "pass",
+      "previewId": "0c63f870-3505-49e9-8f0f-f5fda67ad0fc",
+      "previewStatus": "ready",
+      "missingFields": [],
+      "promptVersion": "customer-extractive-v2/customer-ai-development-notice-v2",
+      "reusedExactPreview": true,
+      "newProviderAttempts": 0,
+      "retainedProviderRuns": [
+        {
+          "cost": null,
+          "model": "gpt-5.4-mini-2026-03-17",
+          "usage": {
+            "inputTokens": 269,
+            "totalTokens": 285,
+            "outputTokens": 16
+          },
+          "attempt": 1,
+          "outcome": "validated",
+          "latencyMs": 1119,
+          "responseId": "chatcmpl-Ek6KHAOuT1zbq9LYFzIjRzg6IpqU5",
+          "outboundAttempted": true
+        }
+      ],
+      "documentId": "5acf1c2c-de8a-44bc-a804-49a1abca30b0",
+      "savedRevision": 2,
+      "originalHistoryPreserved": true,
+      "files": [
+        {
+          "format": "docx",
+          "bytes": 12038,
+          "checksum": "484ee32e5db834a717d823d878924e361fe88255de3517b077260aeeff4671a1",
+          "authorisedDownloadPassed": true,
+          "readerContentPassed": true,
+          "readerWhitespaceNormalised": true
+        },
+        {
+          "format": "pdf",
+          "bytes": 47154,
+          "checksum": "f2a491d9d31a269fb27b54630df855d60bb43ec93196fe0bbcbb92799c0ef849",
+          "authorisedDownloadPassed": true,
+          "readerContentPassed": true,
+          "readerWhitespaceNormalised": true
+        }
+      ]
+    },
+    {
+      "caseID": "CAI-CAND-QUO-01",
+      "caseHash": "27aeace4842577bf5639e8e23bda8432715cdc6af6dd7af81496e81e36e86c5a",
+      "status": "pass",
+      "previewId": "6279d544-83e4-47ef-803f-8109b65e998a",
+      "previewStatus": "needs_information",
+      "missingFields": [
+        "issueDate"
+      ],
+      "promptVersion": "customer-extractive-v2/customer-ai-development-notice-v2",
+      "reusedExactPreview": true,
+      "newProviderAttempts": 0,
+      "retainedProviderRuns": [],
+      "documentId": "3726a8ce-a99c-4922-bbe2-90f15f103a35",
+      "savedRevision": 2,
+      "originalHistoryPreserved": true,
+      "files": [
+        {
+          "format": "docx",
+          "bytes": 12020,
+          "checksum": "07ceb58084eea6e6d1e1ef8a5648d3ca696e2fd334cb9cfce37a4ae89a2c13de",
+          "authorisedDownloadPassed": true,
+          "readerContentPassed": true,
+          "readerWhitespaceNormalised": true
+        },
+        {
+          "format": "pdf",
+          "bytes": 47017,
+          "checksum": "984faac4ccc80b05fb7f3ec68d825049554c8824f61268faf1deb2ba87a33176",
+          "authorisedDownloadPassed": true,
+          "readerContentPassed": true,
+          "readerWhitespaceNormalised": true
+        }
+      ]
+    }
+  ]
+}

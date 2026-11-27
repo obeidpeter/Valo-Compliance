@@ -1,0 +1,482 @@
+# Support enquiries, cases and escalations.
+paths:
+  /public/access-support:
+    post:
+      operationId: requestAccessSupport
+      tags: [support]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AccessSupportInput" }
+      responses:
+        "201":
+          description: Durably saved without looking up or disclosing an account; not an email-delivery confirmation.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AccessSupportAck" }
+        "429": { $ref: "#/components/responses/WriteLimit" }
+  /workspace/support:
+    post:
+      operationId: createSupportTicket
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TicketInput" }
+      responses:
+        "201":
+          description: Ticket durably saved, no appointment or dispatch claim
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TicketReceipt" }
+        "400": { $ref: "#/components/responses/AuthError" }
+        "401": { $ref: "#/components/responses/AuthError" }
+        "403": { $ref: "#/components/responses/AuthError" }
+        "429": { $ref: "#/components/responses/WriteLimit" }
+  /workspace/support-cases:
+    get:
+      operationId: listCustomerSupportCases
+      tags: [workspace]
+      summary: Saved support cases for the current workspace
+      parameters:
+        - { name: page, in: query, schema: { type: integer, minimum: 1, maximum: 10000, default: 1 } }
+      responses:
+        "200":
+          description: Saved cases. No external dispatch is enabled.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CustomerSupportCaseList" }
+        "400": { $ref: "#/components/responses/AuthError" }
+        "401": { $ref: "#/components/responses/AuthError" }
+        "403": { $ref: "#/components/responses/AuthError" }
+        "404": { $ref: "#/components/responses/AuthError" }
+  /workspace/support-cases/{id}:
+    get:
+      operationId: getCustomerSupportCase
+      tags: [workspace]
+      summary: One support case and its customer-visible conversation
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: messagesPage, in: query, schema: { type: integer, minimum: 1, maximum: 10000, default: 1 } }
+      responses:
+        "200":
+          description: The case and a page of customer-visible messages. Internal notes are never included.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CustomerSupportCaseDetail" }
+        "400": { $ref: "#/components/responses/AuthError" }
+        "401": { $ref: "#/components/responses/AuthError" }
+        "403": { $ref: "#/components/responses/AuthError" }
+        "404": { $ref: "#/components/responses/AuthError" }
+  /workspace/support-cases/{id}/reply:
+    post:
+      operationId: replyToSupportCase
+      tags: [workspace]
+      summary: Add information to a support case
+      description: Saves the reply to the private portal. Nothing is emailed or sent elsewhere.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SupportReplyInput" }
+      responses:
+        "200":
+          description: Reply saved, or the same request replayed without a second reply.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CustomerSupportCaseDetail" }
+        "400": { $ref: "#/components/responses/AuthError" }
+        "401": { $ref: "#/components/responses/AuthError" }
+        "403": { $ref: "#/components/responses/AuthError" }
+        "404": { $ref: "#/components/responses/AuthError" }
+        "409": { $ref: "#/components/responses/ConflictError" }
+        "429": { $ref: "#/components/responses/WriteLimit" }
+  /admin/support-cases:
+    get:
+      operationId: listStaffSupportCases
+      tags: [staff]
+      summary: Support case queue
+      parameters:
+        - { name: status, in: query, schema: { type: string, enum: [all, open, in_progress, awaiting_customer, resolved], default: all } }
+        - { name: page, in: query, schema: { type: integer, minimum: 1, maximum: 10000, default: 1 } }
+      responses:
+        "200":
+          description: Cases outside erased workspaces. Requires an active support role and recent MFA.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StaffSupportCaseList" }
+        "400": { $ref: "#/components/responses/AuthError" }
+        "401": { $ref: "#/components/responses/AuthError" }
+        "403": { $ref: "#/components/responses/AuthError" }
+  /admin/support-cases/assignees:
+    get:
+      operationId: listSupportAssignees
+      tags: [staff]
+      summary: Active support staff who can be assigned a case
+      responses:
+        "200":
+          description: Active support assignments, at most 200.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SupportAssignees" }
+        "401": { $ref: "#/components/responses/AuthError" }
+        "403": { $ref: "#/components/responses/AuthError" }
+        "409": { $ref: "#/components/responses/ConflictError" }
+  /admin/support-cases/{id}:
+    get:
+      operationId: getStaffSupportCase
+      tags: [staff]
+      summary: One support case with its full history
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: messagesPage, in: query, schema: { type: integer, minimum: 1, maximum: 10000, default: 1 } }
+      responses:
+        "200":
+          description: The case, a page of messages including internal notes, recent events and content referrals.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StaffSupportCaseDetail" }
+        "400": { $ref: "#/components/responses/AuthError" }
+        "401": { $ref: "#/components/responses/AuthError" }
+        "403": { $ref: "#/components/responses/AuthError" }
+        "404": { $ref: "#/components/responses/AuthError" }
+  /admin/support-cases/{id}/action:
+    post:
+      operationId: actOnSupportCase
+      tags: [staff]
+      summary: Assign, reply to, resolve, reopen or refer a support case
+      description: Replies are saved to the portal or kept internal. Nothing is emailed. A content referral grants no hold or publication authority.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SupportCaseAction" }
+      responses:
+        "200":
+          description: Action saved, or the same request replayed without repeating it.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StaffSupportCaseDetail" }
+        "400": { $ref: "#/components/responses/AuthError" }
+        "401": { $ref: "#/components/responses/AuthError" }
+        "403": { $ref: "#/components/responses/AuthError" }
+        "404": { $ref: "#/components/responses/AuthError" }
+        "409": { $ref: "#/components/responses/ConflictError" }
+        "422": { $ref: "#/components/responses/AuthError" }
+        "429": { $ref: "#/components/responses/QuotaError" }
+  /admin/support-escalations:
+    get:
+      operationId: listContentEscalations
+      tags: [staff]
+      summary: Content referrals from support
+      parameters:
+        - { name: page, in: query, schema: { type: integer, minimum: 1, maximum: 10000, default: 1 } }
+      responses:
+        "200":
+          description: Referred exact content or rule versions. Requires an active content role and recent MFA.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ContentEscalationList" }
+        "400": { $ref: "#/components/responses/AuthError" }
+        "401": { $ref: "#/components/responses/AuthError" }
+        "403": { $ref: "#/components/responses/AuthError" }
+  /admin/support-library-entries:
+    get:
+      operationId: findSupportLibraryEntries
+      tags: [staff]
+      summary: Published staff-library entries a support referral can point at
+      parameters:
+        - { name: q, in: query, required: true, schema: { type: string, minLength: 2, maxLength: 100 } }
+      responses:
+        "200":
+          description: Up to 20 published entries whose title contains the words, by title. Requires an active support role and recent MFA.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SupportLibraryEntryList" }
+        "400": { $ref: "#/components/responses/AuthError" }
+        "401": { $ref: "#/components/responses/AuthError" }
+        "403": { $ref: "#/components/responses/AuthError" }
+  /admin/support-escalations/{id}/action:
+    post:
+      operationId: actOnContentEscalation
+      tags: [staff]
+      summary: Acknowledge or close a content referral, or hold the referred version
+      description: Closing a referral never approves publication or releases a hold. A referred reviewed version or rule release is held through the source controls, which queue its reassessment. A referred staff-library version is held in the staff library, where a Content editor, or the owner for a regulatory guide, reassesses it. No AI call or message is sent.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ContentEscalationActionInput" }
+      responses:
+        "200":
+          description: Triage saved, or the same request replayed without repeating it.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ContentEscalationResult" }
+        "400": { $ref: "#/components/responses/AuthError" }
+        "401": { $ref: "#/components/responses/AuthError" }
+        "403": { $ref: "#/components/responses/AuthError" }
+        "404": { $ref: "#/components/responses/AuthError" }
+        "409": { $ref: "#/components/responses/ConflictError" }
+        "503": { $ref: "#/components/responses/AuthError" }
+schemas:
+  AccessSupportInput:
+    type: object
+    additionalProperties: false
+    required: [idempotencyKey, email, topic, message]
+    properties:
+      idempotencyKey: { type: string, format: uuid }
+      email: { type: string, format: email, maxLength: 254 }
+      topic: { type: string, enum: [account_access, general, content_issue] }
+      message: { type: string, minLength: 20, maxLength: 2000 }
+      website: { type: string, maxLength: 0 }
+  TicketInput:
+    type: object
+    additionalProperties: false
+    required: [category, scope, contactEmail, sharingConsent]
+    properties:
+      category: { type: string, enum: [support, registration, tax, accounting, employment, legal, privacy, sector_approval] }
+      scope: { type: string, minLength: 10, maxLength: 4000 }
+      contactEmail: { type: string, format: email, maxLength: 254 }
+      sharingConsent: { type: boolean }
+  TicketReceipt:
+    type: object
+    required: [reference, message, dispatchStatus]
+    properties:
+      reference: { type: string }
+      message: { type: string }
+      dispatchStatus: { type: string, enum: [awaiting_staff] }
+  SupportCaseStatus:
+    type: string
+    enum: [open, in_progress, awaiting_customer, resolved]
+  CustomerSupportCaseSummary:
+    type: object
+    required: [id, sourceKind, reference, category, status, version, updatedAt]
+    properties:
+      id: { type: string, format: uuid }
+      sourceKind: { type: string, enum: [workspace, access] }
+      reference: { type: string }
+      category: { type: string }
+      status: { $ref: "#/components/schemas/SupportCaseStatus" }
+      version: { type: integer, minimum: 1 }
+      updatedAt: { type: string, format: date-time }
+  StaffSupportCaseSummary:
+    allOf:
+      - { $ref: "#/components/schemas/CustomerSupportCaseSummary" }
+      - type: object
+        required: [assignedTo]
+        properties:
+          assignedTo: { type: [string, "null"] }
+  CustomerSupportCaseList:
+    type: object
+    required: [cases, page, pageSize, hasMore, notice]
+    properties:
+      cases: { type: array, items: { $ref: "#/components/schemas/CustomerSupportCaseSummary" } }
+      page: { type: integer }
+      pageSize: { type: integer }
+      hasMore: { type: boolean }
+      notice: { type: string }
+  StaffSupportCaseList:
+    type: object
+    required: [cases, page, pageSize, hasMore, notice]
+    properties:
+      cases: { type: array, items: { $ref: "#/components/schemas/StaffSupportCaseSummary" } }
+      page: { type: integer }
+      pageSize: { type: integer }
+      hasMore: { type: boolean }
+      notice: { type: string }
+  CustomerSupportCase:
+    type: object
+    required: [id, sourceKind, reference, category, scope, contactEmail, sharingConsent, status, version, createdAt, updatedAt]
+    properties:
+      id: { type: string, format: uuid }
+      sourceKind: { type: string, enum: [workspace, access] }
+      reference: { type: string }
+      category: { type: string }
+      scope: { type: string }
+      contactEmail: { type: string }
+      sharingConsent: { type: boolean }
+      status: { $ref: "#/components/schemas/SupportCaseStatus" }
+      version: { type: integer, minimum: 1 }
+      createdAt: { type: string, format: date-time }
+      updatedAt: { type: string, format: date-time }
+  StaffSupportCase:
+    allOf:
+      - { $ref: "#/components/schemas/CustomerSupportCase" }
+      - type: object
+        required: [assignedTo]
+        properties:
+          assignedTo: { type: [string, "null"] }
+  SupportMessage:
+    type: object
+    required: [id, body, createdAt, authorKind, visibility]
+    properties:
+      id: { type: string, format: uuid }
+      body: { type: string }
+      createdAt: { type: string, format: date-time }
+      authorKind: { type: string, enum: [customer, staff] }
+      visibility: { type: string, enum: [customer, internal] }
+  SupportEvent:
+    type: object
+    required: [id, caseId, actorId, action, createdAt]
+    properties:
+      id: { type: string, format: uuid }
+      caseId: { type: string, format: uuid }
+      actorId: { type: string }
+      action: { type: string }
+      createdAt: { type: string, format: date-time }
+  SupportCaseEscalation:
+    type: object
+    required: [id, caseId, targetKind, targetId, targetHash, targetVersion, reason, status, sourceImpactId, libraryHoldId, createdAt, updatedAt]
+    properties:
+      id: { type: string, format: uuid }
+      caseId: { type: string, format: uuid }
+      # A reviewed content version, a rule release, or a staff-library edition.
+      targetKind: { type: string, enum: [content, rule, library] }
+      targetId: { type: string, format: uuid }
+      targetHash: { type: string }
+      targetVersion: { type: integer, minimum: 1 }
+      reason: { type: string }
+      status: { type: string, enum: [queued, acknowledged, resolved] }
+      sourceImpactId: { type: [string, "null"], format: uuid }
+      # The staff-library hold a library referral placed, or found already placed.
+      libraryHoldId: { type: [string, "null"], format: uuid }
+      createdAt: { type: string, format: date-time }
+      updatedAt: { type: string, format: date-time }
+  CustomerSupportCaseDetail:
+    type: object
+    required: [case, messages, messagesPage, messagePageSize, moreMessages, notice]
+    properties:
+      case: { $ref: "#/components/schemas/CustomerSupportCase" }
+      messages: { type: array, items: { $ref: "#/components/schemas/SupportMessage" } }
+      messagesPage: { type: integer }
+      messagePageSize: { type: integer }
+      moreMessages: { type: boolean }
+      notice: { type: string }
+  StaffSupportCaseDetail:
+    type: object
+    required: [case, messages, messagesPage, messagePageSize, moreMessages, events, eventsTruncated, escalations, escalationsTruncated, notice]
+    properties:
+      case: { $ref: "#/components/schemas/StaffSupportCase" }
+      messages: { type: array, items: { $ref: "#/components/schemas/SupportMessage" } }
+      messagesPage: { type: integer }
+      messagePageSize: { type: integer }
+      moreMessages: { type: boolean }
+      events: { type: array, items: { $ref: "#/components/schemas/SupportEvent" } }
+      eventsTruncated: { type: boolean }
+      escalations: { type: array, items: { $ref: "#/components/schemas/SupportCaseEscalation" } }
+      escalationsTruncated: { type: boolean }
+      notice: { type: string }
+  SupportAssignees:
+    type: object
+    required: [assignees]
+    properties:
+      assignees:
+        type: array
+        items:
+          type: object
+          required: [identityId]
+          properties:
+            identityId: { type: string }
+  SupportReplyInput:
+    type: object
+    additionalProperties: false
+    required: [idempotencyKey, expectedVersion, body]
+    properties:
+      idempotencyKey: { type: string, format: uuid }
+      expectedVersion: { type: integer, minimum: 1 }
+      body: { type: string, minLength: 8, maxLength: 4000 }
+  SupportCaseAction:
+    oneOf:
+      - type: object
+        additionalProperties: false
+        required: [idempotencyKey, expectedVersion, action, assigneeId]
+        properties:
+          idempotencyKey: { type: string, format: uuid }
+          expectedVersion: { type: integer, minimum: 1 }
+          action: { type: string, enum: [assign] }
+          assigneeId: { type: string, minLength: 1, maxLength: 200 }
+      - type: object
+        additionalProperties: false
+        required: [idempotencyKey, expectedVersion, action, body]
+        properties:
+          idempotencyKey: { type: string, format: uuid }
+          expectedVersion: { type: integer, minimum: 1 }
+          action: { type: string, enum: [reply, resolve, reopen] }
+          body: { type: string, minLength: 8, maxLength: 4000 }
+      - type: object
+        additionalProperties: false
+        required: [idempotencyKey, expectedVersion, action, body, targetKind, targetId]
+        properties:
+          idempotencyKey: { type: string, format: uuid }
+          expectedVersion: { type: integer, minimum: 1 }
+          action: { type: string, enum: [escalate_content] }
+          body: { type: string, minLength: 8, maxLength: 4000 }
+          targetKind: { type: string, enum: [content, rule, library] }
+          # For a library entry, the published edition's id, as the entry search gives it.
+          targetId: { type: string, format: uuid }
+  ContentEscalation:
+    type: object
+    required: [id, caseId, reference, targetKind, targetId, targetVersion, targetHash, targetTitle, status, reason, sourceImpactId, libraryHoldId, caseVersion, createdAt, updatedAt]
+    properties:
+      id: { type: string, format: uuid }
+      caseId: { type: string, format: uuid }
+      reference: { type: string }
+      targetKind: { type: string, enum: [content, rule, library] }
+      targetId: { type: string, format: uuid }
+      targetVersion: { type: integer, minimum: 1 }
+      targetHash: { type: string }
+      # A library entry's title, or null for a reviewed version or a rule release.
+      targetTitle: { type: [string, "null"] }
+      status: { type: string, enum: [queued, acknowledged, resolved] }
+      reason: { type: string }
+      sourceImpactId: { type: [string, "null"], format: uuid }
+      libraryHoldId: { type: [string, "null"], format: uuid }
+      caseVersion: { type: integer, minimum: 1 }
+      createdAt: { type: string, format: date-time }
+      updatedAt: { type: string, format: date-time }
+  SupportLibraryEntry:
+    type: object
+    required: [editionId, title, kind, version]
+    properties:
+      editionId: { type: string, format: uuid }
+      title: { type: string }
+      kind: { type: string, enum: [practical_guide, industry_introduction, industry_pack, template, premium_template, regulatory_article] }
+      version: { type: integer, minimum: 1 }
+  SupportLibraryEntryList:
+    type: object
+    required: [entries]
+    properties:
+      entries: { type: array, items: { $ref: "#/components/schemas/SupportLibraryEntry" } }
+  ContentEscalationList:
+    type: object
+    required: [escalations, page, pageSize, hasMore, notice]
+    properties:
+      escalations: { type: array, items: { $ref: "#/components/schemas/ContentEscalation" } }
+      page: { type: integer }
+      pageSize: { type: integer }
+      hasMore: { type: boolean }
+      notice: { type: string }
+  ContentEscalationActionInput:
+    type: object
+    additionalProperties: false
+    required: [idempotencyKey, expectedVersion, action, body]
+    properties:
+      idempotencyKey: { type: string, format: uuid }
+      expectedVersion: { type: integer, minimum: 1 }
+      action: { type: string, enum: [acknowledge, resolve, hold_and_reassess] }
+      body: { type: string, minLength: 8, maxLength: 4000 }
+  ContentEscalationResult:
+    type: object
+    required: [escalation, caseVersion, notice]
+    properties:
+      escalation: { $ref: "#/components/schemas/SupportCaseEscalation" }
+      caseVersion: { type: integer, minimum: 1 }
+      notice: { type: string }

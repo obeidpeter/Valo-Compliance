@@ -1,0 +1,105 @@
+# Customer AI drafts and usage.
+paths:
+  /workspace/ai-drafts:
+    post:
+      operationId: createCustomerAIDraft
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CustomerAIInput" }
+      responses:
+        "200":
+          description: Structured private preview, missing-information response or honest manual fallback
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CustomerAIPreview" }
+  /workspace/ai-drafts/{id}:
+    get:
+      operationId: getCustomerAIDraft
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Workspace-owned AI preview, never an editorial publication
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CustomerAIPreview" }
+  /workspace/ai-drafts/{id}/accept:
+    post:
+      operationId: acceptCustomerAIDraft
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CustomerAISelection" }
+      responses:
+        "201":
+          description: Exactly one private document; subsequent edits append revisions
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BusinessDocument" }
+  /workspace/ai-usage:
+    get:
+      operationId: getCustomerAIUsage
+      responses:
+        "200":
+          description: Real development quota and feature state, not a commercial subscription
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CustomerAIUsage" }
+schemas:
+  CustomerAIInput:
+    type: object
+    additionalProperties: false
+    required: [task, tone, issuerName, recipientName, documentNumber, issueDate, dueDate, contextLines, financialInput, processingConsent, idempotencyKey]
+    properties:
+      task: { $ref: "#/components/schemas/CustomerAITask" }
+      tone: { type: string, enum: [neutral, polite, firm] }
+      issuerName: { type: string, maxLength: 160 }
+      recipientName: { type: string, maxLength: 160 }
+      documentNumber: { type: string, maxLength: 80 }
+      issueDate: { type: string, pattern: "^([0-9]{4}-[0-9]{2}-[0-9]{2})?$" }
+      dueDate: { type: string, pattern: "^([0-9]{4}-[0-9]{2}-[0-9]{2})?$" }
+      contextLines: { type: array, maxItems: 20, items: { type: string, minLength: 1, maxLength: 1000 } }
+      draftingInstruction: { type: string, maxLength: 1000, description: "Optional untrusted organisation preference; never copied into the business document or used to supply missing business facts." }
+      financialInput: { $ref: "#/components/schemas/FinancialInput" }
+      processingConsent: { type: boolean }
+      idempotencyKey: { type: string, format: uuid }
+  CustomerAIPreview:
+    type: object
+    required: [id, task, status, title, content, missingFields, limitations, modelUsed, providerCalls, inputHash, previewHash, acceptedDocumentId]
+    properties:
+      id: { type: string }
+      task: { $ref: "#/components/schemas/CustomerAITask" }
+      status: { type: string, enum: [ready, needs_information, manual_fallback, unsupported, running] }
+      title: { type: string }
+      content: { $ref: "#/components/schemas/CanonicalDocument" }
+      missingFields: { type: array, items: { type: string } }
+      limitations: { type: array, items: { type: string } }
+      modelUsed: { type: [string, "null"] }
+      providerCalls: { type: [integer, "null"] }
+      inputHash: { type: string }
+      previewHash: { type: string }
+      acceptedDocumentId: { type: [string, "null"] }
+  CustomerAISelection:
+    type: object
+    additionalProperties: false
+    required: [title, content, confirmBusinessDraft]
+    properties:
+      title: { type: string, minLength: 1, maxLength: 160 }
+      content: { $ref: "#/components/schemas/CanonicalDocument" }
+      confirmBusinessDraft: { type: boolean }
+  CustomerAIUsage:
+    type: object
+    required: [enabled, workspaceUsed, workspaceDailyLimit, minuteLimit, globalAvailable, manualFallbackAvailable, policyNotice]
+    properties:
+      enabled: { type: boolean }
+      workspaceUsed: { type: integer }
+      workspaceDailyLimit: { type: integer }
+      minuteLimit: { type: integer }
+      globalAvailable: { type: boolean }
+      manualFallbackAvailable: { type: boolean }
+      policyNotice: { type: string }

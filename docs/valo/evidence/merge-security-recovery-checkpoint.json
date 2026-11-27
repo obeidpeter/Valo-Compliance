@@ -1,0 +1,132 @@
+{
+  "recordedAt": "2026-11-14T19:35:06.852Z",
+  "runtimeRevision": "8b60e345ecf54a87cca13b9eaf3d257430876f81",
+  "reviewMerge": "14b1d5283eeb667800a48561b032cd1476bb92e6",
+  "reviewAlreadyInHistory": true,
+  "scope": "Partial development merge-security, real HTTP log capture, internal readiness and isolated synthetic recovery",
+  "proof": [
+    {
+      "path": "docs/valo/evidence/merge-operations-tests.txt",
+      "sha256": "6e69f9e0de92825682889a2c4c84ab96a636ffac12631a8a2ae7250c15adaebe",
+      "tests": 9,
+      "passed": 9,
+      "skipped": 0
+    },
+    {
+      "path": "docs/valo/evidence/merge-api-regression.txt",
+      "sha256": "19e1a5c5ddcb3d0ccdc13af7170280d4992a5746f13465a91784a31dffe7a5f2",
+      "tests": 173,
+      "passed": 172,
+      "skipped": 1
+    },
+    {
+      "path": "docs/valo/evidence/merge-runtime-boundaries.txt",
+      "sha256": "6f03a4f7b3d74dd051f756bd8e404ef0f25d47f93cdfed2419fcb6fe06654bfd",
+      "tests": 45,
+      "passed": 45,
+      "skipped": 0
+    },
+    {
+      "path": "docs/valo/evidence/merge-database-tests.txt",
+      "sha256": "f07403dc5bcc26cec7ee203fdab9225f66ebefa8f0a158e9583629999b95da43",
+      "tests": 62,
+      "passed": 62,
+      "skipped": 0
+    },
+    {
+      "path": "docs/valo/evidence/merge-export-tests.txt",
+      "sha256": "d037a275fc14f0ea8c4d4f972865e84103f5c68b740661ef86eca8ea52ddbec8",
+      "tests": 10,
+      "passed": 10,
+      "skipped": 0
+    },
+    {
+      "path": "docs/valo/evidence/merge-foundation-tests.txt",
+      "sha256": "2689c038e094c3cd6819cb0c694c9496e02750aee13aa7a9b30f8d7e392d7470",
+      "tests": 168,
+      "passed": 168,
+      "skipped": 0
+    },
+    {
+      "path": "docs/valo/evidence/merge-typecheck.txt",
+      "sha256": "ae68aed7058d6236326b5449166c41f7b46237a1e5555d55afd8105f332ee881"
+    },
+    {
+      "path": "docs/valo/evidence/isolated-development-recovery.json",
+      "sha256": "cd8da446017d188166f4373263be550604057ad54a6b8123d3d9400231186c01"
+    },
+    {
+      "path": "docs/valo/evidence/http-private-log-capture.json",
+      "sha256": "8c0cd012d1f15f8cdf421fc4e99186f44261e8a3c4be1c82a5c3f1d72d4155ae"
+    },
+    {
+      "path": "docs/valo/evidence/merge-security-detectors.json",
+      "sha256": "8bd38ee74cfe7c09e04422b624f9504e6e618453ed3e5ac9fa0c2d9b923cbddb"
+    },
+    {
+      "path": "docs/valo/evidence/merge-final-register-tests.txt",
+      "sha256": "a8b74f226e9ac9f7a58bdbf3e9e4e37df0f9829d262aa8b60506b933bf82987c"
+    },
+    {
+      "path": "docs/valo/evidence/merge-final-typecheck.txt",
+      "sha256": "6dae4af028f38ac5d5da438946ef17f14111f39d020f1f87bb3719a1d18ac818"
+    },
+    {
+      "path": "docs/valo/evidence/merge-requirements-refresh.txt",
+      "sha256": "81214d1d881098b9d6539ce0c3050211d4407ecc9cce58f0a706fd87578c8065"
+    }
+  ],
+  "recovery": {
+    "passed": true,
+    "restoreAndValidationElapsedMs": 1716,
+    "elapsedMs": 8303,
+    "cutoffAt": "2026-11-14T19:16:43.459Z",
+    "productionProof": false,
+    "appStorageRestoreProof": false,
+    "physicalErasureComplete": false
+  },
+  "operationalReadinessAccepted": false,
+  "syntheticMissingReceiptOrders": 94,
+  "nativeStaticFindingAwaitingAssessment": 1,
+  "ciActualMainMergeExecution": "not_performed_main_not_merged",
+  "newFormalAcceptanceCases": {
+    "sourceRules": 0,
+    "customerAI": 0,
+    "editorial": 0
+  },
+  "R1Accepted": false,
+  "R2Accepted": false,
+  "launchEnabled": false,
+  "livePaymentsEnabled": false,
+  "inferenceBudgetOrQuotaIncreased": false,
+  "retention35Days": "unresolved",
+  "retentionReference": {
+    "url": "https://docs.replit.com/features/data-and-storage/data-recovery",
+    "lookup": "Official documentation rechecked: default 7-day PITR, eligible plans up to 28 days; actual account configuration unverified"
+  },
+  "nafdac": {
+    "path": "docs/content-candidates/source-evidence/nafdac_cap_f33.pdf",
+    "sha256": "3099b153d913872ef0d839110a65c8451f758d145eeadd54ebc2f049ff663f07",
+    "bytes": 31142,
+    "pages": 8,
+    "publicationAccepted": false
+  },
+  "dependencyEngineCanary": {
+    "genuineRegistryAudit": true,
+    "packageInstalled": false,
+    "detected": true,
+    "counts": {
+      "critical": 0,
+      "high": 2,
+      "moderate": 2,
+      "low": 0,
+      "info": 0
+    }
+  },
+  "finalValidation": {
+    "workspaceTypecheck": "passed",
+    "registerEngineeringTests": 168,
+    "exactRequirementsPreserved": 127,
+    "fullRequirementAccepted": false
+  }
+}

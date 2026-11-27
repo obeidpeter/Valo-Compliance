@@ -1,0 +1,209 @@
+{
+  "suite": "supplied-reminder-candidate-vertical-slice",
+  "startedAt": "2026-11-14T04:19:49.914Z",
+  "finishedAt": "2026-11-14T04:19:55.600Z",
+  "sourceCorpusHash": "8c828ad115a855da9d725aaa8ecb76d91e36daa4a9142571c0a45d306ec995e2",
+  "resumedExactPriorProviderInputs": true,
+  "suppliedCasesExecuted": 4,
+  "passed": 4,
+  "failed": 0,
+  "blocked": 0,
+  "actualProviderAttempts": 2,
+  "newProviderAttemptsThisExecution": 0,
+  "faultInjectionCases": 0,
+  "managedIdentityEvaluated": false,
+  "serviceLayerOnly": true,
+  "scope": "Four original reminder cases; two request the real configured provider and two intentionally stop at missing-information/zero-balance preflight. Real saved revisions, queue worker, private DOCX/PDF and foreign-tenant rejection. Not the full 60-case evaluation.",
+  "syntheticRecordsAndProviderQuotaRetained": true,
+  "AI008Accepted": false,
+  "R1Accepted": false,
+  "R2Accepted": false,
+  "results": [
+    {
+      "caseID": "CAI-CAND-REM-01",
+      "status": "pass",
+      "expectsProvider": true,
+      "previewId": "7f545968-ae44-4a8a-9c12-0d9501c9f3cb",
+      "previewStatus": "ready",
+      "actualProviderAttempts": 1,
+      "providerRuns": [
+        {
+          "cost": null,
+          "model": "gpt-5.4-mini-2026-03-17",
+          "usage": {
+            "inputTokens": 241,
+            "totalTokens": 269,
+            "outputTokens": 28
+          },
+          "attempt": 1,
+          "outcome": "validated",
+          "latencyMs": 1234,
+          "responseId": "chatcmpl-EjzMJGBM6ZWZbGjNkmOFWa6I1mJX8",
+          "outboundAttempted": true
+        }
+      ],
+      "promptVersion": "customer-extractive-v1/customer-ai-development-notice-v1",
+      "failureCode": null,
+      "documentId": "2758eb3b-7f38-4bef-8bd5-b6199972c8f5",
+      "revision": 3,
+      "balance": {
+        "invoiceKobo": "10000000",
+        "recordedPaymentsKobo": "3000000",
+        "netRecordedBalanceKobo": "7000000",
+        "amountDueKobo": "7000000",
+        "excessToReconcileKobo": "0"
+      },
+      "exports": [
+        {
+          "id": "19439c5e-b3aa-4c28-a415-0383ceab74aa",
+          "format": "docx",
+          "status": "ready",
+          "checksum": "0086320c2eef1825ac2967dd0bb841b26e8e8d472aa2e1f8d78bea7e6c9459e2",
+          "bytes": 12070,
+          "standardReaderParsed": true
+        },
+        {
+          "id": "9825f484-41e5-42a8-85f9-93494d95d432",
+          "format": "pdf",
+          "status": "ready",
+          "checksum": "982c06eb8793bf3c912b1c00583594d0c9a33721c63e06cfaf1721a28535c892",
+          "bytes": 47404,
+          "standardReaderParsed": true
+        }
+      ],
+      "tenantIsolationPassed": true
+    },
+    {
+      "caseID": "CAI-CAND-REM-02",
+      "status": "pass",
+      "expectsProvider": false,
+      "previewId": "01682c34-7f49-4a8e-b851-8c3cc600cb62",
+      "previewStatus": "needs_information",
+      "actualProviderAttempts": 0,
+      "providerRuns": [],
+      "promptVersion": "customer-extractive-v1/customer-ai-development-notice-v1",
+      "failureCode": null,
+      "documentId": "b5082d48-9acb-4bd4-8755-c714bc686408",
+      "revision": 3,
+      "balance": {
+        "invoiceKobo": "30",
+        "recordedPaymentsKobo": "10",
+        "netRecordedBalanceKobo": "20",
+        "amountDueKobo": "20",
+        "excessToReconcileKobo": "0"
+      },
+      "exports": [
+        {
+          "id": "8320f9e2-ccd0-4b21-b985-10c301314f4e",
+          "format": "docx",
+          "status": "ready",
+          "checksum": "3c340f9a0ab7a2c16f2f274ce9af9434d2b0d3c90aae3ea08ad0c056db384e07",
+          "bytes": 11996,
+          "standardReaderParsed": true
+        },
+        {
+          "id": "df467cc3-4b75-465a-aaa1-1a91b6cc5c88",
+          "format": "pdf",
+          "status": "ready",
+          "checksum": "862113c8592e5f22fc8c35c0db0dd9485b0cefce9d8e788214400b9b62cafad2",
+          "bytes": 46955,
+          "standardReaderParsed": true
+        }
+      ],
+      "tenantIsolationPassed": true
+    },
+    {
+      "caseID": "CAI-CAND-REM-03",
+      "status": "pass",
+      "expectsProvider": true,
+      "previewId": "420c17e5-d7af-47f3-86bf-bb85a24bf569",
+      "previewStatus": "ready",
+      "actualProviderAttempts": 1,
+      "providerRuns": [
+        {
+          "cost": null,
+          "model": "gpt-5.4-mini-2026-03-17",
+          "usage": {
+            "inputTokens": 239,
+            "totalTokens": 267,
+            "outputTokens": 28
+          },
+          "attempt": 1,
+          "outcome": "validated",
+          "latencyMs": 731,
+          "responseId": "chatcmpl-EjzMaj11boGlEqf0trQojrWXI8KCX",
+          "outboundAttempted": true
+        }
+      ],
+      "promptVersion": "customer-extractive-v1/customer-ai-development-notice-v1",
+      "failureCode": null,
+      "documentId": "16711579-8775-4741-812e-00a029bd3659",
+      "revision": 3,
+      "balance": {
+        "invoiceKobo": "2000000",
+        "recordedPaymentsKobo": "750000",
+        "netRecordedBalanceKobo": "1250000",
+        "amountDueKobo": "1250000",
+        "excessToReconcileKobo": "0"
+      },
+      "exports": [
+        {
+          "id": "246f81d2-4ff6-4f11-b6e1-dd510c6a48f0",
+          "format": "docx",
+          "status": "ready",
+          "checksum": "9aa227c071b1159a9ceead1759d694543cbec2412d6e21ea2afbe68ddb274197",
+          "bytes": 12080,
+          "standardReaderParsed": true
+        },
+        {
+          "id": "11b7255a-63a8-4716-9bac-03be61299815",
+          "format": "pdf",
+          "status": "ready",
+          "checksum": "23628adca8580d044cc7793b043f25c9e968a12f4a89b1bd8f95651776ed2d64",
+          "bytes": 47451,
+          "standardReaderParsed": true
+        }
+      ],
+      "tenantIsolationPassed": true
+    },
+    {
+      "caseID": "CAI-CAND-REM-04",
+      "status": "pass",
+      "expectsProvider": false,
+      "previewId": "ae05c803-d83a-4e13-82c5-7e8347f599f2",
+      "previewStatus": "needs_information",
+      "actualProviderAttempts": 0,
+      "providerRuns": [],
+      "promptVersion": "customer-extractive-v1/customer-ai-development-notice-v1",
+      "failureCode": null,
+      "documentId": "c21e6472-192a-4b1e-a9e2-077142bf569f",
+      "revision": 3,
+      "balance": {
+        "invoiceKobo": "1000000",
+        "recordedPaymentsKobo": "1100000",
+        "netRecordedBalanceKobo": "-100000",
+        "amountDueKobo": "0",
+        "excessToReconcileKobo": "100000"
+      },
+      "exports": [
+        {
+          "id": "5073c45d-4033-45e2-bf8d-a411174d1768",
+          "format": "docx",
+          "status": "ready",
+          "checksum": "eb93b40ac8a3cf07a60a91d39851a70e168572b727583415a7c7f415d8a48d18",
+          "bytes": 12028,
+          "standardReaderParsed": true
+        },
+        {
+          "id": "28bb9626-2d30-4839-a6cc-9bc2d1fb5a25",
+          "format": "pdf",
+          "status": "ready",
+          "checksum": "4261ef7919b72dc55a262f8ada52b98dfb16c36169751cdbbebc92dad6ed87b0",
+          "bytes": 47061,
+          "standardReaderParsed": true
+        }
+      ],
+      "tenantIsolationPassed": true
+    }
+  ]
+}

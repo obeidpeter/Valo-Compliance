@@ -1,0 +1,68 @@
+[
+  {
+    "failures": [
+      {
+        "evidence": [
+          "2026-11-14T21:54:04.1842503Z     not ok 6 - native private storage deletion and repeated late-write replay remove actual synthetic bytes",
+          "2026-11-14T21:54:04.1849103Z       error: 'PRIVATE_STORAGE_UNCONFIGURED'",
+          "2026-11-14T21:54:04.1849667Z       code: 'ERR_TEST_FAILURE'",
+          "2026-11-14T21:54:04.1962073Z not ok 4 - resumable physical development erasure with retained exclusions and replay",
+          "2026-11-14T21:54:04.1969076Z   error: 'PRIVATE_STORAGE_UNCONFIGURED'",
+          "2026-11-14T21:54:04.1969855Z   code: 'ERR_TEST_FAILURE'"
+        ],
+        "failedSteps": [
+          "Prove tenant boundaries, conflicts and history"
+        ],
+        "name": "Synthetic PostgreSQL isolation and concurrency"
+      },
+      {
+        "evidence": [
+          "2026-11-14T21:55:16.9528968Z # ✘ [ERROR] No matching export in \"controlled-effects:valo-store\" for import \"authorizeWorkspaceWrite\"",
+          "2026-11-14T21:55:16.9538420Z #       7 │ import { ValoProblem,authorizeWorkspaceWrite, type WorkspaceActor }...",
+          "2026-11-14T21:55:16.9624714Z not ok 2 - actual export entries and worker startup reject before database, queue or storage effects",
+          "2026-11-14T21:55:16.9658176Z     src/lib/valo-exports.ts:7:21: ERROR: No matching export in \"controlled-effects:valo-store\" for import \"authorizeWorkspaceWrite\"",
+          "2026-11-14T21:55:16.9660253Z   code: 'ERR_TEST_FAILURE'"
+        ],
+        "failedSteps": [
+          "Reject unsafe export modes and stale account requests"
+        ],
+        "name": "Foundation typecheck and unit tests"
+      }
+    ],
+    "run": 43645147968,
+    "url": "https://github.com/obeidpeter/Valo-Compliance/actions/runs/43645147968"
+  },
+  {
+    "failures": [
+      {
+        "evidence": [
+          "2026-11-14T21:54:02.7741281Z     not ok 6 - native private storage deletion and repeated late-write replay remove actual synthetic bytes",
+          "2026-11-14T21:54:02.7747377Z       error: 'PRIVATE_STORAGE_UNCONFIGURED'",
+          "2026-11-14T21:54:02.7748080Z       code: 'ERR_TEST_FAILURE'",
+          "2026-11-14T21:54:02.8022031Z not ok 4 - resumable physical development erasure with retained exclusions and replay",
+          "2026-11-14T21:54:02.8025599Z   error: 'PRIVATE_STORAGE_UNCONFIGURED'",
+          "2026-11-14T21:54:02.8025975Z   code: 'ERR_TEST_FAILURE'"
+        ],
+        "failedSteps": [
+          "Prove tenant boundaries, conflicts and history"
+        ],
+        "name": "Synthetic PostgreSQL isolation and concurrency"
+      },
+      {
+        "evidence": [
+          "2026-11-14T21:55:05.3158144Z # ✘ [ERROR] No matching export in \"controlled-effects:valo-store\" for import \"authorizeWorkspaceWrite\"",
+          "2026-11-14T21:55:05.3209612Z #       7 │ import { ValoProblem,authorizeWorkspaceWrite, type WorkspaceActor }...",
+          "2026-11-14T21:55:05.3250783Z not ok 2 - actual export entries and worker startup reject before database, queue or storage effects",
+          "2026-11-14T21:55:05.3255278Z     src/lib/valo-exports.ts:7:21: ERROR: No matching export in \"controlled-effects:valo-store\" for import \"authorizeWorkspaceWrite\"",
+          "2026-11-14T21:55:05.3255993Z   code: 'ERR_TEST_FAILURE'"
+        ],
+        "failedSteps": [
+          "Reject unsafe export modes and stale account requests"
+        ],
+        "name": "Foundation typecheck and unit tests"
+      }
+    ],
+    "run": 43645143946,
+    "url": "https://github.com/obeidpeter/Valo-Compliance/actions/runs/43645143946"
+  }
+]

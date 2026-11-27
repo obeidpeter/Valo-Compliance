@@ -1,0 +1,843 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
+import {
+  db,
+  pool,
+  valoPrivacyErasureObjects,
+  valoPrivacyCases,
+  valoPrivacyEvents,
+  valoPrivacyTombstones,
+  valoWorkspaces,
+  valoMemberships,
+  valoStaffAssignments,
+  valoStaffAccessAudit,
+  valoProfileVersions,
+  valoDocuments,
+  valoDocumentRevisions,
+  valoSupportTickets,
+  valoSupportCases,
+  valoSupportMessages,
+  valoSupportEscalations,
+  valoEvents,
+  valoAIDrafts,
+  valoExportJobs,
+  valoFileAssets,
+  valoExportObjects,
+  valoPrivacyMessages,
+  valoSavedTemplates,
+  valoRuleNotices,
+  valoEditionNotices,
+  valoConsentChanges,
+  valoMessages,
+} from "@workspace/db";
+import { eq, inArray, sql } from "drizzle-orm";
+import { guardRefusal } from "../../platform/http-errors";
+import { createDocument } from "../documents";
+import { resolveWorkspace, saveProfile, authorizeWorkspaceWrite } from "../workspaces";
+import { syntheticProfile, syntheticDocument } from "../../lib/valo-test-fixtures";
+import {
+  createPrivacyCase,
+  confirmPrivacyCase,
+  simpleStaffPrivacyAction,
+  readPrivacyCase,
+  privacyChange,
+} from "./valo-privacy";
+import {
+  applicationErasurePhaseCount,
+  processPrivacyErasure,
+  replayErasureObjects,
+  replayErasedApplication,
+  closePrivacyErasureLocks,
+} from "./valo-privacy-erasure";
+import { erasureProofMode, erasureProofStorage } from "../../test-support/erasure-proof-storage";
+import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
+import { signErasureSeal, type ErasureSeal } from "./valo-erasure-seal";
+import { privacySigner } from "../../lib/valo-privacy-keys";
+import { executeExport } from "../exports/valo-exports";
+
+test(
+  "resumable physical development erasure with retained exclusions and replay",
+  {
+    skip: process.env.VALO_RUN_DB_TESTS !== "synthetic-development-only",
+    timeout: 60000,
+  },
+  async (t) => {
+    assertDevelopmentRuntime();
+    // Fail a requested native proof before SQL fixture creation, rather than
+    // silently falling back or failing again during cleanup.
+    const mode = erasureProofMode(process.env);
+    const run = randomUUID(),
+      a = await resolveWorkspace(`synthetic-erasure-${run}`),
+      b = await resolveWorkspace(`synthetic-erasure-other-${run}`);
+    const storage = await erasureProofStorage(a.workspaceId, mode);
+    const staff = { identityId: `synthetic-privacy-${run}`, recentMfa: true, verifiedAt: Date.now() };
+    let id = "",
+      version = 0;
+    let preparedCaseId = "";
+    let storageKey = "";
+    const privateObjects: { key: string; checksum: string; jobId: string; queueId: string }[] = [];
+    const reason = "Controlled synthetic application erasure, retaining financial and external exclusions.";
+    try {
+      await db.insert(valoStaffAssignments).values({
+        id: randomUUID(),
+        identityId: staff.identityId,
+        role: "privacy",
+        grantedBy: "synthetic-test-only",
+        reason,
+      });
+      await saveProfile(a, { expectedRevision: 0, profile: syntheticProfile });
+      await createDocument(a, syntheticDocument);
+      await createDocument(b, syntheticDocument);
+      // A rule's and a template edition's notices to each workspace (docs/architecture/processing-inventory.md,
+      // slice 5): the erasure removes the erased workspace's, and leaves the other's.
+      for (const workspace of [a, b]) {
+        await db.insert(valoRuleNotices).values({
+          workspaceId: workspace.workspaceId,
+          ruleId: "SYNTHETIC-ERASURE-RULE",
+          version: 1,
+          kind: "withdrawn",
+          title: "Synthetic rule",
+          reason: "Synthetic withdrawal for the erasure test.",
+          results: 1,
+          tasks: 0,
+        });
+        await db.insert(valoEditionNotices).values({
+          workspaceId: workspace.workspaceId,
+          route: "library",
+          edition: randomUUID(),
+          kind: "withdrawn",
+          title: "Synthetic template",
+          version: 1,
+          reason: "Synthetic withdrawal for the erasure test.",
+          held: true,
+          documents: 0,
+        });
+        await db.insert(valoConsentChanges).values({
+          workspaceId: workspace.workspaceId,
+          consent: "marketing",
+          choice: true,
+          noticeVersion: "0".repeat(64),
+          actorId: workspace.identityId,
+        });
+        // A message Valo owed each workspace (docs/architecture/messages.md, slice 1a).
+        await db.insert(valoMessages).values({
+          id: randomUUID(),
+          workspaceId: workspace.workspaceId,
+          kind: "purchase_receipt",
+          class: "necessary",
+          recipientIdentityId: workspace.identityId,
+          subjectId: randomUUID(),
+        });
+      }
+      await db.insert(valoSavedTemplates).values(
+        Array.from({ length: 101 }, (_, i) => ({
+          id: randomUUID(),
+          workspaceId: a.workspaceId,
+          templateId: "CONTROLLED-SAVED-" + i,
+          savedTitle: "Controlled metadata only",
+          savedVersion: 1,
+        })),
+      );
+      const [revision] = await db
+        .select()
+        .from(valoDocumentRevisions)
+        .where(eq(valoDocumentRevisions.workspaceId, a.workspaceId));
+      assert.ok(revision);
+      for (const state of ["retained", "pending", "cleanup"] as const) {
+        const key = `valo/development/${a.workspaceId}/${randomUUID()}.pdf`,
+          jobId = randomUUID(),
+          queueId = randomUUID();
+        const bytes = Buffer.from(`Synthetic ${state} erasure bytes; not a PDF-rendering test.`);
+        const stored = state === "pending" ? { checksum: "0".repeat(64) } : await storage.write(key, bytes);
+        if (state !== "pending") assert.deepEqual(await storage.read(key, stored.checksum), bytes);
+        privateObjects.push({ key, checksum: stored.checksum, jobId, queueId });
+        await db.insert(valoExportJobs).values({
+          id: jobId,
+          workspaceId: a.workspaceId,
+          documentId: revision.documentId,
+          revisionId: revision.id,
+          revision: revision.revision,
+          format: "pdf",
+          renderVersion: `erasure-${state}`,
+          sourceHash: revision.contentHash,
+          requestedBy: a.identityId,
+          queueId,
+          status: state === "retained" ? "ready" : "running",
+        });
+        await db.execute(sql`INSERT INTO valo_jobs.job(id,name,data,start_after)
+        VALUES(${queueId}::uuid,'valo-manual-export-v1',
+          ${JSON.stringify({ ...(state === "pending" ? {} : { workspaceId: a.workspaceId }), jobId, privateMarker: "SYNTHETIC-QUEUED-COPY" })}::jsonb,
+          now()+interval '1 hour')`);
+        await db
+          .insert(valoExportObjects)
+          .values({ objectKey: key, workspaceId: a.workspaceId, jobId, queueId, state });
+        if (state === "retained")
+          await db.insert(valoFileAssets).values({
+            id: randomUUID(),
+            workspaceId: a.workspaceId,
+            jobId,
+            objectKey: key,
+            checksum: stored.checksum,
+            size: bytes.length,
+            mime: "application/pdf",
+          });
+      }
+      await db.insert(valoAIDrafts).values({
+        id: randomUUID(),
+        workspaceId: a.workspaceId,
+        actorId: a.identityId,
+        idempotencyKey: randomUUID(),
+        inputHash: "a".repeat(64),
+        task: "invoice",
+        status: "preview",
+        promptVersion: "controlled",
+        preview: { privateMarker: "ERASE-ME" },
+        plan: { privateMarker: "ERASE-ME" },
+        providerCalls: 1,
+        budgetReserved: true,
+        providerRuns: [
+          { responseId: "synthetic-no-real-provider-call", usage: { inputTokens: 10, outputTokens: 10 } },
+        ],
+      });
+      await db.execute(sql`INSERT INTO valo_jobs.job(id,name,data,start_after) VALUES(${randomUUID()}::uuid,
+      'valo-manual-export-v1',${JSON.stringify({
+        workspaceId: a.workspaceId,
+        jobId: randomUUID(),
+        privateMarker: "SYNTHETIC-ORPHAN-PAYLOAD",
+      })}::jsonb,now()+interval '1 hour')`);
+      const prepared = await createPrivacyCase(a, "synthetic-private-contact@example.invalid", {
+        kind: "export",
+        idempotencyKey: randomUUID(),
+        message: "SYNTHETIC-PRIVATE-REQUEST-TEXT",
+        acknowledgement: true,
+      });
+      preparedCaseId = prepared.reference.slice(5);
+      const [supportCase] = await db
+        .select()
+        .from(valoSupportCases)
+        .where(eq(valoSupportCases.workspaceId, a.workspaceId));
+      assert.ok(supportCase);
+      await db.insert(valoSupportMessages).values(
+        Array.from({ length: 203 }, (_, n) => ({
+          id: randomUUID(),
+          caseId: supportCase.id,
+          workspaceId: a.workspaceId,
+          authorId: a.identityId,
+          authorKind: "customer" as const,
+          visibility: "customer" as const,
+          body: `SYNTHETIC-ERASE-SUPPORT-REPLY-${n}`,
+        })),
+      );
+      await db.insert(valoSupportEscalations).values({
+        id: randomUUID(),
+        caseId: supportCase.id,
+        targetKind: "content",
+        targetId: randomUUID(),
+        targetHash: "synthetic-erasure-fixture-not-a-publication",
+        targetVersion: 1,
+        reason: "SYNTHETIC-PRIVATE-CONTENT-COMPLAINT",
+      });
+      await db.insert(valoPrivacyMessages).values({
+        id: randomUUID(),
+        workspaceId: a.workspaceId,
+        caseId: preparedCaseId,
+        replyToVersion: 1,
+        body: "SYNTHETIC-ERASE-PRIVATE-CASE-REPLY",
+      });
+      await db.transaction(async (tx) => {
+        const existing = await readPrivacyCase(tx, preparedCaseId);
+        await privacyChange(
+          tx,
+          existing,
+          { identityId: "synthetic-fixture-setup", type: "worker" },
+          "synthetic_result_fixture",
+          "Controlled prepared-data fixture, not actual fulfilment.",
+          { resultJson: { privateMarker: "SYNTHETIC-PREPARED-RESULT" } },
+        );
+      });
+      const request = await createPrivacyCase(a, "synthetic@example.invalid", {
+        kind: "deletion",
+        idempotencyKey: randomUUID(),
+        message: reason,
+        acknowledgement: true,
+      });
+      id = request.reference.slice(5);
+      let detail = await confirmPrivacyCase(a, id, { expectedVersion: 1, acknowledgement: true });
+      detail = await simpleStaffPrivacyAction(staff, id, {
+        expectedVersion: detail.request.version,
+        action: "claim",
+        reason,
+      });
+      version = detail.request.version;
+      const key = `valo/development/${a.workspaceId}/${randomUUID()}.pdf`;
+      // Controlled fixture captured before sealing; production capture reads the
+      // actual export reservation/file rows in the same quarantine transaction.
+      await db
+        .insert(valoPrivacyErasureObjects)
+        .values({ workspaceId: a.workspaceId, caseId: id, objectKey: key });
+      const act = (action: "start_erasure" | "resume_erasure", acknowledgement = true) =>
+        processPrivacyErasure(
+          { ...staff, verifiedAt: Date.now() },
+          id,
+          { expectedVersion: version, action, reason, acknowledgement },
+          storage.remove,
+        );
+      await t.test("unacknowledged, wrong-role and stale requests cannot delete content", async () => {
+        await assert.rejects(() => act("start_erasure", false), { status: 422 });
+        await assert.rejects(
+          () =>
+            processPrivacyErasure({ ...staff, recentMfa: false }, id, {
+              expectedVersion: version,
+              action: "start_erasure",
+              reason,
+              acknowledgement: true,
+            }),
+          { status: 403 },
+        );
+        await assert.rejects(
+          () =>
+            processPrivacyErasure(staff, id, {
+              expectedVersion: 0,
+              action: "start_erasure",
+              reason,
+              acknowledgement: true,
+            }),
+          { status: 409 },
+        );
+        assert.equal(
+          (await db.select().from(valoDocuments).where(eq(valoDocuments.workspaceId, a.workspaceId))).length,
+          1,
+        );
+        const qid = privateObjects[0]!.queueId;
+        await db.execute(sql`UPDATE valo_jobs.job SET data=jsonb_set(data,'{workspaceId}',${JSON.stringify(b.workspaceId)}::jsonb)
+        WHERE id=${qid}::uuid AND name='valo-manual-export-v1'`);
+        await assert.rejects(() => act("start_erasure"), {
+          status: 409,
+          message: /Queue ownership is inconsistent/,
+        });
+        await db.execute(sql`UPDATE valo_jobs.job SET data=jsonb_set(data,'{workspaceId}',${JSON.stringify(a.workspaceId)}::jsonb)
+        WHERE id=${qid}::uuid AND name='valo-manual-export-v1'`);
+      });
+      await t.test(
+        "quarantine persists before physical deletion and denies workspace resurrection",
+        async () => {
+          const raced = await Promise.allSettled([act("start_erasure"), act("start_erasure")]);
+          assert.equal(raced.filter((r) => r.status === "fulfilled").length, 1);
+          detail = (raced.find((r) => r.status === "fulfilled") as PromiseFulfilledResult<typeof detail>)
+            .value;
+          version = detail.request.version;
+          assert.equal(detail.request.status, "in_progress");
+          assert.equal(
+            (await db.select().from(valoPrivacyTombstones).where(eq(valoPrivacyTombstones.caseId, id)))
+              .length,
+            1,
+          );
+          await assert.rejects(() => resolveWorkspace(a.identityId), { status: 403 });
+          assert.equal(
+            (await db.select().from(valoDocuments).where(eq(valoDocuments.workspaceId, a.workspaceId)))
+              .length,
+            1,
+          );
+        },
+      );
+      await t.test(
+        "object failure is retained and blocks content purge; repeated deletion is retryable",
+        async () => {
+          const queued = await db.execute(sql`SELECT count(*)::int AS count FROM valo_jobs.job
+        WHERE data->>'workspaceId'=${a.workspaceId}
+          OR id=ANY(${`{${privateObjects.map((object) => object.queueId).join(",")}}`}::uuid[])`);
+          assert.equal(queued.rows[0]!.count, 0, "scoped queued private payloads survived the access fence");
+          let calls = 0;
+          await assert.rejects(
+            () =>
+              replayErasureObjects(id, async () => {
+                calls++;
+              }),
+            { status: 409 },
+          );
+          assert.equal(calls, 0, "unfinished cases never dispatch recovery deletes");
+          detail = await processPrivacyErasure(
+            { ...staff, verifiedAt: Date.now() },
+            id,
+            { expectedVersion: version, action: "resume_erasure", reason, acknowledgement: true },
+            async () => {
+              throw Error("controlled storage outage");
+            },
+          );
+          version = detail.request.version;
+          assert.equal(
+            (
+              await db
+                .select()
+                .from(valoPrivacyErasureObjects)
+                .where(eq(valoPrivacyErasureObjects.caseId, id))
+            )[0]!.status,
+            "failed",
+          );
+          assert.equal(
+            (await db.select().from(valoDocuments).where(eq(valoDocuments.workspaceId, a.workspaceId)))
+              .length,
+            1,
+          );
+          detail = await processPrivacyErasure(
+            { ...staff, verifiedAt: Date.now() },
+            id,
+            { expectedVersion: version, action: "resume_erasure", reason, acknowledgement: true },
+            async (received) => {
+              assert.ok([key, ...privateObjects.map((o) => o.key)].includes(received));
+              await storage.remove(received);
+            },
+          );
+          version = detail.request.version;
+        },
+      );
+      await t.test(
+        "ready, pending and cleanup objects are inventoried once before rows disappear and stale workers stay fenced",
+        async () => {
+          const inventory = await db
+            .select()
+            .from(valoPrivacyErasureObjects)
+            .where(eq(valoPrivacyErasureObjects.caseId, id));
+          assert.equal(inventory.length, 4);
+          assert.equal(new Set(inventory.map((x) => x.objectKey)).size, 4);
+          assert.ok(inventory.every((x) => x.status === "deleted"));
+          for (const object of privateObjects) {
+            const [job] = await db.select().from(valoExportJobs).where(eq(valoExportJobs.id, object.jobId));
+            assert.ok(job);
+            assert.equal(job.status, "failed");
+            assert.notEqual(job.queueId, object.queueId);
+            await executeExport(object.jobId, a.workspaceId, object.queueId);
+            await assert.rejects(
+              () => storage.read(object.key, object.checksum),
+              /PRIVATE_STORAGE_READ_FAILED/,
+            );
+          }
+        },
+      );
+      await t.test(
+        "resume physically removes only scoped rows, keeping explicit unfulfilled records and another tenant",
+        async () => {
+          const remainingSupport = async () =>
+            Number(
+              (
+                await db.execute(sql`SELECT
+        (SELECT count(*) FROM valo_support_messages WHERE workspace_id=${a.workspaceId}::uuid
+          AND (body<>'[Private content removed by verified workspace erasure]' OR (author_kind='customer' AND author_id<>'erased')))+
+        (SELECT count(*) FROM valo_support_escalations e JOIN valo_support_cases c ON c.id=e.case_id
+          WHERE c.workspace_id=${a.workspaceId}::uuid AND e.reason<>'[Private content removed by verified workspace erasure]')+
+        (SELECT count(*) FROM valo_support_tickets WHERE workspace_id=${a.workspaceId}::uuid
+          AND (scope<>'[Private content removed by verified workspace erasure]' OR contact_email<>'erased@invalid')) AS remaining`)
+              ).rows[0]!.remaining,
+            );
+          let supportBatches = 0;
+          const currentPhase = async () =>
+            (
+              await db
+                .select({ phase: valoPrivacyCases.erasurePhase })
+                .from(valoPrivacyCases)
+                .where(eq(valoPrivacyCases.id, id))
+            )[0]!.phase;
+          for (let n = 0; n < 60 && detail.request.status !== "partially_fulfilled"; n++) {
+            const beforePhase = await currentPhase(),
+              before = await remainingSupport();
+            detail = await act("resume_erasure");
+            version = detail.request.version;
+            if (beforePhase === "support_content") {
+              supportBatches++;
+              const after = await remainingSupport();
+              assert.ok(
+                before - after <= 100,
+                "one support phase call may redact at most 100 rows across all copies",
+              );
+              assert.ok(before - after > 0, "the seeded support phase must make bounded progress");
+              if (after > 0)
+                assert.equal(
+                  await currentPhase(),
+                  "support_content",
+                  "never advance while ticket or conversation private text remains",
+                );
+            }
+          }
+          assert.equal(
+            supportBatches,
+            3,
+            "203 replies, one complaint and retained ticket copies require three bounded batches",
+          );
+          assert.equal(await remainingSupport(), 0);
+          assert.equal(detail.request.status, "partially_fulfilled");
+          for (const table of [
+            valoDocuments,
+            valoDocumentRevisions,
+            valoProfileVersions,
+            valoSavedTemplates,
+            valoRuleNotices,
+            valoEditionNotices,
+            valoConsentChanges,
+            valoMessages,
+          ])
+            assert.equal(
+              (await db.select().from(table).where(eq(table.workspaceId, a.workspaceId))).length,
+              0,
+            );
+          for (const table of [valoRuleNotices, valoEditionNotices, valoConsentChanges, valoMessages])
+            assert.equal(
+              (await db.select().from(table).where(eq(table.workspaceId, b.workspaceId))).length,
+              1,
+              "the other workspace's notices stay",
+            );
+          assert.equal(
+            (await db.select().from(valoDocuments).where(eq(valoDocuments.workspaceId, b.workspaceId)))
+              .length,
+            1,
+          );
+          assert.ok(
+            (
+              await db
+                .select()
+                .from(valoSupportTickets)
+                .where(eq(valoSupportTickets.workspaceId, a.workspaceId))
+            ).length > 0,
+          );
+          assert.ok(detail.steps.some((s) => s.system === "external_processors" && s.status === "held"));
+          assert.match(detail.request.resultScope, /not complete account deletion/);
+          const [usage] = await db
+            .select()
+            .from(valoAIDrafts)
+            .where(eq(valoAIDrafts.workspaceId, a.workspaceId));
+          assert.ok(usage);
+          assert.equal(usage.providerCalls, 1);
+          assert.equal(usage.budgetReserved, true);
+          assert.deepEqual(usage.preview, {});
+          assert.equal(usage.plan, null);
+          const support = await db
+            .select()
+            .from(valoSupportTickets)
+            .where(eq(valoSupportTickets.workspaceId, a.workspaceId));
+          assert.ok(
+            (await db.select().from(valoSupportCases).where(eq(valoSupportCases.workspaceId, a.workspaceId)))
+              .length > 0,
+            "minimal case references remain",
+          );
+          const replies = await db
+            .select()
+            .from(valoSupportMessages)
+            .where(eq(valoSupportMessages.workspaceId, a.workspaceId));
+          assert.equal(replies.length, 203);
+          assert.ok(
+            replies.every(
+              (r) =>
+                r.body === "[Private content removed by verified workspace erasure]" &&
+                r.authorId === "erased",
+            ),
+          );
+          assert.ok(
+            support.every(
+              (row) =>
+                row.scope === "[Private content removed by verified workspace erasure]" &&
+                row.contactEmail === "erased@invalid",
+            ),
+          );
+          await db.transaction(async (tx) => {
+            for (const caseId of [id, preparedCaseId]) {
+              const checked = await readPrivacyCase(tx, caseId);
+              assert.equal(checked.message, "[Private content removed by verified workspace erasure]");
+              assert.equal(checked.resultJson, null);
+            }
+          });
+          assert.equal(
+            (
+              await db
+                .select()
+                .from(valoPrivacyMessages)
+                .where(eq(valoPrivacyMessages.workspaceId, a.workspaceId))
+            ).length,
+            0,
+          );
+          assert.equal(usage.providerRuns.length, 1);
+        },
+      );
+      await t.test(
+        "restored membership and late-written objects are re-deleted from retained tombstones",
+        async () => {
+          await db
+            .update(valoMemberships)
+            .set({ active: "yes" })
+            .where(eq(valoMemberships.workspaceId, a.workspaceId));
+          await assert.rejects(() => db.transaction((tx) => authorizeWorkspaceWrite(tx, a)), { status: 403 });
+          await db.insert(valoDocuments).values({ id: randomUUID(), workspaceId: a.workspaceId });
+          const removed: string[] = [];
+          const replay = await replayErasureObjects(id, async (key) => {
+            removed.push(key);
+          });
+          assert.equal(replay.deleted, 4);
+          assert.deepEqual(new Set(removed), new Set([key, ...privateObjects.map((o) => o.key)]));
+          await assert.rejects(() => resolveWorkspace(a.identityId), { status: 403 });
+          assert.equal((await replayErasureObjects(id, async () => {})).deleted, 4);
+          let physical = await replayErasedApplication(id, async () => {});
+          // One phase a call: the replay finishes within one call for each phase.
+          for (let n = 0; n < applicationErasurePhaseCount && physical.remaining; n++)
+            physical = await replayErasedApplication(id, async () => {});
+          assert.equal(physical.remaining, false);
+          assert.equal(
+            (await db.select().from(valoDocuments).where(eq(valoDocuments.workspaceId, a.workspaceId)))
+              .length,
+            0,
+          );
+        },
+      );
+      await t.test(
+        "selected storage backend deletes actual synthetic bytes after late write and repeated replay",
+        async () => {
+          storageKey = key;
+          const bytes = Buffer.from("Synthetic erasure storage probe; not a document-format test.");
+          const stored = await storage.write(key, bytes);
+          assert.deepEqual(await storage.read(key, stored.checksum), bytes);
+          const replay = await replayErasureObjects(id, storage.remove);
+          assert.equal(replay.failed, 0);
+          assert.equal(replay.deleted, 4);
+          await assert.rejects(() => storage.read(key, stored.checksum), /PRIVATE_STORAGE_READ_FAILED/);
+          assert.equal((await replayErasureObjects(id, storage.remove)).failed, 0);
+          t.diagnostic(
+            JSON.stringify({
+              backend: storage.backend,
+              nativeProviderProof: mode === "native-replit",
+              productionProof: false,
+              syntheticOnly: true,
+              storageOperations: storage.stats,
+            }),
+          );
+        },
+      );
+      await t.test("sealed key tampering and corrupted completion proof stop before deletion", async () => {
+        const hostile = `valo/development/${b.workspaceId}/${randomUUID()}.pdf`;
+        const rejected = (e: unknown) =>
+          (e as { cause?: { code?: string }; code?: string }).cause?.code === "23514" ||
+          (e as { code?: string }).code === "23514";
+        await assert.rejects(
+          () =>
+            db
+              .insert(valoPrivacyErasureObjects)
+              .values({ workspaceId: a.workspaceId, caseId: id, objectKey: hostile }),
+          rejected,
+        );
+        const sameWorkspace = `valo/development/${a.workspaceId}/${randomUUID()}.pdf`;
+        await assert.rejects(
+          () =>
+            db
+              .update(valoPrivacyErasureObjects)
+              .set({ objectKey: sameWorkspace })
+              .where(eq(valoPrivacyErasureObjects.caseId, id)),
+          rejected,
+        );
+        const [original] = await db
+          .select()
+          .from(valoPrivacyTombstones)
+          .where(eq(valoPrivacyTombstones.caseId, id));
+        assert.ok(original);
+        await assert.rejects(
+          () =>
+            db
+              .update(valoPrivacyTombstones)
+              .set({ erasureSeal: null })
+              .where(eq(valoPrivacyTombstones.caseId, id)),
+          rejected,
+        );
+        const calls: string[] = [];
+        try {
+          await db
+            .update(valoPrivacyTombstones)
+            .set({ erasureSeal: { ...original.erasureSeal, mac: "b".repeat(64) } })
+            .where(eq(valoPrivacyTombstones.caseId, id));
+          await assert.rejects(
+            () =>
+              replayErasureObjects(id, async (key) => {
+                calls.push(key);
+              }),
+            /ERASURE_SEAL_INVALID/,
+          );
+          assert.equal(calls.length, 0);
+        } finally {
+          await db
+            .update(valoPrivacyTombstones)
+            .set({ erasureSeal: original.erasureSeal })
+            .where(eq(valoPrivacyTombstones.caseId, id));
+        }
+        const [receipt] = await db
+          .select()
+          .from(valoPrivacyEvents)
+          .where(eq(valoPrivacyEvents.caseId, id))
+          .limit(1);
+        assert.ok(receipt);
+        // The case history refuses the change itself (ADM-009). A corrupt copy, such as a damaged restore
+        // could hold, is made in one transaction with its guard off, which no other session sees, and the
+        // replay must still refuse it.
+        const refusal = await db
+          .update(valoPrivacyEvents)
+          .set({ reason: "controlled unsigned corruption" })
+          .where(eq(valoPrivacyEvents.id, receipt.id))
+          .then(
+            () => null,
+            (error: unknown) => error,
+          );
+        // Drizzle reports "Failed query: ..." with the database's own error as its cause.
+        const refusedByGuard = (error: unknown) => {
+          for (let e: unknown = error, depth = 0; e && depth < 5; depth++) {
+            const item = e as { message?: unknown; cause?: unknown };
+            if (/Privacy case history is append-only/.test(String(item.message ?? ""))) return true;
+            e = item.cause;
+          }
+          return false;
+        };
+        assert.ok(refusedByGuard(refusal));
+        // The error handler reads the real refusal as a guard's, by the guard's name, and counts it.
+        assert.equal(guardRefusal(refusal), "valo_privacy_history_guard");
+        const setReason = (reason: string) =>
+          db.transaction(async (tx) => {
+            await tx.execute(
+              sql`ALTER TABLE valo_privacy_events DISABLE TRIGGER valo_privacy_events_append_only`,
+            );
+            const changed = await tx
+              .update(valoPrivacyEvents)
+              .set({ reason })
+              .where(eq(valoPrivacyEvents.id, receipt.id));
+            assert.equal(changed.rowCount, 1);
+            await tx.execute(
+              sql`ALTER TABLE valo_privacy_events ENABLE TRIGGER valo_privacy_events_append_only`,
+            );
+          });
+        try {
+          await setReason("controlled unsigned corruption");
+          await assert.rejects(() =>
+            replayErasureObjects(id, async (key) => {
+              calls.push(key);
+            }),
+          );
+          assert.equal(calls.length, 0);
+        } finally {
+          await setReason(receipt.reason);
+        }
+        try {
+          const absentReceipt = await db.transaction(async (tx) =>
+            signErasureSeal(
+              { ...(original.erasureSeal as ErasureSeal), completedEventHash: "f".repeat(64) },
+              await privacySigner(tx),
+            ),
+          );
+          await db
+            .update(valoPrivacyTombstones)
+            .set({ erasureSeal: absentReceipt })
+            .where(eq(valoPrivacyTombstones.caseId, id));
+          await assert.rejects(
+            () =>
+              replayErasureObjects(id, async (key) => {
+                calls.push(key);
+              }),
+            { status: 409 },
+          );
+          assert.equal(calls.length, 0);
+        } finally {
+          await db
+            .update(valoPrivacyTombstones)
+            .set({ erasureSeal: original.erasureSeal })
+            .where(eq(valoPrivacyTombstones.caseId, id));
+        }
+      });
+      await t.test(
+        "non-development and every nonempty deployment marker stop before deletion I/O",
+        async () => {
+          const oldNode = process.env.NODE_ENV,
+            oldDeployment = process.env.REPLIT_DEPLOYMENT;
+          let calls = 0;
+          try {
+            for (const mode of ["production", "test", undefined]) {
+              if (mode === undefined) delete process.env.NODE_ENV;
+              else process.env.NODE_ENV = mode;
+              await assert.rejects(
+                () =>
+                  replayErasureObjects(id, async () => {
+                    calls++;
+                  }),
+                { code: "DEVELOPMENT_RUNTIME_REQUIRED" },
+              );
+            }
+            process.env.NODE_ENV = "development";
+            for (const marker of ["1", "true", "arbitrary", "false", " "]) {
+              process.env.REPLIT_DEPLOYMENT = marker;
+              await assert.rejects(
+                () =>
+                  replayErasureObjects(id, async () => {
+                    calls++;
+                  }),
+                { code: "DEVELOPMENT_RUNTIME_REQUIRED" },
+              );
+            }
+            assert.equal(calls, 0);
+          } finally {
+            if (oldNode === undefined) delete process.env.NODE_ENV;
+            else process.env.NODE_ENV = oldNode;
+            if (oldDeployment === undefined) delete process.env.REPLIT_DEPLOYMENT;
+            else process.env.REPLIT_DEPLOYMENT = oldDeployment;
+          }
+        },
+      );
+      await t.test(
+        "even a deleted membership cannot recreate an identity with a deletion tombstone",
+        async () => {
+          await db.delete(valoMemberships).where(eq(valoMemberships.workspaceId, a.workspaceId));
+          // Simulate no remaining ownership mapping; the post-cutoff identity
+          // journal must stop creation of a different workspace UUID as well.
+          await db
+            .update(valoWorkspaces)
+            .set({ ownerIdentityId: `synthetic-anonymised-${randomUUID()}` })
+            .where(eq(valoWorkspaces.id, a.workspaceId));
+          await assert.rejects(() => resolveWorkspace(a.identityId), { status: 403 });
+          assert.equal(
+            (await db.select().from(valoMemberships).where(eq(valoMemberships.workspaceId, a.workspaceId)))
+              .length,
+            0,
+          );
+        },
+      );
+    } finally {
+      // Never discard native cleanup locators when the provider result is unknown.
+      try {
+        for (const object of privateObjects) await storage.remove(object.key);
+        if (storageKey) await storage.remove(storageKey);
+        await storage.close();
+      } catch {
+        await closePrivacyErasureLocks();
+        await pool.end();
+        // oxlint-disable-next-line eslint/no-unsafe-finally -- a failed cleanup fails the test, whatever its body did
+        throw Error("ERASURE_PROOF_CLEANUP_PENDING_SYNTHETIC_ROWS_RETAINED");
+      }
+      for (const table of [valoFileAssets, valoExportObjects, valoExportJobs])
+        await db.delete(table).where(eq(table.workspaceId, a.workspaceId));
+      const ids = [a.workspaceId, b.workspaceId];
+      for (const table of [
+        valoPrivacyMessages,
+        valoPrivacyTombstones,
+        valoPrivacyErasureObjects,
+        valoPrivacyEvents,
+        valoPrivacyCases,
+        valoSupportTickets,
+        valoEvents,
+        valoAIDrafts,
+        valoDocumentRevisions,
+        valoDocuments,
+        valoProfileVersions,
+        valoRuleNotices,
+        valoEditionNotices,
+        valoConsentChanges,
+        valoMessages,
+        valoMemberships,
+      ])
+        await db.delete(table).where(inArray(table.workspaceId, ids));
+      await db.delete(valoStaffAccessAudit).where(eq(valoStaffAccessAudit.actorId, staff.identityId));
+      await db.delete(valoStaffAssignments).where(eq(valoStaffAssignments.identityId, staff.identityId));
+      await db.delete(valoWorkspaces).where(inArray(valoWorkspaces.id, ids));
+      await closePrivacyErasureLocks();
+      await pool.end();
+    }
+  },
+);

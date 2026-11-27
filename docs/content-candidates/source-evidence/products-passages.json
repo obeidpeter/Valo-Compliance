@@ -1,0 +1,370 @@
+{
+  "artifact": "Valo product/food source passage locator manifest",
+  "version": 1,
+  "preparedAt": "2026-11-14T08:51:57.745588+00:00",
+  "state": "source_capture_and_locators_only_not_editorial_review_or_publication",
+  "instructions": [
+    "Before EDP use, retrieve the full official PDF at the recorded URL, calculate SHA-256, and match the recorded digest; a changed digest requires new evidence review.",
+    "Bind the exact scoped operative passages, exceptions, source metadata and candidate version to each actual review input. These locators do not claim the provider received or reviewed source text.",
+    "Use one-based physical PDF page numbers. Printed page totals and contents-page references are inconsistent in some sources.",
+    "No PDF or copied commercial source form is included in this locator manifest. Private retrieval evidence does not grant commercial reproduction rights."
+  ],
+  "sources": [
+    {
+      "sourceID": "PROD-S01",
+      "url": "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FSAN/2025-2030/Guidelines-for-Inspection-of-Micro-Scale-Enterprises-in-Nigeria.pdf",
+      "pdfSHA256": "e886bb426318c246fe0795fd3861e0c1b90f95629f6ac67aed4acb5c79f757d3",
+      "pdfBytes": 390911,
+      "retrievedAt": "2026-11-14T08:40:02.686024+00:00",
+      "localPDF": "analysis/governance_safety_sources/nafdac_micro_2025.pdf",
+      "localExtraction": "analysis/governance_safety_sources/nafdac_micro_2025.txt",
+      "extractionSHA256": "639f4373c754f6e3e2849341821e003777bcfcbf1d788ffc2de4d63a97c78c22",
+      "locators": [
+        {
+          "items": [
+            "GUD-19"
+          ],
+          "sections": [
+            "1.1–1.7"
+          ],
+          "pdfPages": [
+            2
+          ],
+          "purpose": "Micro facility scope and route exclusions"
+        },
+        {
+          "items": [
+            "GUD-19"
+          ],
+          "sections": [
+            "Personnel 1.1"
+          ],
+          "pdfPages": [
+            4
+          ],
+          "purpose": "Conflicting staff description; do not resolve by inference"
+        }
+      ]
+    },
+    {
+      "sourceID": "PROD-S02",
+      "url": "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FSAN/2025-2030/Guidelines-for-Inspection-of-Small-Scale-Enterprises.pdf",
+      "pdfSHA256": "ed0eb2e3c7a93cefc8ceb7be1e49485c07f41d3b67bf5638c66e43649e71108b",
+      "pdfBytes": 375979,
+      "retrievedAt": "2026-11-14T08:40:02.281132+00:00",
+      "localPDF": "analysis/governance_safety_sources/nafdac_small_2025.pdf",
+      "localExtraction": "analysis/governance_safety_sources/nafdac_small_2025.txt",
+      "extractionSHA256": "c4ecea30d3c09165fd7597cfe03104ad86143e898b87547ea0645b6666549583",
+      "locators": [
+        {
+          "items": [
+            "GUD-19"
+          ],
+          "sections": [
+            "1.1–1.6"
+          ],
+          "pdfPages": [
+            2
+          ],
+          "purpose": "Small facility scope and scheme limits"
+        },
+        {
+          "items": [
+            "TPL-36"
+          ],
+          "sections": [
+            "8–10"
+          ],
+          "pdfPages": [
+            7,
+            8
+          ],
+          "purpose": "Conditional small-food complaint, recall, distribution and transport context"
+        }
+      ]
+    },
+    {
+      "sourceID": "PROD-S03",
+      "url": "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FSAN/2025-2030/Guideline-for-Inspection-and-Requirements-for-Pre-Packaged-Food-Facilities-in-Nigeria.pdf",
+      "pdfSHA256": "73d97cf33bce46abd7a49a0861a1d1b2d2882f641d2c2418855bec96c4e0a01e",
+      "pdfBytes": 529685,
+      "retrievedAt": "2026-11-14T08:45:00.777973+00:00",
+      "localPDF": "analysis/governance_safety_sources/nafdac_prepackaged_facility_2025.pdf",
+      "localExtraction": "analysis/governance_safety_sources/nafdac_prepackaged_facility_2025.txt",
+      "extractionSHA256": "87cc9fa1f0ead26187e9436441f8a51e853414f0a7416b7f96430a80f6efb526",
+      "locators": [
+        {
+          "items": [
+            "GUD-19",
+            "GUD-20"
+          ],
+          "sections": [
+            "1",
+            "2"
+          ],
+          "pdfPages": [
+            2,
+            3,
+            4
+          ],
+          "purpose": "Facility scope and application evidence"
+        },
+        {
+          "items": [
+            "GUD-20"
+          ],
+          "sections": [
+            "4",
+            "5"
+          ],
+          "pdfPages": [
+            5
+          ],
+          "purpose": "Scheduling, inspection and progression; not guaranteed approval"
+        }
+      ]
+    },
+    {
+      "sourceID": "PROD-S04",
+      "url": "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FR_and_R/Guidelines-for-Registration-of-Food-Products-Made-in-Nigeria.pdf",
+      "pdfSHA256": "cd126bb61bd7593b35d1a1ea4ef4f2ee6ce294cbc538cd777a63b1c72bf8204a",
+      "pdfBytes": 179300,
+      "retrievedAt": "2026-11-14T08:45:00.897593+00:00",
+      "localPDF": "analysis/governance_safety_sources/nafdac_local_food_registration_2026.pdf",
+      "localExtraction": "analysis/governance_safety_sources/nafdac_local_food_registration_2026.txt",
+      "extractionSHA256": "09602d82995cac2d15a79687adca05d58d1aedffecde4a964da52cb2a5a59056",
+      "locators": [
+        {
+          "items": [
+            "GUD-21"
+          ],
+          "sections": [
+            "1",
+            "2",
+            "3",
+            "4"
+          ],
+          "pdfPages": [
+            2
+          ],
+          "purpose": "Local product scope, application and documentation"
+        },
+        {
+          "items": [
+            "GUD-21",
+            "GUD-26"
+          ],
+          "sections": [
+            "5",
+            "6",
+            "8.2",
+            "8.4",
+            "8.6"
+          ],
+          "pdfPages": [
+            3
+          ],
+          "purpose": "Decision/certificate stages; application/payment not registration; advertising separate; unresolved numeric processing-time conflict"
+        }
+      ]
+    },
+    {
+      "sourceID": "PROD-S05",
+      "url": "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FSAN/2025-2030/Current-Good-Manufacturing-Practice-Guidelines-for-Food-and-Food-Products.pdf",
+      "pdfSHA256": "c01d8664329296b37977144d5c1c224576e56e29d87a0e234e71912f430f0f42",
+      "pdfBytes": 1604108,
+      "retrievedAt": "2026-11-14T08:40:03.010510+00:00",
+      "localPDF": "analysis/governance_safety_sources/nafdac_gmp_2025.pdf",
+      "localExtraction": "analysis/governance_safety_sources/nafdac_gmp_2025.txt",
+      "extractionSHA256": "ab448d80b2340212440073bdafce713ad2756556ecba88a462ec70b3b64b1a58",
+      "locators": [
+        {
+          "items": [
+            "TPL-36",
+            "GUD-22",
+            "GUD-23"
+          ],
+          "sections": [
+            "32",
+            "32.1"
+          ],
+          "pdfPages": [
+            53,
+            54
+          ],
+          "purpose": "Food recall process, serious-event escalation and traceability"
+        },
+        {
+          "items": [
+            "GUD-22"
+          ],
+          "sections": [
+            "39"
+          ],
+          "pdfPages": [
+            59
+          ],
+          "purpose": "Distribution-record content"
+        },
+        {
+          "items": [
+            "TPL-36"
+          ],
+          "sections": [
+            "33"
+          ],
+          "pdfPages": [
+            54,
+            55,
+            56
+          ],
+          "purpose": "Record control context; no copied retention duration in forms"
+        }
+      ]
+    },
+    {
+      "sourceID": "PROD-S06",
+      "url": "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FSAN/2025-2030/NAFDAC-Guidelines-for-Food-Hygienic-Practices.pdf",
+      "pdfSHA256": "f65f8912782749003aa7a2d09ad934480f9f799de671fe5e94a1fbdf7e1d7974",
+      "pdfBytes": 1026236,
+      "retrievedAt": "2026-11-14T08:40:03.623497+00:00",
+      "localPDF": "analysis/governance_safety_sources/nafdac_hygiene_2025.pdf",
+      "localExtraction": "analysis/governance_safety_sources/nafdac_hygiene_2025.txt",
+      "extractionSHA256": "e58e23a8f114cee0a9ab791d5809c0252c14a45340a4ec960d29685904bd5dc8",
+      "locators": [
+        {
+          "items": [
+            "TPL-37",
+            "GUD-24"
+          ],
+          "sections": [
+            "2.1"
+          ],
+          "pdfPages": [
+            8
+          ],
+          "purpose": "Baseline and sector scope"
+        },
+        {
+          "items": [
+            "TPL-37",
+            "GUD-24"
+          ],
+          "sections": [
+            "5.2.1",
+            "6",
+            "7"
+          ],
+          "pdfPages": [
+            18,
+            19,
+            22,
+            23,
+            24,
+            25
+          ],
+          "purpose": "Control selection, hygiene and personnel context; no fixed technical or clinical values"
+        },
+        {
+          "items": [
+            "TPL-37",
+            "GUD-24"
+          ],
+          "sections": [
+            "Copyright notice"
+          ],
+          "pdfPages": [
+            2
+          ],
+          "purpose": "Commercial reproduction restriction; independent rights review remains required"
+        }
+      ]
+    },
+    {
+      "sourceID": "PROD-S07",
+      "url": "https://www.nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/INVESTIGATION_ENFORCEMENT_GUIDELINES/Guidelines-for-Handling-and-Disposal-of-Unwholesome-Medicines-and-Other-NAFDAC-Regulated-Products.pdf",
+      "pdfSHA256": "5af7328e2d8b26dcaed2ddc493dce02d20b01b759dfb124a11ca2aed3ba4d239",
+      "pdfBytes": 81923,
+      "retrievedAt": "2026-11-14T08:45:00.772748+00:00",
+      "localPDF": "analysis/governance_safety_sources/nafdac_disposal_2024.pdf",
+      "localExtraction": "analysis/governance_safety_sources/nafdac_disposal_2024.txt",
+      "extractionSHA256": "284b2a28f3350873c8f348c84eaa7e01014c910d82dbcd142d7931a6cb25310b",
+      "locators": [
+        {
+          "items": [
+            "GUD-25"
+          ],
+          "sections": [
+            "1",
+            "2",
+            "3"
+          ],
+          "pdfPages": [
+            2,
+            3
+          ],
+          "purpose": "Product scope, inventory and application; preserve medicine-specific exceptions"
+        },
+        {
+          "items": [
+            "GUD-25"
+          ],
+          "sections": [
+            "4",
+            "5",
+            "6",
+            "7",
+            "8"
+          ],
+          "pdfPages": [
+            4,
+            5
+          ],
+          "purpose": "Verification, supervised disposal and actual evidence/certificate distinction"
+        }
+      ]
+    },
+    {
+      "sourceID": "PROD-S08",
+      "url": "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FR_and_R/Guidelines-for-Advertisement-Control-of-Food-Products-in-Nigeria-Revised.pdf",
+      "pdfSHA256": "31c5bb7228b000f51de736bcf9610fd5e2fa97b17a6b0d549083b958641f87ce",
+      "pdfBytes": 211612,
+      "retrievedAt": "2026-11-14T08:45:00.182973+00:00",
+      "localPDF": "analysis/governance_safety_sources/nafdac_food_advertisement_2026.pdf",
+      "localExtraction": "analysis/governance_safety_sources/nafdac_food_advertisement_2026.txt",
+      "extractionSHA256": "ba7f073b58cbe9dd7dfb2221efc5375ba54791c0a3e55bb81d597593497bd9c0",
+      "locators": [
+        {
+          "items": [
+            "GUD-26"
+          ],
+          "sections": [
+            "1.1",
+            "1.3",
+            "1.4",
+            "2",
+            "3"
+          ],
+          "pdfPages": [
+            2,
+            3
+          ],
+          "purpose": "Registered-food scope; express prohibited advertising categories; application evidence and channels"
+        },
+        {
+          "items": [
+            "GUD-26"
+          ],
+          "sections": [
+            "4",
+            "5"
+          ],
+          "pdfPages": [
+            3
+          ],
+          "purpose": "Actual submitted materials and applicable requirements; no invented approval"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1173 @@
+{
+  "executedAt": "2026-11-14T10:26:08.323Z",
+  "scope": "Actual draft render and reader extraction only",
+  "results": [
+    {
+      "id": "TPL-01",
+      "title": "Invoice",
+      "sourcePath": "docs/content-candidates/additional-template-candidates-a.md",
+      "sourceHash": "0659f3e1f035277a16c37f7876042199aeaf49e836b8f0f97ae694f7db812306",
+      "canonicalHash": "68e356f0dc6c9fc29259c7006b715cfdf838368e65ee3c42eab5a5575aa5ac8f",
+      "docxHash": "22c8a4c3fefd90e4595ea1370adea917fc6a2b9773cde973986a0f3990bdb523",
+      "pdfHash": "ffa553821252a04e9dafa24c6ded8de0a155e4d06877dc1e1a347c450bdbdef3",
+      "docxBytes": 12648,
+      "pdfBytes": 46885,
+      "pages": 2,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "446a2d5a4b60e18e8b6f8fb05f3adfa5cd56befb08bb91c89c44db21a5ddd9a0",
+        "cd479ecea0fd2c66441a66e306a5d58028ac2d557c7d5e2ef20af8e9aadfe3a8"
+      ],
+      "segments": 57,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 989,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-02",
+      "title": "Quotation",
+      "sourcePath": "docs/content-candidates/additional-template-candidates-a.md",
+      "sourceHash": "0659f3e1f035277a16c37f7876042199aeaf49e836b8f0f97ae694f7db812306",
+      "canonicalHash": "3f75734490bfbcf9b02530ac3612d0601c66aac23ca7dd05f44ad07779660ae7",
+      "docxHash": "500479b9c2cd31fb3dfed9f7c6988e78cc8d9e727b7b76aefc5126f4b23f7b77",
+      "pdfHash": "d8e9f7beb00a66a80ff857a6ac4fe2b80008630a4b0a99911ac32862670468bb",
+      "docxBytes": 12761,
+      "pdfBytes": 47231,
+      "pages": 2,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "1db87ddbcd091a36521dea7b4f297ecf8da99aa3cbf26dd2352262213d26d50a",
+        "66de9d095a5136f9ea826ddc48c2ee44f9669bd4bad9682052d8a1e1568770c3"
+      ],
+      "segments": 58,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 982,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-03",
+      "title": "Receipt",
+      "sourcePath": "docs/content-candidates/additional-template-candidates-a.md",
+      "sourceHash": "0659f3e1f035277a16c37f7876042199aeaf49e836b8f0f97ae694f7db812306",
+      "canonicalHash": "d958cdefe2a0f2dfc6ed944d12d659f767c1946f57365a6a67949c0f116c3f92",
+      "docxHash": "4b701eae9afd5b5950c912b5079a2545169be5c4cab948d9d8ed5fe5ec35e48b",
+      "pdfHash": "3f438baaaba8c180567aedbf6eabf552cf495d6a3ea0b1ef72ea8bbaf187c7c2",
+      "docxBytes": 12435,
+      "pdfBytes": 45034,
+      "pages": 2,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "5baf9563308a019bc17ef46a9a9b4f23a4da012ec4ed1e34b83d057ac1de560e",
+        "99b122b379349171e2ca1bd1f4c2f4fce532630f601fe26a9fc1bfafb93eb9ec"
+      ],
+      "segments": 29,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 485,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-04",
+      "title": "Purchase order",
+      "sourcePath": "docs/content-candidates/additional-template-candidates-a.md",
+      "sourceHash": "0659f3e1f035277a16c37f7876042199aeaf49e836b8f0f97ae694f7db812306",
+      "canonicalHash": "8401d8f0739dead0c5d22fdacfcbd1cf627bb24caa8dc1c087e4e6eae563d7ed",
+      "docxHash": "3ca3bf17efdedcbe398d490fbc68b69650338806bdc653c40e64a3224ba3e053",
+      "pdfHash": "899c97319696b5b96472bbee607d42ec499f659b9e56874be349af4c770d7360",
+      "docxBytes": 12687,
+      "pdfBytes": 46829,
+      "pages": 2,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "5b65cd4ded4f57fe9c24643233d3baa628b500fa34e2a412ce317b53592e69f0",
+        "8f6ca7c6a93c05c87d12c609af3902e3e2142e8970017dbeede5ad6dc7178dc4"
+      ],
+      "segments": 50,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 540,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-05",
+      "title": "Delivery note",
+      "sourcePath": "docs/content-candidates/additional-template-candidates-a.md",
+      "sourceHash": "0659f3e1f035277a16c37f7876042199aeaf49e836b8f0f97ae694f7db812306",
+      "canonicalHash": "59b8f5599df0f6c523cf2a3e63caee4153f255442892b24771ca18c0ceb09f98",
+      "docxHash": "fda12d50dab74fd09bf0d5a5c9b1d31572d54bc88008a880028f82f4f7b3edc1",
+      "pdfHash": "1ef433be388a89288e829983a22d97ca4a1ed0d9ef5fb3ba04c0cecaf10c1b0c",
+      "docxBytes": 12610,
+      "pdfBytes": 47336,
+      "pages": 2,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "ba5710cd6320c077e9ac3a28746c61c5bccc248c246a65ee768a6fceb83e9762",
+        "cb7db928a3e0c2e113db1c14fffe45d1b6e5f7a3a1fe017f4e22a6a75df42085"
+      ],
+      "segments": 38,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 465,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-06",
+      "title": "Expense claim form",
+      "sourcePath": "docs/content-candidates/operational-template-revisions.md",
+      "sourceHash": "f0a427d404b8fc4d2c09b6444ca01760ac221836f52d8781dadc4248237ec664",
+      "canonicalHash": "571115db7b5598e74354d5d59c9377fcf4421ce28c4a55e5e365562a2dc9442f",
+      "docxHash": "f70818ca5f49a77ebf61d3ab06a4dadafe5a70c92a456f255ac9e1e34a11a5a3",
+      "pdfHash": "506c55912bf210e21f0c25c3d58f023b3d47213ccdb5ba8d8b3d21dfb8c0b9d8",
+      "docxBytes": 14121,
+      "pdfBytes": 55341,
+      "pages": 3,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "cc9c9b4fc87718df966e3cfada15cbebb36582261af9ef0bc4dc9390bb23b2d1",
+        "cccfc4b27448926cd3683000a6b34713bf9b0ec3775f709110bff0468fd53a16"
+      ],
+      "segments": 58,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 533,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-07",
+      "title": "Inventory register",
+      "sourcePath": "docs/content-candidates/operational-template-revisions.md",
+      "sourceHash": "f0a427d404b8fc4d2c09b6444ca01760ac221836f52d8781dadc4248237ec664",
+      "canonicalHash": "c00733efd6a6657d05ebac8da81a2e1175877b070fc292d8b832a2ae6dd58dcc",
+      "docxHash": "ba4b8c81ae0e6e8a5f0e62663c466fecab049518fd66834efc207478ddff5f78",
+      "pdfHash": "7a56fb673a3e45b1b5fbf30ae62688dfa9cd5cd0484cb992be97d950809dcf87",
+      "docxBytes": 14291,
+      "pdfBytes": 56206,
+      "pages": 3,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "4e97f60267e2bc18cb27cdeda099de061cdcec9a1f0b1fdea315063220192919",
+        "bc0fa7b19d0c99e173acf3327ddbe517e27b50f3f4dec2dca3e809f0304b4600"
+      ],
+      "segments": 47,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 497,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-08",
+      "title": "Meeting minutes",
+      "sourcePath": "docs/content-candidates/additional-template-candidates-a.md",
+      "sourceHash": "0659f3e1f035277a16c37f7876042199aeaf49e836b8f0f97ae694f7db812306",
+      "canonicalHash": "6a990e0ef66c430d694a8930f4989864af4cfe8e427d9fd56c84494fbd39b264",
+      "docxHash": "e8e3856620cdba980062d3d1ebb7bc0e9a3a780330be54ddad92385421675347",
+      "pdfHash": "f61b3a47b36ad608e105f48b10aea6e50b0f9466f44923c60794dde81d1f56dd",
+      "docxBytes": 12712,
+      "pdfBytes": 47445,
+      "pages": 2,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "587eddcde735bef50e610105c08badf106f7ba434ccbc6975468a8a8fe1071c0",
+        "2b7abf5139e3b7dfee7ecf059e029f8f65e1eea3e630714ae756237588afd26c"
+      ],
+      "segments": 45,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 525,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-09",
+      "title": "Customer complaint form",
+      "sourcePath": "docs/content-candidates/operational-template-candidates.md",
+      "sourceHash": "07b23152ea8f3588644b5f996bc900a6fb5942022b61605ce8565a21c7d3494c",
+      "canonicalHash": "21165bbfff2f7619647cfd92024a0707e9d0666416caa0013b5cd3a52170c931",
+      "docxHash": "04858e75c77281317913f6b4e4487c0a125efce50e421197f6e58a8b9da52e09",
+      "pdfHash": "96173f55be524cff467ed1d3a813aee19ec3c460035bad2a46c1a92567393324",
+      "docxBytes": 13016,
+      "pdfBytes": 48614,
+      "pages": 2,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "636bc455f68a7ed4fbf0867e4c2e32f4aa3003cf54b1241bea821a2c8bf8e7b7",
+        "73e1c4db95bb986b7689ada0b696aca3d63208daf92f4bbe5f7544fc46853cff"
+      ],
+      "segments": 40,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 521,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-10",
+      "title": "Leave request form",
+      "sourcePath": "docs/content-candidates/additional-template-candidates-b.md",
+      "sourceHash": "6e5d39fb2f6480ef1ae198c19561b9dfc932f1dee4b7cf97494a6dac3ed21889",
+      "canonicalHash": "886d1ed0811f0e249370c4a4c935c7f49f21a52d013af8fa38aaeec61431b504",
+      "docxHash": "2ce98b8d1f472a77f584c19e80d890fd401944d17f0d6e3f1f8227bfa2eb8525",
+      "pdfHash": "54ffe6fefd29dc00c28e6226967a9e409cca47295f13926987b7931c6f3aa2ab",
+      "docxBytes": 13274,
+      "pdfBytes": 49163,
+      "pages": 2,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "d71a1ef681d2f26ee7786ec3b9c7bfb188fca564f66766fbe29130c1241adae7",
+        "d2525982b8247449f918cb04dba81affd5298496789767a861763dd3d689cc80"
+      ],
+      "segments": 31,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 509,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-11",
+      "title": "Staff onboarding checklist",
+      "sourcePath": "docs/content-candidates/additional-template-candidates-b.md",
+      "sourceHash": "6e5d39fb2f6480ef1ae198c19561b9dfc932f1dee4b7cf97494a6dac3ed21889",
+      "canonicalHash": "f497abc4e1a4ee7051a6b4c8b2b209abe61d93da7b5aee5263d324963b1cf127",
+      "docxHash": "e0c31d89aa96df932cf55797dfeb7fd4c8ce0efe71e5da95eb145514ae9dec28",
+      "pdfHash": "ec49f94bc6f9429d50aa7008eee208724ffac2472ef133d7de88b484d5f7bf81",
+      "docxBytes": 13609,
+      "pdfBytes": 53127,
+      "pages": 3,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "5b87283157e05270af5328d6cd1e3a54a5452ee3adc661a58d45795f7de5c59b",
+        "5bc21f31ec123cbb4e9ba3c4e070341119e1f53cfada2134411793069b84c02c"
+      ],
+      "segments": 91,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 437,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-12",
+      "title": "Payment reminder letter",
+      "sourcePath": "docs/content-candidates/additional-template-candidates-b.md",
+      "sourceHash": "6e5d39fb2f6480ef1ae198c19561b9dfc932f1dee4b7cf97494a6dac3ed21889",
+      "canonicalHash": "7cb0504080f751f74c7f71226ad7bfab2df6178dbb07af8cccf1c283b3fb7a8a",
+      "docxHash": "af7ebbd8ebe44f91653398f0b5cfb211d12fb9fdc4448162332bacf431a0ef69",
+      "pdfHash": "33be8c1dfe06859dc4aedc34e702828cd5b5b7ffd693d04bd184cac8e7f26256",
+      "docxBytes": 13897,
+      "pdfBytes": 55394,
+      "pages": 3,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "c7b3b3353db935f4e88b2a6e483afecb7693845c3ab6e68ca0e422746f803a0f",
+        "468229559b7c060b54bb4d84e4a4a258a76015284df6b9392246a739bbd098ef"
+      ],
+      "segments": 29,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 482,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-13",
+      "title": "Service agreement",
+      "sourcePath": "docs/content-candidates/commercial-template-candidates.md",
+      "sourceHash": "5f6ac775542a776f08f1a55505d7b5333ef9e1787fc47aad846948e730bfb963",
+      "canonicalHash": "f234e4bfda74b06234dafd96d976e33f1852312e03da8c9131b8de2ca4ec146d",
+      "docxHash": "f2cb4a6aef596efc0bb92eafb560cc8a9c02a704f64a6dbfd11501f4256abfb0",
+      "pdfHash": "a1a05218515e6bd8962ac6b07008592f3ff07b1a0eab128a7a3b94e373582183",
+      "docxBytes": 16850,
+      "pdfBytes": 72246,
+      "pages": 5,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "d5bc0b8a78035e4ca5adf3265721ba23400da53499a4023aee9984f3f4256fea",
+        "3cc6e6ea4b97654162fb2634370a5a68cf74d7b04aa354336cb3f8d12fd6b504"
+      ],
+      "segments": 77,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 556,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-14",
+      "title": "Consultancy agreement",
+      "sourcePath": "docs/content-candidates/commercial-template-candidates.md",
+      "sourceHash": "5f6ac775542a776f08f1a55505d7b5333ef9e1787fc47aad846948e730bfb963",
+      "canonicalHash": "46dfc9d31a59df793ec1223f0898f2dd5a0c1cbd742479b0e60286125a8aa6d7",
+      "docxHash": "47a559e13b7374581ea358d8bcdae8eac2c15b3b03df9baf09f0acf118ee8951",
+      "pdfHash": "9173094b97828e43f9e44b4fb4efbb8d70ab94fee14d286a2ba5eafb7cbd6aed",
+      "docxBytes": 16361,
+      "pdfBytes": 67472,
+      "pages": 4,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "ae57226db356d8027f2fd42e623d2487948eea3028ec2f8b3868c1ab94289f96",
+        "008961ac6fd82795d07824bcd334f35dc2ca621adb501142665bee753df49f29"
+      ],
+      "segments": 59,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 566,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-15",
+      "title": "Non-disclosure agreement",
+      "sourcePath": "docs/content-candidates/commercial-template-candidates.md",
+      "sourceHash": "5f6ac775542a776f08f1a55505d7b5333ef9e1787fc47aad846948e730bfb963",
+      "canonicalHash": "4c321b2929cd9524d472a6d868e101dff889e796481687973f385fe61b7d7596",
+      "docxHash": "519bcb58007870f418ac0cf3b21c1e3fc9eb67b77b6022bf682637b2f4fb9c0d",
+      "pdfHash": "56227c16b6570fa16c9824cae4afc48cbf4b96d5e9d57f5e7c603496c542cf13",
+      "docxBytes": 15328,
+      "pdfBytes": 60433,
+      "pages": 3,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "fbe36bc05ee33ff827263a4c07c927061ed53da2b96d4c6542c3b586f6578ec6",
+        "be988b03c1ad9e7462c99eaa75a2f53086293ef3084ce25549d2475a39b25843"
+      ],
+      "segments": 43,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 475,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-16",
+      "title": "Employment contract",
+      "sourcePath": "docs/content-candidates/employment-template-candidates.md",
+      "sourceHash": "716037213d047dbbafd4ce4124e538c9aa4adc9a354c91eceac0e266a418e90c",
+      "canonicalHash": "88e01d73ae1921ee6b3c28a6821a438f0f6ca6fa52e218dab9573d889b3c222d",
+      "docxHash": "d34e0088d8abcbefb61d6570967455f01195247f065f12d79220e96af2e6d252",
+      "pdfHash": "493fbc6004589e0f47cea116de7541b77dc0e6ae4f5c03df0b9a03435df548a4",
+      "docxBytes": 15300,
+      "pdfBytes": 63264,
+      "pages": 4,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "626bd582ce387b7aed160c268574fef7470c36fa8a268e280401062eee199d99",
+        "30d3217d86a497daba3cad0fec123b8077f5a32f6e341f1e9d745b816b956ec6"
+      ],
+      "segments": 83,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 525,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-17",
+      "title": "Offer letter",
+      "sourcePath": "docs/content-candidates/employment-template-candidates.md",
+      "sourceHash": "716037213d047dbbafd4ce4124e538c9aa4adc9a354c91eceac0e266a418e90c",
+      "canonicalHash": "ba4ac6a171b5e8875f9bd962910e15ade4ef9e0abc2823f9f88e1ac69c95a208",
+      "docxHash": "2b9c2d9e8eee57ecc10568638408920eb2dc10e1d6d15f7a100ffb64977d4ebd",
+      "pdfHash": "0d2388cda221514867bb4646a073fa9a83f54f33ad4339959d58a97464256cf6",
+      "docxBytes": 13369,
+      "pdfBytes": 49405,
+      "pages": 2,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "a9457118580954be1d11e559e7f7be0d3fbd8303d13c8cb188ee4113e9a386a0",
+        "5e2ed6fdd628790520435bbc48edaf0b9c09a30dbe5d3e1e09967f1e608b39ea"
+      ],
+      "segments": 35,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 574,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-18",
+      "title": "Supplier agreement",
+      "sourcePath": "docs/content-candidates/commercial-template-candidates.md",
+      "sourceHash": "5f6ac775542a776f08f1a55505d7b5333ef9e1787fc47aad846948e730bfb963",
+      "canonicalHash": "e8e2d5772a1a0938fff168abf217af9c7d7f131533113027cbde8ed59c1f6bda",
+      "docxHash": "2adf2191fc1ec834bffb7bfbafea148f6069e950c6ae199b04ee3241874e6612",
+      "pdfHash": "1836f4318f28c1a6fd7f78249d41787dd3552833069ebc166dc8f6d77a2f0e03",
+      "docxBytes": 17492,
+      "pdfBytes": 75007,
+      "pages": 5,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "f8e117d73257f2807d5b6c0089e248ab4f6e8b89cf9174694f69ffcf4571874a",
+        "63fcb9e6ac3cdcee0fea365bc2bd846a59582e6862d809d3bfab735e31afd962"
+      ],
+      "segments": 88,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 570,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-19",
+      "title": "Sales agreement",
+      "sourcePath": "docs/content-candidates/commercial-template-candidates.md",
+      "sourceHash": "5f6ac775542a776f08f1a55505d7b5333ef9e1787fc47aad846948e730bfb963",
+      "canonicalHash": "27474c3f4e6b39619fad52c1699e593c8c120f20f3e510ce7de11c250d9868b2",
+      "docxHash": "31dd03076544d2987f20e5aeab5afce6a25880dcc99d34e1647caf16bb7626ae",
+      "pdfHash": "a81b6d1befbefa53672be745f5fe8bae5b6709323f810e7193abd9fdc1f80dda",
+      "docxBytes": 16360,
+      "pdfBytes": 67368,
+      "pages": 4,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "af04ce294077d075c90c91b106488fddfa51f2a33981c686b931e07eba42de42",
+        "0cc25345fbcf6920721ae21635f55e99c05ee395ede90b24f602d27fb51b694e"
+      ],
+      "segments": 75,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 518,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-20",
+      "title": "Partnership agreement",
+      "sourcePath": "docs/content-candidates/commercial-template-candidates.md",
+      "sourceHash": "5f6ac775542a776f08f1a55505d7b5333ef9e1787fc47aad846948e730bfb963",
+      "canonicalHash": "868eac788439fbe4770300d2aa1474bdb3b85878f5b2d9c608257d0789c4b51f",
+      "docxHash": "44508519017944d25d7ff14d57b3b4e023cb51360f77145d3f2bee8204f27dff",
+      "pdfHash": "410883faf277f4074229c7cf8399fb8cc48887f0ea2e0d0292cd72cc833eb76c",
+      "docxBytes": 18483,
+      "pdfBytes": 81758,
+      "pages": 6,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "d21bab2408334797d7c078a56f4949c946296d21d1887fd90e907cbdb3b66369",
+        "146402e24e7134f2a91b75cd694ffbca32b041254b7110a788ae01935d0f7a9c"
+      ],
+      "segments": 96,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 608,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-21",
+      "title": "Independent contractor agreement",
+      "sourcePath": "docs/content-candidates/commercial-template-candidates.md",
+      "sourceHash": "5f6ac775542a776f08f1a55505d7b5333ef9e1787fc47aad846948e730bfb963",
+      "canonicalHash": "dad67600d6063aa204c2682d08288134ddd78cb4f232f0aaac116e1c83af8d3b",
+      "docxHash": "7ac0e8465402ca000c1c460cea6bc46f33c6ed8b8cd00c2f0898526ba583e15d",
+      "pdfHash": "f444650613265bb43a39b270cd65f9400cbda478601910c0f344549d7dad710c",
+      "docxBytes": 16584,
+      "pdfBytes": 67743,
+      "pages": 4,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "232546928b056642b826d84894b79ed3412c05710e2ce978f26a43441f483e75",
+        "d570874378ee983e79617df39b46083a9abb5ca3f46f26ac487787dad3c34f34"
+      ],
+      "segments": 60,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 544,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-22",
+      "title": "Business proposal",
+      "sourcePath": "docs/content-candidates/additional-template-candidates-b.md",
+      "sourceHash": "6e5d39fb2f6480ef1ae198c19561b9dfc932f1dee4b7cf97494a6dac3ed21889",
+      "canonicalHash": "d48fa5aab1c0073c9dad47bb4427f2fc18e74e139ef323006aa48f1d9b95719d",
+      "docxHash": "08864e694d3af9dab472b70cd8c8b85a76603f4ba40f4e641a9bb746e794c32a",
+      "pdfHash": "9554577f8229f652243eaf2e72016023d490078fea76bc2bcd2537cc218cd6b0",
+      "docxBytes": 14388,
+      "pdfBytes": 56345,
+      "pages": 3,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "26c2175e0f0cd29d3339bec415f2a70b347dbdf7cecedd9bca73b21f89b77bd6",
+        "07a0b4280ced938c261d43f2dfb96c46d6d5f2df44f9e97694fe57208e33d58c"
+      ],
+      "segments": 68,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 553,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-23",
+      "title": "Statement of work",
+      "sourcePath": "docs/content-candidates/additional-template-candidates-b.md",
+      "sourceHash": "6e5d39fb2f6480ef1ae198c19561b9dfc932f1dee4b7cf97494a6dac3ed21889",
+      "canonicalHash": "87b74835e93de26e517041558797d082b65d43216355afa195c5da1c3d7b7478",
+      "docxHash": "012aa9a5725a07f6fa5327ac762235643f4e43cc9764713e7dcc58f37fb964cb",
+      "pdfHash": "1207392cbff7ed6cb4e688ff44805c3853da32eaca7add0bb20ccd6245e935b3",
+      "docxBytes": 14003,
+      "pdfBytes": 55464,
+      "pages": 3,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "35a3cc52b8a08392d48c8f905260bd126996ea37c3f096b84450f7a713397e94",
+        "a8c2f418a717c3751a0f3d1954b7fba39f2c8c7ef4fa7b3663ce25df0f7e8654"
+      ],
+      "segments": 76,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 493,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-24",
+      "title": "Procurement evaluation form",
+      "sourcePath": "docs/content-candidates/operational-template-candidates.md",
+      "sourceHash": "07b23152ea8f3588644b5f996bc900a6fb5942022b61605ce8565a21c7d3494c",
+      "canonicalHash": "946cfe72038f0947cf9712fe6044bf9a9654ba1c316be7fdd4b4a7b075bd9122",
+      "docxHash": "6ea0525cf86a4289a0d0492b8c9caa3c8803106cd8e4d1be9779f1bcfc906d17",
+      "pdfHash": "dcbab4cd16b967bbf978eee57ad640562a3181c441c5845133ca600415e54fdc",
+      "docxBytes": 13219,
+      "pdfBytes": 55233,
+      "pages": 4,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "319efa04937f772e595ee1421655abc8476af424ae0d44becc580b9f1093d47c",
+        "c197c87abc00be1f57b136a750ce7f10fae556cb60bd0ba75ee86db5d9b334aa"
+      ],
+      "segments": 136,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 550,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-25",
+      "title": "Board resolution",
+      "sourcePath": "docs/content-candidates/governance-safety-template-candidates.md",
+      "sourceHash": "5a13329b1421103e2b7ea81c2d5e2c9cd43f4f7853b2bb42b0fedc27eb354dc5",
+      "canonicalHash": "d5d9a8f4c93e9377e489b2bdfa43247936f0683e1235d85add72e11157baffa7",
+      "docxHash": "ad84a3950c94dd6721b0d5f532a16bd35cd828a82f64ed534c5f4d8560bbd06d",
+      "pdfHash": "0561f270317e869537809c26b5b68d5129097f51b705ed958295789e2c47c4dd",
+      "docxBytes": 14033,
+      "pdfBytes": 54096,
+      "pages": 3,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "6fa67d8a41937ff740e56b4984e66f2eba43b2646f25ed22e09cdeff8769e104",
+        "a0959927832ee591db475d0d5e7f49c5ef8487857b1be01e8440074af54e9cdb"
+      ],
+      "segments": 76,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 468,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-26",
+      "title": "Employee handbook",
+      "sourcePath": "docs/content-candidates/employment-template-candidates.md",
+      "sourceHash": "716037213d047dbbafd4ce4124e538c9aa4adc9a354c91eceac0e266a418e90c",
+      "canonicalHash": "2925bf5738d02f1217fa1215744338a64e49c4e9cdb5363e27768cc5e3706d9c",
+      "docxHash": "5528533b8410dc393538e253335c89d6f330e157a836c094608fc2865fc55474",
+      "pdfHash": "f8cf00b59d9ed408c3aa45df7da55ca4a81f3a6efbecd2742b3c54201a05fcd5",
+      "docxBytes": 15011,
+      "pdfBytes": 59750,
+      "pages": 3,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "22523c1baa0eb21ec9d9bfca207db1da516949e7f8091a82cfdfdc70e55295f7",
+        "4ac86d8e9d165e77b6b802ef5148a1715463b49e01ef4df0477c6e2c27027340"
+      ],
+      "segments": 52,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 456,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-27",
+      "title": "Leave policy",
+      "sourcePath": "docs/content-candidates/employment-template-candidates.md",
+      "sourceHash": "716037213d047dbbafd4ce4124e538c9aa4adc9a354c91eceac0e266a418e90c",
+      "canonicalHash": "f8382ee5e1e5751348b8f248be6925fa3723149fce3cb5ba51d5e6277c581d9f",
+      "docxHash": "4542af016939df5be1d3da552f94b403d26d79172d7d87c3fe27b66b74a003f5",
+      "pdfHash": "93e2a606f4459dca36a576d890880fcd6327a6b3d4de2c160f72c2e595716a12",
+      "docxBytes": 14215,
+      "pdfBytes": 59448,
+      "pages": 4,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "13aa7d99196a1620e33b04a2103e7decaad59cc4f1be2db5ebca4d7c7efe7d29",
+        "b0b1e21fae6b153d6174d536f7bb5ed8c1556126c3f4f35ee0be2f97af11a910"
+      ],
+      "segments": 114,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 503,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-28",
+      "title": "Disciplinary procedure",
+      "sourcePath": "docs/content-candidates/employment-template-candidates.md",
+      "sourceHash": "716037213d047dbbafd4ce4124e538c9aa4adc9a354c91eceac0e266a418e90c",
+      "canonicalHash": "24a6813fde0598cd3d966c7fb8df39ddc279c175c90ab32f2821f28133484251",
+      "docxHash": "f89b95e2dcf2d5ba0e1e3cc2602f89387e9b6cb31ab8a90c0f6c83053e2078bd",
+      "pdfHash": "a663ea35e5ea0dcecb55db9b8180f4d4774cf3acf41176b26135807c5be93b51",
+      "docxBytes": 14569,
+      "pdfBytes": 57877,
+      "pages": 3,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "df6c3909c7c5285d022518bc017cd25333e71c412788607780e14a58ccdacaf7",
+        "fba405924ed3087a1659cc666e02168dfb010809502c41bbd8614cbd8bc89438"
+      ],
+      "segments": 51,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 550,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-29",
+      "title": "Privacy notice",
+      "sourcePath": "docs/content-candidates/privacy-template-candidates.md",
+      "sourceHash": "371c85bb8942cb046204ba8e4c27c69df032225590deabea82dc9a2b574a5bf9",
+      "canonicalHash": "327ed5e4bded60ddf3a56c6d5c022a2cccd5491e4153ae4b0e30caca15e87c0d",
+      "docxHash": "3b38ec061ff0d4d6beb269d6e6c9a8b249cb10d8c0c2943e0759687901fe18ec",
+      "pdfHash": "c4b40459c53d95e58cbac023de4aab126a5ee790154e9edf192a94af65726b4a",
+      "docxBytes": 15158,
+      "pdfBytes": 59036,
+      "pages": 3,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "6c4fd60d3d4747c71318fb8ce3fe0c54210e1a1f8be2e6635ce97a5767ee20e7",
+        "78bf387d97180a39cf5be6ef58d01b3557db5280b884ca5ed39091908991b88a"
+      ],
+      "segments": 62,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 557,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-30",
+      "title": "Website terms and conditions",
+      "sourcePath": "docs/content-candidates/privacy-template-candidates.md",
+      "sourceHash": "371c85bb8942cb046204ba8e4c27c69df032225590deabea82dc9a2b574a5bf9",
+      "canonicalHash": "735d8f0827321ff873e56707024a5dc3722142a06e0a2a545a9fa7a315587f1c",
+      "docxHash": "5cafa210aaa4c6b016291aee5c8098eafe1a70b1d3d07a6d400657fd7b04d38c",
+      "pdfHash": "9780900d8e8b4be6972470376ff1a452fbec83012d04d7692d329a68277d5f3a",
+      "docxBytes": 14570,
+      "pdfBytes": 57181,
+      "pages": 3,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "2a4dfa1fc99ec03b6210881409fa7f2d0daf07ced9356f38981a44d85de48f65",
+        "8d031271fb73e80eb1490dee1e23eb15280aafe641dee1ae031efdbef5228e94"
+      ],
+      "segments": 29,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 501,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-31",
+      "title": "Data processing agreement",
+      "sourcePath": "docs/content-candidates/privacy-template-candidates.md",
+      "sourceHash": "371c85bb8942cb046204ba8e4c27c69df032225590deabea82dc9a2b574a5bf9",
+      "canonicalHash": "7fdb8a28053f34a0c52ad456ddae15c1f0dc1e788421bf8aa0138dae9c179d04",
+      "docxHash": "4f59da1afab6f327151fc2278533655c9c2561fffb8b72f14373d15b7ccc7433",
+      "pdfHash": "f38fdf497b8018fc2a3ca6628e84b7ab74abf07ac644abdb26767784ce84f07f",
+      "docxBytes": 15728,
+      "pdfBytes": 66274,
+      "pages": 5,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "74750f0e89231b08bfd4fc1e90beebc0325a74310751151e700366037d869286",
+        "371f3a52f38450cae112db02aa0a9cce0f71c369a7b18ac0d6613d47ee2ac5c1"
+      ],
+      "segments": 101,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 593,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-32",
+      "title": "Data retention policy",
+      "sourcePath": "docs/content-candidates/privacy-template-candidates.md",
+      "sourceHash": "371c85bb8942cb046204ba8e4c27c69df032225590deabea82dc9a2b574a5bf9",
+      "canonicalHash": "78b956a6aa4d917b53a2eb064dbdc9b35f00cd38b316a1400d1922f98d1b9181",
+      "docxHash": "12985da160a854de69c2f255f6d1a3d630ad28f49f2823077d8a8c9307f46d78",
+      "pdfHash": "2ed6adbd0dc8623b633891a00cbb1b30956b21e8744d0c17558c6a45dd8fd8da",
+      "docxBytes": 14423,
+      "pdfBytes": 55855,
+      "pages": 3,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "e8db66a7d26da0d187e5e4d5e71601c77e23c3eee0fb2f91d93bf44824459377",
+        "e2c6720f6b7a555943f17e58b44ba3cb16b6ee202ca78a0840c5a2213094650c"
+      ],
+      "segments": 41,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 502,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-33",
+      "title": "Health and safety checklist",
+      "sourcePath": "docs/content-candidates/governance-safety-template-candidates.md",
+      "sourceHash": "5a13329b1421103e2b7ea81c2d5e2c9cd43f4f7853b2bb42b0fedc27eb354dc5",
+      "canonicalHash": "90491fac57b5aeb5b0bb95dfb6bed13118d48f0cec1a0e161c805110238fb490",
+      "docxHash": "1bb971781cc6ba9c72e38b9d222a5b3e567ff956d1c2d29d1333db37b0778b9d",
+      "pdfHash": "b8ce8d5c300dccb5fe2bbeda3f5ce9071acf86e788f6a4095e79886f3037a85d",
+      "docxBytes": 14222,
+      "pdfBytes": 55745,
+      "pages": 3,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "5846d618d53abf0b2fcd2d202e00c5cb61024812408476aacebd921e533d4a13",
+        "3ccd4a4a48222f1c6f842e7e26aa63d46a1fded9e4f89fd72b52f40aa3af956c"
+      ],
+      "segments": 86,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 482,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-34",
+      "title": "Incident report",
+      "sourcePath": "docs/content-candidates/operational-template-candidates.md",
+      "sourceHash": "07b23152ea8f3588644b5f996bc900a6fb5942022b61605ce8565a21c7d3494c",
+      "canonicalHash": "0fa8c5a430fc195d9f42779e05da6f5346e77c2c636093ee3aa1c32ae2b01c07",
+      "docxHash": "4a7571e5237f5233fa69a1765c980ae6c3a2ef293103817866b3475a7b8235bc",
+      "pdfHash": "925bea28cae2af0bf6a017b67afddb189939241f2c508968416bd25f5f491d46",
+      "docxBytes": 13043,
+      "pdfBytes": 50339,
+      "pages": 3,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "40780c9588452804cebdb97afc0e7cd52498476fdb3186cf9abdc9904a46ddf0",
+        "0cdc1a89a56cd7326f501fdfe4632b05a99c576e0fe571fea161af5ef23b684e"
+      ],
+      "segments": 53,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 522,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-35",
+      "title": "Standard operating procedure",
+      "sourcePath": "docs/content-candidates/operational-template-candidates.md",
+      "sourceHash": "07b23152ea8f3588644b5f996bc900a6fb5942022b61605ce8565a21c7d3494c",
+      "canonicalHash": "19fc7a2e119c3f74dbe13b3cb8b2d6c2e9bb57f320bc91451b85c164e45c5bf9",
+      "docxHash": "e70165e662dedc3d2a463e5e04cfb7abeff0852e645de3f029b9400f874e17fb",
+      "pdfHash": "52eabb062025588edab462f4b5d4353dc54443a9f3b097563aed8486e708f293",
+      "docxBytes": 13133,
+      "pdfBytes": 51037,
+      "pages": 3,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "ae1d7f064126b3f56c08e58a25018190a0f102de2ebdce789c2ebc4a441adef5",
+        "c16cd28ae54974d7a5581db7323b2a9b85fccd531668c80b07ab527155186394"
+      ],
+      "segments": 94,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 545,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-36",
+      "title": "Product recall plan",
+      "sourcePath": "docs/content-candidates/governance-safety-template-candidates.md",
+      "sourceHash": "5a13329b1421103e2b7ea81c2d5e2c9cd43f4f7853b2bb42b0fedc27eb354dc5",
+      "canonicalHash": "5bc3957141c587dff0c0eb1008653ead936dd39c81772e0c1a3bff7d115dc672",
+      "docxHash": "b14166b2d658e1248b2364570a1eee4676f715796c7f94bb503bb918e698fdd6",
+      "pdfHash": "2a93527c49231b6fa590f8d22fd459f33505653d68a365ea72e2654f7734d70a",
+      "docxBytes": 14870,
+      "pdfBytes": 59581,
+      "pages": 4,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "b212ab18acea401972222a2d367cd44a351fc25a136f6f6f29a77904a50431b1",
+        "ff8efe77f24f8b039a8fc485373b7efa4b2200b88d4c681f1481733e1f5b94ba"
+      ],
+      "segments": 89,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 494,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-37",
+      "title": "Food hygiene checklist",
+      "sourcePath": "docs/content-candidates/governance-safety-template-candidates.md",
+      "sourceHash": "5a13329b1421103e2b7ea81c2d5e2c9cd43f4f7853b2bb42b0fedc27eb354dc5",
+      "canonicalHash": "27d1cb03146c8206839c8645b59cad0c82e8578595dfafbd02c1310ade5afbc2",
+      "docxHash": "eaef1a79a6296cb15998536183f136a35c696bea33086e3db9eef028ff462150",
+      "pdfHash": "eede2f5dbaa4bd85888bdb262a2ffae39e12da8c43d150cdce746676c32eb86f",
+      "docxBytes": 14562,
+      "pdfBytes": 59180,
+      "pages": 4,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "38a849b4347dd22bf895263a69e37e02f6f7963258d547b99ed79e4d2cb02220",
+        "906cc792dde2174b48870e14748a1e7b80c0c9eee884a826870e1678879619ad"
+      ],
+      "segments": 109,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 538,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-38",
+      "title": "Equipment maintenance log",
+      "sourcePath": "docs/content-candidates/operational-template-candidates.md",
+      "sourceHash": "07b23152ea8f3588644b5f996bc900a6fb5942022b61605ce8565a21c7d3494c",
+      "canonicalHash": "6bb6f196576ad6717e70c0f931f2a84d6571e8889c4d7c52bef1ff6bb02fda7f",
+      "docxHash": "6d561cd48be7bad0ad946dcb537526af4779ce8d196a236ccae27796f362cbe3",
+      "pdfHash": "15aadcdbb4cfe482bde9bae8de240732fa1b310bf7c8efa82700ec291a135ca5",
+      "docxBytes": 13866,
+      "pdfBytes": 56812,
+      "pages": 4,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "14575ee5ce2b784570572b73b661dcb4d1b9eddb973b6aff9a0317c35ead14a9",
+        "fa97c6901e2b4c3f710c849b4a398006174c68fc00fe12f69cbcb1fab4e2b1bf"
+      ],
+      "segments": 85,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 519,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-39",
+      "title": "Commercial lease checklist",
+      "sourcePath": "docs/content-candidates/commercial-template-candidates.md",
+      "sourceHash": "5f6ac775542a776f08f1a55505d7b5333ef9e1787fc47aad846948e730bfb963",
+      "canonicalHash": "bb1ca7ba1c2353a7ffa7acbcf478dac77d71b492a4356396fd13bb8f8dc075b4",
+      "docxHash": "a3b2dc660e4155b00112e2581cb33004feb275e70719f7b7e89ed8eb38fb7ad5",
+      "pdfHash": "656edd62e5eb0a061b863218e6452b46ac7a2f0848f21106d225eadb03d23a5f",
+      "docxBytes": 17127,
+      "pdfBytes": 69719,
+      "pages": 4,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "ff7c4cb6126f49c361b853954a744be156f5ae6b4a562e47d2d2edd9c3822add",
+        "82f981d60a1d95f8acded25c26c69c186defe0a0f3d6a1f7266ee44f744f58ea"
+      ],
+      "segments": 46,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 545,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    },
+    {
+      "id": "TPL-40",
+      "title": "Compliance evidence checklist",
+      "sourcePath": "docs/content-candidates/additional-template-candidates-b.md",
+      "sourceHash": "6e5d39fb2f6480ef1ae198c19561b9dfc932f1dee4b7cf97494a6dac3ed21889",
+      "canonicalHash": "116b972bd781476e184bc0f5c31a6d2d643e180d0294b04270b9cb509508830e",
+      "docxHash": "466a22d2a722da2ea404389124ec58e1b5370b377c681afcac9aadf98088b6aa",
+      "pdfHash": "f8a74a6ea23b64c865aa21b695d70a312cb5e3ab18d83c7fe8b1710096dd58ca",
+      "docxBytes": 13781,
+      "pdfBytes": 54314,
+      "pages": 3,
+      "a4": true,
+      "wordBounds": true,
+      "readerModes": [
+        "layout",
+        "raw"
+      ],
+      "readerOutputHashes": [
+        "6b7cc8463773bf1b672b5258ce840e3f69e0c26631c451a3d93183def6748180",
+        "695e45e694a3129d4577703fff9e0336b8ae38940fedb0536c5c51c8e2e9f2e0"
+      ],
+      "segments": 64,
+      "missingPDF": [],
+      "missingDOCX": [],
+      "passed": true,
+      "elapsedMs": 498,
+      "publicationStatus": "unpublished_candidate",
+      "independentReviews": 0
+    }
+  ],
+  "passed": 40,
+  "total": 40,
+  "providerCalls": 0,
+  "publishedTemplates": 0,
+  "professionalReviewClaimed": false,
+  "r1Accepted": false,
+  "r2Unlocked": false
+}

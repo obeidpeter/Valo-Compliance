@@ -1,0 +1,507 @@
+# The customer's account record, privacy requests and cases, and workspace data exports.
+paths:
+  /workspace/account:
+    get:
+      operationId: getCustomerAccount
+      tags: [workspace]
+      responses:
+        "200":
+          description: Actual saved privacy requests for the authorised workspace.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CustomerAccount" }
+  /workspace/privacy-requests:
+    post:
+      operationId: requestCustomerPrivacy
+      tags: [workspace]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PrivacyRequestInput" }
+      responses:
+        "201":
+          description: Saved request; no deletion or provider-wide fulfilment is claimed.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AccessSupportAck" }
+        "429": { $ref: "#/components/responses/WriteLimit" }
+  /workspace/data-export:
+    get:
+      operationId: downloadWorkspaceData
+      tags: [workspace]
+      responses:
+        "200":
+          description: Private structured workspace data; identity/provider-wide export is separately requested.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WorkspaceDataExport" }
+  /workspace/data-exports:
+    get:
+      operationId: listWorkspaceDataExports
+      parameters:
+        - {in: query, name: cursor, required: false, schema: {type: string, format: uuid}}
+      responses:
+        "200":
+          description: Current user's durable private exports.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/WorkspaceExportPage"}
+    post:
+      operationId: createWorkspaceDataExport
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkspaceExportRequest"
+      responses:
+        "201":
+          description: Persistent export identity; not proof of completed preparation.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/WorkspaceExportJob"}
+  /workspace/data-exports/{id}:
+    get:
+      operationId: getWorkspaceDataExport
+      parameters:
+        - {in: path, name: id, required: true, schema: {type: string, format: uuid}}
+      responses:
+        "200":
+          description: Current recorded status for the owning account.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/WorkspaceExportJob"}
+  /workspace/data-exports/{id}/cancel:
+    post:
+      operationId: cancelWorkspaceDataExport
+      parameters:
+        - {in: path, name: id, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/WorkspaceExportAction"}
+      responses:
+        "200":
+          description: Recorded action; neither download receipt nor physical deletion proof.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/WorkspaceExportJob"}
+  /workspace/data-exports/{id}/retry:
+    post:
+      operationId: retryWorkspaceDataExport
+      parameters:
+        - {in: path, name: id, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/WorkspaceExportAction"}
+      responses:
+        "200":
+          description: Recorded action; neither download receipt nor physical deletion proof.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/WorkspaceExportJob"}
+  /workspace/data-exports/{id}/download:
+    get:
+      operationId: downloadWorkspaceDataArtifact
+      parameters:
+        - {in: path, name: id, required: true, schema: {type: string, format: uuid}}
+      responses:
+        "200":
+          description: Complete verified private JSON artifact, never a partial preparation.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/WorkspaceDataExport"}
+        "206":
+          description: Authorized byte range of an already complete verified artifact.
+          content:
+            application/octet-stream:
+              schema: {type: string}
+  /workspace/privacy-cases:
+    get:
+      operationId: listPrivacyCases
+      responses:
+        "200":
+          description: Owner-scoped requests with actual processing state, not assumed fulfilment
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/PrivacyCase" } }
+        "401": { $ref: "#/components/responses/AuthError" }
+  /workspace/privacy-cases/{id}/respond:
+    post:
+      operationId: respondPrivacyCase
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PrivacyInformation"
+      responses:
+        "200":
+          description: Information saved to this case, separately from identity verification
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PrivacyCaseDetail" }
+        "401": { $ref: "#/components/responses/AuthError" }
+  /workspace/privacy-cases/{id}:
+    get:
+      operationId: getPrivacyCase
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Request and its audited processing steps
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PrivacyCaseDetail" }
+        "404": { $ref: "#/components/responses/AuthError" }
+  /workspace/privacy-cases/{id}/verify:
+    post:
+      operationId: verifyPrivacyCase
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PrivacyCaseConfirmation" }
+      responses:
+        "200":
+          description: Ownership verified against the active managed identity and workspace; no fulfilment implied
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PrivacyCaseDetail" }
+        "409": { $ref: "#/components/responses/ConflictError" }
+  /workspace/privacy-cases/{id}/cancel:
+    post:
+      operationId: cancelPrivacyCase
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PrivacyCaseConfirmation" }
+      responses:
+        "200":
+          description: A not-yet-destructive request was cancelled
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PrivacyCaseDetail" }
+        "409": { $ref: "#/components/responses/ConflictError" }
+  /workspace/privacy-cases/{id}/result:
+    get:
+      operationId: downloadPrivacyCaseResult
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Private prepared result, with its exact included systems and remaining exclusions
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+        "404": { $ref: "#/components/responses/AuthError" }
+  /admin/privacy-cases:
+    get:
+      operationId: listStaffPrivacyCases
+      parameters:
+        - { in: query, name: page, schema: { type: integer, minimum: 1, default: 1 } }
+      responses:
+        "200":
+          description: Privacy-role and fresh-MFA gated queue
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, page, total, pageSize]
+                properties:
+                  items: { type: array, items: { $ref: "#/components/schemas/PrivacyCase" } }
+                  page: { type: integer }
+                  total: { type: integer }
+                  pageSize: { type: integer }
+        "403": { $ref: "#/components/responses/AuthError" }
+  /admin/privacy-cases/{id}:
+    get:
+      operationId: getStaffPrivacyCase
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Fresh-MFA privacy staff read-only case inspection and currently permitted operations
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PrivacyCaseDetail" }
+        "401": { $ref: "#/components/responses/AuthError" }
+  /admin/privacy-cases/{id}/action:
+    post:
+      operationId: actOnStaffPrivacyCase
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PrivacyStaffAction" }
+      responses:
+        "200":
+          description: Audited permitted action; requests and pending provider steps are never reported as confirmed outcomes
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PrivacyCaseDetail" }
+        "403": { $ref: "#/components/responses/AuthError" }
+        "409": { $ref: "#/components/responses/ConflictError" }
+  /admin/privacy-holds:
+    get:
+      operationId: listPrivacyHolds
+      responses:
+        "200":
+          description: Privacy-role and fresh-MFA gated holds of their own on workspaces, the standing ones first, then the most recently placed, up to 100
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PrivacyHoldList" }
+        "403": { $ref: "#/components/responses/AuthError" }
+    post:
+      operationId: placePrivacyHold
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PrivacyHoldInput" }
+      responses:
+        "200":
+          description: The hold placed. While it stands, Valo's own deletion of the workspace's data stops.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PrivacyHold" }
+        "403": { $ref: "#/components/responses/AuthError" }
+        "404": { $ref: "#/components/responses/AuthError" }
+        "409": { $ref: "#/components/responses/ConflictError" }
+        "503": { description: The privacy holds migrations have not been applied }
+  /admin/privacy-holds/{id}/release:
+    post:
+      operationId: releasePrivacyHold
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PrivacyHoldRelease" }
+      responses:
+        "200":
+          description: The hold released, by another member of privacy staff than the one who placed it
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PrivacyHold" }
+        "403": { $ref: "#/components/responses/AuthError" }
+        "404": { $ref: "#/components/responses/AuthError" }
+        "409": { $ref: "#/components/responses/ConflictError" }
+        "503": { description: The privacy holds migrations have not been applied }
+schemas:
+  PrivacyRequestInput:
+    type: object
+    additionalProperties: false
+    required: [kind, message, acknowledgement]
+    properties:
+      kind: { type: string, enum: [correction, export, deletion] }
+      message: { type: string, minLength: 10, maxLength: 1500 }
+      acknowledgement: { type: boolean, enum: [true] }
+      idempotencyKey: { type: string, format: uuid }
+  PrivacyCaseConfirmation:
+    type: object
+    additionalProperties: false
+    required: [expectedVersion, acknowledgement]
+    properties:
+      expectedVersion: { type: integer, minimum: 1 }
+      acknowledgement: { type: boolean, enum: [true] }
+  PrivacyCase:
+    type: object
+    required: [id, workspaceId, reference, kind, message, status, version, assigned, verifiedAt, resultAvailable, resultScope, createdAt, updatedAt]
+    properties:
+      id: { type: string, format: uuid }
+      workspaceId: { type: string, format: uuid }
+      reference: { type: string }
+      kind: { type: string, enum: [correction, export, deletion] }
+      message: { type: string }
+      status: { type: string, enum: [awaiting_verification, verified, assigned, in_progress, needs_information, held, partially_fulfilled, fulfilled, rejected, cancelled, failed] }
+      version: { type: integer }
+      assigned: { type: boolean }
+      verifiedAt: { type: string, nullable: true }
+      resultAvailable: { type: boolean }
+      resultScope: { type: string }
+      createdAt: { type: string }
+      updatedAt: { type: string }
+      aimBy:
+        type: string
+        nullable: true
+        description: In the staff queue only, for a request not yet done, refused or cancelled, the date Valo aims to finish it by. It is Valo's own aim, not a time limit set by law.
+  PrivacyInformation:
+    type: object
+    additionalProperties: false
+    required: [expectedVersion, message]
+    properties:
+      expectedVersion: { type: integer, minimum: 1 }
+      message: { type: string, minLength: 10, maxLength: 4000 }
+  PrivacyCaseDetail:
+    type: object
+    required: [request, events, steps, messages, mayRespond]
+    properties:
+      request: { $ref: "#/components/schemas/PrivacyCase" }
+      mayRespond: { type: boolean }
+      availableActions: { type: array, items: { type: string } }
+      workspaceHeld:
+        type: boolean
+        description: In the staff view only, whether a hold of its own stands on the request's workspace. While it does, Valo's own deletion of the workspace's data stops, and the erasure is not offered.
+      messages:
+        type: array
+        items:
+          type: object
+          required: [id, body, createdAt]
+          properties:
+            id: { type: string, format: uuid }
+            body: { type: string }
+            createdAt: { type: string }
+      events:
+        type: array
+        items:
+          type: object
+          required: [sequence, action, actorType, reason, createdAt]
+          properties:
+            sequence: { type: integer }
+            action: { type: string }
+            actorType: { type: string, enum: [customer, staff, worker] }
+            reason: { type: string }
+            createdAt: { type: string }
+      steps:
+        type: array
+        items:
+          type: object
+          required: [system, status, detail]
+          properties:
+            system: { type: string }
+            status: { type: string, enum: [pending, running, confirmed, held, failed, not_applicable] }
+            detail: { type: string }
+  PrivacyStaffAction:
+    type: object
+    additionalProperties: false
+    required: [expectedVersion, action, reason]
+    properties:
+      expectedVersion: { type: integer, minimum: 1 }
+      action: { type: string, enum: [claim, request_information, hold, release_hold, reject, prepare_export, record_correction, start_erasure, resume_erasure, record_step, complete] }
+      reason: { type: string, minLength: 10, maxLength: 1000 }
+      profileVersionId: { type: string, format: uuid }
+      acknowledgement: { type: boolean }
+      system:
+        type: string
+        description: For record_step, the outside step recorded. The reason is its words, which the person who asked reads.
+        enum: [private_files, managed_identity, external_processors, retention_and_recovery]
+      outcome:
+        type: string
+        description: For record_step, whether the step was carried out and confirmed, or was not needed.
+        enum: [confirmed, not_applicable]
+  PrivacyHold:
+    type: object
+    description: A hold of its own on a workspace, apart from any privacy request. Privacy staff see it; the person whose workspace is held is not shown its reason.
+    required: [id, workspaceId, reason, placedAt, placedByYou, released, releasedAt, releaseReason, releasedByYou]
+    properties:
+      id: { type: string, format: uuid }
+      workspaceId: { type: string, format: uuid }
+      reason: { type: string }
+      placedAt: { type: string }
+      placedByYou: { type: boolean }
+      released: { type: boolean }
+      releasedAt: { type: string, nullable: true }
+      releaseReason: { type: string, nullable: true }
+      releasedByYou: { type: boolean }
+  PrivacyHoldList:
+    type: object
+    required: [ready, items]
+    properties:
+      ready:
+        type: boolean
+        description: Whether the privacy holds migrations have reached this database. Until they have, nothing is held and no hold can be placed.
+      items: { type: array, items: { $ref: "#/components/schemas/PrivacyHold" } }
+  PrivacyHoldInput:
+    type: object
+    additionalProperties: false
+    required: [workspaceId, reason]
+    properties:
+      workspaceId: { type: string, format: uuid }
+      reason: { type: string, minLength: 10, maxLength: 1000 }
+  PrivacyHoldRelease:
+    type: object
+    additionalProperties: false
+    required: [reason]
+    properties:
+      reason: { type: string, minLength: 10, maxLength: 1000 }
+  CustomerAccount:
+    type: object
+    required: [workspaceId, privacyRequests]
+    properties:
+      workspaceId: { type: string, format: uuid }
+      privacyRequests:
+        type: array
+        items: { $ref: "#/components/schemas/PrivacyRequestRecord" }
+  PrivacyRequestRecord:
+    type: object
+    required: [reference, request, status, createdAt]
+    properties:
+      reference: { type: string }
+      request: { type: string }
+      status: { type: string }
+      createdAt: { type: string }
+  WorkspaceExportRequest:
+    type: object
+    required: [requestKey]
+    additionalProperties: false
+    properties:
+      requestKey: {type: string, format: uuid}
+  WorkspaceExportAction:
+    type: object
+    required: [expectedVersion]
+    additionalProperties: false
+    properties:
+      expectedVersion: {type: integer, minimum: 1}
+  WorkspaceExportPage:
+    type: object
+    required: [items, nextCursor]
+    properties:
+      items: {type: array, items: {$ref: "#/components/schemas/WorkspaceExportJob"}}
+      nextCursor: {type: string, nullable: true}
+  WorkspaceExportJob:
+    type: object
+    required: [id, status, version, attempts, createdAt, expiresAt, snapshotAt, size, counts, errorCode, notice, progress, retryAvailable]
+    properties:
+      id: {type: string, format: uuid}
+      status: {type: string, enum: [queued, preparing, interrupted, ready, cancelled, expired]}
+      version: {type: integer, minimum: 1}
+      retryAvailable: {type: boolean}
+      progress:
+        type: object
+        required: [section, rows, bytes]
+        properties:
+          section: {type: string, nullable: true}
+          rows: {type: integer, minimum: 0}
+          bytes: {type: integer, minimum: 0}
+      attempts: {type: integer}
+      createdAt: {type: string, format: date-time}
+      expiresAt: {type: string, format: date-time}
+      snapshotAt: {type: string, nullable: true}
+      size: {type: number, nullable: true}
+      counts: {type: object, additionalProperties: {type: integer}, nullable: true}
+      errorCode: {type: string, nullable: true}
+      notice: {type: string}
+  WorkspaceDataExport:
+    type: object
+    required: [schemaVersion, exportedAt, workspaceId, scope, data]
+    properties:
+      schemaVersion: { type: integer }
+      exportedAt: { type: string }
+      workspaceId: { type: string }
+      scope: { type: string }
+      data: { type: object, additionalProperties: true }

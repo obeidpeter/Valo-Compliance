@@ -1,0 +1,196 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-14T13:40:59.454Z",
+  "scope": "Synthetic development customer safety and recovery, not complete R1/R2 acceptance",
+  "baseSavedCommit": "04df6d650704c2143cda61afaf99c99818d24200",
+  "codeBinding": "Exact working-tree source hashes; these must match the saved implementation checkpoint",
+  "tests": {
+    "api": {
+      "tests": 117,
+      "passed": 116,
+      "failed": 0,
+      "skipped": 1,
+      "scope": "Engineering controls, not formal 80/60/60 acceptance",
+      "rawReport": "docs/valo/evidence/customer-safety-raw-api.txt",
+      "rawHash": "bc11227407b476cd85e1f5e54a5d5083f332bb311898f0ed0e0613624913652b"
+    },
+    "commerce": {
+      "tests": 15,
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0,
+      "scope": "Engineering controls, not formal 80/60/60 acceptance",
+      "rawReport": "docs/valo/evidence/customer-safety-raw-commerce.txt",
+      "rawHash": "77013ed61f90d2f5e23a4bc1caa5ffd775afbfd8bc3c4545f066602b3c91fc89"
+    },
+    "refunds": {
+      "tests": 17,
+      "passed": 17,
+      "failed": 0,
+      "skipped": 0,
+      "scope": "Engineering controls, not formal 80/60/60 acceptance",
+      "rawReport": "docs/valo/evidence/customer-safety-raw-refunds.txt",
+      "rawHash": "829edc97ec34771b7786beece9706c27e11b15431c92b933f87c5655f92fddda"
+    },
+    "paymentHttp": {
+      "tests": 5,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "scope": "Engineering controls, not formal 80/60/60 acceptance",
+      "rawReport": "docs/valo/evidence/customer-safety-raw-paymentHttp.txt",
+      "rawHash": "b9c03c8c478da183e664cd94699ea3498bf92cdedd0bc3e24e8a0f7f6fb02a54"
+    },
+    "tasksAndReminders": {
+      "tests": 12,
+      "passed": 12,
+      "failed": 0,
+      "skipped": 0,
+      "scope": "Engineering controls, not formal 80/60/60 acceptance",
+      "rawReport": "docs/valo/evidence/customer-safety-raw-tasksAndReminders.txt",
+      "rawHash": "b7e930e69004983280476f4b16a34e4977b737a510d4d8aa4dbd8c44f6828be1"
+    }
+  },
+  "browser": {
+    "checkedAt": "2026-11-14T13:39:33.117Z",
+    "syntheticDevelopmentOnly": true,
+    "checks": [
+      {
+        "name": "managed_verified_customer_can_open_private_routes",
+        "status": "pass"
+      },
+      {
+        "name": "real_editor_navigation_financial_restore_undo_and_concurrent_session",
+        "status": "pass"
+      },
+      {
+        "name": "real_task_notes_survive_filters_background_refresh_and_revision_conflict",
+        "status": "pass"
+      },
+      {
+        "name": "real_reminder_optout_without_offsets_survives_reload",
+        "status": "pass"
+      }
+    ],
+    "selection": "managed-identity-editor-safety",
+    "actualManagedIdentityUsed": true,
+    "realEmailDeliveryClaimed": false,
+    "actualNewPublications": 0,
+    "fixtureDisclosure": "Actual managed synthetic verified identity, application API and PostgreSQL. Two real browser tabs; one PATCH delayed then released unchanged to order a revision conflict. No forged API responses, provider sends, AI calls or payment calls.",
+    "r1Accepted": false,
+    "r2Accepted": false,
+    "cleanupErrors": 0,
+    "cleanup": "Owned synthetic identity and application rows removed; provider usage history untouched.",
+    "rawReport": "generated-artifacts/valo-customer-ux/browser.json",
+    "rawHash": "76acf3c4936a6965507458df85217303993a86402be63a7e3b16000015ba43db"
+  },
+  "iterationDiagnostics": "docs/valo/evidence/customer-safety-browser-iterations.json",
+  "sources": [
+    {
+      "path": "artifacts/valo/src/screens/document-editor.tsx",
+      "sha256": "eddcd568ab44ecc0c8a676c6fd8d1374a019bc9d3dfee2d1fd64c8702492734f"
+    },
+    {
+      "path": "artifacts/valo/src/components/financial-fields.tsx",
+      "sha256": "957d8bcc933272147b4a93b577398ff38623f228d8cb0bf3f95c0438ea1628d7"
+    },
+    {
+      "path": "artifacts/valo/src/lib/use-unsaved-navigation.ts",
+      "sha256": "94558585127395d44989576529457dd6365a76edbeab05966450775c80f2d7ba"
+    },
+    {
+      "path": "artifacts/valo/src/components/unsaved-navigation-dialog.tsx",
+      "sha256": "4954f648f838e376358b763d9fe216e2f9c25f5337ddfa99adf27ecefd4dcb07"
+    },
+    {
+      "path": "artifacts/valo/src/lib/api.ts",
+      "sha256": "1a044c25243dc937e647f605e345786c7913ca4d9b0d25fd38bd865c76c7f780"
+    },
+    {
+      "path": "artifacts/valo/src/screens/tasks.tsx",
+      "sha256": "01c7074f5a80ac8ab88a8381092a02c93c1c920fc5b91d7a9ddc1aee3d378d4b"
+    },
+    {
+      "path": "artifacts/valo/src/screens/reminders.tsx",
+      "sha256": "2b0a77bd6ca271ad9de334bff7be67a1ceac4cc2dddb15e86ee699f0f529d960"
+    },
+    {
+      "path": "artifacts/api-server/src/scripts/customer-experience-journey.ts",
+      "sha256": "a9dbb699797019bca71b95487b9aef6241741be76664aeeb490c9303a771ec4e"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/valo-commerce.ts",
+      "sha256": "ad1eee39bb34b2f047ca65693d7a0be00aa0b1a794ad64005747627f359f16ac"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/valo-commerce.integration.test.ts",
+      "sha256": "16aacd776ebe0260bf31020e90f21a52cc5a683a3e198ea560c6afd93c36633a"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/valo-tasks.ts",
+      "sha256": "99e72447c49acf724ad89904050f9d9ddec8c0f2f7590d54c56eb633131e5e88"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/valo-task-pages.integration.test.ts",
+      "sha256": "68e743d0ea430831113cfd695ae7e7824f4ab9490921826099ca60af3b962e8f"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/valo-reminder-worker.ts",
+      "sha256": "78ef7cca02971203a37f846285419225ed7f21e80a2a64ae551521a38c09dec9"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/valo-reminder-delivery.integration.test.ts",
+      "sha256": "a8de77ab2011b01b58a3ff7a5ec1786fe6d9fc16302465aaf08015fa1814fd18"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/valo-reminder-resend.ts",
+      "sha256": "b962269a3ff65c3075c9b468d18f9ff84e920a4d8b897306d1003394105c1ca6"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/valo-reminder-resend.test.ts",
+      "sha256": "d0d17436c5ab1081cd4dac49ff719e66ba0e1fd5230224810d7ec504773f89b5"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/valo-operational-dispatch.ts",
+      "sha256": "c55ef618f1bb81b3842daf07d2c21816d76a8aaefe7bcbaa1ba26b9372011cf6"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/valo-operational-dispatch.test.ts",
+      "sha256": "9af356b53486c3b3ebd91980995cab7d645b9baeca045ae6f7e49c48b84685b2"
+    },
+    {
+      "path": "artifacts/api-server/src/workers/export-worker.ts",
+      "sha256": "30e4e53d521981cf7d4783ced7f3d17bfccd9859970a6f60aa86b76f15b4e1a3"
+    },
+    {
+      "path": "artifacts/api-server/src/routes/valo-requirements.ts",
+      "sha256": "39147962c39d23233d307f1019b33ecf9ef5f080d78bdd58a31324c6803a7ef2"
+    },
+    {
+      "path": "artifacts/api-server/package.json",
+      "sha256": "f51814c7a4955983f74618bb527645c08161b2cb760d8cb26aad8599cb28b6bd"
+    },
+    {
+      "path": "lib/api-spec/openapi.yaml",
+      "sha256": "a95a151388723c123534b1a85cd405a2cf5acabf48072fa1ef2a143d2153b559"
+    }
+  ],
+  "controlledPaymentProvider": true,
+  "realPaystackCalls": 0,
+  "realEmailSends": 0,
+  "paidAiCalls": 0,
+  "limitations": [
+    "The task corpus is a controlled 205-active-task database fixture, not 205 real customers.",
+    "Receipt repair and reversal use controlled verified provider payloads, not actual merchant settlement.",
+    "Four browser groups use a real managed synthetic identity and real application APIs/database; one PATCH is delayed and released unchanged to order the two-tab conflict.",
+    "Type-specific twelve-editor integration is incomplete; shared guided field code remains scaffolding.",
+    "Privacy fulfilment/erasure operations, verified delivery/bounce handling and rich-fact source-rule implementation remain incomplete.",
+    "No new source-backed 80-rule, provider-quality 60-customer-AI or 60-editorial acceptance execution is claimed.",
+    "No eligible publication, production restore, independent security review, beta, R1/R2 or launch acceptance is established."
+  ],
+  "r1Accepted": false,
+  "r2Accepted": false,
+  "publicLaunchEnabled": false,
+  "livePaymentsEnabled": false,
+  "acceptedRequirementIds": []
+}

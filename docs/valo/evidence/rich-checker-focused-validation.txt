@@ -1,0 +1,58 @@
+Observed local focused validation after independent review corrections
+UTC: 2026-11-14T22:46:46.371297+00:00
+
+$ node --import tsx --test artifacts/api-server/src/lib/valo-checker-rich.test.ts artifacts/valo/src/lib/rich-checker.test.ts artifacts/api-server/src/lib/valo-task-source-guard.integration.test.ts
+
+✔ old v1 result/hash and generated saved response remain unchanged (8.451946ms)
+✔ v2 preserves known false, absence and all three marker states through request/save schemas (9.339553ms)
+✔ version and client evidence injection are rejected without source policy coercion (4.701867ms)
+✔ four outcomes traverse the real engine and generated response contract in private fixture mode (72.200065ms)
+✔ all partners matter; unknown appointment and unknown exception facts do not become a negative (12.670088ms)
+✔ household context never fills an omitted purpose or upgrades uncertainty into exemption (3.158482ms)
+✔ unknown operator and derived exception questions map back to actual supplied answers (2.514925ms)
+✔ period and product questions retain their narrow scope without an automatic date or duplicate application (3.788528ms)
+✔ source-family implementation, publication, period and freshness gates fail closed (3.17154ms)
+✔ comparison identifies removed and changed nested answers without flattening marker states (1.085045ms)
+✔ original source candidate bytes remain bound and unchanged (1.111869ms)
+✔ composite privacy questions preserve each original marker and target actual facts (1.400964ms)
+✔ contradictory formation and personal-data facts ask for review without changing known answers (1.990223ms)
+✔ authority-only classifications are explicit source holds without invented customer questions (1.537305ms)
+✔ indirect supporting circumstances remain answerable but cannot certify an exception (1.168825ms)
+✔ product composite questions retain markers and separate permit authority review (1.379246ms)
+✔ unsupported succession composition points to real name facts and a source-review hold (1.038149ms)
+✔ known unsupported classifications cannot be fixed by asserting a legal conclusion (1.383535ms)
+﹣ new source-linked tasks recheck current eligibility before any insert (0.819017ms) # SKIP
+✔ rich review preserves known false, omitted answers and all three explicit states (2.311578ms)
+✔ changing the operator preserves partner and name answers, and editing a field preserves other groups (0.787687ms)
+✔ review and comparisons address nested partners and removed rich facts without object text (0.983023ms)
+✔ submission removes unfinished blank name rows without inventing answers or clearing conditional details (1.49039ms)
+✔ all four result labels are represented and server task restrictions override likely relevance (0.250265ms)
+✔ exact names stay literal across review and grouped comparison (0.354946ms)
+✔ rich question targets cover every declared customer control, including support facts (2.693187ms)
+✔ group and indexed question targets have real fallbacks while review aliases have no target (0.776842ms)
+ℹ tests 27
+ℹ suites 0
+ℹ pass 26
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 1
+ℹ todo 0
+ℹ duration_ms 1055.854388
+
+exit=0
+
+$ node_modules/.bin/tsc --noEmit --target es2022 --module esnext --moduleResolution bundler --skipLibCheck --strict --types node lib/valo-core/src/checker.ts lib/valo-core/src/checker-rich.ts artifacts/api-server/src/lib/valo-checker-rich.test.ts lib/api-client-react/src/generated/api.schemas.ts lib/api-zod/src/generated/api.ts scripts/src/valo/rule-evaluation-fixtures.ts
+
+
+exit=0
+
+$ node_modules/.bin/tsc -b lib/valo-core
+
+
+exit=0
+
+$ node --import tsx -e import("./scripts/src/valo/rule-evaluation-fixtures.ts").then(m=>{for(const f of m.ruleEvaluationFixtures)m.executeRuleFixture(f); console.log(JSON.stringify({suite:"legacy synthetic predicate engineering fixtures (not source oracle)",cases:m.ruleEvaluationFixtures.length,passed:m.ruleEvaluationFixtures.length}));})
+
+{"suite":"legacy synthetic predicate engineering fixtures (not source oracle)","cases":80,"passed":80}
+
+exit=0

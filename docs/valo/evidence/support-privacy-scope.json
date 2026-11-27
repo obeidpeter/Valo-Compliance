@@ -1,0 +1,341 @@
+{
+  "preparedAt": "2026-11-14T14:38:10.013Z",
+  "developmentOnly": true,
+  "codeHashes": {
+    "artifacts/valo/src/components/support-records.tsx": "014d81b0e185a46f0fbed36edb414ec87b642131c4b00448becd405e7d2f7624",
+    "artifacts/valo/src/screens/staff.tsx": "99c71790c8e1bcf425f519c154c2151a5a9956d764efbc00358c92f38eb26232",
+    "artifacts/valo/src/screens/account.tsx": "1840581d901838fe6818d890967c5bc6bb64fd67e0fc103200c5d54e93b39577",
+    "artifacts/api-server/src/lib/valo-customer-access.ts": "466f413bd34a111614615b25cc3167864ca1167f15c6ea4a011ae633abe51a3c",
+    "artifacts/api-server/src/scripts/customer-experience-journey.ts": "8db33c7f01706ada9c0f188108458f1136f0ed8b43184a07d560dd2000d4a692"
+  },
+  "browserEvidence": {
+    "sha256": "0feab08468fc49cccc11b7f6f6ca02eb3ac60662ac27063139d02f5df645ba0d",
+    "checkedAt": "2026-11-14T14:34:48.810Z",
+    "syntheticDevelopmentOnly": true,
+    "checks": [
+      {
+        "name": "managed_verified_customer_can_open_private_routes",
+        "status": "pass"
+      },
+      {
+        "name": "controlled_support_display_preserves_mixed_full_messages_and_keyboard_mobile",
+        "status": "pass"
+      },
+      {
+        "name": "real_private_privacy_request_reload_and_JSON_download",
+        "status": "pass"
+      }
+    ],
+    "selection": "managed-identity-support-details-and-privacy-scope",
+    "actualManagedIdentityUsed": true,
+    "realEmailDeliveryClaimed": false,
+    "actualNewPublications": 0,
+    "fixtureDisclosure": "Actual managed synthetic customer verification, private routes, saved privacy ticket and workspace JSON download. The real staff API denied this customer. ONLY the staff display payload was intercepted with synthetic mixed request records for full-message, XSS, keyboard and mobile checks. No actual authorised staff/MFA session, privacy fulfilment, provider-wide export or erasure was proven. No messages sent.",
+    "r1Accepted": false,
+    "r2Accepted": false,
+    "cleanupErrors": 0,
+    "cleanup": "Owned synthetic identity and application rows removed; provider usage history untouched."
+  },
+  "typecheck": {
+    "command": "pnpm run typecheck",
+    "startedAt": "2026-11-14T14:37:56Z",
+    "endedAt": "2026-11-14T14:38:08.691Z",
+    "exitCode": 0,
+    "metadataSha256": "118a602eb2ecf6d0ceaf21f2c4a221d4c85927717677c61cfafc3adb4bdca320",
+    "outputSha256": "6dae4af028f38ac5d5da438946ef17f14111f39d020f1f87bb3719a1d18ac818",
+    "output": "\n> workspace@0.0.0 typecheck /home/runner/workspace\n> pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck\n\n\n> workspace@0.0.0 typecheck:libs /home/runner/workspace\n> tsc --build\n\nScope: 4 of 11 workspace projects\nartifacts/api-server typecheck$ tsc -p tsconfig.json --noEmit\nartifacts/mockup-sandbox typecheck$ tsc -p tsconfig.json --noEmit\nartifacts/valo typecheck$ tsc -p tsconfig.json --noEmit\nscripts typecheck$ tsc -p tsconfig.json --noEmit\nscripts typecheck: Done\nartifacts/valo typecheck: Done\nartifacts/mockup-sandbox typecheck: Done\nartifacts/api-server typecheck: Done\n"
+  },
+  "retainedIntermediateHarnessFailure": {
+    "disposition": "Superseded by the final passing run. A locator observation used an arrow-function string instead of an invoked browser callback; this is not evidence of a product focus failure.",
+    "report": {
+      "checkedAt": "2026-11-14T14:31:48.250Z",
+      "syntheticDevelopmentOnly": true,
+      "checks": [
+        {
+          "name": "managed_verified_customer_can_open_private_routes",
+          "status": "pass"
+        },
+        {
+          "name": "controlled_support_display_preserves_mixed_full_messages_and_keyboard_mobile",
+          "status": "fail",
+          "diagnostic": "{\"state\":{\"path\":\"/staff\",\"headings\":1,\"width\":1280,\"scroll\":1280,\"focus\":\"SUMMARY\",\"focusOutline\":\"rgb(16, 16, 16) solid 2px\",\"focusId\":\"\",\"focusVisible\":true,\"alerts\":[],\"overflow\":[]},\"location\":\"    at <anonymous> (/home/runner/workspace/artifacts/api-server/src/scripts/customer-experience-journey.ts:295:67)\"}"
+        },
+        {
+          "name": "real_private_privacy_request_reload_and_JSON_download",
+          "status": "pass"
+        }
+      ],
+      "selection": "managed-identity-support-details-and-privacy-scope",
+      "actualManagedIdentityUsed": true,
+      "realEmailDeliveryClaimed": false,
+      "actualNewPublications": 0,
+      "fixtureDisclosure": "Actual managed synthetic customer verification, private routes, saved privacy ticket and workspace JSON download. The real staff API denied this customer. ONLY the staff display payload was intercepted with synthetic mixed request records for full-message, XSS, keyboard and mobile checks. No actual authorised staff/MFA session, privacy fulfilment, provider-wide export or erasure was proven. No messages sent.",
+      "r1Accepted": false,
+      "r2Accepted": false,
+      "cleanupErrors": 0,
+      "cleanup": "Owned synthetic identity and application rows removed; provider usage history untouched."
+    }
+  },
+  "publicObservation": {
+    "observedAt": "2026-11-14T14:38:10.014Z",
+    "catalogue": {
+      "items": [],
+      "total": 0,
+      "page": 1,
+      "heldTemplates": 40
+    },
+    "coverage": {
+      "industries": [
+        {
+          "id": "IND-01",
+          "slug": "retail-wholesale",
+          "title": "retail/wholesale",
+          "deeperPackTarget": true,
+          "enhancedEvidenceRequired": false,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        },
+        {
+          "id": "IND-02",
+          "slug": "packaged-food-manufacturing",
+          "title": "packaged-food manufacturing",
+          "deeperPackTarget": true,
+          "enhancedEvidenceRequired": false,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        },
+        {
+          "id": "IND-03",
+          "slug": "restaurants-hospitality",
+          "title": "restaurants/hospitality",
+          "deeperPackTarget": true,
+          "enhancedEvidenceRequired": false,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        },
+        {
+          "id": "IND-04",
+          "slug": "agriculture",
+          "title": "agriculture",
+          "deeperPackTarget": false,
+          "enhancedEvidenceRequired": false,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        },
+        {
+          "id": "IND-05",
+          "slug": "general-manufacturing",
+          "title": "general manufacturing",
+          "deeperPackTarget": false,
+          "enhancedEvidenceRequired": false,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        },
+        {
+          "id": "IND-06",
+          "slug": "logistics-transport",
+          "title": "logistics/transport",
+          "deeperPackTarget": false,
+          "enhancedEvidenceRequired": false,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        },
+        {
+          "id": "IND-07",
+          "slug": "construction",
+          "title": "construction",
+          "deeperPackTarget": false,
+          "enhancedEvidenceRequired": false,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        },
+        {
+          "id": "IND-08",
+          "slug": "real-estate",
+          "title": "real estate",
+          "deeperPackTarget": false,
+          "enhancedEvidenceRequired": false,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        },
+        {
+          "id": "IND-09",
+          "slug": "technology-software",
+          "title": "technology/software",
+          "deeperPackTarget": true,
+          "enhancedEvidenceRequired": false,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        },
+        {
+          "id": "IND-10",
+          "slug": "e-commerce",
+          "title": "e-commerce",
+          "deeperPackTarget": false,
+          "enhancedEvidenceRequired": false,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        },
+        {
+          "id": "IND-11",
+          "slug": "beauty-personal-care",
+          "title": "beauty/personal care",
+          "deeperPackTarget": true,
+          "enhancedEvidenceRequired": false,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        },
+        {
+          "id": "IND-12",
+          "slug": "fashion-textiles",
+          "title": "fashion/textiles",
+          "deeperPackTarget": false,
+          "enhancedEvidenceRequired": false,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        },
+        {
+          "id": "IND-13",
+          "slug": "healthcare",
+          "title": "healthcare",
+          "deeperPackTarget": false,
+          "enhancedEvidenceRequired": true,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        },
+        {
+          "id": "IND-14",
+          "slug": "education",
+          "title": "education",
+          "deeperPackTarget": false,
+          "enhancedEvidenceRequired": false,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        },
+        {
+          "id": "IND-15",
+          "slug": "professional-services",
+          "title": "professional services",
+          "deeperPackTarget": true,
+          "enhancedEvidenceRequired": false,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        },
+        {
+          "id": "IND-16",
+          "slug": "media-creative",
+          "title": "media/creative",
+          "deeperPackTarget": false,
+          "enhancedEvidenceRequired": false,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        },
+        {
+          "id": "IND-17",
+          "slug": "import-export",
+          "title": "import/export",
+          "deeperPackTarget": false,
+          "enhancedEvidenceRequired": false,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        },
+        {
+          "id": "IND-18",
+          "slug": "energy",
+          "title": "energy",
+          "deeperPackTarget": false,
+          "enhancedEvidenceRequired": true,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        },
+        {
+          "id": "IND-19",
+          "slug": "financial-services",
+          "title": "financial services",
+          "deeperPackTarget": false,
+          "enhancedEvidenceRequired": true,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        },
+        {
+          "id": "IND-20",
+          "slug": "other",
+          "title": "other",
+          "deeperPackTarget": false,
+          "enhancedEvidenceRequired": false,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        }
+      ],
+      "guidanceTarget": 30,
+      "publishedGuidance": 0,
+      "guidesTarget": 12,
+      "publishedGuides": 0,
+      "deeperPackTarget": 6,
+      "publishedDeeperPacks": 0,
+      "selectableLocations": 37,
+      "priorityLocations": [
+        "Lagos",
+        "FCT",
+        "Bayelsa"
+      ],
+      "checkedLocationPacks": 0,
+      "notice": "Coverage targets, not completed coverage. No federal, state/FCT or LGA guidance is currently released. Priority is not evidence of a source check.",
+      "ngoNotice": "NGO applicability depends on actual legal form, activities and geography. No tax or licensing exemption is inferred. NGO onboarding expansion remains locked until R1 acceptance."
+    }
+  },
+  "scope": {
+    "realCustomerVerificationAndPrivateJsonDownload": true,
+    "realStaffApiDeniedCustomer": true,
+    "supportDisplayUsesControlledPayload": true,
+    "actualAuthorisedStaffMfaSession": false,
+    "privacyVerificationAssignmentOrFulfilmentCompleted": false,
+    "externalProviderExportCompleted": false,
+    "erasureOrTombstoneWorkflowCompleted": false,
+    "modelPaymentOrEmailCalls": 0
+  },
+  "r1Accepted": false,
+  "r2Accepted": false,
+  "publicLaunchEnabled": false,
+  "livePaymentsEnabled": false
+}
