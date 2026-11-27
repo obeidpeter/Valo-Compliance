@@ -6,6 +6,7 @@
  *
  * Used only inside the module, and not re-exported: valo-reminder-sender.ts.
  */
+export * from "./reminder-unsubscribe";
 export * from "./valo-reminder-resend";
 export * from "./valo-reminder-worker";
 export * from "./valo-tasks";

@@ -9,7 +9,47 @@ paths:
           content:
             application/json:
               schema: { type: array, items: { $ref: "#/components/schemas/WorkspaceMessage" } }
+  /public/unsubscribe:
+    post:
+      operationId: unsubscribe
+      tags: [messages]
+      summary: Stop one kind of optional message, from the link in one of them; needs no account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UnsubscribeInput" }
+      responses:
+        "200":
+          description: That kind of message is off for the workspace the link was made for, whether or not it was before. The choice is recorded as the workspace's own.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UnsubscribeAck" }
+        "400":
+          description: Not a link Valo made, or one it no longer honours. Nothing was changed, and the answer does not say which.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiProblem" }
+        "429":
+          description: Too many tries with one workspace's links in a short time. This try changed nothing, and the answer says when to try again.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiProblem" }
 schemas:
+  UnsubscribeInput:
+    type: object
+    additionalProperties: false
+    required: [token]
+    properties:
+      # The token from the link, as it was written there.
+      token: { type: string, minLength: 1, maxLength: 181 }
+  UnsubscribeAck:
+    type: object
+    required: [consent, state]
+    properties:
+      # The kind of optional message that is now off.
+      consent: { type: string, enum: [reminders] }
+      state: { type: string, enum: ["off"] }
   WorkspaceMessage:
     type: object
     required: [id, kind, orderId, orderReference, refundReference, forYou, status, reason, attempts, createdAt, lastAttemptAt, nextAttemptAt, acceptedAt, delivery, deliveryAt]

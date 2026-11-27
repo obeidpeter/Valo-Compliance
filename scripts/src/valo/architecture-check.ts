@@ -182,14 +182,16 @@ export const isHttpSource = (path: string) =>
 
 /**
  * The only code that may enter a workspace's database scope (runInWorkspaceScope): the
- * identity middleware, for the workspace it resolved from the membership, and background
- * work for the workspace of the stored record it processes. A new caller needs review.
+ * identity middleware, for the workspace it resolved from the membership; background
+ * work, for the workspace of the stored record it processes; and the unsubscribe link's
+ * action, for the workspace a link Valo signed names. A new caller needs review.
  */
 export const WORKSPACE_SCOPE_ENTRIES = [
   "artifacts/api-server/src/middlewares/valo-identity.ts",
   "artifacts/api-server/src/modules/exports/valo-exports.ts",
   "artifacts/api-server/src/modules/privacy/valo-privacy-processing.ts",
   "artifacts/api-server/src/modules/tasks/valo-reminder-worker.ts",
+  "artifacts/api-server/src/modules/tasks/reminder-unsubscribe.ts",
   "artifacts/api-server/src/modules/messages/valo-message-dispatcher.ts",
   "artifacts/api-server/src/modules/messages/valo-email-events.ts",
   "artifacts/api-server/src/modules/privacy/valo-workspace-export-jobs.ts",

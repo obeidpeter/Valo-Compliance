@@ -199,6 +199,8 @@ async function deliverReminder(workspaceId: string, id: string, sender: Reminder
       },
       message: {
         idempotencyKey: row.idempotencyKey,
+        workspaceId,
+        reminderId: id,
         ownerIdentityId: workspace.ownerIdentityId,
         title: eligible.task.title,
         dueDate: eligible.task.dueDate,

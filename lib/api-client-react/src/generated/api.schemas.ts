@@ -3906,6 +3906,33 @@ export interface ManualLibraryHold {
   reason: string;
 }
 
+export interface UnsubscribeInput {
+  /**
+     * @minLength 1
+     * @maxLength 181
+     */
+  token: string;
+}
+
+export type UnsubscribeAckConsent = typeof UnsubscribeAckConsent[keyof typeof UnsubscribeAckConsent];
+
+
+export const UnsubscribeAckConsent = {
+  reminders: 'reminders',
+} as const;
+
+export type UnsubscribeAckState = typeof UnsubscribeAckState[keyof typeof UnsubscribeAckState];
+
+
+export const UnsubscribeAckState = {
+  off: 'off',
+} as const;
+
+export interface UnsubscribeAck {
+  consent: UnsubscribeAckConsent;
+  state: UnsubscribeAckState;
+}
+
 export type WorkspaceMessageKind = typeof WorkspaceMessageKind[keyof typeof WorkspaceMessageKind];
 
 

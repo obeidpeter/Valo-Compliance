@@ -6322,6 +6322,23 @@ export const ListWorkspaceMessagesResponseItem = zod.object({
 export const ListWorkspaceMessagesResponse = zod.array(ListWorkspaceMessagesResponseItem)
 
 
+/**
+ * @summary Stop one kind of optional message, from the link in one of them; needs no account
+ */
+export const unsubscribeBodyTokenMax = 181;
+
+
+
+export const UnsubscribeBody = zod.object({
+  "token": zod.string().min(1).max(unsubscribeBodyTokenMax)
+})
+
+export const UnsubscribeResponse = zod.object({
+  "consent": zod.enum(['reminders']),
+  "state": zod.enum(['off'])
+})
+
+
 export const getOperationalAlertsResponseActiveItemCodeRegExp = new RegExp('^[A-Z][A-Z_]{2,80}$');
 export const getOperationalAlertsResponseActiveItemTitleMax = 300;
 

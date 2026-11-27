@@ -202,6 +202,8 @@ import type {
   TaskUpdate,
   TicketInput,
   TicketReceipt,
+  UnsubscribeAck,
+  UnsubscribeInput,
   VerifyStaffRoleTarget200,
   VerifyStaffRoleTargetInput,
   Workspace,
@@ -10113,6 +10115,92 @@ export function useListWorkspaceMessages<TData = Awaited<ReturnType<typeof listW
 
 
 
+
+export const getUnsubscribeUrl = () => {
+
+
+
+
+  return `/api/public/unsubscribe`
+}
+
+/**
+ * @summary Stop one kind of optional message, from the link in one of them; needs no account
+ */
+export const unsubscribe = async (unsubscribeInput: UnsubscribeInput, options?: Parameters<typeof customFetch>[1]): Promise<UnsubscribeAck> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<UnsubscribeAck>(getUnsubscribeUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(unsubscribeInput)
+  }
+);}
+
+
+
+
+
+export const getUnsubscribeMutationKey = () => ['unsubscribe'] as const;
+
+export const getUnsubscribeMutationOptions = <TError = ErrorType<ApiProblem>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unsubscribe>>, TError,UnsubscribeMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof unsubscribe>>, TError,UnsubscribeMutationVariables, TContext> => {
+
+const mutationKey = getUnsubscribeMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof unsubscribe>>, UnsubscribeMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  unsubscribe(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UnsubscribeMutationResult = NonNullable<Awaited<ReturnType<typeof unsubscribe>>>
+    export type UnsubscribeMutationBody = BodyType<UnsubscribeInput>
+    export type UnsubscribeMutationError = ErrorType<ApiProblem>
+    export type UnsubscribeMutationVariables = {data: BodyType<UnsubscribeInput>}
+
+    /** @summary Stop one kind of optional message, from the link in one of them; needs no account */
+export const useUnsubscribe = <TError = ErrorType<ApiProblem>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unsubscribe>>, TError,UnsubscribeMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof unsubscribe>>,
+        TError,
+        UnsubscribeMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUnsubscribeMutationOptions(options), queryClient);
+    }
 
 export const getGetOperationalAlertsUrl = () => {
 

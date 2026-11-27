@@ -75,9 +75,11 @@ import { acceptanceReviewRouter } from "./valo-acceptance-review";
 import { ownerPriceRouter } from "./valo-owner-prices";
 import { ownerBundleRouter } from "./valo-owner-bundles";
 import { ownerSettingRouter } from "./valo-owner-settings";
+import { unsubscribeRouter } from "./valo-unsubscribe";
 const router = Router();
 router.use(createSessionVerificationRouter());
 router.use(publicAccessRouter);
+router.use(unsubscribeRouter);
 // Refuse accounts without any active staff assignment before staff routes read input.
 router.use("/admin", makeStaffGate());
 router.use(createManualLibraryRouter());

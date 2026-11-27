@@ -3,6 +3,9 @@ export type ReminderSender = {
   replayWindowMs?: number | undefined;
   send(input: {
     idempotencyKey: string;
+    /** The reminder and its workspace, which the message's unsubscribe link names. */
+    workspaceId: string;
+    reminderId: string;
     ownerIdentityId: string;
     title: string;
     dueDate: string;

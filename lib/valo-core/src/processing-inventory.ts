@@ -154,6 +154,7 @@ export const processingInventory: readonly ProcessingActivity[] = [
       "the reminders waiting to be sent",
       "what the email service reported about a reminder it took: that it was delivered, delayed, sent back or marked as spam",
       "whether Valo has stopped emailing your address, after an email to it came back for good or was marked as spam",
+      "the link in each reminder that stops them without signing in: it tells Valo which workspace and which reminder it came from, and holds no name or address",
     ],
     subjects: ["account holders"],
     staff: null,

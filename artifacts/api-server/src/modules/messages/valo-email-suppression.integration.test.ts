@@ -27,6 +27,7 @@ import {
 } from "./valo-email-events";
 import { addressSuppressed, SUPPRESSION_LASTS_MS } from "./valo-email-suppression";
 import { dispatchMessage } from "./valo-message-dispatcher";
+import { unsubscribeToken } from "./unsubscribe-token";
 
 /**
  * Suppression (docs/architecture/messages.md, slice 2b), against the real database: synthetic workspaces,
@@ -200,6 +201,14 @@ test(
               async () => address,
               // The real check, asked from inside the reminder's workspace scope.
               addressSuppressed,
+              // The real link, under this run's own key.
+              (about) =>
+                unsubscribeToken({
+                  consent: "reminders",
+                  workspaceId: about.workspaceId,
+                  recordId: about.reminderId,
+                  identityId: about.identityId,
+                }),
               env,
             );
             return { actor, reminder: reminder!, sender, calls };

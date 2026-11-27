@@ -14,6 +14,7 @@ import { logger } from "./platform/logger";
 import { requestReadQuota } from "./middlewares/valo-quota";
 import { paystackWebhookRouter } from "./routes/valo-paystack-webhook";
 import { emailWebhookRouter } from "./routes/valo-email-webhook";
+import { oneClickUnsubscribeRouter } from "./routes/valo-unsubscribe";
 import { securitySignals } from "./middlewares/valo-security-signals";
 import { requestCounting } from "./middlewares/valo-request-counts";
 import { configureProxyBoundary } from "./lib/valo-proxy-boundary";
@@ -59,6 +60,8 @@ app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
 app.use(securitySignals());
 app.use(paystackWebhookRouter);
 app.use(emailWebhookRouter);
+// A mail service's one-click unsubscribe request (RFC 8058), which is no browser's and no member's either.
+app.use(oneClickUnsubscribeRouter);
 app.use(express.json({ limit: "128kb", inflate: false }));
 app.use(requestComplexityLimit);
 app.use(identityMiddleware());

@@ -21,6 +21,14 @@ export {
 export { deliveriesOf, emailEventsReady, recordDeliveryReports, recordEmailEvent } from "./valo-email-events";
 export { addressSuppressed, SUPPRESSION_LASTS_MS } from "./valo-email-suppression";
 export {
+  readUnsubscribeToken,
+  unsubscribeToken,
+  UNSUBSCRIBE_CONSENTS,
+  UNSUBSCRIBE_TOKEN_MAX,
+  type UnsubscribeConsent,
+  type UnsubscribeLink,
+} from "./unsubscribe-token";
+export {
   STAND_IN_SENDER,
   configuredMessageSender,
   standInSender,

@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { and, desc, eq, inArray, isNull, ne, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, ne, notInArray, sql } from "drizzle-orm";
 import { valoTasks, valoReminderPreferences, valoReminderOutbox, valoRuleNotices } from "@workspace/db";
 import {
   CreateTaskBody,
@@ -126,7 +126,9 @@ async function cancelOutstanding(
     .where(
       and(
         eq(valoReminderOutbox.workspaceId, actor.workspaceId),
-        ne(valoReminderOutbox.status, "sent"),
+        // What was sent stays sent, and a reminder already cancelled keeps the reason it was cancelled for:
+        // its row in the workspace's log goes on saying why it stopped.
+        notInArray(valoReminderOutbox.status, ["sent", "cancelled"]),
         taskId ? eq(valoReminderOutbox.taskId, taskId) : undefined,
       ),
     );
@@ -468,6 +470,34 @@ export async function saveReminderPreferences(actor: WorkspaceActor, raw: unknow
     await workspaceEvent(tx, actor, "reminders.preferences_saved", actor.workspaceId, values.revision);
   });
   return getReminderPreferences(actor);
+}
+/**
+ * Turns a workspace's reminders off from the unsubscribe link in one of them
+ * (docs/architecture/messages.md, part 4), as its owner would in the app: the choice is recorded with the
+ * notice in force, every reminder still waiting is cancelled, and the workspace's history names the
+ * reminder that carried the link. The days chosen are kept, for when reminders are turned on again. A
+ * workspace whose reminders are already off is left as it is.
+ */
+export async function turnRemindersOffByLink(tx: WorkspaceTx, actor: WorkspaceActor, reminderId: string) {
+  const [old] = await tx
+    .select()
+    .from(valoReminderPreferences)
+    .where(eq(valoReminderPreferences.workspaceId, actor.workspaceId));
+  if (!old?.enabled) return "already_off" as const;
+  const revision = old.revision + 1;
+  await recordConsentChange(tx, {
+    workspaceId: actor.workspaceId,
+    actorId: actor.identityId,
+    consent: "reminders",
+    choice: false,
+  });
+  await tx
+    .update(valoReminderPreferences)
+    .set({ enabled: false, revision, actorId: actor.identityId, updatedAt: new Date() })
+    .where(eq(valoReminderPreferences.workspaceId, actor.workspaceId));
+  await cancelOutstanding(tx, actor, undefined, "REMINDERS_OPTED_OUT");
+  await workspaceEvent(tx, actor, "reminders.stopped_by_link", reminderId, revision);
+  return "off" as const;
 }
 export async function listReminders(actor: WorkspaceActor) {
   // The delivery reports and the database schema they read load here, when a member reads the reminders,

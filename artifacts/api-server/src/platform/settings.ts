@@ -214,6 +214,12 @@ export const SETTINGS = {
     description: "Refund requests by one account a day (1-10000, default 50).",
     example: "50",
   },
+  VALO_LIMIT_UNSUBSCRIBE_LINK: {
+    group: "Request limits",
+    description:
+      "Uses of one workspace's unsubscribe links a minute, by whoever holds one (1-10000, default 10).",
+    example: "10",
+  },
 
   DATABASE_URL: { group: "Database", description: "PostgreSQL connection string.", secret: true },
 
