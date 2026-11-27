@@ -157,6 +157,13 @@ Rules that apply now:
   current only by `guideSourceDecision`, from its text's amendment record
   (`guidance-amendments.ts`); record there only a search, a reading or a comparison that was
   really made, with what it did not cover.
+- An order keeps the terms it was made with. The database refuses any change to its amount,
+  currency, line, price or bundle, and to what says which order it is
+  (`valo_orders_keep_terms`, `docs/architecture/order-safety.md`). Only its status, provider
+  transaction, checkout address and last check change, and an erasure's mark replaces who placed
+  it. Never turn the trigger off to change an order: a correction is a finance decision with its
+  own record. A test goes beneath it only to plant the fault it is about, in a synthetic order of
+  its own.
 - Only the operator commands in `FINITE_WORK_BINDING_ENTRIES` hand the inference
   dispatcher its work-binding checks (`provideFiniteWorkBindings`), and only the real
   `assertFiniteWorkBindings`; the `inference-bindings` repository rule enforces this.

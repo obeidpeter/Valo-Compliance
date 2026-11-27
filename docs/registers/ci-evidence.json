@@ -3093,7 +3093,7 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/commerce/valo-commerce.integration.test.ts",
       "test": "controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication",
-      "proves": "Order requests for a held product are refused, including one that adds its own amount and currency, and no order is saved; a payment result one kobo above a synthetic order's amount does not settle it; and after a new price version the order's receipt still shows the amount and licence text it was created with."
+      "proves": "Order requests for a held product are refused, including one that adds its own amount and currency, and no order is saved; a payment result one kobo above a synthetic order's amount does not settle it; after a new price version the order's receipt still shows the amount and licence text it was created with; and the database refuses a change to a synthetic order's amount, currency, line, price, bundle, workspace, reference, request key, creation time or id, from the application's login and from a customer's workspace scope alike, while its status, checkout address, last check and provider transaction still change, and who placed it changes only to the mark the erasure's own statement writes."
     },
     {
       "requirement": "PAY-001",
@@ -3101,6 +3101,13 @@
       "file": "artifacts/api-server/src/modules/commerce/valo-paystack-contract.test.ts",
       "test": "checkout asks Paystack only for a one-time charge, with no plan, split, subaccount or saved card",
       "proves": "Checkout's request to Paystack, captured by a controlled transport, has exactly the fields for a reference, amount, currency, email, return address and metadata, with only order-ID and workspace-ID keys in the metadata, the order's amount in kobo and naira as the currency, so no discount, plan or other price field reaches the charge."
+    },
+    {
+      "requirement": "PAY-001",
+      "job": "foundation",
+      "file": "lib/db/scripts/phase1-migrations.test.mjs",
+      "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
+      "proves": "The order terms guard migration applies to a database that holds orders, with or without a migration ledger, and rolls back whole; afterwards each of fourteen changes to a synthetic order's amount, line, price, bundle, currency, workspace, reference, request key, creation time or id is refused, who placed it is refused every value but the erasure's mark, and its status, checkout address and provider transaction still change."
     },
     {
       "requirement": "PAY-002",
