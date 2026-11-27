@@ -448,6 +448,13 @@ jobs:
       # skips there; here it runs.
       - name: Prove the real API refuses compressed and oversized JSON and keeps serving
         run: pnpm --filter @workspace/api-server test:valo-request-budget
+      # Before the first step that renders: the next one asks the API for a receipt as a PDF, as its owner.
+      - name: Install Chromium and independent PDF reader before actual render proofs
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y poppler-utils
+          pnpm --filter @workspace/api-server exec playwright install --with-deps chromium
+          echo "CHROMIUM_EXECUTABLE_PATH=$(pnpm --filter @workspace/api-server exec node --input-type=module -e 'import {chromium} from "playwright"; process.stdout.write(chromium.executablePath())')" >> "$GITHUB_ENV"
       - name: Prove another workspace's identifiers are refused like unknown ones on every private route (SEC-001)
         run: pnpm --filter @workspace/api-server test:valo-tenant-substitution
       - name: Prove every change in the contract refuses a request another site's page could send (SEC-003)
@@ -464,12 +471,6 @@ jobs:
           PRIVATE_OBJECT_DIR: ""
           DEFAULT_OBJECT_STORAGE_BUCKET_ID: ""
           PUBLIC_OBJECT_SEARCH_PATHS: ""
-      - name: Install Chromium and independent PDF reader before actual render proofs
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y poppler-utils
-          pnpm --filter @workspace/api-server exec playwright install --with-deps chromium
-          echo "CHROMIUM_EXECUTABLE_PATH=$(pnpm --filter @workspace/api-server exec node --input-type=module -e 'import {chromium} from "playwright"; process.stdout.write(chromium.executablePath())')" >> "$GITHUB_ENV"
       - name: Prove tenant boundaries, conflicts and history
         run: pnpm --filter @workspace/api-server test:valo-db-core
       - name: Prove actual HTTP privacy-role and session boundary
