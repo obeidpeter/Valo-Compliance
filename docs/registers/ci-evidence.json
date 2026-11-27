@@ -6019,7 +6019,7 @@
       "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
       "test": "the message that confirms a save has a close button with a name, lies under the header and clear of the save button, passes the automated checks while it shows, and goes when the keyboard moves on",
-      "proves": "On an emulated phone and on a desktop, the message that confirms a saved business profile has a close button named for a screen reader that shows without a pointer over it, lies under the header and clear of the save button held at the foot of the screen, leaves the page beside it in reach, follows the header as the page scrolls, has no automated WCAG 2.2 AA failure while it shows, and goes when Tab moves the keyboard on; on the phone, no control the keyboard then reaches is hidden behind a bar that stays on screen. This is an automated check, not a manual or assistive-technology review."
+      "proves": "On an emulated phone and on a desktop, the message that confirms a saved business profile has a close button named for a screen reader that shows without a pointer over it, lies under the header and clear of the save button held at the foot of the screen, leaves the page beside it in reach, follows the header as the page scrolls, has no automated WCAG 2.2 AA failure while it shows, and goes once Tab has moved the focus from the save button to the control after it, where the focus then is; on the phone, no control the keyboard then reaches is hidden behind a bar that stays on screen. This is an automated check, not a manual or assistive-technology review."
     },
     {
       "requirement": "NFR-006",
@@ -6027,6 +6027,13 @@
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
       "test": "the message that confirms a save is reached with F8, and its close button closes it",
       "proves": "On a desktop, F8 reaches the message that confirms a saved business profile, Tab moves to the message and then to its close button without dismissing it, and Enter on the button closes it."
+    },
+    {
+      "requirement": "NFR-006",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "the keyboard moving on from the page's last control reaches the message that confirms a save, which stays while the keyboard is in it and goes once the keyboard leaves it",
+      "proves": "On an emulated phone, Tab from the page's last control moves the focus onto the message that confirms a saved business profile, which stays while the focus is on it and then on its close button, and goes once the next Tab takes the focus out of it. This is an automated check, not a manual or assistive-technology review."
     }
   ]
 }

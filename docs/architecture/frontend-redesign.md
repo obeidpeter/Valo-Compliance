@@ -1588,12 +1588,20 @@ controls when a test of another change ran them straight after a save.
 
 The message now shows at the top of the screen, under the header wherever the header is, on every
 width. Only the message itself takes a tap. Its close button is named "Close this message" and
-always shows. When the keyboard moves on, the message goes, so the control that takes the focus is
-not hidden under it. F8 still reaches the message, and Tab inside it moves to its close button.
+always shows. Once the keyboard has moved on to another part of the page, the message goes, so the
+control that takes the focus is not hidden under it. It stays while the keyboard is in the message
+itself, which F8 reaches and which follows the page's last control, and Tab inside it moves to its
+close button.
+
+The message goes only after the key has moved the focus, never as the key is pressed. A first
+version dismissed it at the press of Tab. A Tab that moved into the message then found it going,
+and the focus was left in something that was gone. The hosted checks found this, not the local
+ones.
 
 A new check saves the business profile on a phone and on a desktop. With the message showing, it
-checks each of these and runs the automated accessibility checks. A second reaches the message with
-F8 and closes it from the keyboard.
+checks each of these and runs the automated accessibility checks. A second moves on from the page's
+last control into the message, and out of it again. A third reaches the message with F8 and closes
+it from the keyboard.
 
 ## How the ten heuristics are applied
 
