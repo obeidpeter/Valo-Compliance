@@ -473,6 +473,12 @@ jobs:
           PUBLIC_OBJECT_SEARCH_PATHS: ""
       - name: Prove tenant boundaries, conflicts and history
         run: pnpm --filter @workspace/api-server test:valo-db-core
+      - name: Prove the messages' outbox, log, delivery reports, suppression and daily notices, one file at a time
+        # Each of these files writes the staff pause on messages, which is one row for every
+        # workspace, so they run one at a time. They were part of the step before, and run
+        # whatever became of it.
+        if: ${{ !cancelled() }}
+        run: pnpm --filter @workspace/api-server test:valo-messages-db
       - name: Prove actual HTTP privacy-role and session boundary
         if: ${{ !cancelled() }}
         run: pnpm --filter @workspace/api-server test:valo-privacy-http-db

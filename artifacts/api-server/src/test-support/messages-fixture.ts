@@ -88,6 +88,11 @@ export async function messagesFixture() {
     .select()
     .from(valoSafetySwitches)
     .where(eq(valoSafetySwitches.key, "messages"));
+  /**
+   * Sets or clears the staff pause on messages. The pause is one row for every workspace: beside another
+   * test file, one file's pause holds the other's messages. So a file that calls this is run only by a
+   * script that runs one file at a time (test:valo-messages-db), and the test inventory fails otherwise.
+   */
   const setPause = (paused: boolean) =>
     db
       .insert(valoSafetySwitches)
