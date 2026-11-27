@@ -4234,7 +4234,7 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/messages/valo-messages.integration.test.ts",
       "test": "messages wait in the outbox and are offered to the sender once, after every check is made again (WRK-003, WRK-004, PAY-008, PAY-009)",
-      "proves": "Against PostgreSQL, each message carries its class, and the two kinds there are, receipts and refund notices, are necessary. Just before a message is offered the dispatcher checks again the pause, the workspace's erasure, the recipient's membership and the record it is about, and a message stopped by any of them is not handed to the sender. No optional message, unsubscribe link or consent check exists yet."
+      "proves": "Against PostgreSQL, each message carries its class, and receipts and refund notices are necessary. Just before a message is offered the dispatcher checks again the pause, the workspace's erasure, the recipient's membership and the record it is about, and a message stopped by any of them is not handed to the sender. The outbox holds no optional message and makes no consent check yet. A sender's answer that an address is stopped, which only an optional message is given, is no acceptance of one of the outbox's necessary messages, and neither is a blank reference: the message is not taken and is offered again."
     },
     {
       "requirement": "WRK-004",
@@ -6181,6 +6181,27 @@
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
       "test": "signed in, the support page says its list of requests is loading, says when there are none and offers another try when the list cannot be read; its form says what is missing, keeps what was typed when a save fails and says so, and saves on the next try",
       "proves": "axe-core finds no WCAG 2.0, 2.1 or 2.2 A or AA rule failing on a signed-in customer's support page at phone width while its list is read, when the list cannot be read, with the form's missing details shown and after a save that failed, and the failed list and the failed save are each announced in a role=\"alert\" element; no manual or assistive-technology review is recorded."
+    },
+    {
+      "requirement": "WRK-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/tasks/valo-reminder-resend.test.ts",
+      "test": "the request the provider is sent for a reminder is, to the byte, what it was before the reminders moved onto the shared sender",
+      "proves": "A reminder handed to the shared sender reaches the email provider as the same request as before, with the same idempotency key and the same body in the same order, so a reminder retried across that change is the first request again and is sent once."
+    },
+    {
+      "requirement": "WRK-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/tasks/valo-reminder-resend.test.ts",
+      "test": "the development mailer sends whatever message it is handed: one with no headers or labels goes without them, and only an optional one is asked about its address",
+      "proves": "The reminders' development mailer, as a sender of the shared kind, sends a necessary message without asking whether Valo has stopped sending to its address, and asks for an optional one alone: stopped, it sends nothing and says so. A key, a subject or a header that is not one plain line never reaches its transport."
+    },
+    {
+      "requirement": "WRK-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/tasks/valo-reminder-resend.test.ts",
+      "test": "a reminder goes through any sender of the shared kind, as an optional message under its own key, and a sender's answer that the address is stopped is the reminders' own refusal",
+      "proves": "A reminder is handed to a sender as an optional message with its unsubscribe link in its words and headers and no task title or identifier in them, the same on every attempt. A sender's answer that the address is stopped is never taken for a sent reminder, and without its link a reminder is handed to no sender."
     }
   ]
 }

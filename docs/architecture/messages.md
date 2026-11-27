@@ -175,13 +175,38 @@ Built (slice 1a):
 - **The interface** (`modules/messages/message-sender.ts`). A sender is handed the message's idempotency
   key, its kind, the recipient as an identity, a subject and plain text. It returns its reference for the
   message. It is never handed an address: a real sender reads the identity's verified address as it
-  sends. Headers and tags join the interface with the unsubscribe headers, and the reminder adapter moves
-  onto it, in slice 3b.
+  sends. Headers and labels joined it in slice 3b, below.
 - **The stand-in.** It sends nothing to anyone. It gives each idempotency key one reference, as a provider
   that tells a retry from a new message would. It keeps what it was handed only in a test.
 - **The worker's sender** is chosen by `VALO_MESSAGE_SENDER` as the worker starts. Unset, there is none,
   and every message waits as `held`. `stand-in` is the only value there is. Any other value, or the
   stand-in in production, stops the worker before it works.
+
+Built (slice 3b):
+- **What else a sender is handed.** A message can carry headers for its reader's mail program, labels
+  for the provider to keep, and a mark that it is optional. A sender asks whether Valo has stopped
+  sending to the address only for an optional message, and answers that it sent nothing if so. A
+  necessary message is owed whatever became of its address, and nobody is asked.
+- **The reminders' development mailer is a sender of this kind** (`modules/tasks/valo-reminder-resend.ts`).
+  It sends whatever message it is handed, with its gates unchanged: development only, never while a
+  recovery is rehearsed, and only to the configured test address, which must be the recipient's own
+  verified one. It reads a key, a subject and each header as one plain line before it sends them.
+- **A reminder is made before a sender is asked** (`modules/tasks/reminder-message.ts`): its words, its
+  unsubscribe headers and its labels, handed over as an optional message under the reminder's own key.
+  So any sender of this kind can be given a reminder.
+- **Nothing a reminder's reader gets has changed.** A test holds the request the provider is sent to
+  what it was before, to the byte, with its key. A reminder first tried before this slice and retried
+  after it is the same request.
+- **One order changed.** A reminder's link is now made before the sender looks at the address, so one
+  is made for a reminder to an address Valo has stopped sending to. It goes nowhere.
+- **The outbox's own sender is still the stand-in, and nothing else.** The development mailer is not
+  offered to it: a receipt sent to the test address would be a real message of a new kind, which is the
+  owner's to approve. The mailer stays with the reminders, which are all it sends.
+- **The reminders' outbox does not record which sender took a reminder.** So outside tests a reminder is
+  handed to the development mailer alone: one the stand-in took would read as sent.
+- **An answer without a reference is no acceptance.** The outbox's dispatcher takes a sender's answer
+  that an address is stopped as it takes a blank reference: the message was not taken, and is offered
+  again. Every message of the outbox is a necessary one.
 
 ### 3. Delivery and bounces (WRK-003)
 
@@ -280,8 +305,8 @@ Built (slice 2b), suppression (`modules/messages/valo-email-suppression.ts`):
   - The outbox holds only necessary messages: a receipt, a refund's notice and a day's notices. A
     suppression does not stop them: they are still owed, and a receipt that came back still shows on
     the purchases screen.
-  - When an optional kind joins the outbox, its sender asks the same question. That is slice 3b, which
-    moves the reminders onto the shared sender.
+  - When an optional kind joins the outbox, its sender asks the same question. Since slice 3b a sender of
+    the shared kind asks it for any optional message it is handed (part 2).
 - **Privacy.** The processing inventory and the privacy notice name the checksum, what it is for and how
   long it is kept. A suppression is about an address and names no account: a data download does not list
   it, and a deletion request does not remove it. The notice says so.
@@ -370,12 +395,14 @@ Built (slice 3a), for reminders, which are the one optional message there is:
   documentation says it refuses a retry whose content differs from the first under the same key. Such
   a reminder goes at most once and ends as not confirmed. No request has shown this.
 
-Not built (slice 3b):
-- **The reminders on the shared sender.** They still go through their own development mailer, and the
-  sender interface carries no headers yet.
-- **Consent read by the outbox's dispatcher.** The outbox holds only necessary messages. When an
-  optional kind joins it, its dispatcher reads that kind's consent as it sends, and its messages carry
-  this link. R1 sends no marketing, so nothing reads the marketing choice yet.
+Built (slice 3b): the reminders go through the shared sender, as an optional message with this link in
+their words and their headers (part 2).
+
+Not built:
+- **Consent read by the outbox's dispatcher.** The outbox holds only necessary messages, and its table
+  takes no other kind. When an optional kind joins it, its dispatcher reads that kind's consent as it
+  sends, and its messages carry this link. R1 sends no marketing, so nothing reads the marketing choice
+  yet, and there is nothing to build until such a kind exists.
 
 ### 5. Receipts and refund notices (PAY-009, PAY-008)
 
@@ -598,7 +625,7 @@ You receive this message because these changes affect what you saved, made or bo
 | 2a | Delivery and bounces: the webhook, the reports recorded on messages and reminders, and their words on the log | Built |
 | 2b | Suppression: a hard bounce or a complaint stops optional messages to that address | Built |
 | 3a | Unsubscribe for reminders: the link in each reminder, its token, the page, the one-click address, and the choice recorded | Built |
-| 3b | The reminders on the shared sender, and consent read by the dispatcher for the first optional kind in the outbox | Not built |
+| 3b | The reminders on the shared sender. Consent read by the dispatcher waits for the first optional kind in the outbox, and R1 has none | Built |
 | 4a | Support: alerts on an enquiry nobody has taken, and on one waiting on Valo past its time | Built |
 | 4b | Support: a reply by email to someone who cannot sign in, and its states on the case | Not built |
 | 4c | Support: the daily message to the support role's members | Not built |

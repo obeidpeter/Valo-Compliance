@@ -30,7 +30,7 @@ No recorded evidence at all: none.
 
 ## Tests cited as evidence
 
-`docs/registers/ci-evidence.json` holds 883 citations of 619 tests for 126 requirements (decision 0010).
+`docs/registers/ci-evidence.json` holds 886 citations of 622 tests for 126 requirements (decision 0010).
 A CI job fails when a test cited for it does not pass, and each run's `readiness-report` artifact lists every citation's result.
 A citation is partial evidence: it never accepts a requirement.
 
@@ -158,8 +158,8 @@ A citation is partial evidence: it never accepts a requirement.
 | WEB-004 | 3 | foundation |
 | WRK-001 | 6 | postgres, web-performance |
 | WRK-002 | 2 | foundation |
-| WRK-003 | 16 | foundation, postgres, web-performance |
-| WRK-004 | 10 | foundation, postgres, web-performance |
+| WRK-003 | 17 | foundation, postgres, web-performance |
+| WRK-004 | 12 | foundation, postgres, web-performance |
 | WRK-005 | 1 | foundation |
 | WRK-006 | 3 | foundation, postgres |
 
