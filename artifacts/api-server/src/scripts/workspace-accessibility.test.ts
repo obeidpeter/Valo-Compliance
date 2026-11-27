@@ -5919,6 +5919,130 @@ test("a new requirements check is offered where the server offers one: with the 
   }
 });
 
+// NFR-006: the message that confirms an action shows for a few seconds over the page. It must not
+// hide the header, the button just pressed, or the control the keyboard moves to next.
+test("the message that confirms a save has a close button with a name, lies under the header and clear of the save button, passes the automated checks while it shows, and goes when the keyboard moves on", async () => {
+  const workspace = answers["GET /workspace"] as Record<string, unknown>;
+  const saved = api.SaveBusinessProfileResponse.parse({ ...workspace, profileRevision: 4 });
+  /** Whether two boxes share any area. */
+  const overlap = (a: { x: number; y: number; width: number; height: number }, b: typeof a) =>
+    a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+  for (const [kind, open] of [
+    ["phone", phone],
+    ["desktop", desktop],
+  ] as const) {
+    const { page, errors, unknown, close } = await open(
+      "/workspace/profile",
+      except({ "PUT /workspace/profile": saved }),
+    );
+    try {
+      await ready(page);
+      const save = page.getByTestId("button-save-profile");
+      // The save button is held at the foot of the screen while the form runs on below it.
+      await save.click();
+      const message = page.getByTestId("toast").filter({ hasText: "Profile saved" });
+      await expect(message).toContainText("Saved as version 4.");
+      // Its close button shows without a pointer over the message, as on a phone.
+      const shut = message.getByRole("button", { name: "Close this message" });
+      await expect(shut).toBeVisible();
+      assert.equal(
+        await page.evaluate(
+          `getComputedStyle(document.querySelector('[data-testid="toast"] button')).opacity`,
+        ),
+        "1",
+        kind,
+      );
+      // The pointer on the message keeps it on screen while it is looked at.
+      await message.hover();
+      await settled(page);
+      const box = (await message.boundingBox())!,
+        header = (await page.locator("header").first().boundingBox())!,
+        button = (await save.boundingBox())!,
+        view = page.viewportSize()!;
+      assert.ok(box.y >= header.y + header.height - 1, `${kind}: the message lies over the header`);
+      assert.ok(!overlap(box, button), `${kind}: the message lies over the save button`);
+      assert.ok(box.x >= 0 && box.x + box.width <= view.width, `${kind}: the message leaves the screen`);
+      // The automated checks, with the message showing.
+      const { passes, failures } = await wcagFailures(page);
+      assert.ok(passes > 10, kind);
+      assert.deepEqual(failures, [], kind);
+      // Only the message takes a tap: the room around it leaves the page beneath in reach.
+      assert.equal(
+        await page.evaluate(
+          `document.elementFromPoint(${box.x - 8}, ${box.y + box.height / 2}) !==
+            document.querySelector('[data-testid="toast"]').parentElement`,
+        ),
+        true,
+        `${kind}: the room beside the message takes taps`,
+      );
+      // The header's own controls stay in reach under the pointer.
+      const logo = (await page.locator("header a").first().boundingBox())!;
+      assert.equal(
+        await page.evaluate(
+          `!!document.elementFromPoint(${logo.x + logo.width / 2}, ${logo.y + logo.height / 2})?.closest("header")`,
+        ),
+        true,
+        `${kind}: the header is under the message`,
+      );
+      // The message follows the header. At the head of the page the header sits lower, under the
+      // development banner; further down it rests at the top of the screen.
+      const under = async () => {
+        const at = (await message.boundingBox())!,
+          head = (await page.locator("header").first().boundingBox())!;
+        return { header: Math.round(head.y), gap: Math.round(at.y - (head.y + head.height)) };
+      };
+      await page.evaluate("window.scrollTo(0, 0)");
+      await expect.poll(async () => (await under()).header > 0 && (await under()).gap === 16).toBe(true);
+      await page.getByTestId("checkbox-marketing").scrollIntoViewIfNeeded();
+      await expect.poll(under).toEqual({ header: 0, gap: 16 });
+      await message.hover();
+      // The keyboard moves on, and the message goes: nothing it reaches is hidden.
+      await page.keyboard.press("Tab");
+      await expect(message).toHaveCount(0);
+      if (kind === "phone")
+        assert.deepEqual(await phoneProblems(page, "the business profile after a save"), []);
+      assert.deepEqual([...errors, ...unknown], [], kind);
+    } finally {
+      await close();
+    }
+  }
+});
+
+// The message itself can be reached and closed from the keyboard.
+test("the message that confirms a save is reached with F8, and its close button closes it", async () => {
+  const workspace = answers["GET /workspace"] as Record<string, unknown>;
+  const { page, errors, unknown, close } = await desktop(
+    "/workspace/profile",
+    except({
+      "PUT /workspace/profile": api.SaveBusinessProfileResponse.parse({ ...workspace, profileRevision: 4 }),
+    }),
+  );
+  try {
+    await ready(page);
+    await page.getByTestId("button-save-profile").click();
+    const message = page.getByTestId("toast").filter({ hasText: "Profile saved" });
+    await expect(message).toBeVisible();
+    await page.keyboard.press("F8");
+    // Tab from the messages' own region moves to the message, then to its close button, and does
+    // not dismiss it on the way.
+    await page.keyboard.press("Tab");
+    await expect(message).toBeFocused();
+    // A message that is on its way out stays a moment longer: it must still be there after one.
+    await delay(600);
+    await expect(message).toBeVisible();
+    await page.keyboard.press("Tab");
+    const shut = message.getByRole("button", { name: "Close this message" });
+    await expect(shut).toBeFocused();
+    await delay(600);
+    await expect(message).toBeVisible();
+    await page.keyboard.press("Enter");
+    await expect(message).toHaveCount(0);
+    assert.deepEqual([...errors, ...unknown], []);
+  } finally {
+    await close();
+  }
+});
+
 // docs/architecture/library-holds.md, slice 3 (ADM-008): support staff refer a case to a staff-library
 // entry found by its title, and the referral sends that entry's published version.
 test("support staff find a library entry by its title and refer a case to its published version", async () => {
