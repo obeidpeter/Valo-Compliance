@@ -870,6 +870,41 @@
       "proves": "Type, industry, access and category filters combine, name and recency sorts order the results, and an unknown query or filter returns nothing."
     },
     {
+      "requirement": "WEB-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/catalogue/public-search.test.ts",
+      "test": "the list a search is judged on is the library's own, were every draft kept in the repository released: 40 templates, 30 guides to the rules, 38 articles, 20 industry pages and 7 service categories",
+      "proves": "The list the searches below run over is built by the catalogue's own functions from the 108 drafts kept in the repository, the 20 industry pages and the 7 service categories: 135 items of the five kinds, each read by its title and a description of at most 260 characters. Nothing is released to make it."
+    },
+    {
+      "requirement": "WEB-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/catalogue/public-search.test.ts",
+      "test": "50 curated searches across templates, guides to the rules, articles, industry pages and service categories each find the expected item in the first three results, whichever order the list is in",
+      "proves": "Each of 50 searches across the five kinds, worded as a business owner might type them, finds its expected item in the first three results with the list in either order. The searches and their expected items are the builder's, the search was built against them, and no pass threshold is agreed."
+    },
+    {
+      "requirement": "WEB-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/catalogue/public-search.test.ts",
+      "test": "of two further sets of 50 searches across the five kinds, 47 and 42 find their item in the first three results, and the eleven that do not are the ones named",
+      "proves": "Two further sets of 50 searches, each first run before anything was changed for it, now find 47 and 42 of their items; the eleven they miss are named, so that a search that starts to pass or to fail fails the test."
+    },
+    {
+      "requirement": "WEB-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/catalogue/public-search.test.ts",
+      "test": "the type and industry filters narrow a search over all five kinds, alone and together",
+      "proves": "Over all five kinds, a type lists every item of that kind and no other, an industry lists what is filed under it and what is for every industry, and the two combine with each other and with a search."
+    },
+    {
+      "requirement": "WEB-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/catalogue/valo-catalogue-visibility.integration.test.ts",
+      "test": "public search lists what the staff library has released under its type and its industry, in a visitor's words, and never a draft, an unsigned guide, a held, withdrawn or replaced version or a customer's document",
+      "proves": "Against PostgreSQL, a template, a practical guide and a regulatory article released through the staff library's own functions are each found under their own type and the guide under its industry, by a plural and an everyday word; a draft, a regulatory article the owner has not signed, a later draft's words, a held, withdrawn or replaced version and a customer's document with the same word are never found."
+    },
+    {
       "requirement": "SRV-001",
       "job": "foundation",
       "file": "artifacts/valo/src/components/service-categories.test.tsx",
