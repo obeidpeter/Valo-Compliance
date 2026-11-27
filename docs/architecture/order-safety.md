@@ -46,7 +46,7 @@ asks the provider and records the answer. The provider's webhook does the same. 
 | 1 | An order keeps the terms it was made with | Built |
 | 2 | An order is made from the price book, checked by the database as it is made | Not built |
 | 3 | The status is asked for when the customer returns from the provider's page | Not built |
-| 4 | An abandoned or failed order is asked about again before a second order for its edition | Not built |
+| 4 | An abandoned or failed order is asked about again before a second order for its edition | Built |
 
 ## Slice 1: an order keeps its terms
 
@@ -102,16 +102,44 @@ The slice has that screen ask for the status of the workspace's own order with t
 say what it found. The reference is only a way to find the order. The server asks the provider, as the
 button does.
 
-## Slice 4: before a second order (not built)
+## Slice 4: before a second order
 
-Before a second order is made for an edition whose earlier order is abandoned or failed, the server asks
-the provider about the earlier one. If it was paid, that order is settled and no second order is made.
-The call to the provider is made outside any transaction, and the checks are made again in the
-transaction that records its answer.
+**Before another order for an edition, or a payment for one, the provider is asked again** about each
+earlier order of the workspace for it that ended abandoned or failed. Such an order ended so because the
+provider said so when it was last asked, and may have been paid since.
+
+- **When.** As an order is about to be made, a template's or a bundle's, once its other checks have
+  passed. And as a payment is about to be started for an order, or its saved payment page handed out
+  again.
+- **Which orders.** The workspace's own, for the same edition, that ended abandoned or failed and that
+  the provider was asked to take a payment for: the five most recent. For a bundle, any of its
+  templates' editions counts. A request repeated under its own request key is the same order, and
+  nobody is asked for it.
+- **How.** The transaction that was about to write ends first, with nothing written. The provider is
+  asked outside any transaction, as "Check payment status" asks it, and the answer is recorded as that
+  button records it. Then the transaction runs once more.
+- **Paid since.** The earlier order is settled and its edition granted. The second run finds a payment
+  on record: no order is made and no payment is started. The customer reads "A payment for this
+  edition is already on record. Check your purchases before paying again."
+- **Still unpaid.** The second run does what the first would have done.
+- **The provider cannot be asked.** Nothing new is made or started, and the customer is asked to try
+  again in a few minutes. Valo cannot tell whether they have paid.
+- **Without a merchant** nobody is asked. No payment can be started either.
+- **Each question counts** towards the customer's limit on purchase requests, as a status check does.
+
+**What this does not do.**
+
+- **It closes no payment page.** A page still open at the provider can still be paid on. Valo stops
+  sending the customer to it.
+- **It asks about five orders at most.** The daily reconciliation asks about every order.
+- **A provider that can never answer for an earlier order stops new orders for that edition** in that
+  workspace: after the merchant's key is replaced by another account's, for example. Nothing in the
+  product settles such an order yet. That belongs to reconciliation (PAY-007). What the provider answers
+  for a reference it does not know is one of the points the first run in test mode settles.
 
 ## What is not done
 
 - **Nothing has run against Paystack.** Whether an abandoned transaction can still be paid, and how an
   unpaid one verifies, are among the points the first run in test mode settles (finishing plan, Phase 5,
-  first row). Slices 3 and 4 are built against the stand-in until then.
-- **Slices 2 to 4**, as above.
+  first row). Slice 4 is built against the stand-in until then, and slice 3 will be.
+- **Slices 2 and 3**, as above.

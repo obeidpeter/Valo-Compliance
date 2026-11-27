@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { asc, eq } from "drizzle-orm";
 import {
+  CreateCommerceOrderResponse,
   GetCustomerPurchasesResponse,
   GetManualLibraryRevisionResponse,
   PreviewOwnerBundleResponse,
@@ -9,6 +10,7 @@ import {
 } from "@workspace/api-zod";
 import { sha256 } from "@workspace/valo-core";
 import { wordFromText } from "../modules/manual-library/files";
+import { withStandInPaystack } from "./manual-premium-template";
 import { libraryAction, templateDetails } from "./template-details";
 
 type Call = (
@@ -269,6 +271,75 @@ export async function exerciseBundlePurchase(call: Call, editor: string) {
     const stranger = await resolveWorkspace("synthetic-bundle-stranger-" + id);
     assert.equal((await offered(stranger.identityId)).length, 1);
     assert.equal(await download(agreement.id, stranger.identityId), 403);
+
+    // PAY-006 (docs/architecture/order-safety.md, slice 4): before another order for the bundle, the
+    // provider is asked again about an earlier one whose payment page its buyer left. Paid since, it is
+    // settled, both templates are granted, and no second order is made. Paystack is stood in for.
+    const looker = await resolveWorkspace("synthetic-bundle-looker-" + id);
+    const bundleOrder = () =>
+      call(
+        "/workspace/orders",
+        {
+          bundleId: first.bundleId,
+          acceptedLicenceVersion: "synthetic-bundle-1",
+          acceptedCarriesToLaterEditions: true,
+          requestKey: randomUUID(),
+        },
+        looker.identityId,
+      );
+    const left = CreateCommerceOrderResponse.parse(await (await bundleOrder()).json());
+    const leftVerify = "/transaction/verify/" + encodeURIComponent(left.reference);
+    const transaction = String(Number.parseInt(randomUUID().replaceAll("-", "").slice(0, 12), 16));
+    let paid = false;
+    const asked: string[] = [];
+    await withStandInPaystack(
+      (path) => {
+        asked.push(path);
+        if (path === "/transaction/initialize")
+          return {
+            authorization_url: "https://checkout.paystack.com/synthetic-" + left.id.slice(0, 8),
+            reference: left.reference,
+          };
+        if (path !== leftVerify) return undefined;
+        return {
+          id: transaction,
+          domain: "test",
+          status: paid ? "success" : "abandoned",
+          reference: left.reference,
+          amount: left.amountKobo,
+          currency: "NGN",
+          metadata: { valoOrderId: left.id, workspaceId: looker.workspaceId },
+        };
+      },
+      async () => {
+        const at = "/workspace/orders/" + left.id;
+        assert.equal((await call(at + "/checkout", {}, looker.identityId)).status, 200);
+        const refreshed = await call(at + "/refresh", {}, looker.identityId);
+        assert.equal(((await refreshed.json()) as { status: string }).status, "abandoned");
+        paid = true;
+        asked.length = 0;
+        const another = await bundleOrder();
+        assert.deepEqual(
+          [another.status, ((await another.json()) as { error: string }).error],
+          [
+            409,
+            "Your workspace already owns a template in this bundle. Check your purchases. No order was created.",
+          ],
+        );
+        assert.deepEqual(asked, [leftVerify]);
+      },
+    );
+    assert.deepEqual(
+      (
+        await db
+          .select({ id: valoOrders.id, status: valoOrders.status })
+          .from(valoOrders)
+          .where(eq(valoOrders.workspaceId, looker.workspaceId))
+      ).map((row) => [row.id, row.status]),
+      [[left.id, "verified_success"]],
+    );
+    for (const edition of [agreement.id, policy.id])
+      assert.equal(await download(edition, looker.identityId), 200);
 
     // ADM-006: the owner's next version of the bundle leaves the order's amount, licence and editions.
     const second = await record("7500.00", "synthetic-owner-bundle-approval-2");

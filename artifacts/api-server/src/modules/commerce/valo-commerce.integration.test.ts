@@ -17,6 +17,7 @@ import {
 } from "@workspace/db";
 import { resolveWorkspace } from "../workspaces";
 import * as commerce from "./valo-commerce";
+import { endedEditionOrders } from "./checkout-editions";
 import { purchaseReceiptFile } from "./purchase-receipt-file";
 import { PAYSTACK_API, verifiedTransaction } from "./valo-paystack-contract";
 import { quotaSubjectHash } from "../../lib/valo-quota";
@@ -796,6 +797,76 @@ test(
               .where(eq(valoOrders.id, theirs!.id)),
             keepsTerms,
           );
+        },
+      );
+      await t.test(
+        "the look for a workspace's ended orders keeps to that workspace, the editions asked about, the two endings and the orders the provider was offered, the five latest first, on a login that sees every workspace's orders",
+        async () => {
+          // PAY-006: before another order or payment, the provider is asked again about these orders. A
+          // customer's request sees only its own workspace's rows, so no request can show whether the
+          // look's own conditions are there. Here it runs on the application's own login, which sees
+          // every workspace's orders.
+          const asking = await resolveWorkspace(`synthetic-commerce-${randomUUID()}`),
+            neighbour = await resolveWorkspace(`synthetic-commerce-${randomUUID()}`);
+          workspaces.push(asking.workspaceId, neighbour.workspaceId);
+          const started = Date.now(),
+            otherEdition = randomUUID(),
+            page = "https://checkout.example.test/synthetic",
+            taken = () => `synthetic-${randomUUID()}`;
+          const earlier = async (
+            actor: typeof a,
+            minutesAgo: number,
+            happened: Partial<typeof valoOrders.$inferInsert>,
+            line = fixtureLine,
+          ) => {
+            const id = randomUUID();
+            orders.push(id);
+            await db.insert(valoOrders).values({
+              id,
+              workspaceId: actor.workspaceId,
+              requestedBy: actor.identityId,
+              requestKey: randomUUID(),
+              priceId,
+              reference: `valo-test-${id}`,
+              amountKobo: 12345,
+              line,
+              createdAt: new Date(started - minutesAgo * 60_000),
+            });
+            await db.update(valoOrders).set(happened).where(eq(valoOrders.id, id));
+            return id;
+          };
+          const look = (actor: typeof a, editions: string[]) =>
+            db.transaction((tx) => endedEditionOrders(tx, actor, editions));
+          const abandoned = await earlier(asking, 90, { status: "abandoned", checkoutUrl: page }),
+            failed = await earlier(asking, 80, { status: "failed", providerTransactionId: taken() });
+          // Not asked about: an order the provider was never offered, and one that has not ended so.
+          await earlier(asking, 70, { status: "abandoned" });
+          await earlier(asking, 69, { status: "failed" });
+          for (const status of ["created", "pending", "verified_success", "needs_review", "reversed"])
+            await earlier(asking, 60, { status, checkoutUrl: page, providerTransactionId: taken() });
+          const elsewhere = await earlier(
+            asking,
+            50,
+            { status: "abandoned", checkoutUrl: page },
+            { ...fixtureLine, contentVersionId: otherEdition },
+          );
+          const theirs = await earlier(neighbour, 40, { status: "failed", checkoutUrl: page });
+          assert.deepEqual(await look(asking, [version]), [failed, abandoned]);
+          assert.deepEqual(await look(neighbour, [version]), [theirs]);
+          assert.deepEqual(await look(asking, [otherEdition]), [elsewhere]);
+          assert.deepEqual(await look(neighbour, [otherEdition]), []);
+          assert.deepEqual(await look(asking, [otherEdition, version]), [elsewhere, failed, abandoned]);
+          assert.deepEqual(await look(asking, [randomUUID()]), []);
+          assert.deepEqual(await look(asking, []), []);
+          // Five at most, the latest first: the neighbour's earliest of six is left to the day's
+          // reconciliation.
+          const later: string[] = [];
+          for (const minutesAgo of [30, 25, 20, 15, 10])
+            later.unshift(await earlier(neighbour, minutesAgo, { status: "abandoned", checkoutUrl: page }));
+          assert.deepEqual(await look(neighbour, [version]), later);
+          assert.ok(!later.includes(theirs));
+          // The asking workspace's answer is what it was.
+          assert.deepEqual(await look(asking, [version]), [failed, abandoned]);
         },
       );
       await t.test("checkout of a product that is not released is refused", async () => {

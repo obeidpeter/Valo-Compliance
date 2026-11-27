@@ -42,6 +42,7 @@ import { singleRow } from "../../platform/rows";
 import { queueMessage } from "../messages";
 import {
   assertPayableOrder,
+  endedEditionOrders,
   lockCheckoutWorkspace,
   openEditionOrder,
   orderEditions,
@@ -377,17 +378,68 @@ export async function purchases(actor: WorkspaceActor) {
     ownedDownloads: catalogue.ownedDownloads,
   };
 }
+/** Ends an order's or a checkout's transaction before it writes anything: the provider is to be asked
+ * about these earlier orders first. Only afterALookAtEndedOrders catches it. */
+class EndedOrdersUnchecked extends Error {
+  constructor(readonly orders: string[]) {
+    super("ENDED_ORDERS_UNCHECKED");
+  }
+}
+/**
+ * PAY-006 (docs/architecture/order-safety.md, slice 4). Called in the transaction that is about to make
+ * another order for these editions, or to start a payment for one, once its other checks have passed. An
+ * earlier order for one of them that ended abandoned or failed may have been paid since. So the
+ * transaction ends here, with nothing written, for the provider to be asked outside it. Without a
+ * merchant there is nobody to ask, and no payment can be started either.
+ */
+async function endedOrdersLookedAt(tx: Tx, actor: WorkspaceActor, editions: string[], looked: boolean) {
+  if (looked || !sandboxPaymentsConfigured()) return;
+  const ended = await endedEditionOrders(tx, actor, editions);
+  if (ended.length) throw new EndedOrdersUnchecked(ended);
+}
+/**
+ * Runs `attempt`. Where it stops for earlier orders to be asked about, the provider is asked about each,
+ * outside any transaction, and `attempt` runs once more. An order paid since is settled by the asking,
+ * so the second run finds a payment on record and makes or starts nothing. One the provider still calls
+ * unpaid leaves the second run to do what the first would have. If the provider cannot be asked, nothing
+ * new is made or started: Valo cannot tell whether the customer has paid.
+ */
+async function afterALookAtEndedOrders<T>(actor: WorkspaceActor, attempt: (looked: boolean) => Promise<T>) {
+  try {
+    return await attempt(false);
+  } catch (stopped) {
+    if (!(stopped instanceof EndedOrdersUnchecked)) throw stopped;
+    for (const id of stopped.orders) {
+      try {
+        await refreshOrder(actor, id);
+      } catch (problem) {
+        // The provider's own refusals speak of "this order"; here the customer asked for another.
+        if (problem instanceof ValoProblem && problem.status === 503)
+          throw new ValoProblem(
+            503,
+            "Paystack could not be asked about your earlier order just now, so nothing new was started. Try again in a few minutes.",
+          );
+        throw problem;
+      }
+    }
+    return attempt(true);
+  }
+}
 export async function createOrder(actor: WorkspaceActor, raw: unknown) {
   const input = CreateCommerceOrderBody.strict().parse(raw);
   // An order buys one template's price or one bundle's version (docs/architecture/commercial-settings.md,
   // slice 4c).
   if ((input.priceId === undefined) === (input.bundleId === undefined))
     throw new ValoProblem(422, "Choose one template or one bundle to buy. No order was created.");
-  if (input.bundleId !== undefined) return createBundleOrder(actor, { ...input, bundleId: input.bundleId });
+  const { bundleId } = input;
+  if (bundleId !== undefined)
+    return afterALookAtEndedOrders(actor, (looked) =>
+      createBundleOrder(actor, { ...input, bundleId }, looked),
+    );
   const priceId = input.priceId!;
   // Before the transaction: see commerceProducts.
   const offer = (await commercialCatalogue()).offers.find((entry) => entry.product.id === priceId);
-  return priceOrder(actor, { ...input, priceId }, offer);
+  return afterALookAtEndedOrders(actor, (looked) => priceOrder(actor, { ...input, priceId }, offer, looked));
 }
 /** A template's order, made in one transaction from the price book: see createOrder. */
 async function priceOrder(
@@ -399,6 +451,7 @@ async function priceOrder(
     requestKey: string;
   },
   offer: { manual: boolean } | undefined,
+  looked: boolean,
 ) {
   const { priceId } = input;
   return db.transaction(async (tx) => {
@@ -468,6 +521,7 @@ async function priceOrder(
         );
       return presentOrder(tx, existing);
     }
+    await endedOrdersLookedAt(tx, actor, [price.contentVersionId], looked);
     await limit(tx, actor);
     const id = randomUUID();
     const order = singleRow(
@@ -521,6 +575,7 @@ async function createBundleOrder(
     acceptedCarriesToLaterEditions: boolean;
     requestKey: string;
   },
+  looked: boolean,
 ) {
   return db.transaction(async (tx) => {
     await assertSafetyActive(tx, "checkout");
@@ -571,6 +626,7 @@ async function createBundleOrder(
         );
       return presentOrder(tx, existing);
     }
+    await endedOrdersLookedAt(tx, actor, editions, looked);
     await limit(tx, actor);
     const id = randomUUID();
     const order = singleRow(
@@ -627,7 +683,9 @@ export async function startCheckout(actor: WorkspaceActor, id: string, email: st
   const products = await commerceProducts();
   const bundles = await bundleOffers();
   const origin = trustedSiteOrigin();
-  const order = await checkoutOrder(actor, id, { products, bundles, origin });
+  const order = await afterALookAtEndedOrders(actor, (looked) =>
+    checkoutOrder(actor, id, { products, bundles, origin }, looked),
+  );
   if (order.checkoutUrl) return { url: order.checkoutUrl };
   // No membership lock across provider I/O. Stable provider reference prevents
   // a retry from becoming a different order; never mint another reference on error.
@@ -657,6 +715,7 @@ async function checkoutOrder(
     bundles,
     origin,
   }: { products: { id: string }[]; bundles: { id: string }[]; origin: string | undefined },
+  looked: boolean,
 ) {
   return db.transaction(async (tx) => {
     await assertSafetyActive(tx, "checkout");
@@ -676,6 +735,7 @@ async function checkoutOrder(
         "This product is unavailable for new checkout. Your order history and drafts are unchanged.",
       );
     await assertPayableOrder(tx, actor, order);
+    await endedOrdersLookedAt(tx, actor, orderEditions(order.line), looked);
     if (order.checkoutUrl) return order;
     if (!origin) throw new ValoProblem(503, "The trusted checkout return address is not configured.");
     if (!sandboxPaymentsConfigured())

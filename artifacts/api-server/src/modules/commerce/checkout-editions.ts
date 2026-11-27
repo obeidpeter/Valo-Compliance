@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, isNotNull, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull, or, sql } from "drizzle-orm";
 import { db, valoBundles, valoOrders, valoPrices, type ValoOrderLine } from "@workspace/db";
 import type { WorkspaceActor } from "../workspaces";
 import { ValoProblem } from "../../platform/valo-problem";
@@ -91,6 +91,30 @@ export async function openEditionOrder(tx: Tx, actor: WorkspaceActor, editions: 
     );
   }
   return row?.order;
+}
+
+/**
+ * PAY-006 (docs/architecture/order-safety.md, slice 4): the workspace's orders for any of these editions
+ * that ended abandoned or failed, the five most recent. Each ended so because the provider said so when
+ * it was last asked, and may have been paid since. An order the provider was never asked to take a
+ * payment for is not one of them.
+ */
+export async function endedEditionOrders(tx: Tx, actor: WorkspaceActor, editions: string[]) {
+  if (!editions.length) return [];
+  const rows = await tx
+    .select({ id: valoOrders.id })
+    .from(valoOrders)
+    .where(
+      and(
+        eq(valoOrders.workspaceId, actor.workspaceId),
+        namesAny(editions),
+        inArray(valoOrders.status, ["abandoned", "failed"]),
+        or(isNotNull(valoOrders.checkoutUrl), isNotNull(valoOrders.providerTransactionId)),
+      ),
+    )
+    .orderBy(desc(valoOrders.createdAt), desc(valoOrders.id))
+    .limit(5);
+  return rows.map((row) => row.id);
 }
 
 export async function assertPayableOrder(
