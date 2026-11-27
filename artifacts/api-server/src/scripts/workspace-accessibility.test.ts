@@ -5737,6 +5737,188 @@ test("a saved result whose rule changed since says so above it and under that ru
   }
 });
 
+// PRO-003: "Version relevant profile changes and offer a new requirements assessment without overwriting
+// the prior result. Accept: changed location, activities or employee count produces a dated comparison
+// and preserves user-created tasks." The server decides when a new check is offered and names the
+// changed answers (`Workspace.recheck`); these are the screens that show its offer.
+test("a new requirements check is offered where the server offers one: with the profile's save, on the home page and on the result it follows, and the result saved from it opens compared with that one", async () => {
+  const workspace = answers["GET /workspace"] as Record<string, unknown>;
+  const recheck = {
+    assessmentId: ASSESSMENT,
+    savedAt: assessment.createdAt,
+    changed: ["state", "employees"],
+  };
+  const offered = api.GetWorkspaceResponse.parse({ ...workspace, recheck });
+  const href = `/workspace/checker?prefill=profile&since=${ASSESSMENT}`;
+  const changed =
+    "These answers have changed since the result saved on 18 Nov 2026, 10:00: State or FCT and Employees.";
+  const offer = async (page: Page) => {
+    const notice = page.getByTestId("notice-check-again");
+    await expect(notice).toContainText("Your business profile has changed since your last saved result");
+    await expect(notice).toContainText(changed);
+    await expect(notice).toContainText(
+      "Check again to see what that means for your requirements. Your saved results and your tasks stay as they are.",
+    );
+    await expect(notice.getByRole("link", { name: "Check again with my profile" })).toHaveAttribute(
+      "href",
+      href,
+    );
+    return notice;
+  };
+
+  // The profile's page offers nothing until a save brings the offer, and then brings it into view.
+  {
+    const { page, errors, unknown, close } = await phone(
+      "/workspace/profile",
+      except({
+        "PUT /workspace/profile": api.SaveBusinessProfileResponse.parse({
+          ...workspace,
+          profileRevision: 4,
+          profile: { ...profile, state: "Bayelsa", employees: "6" },
+          recheck,
+        }),
+      }),
+    );
+    try {
+      await ready(page);
+      await expect(page.getByTestId("notice-check-again")).toHaveCount(0);
+      await page.getByTestId("input-state").selectOption("Bayelsa");
+      await page.getByTestId("input-employees").fill("6");
+      // Saved from the foot of the form, where the head of the page is out of sight.
+      await page.getByTestId("checkbox-marketing").scrollIntoViewIfNeeded();
+      await page.getByTestId("button-save-profile").click();
+      await expect(await offer(page)).toBeInViewport({ ratio: 1 });
+      await expect(page.getByTestId("text-profile-revision")).toHaveText("Version 4");
+      assert.deepEqual([...errors, ...unknown], []);
+    } finally {
+      await close();
+    }
+  }
+  // It is still offered when the page is opened again. (The sweep runs here, on the page at rest:
+  // the message that confirms a save is on screen for some seconds after one.)
+  {
+    const { page, errors, unknown, close } = await phone(
+      "/workspace/profile",
+      except({ "GET /workspace": offered }),
+    );
+    try {
+      await ready(page);
+      await offer(page);
+      await settled(page);
+      assert.deepEqual(await phoneProblems(page, "the business profile with a new check offered"), []);
+      assert.deepEqual([...errors, ...unknown], []);
+    } finally {
+      await close();
+    }
+  }
+
+  // The home page lists it with what needs attention, and says so beside the latest result.
+  {
+    const { page, errors, unknown, close } = await phone("/workspace", except({ "GET /workspace": offered }));
+    try {
+      await ready(page);
+      const item = page.getByTestId("attention-stale-check");
+      await expect(item).toContainText("Your business profile has changed since your last saved result");
+      await expect(item).toContainText(changed);
+      await expect(item.getByRole("link", { name: "Check again with my profile" })).toHaveAttribute(
+        "href",
+        href,
+      );
+      const beside = page.getByTestId("status-profile-changed-since-check");
+      await expect(beside).toContainText("Your business profile has changed since this saved result.");
+      await expect(beside.getByRole("link", { name: "Check again with my profile" })).toHaveAttribute(
+        "href",
+        href,
+      );
+      await settled(page);
+      assert.deepEqual(await phoneProblems(page, "the home page with a new check offered"), []);
+      assert.deepEqual([...errors, ...unknown], []);
+    } finally {
+      await close();
+    }
+  }
+
+  // The result it follows shows it too, and is itself as it was saved.
+  {
+    const { page, errors, unknown, close } = await phone(
+      `/workspace/assessments/${ASSESSMENT}`,
+      except({ "GET /workspace": offered }),
+    );
+    try {
+      await ready(page);
+      await offer(page);
+      await expect(page.getByTestId(`card-item-${assessment.result.items[0]!.ruleId}`)).toContainText(
+        assessment.result.items[0]!.reason,
+      );
+      await settled(page);
+      assert.deepEqual(await phoneProblems(page, "a saved result with a new check offered"), []);
+      assert.deepEqual([...errors, ...unknown], []);
+    } finally {
+      await close();
+    }
+  }
+
+  // Without the server's offer no screen makes one: not when the profile's version is newer than
+  // the one a result names, which a change to the business name alone brings about.
+  const renamed = api.GetWorkspaceResponse.parse({ ...workspace, profileRevision: 5 });
+  for (const path of ["/workspace", `/workspace/assessments/${ASSESSMENT}`, "/workspace/profile"]) {
+    const { page, errors, unknown, close } = await phone(path, except({ "GET /workspace": renamed }));
+    try {
+      await ready(page);
+      await settled(page);
+      for (const id of ["notice-check-again", "attention-stale-check", "status-profile-changed-since-check"])
+        await expect(page.getByTestId(id), `${path}: ${id}`).toHaveCount(0);
+      assert.deepEqual([...errors, ...unknown], [], path);
+    } finally {
+      await close();
+    }
+  }
+
+  // The check the offer opens is filled in from the profile. The result saved from it opens compared
+  // with the one it follows, each under the time it was saved, and the offer is not repeated on it.
+  {
+    const NEXT = "00000000-0000-4000-8000-00000000a002";
+    const next = { ...assessment, id: NEXT, profileRevision: null, createdAt: at(19) };
+    const { page, errors, unknown, close } = await phone(
+      href,
+      except({
+        "GET /workspace": offered,
+        "POST /workspace/checker/preview": api.PreviewWorkspaceAssessmentResponse.parse(assessment.result),
+        "POST /workspace/assessments": api.CreateAssessmentResponse.parse(next),
+        "GET /workspace/assessments": api.ListAssessmentsResponse.parse([next, assessment]),
+        [`GET /workspace/assessments/${NEXT}`]: api.GetAssessmentResponse.parse(next),
+        [`GET /workspace/assessments/${NEXT}/compare/${ASSESSMENT}`]: api.CompareAssessmentsResponse.parse({
+          previousId: ASSESSMENT,
+          currentId: NEXT,
+          changedFacts: ["employees", "state"],
+          addedRuleIds: [],
+          removedRuleIds: [],
+          changedRuleIds: [],
+          explanations: [],
+        }),
+      }),
+    );
+    try {
+      await ready(page);
+      await expect(page.getByText("Filled in from your business profile.")).toBeAttached();
+      await page.getByTestId("button-step-5").click();
+      await page.getByTestId("button-run").click();
+      await page.getByTestId("checkbox-save-consent").check();
+      await page.getByTestId("button-save-assessment").click();
+      await page.waitForURL(`**/workspace/assessments/${NEXT}?compare=${ASSESSMENT}`);
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText("Result saved 19 Nov 2026, 10:00");
+      const earlier = page.getByTestId("select-compare");
+      await expect(earlier).toHaveValue(ASSESSMENT);
+      await expect(earlier.locator("option:checked")).toHaveText("18 Nov 2026, 10:00");
+      await expect(page.getByTestId("comparison")).toContainText("Changed answers (2)");
+      await expect(page.getByTestId("notice-check-again")).toHaveCount(0);
+      assert.deepEqual([...errors, ...unknown], []);
+    } finally {
+      await close();
+    }
+  }
+});
+
 // docs/architecture/library-holds.md, slice 3 (ADM-008): support staff refer a case to a staff-library
 // entry found by its title, and the referral sends that entry's published version.
 test("support staff find a library entry by its title and refer a case to its published version", async () => {

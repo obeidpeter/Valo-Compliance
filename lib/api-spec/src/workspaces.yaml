@@ -76,3 +76,21 @@ schemas:
           - { $ref: "#/components/schemas/Profile" }
           - { type: "null" }
       documentCount: { type: integer }
+      recheck:
+        description: Present when a new requirements check is offered (PRO-003). The business profile has changed an answer the check reads since the latest saved result, and that result was not worked out from the new answer. A change to the business name or the marketing choice alone offers nothing.
+        $ref: "#/components/schemas/ProfileRecheck"
+  ProfileRecheck:
+    type: object
+    additionalProperties: false
+    required: [assessmentId, savedAt, changed]
+    properties:
+      assessmentId: { type: string, format: uuid, description: "The workspace's latest saved result, which a new check would follow. It is kept as it was saved." }
+      savedAt: { type: string, format: date-time, description: "When that result was saved." }
+      changed:
+        type: array
+        minItems: 1
+        maxItems: 14
+        description: The profile's changed answers, in the order the profile asks them.
+        items:
+          type: string
+          enum: [legalForm, registrationStatus, activities, state, lga, employees, turnoverBand, turnoverYear, turnoverMetric, turnoverCurrency, premises, manufacturing, importing, personalData]

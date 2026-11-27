@@ -6,10 +6,13 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { Profile } from './profile';
+import type { ProfileRecheck } from './profileRecheck';
 
 export interface Workspace {
   id: string;
   profileRevision: number;
   profile: Profile | null;
   documentCount: number;
+  /** Present when a new requirements check is offered (PRO-003). The business profile has changed an answer the check reads since the latest saved result, and that result was not worked out from the new answer. A change to the business name or the marketing choice alone offers nothing. */
+  recheck?: ProfileRecheck;
 }

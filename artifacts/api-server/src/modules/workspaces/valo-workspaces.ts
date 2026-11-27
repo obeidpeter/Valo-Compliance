@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
-import { and, eq, sql, inArray } from "drizzle-orm";
+import { and, desc, eq, lte, sql, inArray } from "drizzle-orm";
 import type { db } from "@workspace/db";
-import { sha256 } from "@workspace/valo-core";
+import { profileAnswersToCheckAgain, sha256, type ProfileCheckAnswer } from "@workspace/valo-core";
 import { privacyNotice } from "@workspace/valo-core/privacy-notice";
 import { profileInput } from "../../lib/valo-validation";
 import { consumeQuota, quotaLimit, quotaSubjectHash } from "../../lib/valo-quota";
@@ -204,6 +204,59 @@ export async function savedBusinessName(tx: Tx, actor: WorkspaceActor): Promise<
   const name = row?.profile.businessName;
   return typeof name === "string" ? name.trim() : "";
 }
+/**
+ * PRO-003: "Version relevant profile changes and offer a new requirements assessment without
+ * overwriting the prior result." The offer is made when the profile has changed an answer the check
+ * reads since the workspace's latest saved result, and that result was not worked out from the new
+ * answer (`profileAnswersToCheckAgain`). It names the result and the changed answers; the result,
+ * and every task, stay as they are.
+ *
+ * The profile as it was then is the newest version saved by the time the result was. Both saves
+ * hold the workspace's row, so the two records' times are in the order of the saves unless two of
+ * the workspace's own requests begin in the same instant. The times are compared in the database,
+ * where they are kept more finely than here.
+ */
+async function profileRecheck(
+  reader: Tx | typeof db,
+  actor: WorkspaceActor,
+  current: { profile: Record<string, unknown> } | undefined,
+): Promise<{ recheck?: { assessmentId: string; savedAt: string; changed: ProfileCheckAnswer[] } }> {
+  if (!current) return {};
+  const { valoAssessments, valoProfileVersions } = await import("@workspace/db");
+  const then = reader
+    .select({ profile: valoProfileVersions.profile })
+    .from(valoProfileVersions)
+    .where(
+      and(
+        eq(valoProfileVersions.workspaceId, valoAssessments.workspaceId),
+        lte(valoProfileVersions.createdAt, valoAssessments.createdAt),
+      ),
+    )
+    .orderBy(desc(valoProfileVersions.revision))
+    .limit(1)
+    .as("then");
+  const [latest] = await reader
+    .select({
+      id: valoAssessments.id,
+      facts: valoAssessments.facts,
+      createdAt: valoAssessments.createdAt,
+      before: then.profile,
+    })
+    .from(valoAssessments)
+    .leftJoinLateral(then, sql`true`)
+    .where(eq(valoAssessments.workspaceId, actor.workspaceId))
+    .orderBy(desc(valoAssessments.createdAt), desc(valoAssessments.id))
+    .limit(1);
+  if (!latest) return {};
+  const changed = profileAnswersToCheckAgain({
+    before: latest.before,
+    current: current.profile,
+    used: latest.facts !== null && typeof latest.facts === "object" ? { ...latest.facts } : {},
+  });
+  return changed.length
+    ? { recheck: { assessmentId: latest.id, savedAt: latest.createdAt.toISOString(), changed } }
+    : {};
+}
 export async function getWorkspace(actor: WorkspaceActor) {
   const { db, valoDocuments, valoProfileVersions, valoWorkspaces } = await import("@workspace/db");
   const [workspace] = await db.select().from(valoWorkspaces).where(eq(valoWorkspaces.id, actor.workspaceId));
@@ -228,6 +281,7 @@ export async function getWorkspace(actor: WorkspaceActor) {
     profileRevision: workspace.profileRevision,
     profile: version?.profile ?? null,
     documentCount: count.total,
+    ...(await profileRecheck(db, actor, version)),
   };
 }
 export async function saveProfile(actor: WorkspaceActor, raw: unknown) {
@@ -296,6 +350,8 @@ export async function saveProfile(actor: WorkspaceActor, raw: unknown) {
       profileRevision: revision,
       profile: input.profile,
       documentCount: count.total,
+      // Said with the save, so that the profile's page can offer the check at once.
+      ...(await profileRecheck(tx, actor, { profile: input.profile })),
     };
   });
 }

@@ -16,3 +16,4 @@ export * from "./assessment-changes";
 export * from "./rule-release";
 export * from "./owner-rule-release";
 export * from "./processing-inventory";
+export * from "./profile-recheck";

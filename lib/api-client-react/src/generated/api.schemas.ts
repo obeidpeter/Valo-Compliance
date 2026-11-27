@@ -6189,11 +6189,46 @@ export interface ProfileInput {
   profile: Profile;
 }
 
+export type ProfileRecheckChangedItem = typeof ProfileRecheckChangedItem[keyof typeof ProfileRecheckChangedItem];
+
+
+export const ProfileRecheckChangedItem = {
+  legalForm: 'legalForm',
+  registrationStatus: 'registrationStatus',
+  activities: 'activities',
+  state: 'state',
+  lga: 'lga',
+  employees: 'employees',
+  turnoverBand: 'turnoverBand',
+  turnoverYear: 'turnoverYear',
+  turnoverMetric: 'turnoverMetric',
+  turnoverCurrency: 'turnoverCurrency',
+  premises: 'premises',
+  manufacturing: 'manufacturing',
+  importing: 'importing',
+  personalData: 'personalData',
+} as const;
+
+export interface ProfileRecheck {
+  /** The workspace's latest saved result, which a new check would follow. It is kept as it was saved. */
+  assessmentId: string;
+  /** When that result was saved. */
+  savedAt: string;
+  /**
+     * The profile's changed answers, in the order the profile asks them.
+     * @minItems 1
+     * @maxItems 14
+     */
+  changed: ProfileRecheckChangedItem[];
+}
+
 export interface Workspace {
   id: string;
   profileRevision: number;
   profile: Profile | null;
   documentCount: number;
+  /** Present when a new requirements check is offered (PRO-003). The business profile has changed an answer the check reads since the latest saved result, and that result was not worked out from the new answer. A change to the business name or the marketing choice alone offers nothing. */
+  recheck?: ProfileRecheck;
 }
 
 export type WriteLimitResponseCode = typeof WriteLimitResponseCode[keyof typeof WriteLimitResponseCode];

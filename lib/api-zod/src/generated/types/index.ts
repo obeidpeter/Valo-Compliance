@@ -344,6 +344,8 @@ export * from './privacyStaffActionSystem';
 export * from './profile';
 export * from './profileInput';
 export * from './profileLegalForm';
+export * from './profileRecheck';
+export * from './profileRecheckChangedItem';
 export * from './profileRegistrationStatus';
 export * from './profileState';
 export * from './profileTurnoverBand';

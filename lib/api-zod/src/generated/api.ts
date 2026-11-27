@@ -10816,6 +10816,8 @@ export const getWorkspaceResponseProfileOneLgaMax = 100;
 
 export const getWorkspaceResponseProfileOneEmployeesRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{1,7})$');
 export const getWorkspaceResponseProfileOneTurnoverYearRegExp = new RegExp('^(unknown|[0-9]{4})$');
+export const getWorkspaceResponseRecheckChangedMax = 14;
+
 
 
 export const GetWorkspaceResponse = zod.object({
@@ -10839,7 +10841,12 @@ export const GetWorkspaceResponse = zod.object({
   "personalData": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
   "marketingConsent": zod.boolean()
 }),zod.null()]),
-  "documentCount": zod.int()
+  "documentCount": zod.int(),
+  "recheck": zod.object({
+  "assessmentId": zod.uuid().describe('The workspace\'s latest saved result, which a new check would follow. It is kept as it was saved.'),
+  "savedAt": zod.coerce.date().describe('When that result was saved.'),
+  "changed": zod.array(zod.enum(['legalForm', 'registrationStatus', 'activities', 'state', 'lga', 'employees', 'turnoverBand', 'turnoverYear', 'turnoverMetric', 'turnoverCurrency', 'premises', 'manufacturing', 'importing', 'personalData'])).min(1).max(getWorkspaceResponseRecheckChangedMax).describe('The profile\'s changed answers, in the order the profile asks them.')
+}).optional().describe('Present when a new requirements check is offered (PRO-003). The business profile has changed an answer the check reads since the latest saved result, and that result was not worked out from the new answer. A change to the business name or the marketing choice alone offers nothing.')
 })
 
 
@@ -10889,6 +10896,8 @@ export const saveBusinessProfileResponseProfileOneLgaMax = 100;
 
 export const saveBusinessProfileResponseProfileOneEmployeesRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{1,7})$');
 export const saveBusinessProfileResponseProfileOneTurnoverYearRegExp = new RegExp('^(unknown|[0-9]{4})$');
+export const saveBusinessProfileResponseRecheckChangedMax = 14;
+
 
 
 export const SaveBusinessProfileResponse = zod.object({
@@ -10912,7 +10921,12 @@ export const SaveBusinessProfileResponse = zod.object({
   "personalData": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
   "marketingConsent": zod.boolean()
 }),zod.null()]),
-  "documentCount": zod.int()
+  "documentCount": zod.int(),
+  "recheck": zod.object({
+  "assessmentId": zod.uuid().describe('The workspace\'s latest saved result, which a new check would follow. It is kept as it was saved.'),
+  "savedAt": zod.coerce.date().describe('When that result was saved.'),
+  "changed": zod.array(zod.enum(['legalForm', 'registrationStatus', 'activities', 'state', 'lga', 'employees', 'turnoverBand', 'turnoverYear', 'turnoverMetric', 'turnoverCurrency', 'premises', 'manufacturing', 'importing', 'personalData'])).min(1).max(saveBusinessProfileResponseRecheckChangedMax).describe('The profile\'s changed answers, in the order the profile asks them.')
+}).optional().describe('Present when a new requirements check is offered (PRO-003). The business profile has changed an answer the check reads since the latest saved result, and that result was not worked out from the new answer. A change to the business name or the marketing choice alone offers nothing.')
 })
 
 
