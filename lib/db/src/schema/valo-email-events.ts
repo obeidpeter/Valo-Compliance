@@ -19,6 +19,9 @@ const DELIVERIES = sql`('delivered', 'delayed', 'bounced', 'complained', 'undeli
  * - `occurred_at`: the provider's time for the report.
  * - `status`: `pending` until the job finds the record; `applied` once it has; `unmatched` when no record
  *   held the reference within the time the job waits.
+ * - `address_hash` and `address_key_version`: only for a report that suppresses, which is a bounce the
+ *   provider calls permanent or a complaint: a keyed checksum of the one address the message went to, and
+ *   the version of the key it was made under.
  *
  * It keeps no address, subject or text, and no workspace: the record the report is about says whose it is.
  * Customer requests have no access to it. A settled row is removed after thirty days.
@@ -36,6 +39,8 @@ export const valoEmailEvents = pgTable(
     status: text("status").notNull().default("pending"),
     receivedAt: timestamp("received_at", { withTimezone: true }).notNull().defaultNow(),
     settledAt: timestamp("settled_at", { withTimezone: true }),
+    addressHash: text("address_hash"),
+    addressKeyVersion: text("address_key_version"),
   },
   (t) => [
     uniqueIndex("valo_email_event_once").on(t.provider, t.eventKey),
@@ -50,9 +55,56 @@ export const valoEmailEvents = pgTable(
         AND ${t.status} IN ('pending', 'applied', 'unmatched')
         AND (${t.status} = 'pending') = (${t.settledAt} IS NULL)`,
     ),
+    check(
+      "valo_email_event_address",
+      sql`(${t.addressHash} IS NULL) = (${t.addressKeyVersion} IS NULL)
+        AND (${t.addressHash} IS NULL OR (${t.addressHash} ~ '^[a-f0-9]{64}$'
+          AND ${t.addressKeyVersion} ~ '^[a-zA-Z0-9_-]{1,80}$'
+          AND ${t.delivery} IN ('bounced', 'complained')))`,
+    ),
   ],
 );
 export type ValoEmailEvent = typeof valoEmailEvents.$inferSelect;
+
+/**
+ * The addresses Valo has stopped sending optional messages to (docs/architecture/messages.md, part 3):
+ * one row for each address whose email service sent a message back for good, or reported it as spam.
+ *
+ * - `address_hash` and `key_version`: a keyed checksum of the address, and the version of the key it was
+ *   made under, so that a later key still finds it. Never the address: a row cannot be read back into one.
+ * - `reason`: `bounced` or `complained`, as last reported.
+ * - `expires_at`: 180 days after the last report. An address is tried again after that, and suppressed
+ *   again if its email service says the same.
+ *
+ * It names no person and no workspace. Customer requests have no access to it: the one question they
+ * need answered, whether an address is suppressed, they ask through `valo_email_address_suppressed`, which
+ * returns only yes or no for a checksum the caller already holds.
+ */
+export const valoEmailSuppressions = pgTable(
+  "valo_email_suppressions",
+  {
+    id: uuid("id").primaryKey(),
+    keyVersion: text("key_version").notNull(),
+    addressHash: text("address_hash").notNull(),
+    reason: text("reason").notNull(),
+    firstReportedAt: timestamp("first_reported_at", { withTimezone: true }).notNull(),
+    lastReportedAt: timestamp("last_reported_at", { withTimezone: true }).notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  },
+  (t) => [
+    uniqueIndex("valo_email_suppression_once").on(t.keyVersion, t.addressHash),
+    index("valo_email_suppression_expiry_idx").on(t.expiresAt),
+    check(
+      "valo_email_suppression_shape",
+      sql`${t.reason} IN ('bounced', 'complained')
+        AND ${t.addressHash} ~ '^[a-f0-9]{64}$'
+        AND ${t.keyVersion} ~ '^[a-zA-Z0-9_-]{1,80}$'
+        AND ${t.lastReportedAt} >= ${t.firstReportedAt}
+        AND ${t.expiresAt} > ${t.lastReportedAt}`,
+    ),
+  ],
+);
+export type ValoEmailSuppression = typeof valoEmailSuppressions.$inferSelect;
 
 /**
  * The latest thing the email provider reported about one message or reminder of a workspace (part 3):

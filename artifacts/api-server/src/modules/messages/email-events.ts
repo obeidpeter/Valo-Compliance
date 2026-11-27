@@ -59,8 +59,15 @@ export type EmailEventSource = {
   /**
    * The provider's id for this report, and what it says. The report is null for an event Valo keeps
    * nothing of, such as one saying a message was opened. Throws on a body it cannot read.
+   *
+   * `address` is the one address the message went to, given only for a report that may suppress it (a
+   * bounce or a complaint), so that its keyed checksum can be made. It is no part of the report, and
+   * nothing keeps it.
    */
-  read(body: Buffer, header: Header): { eventKey: string; report: EmailReport | null };
+  read(
+    body: Buffer,
+    header: Header,
+  ): { eventKey: string; report: EmailReport | null; address: string | null };
 };
 
 /**
@@ -109,7 +116,10 @@ function signedBy(body: Buffer, header: Header, keys: readonly Buffer[], now = n
   return matched;
 }
 
-/** Only what Valo reads of an event. The address, the subject and the rest are never read. */
+/**
+ * Only what Valo reads of an event. The subject and the rest are never read. The address is read only to
+ * make its keyed checksum, for a bounce or a complaint (valo-email-suppression.ts), and is kept nowhere.
+ */
 const resendEvent = z.object({
   type: z.string().min(1).max(80),
   created_at: z.string().max(60).optional(),
@@ -117,6 +127,7 @@ const resendEvent = z.object({
     .object({
       email_id: z.string().min(1).max(200).optional(),
       bounce: z.object({ type: z.string().max(60).optional() }).optional(),
+      to: z.array(z.string().max(320)).max(50).optional(),
     })
     .optional(),
 });
@@ -155,7 +166,7 @@ export const resendEvents: EmailEventSource = {
     if (!eventKey || eventKey.length > 200) throw Error("EMAIL_EVENT_WITHOUT_ID");
     const event = resendEvent.parse(JSON.parse(body.toString("utf8")));
     const known = RESEND_REPORTS.get(event.type);
-    if (!known) return { eventKey, report: null };
+    if (!known) return { eventKey, report: null, address: null };
     if (!event.data?.email_id) throw Error("EMAIL_EVENT_WITHOUT_MESSAGE");
     // The event's own time, or the time it was signed when the event gives none that can be read. A
     // time later than the signing is not the provider's, and is not kept.
@@ -164,6 +175,14 @@ export const resendEvents: EmailEventSource = {
     const occurredAt =
       Number.isNaN(+said) || +said > +signedAt + SIGNED_WITHIN_MS || +said < 0 ? signedAt : said;
     if (Number.isNaN(+occurredAt)) throw Error("EMAIL_EVENT_WITHOUT_TIME");
+    // Valo sends each message to one address. A report naming several, or none, suppresses none.
+    const to = event.data.to ?? [];
+    const address =
+      (known.delivery === "bounced" || known.delivery === "complained") &&
+      to.length === 1 &&
+      /^[^\s@]+@[^\s@]+$/.test(to[0]!)
+        ? to[0]!
+        : null;
     return {
       eventKey,
       report: {
@@ -172,6 +191,7 @@ export const resendEvents: EmailEventSource = {
         providerMessageId: event.data.email_id,
         occurredAt,
       },
+      address,
     };
   },
 };

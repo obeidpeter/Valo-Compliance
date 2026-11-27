@@ -113,6 +113,11 @@ test("actual export entries and worker startup reject before database, queue or 
       "valo-email-events",
       "export const recordDeliveryReports=async()=>{globalThis.guardEffects.services++},deliveriesOf=recordDeliveryReports,emailEventsReady=recordDeliveryReports,recordEmailEvent=recordDeliveryReports;",
     ],
+    // Whether an address is suppressed is a question put to the database, which a reminder's sender asks.
+    [
+      "valo-email-suppression",
+      "export const addressSuppressed=async()=>{globalThis.guardEffects.services++},SUPPRESSION_LASTS_MS=0;",
+    ],
     // The worker reaches the daily source check through the sources module's index.
     ["sources", "export const reconcileSourceMonitoring=async()=>{globalThis.guardEffects.services++};"],
     // It reaches a published guide's daily source check through the manual guidance module's index.

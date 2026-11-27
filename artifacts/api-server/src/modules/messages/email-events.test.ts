@@ -184,8 +184,15 @@ test("each event Valo uses becomes a report that keeps the message's reference, 
     ["email.failed", { failed: { reason: "SYNTHETIC FAILURE TEXT" } }, "undelivered", "PROVIDER_FAILED"],
     ["email.suppressed", {}, "undelivered", "PROVIDER_SUPPRESSED"],
   ] as const) {
-    const { eventKey, report } = read(event(type, data));
+    const { eventKey, report, address } = read(event(type, data));
     assert.equal(eventKey, REPORT_ID);
+    // The address is handed on, outside the report, only for a bounce or a complaint: its keyed checksum
+    // is what stops optional messages to it. For every other report it is not read at all.
+    assert.equal(
+      address,
+      delivery === "bounced" || delivery === "complained" ? "synthetic-recipient@example.test" : null,
+      type,
+    );
     assert.deepEqual(
       report,
       {
@@ -219,6 +226,7 @@ test("an event Valo does not use leaves no report: that a message was handed ove
     assert.deepEqual(resendEvents.read(Buffer.from(body), signed(body, NOW)), {
       eventKey: REPORT_ID,
       report: null,
+      address: null,
     });
   }
 });
@@ -276,4 +284,21 @@ test("a report replaces another only if it says more, so the reports about one m
     assert.equal(saysMore(delivery, null), true, delivery);
     assert.equal(saysMore(delivery, undefined), true, delivery);
   }
+});
+
+test("a bounce or a complaint hands on its address only when it names exactly one, and one that is an address", () => {
+  const address = (to: unknown, type = "email.bounced") => {
+    const body = event(type, { to, bounce: { type: "Permanent" } });
+    return resendEvents.read(Buffer.from(body), signed(body, NOW)).address;
+  };
+  assert.equal(address(["synthetic-one@example.test"]), "synthetic-one@example.test");
+  assert.equal(address(["synthetic-one@example.test"], "email.complained"), "synthetic-one@example.test");
+  // Valo sends each message to one address: a report naming several, or none, suppresses none.
+  assert.equal(address(["synthetic-one@example.test", "synthetic-two@example.test"]), null);
+  assert.equal(address([]), null);
+  assert.equal(address(undefined), null);
+  for (const notAnAddress of ["", "synthetic-no-at-sign", "two words@example.test", "@", "a@b@c"])
+    assert.equal(address([notAnAddress]), null, notAnAddress);
+  // A report of delivery is about an address too, and hands on none.
+  assert.equal(address(["synthetic-one@example.test"], "email.delivered"), null);
 });

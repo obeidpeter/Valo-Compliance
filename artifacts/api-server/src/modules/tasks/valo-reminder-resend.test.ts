@@ -5,6 +5,7 @@ import {
   createResendReminderSender,
   automaticReminderDeliveryReady,
 } from "./valo-reminder-resend";
+import { ReminderAddressSuppressed } from "./valo-reminder-sender";
 const env = {
   NODE_ENV: "development",
   VALO_EMAIL_MODE: "development-test",
@@ -22,6 +23,8 @@ const input = {
   signal: new AbortController().signal,
 };
 const id = "6ddc3cb1-a114-4a93-9c72-39f5720856bb";
+/** No address is suppressed, unless a test says one is. */
+const notSuppressed = async () => false;
 test("real sending is disabled without complete development-only settings", () => {
   assert.equal(reminderEmailConfiguration({}), null);
   assert.equal(reminderEmailConfiguration({ ...env, NODE_ENV: "production" }), null);
@@ -56,6 +59,7 @@ test("only the selected verified workspace owner's allowlisted email can reach t
         return Response.json({ id });
       },
       async () => recipient,
+      notSuppressed,
       env,
     );
     await assert.rejects(() => sender.send(input), /RECIPIENT_NOT_AUTHORIZED/);
@@ -74,6 +78,7 @@ test("controlled acceptance preserves one bounded provider key and minimal stabl
       return Response.json({ id });
     },
     async () => config.recipient,
+    notSuppressed,
     env,
   );
   assert.deepEqual(await sender.send(input), { providerMessageId: id });
@@ -98,6 +103,7 @@ test("controlled provider rate failure, oversized data and invalid acknowledgeme
       config,
       async () => response,
       async () => config.recipient,
+      notSuppressed,
       env,
     );
     await assert.rejects(() => sender.send(input));
@@ -113,6 +119,7 @@ test("every nonempty deployment marker and production reject before transport, i
       return Response.json({ id });
     },
     async () => config.recipient,
+    notSuppressed,
     runtime,
   );
   for (const marker of ["1", "0", "false", "true", "production", " ", "\t"]) {
@@ -131,5 +138,59 @@ test("every nonempty deployment marker and production reject before transport, i
   runtime.NODE_ENV = "development";
   runtime.VALO_ISOLATED_RECOVERY = "synthetic-local-only";
   await assert.rejects(() => sender.send(input), /RECOVERY_EXTERNAL_EFFECTS_DISABLED/);
+  assert.equal(calls, 0);
+});
+test("a reminder to an address Valo has stopped sending to never reaches transport, and neither does one whose suppression cannot be checked", async () => {
+  let calls = 0;
+  const asked: string[] = [];
+  const transport = async () => {
+    calls++;
+    return Response.json({ id });
+  };
+  const suppressed = createResendReminderSender(
+    config,
+    transport,
+    async () => config.recipient,
+    async (address) => {
+      asked.push(address);
+      return true;
+    },
+    env,
+  );
+  await assert.rejects(
+    () => suppressed.send(input),
+    (error: unknown) =>
+      error instanceof ReminderAddressSuppressed && error.message === "EMAIL_ADDRESS_SUPPRESSED",
+  );
+  // The question is asked of the verified recipient's own address, and of no other.
+  assert.deepEqual(asked, [config.recipient]);
+  // A check that fails is not an answer of "no": nothing is sent, and the error is not a suppression.
+  const unknown = createResendReminderSender(
+    config,
+    transport,
+    async () => config.recipient,
+    async () => {
+      throw Error("EMAIL_SUPPRESSION_CHECK_UNAVAILABLE");
+    },
+    env,
+  );
+  await assert.rejects(
+    () => unknown.send(input),
+    (error: unknown) =>
+      !(error instanceof ReminderAddressSuppressed) && /CHECK_UNAVAILABLE/.test(String(error)),
+  );
+  // A recipient who is not the allowed one is refused before the question is asked at all.
+  const other = createResendReminderSender(
+    config,
+    transport,
+    async () => "other@synthetic.invalid",
+    async (address) => {
+      asked.push(address);
+      return false;
+    },
+    env,
+  );
+  await assert.rejects(() => other.send(input), /RECIPIENT_NOT_AUTHORIZED/);
+  assert.deepEqual(asked, [config.recipient]);
   assert.equal(calls, 0);
 });

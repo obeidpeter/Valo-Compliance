@@ -5,7 +5,7 @@ import { clerkClient } from "@clerk/express";
 import { z } from "zod";
 import { sha256 } from "@workspace/valo-core";
 import { trustedSiteOrigin } from "../../lib/valo-site-origin";
-import type { ReminderSender } from "./valo-reminder-sender";
+import { ReminderAddressSuppressed, type ReminderSender } from "./valo-reminder-sender";
 import { environment } from "../../platform/settings";
 
 const envelope = z.email().max(254);
@@ -24,10 +24,16 @@ export function reminderEmailConfiguration(env: NodeJS.ProcessEnv = environment(
   if (!from.success || !to.success || !origin?.startsWith("https://")) return null;
   return { from: from.data, recipient: to.data.toLowerCase(), origin };
 }
+/**
+ * `suppressed` says whether Valo has stopped sending optional messages to an address. It is asked of the
+ * recipient's address just before the provider is called, and a reminder to a suppressed address is not
+ * sent. If the question cannot be asked, it throws, and nothing is sent either.
+ */
 export function createResendReminderSender(
   config: Config,
   proxy: Proxy,
   verifiedRecipient: (identityId: string) => Promise<string | null>,
+  suppressed: (address: string) => Promise<boolean>,
   env: NodeJS.ProcessEnv = environment(),
 ): ReminderSender {
   return {
@@ -44,6 +50,7 @@ export function createResendReminderSender(
       const recipient = await verifiedRecipient(input.ownerIdentityId);
       if (!recipient || recipient.toLowerCase() !== config.recipient)
         throw Error("EMAIL_TEST_RECIPIENT_NOT_AUTHORIZED");
+      if (await suppressed(recipient)) throw new ReminderAddressSuppressed();
       const key = `valo-reminder-v1-${sha256(input.idempotencyKey)}`;
       const response = await proxy("/emails", {
         method: "POST",
@@ -90,5 +97,8 @@ export function configuredReminderSender(): ReminderSender | null {
       const primary = user.emailAddresses.find((email) => email.id === user.primaryEmailAddressId);
       return primary?.verification?.status === "verified" ? primary.emailAddress : null;
     },
+    // The suppressions and the database schema they read load here, as a reminder is sent, not with every
+    // reader of the tasks code.
+    async (address) => (await import("../messages")).addressSuppressed(address),
   );
 }

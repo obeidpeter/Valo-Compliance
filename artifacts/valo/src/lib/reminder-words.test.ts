@@ -27,6 +27,7 @@ const RECORDED = [
   "TASK_NO_LONGER_SCHEDULED",
   "TASK_CHANGED",
   "TASK_ARCHIVED",
+  "EMAIL_ADDRESS_SUPPRESSED",
 ];
 /** Words of the system's own, which a customer is not asked to know. */
 const SYSTEM_WORDS =
@@ -77,6 +78,20 @@ test("a reason says why; a reason this screen does not know says only what the s
     reminderMeaning({ status: "failed", reason: "EMAIL_ACCEPTANCE_UNCONFIRMED" }),
     REMINDER_STATUS.failed.means,
   );
+  // A reminder Valo would not send says why, what happens to it and that the task is safe. It says
+  // nothing of an earlier try, which the row's count of tries does.
+  assert.equal(
+    reminderMeaning({ status: "cancelled", reason: "EMAIL_ADDRESS_SUPPRESSED" }),
+    "Valo has stopped emailing the address this reminder was for: an earlier email to it came back, or was marked as spam. This reminder will not be sent. Your task is saved.",
+  );
+  // Every recorded reason but the unconfirmed try has a sentence of its own, so a reason the server
+  // records and this file does not know is noticed here.
+  for (const reason of RECORDED.filter((each) => each !== "EMAIL_ACCEPTANCE_UNCONFIRMED"))
+    assert.notEqual(
+      reminderMeaning({ status: "cancelled", reason }),
+      REMINDER_STATUS.cancelled.means,
+      reason,
+    );
   // A cancelled reminder with a reason added later is not described as paused.
   assert.equal(reminderMeaning({ status: "cancelled", reason: "SOMETHING_NEW" }), "It will not be sent.");
   assert.equal(reminderMeaning({ status: "pending", reason: null }), "Not sent yet.");
@@ -85,7 +100,7 @@ test("a reason says why; a reason this screen does not know says only what the s
 test("only what the customer cannot clear alone offers the way to report a problem", () => {
   assert.deepEqual(
     RECORDED.filter((reason) => reminderNeedsHelp({ status: "held", reason })),
-    ["EMAIL_FIRST_ATTEMPT_UNKNOWN", "EMAIL_ATTEMPT_LIMIT_REACHED"],
+    ["EMAIL_FIRST_ATTEMPT_UNKNOWN", "EMAIL_ATTEMPT_LIMIT_REACHED", "EMAIL_ADDRESS_SUPPRESSED"],
   );
   assert.equal(reminderNeedsHelp({ status: "held", reason: null }), false);
 });

@@ -19,6 +19,7 @@ export {
   type EmailReport,
 } from "./email-events";
 export { deliveriesOf, emailEventsReady, recordDeliveryReports, recordEmailEvent } from "./valo-email-events";
+export { addressSuppressed, SUPPRESSION_LASTS_MS } from "./valo-email-suppression";
 export {
   STAND_IN_SENDER,
   configuredMessageSender,

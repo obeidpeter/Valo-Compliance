@@ -13,7 +13,7 @@ import { ValoProblem } from "../../platform/valo-problem";
 import { releasedRegistry, workspaceTransaction } from "../rules";
 import { reminderInstant } from "./valo-tasks";
 import { configuredReminderSender } from "./valo-reminder-resend";
-import type { ReminderSender } from "./valo-reminder-sender";
+import { ReminderAddressSuppressed, type ReminderSender } from "./valo-reminder-sender";
 import { workspaceActorFromRecord } from "../../platform/workspace-context";
 
 export type { ReminderSender } from "./valo-reminder-sender";
@@ -191,6 +191,12 @@ async function deliverReminder(workspaceId: string, id: string, sender: Reminder
     return {
       token,
       attempt: row.attempts + 1,
+      // What the row said of earlier tries, for a sender that turns out not to call the provider at all.
+      before: {
+        attempts: row.attempts,
+        firstAttemptAt: row.firstAttemptAt,
+        lastAttemptAt: row.lastAttemptAt,
+      },
       message: {
         idempotencyKey: row.idempotencyKey,
         ownerIdentityId: workspace.ownerIdentityId,
@@ -206,7 +212,8 @@ async function deliverReminder(workspaceId: string, id: string, sender: Reminder
   // The provider is called with no transaction, lock or pooled connection held. The lease keeps
   // other attempts away meanwhile; a call that outlives it is retried with the same idempotency
   // key, which the provider deduplicates.
-  let providerMessageId: string | undefined;
+  let providerMessageId: string | undefined,
+    suppressed = false;
   const controller = new AbortController();
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
@@ -222,10 +229,12 @@ async function deliverReminder(workspaceId: string, id: string, sender: Reminder
     ]);
     if (!receipt.providerMessageId?.trim()) throw Error("EMAIL_PROVIDER_ACK_MISSING");
     providerMessageId = receipt.providerMessageId;
-  } catch {
+  } catch (error) {
     // A timeout may follow provider acceptance. A retry reuses the SAME provider idempotency
     // key; an unconfirmed message is never claimed as delivered.
     providerMessageId = undefined;
+    // The sender did not call the provider at all: the address is one Valo has stopped sending to.
+    suppressed = error instanceof ReminderAddressSuppressed;
   } finally {
     if (timer) clearTimeout(timer);
   }
@@ -260,6 +269,24 @@ async function deliverReminder(workspaceId: string, id: string, sender: Reminder
     // claim; a cancellation or new schedule made meanwhile stands, and any retry checks
     // eligibility again before calling the provider.
     if (row.leaseToken !== claim.token || row.status !== "pending") return row.status;
+    if (suppressed) {
+      // The provider was not called, so this was not a try: the count and the times of the tries go
+      // back to what they were. Nothing will be sent, so the reminder ends here and is not tried again.
+      await tx
+        .update(valoReminderOutbox)
+        .set({
+          status: "cancelled",
+          reason: "EMAIL_ADDRESS_SUPPRESSED",
+          attempts: claim.before.attempts,
+          firstAttemptAt: claim.before.firstAttemptAt,
+          lastAttemptAt: claim.before.lastAttemptAt,
+          nextAttemptAt: null,
+          leaseToken: null,
+          leaseUntil: null,
+        })
+        .where(and(eq(valoReminderOutbox.workspaceId, workspaceId), eq(valoReminderOutbox.id, id)));
+      return "cancelled";
+    }
     await tx
       .update(valoReminderOutbox)
       .set({

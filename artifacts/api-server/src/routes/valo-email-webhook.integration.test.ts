@@ -162,9 +162,14 @@ test(
             ["resend", id, "bounced", "PERMANENT", reference, "pending"],
           );
           assert.equal(row.settledAt, null);
-          // Nothing of the address, the subject or the provider's own words is in the row.
+          // Nothing of the address, the subject or the provider's own words is in the row. For this
+          // bounce, which the provider calls permanent, the address's keyed checksum is.
           assert.doesNotMatch(JSON.stringify(row), /example\.test|SYNTHETIC|synthetic-recipient/);
+          assert.match(row.addressHash!, /^[a-f0-9]{64}$/);
+          assert.ok(row.addressKeyVersion);
           assert.deepEqual(Object.keys(row).sort(), [
+            "addressHash",
+            "addressKeyVersion",
             "delivery",
             "detail",
             "eventKey",
@@ -217,6 +222,12 @@ test(
           const alive = await post(body, signature(body, id));
           assert.equal(alive.status, 200);
           assert.deepEqual(ack.parse(await alive.json()), { received: true, kept: true, duplicate: false });
+          // A report of delivery names an address too, and no checksum of it is kept.
+          const delivered = (await kept()).find((row) => row.eventKey === id)!;
+          assert.deepEqual(
+            [delivered.delivery, delivered.addressHash, delivered.addressKeyVersion],
+            ["delivered", null, null],
+          );
         },
       );
 

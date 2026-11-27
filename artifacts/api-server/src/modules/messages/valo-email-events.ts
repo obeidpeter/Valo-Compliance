@@ -10,6 +10,12 @@ import {
   type ValoEmailEvent,
 } from "@workspace/db";
 import { isDelivery, saysMore, type Delivery, type EmailReport } from "./email-events";
+import {
+  addressChecksum,
+  removeExpiredSuppressions,
+  suppressAddress,
+  suppresses,
+} from "./valo-email-suppression";
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
@@ -45,26 +51,55 @@ export async function emailEventsReady(tx: Pick<Tx, "execute">) {
 }
 
 /**
+ * Whether reports can be taken and recorded: the delivery tables, and the suppressions that a report can
+ * add to. A database the suppression migration has not reached takes no report, so that none is recorded
+ * without what it should have stopped; what was recorded before it is still read (`emailEventsReady`).
+ */
+export async function reportsCanBeTaken(tx: Pick<Tx, "execute">) {
+  const [tables] = (
+    await tx.execute<{ present: boolean }>(
+      sql`select to_regclass('valo_email_events') is not null
+        and to_regclass('valo_message_deliveries') is not null
+        and to_regclass('valo_messages') is not null
+        and to_regclass('valo_email_suppressions') is not null as present`,
+    )
+  ).rows;
+  return tables?.present === true;
+}
+
+/**
  * Keeps one signed report until the worker's messages job records it (docs/architecture/messages.md,
  * part 3). The provider's own id for the report makes one delivered twice a single row. In a database the
- * delivery migration has not reached, nothing is kept, and the caller is told so.
+ * delivery migrations have not reached, nothing is kept, and the caller is told so.
+ *
+ * `address` is the address a bounce or a complaint was about. For a report that suppresses, its keyed
+ * checksum is kept with the report; the address itself is kept nowhere.
  */
-export async function recordEmailEvent(provider: string, eventKey: string, report: EmailReport) {
-  if (!(await emailEventsReady(db))) return "not_ready" as const;
-  const [kept] = await db
-    .insert(valoEmailEvents)
-    .values({
-      id: randomUUID(),
-      provider,
-      eventKey,
-      delivery: report.delivery,
-      detail: report.detail,
-      providerMessageId: report.providerMessageId,
-      occurredAt: report.occurredAt,
-    })
-    .onConflictDoNothing()
-    .returning({ id: valoEmailEvents.id });
-  return kept ? ("kept" as const) : ("duplicate" as const);
+export async function recordEmailEvent(
+  provider: string,
+  eventKey: string,
+  report: EmailReport,
+  address: string | null = null,
+) {
+  if (!(await reportsCanBeTaken(db))) return "not_ready" as const;
+  return db.transaction(async (tx) => {
+    const about = address !== null && suppresses(report) ? await addressChecksum(tx, address) : null;
+    const [kept] = await tx
+      .insert(valoEmailEvents)
+      .values({
+        id: randomUUID(),
+        provider,
+        eventKey,
+        delivery: report.delivery,
+        detail: report.detail,
+        providerMessageId: report.providerMessageId,
+        occurredAt: report.occurredAt,
+        ...about,
+      })
+      .onConflictDoNothing()
+      .returning({ id: valoEmailEvents.id });
+    return kept ? ("kept" as const) : ("duplicate" as const);
+  });
 }
 
 type Reported = { source: "message" | "reminder"; id: string; workspaceId: string };
@@ -178,13 +213,15 @@ function recordReport(record: Reported, event: ValoEmailEvent, delivery: Deliver
  * settled outside the scope.
  *
  * - A report whose record is found is `applied`, whether or not it changed what the record holds.
- * - A report no record holds the reference of waits an hour for it, and is then `unmatched`.
- * - A settled report is removed thirty days later.
+ * - A report that suppresses, and is about a record Valo holds, stops optional messages to its address.
+ * - A report no record holds the reference of waits an hour for it, and is then `unmatched`. It
+ *   suppresses nothing: it is about no message of Valo's.
+ * - A settled report is removed thirty days later, and a suppression when its time has passed.
  */
 export async function recordDeliveryReports(now = new Date()) {
-  const result = { applied: 0, waiting: 0, unmatched: 0, removed: 0 };
-  // A database the delivery migration has not reached holds no report.
-  if (!(await emailEventsReady(db))) return result;
+  const result = { applied: 0, waiting: 0, unmatched: 0, removed: 0, suppressed: 0, lifted: 0 };
+  // A database the delivery migrations have not reached holds no report.
+  if (!(await reportsCanBeTaken(db))) return result;
   let failures = 0,
     after: { receivedAt: Date; id: string } | undefined;
   for (let page = 0; page < PAGES; page++) {
@@ -222,6 +259,17 @@ export async function recordDeliveryReports(now = new Date()) {
           continue;
         }
         for (const record of records) await recordReport(record, event, event.delivery, now);
+        // Before the report is settled, so that one settled has stopped what it should.
+        const reason = suppresses(event);
+        if (reason && event.addressHash && event.addressKeyVersion) {
+          await suppressAddress(
+            db,
+            { addressHash: event.addressHash, addressKeyVersion: event.addressKeyVersion },
+            reason,
+            event.occurredAt,
+          );
+          result.suppressed++;
+        }
         await settle("applied");
         result.applied++;
       } catch {
@@ -244,6 +292,7 @@ export async function recordDeliveryReports(now = new Date()) {
       )
       .returning({ id: valoEmailEvents.id })
   ).length;
+  result.lifted = await removeExpiredSuppressions(db, now);
   if (failures) throw Error(`DELIVERY_REPORTS_PARTIALLY_FAILED_${failures}`);
   return result;
 }

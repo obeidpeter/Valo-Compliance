@@ -10,7 +10,8 @@ import { setting } from "../platform/settings";
  *
  * A report is kept before it is answered, and the worker's messages job records it on the message or
  * reminder it is about. Nothing is kept of a request whose signature does not verify, or of an event Valo
- * does not use. The address in an event is never read.
+ * does not use. The address in an event is never kept: for a bounce or a complaint a keyed checksum of it
+ * is, so that optional messages to it stop.
  */
 export const emailWebhookRouter = Router();
 emailWebhookRouter.post(
@@ -44,7 +45,7 @@ emailWebhookRouter.post(
       res.json({ received: true, kept: false });
       return;
     }
-    const outcome = await recordEmailEvent(resendEvents.provider, read.eventKey, read.report);
+    const outcome = await recordEmailEvent(resendEvents.provider, read.eventKey, read.report, read.address);
     if (outcome === "not_ready") {
       // The provider sends the report again later, by which time the tables may be there.
       res.status(503).json({ error: "Email delivery reports are not set up." });

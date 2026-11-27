@@ -43,10 +43,16 @@ const REASONS: Record<string, string> = {
   TASK_NO_LONGER_SCHEDULED: "The task is done or archived, or no longer has a due date you confirmed.",
   TASK_CHANGED: "The task was changed, so this earlier reminder was cancelled.",
   TASK_ARCHIVED: "The task was archived.",
+  EMAIL_ADDRESS_SUPPRESSED:
+    "Valo has stopped emailing the address this reminder was for: an earlier email to it came back, or was marked as spam. This reminder will not be sent. Your task is saved.",
 };
 
 /** The reasons the customer cannot clear alone: the screen offers the way to report a problem. */
-const NEEDS_HELP = new Set(["EMAIL_ATTEMPT_LIMIT_REACHED", "EMAIL_FIRST_ATTEMPT_UNKNOWN"]);
+const NEEDS_HELP = new Set([
+  "EMAIL_ATTEMPT_LIMIT_REACHED",
+  "EMAIL_FIRST_ATTEMPT_UNKNOWN",
+  "EMAIL_ADDRESS_SUPPRESSED",
+]);
 
 type Told = Pick<ReminderRecord, "status" | "reason"> & { delivery?: MessageDelivery | null | undefined };
 

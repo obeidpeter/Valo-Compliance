@@ -3692,6 +3692,8 @@ test("the reminders screen says in plain words whether emails are being sent and
       delivery: "bounced",
       deliveryAt: at(18),
     }),
+    // One that was never handed to the email service: Valo had stopped emailing its address.
+    reminder(8, { status: "cancelled", reason: "EMAIL_ADDRESS_SUPPRESSED", scheduledAt: at(17) }),
   ]);
   const preferences = (deliveryAvailable: boolean) =>
     api.GetReminderPreferencesResponse.parse({
@@ -3780,8 +3782,20 @@ test("the reminders screen says in plain words whether emails are being sent and
       );
       await expect(row(page, 7)).toContainText("The email service reported this on 18 Nov 2026, 10:00.");
       await expect(row(page, 7).getByRole("link", { name: "Report a problem" })).toHaveCount(0);
-      // No reminder but those is called delivered or not delivered.
-      for (const n of [1, 2, 3, 4, 5])
+      // Valo had stopped emailing the address, so the email service was never asked. The row says why, and
+      // that the task is safe. Only Valo's staff can look at that, so the way to report it is here. It
+      // was not a try, and the row does not count one.
+      await expect(row(page, 8).locator(".pill")).toHaveText("Cancelled");
+      await expect(row(page, 8)).toContainText(
+        "Valo has stopped emailing the address this reminder was for: an earlier email to it came back, or was marked as spam. This reminder will not be sent. Your task is saved.",
+      );
+      await expect(row(page, 8).getByRole("link", { name: "Report a problem" })).toHaveAttribute(
+        "href",
+        "/support",
+      );
+      assert.doesNotMatch(await row(page, 8).innerText(), /Tried|tries again/);
+      // No reminder but those two is called delivered or not delivered.
+      for (const n of [1, 2, 3, 4, 5, 8])
         assert.doesNotMatch(await row(page, n).innerText(), /delivered/i, `reminder ${n}`);
 
       // None of the system's own words, and no note written for operators.

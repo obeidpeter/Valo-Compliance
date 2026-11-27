@@ -416,7 +416,9 @@ test(
           const reported = await report("delivered", first.reference);
           const ran = await runMessagesJob(standInSender(), new Date(), { workspaceId: a.workspaceId });
           assert.deepEqual([ran.checked, ran.offered], [1, 1]);
-          assert.ok(ran.reports && ran.reports.applied >= 1);
+          // The task gives back what its recording did. Another test file records reports too, and may
+          // have recorded this one first, so the report's own state below is the fact, not the count.
+          assert.ok(ran.reports);
           assert.equal((await row(due.id)).status, "accepted");
           assert.equal((await eventOf(reported.eventKey))!.status, "applied");
           // The messages cannot be offered: the task fails, and the report is recorded all the same.
