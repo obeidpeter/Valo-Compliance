@@ -387,6 +387,20 @@ export async function createOrder(actor: WorkspaceActor, raw: unknown) {
   const priceId = input.priceId!;
   // Before the transaction: see commerceProducts.
   const offer = (await commercialCatalogue()).offers.find((entry) => entry.product.id === priceId);
+  return priceOrder(actor, { ...input, priceId }, offer);
+}
+/** A template's order, made in one transaction from the price book: see createOrder. */
+async function priceOrder(
+  actor: WorkspaceActor,
+  input: {
+    priceId: string;
+    acceptedLicenceVersion: string;
+    acceptedCarriesToLaterEditions: boolean;
+    requestKey: string;
+  },
+  offer: { manual: boolean } | undefined,
+) {
+  const { priceId } = input;
   return db.transaction(async (tx) => {
     await assertSafetyActive(tx, "checkout");
     // Serialize one tenant's idempotency/price selection without trusting browser prices.
@@ -613,7 +627,38 @@ export async function startCheckout(actor: WorkspaceActor, id: string, email: st
   const products = await commerceProducts();
   const bundles = await bundleOffers();
   const origin = trustedSiteOrigin();
-  const order = await db.transaction(async (tx) => {
+  const order = await checkoutOrder(actor, id, { products, bundles, origin });
+  if (order.checkoutUrl) return { url: order.checkoutUrl };
+  // No membership lock across provider I/O. Stable provider reference prevents
+  // a retry from becoming a different order; never mint another reference on error.
+  const url = await withSafetyDispatch("checkout", async () => {
+    if (!(await stillOnSale(order)))
+      throw new ValoProblem(409, "This product is no longer available for new checkout.");
+    return paystack.initialise(order, email, `${origin}/workspace/purchases`);
+  });
+  return db.transaction(async (tx) => {
+    await assertSafetyActive(tx, "checkout");
+    await lockCheckoutWorkspace(tx, actor.workspaceId);
+    const current = await ownedOrder(tx, actor, id);
+    await assertPayableOrder(tx, actor, current);
+    if (current.checkoutUrl) return { url: current.checkoutUrl };
+    await tx.update(valoOrders).set({ checkoutUrl: url, status: "pending" }).where(eq(valoOrders.id, id));
+    await audit(tx, actor.workspaceId, actor.identityId, "checkout.initialised", id);
+    return { url };
+  });
+}
+/** The order a payment is about to be started for, after the checks that come before the merchant is
+ * asked, in one transaction: see startCheckout. */
+async function checkoutOrder(
+  actor: WorkspaceActor,
+  id: string,
+  {
+    products,
+    bundles,
+    origin,
+  }: { products: { id: string }[]; bundles: { id: string }[]; origin: string | undefined },
+) {
+  return db.transaction(async (tx) => {
     await assertSafetyActive(tx, "checkout");
     await lockCheckoutWorkspace(tx, actor.workspaceId);
     const order = await ownedOrder(tx, actor, id);
@@ -656,24 +701,6 @@ export async function startCheckout(actor: WorkspaceActor, id: string, email: st
     await tx.update(valoOrders).set({ status: "pending" }).where(eq(valoOrders.id, id));
     await audit(tx, actor.workspaceId, actor.identityId, "checkout.starting", id);
     return order;
-  });
-  if (order.checkoutUrl) return { url: order.checkoutUrl };
-  // No membership lock across provider I/O. Stable provider reference prevents
-  // a retry from becoming a different order; never mint another reference on error.
-  const url = await withSafetyDispatch("checkout", async () => {
-    if (!(await stillOnSale(order)))
-      throw new ValoProblem(409, "This product is no longer available for new checkout.");
-    return paystack.initialise(order, email, `${origin}/workspace/purchases`);
-  });
-  return db.transaction(async (tx) => {
-    await assertSafetyActive(tx, "checkout");
-    await lockCheckoutWorkspace(tx, actor.workspaceId);
-    const current = await ownedOrder(tx, actor, id);
-    await assertPayableOrder(tx, actor, current);
-    if (current.checkoutUrl) return { url: current.checkoutUrl };
-    await tx.update(valoOrders).set({ checkoutUrl: url, status: "pending" }).where(eq(valoOrders.id, id));
-    await audit(tx, actor.workspaceId, actor.identityId, "checkout.initialised", id);
-    return { url };
   });
 }
 /** Called ONLY with schema-validated data obtained by the server's verify API adapter.
