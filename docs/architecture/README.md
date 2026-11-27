@@ -251,7 +251,10 @@ contract. Its `index.ts` re-exports what the routes, the worker and the privacy 
 merchant transports, the dispute schema and the test fixtures stay internal. The routes stay in
 `src/routes`. The database takes a new order only with the amount and the line of a price or a
 bundle's version in effect, and once an order is made it keeps its amount, its line and the price
-or bundle it names, whoever asks to change them ([order safety](order-safety.md)).
+or bundle it names, whoever asks to change them ([order safety](order-safety.md)). The daily
+payment check (`valo-payment-reconciliation.ts`) names what the provider's answer, or Valo's own
+record, says differently about an order, and an order whose latest check found a difference raises
+an alert ([reconciliation](reconciliation.md)).
 
 `modules/rules` holds the released-rule registry the checker uses, saved assessments, their
 comparison and the admission check for a rule release. The rule release command itself lives in

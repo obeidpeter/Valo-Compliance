@@ -174,6 +174,12 @@ Rules that apply now:
   abandoned or failed (`afterALookAtEndedOrders`, `docs/architecture/order-safety.md`, slice 4).
   A new path that makes an order or starts a payment runs through it. The provider is asked
   outside any transaction, and where it cannot be asked nothing new is made or started.
+- The daily payment check compares the provider's answer with the order before it settles
+  anything (`orderDifferences`, `docs/architecture/reconciliation.md`, slice 1). An answer that
+  differs is recorded as the check's finding, names what differs, and settles nothing. A provider
+  that gives no answer is not a difference: the attempt is counted, and the check reads
+  `NO_ANSWER` only after its third, an hour apart. Never correct an order, a payment or a grant
+  from the check's finding.
 - Only the operator commands in `FINITE_WORK_BINDING_ENTRIES` hand the inference
   dispatcher its work-binding checks (`provideFiniteWorkBindings`), and only the real
   `assertFiniteWorkBindings`; the `inference-bindings` repository rule enforces this.
