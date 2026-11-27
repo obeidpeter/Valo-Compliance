@@ -827,6 +827,13 @@
       "when": 1795793113347,
       "tag": "20261127152513_order_terms_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 118,
+      "version": "7",
+      "when": 1795800574121,
+      "tag": "20261127172934_order_price_book_guard",
+      "breakpoints": true
     }
   ]
 }

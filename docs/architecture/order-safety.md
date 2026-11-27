@@ -44,7 +44,7 @@ asks the provider and records the answer. The provider's webhook does the same. 
 | Slice | What | State |
 | --- | --- | --- |
 | 1 | An order keeps the terms it was made with | Built |
-| 2 | An order is made from the price book, checked by the database as it is made | Not built |
+| 2 | An order is made from the price book, checked by the database as it is made | Built |
 | 3 | The status is asked for when the customer returns from the provider's page | Built |
 | 4 | An abandoned or failed order is asked about again before a second order for its edition | Built |
 
@@ -79,21 +79,66 @@ edit of the table would.
   a trigger off. In the development and test databases the application's login owns the tables. The
   guard stops a mistaken or injected statement. The role a customer's request acts as owns nothing and
   cannot turn it off.
-- **It checks nothing as an order is made.** That is slice 2.
+- **It checks nothing as an order is made.** Slice 2 does.
 - **An order can still be deleted** by the application's login, where nothing refers to it. No code does
   so, and the role a customer's request acts as cannot. Whether an unpaid order is ever removed is a
   retention decision, so no guard was added.
 
-## Slice 2: an order is made from the price book (not built)
+## Slice 2: an order is made from the price book
 
-The application reads the amount and the line from the price book. The database does not check that it
-did. The slice adds a check as the row is made: the amount, the currency, the content version and the
-licence version are those of the price or bundle version the order names, and that offer is approved
-and in effect.
+**The database refuses a new order that is not the price book's.** The trigger
+`valo_orders_made_from_price_book` (migration `20261127172934_order_price_book_guard`) runs before every
+insert of an order.
 
-Seventeen files besides the application's own make orders directly: tests, their fixtures, the customer
-journey script and the migration test. Each has to be read first. One whose order is not the price
-book's needs a price that says what it means.
+- **A price's order.** The price it names is in effect as the order is made. Its amount, its currency
+  and its whole line are that price's: the title, the edition, the licence version, the licence text and
+  the tax treatment, and nothing more.
+- **A bundle's order.** The bundle's version it names is in effect. Its amount, its currency and its
+  line are that version's. The line names the released edition of each of the bundle's templates, each
+  once, in any order. A bundle one of whose templates has no released edition has nothing whole to
+  sell, and no order is made for it.
+- **Whoever makes it.** The trigger runs for the application's login and for the role a customer's
+  request acts as, with the rights of whichever inserts the order. Both may already read the price
+  book. It gives nobody a privilege.
+- **What it says.** "An order is made from a price in effect", "An order is made with the amount and
+  the line its price gives", the same two for a bundle, and "An order is made from a bundle whose
+  templates each have a released edition".
+- **The application made the same order before.** The values its two transactions wrote are now
+  returned by two functions, `priceOrderTerms` and `bundleOrderTerms`. No customer sees a difference.
+- **The price book's own checks** already refuse a price, or a bundle's version, without an approval
+  reference.
+
+**The tests that make an order directly.** Seventeen files besides the application's own did: tests,
+their fixtures, the customer journey script and the migration test. Each was read, and run with the
+guard in place.
+
+- **Nine already made each order with its price's own amount and line.**
+- **Five gave an order a line with words of its own** beside its price's: a title, a licence text, and
+  in one case a licence version. Each now takes its orders' terms from its price, through
+  `priceOrderTerms`.
+- **One made four orders of four amounts from one price.** Each amount now has a price of its own.
+- **The commerce test made orders from a price that one of its subtests had closed.** Its orders are
+  now made from the price in effect, and its order for another edition from a price of its own.
+- **The migration test made orders with two fields of a line, or none.** Each made after the guard
+  exists now has its price's whole line.
+- **Where a test's subject is an order with a wrong line, the line is put beneath the triggers**, in a
+  transaction with triggers off, as a restore or a direct edit of the table would put it. There are
+  four such places: the dispute actions' altered line (slice 1), the commerce test's order that names a
+  version that does not exist, and the migration test's two checks of an order's terms.
+
+**What this does not do.**
+
+- **It does not check that the product may be sold.** Whether an edition is released, held or overdue
+  for its review stays with the application, which checks it under the edition's lock. Most tests make
+  their orders for a version that is held and was never released.
+- **It does not hold the price.** It reads the price as the order is made. The application holds the
+  price's row until its transaction ends, so the owner's next version waits for the order. A statement
+  that went round the application could be passed in the moment a price closes.
+- **It does not say what state a new order is in.** A row can still be inserted as paid. The provider's
+  answer is what settles an order in the application, and nothing in the database checks that yet.
+- **It does not look at orders already there.** A restored backup loads its rows before any trigger
+  exists, so it puts back what there was.
+- **It does not stop someone who administers the database**, as slice 1 says.
 
 ## Slice 3: the status on return
 
@@ -168,4 +213,5 @@ provider said so when it was last asked, and may have been paid since.
 - **What the provider adds to the address when it sends a customer back has not been seen.** The two
   names the screen reads are the ones expected of it. Its documentation could not be read from where
   this was built, so the first run in test mode has to confirm them.
-- **Slice 2**, as above.
+- **Nothing in the database says who may call an order paid.** Slice 2 says so above. It would be
+  a design of its own: which statements may move an order to a verified payment, and on what record.

@@ -817,6 +817,121 @@ test(
         },
       );
       await t.test(
+        "a new order is refused unless it names a price in effect and has that price's amount, currency and whole line, whoever makes it",
+        async () => {
+          // PAY-001: the database checks a new order against the price book. A row that names a price is
+          // made only while that price is in effect, and only with the price's own amount, currency and
+          // line, by either route to the table: the application's own login, and the role a customer's
+          // request acts as, which both hold the privilege to insert an order.
+          assert.ok(offer);
+          const terms = priceOrderTerms(offer);
+          const message = (error: Error) =>
+            String((error as { cause?: Error }).cause?.message ?? error.message);
+          const notThePrices = (error: Error) =>
+            /An order is made with the amount and the line its price gives/.test(message(error));
+          const notInEffect = (error: Error) =>
+            /An order is made from a price in effect/.test(message(error));
+          const inScope = <T>(run: () => Promise<T>) => runInWorkspaceScope(a.workspaceId, run);
+          const tried: string[] = [];
+          const make = (change: Record<string, unknown> = {}) => {
+            const id = randomUUID();
+            tried.push(id);
+            return db.insert(valoOrders).values({
+              id,
+              workspaceId: a.workspaceId,
+              requestedBy: a.identityId,
+              requestKey: randomUUID(),
+              reference: `valo-test-${id}`,
+              ...terms,
+              ...(change as Partial<typeof valoOrders.$inferInsert>),
+            });
+          };
+          const { taxTreatment: _left, ...withoutTax } = terms.line;
+          const wrong: Record<string, Record<string, unknown>> = {
+            "a kobo less": { amountKobo: terms.amountKobo - 1 },
+            "a kobo more": { amountKobo: terms.amountKobo + 1 },
+            // The table's own check would refuse this one too, with other words: the guard's come first.
+            "another currency": { currency: "USD" },
+            "another title": { line: { ...terms.line, title: "CONTROLLED TEST ONLY: another product" } },
+            "another edition": { line: { ...terms.line, contentVersionId: randomUUID() } },
+            "another licence version": { line: { ...terms.line, licenceVersion: "controlled-not-approved" } },
+            "another licence text": { line: { ...terms.line, licenceText: "Other terms." } },
+            "another tax treatment": { line: { ...terms.line, taxTreatment: "Tax included." } },
+            "a discount in its line": { line: { ...terms.line, discountKobo: 1 } },
+            "a line without its tax treatment": { line: withoutTax },
+            "an empty line": { line: {} },
+          };
+          for (const [what, change] of Object.entries(wrong)) {
+            await assert.rejects(
+              make(change),
+              notThePrices,
+              `the application's login made an order with ${what}`,
+            );
+            await assert.rejects(
+              inScope(async () => await make(change)),
+              notThePrices,
+              `a customer's request made an order with ${what}`,
+            );
+          }
+          // A price that has closed, one that has not begun and one that does not exist are none of them in
+          // effect. The first price was closed by an earlier subtest.
+          const [closed] = await db.select().from(valoPrices).where(eq(valoPrices.id, priceId));
+          assert.ok(closed?.effectiveTo, "the first price has closed");
+          const [later] = await db
+            .insert(valoPrices)
+            .values({
+              id: randomUUID(),
+              contentVersionId: version,
+              title: fixtureLine.title,
+              amountKobo: 77777,
+              licenceVersion: "controlled-not-approved-v3",
+              licenceText: "A test price that has not begun",
+              taxTreatment: fixtureLine.taxTreatment,
+              approvalReference: "CONTROLLED_FIXTURE_NOT_APPROVAL",
+              effectiveFrom: new Date(Date.now() + 86_400_000),
+            })
+            .returning();
+          assert.ok(later);
+          const elsewhere: Record<string, Record<string, unknown>> = {
+            "a price that has closed": priceOrderTerms(closed),
+            "a price that has not begun": priceOrderTerms(later),
+            "a price that does not exist": { priceId: randomUUID() },
+          };
+          for (const [what, from] of Object.entries(elsewhere)) {
+            await assert.rejects(
+              make(from),
+              notInEffect,
+              `the application's login made an order from ${what}`,
+            );
+            await assert.rejects(
+              inScope(async () => await make(from)),
+              notInEffect,
+              `a customer's request made an order from ${what}`,
+            );
+          }
+          // Nothing of all that was saved.
+          assert.deepEqual(
+            await db.select({ id: valoOrders.id }).from(valoOrders).where(inArray(valoOrders.id, tried)),
+            [],
+          );
+          // With exactly its price's terms an order is made, by both routes.
+          const before = tried.length;
+          await make();
+          await inScope(async () => await make());
+          const saved = await db
+            .select()
+            .from(valoOrders)
+            .where(inArray(valoOrders.id, tried.slice(before)));
+          assert.equal(saved.length, 2);
+          for (const row of saved)
+            assert.deepEqual(
+              { priceId: row.priceId, amountKobo: row.amountKobo, currency: row.currency, line: row.line },
+              terms,
+            );
+          orders.push(...tried.slice(before));
+        },
+      );
+      await t.test(
         "the look for a workspace's ended orders keeps to that workspace, the editions asked about, the two endings and the orders the provider was offered, the five latest first, on a login that sees every workspace's orders",
         async () => {
           // PAY-006: before another order or payment, the provider is asked again about these orders. A

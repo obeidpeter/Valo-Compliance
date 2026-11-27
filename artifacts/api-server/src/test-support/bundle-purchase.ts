@@ -9,6 +9,7 @@ import {
   RecordOwnerBundleResponse,
 } from "@workspace/api-zod";
 import { sha256 } from "@workspace/valo-core";
+import type { ValoOrderLine } from "@workspace/db";
 import { wordFromText } from "../modules/manual-library/files";
 import { withStandInPaystack } from "./manual-premium-template";
 import { libraryAction, templateDetails } from "./template-details";
@@ -27,11 +28,16 @@ type Call = (
  * template's edition; its settlement grants each edition once; both templates then download, the workspace
  * is not sold either again, and a later edition carries under the order's rule. The owner's next version
  * leaves the order's amount, licence and editions as they were, and a reversal ends both grants together.
+ *
+ * PAY-001 (docs/architecture/order-safety.md, slice 2): along the way, an order made directly for the
+ * bundle is taken by the database only with the amount and the line of the bundle's version in effect,
+ * naming the released edition of each of its templates.
  */
 export async function exerciseBundlePurchase(call: Call, editor: string) {
   const {
     db,
     runInWorkspaceScope,
+    valoBundles,
     valoEntitlements,
     valoOrders,
     valoStaffAssignments: roles,
@@ -39,6 +45,7 @@ export async function exerciseBundlePurchase(call: Call, editor: string) {
   } = await import("@workspace/db");
   const { resolveWorkspace } = await import("../modules/workspaces");
   const { createOrder, settleVerifiedOrder } = await import("../modules/commerce");
+  const { bundleOrderTerms } = await import("../modules/commerce/checkout-editions");
   const id = randomUUID(),
     mark = id.slice(0, 8),
     owner = "synthetic-bundle-buy-owner-" + id,
@@ -210,6 +217,61 @@ export async function exerciseBundlePurchase(call: Call, editor: string) {
     const [stored] = await db.select().from(valoOrders).where(eq(valoOrders.id, made.id));
     assert.deepEqual([stored?.priceId, stored?.bundleId], [null, first.bundleId]);
     const terms = stored?.line;
+    // PAY-001: the database checks a bundle's new order against the bundle's version in effect. Made
+    // directly, an order is taken with exactly the bundle's amount and line, its templates' released
+    // editions in any order, and refused with anything else.
+    assert.ok(stored);
+    const direct = await resolveWorkspace("synthetic-bundle-direct-" + id);
+    const bundleLine = stored.line as Extract<ValoOrderLine, { bundle: string }>;
+    const [one, two] = bundleLine.editions;
+    assert.ok(one && two);
+    const placed = (change: Record<string, unknown> = {}) => {
+      const orderId = randomUUID();
+      return db.insert(valoOrders).values({
+        id: orderId,
+        workspaceId: direct.workspaceId,
+        requestedBy: direct.identityId,
+        requestKey: randomUUID(),
+        reference: "valo-test-" + orderId,
+        bundleId: stored.bundleId,
+        amountKobo: stored.amountKobo,
+        currency: stored.currency,
+        line: bundleLine,
+        ...(change as Partial<typeof valoOrders.$inferInsert>),
+      });
+    };
+    const refused = (pattern: RegExp) => (error: Error) =>
+      pattern.test(String((error as { cause?: Error }).cause?.message ?? error.message));
+    const notTheBundles = refused(/An order is made with the amount and the line its bundle gives/);
+    const { editions: _named, ...withoutEditions } = bundleLine;
+    for (const [what, change] of Object.entries({
+      "a kobo less": { amountKobo: stored.amountKobo - 1 },
+      "another licence text": { line: { ...bundleLine, licenceText: "Other terms." } },
+      "another bundle's name": { line: { ...bundleLine, bundle: "synthetic-another-bundle" } },
+      "a template left out": { line: { ...bundleLine, editions: [one] } },
+      "a template in the other's place": { line: { ...bundleLine, editions: [one, one] } },
+      "a template named twice": { line: { ...bundleLine, editions: [one, two, two] } },
+      "something more said of a template": {
+        line: { ...bundleLine, editions: [one, { ...two, discountKobo: 1 }] },
+      },
+      "a template added": {
+        line: {
+          ...bundleLine,
+          editions: [one, two, { contentVersionId: randomUUID(), title: "Synthetic other template" }],
+        },
+      },
+      "another title for a template": {
+        line: { ...bundleLine, editions: [one, { ...two, title: "Synthetic other title" }] },
+      },
+      "another edition of a template": {
+        line: { ...bundleLine, editions: [one, { ...two, contentVersionId: randomUUID() }] },
+      },
+      "words where its editions are listed": { line: { ...bundleLine, editions: "none" } },
+      "no list of editions": { line: withoutEditions },
+    }))
+      await assert.rejects(placed(change), notTheBundles, `an order was made for the bundle with ${what}`);
+    // In another order of its templates, it is the same line.
+    await placed({ line: { ...bundleLine, editions: [two, one] } });
     // Nothing is granted before a verified payment, and asking again returns the same order.
     assert.equal(await download(agreement.id, buyer.identityId), 403);
     const again = await runInWorkspaceScope(buyer.workspaceId, () =>
@@ -346,6 +408,8 @@ export async function exerciseBundlePurchase(call: Call, editor: string) {
     assert.deepEqual(second.closed, [{ bundleId: first.bundleId, amountKobo: 600000 }]);
     const [kept] = await db.select().from(valoOrders).where(eq(valoOrders.id, made.id));
     assert.deepEqual([kept?.amountKobo, kept?.bundleId, kept?.line], [600000, first.bundleId, terms]);
+    // The first version has closed: no order is made from it any more, whatever it says.
+    await assert.rejects(placed(), refused(/An order is made from a bundle in effect/));
     assert.equal(await download(policy.id, buyer.identityId), 200);
     assert.deepEqual(
       (await offered(stranger.identityId)).map((bundle) => [bundle.id, bundle.amountKobo]),
@@ -356,6 +420,17 @@ export async function exerciseBundlePurchase(call: Call, editor: string) {
     const nextAgreement = await release(agreementItem, agreementTitle, 1);
     assert.equal(await download(nextAgreement.id, buyer.identityId), 200);
     assert.equal(await download(nextAgreement.id, stranger.identityId), 403);
+    // A new order for the bundle names the agreement's next edition, which is the released one now: the
+    // database refuses the one it replaced.
+    const [inEffect] = await db.select().from(valoBundles).where(eq(valoBundles.id, second.bundleId));
+    assert.ok(inEffect);
+    const from = (agreementEdition: string) =>
+      bundleOrderTerms(inEffect, [
+        { edition: agreementEdition, title: agreementTitle },
+        { edition: policy.id, title: policyTitle },
+      ]);
+    await assert.rejects(placed(from(agreement.id)), notTheBundles);
+    await placed(from(nextAgreement.id));
 
     // A reversed payment ends both grants together.
     await settleVerifiedOrder(made.id, { ...verified, status: "reversed" });
@@ -365,6 +440,17 @@ export async function exerciseBundlePurchase(call: Call, editor: string) {
     );
     for (const edition of [nextAgreement.id, policy.id])
       assert.equal(await download(edition, buyer.identityId), 403);
+
+    // A bundle one of whose templates has no released edition has nothing whole to sell: with the policy
+    // withdrawn, the database refuses an order for the bundle, whatever its line says.
+    const withdrawn = await revision(
+      await call(library(policyItem) + "/actions", libraryAction("withdraw", policy), editor),
+    );
+    assert.equal(withdrawn.state, "withdrawn");
+    await assert.rejects(
+      placed(from(nextAgreement.id)),
+      refused(/An order is made from a bundle whose templates each have a released edition/),
+    );
   } finally {
     await db.update(roles).set({ active: false }).where(eq(roles.identityId, owner));
   }
