@@ -38,7 +38,9 @@ import { makeWorkspaceDataDownloadHandler } from "../lib/valo-data-download-http
 import { makeWorkspaceExportRouter } from "../lib/valo-workspace-export-http";
 import {
   financePaymentChecks,
+  financePaymentEvents,
   settlePaymentCheck,
+  settlePaymentEvent,
   financeRefunds,
   decideRefund,
   reconcileFinanceRefund,
@@ -51,7 +53,9 @@ import {
 } from "../modules/commerce";
 import {
   GetFinancePaymentChecksResponse,
+  GetFinancePaymentEventsResponse,
   SettleFinancePaymentCheckResponse,
+  SettleFinancePaymentEventResponse,
   GetFinanceRefundsResponse,
   DecideFinanceRefundResponse,
   ReconcileFinanceRefundResponse,
@@ -263,6 +267,20 @@ staffOperationsRouter.post("/admin/payment-checks/:id/settlement", sameOriginMut
   res.json(
     SettleFinancePaymentCheckResponse.parse(
       await settlePaymentCheck(await financeIdentity(req), z.string().uuid().parse(req.params.id), req.body),
+    ),
+  );
+});
+staffOperationsRouter.use("/admin/payment-events", (_req, res, next) => {
+  res.set("Cache-Control", "private, no-store");
+  next();
+});
+staffOperationsRouter.get("/admin/payment-events", async (req, res) => {
+  res.json(GetFinancePaymentEventsResponse.parse(await financePaymentEvents(await financeIdentity(req))));
+});
+staffOperationsRouter.post("/admin/payment-events/:id/settlement", sameOriginMutation, async (req, res) => {
+  res.json(
+    SettleFinancePaymentEventResponse.parse(
+      await settlePaymentEvent(await financeIdentity(req), z.string().uuid().parse(req.params.id), req.body),
     ),
   );
 });

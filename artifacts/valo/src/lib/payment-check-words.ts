@@ -38,3 +38,34 @@ export const OUTCOME_WORDS = {
   },
 } as const;
 export type PaymentCheckOutcome = keyof typeof OUTCOME_WORDS;
+
+/**
+ * The words finance reads for a Paystack event Valo could not match or process
+ * (docs/architecture/reconciliation.md, slice 3a): why the event worker left it for finance, and what the
+ * event was.
+ */
+const EVENT_FINDING_WORDS: Record<string, string> = {
+  UNMATCHED_REFERENCE:
+    "It names a reference that is no order or refund of Valo's, or no reference at all. Look for the payment at Paystack.",
+  RECORD_DIFFERENCE:
+    "What Paystack says about it does not match Valo's record of the order, refund or dispute it names.",
+  NO_ANSWER: "Valo could not check it with Paystack: no answer that could be used came, five times.",
+  SERVER_VERIFICATION_REQUIRED: "Valo could not process it. It came before Valo named why.",
+  PRIVACY_ERASURE_FINANCE_REVIEW:
+    "The workspace it was about has been erased. Look at what Paystack holds for it.",
+};
+const UNNAMED_EVENT =
+  "Valo could not process it, for a reason it does not name yet. Look for it at Paystack.";
+
+/** Why the event worker left an event for finance, in plain words. */
+export function eventFindingWords(finding: string): string {
+  return EVENT_FINDING_WORDS[finding] ?? UNNAMED_EVENT;
+}
+
+/** What kind of event Paystack sent, in plain words. */
+export function eventTypeWords(eventType: string): string {
+  if (eventType === "charge.success") return "A successful payment";
+  if (eventType.startsWith("charge.dispute.")) return "A dispute";
+  if (eventType.startsWith("refund.")) return "A refund";
+  return `An event Paystack calls ${eventType}`;
+}

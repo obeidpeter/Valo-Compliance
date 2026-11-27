@@ -855,6 +855,20 @@
       "when": 1795808625505,
       "tag": "20261127194345_payment_check_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 122,
+      "version": "7",
+      "when": 1795811746114,
+      "tag": "20261127203546_payment_event_settlements",
+      "breakpoints": true
+    },
+    {
+      "idx": 123,
+      "version": "7",
+      "when": 1795811754734,
+      "tag": "20261127203554_payment_event_settlement_guard",
+      "breakpoints": true
     }
   ]
 }

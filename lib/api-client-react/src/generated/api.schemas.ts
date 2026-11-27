@@ -1739,6 +1739,42 @@ export interface PaymentCheckSettlementInput {
   reason: string;
 }
 
+export interface PaymentEvent {
+  id: string;
+  /** Paystack's name for the event, such as charge.success */
+  eventType: string;
+  /**
+     * The reference the event names, if it names one
+     * @nullable
+     */
+  reference: string | null;
+  receivedAt: string;
+  /** Why the event worker left it for finance */
+  finding: string;
+  attempts: number;
+  /** @nullable */
+  resolvedAt: string | null;
+  resolvedByYou: boolean;
+  /**
+     * Why finance settled it, as the staff access audit keeps it
+     * @nullable
+     */
+  reason: string | null;
+}
+
+export interface FinancePaymentEvents {
+  waiting: PaymentEvent[];
+  settled: PaymentEvent[];
+}
+
+export interface PaymentEventSettlementInput {
+  /**
+     * @minLength 10
+     * @maxLength 1500
+     */
+  reason: string;
+}
+
 export type DisputeInformationInputConsentVersion = typeof DisputeInformationInputConsentVersion[keyof typeof DisputeInformationInputConsentVersion];
 
 

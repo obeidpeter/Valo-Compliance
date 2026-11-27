@@ -275,6 +275,31 @@ export const valoPaymentEvents = pgTable(
     ),
   ],
 );
+/**
+ * Finance's settlement of a provider event Valo could not match or process (docs/architecture/
+ * reconciliation.md, slice 3a): one for each event and the finding it was settled with. Why is a row of the
+ * staff access audit. The database's guard, `valo_payment_event_settlements_kept`, takes a settlement only
+ * from finance with that row written in the same transaction, and never changes or removes one. A customer's
+ * request has no access to it.
+ */
+export const valoPaymentEventSettlements = pgTable(
+  "valo_payment_event_settlements",
+  {
+    id: uuid("id").primaryKey(),
+    eventId: uuid("event_id").notNull(),
+    finding: text("finding").notNull(),
+    resolvedBy: text("resolved_by").notNull(),
+    resolvedAt: timestamp("resolved_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("valo_payment_event_settlement_unique").on(t.eventId, t.finding),
+    foreignKey({
+      name: "valo_payment_event_settlement_event_fk",
+      columns: [t.eventId],
+      foreignColumns: [valoPaymentEvents.id],
+    }),
+  ],
+);
 export const valoEntitlements = pgTable(
   "valo_entitlements",
   {

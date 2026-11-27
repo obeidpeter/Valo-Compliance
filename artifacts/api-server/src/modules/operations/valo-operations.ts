@@ -52,6 +52,12 @@ export const readinessQueries = {
         AND string_to_array(r.finding, ';') <@ string_to_array(s.finding, ';')
         AND NOT EXISTS(SELECT 1 FROM valo_payment_reconciliations m
           WHERE m.order_id=r.order_id AND m.status='matched' AND m.day>s.day AND m.day<r.day)) LIMIT 10001) bounded`,
+  // docs/architecture/reconciliation.md, slice 3a (PAY-007): the provider's events Valo could not match or
+  // process, that finance has not settled with the finding each has now. Finance's list
+  // (financePaymentEvents) holds the same rows.
+  unmatchedPaymentEvents: `SELECT count(*)::int AS value FROM (SELECT 1 FROM valo_payment_events e
+    WHERE e.status='needs_review' AND NOT EXISTS(SELECT 1 FROM valo_payment_event_settlements s
+      WHERE s.event_id=e.id AND s.finding=coalesce(e.failure, '')) LIMIT 10001) bounded`,
   // docs/architecture/alerts.md, part 3: reminder emails waiting more than fifteen minutes past their time,
   // and scheduled jobs waiting more than ten minutes past their start.
   reminders: `SELECT count(*)::int AS value FROM (SELECT 1 FROM valo_reminder_outbox WHERE status='pending'
@@ -195,7 +201,10 @@ const SERVICE_METRICS = [
 /** The reading of messages that failed (docs/architecture/messages.md) and the subject its alerts are named after. */
 const MESSAGE_METRICS = [["failedMessages", "FAILED_MESSAGES"]] as const;
 /** The reading of the daily payment check's differences (docs/architecture/reconciliation.md) and the subject its alerts are named after. */
-const PAYMENT_METRICS = [["paymentDifferences", "PAYMENT_DIFFERENCES"]] as const;
+const PAYMENT_METRICS = [
+  ["paymentDifferences", "PAYMENT_DIFFERENCES"],
+  ["unmatchedPaymentEvents", "UNMATCHED_PAYMENT_EVENTS"],
+] as const;
 /** The readings of enquiries waiting on Valo (docs/architecture/messages.md, part 6) and the subjects their alerts are named after. */
 const SUPPORT_METRICS = [
   ["newEnquiries", "NEW_ENQUIRIES"],
@@ -219,6 +228,7 @@ export type OperationalSample = {
   waitingEnquiries: Metric;
   payments: Metric;
   paymentDifferences: Metric;
+  unmatchedPaymentEvents: Metric;
   requestFailures: Metric;
   requestTime: Metric;
   deniedAccess: Metric;
@@ -254,6 +264,7 @@ export type OperationalSample = {
     newEnquiries: number;
     waitingEnquiries: number;
     paymentDifferences: number;
+    unmatchedPaymentEvents: number;
     workerAgeMs: number;
     requestFailures: number;
     requestTime: number;
@@ -369,6 +380,8 @@ export async function collectOperationalSample(
       waitingEnquiries: 0,
       // Any order whose latest daily payment check found a difference.
       paymentDifferences: 0,
+      // Any provider event Valo could not match or process that finance has not settled.
+      unmatchedPaymentEvents: 0,
       workerAgeMs: 90000,
       // NFR-003's own: fewer than 1 in 100 requests failing unexpectedly, and 95 in 100 within a second.
       requestFailures: 10,
@@ -429,6 +442,7 @@ export const ALERT_RUNBOOKS = {
   WAITING_ENQUIRIES: { runbook: "Provider enquiry dispute", accountable: "Support" },
   PAYMENTS: { runbook: "Payment/entitlement failure", accountable: "Finance + engineering" },
   PAYMENT_DIFFERENCES: { runbook: "Payment/entitlement failure", accountable: "Finance + engineering" },
+  UNMATCHED_PAYMENT_EVENTS: { runbook: "Payment/entitlement failure", accountable: "Finance + engineering" },
   REQUEST_FAILURES: { runbook: "Site/database unavailable", accountable: "Engineering lead" },
   REQUEST_TIME: { runbook: "Site/database unavailable", accountable: "Engineering lead" },
   DENIED_ACCESS: { runbook: "Security/privacy incident", accountable: "Incident lead + privacy owner" },
@@ -501,6 +515,10 @@ export const ALERT_WORDS = {
   PAYMENT_DIFFERENCES: {
     raised: "A daily payment check found a difference",
     reading: "the daily payment checks",
+  },
+  UNMATCHED_PAYMENT_EVENTS: {
+    raised: "A Paystack event matched nothing in Valo, or could not be processed",
+    reading: "the Paystack events waiting for finance",
   },
   REQUEST_FAILURES: {
     raised: "Too many requests failed unexpectedly, counted in 1,000 over ten minutes",
@@ -588,6 +606,7 @@ const SUBJECT_READINGS: Partial<
   WAITING_ENQUIRIES: "waitingEnquiries",
   PAYMENTS: "payments",
   PAYMENT_DIFFERENCES: "paymentDifferences",
+  UNMATCHED_PAYMENT_EVENTS: "unmatchedPaymentEvents",
   REQUEST_FAILURES: "requestFailures",
   REQUEST_TIME: "requestTime",
   DENIED_ACCESS: "deniedAccess",

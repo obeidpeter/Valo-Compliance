@@ -416,6 +416,19 @@ const abandonedPaymentDifference = {
   finding: "NO_ANSWER",
   attempts: 3,
 };
+/** A Paystack event Valo could not match, waiting for finance (PAY-007, docs/architecture/reconciliation.md,
+ * slice 3a). */
+const unmatchedPaymentEvent = {
+  id: "00000000-0000-4000-8000-00000000e101",
+  eventType: "charge.success",
+  reference: "valo-test-synthetic-unknown",
+  receivedAt: "2026-11-24T09:00:00.000Z",
+  finding: "UNMATCHED_REFERENCE",
+  attempts: 1,
+  resolvedAt: null,
+  resolvedByYou: false,
+  reason: null,
+};
 const answers: Record<string, unknown> = {
   // The workspace's support requests page (WRK-001) lists the customer's own requests.
   "GET /workspace/support-cases": api.ListCustomerSupportCasesResponse.parse({
@@ -1086,6 +1099,22 @@ const answers: Record<string, unknown> = {
         resolvedAt: at(20),
         resolvedByYou: true,
         reason: "Synthetic: Paystack's own record shows the order's amount.",
+      },
+    ],
+  }),
+  // docs/architecture/reconciliation.md, slice 3a: one Paystack event waiting for finance, and one settled.
+  [`GET /admin/payment-events`]: api.GetFinancePaymentEventsResponse.parse({
+    waiting: [unmatchedPaymentEvent],
+    settled: [
+      {
+        ...unmatchedPaymentEvent,
+        id: "00000000-0000-4000-8000-00000000e102",
+        eventType: "refund.processed",
+        reference: "valo-test-synthetic-refund",
+        finding: "RECORD_DIFFERENCE",
+        resolvedAt: at(21),
+        resolvedByYou: false,
+        reason: "Synthetic: the refund was made at Paystack's dashboard.",
       },
     ],
   }),
@@ -7537,6 +7566,85 @@ test("the Finance area says what each daily payment check found, settles a diffe
     const checks = empty.page.getByRole("region", { name: "Daily payment checks" });
     await expect(checks).toContainText("No difference is waiting to be settled.");
     await expect(checks).toContainText("Nothing has been settled yet.");
+    assert.deepEqual([...new Set(empty.unknown)], []);
+    assert.deepEqual(empty.errors, []);
+  } finally {
+    await empty.close();
+  }
+});
+
+// PAY-007 (docs/architecture/reconciliation.md, slice 3a): finance reads why each Paystack event waits for it,
+// and settles one only with a reason.
+test("the Finance area says why each Paystack event waits for finance, settles one only with a reason, and fits a phone", async () => {
+  const settlements: unknown[] = [];
+  const reason = "Synthetic: Paystack's dashboard shows a test payment that no order of Valo's made.";
+  const finance: Api = async (route, method, path, query) => {
+    if (method === "POST" && path === `/admin/payment-events/${unmatchedPaymentEvent.id}/settlement`) {
+      const sent = route.request().postDataJSON() as { reason: string };
+      settlements.push(sent);
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(
+          api.SettleFinancePaymentEventResponse.parse({
+            ...unmatchedPaymentEvent,
+            resolvedAt: at(25),
+            resolvedByYou: true,
+            reason: sent.reason,
+          }),
+        ),
+      });
+    }
+    await answer(route, method, path, query);
+  };
+  const { page, unknown, errors, close } = await phone("/staff", finance);
+  try {
+    await ready(page);
+    await page.getByTestId("tab-staff-finance").click();
+    const events = page.getByRole("region", { name: "Paystack events waiting for finance" });
+    const waiting = events.getByRole("article", { name: "valo-test-synthetic-unknown" });
+    await expect(waiting).toContainText("A successful payment · Received 24 Nov 2026, 10:00");
+    await expect(waiting).toContainText(
+      "It names a reference that is no order or refund of Valo's, or no reference at all.",
+    );
+    // Nothing is recorded without a reason of ten characters or more.
+    const record = waiting.getByRole("button", { name: "Record what you found" });
+    await expect(record).toBeDisabled();
+    await waiting.getByLabel(/^What did you find\?/).fill("Too short");
+    await expect(record).toBeDisabled();
+    await waiting.getByLabel(/^What did you find\?/).fill(reason);
+    await record.click();
+    await expect.poll(() => settlements).toEqual([{ reason }]);
+    // The latest settled, with what it was, when, by whom and why.
+    await expect(
+      events.getByRole("list", { name: "Latest settled events" }).getByRole("listitem"),
+    ).toHaveText([
+      "valo-test-synthetic-refund: A refund, settled 21 Nov 2026, 10:00, by another member of finance.Synthetic: the refund was made at Paystack's dashboard.",
+    ]);
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "the Finance area's Paystack events"), []);
+    assert.deepEqual([...new Set(unknown)], []);
+    assert.deepEqual(errors, []);
+  } finally {
+    await close();
+  }
+  // With nothing waiting, it says so.
+  const quiet: Api = async (route, method, path, query) => {
+    if (method === "GET" && path === "/admin/payment-events")
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(api.GetFinancePaymentEventsResponse.parse({ waiting: [], settled: [] })),
+      });
+    await answer(route, method, path, query);
+  };
+  const empty = await phone("/staff", quiet);
+  try {
+    await ready(empty.page);
+    await empty.page.getByTestId("tab-staff-finance").click();
+    const events = empty.page.getByRole("region", { name: "Paystack events waiting for finance" });
+    await expect(events).toContainText("No event is waiting for finance.");
+    await expect(events).toContainText("No event has been settled yet.");
     assert.deepEqual([...new Set(empty.unknown)], []);
     assert.deepEqual(empty.errors, []);
   } finally {

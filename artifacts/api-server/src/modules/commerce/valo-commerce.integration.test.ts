@@ -596,60 +596,87 @@ test(
         "with a test merchant, the event worker checks a recorded charge with Paystack on the server and settles it once, sends an unmatched reference to review at once, and stops retrying a charge it cannot check after five attempts",
         async () => {
           const paid = await fixture(),
-            unverifiable = await fixture();
+            unverifiable = await fixture(),
+            differing = await fixture();
           const settled = response(paid);
-          await withStandInMerchant(new Map([[paid!.reference, settled]]), async (verified) => {
-            const good = await charge(paid!.reference),
-              unmatched = await charge(`valo-test-unmatched-${randomUUID()}`),
-              failing = await charge(unverifiable!.reference);
-            assert.equal(good.recorded.duplicate, false);
-            // The same delivery again is recorded once.
-            const replay = await commerce.recordPaymentEvent(
-              Buffer.from(
-                JSON.stringify({
-                  event: "charge.success",
-                  data: { id: good.id, reference: paid!.reference },
-                }),
-              ),
-            );
-            assert.equal(replay.duplicate, true);
-            const mine = [good.key, unmatched.key, failing.key];
-            for (let run = 0; run < 12; run++) {
-              await commerce.processPaymentEvents();
-              if ((await events(mine)).every((e) => e.status !== "pending")) break;
-            }
-            const byKey = new Map((await events(mine)).map((e) => [e.eventKey, e]));
-            assert.deepEqual(
-              { status: byKey.get(good.key)!.status, failure: byKey.get(good.key)!.failure },
-              { status: "processed", failure: null },
-            );
-            assert.deepEqual(
-              { status: byKey.get(unmatched.key)!.status, attempts: byKey.get(unmatched.key)!.attempts },
-              { status: "needs_review", attempts: 1 },
-            );
-            assert.deepEqual(
-              { status: byKey.get(failing.key)!.status, attempts: byKey.get(failing.key)!.attempts },
-              { status: "needs_review", attempts: 5 },
-            );
-            // Each attempt asked Paystack once; the settled charge was not asked again.
-            assert.equal(verified.filter((r) => r === paid!.reference).length, 1);
-            assert.equal(verified.filter((r) => r === unverifiable!.reference).length, 5);
-            const [order] = await db.select().from(valoOrders).where(eq(valoOrders.id, paid!.id));
-            assert.deepEqual(
-              { status: order!.status, providerTransactionId: order!.providerTransactionId },
-              { status: "verified_success", providerTransactionId: settled.id },
-            );
-            const grants = await db
-              .select()
-              .from(valoEntitlements)
-              .where(inArray(valoEntitlements.orderId, [paid!.id, unverifiable!.id]));
-            assert.deepEqual(
-              grants.map((g) => [g.orderId, g.status]),
-              [[paid!.id, "active"]],
-            );
-            const [still] = await db.select().from(valoOrders).where(eq(valoOrders.id, unverifiable!.id));
-            assert.notEqual(still!.status, "verified_success");
-          });
+          // docs/architecture/reconciliation.md, slice 3a: Paystack answers for one order with an amount
+          // that is not the order's.
+          const differs = { ...response(differing), amount: differing!.amountKobo + 100 };
+          await withStandInMerchant(
+            new Map([
+              [paid!.reference, settled],
+              [differing!.reference, differs],
+            ]),
+            async (verified) => {
+              const good = await charge(paid!.reference),
+                unmatched = await charge(`valo-test-unmatched-${randomUUID()}`),
+                failing = await charge(unverifiable!.reference),
+                different = await charge(differing!.reference);
+              assert.equal(good.recorded.duplicate, false);
+              // The same delivery again is recorded once.
+              const replay = await commerce.recordPaymentEvent(
+                Buffer.from(
+                  JSON.stringify({
+                    event: "charge.success",
+                    data: { id: good.id, reference: paid!.reference },
+                  }),
+                ),
+              );
+              assert.equal(replay.duplicate, true);
+              const mine = [good.key, unmatched.key, failing.key, different.key];
+              for (let run = 0; run < 12; run++) {
+                await commerce.processPaymentEvents();
+                if ((await events(mine)).every((e) => e.status !== "pending")) break;
+              }
+              const byKey = new Map((await events(mine)).map((e) => [e.eventKey, e]));
+              assert.deepEqual(
+                { status: byKey.get(good.key)!.status, failure: byKey.get(good.key)!.failure },
+                { status: "processed", failure: null },
+              );
+              // Each is left for finance with why: a reference no order has, at once; an answer that is not
+              // the order's, at once; and no answer that could be used, after five attempts.
+              const left = (key: string) => {
+                const row = byKey.get(key)!;
+                return { status: row.status, attempts: row.attempts, failure: row.failure };
+              };
+              assert.deepEqual(left(unmatched.key), {
+                status: "needs_review",
+                attempts: 1,
+                failure: "UNMATCHED_REFERENCE",
+              });
+              assert.deepEqual(left(failing.key), {
+                status: "needs_review",
+                attempts: 5,
+                failure: "NO_ANSWER",
+              });
+              assert.deepEqual(left(different.key), {
+                status: "needs_review",
+                attempts: 1,
+                failure: "RECORD_DIFFERENCE",
+              });
+              // Each attempt asked Paystack once; the settled charge was not asked again.
+              assert.equal(verified.filter((r) => r === paid!.reference).length, 1);
+              assert.equal(verified.filter((r) => r === unverifiable!.reference).length, 5);
+              const [order] = await db.select().from(valoOrders).where(eq(valoOrders.id, paid!.id));
+              assert.deepEqual(
+                { status: order!.status, providerTransactionId: order!.providerTransactionId },
+                { status: "verified_success", providerTransactionId: settled.id },
+              );
+              const grants = await db
+                .select()
+                .from(valoEntitlements)
+                .where(inArray(valoEntitlements.orderId, [paid!.id, unverifiable!.id]));
+              assert.deepEqual(
+                grants.map((g) => [g.orderId, g.status]),
+                [[paid!.id, "active"]],
+              );
+              const [still] = await db.select().from(valoOrders).where(eq(valoOrders.id, unverifiable!.id));
+              assert.notEqual(still!.status, "verified_success");
+              // The order whose answer differs is not settled by it.
+              const [unsettled] = await db.select().from(valoOrders).where(eq(valoOrders.id, differing!.id));
+              assert.notEqual(unsettled!.status, "verified_success");
+            },
+          );
         },
       );
       await t.test(

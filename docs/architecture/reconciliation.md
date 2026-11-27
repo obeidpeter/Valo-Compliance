@@ -60,7 +60,8 @@ the provider's behaviour.
 | --- | --- | --- |
 | 1 | A check says what differs, and a difference nobody has settled raises an alert | Built |
 | 2 | Finance settles a difference, with its trail | Built |
-| 3 | The provider's side: its events that match nothing, and its own list of transactions | Not built |
+| 3a | The provider's side: its events Valo could not match or process, in the alert and finance's list, settled with a reason | Built |
+| 3b | The provider's own daily list of transactions | Not built |
 
 ## Slice 1: a check says what differs
 
@@ -172,13 +173,65 @@ abandoned or failed order the provider can never answer for stops new orders for
   reach. The form asks for what was looked at and what it showed; it does not stop a reason that names a
   person.
 
-## Slice 3: the provider's side (outline)
+## Slice 3a: the provider's events that Valo could not match
 
-- **An event that matches nothing.** A provider event Valo could not match to an order, or could not
-  verify, ends `needs_review` in `valo_payment_events`. It joins the alert's reading and finance's list,
-  and is settled as a difference is.
-- **The provider's own list.** Once a day the provider is asked for the day's successful transactions.
-  One whose reference is no order's is recorded as an event that matches nothing.
+**Why an event waits.** The event worker (`processPaymentEvents`) leaves a provider event for finance as
+`needs_review` in `valo_payment_events`, and now says why in its `failure`:
+
+| Finding | When |
+| --- | --- |
+| `UNMATCHED_REFERENCE` | The event names no reference, or one that no order or refund request holds. At once |
+| `RECORD_DIFFERENCE` | What the provider says, asked again, does not match Valo's record of the order, refund or dispute the event names. At once |
+| `NO_ANSWER` | No answer that could be used came, five times |
+
+Events from before this slice keep `SERVER_VERIFICATION_REQUIRED`. An erasure still writes
+`PRIVACY_ERASURE_FINANCE_REVIEW`. Nothing else about the worker changes: a refusal still ends an event
+at once, and anything else is tried again, five times in all.
+
+**The alert.** The reading `unmatchedPaymentEvents` counts the events that wait and that no settlement
+covers. Above none, `UNMATCHED_PAYMENT_EVENTS_DETECTED` is raised, under the runbook "Payment/entitlement
+failure", for finance and engineering.
+
+**What finance sees.** The finance area of the staff console has a section of its own, "Paystack events
+waiting for finance" (`FinancePaymentEvents`, from `GET /api/admin/payment-events`). It lists each event
+that waits: the reference it names, what kind of event it is, when it arrived, and why it waits, in a
+sentence (`payment-check-words.ts`). Below it are the latest fifty settled, with when, by whom and why.
+Reading it needs the finance role and a fresh second factor, and is recorded in the staff access audit.
+
+**What finance does.** For one event, a member of finance says what they found, in ten characters or more
+(`POST /api/admin/payment-events/{id}/settlement`, `settlePaymentEvent`). There is one kind of settlement:
+the reason says what was found, and what was done at Paystack, if anything.
+
+**Where it is kept.** A row of its own, in `valo_payment_event_settlements` (migration
+`20261127203546_payment_event_settlements`): the event, the finding settled, who and when. Why is a row of
+the staff access audit: "Payment event <id>: <reason>". The event itself is never changed for it. A
+customer's request has no access to the settlements.
+
+**How long a settlement lasts.** While the event's finding is the one settled. An erasure that rewrites the
+finding makes the event wait again.
+
+**The database keeps a settlement** (`valo_payment_event_settlements_kept`, migration
+`20261127203554_payment_event_settlement_guard`). A settlement is taken only of an event that needs review,
+with the finding it has, at its transaction's time, where the staff access audit holds, from the same
+transaction, finance's row for this event by an active finance role. One is never changed or removed, and
+the table is never emptied. An event a settlement is about cannot be removed from under it. The settlements
+are a history, so they keep a history digest, as the [audit trail](audit-trail.md) asks of every history.
+
+**What this slice does not do.**
+
+- **It corrects nothing.** A payment that matches no order is dealt with at Paystack. Settling records what
+  finance found.
+- **A settlement is never undone.** One made in error stays, with its reason.
+- **Finance's reason is free text**, kept in the staff access audit, as slice 2's is.
+- **The provider's own list is not read yet.** That is slice 3b.
+
+## Slice 3b: the provider's own list (outline)
+
+- **Once a day** the provider is asked for the day's successful transactions, as many pages as `meta`
+  counts.
+- **One whose reference is no order's** is recorded as an event that matches nothing, `UNMATCHED_REFERENCE`,
+  and waits for finance as slice 3a's events do.
+- **A list that cannot be read** is tried again an hour later, three times in all, and then reported.
 
 ## Decisions made here, for the owner to confirm
 
@@ -188,3 +241,6 @@ abandoned or failed order the provider can never answer for stops new orders for
 - **Two outcomes** finance can record, and what `no_payment_stands` does.
 - **A settlement covers a later check while its finding names nothing new**, until a check matches.
 - **Fifty settlements** are listed, the latest first, and a hundred differences.
+- **One kind of settlement for a provider event**, with a reason, and no outcome to choose; and the three
+  names an event's finding now gives.
+- **Fifty settled events** are listed, the latest first, and a hundred that wait.

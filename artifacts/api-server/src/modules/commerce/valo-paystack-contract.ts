@@ -115,6 +115,25 @@ export function orderDifferences(
  * such as a subscription, invoice, transfer or payment request, is stored as ignored and never
  * processed: R1 keeps recurring billing, wallets, split settlements and collections off (PAY-010).
  */
+/**
+ * A provider event that names nothing of Valo's: no reference, or a reference that no order or refund
+ * request holds (docs/architecture/reconciliation.md, slice 3a). The event worker ends it at once for
+ * finance, as it does any refusal, and names it `UNMATCHED_REFERENCE`.
+ */
+export class UnmatchedPaymentEvent extends ValoProblem {
+  constructor(message: string) {
+    super(409, message);
+  }
+}
+/** Why the event worker left a provider event for finance (docs/architecture/reconciliation.md, slice 3a):
+ * it names nothing of Valo's; what the provider says differs from Valo's record; or no answer that could
+ * be used came, five times. Events from before slice 3 keep `SERVER_VERIFICATION_REQUIRED`, and an
+ * erasure writes `PRIVACY_ERASURE_FINANCE_REVIEW`. */
+export function paymentEventFinding(error: unknown) {
+  if (error instanceof UnmatchedPaymentEvent) return "UNMATCHED_REFERENCE";
+  if (error instanceof ValoProblem && error.status === 409) return "RECORD_DIFFERENCE";
+  return "NO_ANSWER";
+}
 export function paystackEventFamily(event: string): "charge" | "refund" | "dispute" | undefined {
   if (event === "charge.success") return "charge";
   if (/^refund\.(pending|processing|needs-attention|failed|processed)$/.test(event)) return "refund";

@@ -2249,6 +2249,65 @@ export const SettleFinancePaymentCheckResponse = zod.object({
 
 
 /**
+ * Each provider event that the event worker left for finance, with why, that no settlement covers with the finding it has now, and the latest settlements with who made them and why (docs/architecture/reconciliation.md, slice 3a). An active finance role and a fresh second factor are required.
+ * @summary The Paystack events Valo could not match or process that finance has not settled, and the latest settled (PAY-007)
+ */
+export const GetFinancePaymentEventsResponse = zod.object({
+  "waiting": zod.array(zod.object({
+  "id": zod.uuid(),
+  "eventType": zod.string().describe('Paystack\'s name for the event, such as charge.success'),
+  "reference": zod.string().nullable().describe('The reference the event names, if it names one'),
+  "receivedAt": zod.coerce.date(),
+  "finding": zod.string().describe('Why the event worker left it for finance'),
+  "attempts": zod.int(),
+  "resolvedAt": zod.coerce.date().nullable(),
+  "resolvedByYou": zod.boolean(),
+  "reason": zod.string().nullable().describe('Why finance settled it, as the staff access audit keeps it')
+})),
+  "settled": zod.array(zod.object({
+  "id": zod.uuid(),
+  "eventType": zod.string().describe('Paystack\'s name for the event, such as charge.success'),
+  "reference": zod.string().nullable().describe('The reference the event names, if it names one'),
+  "receivedAt": zod.coerce.date(),
+  "finding": zod.string().describe('Why the event worker left it for finance'),
+  "attempts": zod.int(),
+  "resolvedAt": zod.coerce.date().nullable(),
+  "resolvedByYou": zod.boolean(),
+  "reason": zod.string().nullable().describe('Why finance settled it, as the staff access audit keeps it')
+}))
+})
+
+
+/**
+ * @summary Finance records what it found about a Paystack event Valo could not match or process (PAY-007)
+ */
+export const SettleFinancePaymentEventParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const settleFinancePaymentEventBodyReasonMin = 10;
+export const settleFinancePaymentEventBodyReasonMax = 1500;
+
+
+
+export const SettleFinancePaymentEventBody = zod.object({
+  "reason": zod.string().min(settleFinancePaymentEventBodyReasonMin).max(settleFinancePaymentEventBodyReasonMax)
+})
+
+export const SettleFinancePaymentEventResponse = zod.object({
+  "id": zod.uuid(),
+  "eventType": zod.string().describe('Paystack\'s name for the event, such as charge.success'),
+  "reference": zod.string().nullable().describe('The reference the event names, if it names one'),
+  "receivedAt": zod.coerce.date(),
+  "finding": zod.string().describe('Why the event worker left it for finance'),
+  "attempts": zod.int(),
+  "resolvedAt": zod.coerce.date().nullable(),
+  "resolvedByYou": zod.boolean(),
+  "reason": zod.string().nullable().describe('Why finance settled it, as the staff access audit keeps it')
+})
+
+
+/**
  * Each published premium template from the staff library, with its open price and any price scheduled to start (docs/architecture/commercial-settings.md, slice 1). Read-only. Development only.
  * @summary The published premium templates and their prices, for the development owner (ADM-006)
  */

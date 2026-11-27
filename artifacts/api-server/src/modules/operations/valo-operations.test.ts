@@ -98,6 +98,7 @@ test("internal probes measure failures independently and persist/deduplicate/rec
       readinessQueries.newEnquiries,
       readinessQueries.waitingEnquiries,
       readinessQueries.paymentDifferences,
+      readinessQueries.unmatchedPaymentEvents,
       readinessQueries.requestFailures,
       readinessQueries.requestTime,
     ]);
@@ -672,6 +673,74 @@ test("an order whose latest daily payment check found a difference raises an ale
       { code: "PAYMENT_DIFFERENCES_PROBE_UNAVAILABLE", ...owner },
     ]);
     // Once no order's latest check has a difference, nothing is raised.
+    assert.deepEqual((await recordOperationalAlerts(await sample(0), dir)).active, []);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { recursive: true, force: true });
+    if (old === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = old;
+  }
+});
+
+// PAY-007 (docs/architecture/reconciliation.md, slice 3a): a provider event Valo could not match or process,
+// that finance has not settled, raises an alert of its own for finance and engineering. What the reading
+// counts is tested against PostgreSQL with the event worker and finance's settlement.
+test("a Paystack event that matched nothing, and that finance has not settled, raises an alert under the payment runbook, and none once none waits", async () => {
+  const old = process.env.NODE_ENV;
+  process.env.NODE_ENV = "development";
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => {
+    throw Error("EXTERNAL_MESSAGES_FORBIDDEN");
+  };
+  const dir = await mkdtemp(join(tmpdir(), "valo-ops-payment-events-"));
+  const worker = new WorkerHealth();
+  worker.finish(worker.begin()!, true);
+  try {
+    await recordWorkerHeartbeat(worker.snapshot(), dir);
+    const sample = (events: number, unreadable = false) =>
+      collectOperationalSample(async (sql) => {
+        if (unreadable && sql === readinessQueries.unmatchedPaymentEvents)
+          throw Error("SYNTHETIC_PROBE_FAILURE");
+        return {
+          rows: [
+            {
+              value:
+                sql === readinessQueries.database
+                  ? 1
+                  : sql === readinessQueries.unmatchedPaymentEvents
+                    ? events
+                    : 0,
+            },
+          ],
+        };
+      }, dir);
+    const owner = { runbook: "Payment/entitlement failure", accountable: "Finance + engineering" };
+    // No event waiting raises nothing.
+    assert.deepEqual((await recordOperationalAlerts(await sample(0), dir)).active, []);
+    // One event waiting raises the alert, with the count it was raised on, and no other.
+    const raised = await recordOperationalAlerts(await sample(1), dir);
+    assert.deepEqual(raised.owners, [{ code: "UNMATCHED_PAYMENT_EVENTS_DETECTED", ...owner }]);
+    const journal = JSON.parse(await readFile(join(dir, "alerts.json"), "utf8")) as {
+      events: { code: string; state: string; reading: number; threshold: number }[];
+    };
+    assert.deepEqual(
+      journal.events.map(({ code, state, reading, threshold }) => ({ code, state, reading, threshold })),
+      [{ code: "UNMATCHED_PAYMENT_EVENTS_DETECTED", state: "active", reading: 1, threshold: 0 }],
+    );
+    // It says in plain words what it is about, and what Valo could not read when its reading fails.
+    assert.equal(
+      alertTitle("UNMATCHED_PAYMENT_EVENTS_DETECTED"),
+      "A Paystack event matched nothing in Valo, or could not be processed",
+    );
+    assert.equal(
+      alertTitle("UNMATCHED_PAYMENT_EVENTS_PROBE_UNAVAILABLE"),
+      "Valo cannot read the Paystack events waiting for finance",
+    );
+    // A reading that cannot be taken is an alert of its own, and clears the one it replaces.
+    assert.deepEqual((await recordOperationalAlerts(await sample(0, true), dir)).owners, [
+      { code: "UNMATCHED_PAYMENT_EVENTS_PROBE_UNAVAILABLE", ...owner },
+    ]);
+    // Once no event waits, nothing is raised.
     assert.deepEqual((await recordOperationalAlerts(await sample(0), dir)).active, []);
   } finally {
     globalThis.fetch = originalFetch;

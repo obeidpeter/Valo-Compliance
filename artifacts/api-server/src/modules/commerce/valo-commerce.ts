@@ -23,8 +23,10 @@ import { ValoProblem } from "../../platform/valo-problem";
 import { consumeQuota, quotaLimit, quotaSubjectHash } from "../../lib/valo-quota";
 import {
   assertOrderMatch,
+  paymentEventFinding,
   paystack,
   paystackEventFamily,
+  UnmatchedPaymentEvent,
   verifiedTransaction,
   sandboxPaymentsConfigured,
   type VerifiedTransaction,
@@ -1085,7 +1087,7 @@ export async function processPaymentEvents() {
     .limit(20);
   for (const event of events) {
     try {
-      if (!event.reference) throw new ValoProblem(409, "Missing reference");
+      if (!event.reference) throw new UnmatchedPaymentEvent("Missing reference");
       if (event.eventType.startsWith("refund.")) {
         if (!(await handleRefundEvent(event.reference))) continue;
         await db
@@ -1103,17 +1105,19 @@ export async function processPaymentEvents() {
         continue;
       }
       const [order] = await db.select().from(valoOrders).where(eq(valoOrders.reference, event.reference));
-      if (!order) throw new ValoProblem(409, "Unmatched reference");
+      if (!order) throw new UnmatchedPaymentEvent("Unmatched reference");
       await settleVerifiedOrder(order.id, await paystack.verify(order.reference));
       await db
         .update(valoPaymentEvents)
         .set({ status: "processed", failure: null })
         .where(eq(valoPaymentEvents.id, event.id));
     } catch (error) {
-      // Atomic attempts bound retries even across multiple worker processes.
+      // Atomic attempts bound retries even across multiple worker processes. A refusal ends the event at
+      // once; anything else is tried again, five times in all. Its finding says which, for finance
+      // (docs/architecture/reconciliation.md, slice 3a).
       await db.execute(sql`update valo_payment_events set attempts=LEAST(attempts+1,5),
         status=case when attempts>=4 or ${error instanceof ValoProblem && error.status === 409} then 'needs_review' else 'pending' end,
-        failure='SERVER_VERIFICATION_REQUIRED' where id=${event.id} and status='pending'`);
+        failure=${paymentEventFinding(error)} where id=${event.id} and status='pending'`);
     }
   }
 }

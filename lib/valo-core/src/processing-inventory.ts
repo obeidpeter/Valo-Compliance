@@ -196,6 +196,7 @@ export const processingInventory: readonly ProcessingActivity[] = [
       "valo_dispute_actions",
       "valo_dispute_transitions",
       "valo_payment_reconciliations",
+      "valo_payment_event_settlements",
       "valo_payment_concerns",
       "valo_payment_concern_events",
       "valo_concern_messages",
