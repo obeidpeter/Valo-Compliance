@@ -254,7 +254,8 @@ bundle's version in effect, and once an order is made it keeps its amount, its l
 or bundle it names, whoever asks to change them ([order safety](order-safety.md)). The daily
 payment check (`valo-payment-reconciliation.ts`) names what the provider's answer, or Valo's own
 record, says differently about an order, and an order whose latest check found a difference raises
-an alert ([reconciliation](reconciliation.md)).
+an alert. Finance settles a difference in the staff console, with its reason in the staff access
+audit, and the database keeps a finished check ([reconciliation](reconciliation.md)).
 
 `modules/rules` holds the released-rule registry the checker uses, saved assessments, their
 comparison and the admission check for a rule release. The rule release command itself lives in

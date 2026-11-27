@@ -180,6 +180,12 @@ Rules that apply now:
   that gives no answer is not a difference: the attempt is counted, and the check reads
   `NO_ANSWER` only after its third, an hour apart. Never correct an order, a payment or a grant
   from the check's finding.
+- A finished payment check is history. Finance settles a difference only through
+  `settlePaymentCheck`, which records why in the staff access audit in the same transaction; the
+  database's guard `valo_payment_checks_kept` refuses a settlement made any other way, and any
+  other change to a finished check but an erasure's rewrite of its finding
+  (`docs/architecture/reconciliation.md`, slice 2). A test that needs a settled check settles it
+  as finance would.
 - Only the operator commands in `FINITE_WORK_BINDING_ENTRIES` hand the inference
   dispatcher its work-binding checks (`provideFiniteWorkBindings`), and only the real
   `assertFiniteWorkBindings`; the `inference-bindings` repository rule enforces this.

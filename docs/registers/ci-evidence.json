@@ -3191,7 +3191,7 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/commerce/valo-refunds.integration.test.ts",
       "test": "refund lifecycle: actual development PostgreSQL and controlled provider, not a real refund",
-      "proves": "The database refuses to update or delete a recorded refund status transition, and the row keeps its original reason."
+      "proves": "The database refuses to update or delete a recorded refund status transition, and the row keeps its original reason. A member of finance with a fresh second factor settles a synthetic difference a daily payment check found: the check records the outcome, who and when, the staff access audit keeps the reason from the same transaction, the order, its payment and its grants are unchanged, and the alert's reading and finance's list leave it out until a later check finds something more or follows a check that matched; support and content staff, finance without a fresh second factor, a reason under ten characters, a second settlement, a check that is not its order's latest difference, and no payment for an order held as paid are all refused, and an abandoned order settled as having no payment is no longer looked at before another order for its edition. Direct statements on the application's login cannot settle a check without finance's reason in the same transaction, settle it twice, or change a finished check's finding, attempts, status or day, while an erasure may rewrite its finding and nothing else."
     },
     {
       "requirement": "PAY-007",
@@ -3220,6 +3220,13 @@
       "file": "artifacts/api-server/src/routes/valo-manual-library.integration.test.ts",
       "test": "manual publishing through staff HTTP routes and public readers",
       "proves": "The daily check's look at a bundle's paid order finds nothing wanting, and reads ENTITLEMENT_DIFFERENCE while either of the two templates' grants is suspended with nothing on record to explain it."
+    },
+    {
+      "requirement": "PAY-007",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "the Finance area says what each daily payment check found, settles a difference only with an outcome and a reason, and fits a phone",
+      "proves": "In the staff console's Finance area on a phone, each difference a daily payment check found is said in plain words with its order's amount, status and day; a paid order cannot be settled as having no payment; nothing is recorded without an outcome and a reason of ten characters or more, and the settlement sent is exactly the outcome and reason given; the latest settled show what was found, when, by whom and why; and the area has no automated phone problems."
     },
     {
       "requirement": "PAY-008",
