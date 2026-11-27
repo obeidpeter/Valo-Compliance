@@ -111,7 +111,7 @@
       "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/public-server-pages.test.ts",
       "test": "hostile markup in a page's address is drawn only as text: the server's HTML holds it escaped, and the page runs none of it (SEC-003)",
-      "proves": "On the compiled web app, the library and services pages given hostile markup in every value of their address hold it only escaped in the server's HTML, and in a browser run none of it and make none of its elements, while the library's search box shows it as text."
+      "proves": "On the compiled web app, the library, services, guides, industries and help pages given hostile markup in every value of their address hold it only escaped in the server's HTML, and in a browser run none of it and make none of its elements, while the search box of each page that has one shows it as text and the industries page says it back as text."
     },
     {
       "requirement": "SEC-003",
@@ -6034,6 +6034,104 @@
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
       "test": "the keyboard moving on from the page's last control reaches the message that confirms a save, which stays while the keyboard is in it and goes once the keyboard leaves it",
       "proves": "On an emulated phone, Tab from the page's last control moves the focus onto the message that confirms a saved business profile, which stays while the focus is on it and then on its close button, and goes once the next Tab takes the focus out of it. This is an automated check, not a manual or assistive-technology review."
+    },
+    {
+      "requirement": "WEB-002",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/page-filters.test.ts",
+      "test": "a page's search and filters make one address for each view, and the plain page keeps its plain address",
+      "proves": "The address made for a guides, industries or help view carries its search and its filter, leaves out an empty one so that the plain page keeps its plain address, drops the spaces around a search, and carries whatever a visitor types as text."
+    },
+    {
+      "requirement": "WEB-002",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/page-filters.test.ts",
+      "test": "an address gives back the search and the filter it was made with, and nothing longer than a search may be",
+      "proves": "Reading an address gives back the search and the filter it was made with, and from an address someone else wrote a search without the spaces around it and no longer than 120 characters, a filter no longer than 80, and the first of a filter given twice."
+    },
+    {
+      "requirement": "WEB-002",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-page-states.test.ts",
+      "test": "the guides, industries and help pages keep their search and filter in the address: a copied address opens the same view, and Back undoes a change",
+      "proves": "On an emulated phone, a copied guides, industries or help address opens the view it names with the search box filled and the filter chosen; a changed filter and what is typed are in the address, the plain page keeps its plain address, an address written with spaces around its search is not rewritten, a space typed at the end of a search stays in the box, and the Back button undoes each change and refills the box."
+    },
+    {
+      "requirement": "WEB-002",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-server-pages.test.ts",
+      "test": "the server renders the view a guides, industries or help address asks for: the box holds the search, the filter is chosen, and the guides and industries listed are the ones found",
+      "proves": "On the compiled web server, the HTML for a guides address with a search and an industry lists the one guide found with the box filled and the industry chosen, the HTML for an industries search lists the industries it names, and the HTML for a help search fills the box and keeps every question."
+    },
+    {
+      "requirement": "WEB-002",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-server-pages.test.ts",
+      "test": "the library's filters, sort and page live in its address: the server renders the results an address asks for, a reload keeps them, a new search starts again from the first page, and clearing the filters empties the address",
+      "proves": "On the compiled web server, a library address with its category, access, industry, sort and page is rendered by the server as the results it asks for, survives a reload, and is emptied when the filters are cleared."
+    },
+    {
+      "requirement": "WEB-002",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-server-pages.test.ts",
+      "test": "the library's search box keeps a space typed at the end of a word while its address follows, so the next word can be typed, and Back refills the box",
+      "proves": "On an emulated phone, the library's search box keeps a space typed at the end of a word after its address has followed, takes the next word after it, is refilled by the Back button, and leaves an address written with spaces around its search as it is."
+    },
+    {
+      "requirement": "WEB-002",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-page-states.test.ts",
+      "test": "the industries page waiting for its data shows a loading placeholder, then lists every industry and says of each that it has no guides when none is published; a search that names no industry says so and offers the whole list again",
+      "proves": "On an emulated phone, the compiled industries page shows a loading placeholder, no error and no industry while its data is held back, then every industry with \"No guides yet\" when none is published and the number of guides where some are, and a search that names no industry says so and offers the whole list again."
+    },
+    {
+      "requirement": "WEB-002",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-page-states.test.ts",
+      "test": "the pricing page waiting to learn whether payments are on shows a placeholder, then says what the API answered; when the API refuses or cannot be reached it says they are switched off, and shows no error",
+      "proves": "On an emulated phone, the compiled pricing page shows a placeholder while it waits to learn whether payments are on, then says what the API answered, and says \"Switched off\" with no error when the API refuses or cannot be reached."
+    },
+    {
+      "requirement": "WEB-002",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-page-states.test.ts",
+      "test": "the services, support, help, privacy and terms pages wait for nothing and have nothing that can fail to load: with the API failing each shows its whole content, and until the sign-in service answers each form's place shows the way to sign in or to write without an account",
+      "proves": "On an emulated phone with the API failing and the sign-in service unreachable, the compiled services, support, help, privacy and terms pages ask the API for nothing and show their heading and content with no placeholder, nothing waiting and no error, and the services and support pages show the way to sign in, to create an account or to write without one in their form's place."
+    },
+    {
+      "requirement": "WEB-002",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "signed in, the support page says its list of requests is loading, says when there are none and offers another try when the list cannot be read; its form says what is missing, keeps what was typed when a save fails and says so, and saves on the next try",
+      "proves": "On an emulated phone, the support page of a signed-in customer says its list of requests is loading, says when there are none and offers another try when the list cannot be read; its form says what is missing and sends nothing, a save that fails says so and keeps what was typed, the button cannot be pressed while it saves, and the next try saves."
+    },
+    {
+      "requirement": "NFR-006",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-page-states.test.ts",
+      "test": "the industries page waiting for its data shows a loading placeholder, then lists every industry and says of each that it has no guides when none is published; a search that names no industry says so and offers the whole list again",
+      "proves": "axe-core finds no WCAG 2.0, 2.1 or 2.2 A or AA rule failing on the compiled industries page at phone width with no guide published, or with a search that names no industry; no manual or assistive-technology review is recorded."
+    },
+    {
+      "requirement": "NFR-006",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-page-states.test.ts",
+      "test": "the pricing page waiting to learn whether payments are on shows a placeholder, then says what the API answered; when the API refuses or cannot be reached it says they are switched off, and shows no error",
+      "proves": "axe-core finds no WCAG 2.0, 2.1 or 2.2 A or AA rule failing on the compiled pricing page at phone width once it says whether payments are on, or when the API refuses or cannot be reached; no manual or assistive-technology review is recorded."
+    },
+    {
+      "requirement": "NFR-006",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-page-states.test.ts",
+      "test": "the services, support, help, privacy and terms pages wait for nothing and have nothing that can fail to load: with the API failing each shows its whole content, and until the sign-in service answers each form's place shows the way to sign in or to write without an account",
+      "proves": "axe-core finds no WCAG 2.0, 2.1 or 2.2 A or AA rule failing on the compiled services, support, help, privacy and terms pages at phone width with the API failing and the sign-in service unreachable; no manual or assistive-technology review is recorded."
+    },
+    {
+      "requirement": "NFR-006",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "signed in, the support page says its list of requests is loading, says when there are none and offers another try when the list cannot be read; its form says what is missing, keeps what was typed when a save fails and says so, and saves on the next try",
+      "proves": "axe-core finds no WCAG 2.0, 2.1 or 2.2 A or AA rule failing on a signed-in customer's support page at phone width while its list is read, when the list cannot be read, with the form's missing details shown and after a save that failed, and the failed list and the failed save are each announced in a role=\"alert\" element; no manual or assistive-technology review is recorded."
     }
   ]
 }
