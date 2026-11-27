@@ -11,7 +11,10 @@ export async function financeHeldFixture() {
     .from(valoContentVersions)
     .where(eq(valoContentVersions.status, "held"))
     .limit(1);
-  if (existing) return existing;
+  return existing ?? freshHeldFixture();
+}
+/** A held version of its own, for a test that needs a price for another edition than the shared one. */
+export async function freshHeldFixture() {
   if (setting("VALO_RUN_DB_TESTS") !== "synthetic-development-only" || setting("REPLIT_DEPLOYMENT"))
     throw Error("Existing held development candidate or isolated synthetic CI flag required.");
   const token = randomUUID(),

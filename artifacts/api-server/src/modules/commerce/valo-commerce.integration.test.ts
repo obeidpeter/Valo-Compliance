@@ -17,14 +17,15 @@ import {
 } from "@workspace/db";
 import { resolveWorkspace } from "../workspaces";
 import * as commerce from "./valo-commerce";
-import { endedEditionOrders } from "./checkout-editions";
+import { endedEditionOrders, priceOrderTerms } from "./checkout-editions";
 import { purchaseReceiptFile } from "./purchase-receipt-file";
 import { PAYSTACK_API, verifiedTransaction } from "./valo-paystack-contract";
 import { quotaSubjectHash } from "../../lib/valo-quota";
 import { setting } from "../../platform/settings";
-import { financeHeldFixture } from "./valo-finance-test-fixture";
+import { financeHeldFixture, freshHeldFixture } from "./valo-finance-test-fixture";
 import { guardNestedConnections } from "../../test-support/nested-connection-guard";
 import { erasePrivateCopyPhase } from "../privacy/valo-private-copy-inventory";
+import { plantOrderLine } from "../../test-support/planted-order-line";
 
 test(
   "controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication",
@@ -55,7 +56,11 @@ test(
     const neverRendered = async (): Promise<Buffer> => {
       throw Error("A receipt file was made for an order whose receipt the caller may not read.");
     };
-    async function fixture(actor = a, line = fixtureLine) {
+    // The price an order is made from: the one in effect. The first, then the later one that a subtest
+    // replaces it with.
+    let offer: typeof valoPrices.$inferSelect | undefined;
+    async function fixture(actor = a) {
+      if (!offer) throw Error("This test's price has not been made yet.");
       const id = randomUUID();
       orders.push(id);
       const [row] = await db
@@ -65,10 +70,8 @@ test(
           workspaceId: actor.workspaceId,
           requestedBy: actor.identityId,
           requestKey: randomUUID(),
-          priceId,
           reference: `valo-test-${id}`,
-          amountKobo: 12345,
-          line,
+          ...priceOrderTerms(offer),
         })
         .returning();
       return row;
@@ -88,17 +91,20 @@ test(
     // Inside a transaction, commerce must use only that transaction's connection.
     const guard = guardNestedConnections({ db, pool });
     try {
-      await db.insert(valoPrices).values({
-        id: priceId,
-        contentVersionId: version,
-        title: fixtureLine.title,
-        amountKobo: 12345,
-        licenceVersion: fixtureLine.licenceVersion,
-        licenceText: fixtureLine.licenceText,
-        taxTreatment: fixtureLine.taxTreatment,
-        approvalReference: "CONTROLLED_FIXTURE_NOT_APPROVAL",
-        effectiveFrom: new Date(Date.now() - 1000),
-      });
+      [offer] = await db
+        .insert(valoPrices)
+        .values({
+          id: priceId,
+          contentVersionId: version,
+          title: fixtureLine.title,
+          amountKobo: 12345,
+          licenceVersion: fixtureLine.licenceVersion,
+          licenceText: fixtureLine.licenceText,
+          taxTreatment: fixtureLine.taxTreatment,
+          approvalReference: "CONTROLLED_FIXTURE_NOT_APPROVAL",
+          effectiveFrom: new Date(Date.now() - 1000),
+        })
+        .returning();
       await t.test("held content and browser price/currency additions cannot create an order", async () => {
         await assert.rejects(
           commerce.createOrder(a, {
@@ -284,17 +290,21 @@ test(
               .update(valoPrices)
               .set({ effectiveTo: sql`now()` })
               .where(eq(valoPrices.id, priceId));
-            await tx.insert(valoPrices).values({
-              id: laterPriceId,
-              contentVersionId: version,
-              title: fixtureLine.title,
-              amountKobo: 99999,
-              licenceVersion: "controlled-not-approved-v2",
-              licenceText: "A later test price",
-              taxTreatment: fixtureLine.taxTreatment,
-              approvalReference: "CONTROLLED_FIXTURE_NOT_APPROVAL",
-              effectiveFrom: sql`now()`,
-            });
+            // Orders made from here on are this price's: it is the one in effect.
+            [offer] = await tx
+              .insert(valoPrices)
+              .values({
+                id: laterPriceId,
+                contentVersionId: version,
+                title: fixtureLine.title,
+                amountKobo: 99999,
+                licenceVersion: "controlled-not-approved-v2",
+                licenceText: "A later test price",
+                taxTreatment: fixtureLine.taxTreatment,
+                approvalReference: "CONTROLLED_FIXTURE_NOT_APPROVAL",
+                effectiveFrom: sql`now()`,
+              })
+              .returning();
           });
           // The close and the new price share one transaction, so they share one time.
           const changes = (
@@ -361,7 +371,14 @@ test(
         },
       );
       await t.test("a failed fulfilment constraint rolls back settlement and outbox atomically", async () => {
-        const broken = await fixture(a, { ...fixtureLine, contentVersionId: randomUUID() });
+        // An order whose line names a version that does not exist, so that granting it fails. The
+        // database keeps an order's line, so the fault is put beneath its guards.
+        const broken = await fixture();
+        assert.ok(offer);
+        await plantOrderLine(broken!.id, {
+          ...priceOrderTerms(offer).line,
+          contentVersionId: randomUUID(),
+        });
         await assert.rejects(commerce.settleVerifiedOrder(broken!.id, response(broken)));
         const [saved] = await db.select().from(valoOrders).where(eq(valoOrders.id, broken!.id));
         assert.ok(saved);
@@ -810,14 +827,36 @@ test(
             neighbour = await resolveWorkspace(`synthetic-commerce-${randomUUID()}`);
           workspaces.push(asking.workspaceId, neighbour.workspaceId);
           const started = Date.now(),
-            otherEdition = randomUUID(),
             page = "https://checkout.example.test/synthetic",
             taken = () => `synthetic-${randomUUID()}`;
+          // Another edition, with a price of its own: an order is made from its own edition's price.
+          const other = await freshHeldFixture(),
+            otherEdition = other.id;
+          const [current, elsewherePrice] = [
+            offer,
+            (
+              await db
+                .insert(valoPrices)
+                .values({
+                  id: randomUUID(),
+                  contentVersionId: otherEdition,
+                  title: "CONTROLLED TEST ONLY — another edition, not a released product",
+                  amountKobo: 54321,
+                  licenceVersion: fixtureLine.licenceVersion,
+                  licenceText: fixtureLine.licenceText,
+                  taxTreatment: fixtureLine.taxTreatment,
+                  approvalReference: "CONTROLLED_FIXTURE_NOT_APPROVAL",
+                  effectiveFrom: new Date(started - 1000),
+                })
+                .returning()
+            )[0],
+          ];
+          assert.ok(current && elsewherePrice);
           const earlier = async (
             actor: typeof a,
             minutesAgo: number,
             happened: Partial<typeof valoOrders.$inferInsert>,
-            line = fixtureLine,
+            from = current,
           ) => {
             const id = randomUUID();
             orders.push(id);
@@ -826,10 +865,8 @@ test(
               workspaceId: actor.workspaceId,
               requestedBy: actor.identityId,
               requestKey: randomUUID(),
-              priceId,
               reference: `valo-test-${id}`,
-              amountKobo: 12345,
-              line,
+              ...priceOrderTerms(from),
               createdAt: new Date(started - minutesAgo * 60_000),
             });
             await db.update(valoOrders).set(happened).where(eq(valoOrders.id, id));
@@ -848,7 +885,7 @@ test(
             asking,
             50,
             { status: "abandoned", checkoutUrl: page },
-            { ...fixtureLine, contentVersionId: otherEdition },
+            elsewherePrice,
           );
           const theirs = await earlier(neighbour, 40, { status: "failed", checkoutUrl: page });
           assert.deepEqual(await look(asking, [version]), [failed, abandoned]);

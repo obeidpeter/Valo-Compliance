@@ -26,6 +26,7 @@ test(
       await import("@workspace/db");
     const { resolveWorkspace } = await import("../workspaces");
     const { financeHeldFixture } = await import("../commerce/valo-finance-test-fixture");
+    const { priceOrderTerms } = await import("../commerce/checkout-editions");
     const { draftSynthetic } = await import("../../test-support/drafted-content");
     const { requirePurchaseForPricedMaster } = await import("./valo-released-content");
     const {
@@ -56,34 +57,31 @@ test(
       const priceId = randomUUID(),
         orderId = randomUUID(),
         grantId = randomUUID();
-      await db.insert(valoPrices).values({
-        id: priceId,
-        contentVersionId: held.id,
-        title: "CONTROLLED ENTITLEMENT FIXTURE — NOT RELEASED",
-        amountKobo: 10000,
-        licenceVersion: "test-only",
-        licenceText: "No live commercial approval.",
-        taxTreatment: "No tax claim.",
-        approvalReference: "CONTROLLED_FIXTURE_NOT_APPROVAL",
-        effectiveFrom: new Date(),
-      });
+      const [price] = await db
+        .insert(valoPrices)
+        .values({
+          id: priceId,
+          contentVersionId: held.id,
+          title: "CONTROLLED ENTITLEMENT FIXTURE — NOT RELEASED",
+          amountKobo: 10000,
+          licenceVersion: "test-only",
+          licenceText: "No live commercial approval.",
+          taxTreatment: "No tax claim.",
+          approvalReference: "CONTROLLED_FIXTURE_NOT_APPROVAL",
+          effectiveFrom: new Date(),
+        })
+        .returning();
+      assert.ok(price);
+      // Each order is made with its price's own amount and line, as the application makes one.
       await db.insert(valoOrders).values({
         id: orderId,
         workspaceId: purchaser.workspaceId,
         requestedBy: purchaser.identityId,
         requestKey: randomUUID(),
-        priceId,
         reference: "valo-test-" + orderId,
-        amountKobo: 10000,
+        ...priceOrderTerms(price),
         status: "verified_success",
         providerTransactionId: String(Number.parseInt(randomUUID().replaceAll("-", "").slice(0, 12), 16)),
-        line: {
-          title: "Controlled purchase",
-          contentVersionId: held.id,
-          licenceVersion: "test-only",
-          licenceText: "No live commercial approval.",
-          taxTreatment: "No tax claim.",
-        },
       });
       await db.insert(valoEntitlements).values({
         id: grantId,
@@ -99,18 +97,10 @@ test(
         workspaceId: onlyBought.workspaceId,
         requestedBy: onlyBought.identityId,
         requestKey: randomUUID(),
-        priceId,
         reference: "valo-test-" + onlyOrderId,
-        amountKobo: 10000,
+        ...priceOrderTerms(price),
         status: "verified_success",
         providerTransactionId: String(Number.parseInt(randomUUID().replaceAll("-", "").slice(0, 12), 16)),
-        line: {
-          title: "Controlled purchase of this version only",
-          contentVersionId: held.id,
-          licenceVersion: "test-only",
-          licenceText: "No live commercial approval.",
-          taxTreatment: "No tax claim.",
-        },
       });
       await rule("yes", "synthetic-entitlement-rule-yes");
       await db.insert(valoEntitlements).values({

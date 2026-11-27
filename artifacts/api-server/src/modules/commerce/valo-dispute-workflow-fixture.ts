@@ -10,6 +10,7 @@ import {
 } from "@workspace/db";
 import { resolveWorkspace } from "../workspaces";
 import { financeHeldFixture } from "./valo-finance-test-fixture";
+import { priceOrderTerms } from "./checkout-editions";
 import { type FinanceActor } from "./valo-refunds";
 import { makeDisputeTransport } from "./valo-dispute-provider";
 import { setting } from "../../platform/settings";
@@ -40,17 +41,22 @@ export async function disputeFixture() {
   const held = await financeHeldFixture(),
     priceId = randomUUID(),
     id = randomUUID();
-  await db.insert(valoPrices).values({
-    id: priceId,
-    contentVersionId: held.id,
-    title: "CONTROLLED DISPUTE — NOT FOR SALE",
-    amountKobo: 10000,
-    licenceVersion: "test-only",
-    licenceText: "Synthetic fixture only.",
-    taxTreatment: "No tax assertion",
-    approvalReference: "NOT_APPROVAL",
-    effectiveFrom: new Date(),
-  });
+  const price = singleRow(
+    await db
+      .insert(valoPrices)
+      .values({
+        id: priceId,
+        contentVersionId: held.id,
+        title: "CONTROLLED DISPUTE — NOT FOR SALE",
+        amountKobo: 10000,
+        licenceVersion: "test-only",
+        licenceText: "Synthetic fixture only.",
+        taxTreatment: "No tax assertion",
+        approvalReference: "NOT_APPROVAL",
+        effectiveFrom: new Date(),
+      })
+      .returning(),
+  );
   const transactionId = String(Number.parseInt(randomUUID().replaceAll("-", "").slice(0, 12), 16)),
     providerId = String(Number.parseInt(randomUUID().replaceAll("-", "").slice(0, 12), 16));
   const order = singleRow(
@@ -61,18 +67,11 @@ export async function disputeFixture() {
         workspaceId: owner.workspaceId,
         requestedBy: owner.identityId,
         requestKey: randomUUID(),
-        priceId,
         reference: `valo-test-${id}`,
         providerTransactionId: transactionId,
-        amountKobo: 10000,
+        // Made with its price's own amount and line, as the application makes an order.
+        ...priceOrderTerms(price),
         status: "verified_success",
-        line: {
-          title: "Controlled dispute order",
-          contentVersionId: held.id,
-          licenceVersion: "test-only",
-          licenceText: "Synthetic fixture",
-          taxTreatment: "No tax assertion",
-        },
       })
       .returning(),
   );

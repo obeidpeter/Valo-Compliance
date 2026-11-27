@@ -467,6 +467,7 @@ test(
     const { resolveWorkspace, saveProfile } = await import("../modules/workspaces");
     const { syntheticDocument, syntheticProfile } = await import("../lib/valo-test-fixtures");
     const { financeHeldFixture } = await import("../modules/commerce/valo-finance-test-fixture");
+    const { priceOrderTerms } = await import("../modules/commerce/checkout-editions");
     const { createPrivacyCase } = await import("../modules/privacy/valo-privacy");
 
     const server = app.listen(0, "127.0.0.1");
@@ -560,34 +561,31 @@ test(
       const held = await financeHeldFixture(),
         priceId = randomUUID(),
         orderId = randomUUID();
-      await db.insert(valoPrices).values({
-        id: priceId,
-        contentVersionId: held.id,
-        title: "CONTROLLED SUBSTITUTION FIXTURE — NOT RELEASED",
-        amountKobo: 10000,
-        licenceVersion: "test-only",
-        licenceText: "No live commercial approval.",
-        taxTreatment: "No tax claim.",
-        approvalReference: "CONTROLLED_FIXTURE_NOT_APPROVAL",
-        effectiveFrom: new Date(),
-      });
+      const [price] = await db
+        .insert(valoPrices)
+        .values({
+          id: priceId,
+          contentVersionId: held.id,
+          title: "CONTROLLED SUBSTITUTION FIXTURE — NOT RELEASED",
+          amountKobo: 10000,
+          licenceVersion: "test-only",
+          licenceText: "No live commercial approval.",
+          taxTreatment: "No tax claim.",
+          approvalReference: "CONTROLLED_FIXTURE_NOT_APPROVAL",
+          effectiveFrom: new Date(),
+        })
+        .returning();
+      assert.ok(price);
+      // The order is made with its price's own amount and line, as the application makes one.
       await db.insert(valoOrders).values({
         id: orderId,
         workspaceId: ownerActor.workspaceId,
         requestedBy: owner,
         requestKey: randomUUID(),
-        priceId,
         reference: "valo-test-" + orderId,
-        amountKobo: 10000,
+        ...priceOrderTerms(price),
         status: "verified_success",
         providerTransactionId: String(Number.parseInt(randomUUID().replaceAll("-", "").slice(0, 12), 16)),
-        line: {
-          title: "Controlled purchase",
-          contentVersionId: held.id,
-          licenceVersion: "test-only",
-          licenceText: "No live commercial approval.",
-          taxTreatment: "No tax claim.",
-        },
       });
       const createdConcern = await call(owner, "POST", `/workspace/orders/${orderId}/concerns`, {
         requestKey: randomUUID(),

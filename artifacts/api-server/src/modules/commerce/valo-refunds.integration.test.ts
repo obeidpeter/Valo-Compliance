@@ -33,6 +33,8 @@ import { assertRefundMatch, refundBalance, type RefundProvider } from "./valo-re
 import { storeVerifiedDispute } from "./valo-payment-disputes";
 import { purchases } from "./valo-commerce";
 import { financeHeldFixture } from "./valo-finance-test-fixture";
+import { priceOrderTerms } from "./checkout-editions";
+import { singleRow } from "../../platform/rows";
 import { quotaSubjectHash } from "../../lib/valo-quota";
 
 test(
@@ -56,17 +58,23 @@ test(
       priceId = randomUUID(),
       ids = [a.workspaceId, b.workspaceId];
     const held = await financeHeldFixture();
-    await db.insert(valoPrices).values({
-      id: priceId,
-      contentVersionId: held.id,
-      title: "CONTROLLED REFUND TEST — NOT RELEASED",
-      amountKobo: 10000,
-      licenceVersion: "synthetic-only",
-      licenceText: "No sales approval.",
-      taxTreatment: "No tax assertion.",
-      approvalReference: "CONTROLLED_FIXTURE_NOT_APPROVAL",
-      effectiveFrom: new Date(),
-    });
+    // The price says what each order's line said before: an order is made with its price's own line.
+    const price = singleRow(
+      await db
+        .insert(valoPrices)
+        .values({
+          id: priceId,
+          contentVersionId: held.id,
+          title: "Controlled order",
+          amountKobo: 10000,
+          licenceVersion: "synthetic-only",
+          licenceText: "Not approved commercial terms.",
+          taxTreatment: "No tax assertion.",
+          approvalReference: "CONTROLLED_FIXTURE_NOT_APPROVAL",
+          effectiveFrom: new Date(),
+        })
+        .returning(),
+    );
     await db.insert(valoStaffAssignments).values({
       id: role,
       identityId: staff.identityId,
@@ -122,19 +130,11 @@ test(
         id,
         workspaceId: actor.workspaceId,
         requestedBy: actor.identityId,
-        priceId,
         reference: `valo-test-${id}`,
         requestKey: randomUUID(),
-        amountKobo: 10000,
+        ...priceOrderTerms(price),
         status: "verified_success",
         providerTransactionId: String(++idCounter),
-        line: {
-          title: "Controlled order",
-          contentVersionId: held.id,
-          licenceVersion: "synthetic-only",
-          licenceText: "Not approved commercial terms.",
-          taxTreatment: "No tax assertion.",
-        },
       });
       await db
         .insert(valoEntitlements)
