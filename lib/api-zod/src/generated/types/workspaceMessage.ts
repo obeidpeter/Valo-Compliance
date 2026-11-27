@@ -18,6 +18,8 @@ export interface WorkspaceMessage {
   orderReference: string | null;
   /** @nullable */
   refundReference: string | null;
+  /** @nullable */
+  noticesDay: string | null;
   forYou: boolean;
   status: WorkspaceMessageStatus;
   /** @nullable */

@@ -531,6 +531,7 @@ const answers: Record<string, unknown> = {
       orderId: "00000000-0000-4000-8000-00000000a101",
       orderReference: "ORD-SYNTH-1",
       refundReference: null,
+      noticesDay: null,
       forYou: true,
       status: "held",
       reason: "SENDER_NOT_CONFIGURED",
@@ -4864,6 +4865,7 @@ test("the messages screen says in plain words what has happened to each message 
     orderId: "00000000-0000-4000-8000-00000000a101",
     orderReference: "ORD-SYNTH-1",
     refundReference: null,
+    noticesDay: null,
     forYou: true,
     status: "queued",
     reason: null,
@@ -4931,6 +4933,19 @@ test("the messages screen says in plain words what has happened to each message 
     reported(7, 18, "delivered"),
     reported(8, 17, "bounced"),
     reported(9, 16, "undelivered"),
+    // A day's notices of changes that affect the workspace, which Valo only recorded the morning after.
+    message(10, {
+      id: "00000000-0000-4000-8000-00000000d2a0",
+      kind: "notices_digest",
+      orderId: null,
+      orderReference: null,
+      noticesDay: "2026-11-14",
+      status: "recorded",
+      attempts: 1,
+      createdAt: at(15),
+      lastAttemptAt: at(15),
+      acceptedAt: at(15),
+    }),
   ]);
   const reminders = api.ListRemindersResponse.parse(answers["GET /workspace/reminders"]);
   const row = (page: Page, n: number) => page.getByTestId(`row-message-${records[n - 1]!.id}`);
@@ -4943,16 +4958,28 @@ test("the messages screen says in plain words what has happened to each message 
       await ready(page);
       await expect(page.getByRole("heading", { level: 1 })).toHaveText("Messages from Valo");
       await expect(page.getByTestId("text-messages-intro")).toHaveText(
-        "Each message Valo owes this workspace about a purchase or a refund, and each reminder about a task, with what has happened to it. " +
+        "Each message Valo owes this workspace about a purchase, a refund or a change that affects it, and each reminder about a task, with what has happened to it. " +
           "A message is shown as delivered only when the email service reports that it was. Until then, the most Valo knows is that an email service accepted it.",
       );
       // Newest first, the reminder among the messages.
       const rows = page.getByTestId("list-messages").locator("> li");
-      await expect(rows).toHaveCount(10);
+      await expect(rows).toHaveCount(11);
       assert.deepEqual(
         await rows.evaluateAll((items) => items.map((item) => item.getAttribute("data-testid"))),
         [`row-reminder-${reminders[0]!.id}`, ...records.map((record) => `row-message-${record.id}`)],
       );
+      // A day's notices: headed by the day they are about, with where the notices themselves are.
+      await expect(row(page, 10).locator("p").first()).toHaveText(
+        "Changes on 14 Nov 2026 that affect your workspace",
+      );
+      await expect(row(page, 10)).toContainText("15 Nov 2026, 10:00 · For you");
+      await expect(row(page, 10).locator(".pill")).toHaveText("Not emailed");
+      await expect(row(page, 10)).toContainText("The notices themselves are on your Workspace page.");
+      await expect(row(page, 10).getByRole("link", { name: "Go to Workspace" })).toHaveAttribute(
+        "href",
+        "/workspace",
+      );
+      await expect(row(page, 10).getByRole("link", { name: "Go to Purchases" })).toHaveCount(0);
 
       // Waiting because nothing is emailed yet. The receipt itself is where it always is.
       await expect(row(page, 1)).toContainText("Receipt for order ORD-SYNTH-1");
@@ -5060,7 +5087,7 @@ test("the messages screen says in plain words what has happened to each message 
   );
   try {
     await ready(page);
-    assert.deepEqual(await phoneProblems(page, "the messages, with ten in the log"), []);
+    assert.deepEqual(await phoneProblems(page, "the messages, with eleven in the log"), []);
     assert.deepEqual(errors, []);
     assert.deepEqual(unknown, []);
   } finally {

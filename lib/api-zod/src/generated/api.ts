@@ -6304,10 +6304,11 @@ export const listWorkspaceMessagesResponseAttemptsMin = 0;
 
 export const ListWorkspaceMessagesResponseItem = zod.object({
   "id": zod.uuid(),
-  "kind": zod.enum(['purchase_receipt', 'refund_processed']),
+  "kind": zod.enum(['purchase_receipt', 'refund_processed', 'notices_digest']),
   "orderId": zod.string().nullable(),
   "orderReference": zod.string().nullable(),
   "refundReference": zod.string().nullable(),
+  "noticesDay": zod.string().nullable(),
   "forYou": zod.boolean(),
   "status": zod.enum(['queued', 'sending', 'held', 'accepted', 'recorded', 'failed', 'cancelled']),
   "reason": zod.string().nullable(),

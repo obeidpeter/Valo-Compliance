@@ -52,14 +52,16 @@ schemas:
       state: { type: string, enum: ["off"] }
   WorkspaceMessage:
     type: object
-    required: [id, kind, orderId, orderReference, refundReference, forYou, status, reason, attempts, createdAt, lastAttemptAt, nextAttemptAt, acceptedAt, delivery, deliveryAt]
+    required: [id, kind, orderId, orderReference, refundReference, noticesDay, forYou, status, reason, attempts, createdAt, lastAttemptAt, nextAttemptAt, acceptedAt, delivery, deliveryAt]
     properties:
       id: { type: string, format: uuid }
-      kind: { type: string, enum: [purchase_receipt, refund_processed] }
+      kind: { type: string, enum: [purchase_receipt, refund_processed, notices_digest] }
       # The order the message is about: a receipt's own, or a refund notice's refund's.
       orderId: { type: [string, "null"] }
       orderReference: { type: [string, "null"] }
       refundReference: { type: [string, "null"] }
+      # The Lagos day whose notices a notices message is about, as YYYY-MM-DD. Null for any other kind.
+      noticesDay: { type: [string, "null"] }
       # Whether the message is for the member asking, or for another member of the workspace.
       forYou: { type: boolean }
       # accepted: an email service took the message; nothing shows it reached an inbox.

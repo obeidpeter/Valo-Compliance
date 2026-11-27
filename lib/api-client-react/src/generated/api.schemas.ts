@@ -3939,6 +3939,7 @@ export type WorkspaceMessageKind = typeof WorkspaceMessageKind[keyof typeof Work
 export const WorkspaceMessageKind = {
   purchase_receipt: 'purchase_receipt',
   refund_processed: 'refund_processed',
+  notices_digest: 'notices_digest',
 } as const;
 
 export type WorkspaceMessageStatus = typeof WorkspaceMessageStatus[keyof typeof WorkspaceMessageStatus];
@@ -3963,6 +3964,8 @@ export interface WorkspaceMessage {
   orderReference: string | null;
   /** @nullable */
   refundReference: string | null;
+  /** @nullable */
+  noticesDay: string | null;
   forYou: boolean;
   status: WorkspaceMessageStatus;
   /** @nullable */

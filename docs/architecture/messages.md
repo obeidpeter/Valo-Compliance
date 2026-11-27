@@ -477,6 +477,30 @@ carries its test-mode line.
   well as the notice showing there.
 - **One a day.** Several notices on one day are sent as one message.
 
+**The words**, for the owner to review before the first real send (the owner's point 3). A test keeps
+this page's copy the same as the code's. For a day on which two requirements changed, a template was
+withdrawn and two saved items used a source that was held:
+
+```text
+Subject: Changes on 18 Nov 2026 that affect your Valo workspace
+
+On 18 Nov 2026 Valo recorded changes that affect what you saved, made or bought in your workspace.
+
+Requirements Valo checks:
+- Replaced by a later version: File the company's annual return
+- Withdrawn: Register a food product
+
+Templates:
+- Withdrawn: Employment contract pack
+
+Saved items to review:
+- 2 of your tasks, saved results, documents or purchases used a source or a version that is now held or withdrawn. What you saved and the files you made are unchanged.
+
+Each change, and what it affects, is on your workspace page: https://valo.example/workspace
+
+You receive this message because these changes affect what you saved, made or bought in Valo. It is a necessary message about your account, so it has no unsubscribe link.
+```
+
 ## What does not change
 
 - **No real message leaves Valo** but the development test address until the owner approves a provider

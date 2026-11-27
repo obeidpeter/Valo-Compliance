@@ -205,23 +205,29 @@ export const processingInventory: readonly ProcessingActivity[] = [
     id: "messages",
     title: "Messages about your account",
     purpose:
-      "To email you what you need to know about your account, such as the receipt for a purchase and a refund the payment provider processed.",
+      "To email you what you need to know about your account, such as the receipt for a purchase, a refund the payment provider processed, and a change that affects what you saved, made or bought.",
     basis: "contract",
     basisReason:
-      "Needed to give you what you bought and to tell you what happened to it. These messages carry no marketing.",
+      "Needed to give you what you bought, to tell you what happened to it, and to tell you when something you rely on in Valo was corrected, replaced or withdrawn. These messages carry no marketing.",
     data: [
-      "which message Valo owes you, and the order or refund it is about",
+      "which message Valo owes you, and the order, refund or day's changes it is about",
       "whether it is waiting, was taken for sending, or why it stopped",
       "what the email service reported about a message it took: that it was delivered, delayed, sent back or marked as spam",
       "a keyed checksum of an email address, where its email service sent an email back for good or an email to it was marked as spam, so that Valo stops sending optional emails to that address; the address itself is not kept with it",
     ],
-    subjects: ["buyers"],
+    subjects: ["account holders"],
     staff: null,
     services: ["Replit"],
     retention:
       "Kept while your account is open. A verified deletion request removes them. The email service's own report is kept for 30 days after Valo records what it said. An address's checksum is kept for 180 days after the last report about it; a deletion request does not remove it, because it is about the address and names no account. These messages are not yet sent to real addresses.",
     consent: null,
-    tables: ["valo_messages", "valo_message_deliveries", "valo_email_events", "valo_email_suppressions"],
+    tables: [
+      "valo_messages",
+      "valo_message_deliveries",
+      "valo_email_events",
+      "valo_email_suppressions",
+      "valo_notice_digests",
+    ],
   },
   {
     id: "ai_drafting",

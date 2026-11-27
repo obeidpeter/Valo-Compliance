@@ -5,11 +5,13 @@ import type {
   WorkspaceMessageStatus,
 } from "@workspace/api-client-react";
 import { deliveryNeedsHelp, deliveryWords } from "./delivery-words";
+import { formatDay } from "./format";
 
 /** What each kind of message is called. */
 export const MESSAGE_KIND: Record<WorkspaceMessageKind, string> = {
   purchase_receipt: "Receipt",
   refund_processed: "Refund notice",
+  notices_digest: "Changes that affect your workspace",
 };
 
 /**
@@ -55,6 +57,7 @@ const REASONS: Record<string, string> = {
   RECIPIENT_NOT_A_MEMBER: "The person this message was for is no longer a member of this workspace.",
   PURCHASE_MESSAGE_HELD: "Valo is not sending messages about this purchase.",
   RECORD_NOT_FOUND: "The record this message was about is no longer in this workspace.",
+  NOTICES_NOT_FOUND: "The changes this message was about are no longer in this workspace.",
 };
 
 /** The reasons the customer cannot clear alone: the screen offers the way to report a problem. */
@@ -84,14 +87,21 @@ export function messageNeedsHelp(message: Told) {
   return deliveryNeedsHelp(message) || (message.reason !== null && NEEDS_HELP.has(message.reason));
 }
 
-/** What a message is about, as its row's heading. */
-export function messageSubject(message: Pick<WorkspaceMessage, "kind" | "orderReference">) {
+/** What a message is about, as its row's heading. A day's notices are headed by their day. */
+export function messageSubject(
+  message: Pick<WorkspaceMessage, "kind" | "orderReference"> & { noticesDay?: string | null | undefined },
+) {
   const kind = MESSAGE_KIND[message.kind] ?? "Message";
+  if (message.kind === "notices_digest")
+    return message.noticesDay
+      ? `Changes on ${formatDay(message.noticesDay)} that affect your workspace`
+      : kind;
   return message.orderReference ? `${kind} for order ${message.orderReference}` : kind;
 }
 
 /** Where the record itself is, whatever became of its message. */
 export function recordStays({ kind }: Pick<WorkspaceMessage, "kind">) {
+  if (kind === "notices_digest") return "The notices themselves are on your Workspace page.";
   return kind === "refund_processed"
     ? "The refund itself is on your Purchases page."
     : "The receipt itself is on your Purchases page.";

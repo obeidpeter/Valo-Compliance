@@ -16,9 +16,10 @@ import { sha256 } from "@workspace/valo-core";
 import { trustedSiteOrigin } from "../../lib/valo-site-origin";
 import { environment } from "../../platform/settings";
 import { configuredMessageSender, type MessageSender } from "./message-sender";
-import { receiptMessage, refundMessage, type ComposedMessage } from "./message-text";
+import { noticesMessage, receiptMessage, refundMessage, type ComposedMessage } from "./message-text";
 import { MESSAGE_ATTEMPT_LIMIT, messageRetryAt } from "./message-policy";
 import { messagesReady } from "./valo-messages";
+import { dayNotices } from "./valo-notice-digests";
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
@@ -43,7 +44,7 @@ const providerKey = (id: string) => `valo-message-v1-${sha256(id)}`;
  * Everything that could stop a message now, read in the transaction that claims it, just before it is sent
  * (docs/architecture/messages.md, part 1): the pause, an erased workspace, a recipient who is no longer a
  * member, and a record that no longer owes the message. A message that may go is composed from its record as
- * the record is now.
+ * the record is now: an order, a refund, or a day's notices (part 7).
  */
 async function check(tx: Tx, row: ValoMessage, origin: string | null): Promise<Stop | ComposedMessage> {
   const [pause] = await tx
@@ -67,6 +68,14 @@ async function check(tx: Tx, row: ValoMessage, origin: string | null): Promise<S
       ),
     );
   if (member?.active !== "yes") return { status: "cancelled", reason: "RECIPIENT_NOT_A_MEMBER" };
+  if (row.kind === "notices_digest") {
+    // The day's notices as they are now: the message names what is still there to open in the app.
+    const notices = await dayNotices(tx, row.workspaceId, row.subjectId);
+    if (!notices) return { status: "cancelled", reason: "RECORD_NOT_FOUND" };
+    if (!notices.rules.length && !notices.templates.length && !notices.corrections)
+      return { status: "cancelled", reason: "NOTICES_NOT_FOUND" };
+    return noticesMessage(notices, origin);
+  }
   if (row.kind === "purchase_receipt") {
     const [order] = await tx
       .select()

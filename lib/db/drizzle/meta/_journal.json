@@ -806,6 +806,20 @@
       "when": 1795741084363,
       "tag": "20261127005804_email_suppression_check",
       "breakpoints": true
+    },
+    {
+      "idx": 115,
+      "version": "7",
+      "when": 1795750259790,
+      "tag": "20261127033059_notice_digests",
+      "breakpoints": true
+    },
+    {
+      "idx": 116,
+      "version": "7",
+      "when": 1795750274727,
+      "tag": "20261127033114_notice_digest_grants",
+      "breakpoints": true
     }
   ]
 }

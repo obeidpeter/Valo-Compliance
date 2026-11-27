@@ -254,6 +254,10 @@ const PRIVATE_TABLES: Record<string, { cases: readonly string[] } | { reason: st
     reason:
       "Messages the server queues when an order settles or a refund is processed, and the worker sends; no customer request names one, and the workspace's list of them takes no identifier.",
   },
+  valo_notice_digests: {
+    reason:
+      "The days whose notices owe a workspace a message, which the worker records; no customer request names one, and the workspace's list of messages, which shows a day, takes no identifier. valo-notice-digests.integration.test.ts proves another workspace's is neither read nor written.",
+  },
   valo_orders: {
     cases: [
       "POST /workspace/orders/{id}/checkout",

@@ -124,6 +124,7 @@ test(
             "kind",
             "lastAttemptAt",
             "nextAttemptAt",
+            "noticesDay",
             "orderId",
             "orderReference",
             "reason",

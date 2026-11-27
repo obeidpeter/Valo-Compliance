@@ -31,6 +31,7 @@ import {
   valoConsentChanges,
   valoMessages,
   valoMessageDeliveries,
+  valoNoticeDigests,
 } from "@workspace/db";
 import { eq, inArray, sql } from "drizzle-orm";
 import { guardRefusal } from "../../platform/http-errors";
@@ -138,6 +139,12 @@ test(
           recordId: randomUUID(),
           delivery: "delivered",
           reportedAt: new Date(),
+        });
+        // A day whose notices owed each workspace a message (slice 5): a day that has ended.
+        await db.insert(valoNoticeDigests).values({
+          id: randomUUID(),
+          workspaceId: workspace.workspaceId,
+          day: new Date(Date.now() - 3 * 86400000).toISOString().slice(0, 10),
         });
       }
       await db.insert(valoSavedTemplates).values(
@@ -486,6 +493,7 @@ test(
             valoConsentChanges,
             valoMessages,
             valoMessageDeliveries,
+            valoNoticeDigests,
           ])
             assert.equal(
               (await db.select().from(table).where(eq(table.workspaceId, a.workspaceId))).length,
@@ -497,6 +505,7 @@ test(
             valoConsentChanges,
             valoMessages,
             valoMessageDeliveries,
+            valoNoticeDigests,
           ])
             assert.equal(
               (await db.select().from(table).where(eq(table.workspaceId, b.workspaceId))).length,
@@ -848,6 +857,7 @@ test(
         valoConsentChanges,
         valoMessages,
         valoMessageDeliveries,
+        valoNoticeDigests,
         valoMemberships,
       ])
         await db.delete(table).where(inArray(table.workspaceId, ids));

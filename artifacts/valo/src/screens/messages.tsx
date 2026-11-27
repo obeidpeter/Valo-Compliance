@@ -95,9 +95,10 @@ export default function MessagesPage() {
         <p className="eyebrow">Account</p>
         <h1 className="font-display mt-2 text-4xl">Messages from Valo</h1>
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground" data-testid="text-messages-intro">
-          Each message Valo owes this workspace about a purchase or a refund, and each reminder about a task,
-          with what has happened to it. A message is shown as delivered only when the email service reports
-          that it was. Until then, the most Valo knows is that an email service accepted it.
+          Each message Valo owes this workspace about a purchase, a refund or a change that affects it, and
+          each reminder about a task, with what has happened to it. A message is shown as delivered only when
+          the email service reports that it was. Until then, the most Valo knows is that an email service
+          accepted it.
         </p>
       </header>
       <section aria-labelledby="messages-h">
@@ -131,8 +132,8 @@ export default function MessagesPage() {
               </Link>
             }
           >
-            A message appears here when Valo owes you one about a purchase or a refund, or when a reminder is
-            planned for a task.
+            A message appears here when Valo owes you one about a purchase, a refund or a change that affects
+            this workspace, or when a reminder is planned for a task.
           </EmptyState>
         ) : (
           <ul className="surface divide-y divide-border overflow-hidden" data-testid="list-messages">
@@ -181,9 +182,15 @@ function MessageRow({ message }: { message: WorkspaceMessage }) {
         <Reported entry={message} />
         <p className="mt-1 text-xs text-muted-foreground">
           {recordStays(message)}{" "}
-          <Link href="/workspace/purchases" className={LINK}>
-            Go to Purchases
-          </Link>
+          {message.kind === "notices_digest" ? (
+            <Link href="/workspace" className={LINK}>
+              Go to Workspace
+            </Link>
+          ) : (
+            <Link href="/workspace/purchases" className={LINK}>
+              Go to Purchases
+            </Link>
+          )}
         </p>
         {messageNeedsHelp(message) && (
           <Link

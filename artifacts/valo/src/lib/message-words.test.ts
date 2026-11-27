@@ -26,6 +26,7 @@ const RECORDED = [
   "ORDER_NOT_VERIFIED",
   "REFUND_NOT_PROCESSED",
   "PURCHASE_MESSAGE_HELD",
+  "NOTICES_NOT_FOUND",
 ];
 /** Words of the system's own, which a customer is not asked to know. */
 const SYSTEM_WORDS =
@@ -124,4 +125,27 @@ test("a message is named by what it is and the order it is about, and its record
   assert.equal(messageSubject({ kind: "purchase_receipt", orderReference: null }), "Receipt");
   assert.equal(recordStays({ kind: "purchase_receipt" }), "The receipt itself is on your Purchases page.");
   assert.equal(recordStays({ kind: "refund_processed" }), "The refund itself is on your Purchases page.");
+});
+
+test("a message about a day's changes is named by its day, written as the site writes a date, and its notices are said to stay on the Workspace page", () => {
+  assert.equal(MESSAGE_KIND.notices_digest, "Changes that affect your workspace");
+  assert.equal(
+    messageSubject({ kind: "notices_digest", orderReference: null, noticesDay: "2026-11-18" }),
+    "Changes on 18 Nov 2026 that affect your workspace",
+  );
+  // A day the workspace no longer holds is not named, and an order's message is never headed by a day.
+  assert.equal(
+    messageSubject({ kind: "notices_digest", orderReference: null, noticesDay: null }),
+    "Changes that affect your workspace",
+  );
+  assert.equal(messageSubject({ kind: "notices_digest", orderReference: null }), MESSAGE_KIND.notices_digest);
+  assert.equal(
+    messageSubject({ kind: "purchase_receipt", orderReference: "valo-test-1", noticesDay: "2026-11-18" }),
+    "Receipt for order valo-test-1",
+  );
+  assert.equal(recordStays({ kind: "notices_digest" }), "The notices themselves are on your Workspace page.");
+  assert.equal(
+    messageMeaning({ status: "cancelled", reason: "NOTICES_NOT_FOUND" }),
+    "The changes this message was about are no longer in this workspace.",
+  );
 });
