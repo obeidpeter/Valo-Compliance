@@ -170,6 +170,15 @@ export async function paystackRequest(
   body?: unknown,
   method: "GET" | "POST" | "PUT" = body ? "POST" : "GET",
 ): Promise<unknown> {
+  return (await paystackAnswer(path, body, method)).data;
+}
+/** Paystack's whole answer to one request, once it is known to have succeeded: its `data`, and whatever
+ * else it carries beside it, such as the `meta` of a list. Every Paystack request goes through here. */
+export async function paystackAnswer(
+  path: string,
+  body?: unknown,
+  method: "GET" | "POST" | "PUT" = body ? "POST" : "GET",
+): Promise<{ status: true; data?: unknown; meta?: unknown }> {
   assertRecoveryEffectsAllowed();
   const key = testSecret();
   let response: Response;
@@ -189,9 +198,9 @@ export async function paystackRequest(
   }
   if (!response.ok)
     throw new ValoProblem(503, "Paystack could not complete this request. No successful payment is assumed.");
-  const result = (await response.json()) as { status?: unknown; data?: unknown };
+  const result = (await response.json()) as { status?: unknown; data?: unknown; meta?: unknown };
   if (result.status !== true) throw new ValoProblem(503, "Paystack has not confirmed this request.");
-  return result.data;
+  return { status: true, data: result.data, meta: result.meta };
 }
 export const paystack = {
   async verify(reference: string) {
