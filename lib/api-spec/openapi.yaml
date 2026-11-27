@@ -552,6 +552,41 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/RefundRecord" }
+  /admin/payment-checks:
+    get:
+      operationId: getFinancePaymentChecks
+      tags: [admin]
+      summary: The daily payment checks' differences nobody has settled, and the latest settled (PAY-007)
+      description: >-
+        Each order whose latest finished daily check found a difference that no settlement covers, and
+        the latest settlements with what finance found and why (docs/architecture/reconciliation.md,
+        slice 2). An active finance role and a fresh second factor are required.
+      responses:
+        "200":
+          description: The differences and the latest settlements. Nothing here is Paystack's own record.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FinancePaymentChecks" }
+  /admin/payment-checks/{id}/settlement:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      operationId: settleFinancePaymentCheck
+      tags: [admin]
+      summary: Finance records what it found about a difference a daily payment check found (PAY-007)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PaymentCheckSettlementInput" }
+      responses:
+        "200":
+          description: >-
+            The settled check. Nothing about the order, its payment or its grants is changed, and the
+            reason is kept in the staff access audit.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaymentCheck" }
   /admin/owner-prices:
     get:
       operationId: listOwnerPrices
@@ -3341,6 +3376,39 @@ components:
         decision: { type: string, enum: [approve, reject] }
         reason: { type: string, minLength: 10, maxLength: 1500 }
         expectedVersion: { type: integer, minimum: 1 }
+    PaymentCheck:
+      type: object
+      additionalProperties: false
+      required: [id, orderId, reference, amountKobo, currency, orderStatus, day, status, finding, attempts, outcome, resolvedAt, resolvedByYou, reason]
+      properties:
+        id: { type: string, format: uuid }
+        orderId: { type: string, format: uuid }
+        reference: { type: string }
+        amountKobo: { type: integer }
+        currency: { type: string }
+        orderStatus: { type: string }
+        day: { type: string, description: "The UTC date the check is for, as YYYY-MM-DD" }
+        status: { type: string, enum: [needs_review, resolved] }
+        finding: { type: string, description: "What differs: one or more names, joined with ';'" }
+        attempts: { type: integer }
+        outcome: { type: [string, "null"], enum: [explained, no_payment_stands, null] }
+        resolvedAt: { type: [string, "null"], format: date-time }
+        resolvedByYou: { type: boolean }
+        reason: { type: [string, "null"], description: "Why finance settled it, as the staff access audit keeps it" }
+    FinancePaymentChecks:
+      type: object
+      additionalProperties: false
+      required: [differences, settled]
+      properties:
+        differences: { type: array, items: { $ref: "#/components/schemas/PaymentCheck" } }
+        settled: { type: array, items: { $ref: "#/components/schemas/PaymentCheck" } }
+    PaymentCheckSettlementInput:
+      type: object
+      additionalProperties: false
+      required: [outcome, reason]
+      properties:
+        outcome: { type: string, enum: [explained, no_payment_stands] }
+        reason: { type: string, minLength: 10, maxLength: 1500 }
     RefundRecord:
       type: object
       required: [id, orderId, amountKobo, status, reference, reason, decisionReason, policyVersion, version, attempts, createdAt, checkedAt, completedAt, failure]

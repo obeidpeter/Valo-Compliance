@@ -389,6 +389,33 @@ function acceptanceRun(corpus: string) {
   });
 }
 
+/** A difference a daily payment check found for a paid order, and one for an abandoned order (PAY-007). */
+const paymentDifference = {
+  id: "00000000-0000-4000-8000-00000000c101",
+  orderId: "00000000-0000-4000-8000-00000000a102",
+  reference: "valo-test-synthetic-paid",
+  amountKobo: 250000,
+  currency: "NGN",
+  orderStatus: "verified_success",
+  day: "2026-11-24",
+  status: "needs_review" as const,
+  finding: "EVENT_MISSING;ENTITLEMENT_DIFFERENCE",
+  attempts: 0,
+  outcome: null,
+  resolvedAt: null,
+  resolvedByYou: false,
+  reason: null,
+};
+const abandonedPaymentDifference = {
+  ...paymentDifference,
+  id: "00000000-0000-4000-8000-00000000c102",
+  orderId: "00000000-0000-4000-8000-00000000a103",
+  reference: "valo-test-synthetic-abandoned",
+  amountKobo: 150000,
+  orderStatus: "abandoned",
+  finding: "NO_ANSWER",
+  attempts: 3,
+};
 const answers: Record<string, unknown> = {
   // The workspace's support requests page (WRK-001) lists the customer's own requests.
   "GET /workspace/support-cases": api.ListCustomerSupportCasesResponse.parse({
@@ -1043,6 +1070,24 @@ const answers: Record<string, unknown> = {
   [`GET /admin/payment-concerns`]: api.GetFinancePaymentConcernsResponse.parse({
     concerns: [],
     notice: "Synthetic test fixture.",
+  }),
+  // docs/architecture/reconciliation.md, slice 2: two differences the daily payment checks found, one
+  // for a paid order and one for an abandoned one, and one settled.
+  [`GET /admin/payment-checks`]: api.GetFinancePaymentChecksResponse.parse({
+    differences: [paymentDifference, abandonedPaymentDifference],
+    settled: [
+      {
+        ...paymentDifference,
+        id: "00000000-0000-4000-8000-00000000c103",
+        reference: "valo-test-synthetic-settled",
+        finding: "AMOUNT_DIFFERENCE",
+        status: "resolved",
+        outcome: "explained",
+        resolvedAt: at(20),
+        resolvedByYou: true,
+        reason: "Synthetic: Paystack's own record shows the order's amount.",
+      },
+    ],
   }),
   [`GET /admin/owner-guidance`]: api.ListOwnerGuidanceResponse.parse({
     items: [
@@ -7382,6 +7427,116 @@ test("the System area's alerts say in plain words what is active now and what ch
     const alerts = empty.page.getByRole("region", { name: "Alerts" });
     await expect(alerts).toContainText("No alert is active.");
     await expect(alerts).toContainText("No alert has been raised yet.");
+    assert.deepEqual([...new Set(empty.unknown)], []);
+    assert.deepEqual(empty.errors, []);
+  } finally {
+    await empty.close();
+  }
+});
+
+// PAY-007 (docs/architecture/reconciliation.md, slice 2): in the Finance area, a member of finance reads each
+// difference a daily payment check found in plain words, and settles one only with what they found and why.
+test("the Finance area says what each daily payment check found, settles a difference only with an outcome and a reason, and fits a phone", async () => {
+  const settlements: unknown[] = [];
+  const reason = "Synthetic: Paystack's record shows the event was sent an hour late.";
+  const finance: Api = async (route, method, path, query) => {
+    const settling = [paymentDifference, abandonedPaymentDifference].find(
+      (row) => method === "POST" && path === `/admin/payment-checks/${row.id}/settlement`,
+    );
+    if (settling) {
+      const sent = route.request().postDataJSON() as {
+        outcome: "explained" | "no_payment_stands";
+        reason: string;
+      };
+      settlements.push(sent);
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(
+          api.SettleFinancePaymentCheckResponse.parse({
+            ...settling,
+            status: "resolved",
+            outcome: sent.outcome,
+            resolvedAt: at(25),
+            resolvedByYou: true,
+            reason: sent.reason,
+          }),
+        ),
+      });
+    }
+    await answer(route, method, path, query);
+  };
+  const { page, unknown, errors, close } = await phone("/staff", finance);
+  try {
+    await ready(page);
+    await page.getByTestId("tab-staff-finance").click();
+    const checks = page.getByRole("region", { name: "Daily payment checks" });
+    const paid = checks.getByRole("article", { name: "valo-test-synthetic-paid" });
+    await expect(paid).toContainText("₦2,500.00 · Test purchase verified · Checked for 24 Nov 2026");
+    await expect(paid.getByRole("list", { name: "What differs" }).getByRole("listitem")).toHaveText([
+      "The order has been paid for more than an hour, and Paystack's event for the payment has not arrived.",
+      "The order is paid, and a template it bought is not available to the workspace, with no refund in full or dispute on record to explain it.",
+    ]);
+    // A paid order cannot be settled as having no payment.
+    await expect(paid.getByRole("radio", { name: /^No payment stands/ })).toBeDisabled();
+    await expect(paid).toContainText(
+      "Valo holds this order as paid, so it cannot be settled as having no payment.",
+    );
+    // Nothing is recorded without an outcome and a reason of ten characters or more.
+    const record = paid.getByRole("button", { name: "Record what you found" });
+    await expect(record).toBeDisabled();
+    await paid.getByRole("radio", { name: /^Explained/ }).check();
+    await expect(record).toBeDisabled();
+    await paid.getByLabel(/^Why: what you looked at/).fill("Too short");
+    await expect(record).toBeDisabled();
+    await paid.getByLabel(/^Why: what you looked at/).fill(reason);
+    await record.click();
+    await expect.poll(() => settlements).toEqual([{ outcome: "explained", reason }]);
+    // An abandoned order the provider never answered for can be settled as having no payment.
+    const abandoned = checks.getByRole("article", { name: "valo-test-synthetic-abandoned" });
+    await expect(abandoned.getByRole("list", { name: "What differs" }).getByRole("listitem")).toHaveText([
+      "Paystack gave no answer that could be used, three times, an hour apart.",
+    ]);
+    await expect(abandoned.getByRole("radio", { name: /^No payment stands/ })).toBeEnabled();
+    // The outcome sent is the one chosen.
+    const neverPaid = "Synthetic: Paystack's dashboard shows no payment for this reference.";
+    await abandoned.getByRole("radio", { name: /^No payment stands/ }).check();
+    await abandoned.getByLabel(/^Why: what you looked at/).fill(neverPaid);
+    await abandoned.getByRole("button", { name: "Record what you found" }).click();
+    await expect
+      .poll(() => settlements)
+      .toEqual([
+        { outcome: "explained", reason },
+        { outcome: "no_payment_stands", reason: neverPaid },
+      ]);
+    // The latest settled, with what was found, when, by whom and why.
+    await expect(checks.getByRole("list", { name: "Latest settled" }).getByRole("listitem")).toHaveText([
+      "valo-test-synthetic-settled: Explained, 20 Nov 2026, 10:00, by you.Synthetic: Paystack's own record shows the order's amount.",
+    ]);
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "the Finance area's daily payment checks"), []);
+    assert.deepEqual([...new Set(unknown)], []);
+    assert.deepEqual(errors, []);
+  } finally {
+    await close();
+  }
+  // With nothing found, and with the checks unreadable, each says so.
+  const quiet: Api = async (route, method, path, query) => {
+    if (method === "GET" && path === "/admin/payment-checks")
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(api.GetFinancePaymentChecksResponse.parse({ differences: [], settled: [] })),
+      });
+    await answer(route, method, path, query);
+  };
+  const empty = await phone("/staff", quiet);
+  try {
+    await ready(empty.page);
+    await empty.page.getByTestId("tab-staff-finance").click();
+    const checks = empty.page.getByRole("region", { name: "Daily payment checks" });
+    await expect(checks).toContainText("No difference is waiting to be settled.");
+    await expect(checks).toContainText("Nothing has been settled yet.");
     assert.deepEqual([...new Set(empty.unknown)], []);
     assert.deepEqual(empty.errors, []);
   } finally {

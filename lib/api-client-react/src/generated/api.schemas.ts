@@ -1673,6 +1673,72 @@ export interface RefundDecisionInput {
   expectedVersion: number;
 }
 
+export type PaymentCheckStatus = typeof PaymentCheckStatus[keyof typeof PaymentCheckStatus];
+
+
+export const PaymentCheckStatus = {
+  needs_review: 'needs_review',
+  resolved: 'resolved',
+} as const;
+
+/**
+ * @nullable
+ */
+export type PaymentCheckOutcome = typeof PaymentCheckOutcome[keyof typeof PaymentCheckOutcome] | null;
+
+
+export const PaymentCheckOutcome = {
+  explained: 'explained',
+  no_payment_stands: 'no_payment_stands',
+} as const;
+
+export interface PaymentCheck {
+  id: string;
+  orderId: string;
+  reference: string;
+  amountKobo: number;
+  currency: string;
+  orderStatus: string;
+  /** The UTC date the check is for, as YYYY-MM-DD */
+  day: string;
+  status: PaymentCheckStatus;
+  /** What differs: one or more names, joined with ';' */
+  finding: string;
+  attempts: number;
+  /** @nullable */
+  outcome: PaymentCheckOutcome;
+  /** @nullable */
+  resolvedAt: string | null;
+  resolvedByYou: boolean;
+  /**
+     * Why finance settled it, as the staff access audit keeps it
+     * @nullable
+     */
+  reason: string | null;
+}
+
+export interface FinancePaymentChecks {
+  differences: PaymentCheck[];
+  settled: PaymentCheck[];
+}
+
+export type PaymentCheckSettlementInputOutcome = typeof PaymentCheckSettlementInputOutcome[keyof typeof PaymentCheckSettlementInputOutcome];
+
+
+export const PaymentCheckSettlementInputOutcome = {
+  explained: 'explained',
+  no_payment_stands: 'no_payment_stands',
+} as const;
+
+export interface PaymentCheckSettlementInput {
+  outcome: PaymentCheckSettlementInputOutcome;
+  /**
+     * @minLength 10
+     * @maxLength 1500
+     */
+  reason: string;
+}
+
 export type DisputeInformationInputConsentVersion = typeof DisputeInformationInputConsentVersion[keyof typeof DisputeInformationInputConsentVersion];
 
 

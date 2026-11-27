@@ -37,6 +37,8 @@ import { staffOperations } from "../modules/staff";
 import { makeWorkspaceDataDownloadHandler } from "../lib/valo-data-download-http";
 import { makeWorkspaceExportRouter } from "../lib/valo-workspace-export-http";
 import {
+  financePaymentChecks,
+  settlePaymentCheck,
   financeRefunds,
   decideRefund,
   reconcileFinanceRefund,
@@ -48,6 +50,8 @@ import {
   saveDisputeInformation,
 } from "../modules/commerce";
 import {
+  GetFinancePaymentChecksResponse,
+  SettleFinancePaymentCheckResponse,
   GetFinanceRefundsResponse,
   DecideFinanceRefundResponse,
   ReconcileFinanceRefundResponse,
@@ -243,6 +247,22 @@ staffOperationsRouter.post("/admin/refunds/:id/reconcile", sameOriginMutation, a
   res.json(
     ReconcileFinanceRefundResponse.parse(
       await reconcileFinanceRefund(await financeIdentity(req), z.string().uuid().parse(req.params.id)),
+    ),
+  );
+});
+// PAY-007 (docs/architecture/reconciliation.md, slice 2): finance's view of the daily payment checks, and
+// a settlement of one difference. Nothing here changes an order, a payment or a grant.
+staffOperationsRouter.use("/admin/payment-checks", (_req, res, next) => {
+  res.set("Cache-Control", "private, no-store");
+  next();
+});
+staffOperationsRouter.get("/admin/payment-checks", async (req, res) => {
+  res.json(GetFinancePaymentChecksResponse.parse(await financePaymentChecks(await financeIdentity(req))));
+});
+staffOperationsRouter.post("/admin/payment-checks/:id/settlement", sameOriginMutation, async (req, res) => {
+  res.json(
+    SettleFinancePaymentCheckResponse.parse(
+      await settlePaymentCheck(await financeIdentity(req), z.string().uuid().parse(req.params.id), req.body),
     ),
   );
 });

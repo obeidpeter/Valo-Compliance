@@ -59,7 +59,7 @@ the provider's behaviour.
 | Slice | What | State |
 | --- | --- | --- |
 | 1 | A check says what differs, and a difference nobody has settled raises an alert | Built |
-| 2 | Finance settles a difference, with its trail | Not built |
+| 2 | Finance settles a difference, with its trail | Built |
 | 3 | The provider's side: its events that match nothing, and its own list of transactions | Not built |
 
 ## Slice 1: a check says what differs
@@ -119,29 +119,58 @@ failure", for finance and engineering. A later check of the same order that matc
 - **`RECEIPT_OUTBOX_MISSING` is not reached by a test.** Settling a paid order again records a receipt
   that is missing, before the check looks for one.
 
-## Slice 2: finance settles a difference (design)
+## Slice 2: finance settles a difference
 
-**What finance does.** In the finance area, a person with the finance role and a fresh second factor
-opens a difference, chooses an outcome and gives a reason. Nothing about the order, its amount, its
-payment or its grants is changed by this.
+**What finance sees.** The finance area of the staff console has a section of its own, "Daily payment
+checks" (`FinancePaymentChecks`, from `GET /api/admin/payment-checks`). It lists each difference nobody
+has settled: the order's reference, its amount, its status, the day it was checked for, and what was
+found, a sentence for each name the finding gives (`payment-check-words.ts`). Below it are the latest
+fifty settled, with what was found, when, by whom and why. Reading it needs the finance role and a fresh
+second factor, and is recorded in the staff access audit, as the refunds' list is.
+
+**What finance does.** For one difference, a member of finance chooses what they found and says why, in
+ten characters or more (`POST /api/admin/payment-checks/{id}/settlement`, `settlePaymentCheck`). Nothing
+about the order, its amount, its payment or its grants is changed.
 
 | Outcome | Meaning | Effect |
 | --- | --- | --- |
-| `explained` | The difference is understood and nothing in Valo needs changing | The difference is settled |
-| `no_payment_stands` | No payment stands for this order: it was never paid, or it was refunded at the provider. Only for an order Valo does not hold as paid | The difference is settled, and the order is no longer asked about before a new order for its edition |
+| `explained` | The difference is understood, and nothing in Valo needs changing | The difference is settled |
+| `no_payment_stands` | No payment stands for this order: it was never paid, or it was refunded at Paystack. Refused for an order Valo holds as paid | The difference is settled, and the second look no longer asks about the order before another order for its edition |
 
-**Where it is kept.** The row becomes `resolved`, with its outcome and the time. Who settled it, and
-why, are a row of `valo_staff_access_audit`, which the database lets nobody change or remove. A trigger
-refuses a row marked `resolved` unless that audit row was written in the same transaction, and refuses
-any change to a row once it is `matched` or `resolved`, an erasure's rewrite of the finding apart.
+**Where it is kept.** The check becomes `resolved`, with its outcome, who settled it and when
+(`outcome`, `resolved_by`, `resolved_at`, migration `20261127194336_payment_check_settlements`). Why is a
+row of `valo_staff_access_audit`, which nobody can change or remove: "Payment check <id>: <outcome>;
+<reason>".
 
-**How long it lasts.** Each day's check is a new row. A difference counts as settled while the order's
-later checks find the same finding and none has matched since. A different finding, or the same one
-after a check that matched, is a new difference.
+**The database keeps a finished check** (`valo_payment_checks_kept`, migration
+`20261127194345_payment_check_guard`). Before each change to a check:
 
-**The order the provider cannot answer for.** [Order safety](order-safety.md) leaves one case open: an
-abandoned or failed order the provider can never answer for stops new orders for its edition. Settled
-as `no_payment_stands`, it is no longer asked about there.
+| What | Rule |
+| --- | --- |
+| The order and the day it is about | Never change |
+| A waiting check | Changes only as the daily check finishes it, and is never settled |
+| A finished check | Never changes, save as below |
+| A settlement | Only of a check that needs review, once, changing only its status, outcome, who and when, with the time being its transaction's, and only where the staff access audit holds, from the same transaction, finance's row for this check by an active finance role. `no_payment_stands` is refused for an order held as paid |
+| An erasure | Rewrites a finding to `PRIVACY_ERASURE_FINANCE_REVIEW`, and nothing else |
+
+**How long a settlement lasts.** Each day's check is a new row. A difference counts as settled while
+every name its finding gives was in a finding settled before, and no check of the order has matched
+since. The alert's reading and finance's list leave a settled difference out. A finding with a name more,
+or the same finding after a check that matched, is a new difference.
+
+**The order the provider cannot answer for.** [Order safety](order-safety.md) left one case open: an
+abandoned or failed order the provider can never answer for stops new orders for its edition. Settled as
+`no_payment_stands`, the second look no longer asks about it.
+
+**What this slice does not do.**
+
+- **It does not correct anything.** A difference that needs a change in Valo, a grant restored or a
+  payment reversed, still needs engineering. Settling records what finance found; it repairs nothing.
+- **A settlement is never undone.** One made in error stays, with its reason. A later check that matches,
+  or one that finds something more, brings the difference back.
+- **Finance's reason is free text.** It is kept in the staff access audit, which an erasure does not
+  reach. The form asks for what was looked at and what it showed; it does not stop a reason that names a
+  person.
 
 ## Slice 3: the provider's side (outline)
 
@@ -157,3 +186,5 @@ as `no_payment_stands`, it is no longer asked about there.
 - **Three attempts, an hour apart, before a row reads `NO_ANSWER`.**
 - **An hour's grace before a paid order's event is called missing.**
 - **Two outcomes** finance can record, and what `no_payment_stands` does.
+- **A settlement covers a later check while its finding names nothing new**, until a check matches.
+- **Fifty settlements** are listed, the latest first, and a hundred differences.

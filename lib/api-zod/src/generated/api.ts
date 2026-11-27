@@ -2174,6 +2174,81 @@ export const ReconcileFinanceRefundResponse = zod.object({
 
 
 /**
+ * Each order whose latest finished daily check found a difference that no settlement covers, and the latest settlements with what finance found and why (docs/architecture/reconciliation.md, slice 2). An active finance role and a fresh second factor are required.
+ * @summary The daily payment checks' differences nobody has settled, and the latest settled (PAY-007)
+ */
+export const GetFinancePaymentChecksResponse = zod.object({
+  "differences": zod.array(zod.object({
+  "id": zod.uuid(),
+  "orderId": zod.uuid(),
+  "reference": zod.string(),
+  "amountKobo": zod.int(),
+  "currency": zod.string(),
+  "orderStatus": zod.string(),
+  "day": zod.string().describe('The UTC date the check is for, as YYYY-MM-DD'),
+  "status": zod.enum(['needs_review', 'resolved']),
+  "finding": zod.string().describe('What differs: one or more names, joined with \';\''),
+  "attempts": zod.int(),
+  "outcome": zod.union([zod.literal('explained'),zod.literal('no_payment_stands'),zod.literal(null)]).nullable(),
+  "resolvedAt": zod.coerce.date().nullable(),
+  "resolvedByYou": zod.boolean(),
+  "reason": zod.string().nullable().describe('Why finance settled it, as the staff access audit keeps it')
+})),
+  "settled": zod.array(zod.object({
+  "id": zod.uuid(),
+  "orderId": zod.uuid(),
+  "reference": zod.string(),
+  "amountKobo": zod.int(),
+  "currency": zod.string(),
+  "orderStatus": zod.string(),
+  "day": zod.string().describe('The UTC date the check is for, as YYYY-MM-DD'),
+  "status": zod.enum(['needs_review', 'resolved']),
+  "finding": zod.string().describe('What differs: one or more names, joined with \';\''),
+  "attempts": zod.int(),
+  "outcome": zod.union([zod.literal('explained'),zod.literal('no_payment_stands'),zod.literal(null)]).nullable(),
+  "resolvedAt": zod.coerce.date().nullable(),
+  "resolvedByYou": zod.boolean(),
+  "reason": zod.string().nullable().describe('Why finance settled it, as the staff access audit keeps it')
+}))
+})
+
+
+/**
+ * @summary Finance records what it found about a difference a daily payment check found (PAY-007)
+ */
+export const SettleFinancePaymentCheckParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const settleFinancePaymentCheckBodyReasonMin = 10;
+export const settleFinancePaymentCheckBodyReasonMax = 1500;
+
+
+
+export const SettleFinancePaymentCheckBody = zod.object({
+  "outcome": zod.enum(['explained', 'no_payment_stands']),
+  "reason": zod.string().min(settleFinancePaymentCheckBodyReasonMin).max(settleFinancePaymentCheckBodyReasonMax)
+})
+
+export const SettleFinancePaymentCheckResponse = zod.object({
+  "id": zod.uuid(),
+  "orderId": zod.uuid(),
+  "reference": zod.string(),
+  "amountKobo": zod.int(),
+  "currency": zod.string(),
+  "orderStatus": zod.string(),
+  "day": zod.string().describe('The UTC date the check is for, as YYYY-MM-DD'),
+  "status": zod.enum(['needs_review', 'resolved']),
+  "finding": zod.string().describe('What differs: one or more names, joined with \';\''),
+  "attempts": zod.int(),
+  "outcome": zod.union([zod.literal('explained'),zod.literal('no_payment_stands'),zod.literal(null)]).nullable(),
+  "resolvedAt": zod.coerce.date().nullable(),
+  "resolvedByYou": zod.boolean(),
+  "reason": zod.string().nullable().describe('Why finance settled it, as the staff access audit keeps it')
+})
+
+
+/**
  * Each published premium template from the staff library, with its open price and any price scheduled to start (docs/architecture/commercial-settings.md, slice 1). Read-only. Development only.
  * @summary The published premium templates and their prices, for the development owner (ADM-006)
  */

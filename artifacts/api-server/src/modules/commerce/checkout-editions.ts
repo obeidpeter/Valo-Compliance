@@ -152,6 +152,9 @@ export async function endedEditionOrders(tx: Tx, actor: WorkspaceActor, editions
         namesAny(editions),
         inArray(valoOrders.status, ["abandoned", "failed"]),
         or(isNotNull(valoOrders.checkoutUrl), isNotNull(valoOrders.providerTransactionId)),
+        // Finance settled that no payment stands for it (docs/architecture/reconciliation.md, slice 2).
+        sql`NOT EXISTS (SELECT 1 FROM valo_payment_reconciliations c WHERE c.order_id = ${valoOrders.id}
+          AND c.workspace_id = ${valoOrders.workspaceId} AND c.outcome = 'no_payment_stands')`,
       ),
     )
     .orderBy(desc(valoOrders.createdAt), desc(valoOrders.id))

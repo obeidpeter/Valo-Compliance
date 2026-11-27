@@ -565,6 +565,11 @@ export const valoPaymentReconciliations = pgTable(
     // the hour (docs/architecture/reconciliation.md, slice 1).
     lastAttemptAt: timestamp("last_attempt_at", { withTimezone: true }),
     finding: text("finding"),
+    // Finance's settlement of a difference the check found (docs/architecture/reconciliation.md, slice 2):
+    // what finance found, who settled it and when. Why is a row of the staff access audit.
+    outcome: text("outcome"),
+    resolvedBy: text("resolved_by"),
+    resolvedAt: timestamp("resolved_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
@@ -577,7 +582,15 @@ export const valoPaymentReconciliations = pgTable(
     check("valo_payment_reconciliations_attempts_check", sql`${t.attempts} BETWEEN 0 AND 3`),
     check(
       "valo_payment_reconciliations_status_check",
-      sql`${t.status} IN ('pending', 'matched', 'needs_review')`,
+      sql`${t.status} IN ('pending', 'matched', 'needs_review', 'resolved')`,
+    ),
+    check(
+      "valo_payment_reconciliations_outcome_check",
+      sql`${t.outcome} IS NULL OR ${t.outcome} IN ('explained', 'no_payment_stands')`,
+    ),
+    check(
+      "valo_payment_reconciliations_resolution_check",
+      sql`(${t.status} = 'resolved') = (${t.outcome} IS NOT NULL AND ${t.resolvedBy} IS NOT NULL AND ${t.resolvedAt} IS NOT NULL)`,
     ),
     workspaceRowPolicy(t.workspaceId),
   ],

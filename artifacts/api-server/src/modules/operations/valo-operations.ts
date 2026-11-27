@@ -40,11 +40,18 @@ export const readinessQueries = {
   payments: `SELECT count(*)::int AS value FROM (SELECT 1 FROM valo_orders o WHERE o.status='verified_success' AND
     (NOT EXISTS(SELECT 1 FROM valo_entitlements e WHERE e.order_id=o.id AND e.workspace_id=o.workspace_id)
     OR NOT EXISTS(SELECT 1 FROM valo_purchase_outbox r WHERE r.order_id=o.id AND r.workspace_id=o.workspace_id AND r.kind='purchase_receipt')) LIMIT 10001) bounded`,
-  // docs/architecture/reconciliation.md, slice 1 (PAY-007): the orders whose latest finished daily check
-  // found a difference. A later check of the same order that matches ends it.
+  // docs/architecture/reconciliation.md, slices 1 and 2 (PAY-007): the orders whose latest finished daily
+  // check found a difference nobody has settled. A later check of the same order that matches ends it; an
+  // earlier settlement covers it while every name its finding gives was in the finding settled, and no
+  // check has matched since. Finance's list (financePaymentChecks) holds the same rows.
   paymentDifferences: `SELECT count(*)::int AS value FROM (SELECT 1 FROM valo_payment_reconciliations r
     WHERE r.status='needs_review' AND NOT EXISTS(SELECT 1 FROM valo_payment_reconciliations n
-      WHERE n.order_id=r.order_id AND n.day>r.day AND n.status<>'pending') LIMIT 10001) bounded`,
+      WHERE n.order_id=r.order_id AND n.day>r.day AND n.status<>'pending')
+    AND NOT EXISTS(SELECT 1 FROM valo_payment_reconciliations s
+      WHERE s.order_id=r.order_id AND s.status='resolved' AND s.day<r.day
+        AND string_to_array(r.finding, ';') <@ string_to_array(s.finding, ';')
+        AND NOT EXISTS(SELECT 1 FROM valo_payment_reconciliations m
+          WHERE m.order_id=r.order_id AND m.status='matched' AND m.day>s.day AND m.day<r.day)) LIMIT 10001) bounded`,
   // docs/architecture/alerts.md, part 3: reminder emails waiting more than fifteen minutes past their time,
   // and scheduled jobs waiting more than ten minutes past their start.
   reminders: `SELECT count(*)::int AS value FROM (SELECT 1 FROM valo_reminder_outbox WHERE status='pending'

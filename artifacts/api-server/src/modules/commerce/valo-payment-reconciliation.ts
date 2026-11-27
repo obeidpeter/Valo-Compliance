@@ -9,11 +9,14 @@ import {
   valoPurchaseOutbox,
   valoRefundRequests,
 } from "@workspace/db";
+import { SettleFinancePaymentCheckBody } from "@workspace/api-zod";
+import { ValoProblem } from "../../platform/valo-problem";
 import { singleRow } from "../../platform/rows";
 import { orderEditions } from "./checkout-editions";
 import { settleVerifiedOrder } from "./valo-commerce";
 import { orderDifferences, paystack, sandboxPaymentsConfigured } from "./valo-paystack-contract";
 import { refundBalance } from "./valo-refund-provider";
+import { requireFinance, type FinanceActor } from "./valo-refunds";
 
 /** How long a waiting check is left alone after the provider gave no answer that could be used. */
 export const RECONCILIATION_RETRY_MINUTES = 60;
@@ -154,4 +157,160 @@ export async function reconcilePayments() {
           finding=case when attempts>=2 then 'NO_ANSWER' else finding end
         where id=${job.id} and status='pending'`);
   }
+}
+
+/**
+ * A check whose difference nobody has settled (docs/architecture/reconciliation.md, slice 2): its order's
+ * latest finished check, needing review, where no earlier settlement of the order covers every name its
+ * finding gives, with no check that matched since. The operations reading `paymentDifferences` counts the
+ * same rows, and a test holds the two together.
+ */
+const unsettled = sql`r.status = 'needs_review'
+  AND NOT EXISTS (SELECT 1 FROM valo_payment_reconciliations n
+    WHERE n.order_id = r.order_id AND n.day > r.day AND n.status <> 'pending')
+  AND NOT EXISTS (SELECT 1 FROM valo_payment_reconciliations s
+    WHERE s.order_id = r.order_id AND s.status = 'resolved' AND s.day < r.day
+      AND string_to_array(r.finding, ';') <@ string_to_array(s.finding, ';')
+      AND NOT EXISTS (SELECT 1 FROM valo_payment_reconciliations m
+        WHERE m.order_id = r.order_id AND m.status = 'matched' AND m.day > s.day AND m.day < r.day))`;
+type CheckRow = {
+  id: string;
+  order_id: string;
+  reference: string;
+  amount_kobo: number;
+  currency: string;
+  order_status: string;
+  day: string;
+  status: "needs_review" | "resolved";
+  finding: string;
+  attempts: number;
+  outcome: "explained" | "no_payment_stands" | null;
+  resolved_at: Date | string | null;
+  resolved_by: string | null;
+  reason: string | null;
+};
+const checkColumns = sql`r.id, r.order_id, o.reference, o.amount_kobo, o.currency, o.status AS order_status,
+  r.day, r.status, r.finding, r.attempts, r.outcome, r.resolved_at, r.resolved_by`;
+function checkView(actor: FinanceActor, row: CheckRow) {
+  return {
+    id: row.id,
+    orderId: row.order_id,
+    reference: row.reference,
+    amountKobo: Number(row.amount_kobo),
+    currency: row.currency,
+    orderStatus: row.order_status,
+    day: row.day,
+    status: row.status,
+    finding: row.finding,
+    attempts: row.attempts,
+    outcome: row.outcome,
+    resolvedAt: row.resolved_at === null ? null : new Date(row.resolved_at).toISOString(),
+    resolvedByYou: row.resolved_by === actor.identityId,
+    reason: row.reason,
+  };
+}
+const SETTLEMENT_REASON = /^Payment check [0-9a-f-]{36}: (?:explained|no_payment_stands); /;
+
+/** Finance's view of the daily checks: the differences nobody has settled, and the latest settlements with
+ * what finance found and why (PAY-007). */
+export async function financePaymentChecks(actor: FinanceActor) {
+  return db.transaction(async (tx) => {
+    await requireFinance(
+      tx,
+      actor,
+      "Read the daily payment checks' differences and settlements; no private document bodies.",
+      "payment_checks",
+    );
+    const differences = await tx.execute<CheckRow>(sql`SELECT ${checkColumns}, NULL::text AS reason
+      FROM valo_payment_reconciliations r
+      JOIN valo_orders o ON o.id = r.order_id AND o.workspace_id = r.workspace_id
+      WHERE ${unsettled} ORDER BY r.day DESC, r.id LIMIT 100`);
+    const settled = await tx.execute<CheckRow>(sql`SELECT ${checkColumns},
+        (SELECT a.reason FROM valo_staff_access_audit a WHERE a.object = 'payment_check:' || r.id::text
+          AND a.actor_id = r.resolved_by AND a.created_at = r.resolved_at ORDER BY a.id LIMIT 1) AS reason
+      FROM valo_payment_reconciliations r
+      JOIN valo_orders o ON o.id = r.order_id AND o.workspace_id = r.workspace_id
+      WHERE r.status = 'resolved' ORDER BY r.resolved_at DESC, r.id LIMIT 50`);
+    return {
+      differences: differences.rows.map((row) => checkView(actor, row)),
+      settled: settled.rows.map((row) =>
+        checkView(actor, { ...row, reason: row.reason?.replace(SETTLEMENT_REASON, "") ?? null }),
+      ),
+    };
+  });
+}
+
+/**
+ * Finance records what it found about a difference a daily check found (docs/architecture/reconciliation.md,
+ * slice 2): `explained`, or `no_payment_stands` for an order Valo does not hold as paid. The check is marked
+ * settled, and the reason kept in the staff access audit, in one transaction. Nothing about the order, its
+ * payment or its grants is changed. The database's guard `valo_payment_checks_kept` refuses a settlement
+ * made any other way.
+ */
+export async function settlePaymentCheck(actor: FinanceActor, id: string, raw: unknown) {
+  const input = SettleFinancePaymentCheckBody.strict().parse(raw);
+  return db.transaction(async (tx) => {
+    const [link] = await tx
+      .select({
+        orderId: valoPaymentReconciliations.orderId,
+        workspaceId: valoPaymentReconciliations.workspaceId,
+      })
+      .from(valoPaymentReconciliations)
+      .where(eq(valoPaymentReconciliations.id, id));
+    if (!link) throw new ValoProblem(404, "Payment check not found.");
+    // The same order of locks as a settlement of the order: the workspace's, then the order's.
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${link.workspaceId}::text))`);
+    const order = singleRow(
+      await tx
+        .select({ status: valoOrders.status })
+        .from(valoOrders)
+        .where(and(eq(valoOrders.id, link.orderId), eq(valoOrders.workspaceId, link.workspaceId)))
+        .for("share"),
+    );
+    await requireFinance(
+      tx,
+      actor,
+      `Payment check ${id}: ${input.outcome}; ${input.reason}`,
+      `payment_check:${id}`,
+    );
+    const [open] = await tx
+      .execute<{ id: string }>(
+        sql`SELECT r.id FROM valo_payment_reconciliations r
+      WHERE r.id = ${id}::uuid AND ${unsettled} FOR UPDATE`,
+      )
+      .then((result) => result.rows);
+    if (!open)
+      throw new ValoProblem(
+        409,
+        "This check is not a difference waiting to be settled: it has been settled, a later check has been made, or it found nothing. Refresh the list.",
+      );
+    if (input.outcome === "no_payment_stands" && order.status === "verified_success")
+      throw new ValoProblem(
+        409,
+        "Valo holds this order as paid, so it cannot be settled as having no payment. Explain the difference instead, or ask engineering.",
+      );
+    const [settledRow] = await tx
+      .update(valoPaymentReconciliations)
+      .set({
+        status: "resolved",
+        outcome: input.outcome,
+        resolvedBy: actor.identityId,
+        resolvedAt: sql`now()`,
+      })
+      .where(
+        and(eq(valoPaymentReconciliations.id, id), eq(valoPaymentReconciliations.status, "needs_review")),
+      )
+      .returning({ id: valoPaymentReconciliations.id });
+    if (!settledRow)
+      throw new ValoProblem(409, "This check changed while it was being settled. Refresh the list.");
+    const [row] = await tx
+      .execute<CheckRow>(
+        sql`SELECT ${checkColumns}, ${input.reason}::text AS reason
+      FROM valo_payment_reconciliations r
+      JOIN valo_orders o ON o.id = r.order_id AND o.workspace_id = r.workspace_id
+      WHERE r.id = ${id}::uuid`,
+      )
+      .then((result) => result.rows);
+    return checkView(actor, row!);
+  });
 }

@@ -15,6 +15,8 @@ import {
   valoPaymentDisputes,
   valoMemberships,
   valoStaffAssignments,
+  valoStaffAccessAudit,
+  valoPaymentReconciliations,
   valoDocumentRevisions,
   valoDocuments,
 } from "@workspace/db";
@@ -32,6 +34,9 @@ import {
 import { assertRefundMatch, refundBalance, type RefundProvider } from "./valo-refund-provider";
 import { storeVerifiedDispute } from "./valo-payment-disputes";
 import { purchases } from "./valo-commerce";
+import { financePaymentChecks, settlePaymentCheck } from "./valo-payment-reconciliation";
+import { endedEditionOrders } from "./checkout-editions";
+import { readinessQueries } from "../operations/valo-operations";
 import { financeHeldFixture } from "./valo-finance-test-fixture";
 import { priceOrderTerms } from "./checkout-editions";
 import { singleRow } from "../../platform/rows";
@@ -826,6 +831,264 @@ test(
         assert.ok(unchanged);
         assert.equal(unchanged.reason, r.reason);
       });
+      // PAY-007: "finance can resolve a discrepancy with an audit trail and without editing financial
+      // history directly" (docs/architecture/reconciliation.md, slice 2). Each check here is made for a day
+      // of its own, so the daily check of other tests never meets one.
+      let checkDay = 0;
+      const nextDay = () => `2025-01-01`.replace(/01$/, String(++checkDay).padStart(2, "0"));
+      const check = async (order: string, status: string, finding: string | null, day = nextDay()) =>
+        singleRow(
+          await db
+            .insert(valoPaymentReconciliations)
+            .values({ id: randomUUID(), workspaceId: a.workspaceId, orderId: order, day, status, finding })
+            .returning(),
+        );
+      const differenceReading = async () =>
+        Number(
+          (await db.execute<{ value: number }>(sql.raw(readinessQueries.paymentDifferences))).rows[0]!.value,
+        );
+      const listed = async (id: string) => {
+        const view = await financePaymentChecks(staff);
+        return {
+          open: view.differences.some((row) => row.id === id),
+          settled: view.settled.find((row) => row.id === id),
+        };
+      };
+      const orderFacts = async (id: string) => {
+        const [order] = await db.select().from(valoOrders).where(eq(valoOrders.id, id));
+        const grants = await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId, id));
+        return [order, grants];
+      };
+      const reason = "Synthetic: compared the order with Paystack's own record; the event arrived late.";
+      await t.test(
+        "finance settles a difference a daily payment check found, with its reason in the staff audit, the order unchanged, and the alert's reading and finance's list then leave it out until something new is found",
+        async () => {
+          const order = await fixture();
+          const found = await check(order, "needs_review", "EVENT_MISSING;ENTITLEMENT_DIFFERENCE");
+          const before = await differenceReading(),
+            facts = await orderFacts(order);
+          assert.deepEqual(await listed(found.id), { open: true, settled: undefined });
+          const settled = await settlePaymentCheck(staff, found.id, { outcome: "explained", reason });
+          assert.deepEqual(
+            [settled.status, settled.outcome, settled.resolvedByYou, settled.reason, settled.reference],
+            ["resolved", "explained", true, reason, `valo-test-${order}`],
+          );
+          // The check records the outcome, who and when; the audit keeps why, from the same transaction.
+          const [row] = await db
+            .select()
+            .from(valoPaymentReconciliations)
+            .where(eq(valoPaymentReconciliations.id, found.id));
+          assert.deepEqual(
+            [row!.status, row!.outcome, row!.resolvedBy],
+            ["resolved", "explained", staff.identityId],
+          );
+          const audit = await db
+            .select()
+            .from(valoStaffAccessAudit)
+            .where(eq(valoStaffAccessAudit.object, `payment_check:${found.id}`));
+          assert.deepEqual(
+            audit.map((entry) => [entry.actorId, entry.area, entry.reason, entry.createdAt.getTime()]),
+            [
+              [
+                staff.identityId,
+                "finance",
+                `Payment check ${found.id}: explained; ${reason}`,
+                row!.resolvedAt!.getTime(),
+              ],
+            ],
+          );
+          // Nothing about the order, its payment or its grants changed.
+          assert.deepEqual(await orderFacts(order), facts);
+          // The alert's reading and finance's list leave it out; the list shows it settled, with its reason.
+          assert.equal(await differenceReading(), before - 1);
+          const view = await listed(found.id);
+          assert.equal(view.open, false);
+          assert.deepEqual(
+            [view.settled?.outcome, view.settled?.reason, view.settled?.resolvedByYou],
+            ["explained", reason, true],
+          );
+          // Settled once: a second settlement is refused.
+          await assert.rejects(settlePaymentCheck(staff, found.id, { outcome: "explained", reason }), {
+            status: 409,
+          });
+          // The next day's check finds part of what was settled: still settled.
+          const again = await check(order, "needs_review", "EVENT_MISSING");
+          assert.equal(await differenceReading(), before - 1);
+          assert.equal((await listed(again.id)).open, false);
+          await assert.rejects(settlePaymentCheck(staff, again.id, { outcome: "explained", reason }), {
+            status: 409,
+          });
+          // Something new: counted and listed again.
+          const more = await check(order, "needs_review", "EVENT_MISSING;RECEIPT_OUTBOX_MISSING");
+          assert.equal(await differenceReading(), before);
+          assert.equal((await listed(more.id)).open, true);
+          await settlePaymentCheck(staff, more.id, { outcome: "explained", reason });
+          // A check that matched ends what was settled: the same finding after it is a new difference.
+          await check(order, "matched", null);
+          const after = await check(order, "needs_review", "EVENT_MISSING");
+          assert.equal(await differenceReading(), before);
+          assert.equal((await listed(after.id)).open, true);
+          await settlePaymentCheck(staff, after.id, { outcome: "explained", reason });
+          assert.equal(await differenceReading(), before - 1);
+        },
+      );
+      await t.test(
+        "a payment check is settled only by finance with a fresh second factor and a reason, only while it is its order's latest unsettled difference, and an order held as paid is never settled as having no payment",
+        async () => {
+          const paid = await fixture();
+          const found = await check(paid, "needs_review", "EVENT_MISSING");
+          const settle = (actor: FinanceActor, body: unknown = { outcome: "explained", reason }) =>
+            settlePaymentCheck(actor, found.id, body);
+          // Support and content staff, and finance without a fresh second factor, are refused.
+          for (const identityId of [b.identityId, contentOnly])
+            await assert.rejects(settle({ identityId, recentMfa: true, verifiedAt: Date.now() }), {
+              status: 403,
+            });
+          await assert.rejects(settle({ ...staff, recentMfa: false }), { status: 403 });
+          await assert.rejects(settle({ ...staff, verifiedAt: Date.now() - 600_000 }), { status: 403 });
+          // A reason of fewer than ten characters, and an outcome Valo does not know, are refused.
+          await assert.rejects(settle(staff, { outcome: "explained", reason: "Too short" }));
+          await assert.rejects(settle(staff, { outcome: "refunded", reason }));
+          await assert.rejects(settle(staff, { outcome: "explained", reason, extra: true }));
+          // A check that matched, one still waiting, and one a later check has followed are not settled.
+          for (const status of ["matched", "pending"]) {
+            const other = await check(paid, status, null);
+            await assert.rejects(settlePaymentCheck(staff, other.id, { outcome: "explained", reason }), {
+              status: 409,
+            });
+          }
+          const settledRows = async () =>
+            (
+              await db
+                .select()
+                .from(valoPaymentReconciliations)
+                .where(eq(valoPaymentReconciliations.orderId, paid))
+            ).filter((row) => row.status === "resolved").length;
+          await assert.rejects(settle(staff), { status: 409 });
+          assert.equal(await settledRows(), 0);
+          // An order held as paid is not settled as having no payment, by the service or by the database.
+          const latest = await check(paid, "needs_review", "EVENT_MISSING");
+          await assert.rejects(
+            settlePaymentCheck(staff, latest.id, { outcome: "no_payment_stands", reason }),
+            { status: 409, message: /holds this order as paid/ },
+          );
+          // An abandoned order the provider was offered: settled as having no payment, the second look no
+          // longer asks about it before a new order for its edition.
+          const abandoned = await fixture();
+          await db.update(valoOrders).set({ status: "abandoned" }).where(eq(valoOrders.id, abandoned));
+          const look = () => db.transaction((tx) => endedEditionOrders(tx, a, [price.contentVersionId]));
+          assert.ok((await look()).includes(abandoned));
+          const unanswered = await check(abandoned, "needs_review", "NO_ANSWER");
+          await settlePaymentCheck(staff, unanswered.id, { outcome: "no_payment_stands", reason });
+          assert.equal((await look()).includes(abandoned), false);
+          assert.deepEqual(
+            (await db.select().from(valoOrders).where(eq(valoOrders.id, abandoned))).map((row) => row.status),
+            ["abandoned"],
+          );
+        },
+      );
+      await t.test(
+        "the database keeps a finished payment check: a settlement needs finance's reason recorded in the same transaction, once, and nothing else changes but an erasure's finding",
+        async () => {
+          const order = await fixture();
+          const refused = (text: RegExp) => (error: unknown) => {
+            const cause = (error as { cause?: { message?: string } }).cause;
+            return text.test(`${(error as Error).message} ${cause?.message ?? ""}`);
+          };
+          const settlement = (id: string, outcome = "explained", resolvedBy = staff.identityId) =>
+            sql`UPDATE valo_payment_reconciliations SET status = 'resolved', outcome = ${outcome},
+              resolved_by = ${resolvedBy}, resolved_at = now() WHERE id = ${id}::uuid`;
+          const audit = (id: string, assignmentId = role, actorId = staff.identityId) =>
+            sql`INSERT INTO valo_staff_access_audit (id, assignment_id, actor_id, area, object, reason)
+              VALUES (gen_random_uuid(), ${assignmentId}::uuid, ${actorId}, 'finance', ${"payment_check:" + id},
+                'Synthetic settlement for the guard''s test')`;
+          const found = await check(order, "needs_review", "EVENT_MISSING");
+          // Without the audit's row, with one from another transaction, or from another role, it is refused.
+          await assert.rejects(db.execute(settlement(found.id)), refused(/settled only by finance/));
+          await db.execute(audit(found.id));
+          await assert.rejects(db.execute(settlement(found.id)), refused(/settled only by finance/));
+          await assert.rejects(
+            db.transaction(async (tx) => {
+              await tx.execute(audit(found.id, supportRole, b.identityId));
+              await tx.execute(settlement(found.id, "explained", b.identityId));
+            }),
+            refused(/settled only by finance/),
+          );
+          // At a time other than its transaction's, it is refused too.
+          await assert.rejects(
+            db.transaction(async (tx) => {
+              await tx.execute(audit(found.id));
+              await tx.execute(sql`UPDATE valo_payment_reconciliations SET status = 'resolved', outcome = 'explained',
+                resolved_by = ${staff.identityId}, resolved_at = now() - interval '1 second' WHERE id = ${found.id}::uuid`);
+            }),
+            refused(/settled only by finance/),
+          );
+          // An order held as paid is not settled as having no payment, even with the audit's row.
+          await assert.rejects(
+            db.transaction(async (tx) => {
+              await tx.execute(audit(found.id));
+              await tx.execute(settlement(found.id, "no_payment_stands"));
+            }),
+            refused(/held as paid|holds as paid/),
+          );
+          // With finance's reason recorded in the same transaction, it is settled, once.
+          await db.transaction(async (tx) => {
+            await tx.execute(audit(found.id));
+            await tx.execute(settlement(found.id));
+          });
+          await assert.rejects(
+            db.transaction(async (tx) => {
+              await tx.execute(audit(found.id));
+              await tx.execute(sql`UPDATE valo_payment_reconciliations SET outcome = 'no_payment_stands',
+                resolved_at = now() WHERE id = ${found.id}::uuid`);
+            }),
+            refused(/never changed/),
+          );
+          // A finished check changes nothing else: not its finding, not its attempts, not its day.
+          const matched = await check(order, "matched", null);
+          for (const change of [
+            sql`UPDATE valo_payment_reconciliations SET finding = 'AMOUNT_DIFFERENCE' WHERE id = ${found.id}::uuid`,
+            sql`UPDATE valo_payment_reconciliations SET attempts = 1 WHERE id = ${matched.id}::uuid`,
+            sql`UPDATE valo_payment_reconciliations SET status = 'needs_review', finding = 'EVENT_MISSING' WHERE id = ${matched.id}::uuid`,
+          ])
+            await assert.rejects(db.execute(change), refused(/never changed/));
+          await assert.rejects(
+            db.execute(
+              sql`UPDATE valo_payment_reconciliations SET day = '2024-12-31' WHERE id = ${matched.id}::uuid`,
+            ),
+            refused(/keeps the order and the day/),
+          );
+          // A waiting check is finished by the daily check, never settled.
+          const waiting = await check(order, "pending", null);
+          await assert.rejects(
+            db.transaction(async (tx) => {
+              await tx.execute(audit(waiting.id));
+              await tx.execute(settlement(waiting.id));
+            }),
+            refused(/waiting payment check/),
+          );
+          await db.execute(
+            sql`UPDATE valo_payment_reconciliations SET attempts = 1, last_attempt_at = now() WHERE id = ${waiting.id}::uuid`,
+          );
+          // An erasure rewrites a finding, and only that.
+          await db.execute(
+            sql`UPDATE valo_payment_reconciliations SET finding = 'PRIVACY_ERASURE_FINANCE_REVIEW' WHERE id = ${found.id}::uuid`,
+          );
+          await assert.rejects(
+            db.execute(sql`UPDATE valo_payment_reconciliations SET finding = 'PRIVACY_ERASURE_FINANCE_REVIEW', attempts = 2
+              WHERE id = ${matched.id}::uuid`),
+            refused(/never changed/),
+          );
+          const [erased] = await db
+            .select()
+            .from(valoPaymentReconciliations)
+            .where(eq(valoPaymentReconciliations.id, found.id));
+          assert.deepEqual(
+            [erased!.status, erased!.outcome, erased!.finding],
+            ["resolved", "explained", "PRIVACY_ERASURE_FINANCE_REVIEW"],
+          );
+        },
+      );
       console.log(
         JSON.stringify({
           realPaystackCalls: 0,

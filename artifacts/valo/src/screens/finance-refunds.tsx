@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { FinancePaymentConcerns } from "@/components/payment-concerns";
+import { FinancePaymentChecks } from "@/components/payment-checks";
 import { FinanceDisputeCard, FinanceDisputeLink, DisputeFormsBoundary } from "@/components/dispute-workflows";
 import {
   useGetFinanceRefunds,
@@ -143,6 +144,7 @@ function FinanceRefundsContent() {
         </div>
       )}
       <FinancePaymentConcerns />
+      <FinancePaymentChecks />
       <h3 className="my-4 font-semibold">Provider dispute observations</h3>
       <FinanceDisputeLink
         onLinked={async (id) => {

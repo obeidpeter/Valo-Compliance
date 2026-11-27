@@ -76,6 +76,7 @@ import type {
   ExportRetryInput,
   FinanceDispute,
   FinanceDisputeLink,
+  FinancePaymentChecks,
   FinancePaymentConcerns,
   FinanceRefunds,
   FindSupportLibraryEntriesParams,
@@ -138,6 +139,8 @@ import type {
   OwnerSettingRecord,
   OwnerSettingRecorded,
   OwnerSettingTerms,
+  PaymentCheck,
+  PaymentCheckSettlementInput,
   PaymentConcern,
   PaymentConcernAction,
   PaymentConcernInput,
@@ -3489,6 +3492,207 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getReconcileFinanceRefundMutationOptions(options), queryClient);
+    }
+
+export const getGetFinancePaymentChecksUrl = () => {
+
+
+
+
+  return `/api/admin/payment-checks`
+}
+
+/**
+ * Each order whose latest finished daily check found a difference that no settlement covers, and the latest settlements with what finance found and why (docs/architecture/reconciliation.md, slice 2). An active finance role and a fresh second factor are required.
+ * @summary The daily payment checks' differences nobody has settled, and the latest settled (PAY-007)
+ */
+export const getFinancePaymentChecks = async ( options?: Parameters<typeof customFetch>[1]): Promise<FinancePaymentChecks> => {
+
+  return customFetch<FinancePaymentChecks>(getGetFinancePaymentChecksUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetFinancePaymentChecksQueryKey = () => {
+    return [
+    "getFinancePaymentChecks"
+    ] as const;
+    }
+
+
+export const getGetFinancePaymentChecksQueryOptions = <TData = Awaited<ReturnType<typeof getFinancePaymentChecks>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFinancePaymentChecks>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetFinancePaymentChecksQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFinancePaymentChecks>>> = ({ signal }) => getFinancePaymentChecks({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFinancePaymentChecks>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetFinancePaymentChecksQueryResult = NonNullable<Awaited<ReturnType<typeof getFinancePaymentChecks>>>
+export type GetFinancePaymentChecksQueryError = ErrorType<unknown>
+
+
+/**
+ * Each order whose latest finished daily check found a difference that no settlement covers, and the latest settlements with what finance found and why (docs/architecture/reconciliation.md, slice 2). An active finance role and a fresh second factor are required.
+ * @summary The daily payment checks' differences nobody has settled, and the latest settled (PAY-007)
+ */
+export function useGetFinancePaymentChecks<TData = Awaited<ReturnType<typeof getFinancePaymentChecks>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFinancePaymentChecks>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getFinancePaymentChecks>>,
+          TError,
+          Awaited<ReturnType<typeof getFinancePaymentChecks>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Each order whose latest finished daily check found a difference that no settlement covers, and the latest settlements with what finance found and why (docs/architecture/reconciliation.md, slice 2). An active finance role and a fresh second factor are required.
+ * @summary The daily payment checks' differences nobody has settled, and the latest settled (PAY-007)
+ */
+export function useGetFinancePaymentChecks<TData = Awaited<ReturnType<typeof getFinancePaymentChecks>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFinancePaymentChecks>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getFinancePaymentChecks>>,
+          TError,
+          Awaited<ReturnType<typeof getFinancePaymentChecks>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Each order whose latest finished daily check found a difference that no settlement covers, and the latest settlements with what finance found and why (docs/architecture/reconciliation.md, slice 2). An active finance role and a fresh second factor are required.
+ * @summary The daily payment checks' differences nobody has settled, and the latest settled (PAY-007)
+ */
+export function useGetFinancePaymentChecks<TData = Awaited<ReturnType<typeof getFinancePaymentChecks>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFinancePaymentChecks>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Each order whose latest finished daily check found a difference that no settlement covers, and the latest settlements with what finance found and why (docs/architecture/reconciliation.md, slice 2). An active finance role and a fresh second factor are required.
+ * @summary The daily payment checks' differences nobody has settled, and the latest settled (PAY-007)
+ */
+export function useGetFinancePaymentChecks<TData = Awaited<ReturnType<typeof getFinancePaymentChecks>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFinancePaymentChecks>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetFinancePaymentChecksQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSettleFinancePaymentCheckUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/payment-checks/${encodeURIComponent(String(id))}/settlement`
+}
+
+/**
+ * @summary Finance records what it found about a difference a daily payment check found (PAY-007)
+ */
+export const settleFinancePaymentCheck = async (id: string,
+    paymentCheckSettlementInput: PaymentCheckSettlementInput, options?: Parameters<typeof customFetch>[1]): Promise<PaymentCheck> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<PaymentCheck>(getSettleFinancePaymentCheckUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(paymentCheckSettlementInput)
+  }
+);}
+
+
+
+
+
+export const getSettleFinancePaymentCheckMutationKey = () => ['settleFinancePaymentCheck'] as const;
+
+export const getSettleFinancePaymentCheckMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof settleFinancePaymentCheck>>, TError,SettleFinancePaymentCheckMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof settleFinancePaymentCheck>>, TError,SettleFinancePaymentCheckMutationVariables, TContext> => {
+
+const mutationKey = getSettleFinancePaymentCheckMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof settleFinancePaymentCheck>>, SettleFinancePaymentCheckMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  settleFinancePaymentCheck(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SettleFinancePaymentCheckMutationResult = NonNullable<Awaited<ReturnType<typeof settleFinancePaymentCheck>>>
+    export type SettleFinancePaymentCheckMutationBody = BodyType<PaymentCheckSettlementInput>
+    export type SettleFinancePaymentCheckMutationError = ErrorType<unknown>
+    export type SettleFinancePaymentCheckMutationVariables = {id: string;data: BodyType<PaymentCheckSettlementInput>}
+
+    /** @summary Finance records what it found about a difference a daily payment check found (PAY-007) */
+export const useSettleFinancePaymentCheck = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof settleFinancePaymentCheck>>, TError,SettleFinancePaymentCheckMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof settleFinancePaymentCheck>>,
+        TError,
+        SettleFinancePaymentCheckMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSettleFinancePaymentCheckMutationOptions(options), queryClient);
     }
 
 export const getListOwnerPricesUrl = () => {

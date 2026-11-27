@@ -1075,12 +1075,18 @@ test(
           orderId: order.id,
           day: dayFromNow(days),
         });
-      /** Puts an order's last attempt this many minutes back, as if that long had passed. */
+      /** Puts an order's last attempt this many minutes back, as if that long had passed. Only a check still
+       * waiting can change: a finished one is kept as it is (docs/architecture/reconciliation.md, slice 2). */
       const attemptedMinutesAgo = (order: Made, minutes: number) =>
         db
           .update(valoPaymentReconciliations)
           .set({ lastAttemptAt: sql`now() - ${minutes} * interval '1 minute'` })
-          .where(eq(valoPaymentReconciliations.orderId, order.id));
+          .where(
+            and(
+              eq(valoPaymentReconciliations.orderId, order.id),
+              eq(valoPaymentReconciliations.status, "pending"),
+            ),
+          );
       async function runDailyCheck() {
         for (let run = 0; run < 400; run++) {
           await reconcilePayments();
