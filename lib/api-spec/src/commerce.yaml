@@ -96,6 +96,29 @@ paths:
                     properties:
                       notice: { type: string }
                       deliveryStatus: { type: string }
+  /workspace/orders/{id}/receipt/file:
+    get:
+      operationId: downloadCommerceReceipt
+      tags: [valo]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: The order's test receipt as a PDF, made from the order's record; never publicly cached
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+        "404": { description: "No such order in this workspace." }
+        "409":
+          description: "The order has no recorded verified original purchase receipt."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiProblem" }
+        "429":
+          description: "Too many files asked for in a short time."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiProblem" }
   /workspace/orders/{id}/refund:
     post:
       operationId: requestCommerceRefund

@@ -332,10 +332,10 @@ support case from a ticket or an access or privacy request, and the support life
 messages, staff assignment and escalations.
 
 `modules/messages` holds the outbox of every message Valo means to send, the worker task that offers each
-to a sender, the sender interface with its stand-in, and the messages' words
-([messages](messages.md)). It depends on no other module: the event that owes a message records it with
-`queueMessage` in its own transaction, and only the dispatcher hands a message to a sender. No sender
-reaches a real address.
+to a sender, the sender interface with its stand-in, the messages' words, and the workspace's delivery
+log ([messages](messages.md)). It depends on one other module only, `modules/workspaces`, for a member's
+right to read the log: the event that owes a message records it with `queueMessage` in its own
+transaction, and only the dispatcher hands a message to a sender. No sender reaches a real address.
 
 The store that held workspaces, documents and support tickets together is split
 ([decision 0012](decisions/0012-split-the-store.md)):

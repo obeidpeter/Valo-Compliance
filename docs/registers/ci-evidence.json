@@ -44,6 +44,13 @@
       "proves": "Against PostgreSQL, in another workspace's database scope a message can be neither read, changed nor offered to a sender, in its own scope a message's recipient cannot be changed, and a row another workspace holds about the same record's id does not stand in for a workspace's own message."
     },
     {
+      "requirement": "SEC-001",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/messages/valo-message-log.integration.test.ts",
+      "test": "a workspace's log says what became of each message, never that one reached anyone, and the receipt downloads as a PDF (WRK-003, PAY-009)",
+      "proves": "Against PostgreSQL, another member of a workspace reads its delivery log and is told only that a message is not theirs, another workspace's log holds none of it, and a member who has left is refused."
+    },
+    {
       "requirement": "IAM-003",
       "job": "postgres",
       "file": "artifacts/api-server/src/platform/workspace-row-security.integration.test.ts",
@@ -2847,8 +2854,8 @@
       "requirement": "NFR-006",
       "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
-      "test": "the account menu lists the account's four pages, closes with Escape, a click elsewhere or focus moving on, returns focus to its button, and leaves sign out beside it",
-      "proves": "With the keyboard alone, Enter on the header's account button shows its four links and sets aria-expanded, Tab moves into them, Escape hides them and returns focus to the button, and tabbing past the last link hides them; a click elsewhere hides them too, and following a link opens its page with the list hidden. No assistive technology is used."
+      "test": "the account menu lists the account's pages, closes with Escape, a click elsewhere or focus moving on, returns focus to its button, and leaves sign out beside it",
+      "proves": "With the keyboard alone, Enter on the header's account button shows its links, one for each of the account's pages, and sets aria-expanded, Tab moves into them, Escape hides them and returns focus to the button, and tabbing past the last link hides them; a click elsewhere hides them too, and following a link opens its page with the list hidden. No assistive technology is used."
     },
     {
       "requirement": "NFR-006",
@@ -3831,6 +3838,13 @@
       "proves": "Without its key, or with one shorter than 32 characters, the limits refuse to count rather than fall back to memory or an unkeyed hash."
     },
     {
+      "requirement": "SEC-005",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/messages/valo-message-log.integration.test.ts",
+      "test": "a workspace's log says what became of each message, never that one reached anyone, and the receipt downloads as a PDF (WRK-003, PAY-009)",
+      "proves": "Against PostgreSQL, each receipt file an account asks for is counted with the files it asks Valo to make, a refused one too, and at that limit no file is made and the answer says when to try again."
+    },
+    {
       "requirement": "SEC-006",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/publication/publication-guards.integration.test.ts",
@@ -4678,6 +4692,27 @@
       "proves": "After the messages migrations, the database holds one message for each workspace's record and kind, refuses a state that does not agree with itself, such as an accepted message without its sender's reference, and lets a customer request change only a message's state, never whom or what it is for."
     },
     {
+      "requirement": "WRK-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/messages/valo-message-log.integration.test.ts",
+      "test": "a workspace's log says what became of each message, never that one reached anyone, and the receipt downloads as a PDF (WRK-003, PAY-009)",
+      "proves": "Against PostgreSQL, a workspace's delivery log lists each message Valo owes it, newest first, with the order it is about and what became of it: waiting for want of a sender, paused, not taken and to be tried again, failed after five tries, or cancelled with its reason. A message the stand-in took is called recorded and never accepted, and the log names no recipient, sender or provider reference. The stand-in sends nothing, so no message reaches anyone, and nothing records a delivery."
+    },
+    {
+      "requirement": "WRK-003",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "the messages screen says in plain words what has happened to each message and reminder, calls none of them sent or delivered, and says of a message Valo only recorded that nothing was emailed",
+      "proves": "In a real browser with controlled answers, the Messages page lists the workspace's messages and the reminders about its tasks together, newest first, each with its state in plain words. A message an email service accepted is not called sent or delivered, and one Valo only recorded is called not emailed and shows no tries. The page has no automated WCAG 2.2 AA failure and fits a phone. No assistive technology is used."
+    },
+    {
+      "requirement": "WRK-003",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/message-words.test.ts",
+      "test": "no state of a message is called sent or delivered, and a message Valo only recorded is called not emailed",
+      "proves": "No state a message can be in has a name that holds sent or delivered; a message an email service took is named as accepted, with the words that this does not show it reached an inbox, and one Valo only recorded is named as not emailed, in words that claim no email."
+    },
+    {
       "requirement": "SRV-002",
       "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
@@ -5336,6 +5371,27 @@
       "proves": "The receipt message's words say it is Valo's receipt for the purchase and not a business invoice, a government receipt or an official tax invoice, and that a test-mode purchase took no real money."
     },
     {
+      "requirement": "PAY-009",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/messages/valo-message-log.integration.test.ts",
+      "test": "a workspace's log says what became of each message, never that one reached anyone, and the receipt downloads as a PDF (WRK-003, PAY-009)",
+      "proves": "Against PostgreSQL and the real renderer, the API returns a verified order's receipt as a PDF that an independent reader opens: it names the order and its amount, under the notice that it is a test transaction's record and not proof of delivery, bank outcome, a government tax invoice or official approval. Another workspace's member is answered as for an unknown order, and an unpaid order has no receipt file. The receipt holds no business details of Valo's yet."
+    },
+    {
+      "requirement": "PAY-009",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/commerce/valo-commerce.integration.test.ts",
+      "test": "controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication",
+      "proves": "Against PostgreSQL, a receipt file is made from the order's own record and named by the receipt's reference, with no pooled connection held while it is made; none is made for a saved order that is not paid, or for another workspace's member."
+    },
+    {
+      "requirement": "PAY-009",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "purchase history offers the exact owned file on a verified order and keeps its receipt after access ends",
+      "proves": "On a phone, a verified order on the purchases screen links to its own receipt as a PDF, says that the receipt is for a test purchase and not a live payment, a business invoice, a government receipt or an official tax invoice, and says what became of the receipt's email in the delivery log's words; an order the log holds no message for says that nothing was emailed, and an unpaid order shows no receipt."
+    },
+    {
       "requirement": "EDP-011",
       "job": "postgres",
       "file": "artifacts/api-server/src/routes/valo-manual-library.integration.test.ts",
@@ -5627,7 +5683,7 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/operations/request-counts.integration.test.ts",
       "test": "request counts: each process's minutes add up, the readings take the last ten minutes, a week is kept, and reminders and jobs are read from their own tables",
-      "proves": "On a real database, two processes' counts for a minute add up, counts that do not hold together are refused, the failure and time readings take the last ten minutes' counts once there are a hundred requests, and a week of minutes is kept."
+      "proves": "On a real database, two processes' counts for a minute add up, counts that do not hold together are refused, the failure and time readings take the last ten minutes' counts once there are a hundred requests, and a week of minutes is kept. The readings of reminders, the job queue and messages count real rows: a message queued past its time or left mid-attempt past its lease is waiting, a held one is not, and a failed one is counted for a day."
     },
     {
       "requirement": "NFR-010",
@@ -5642,6 +5698,13 @@
       "file": "artifacts/api-server/src/platform/http-logging.test.ts",
       "test": "each request's log line names its route's pattern and never a value from the address",
       "proves": "Each request's log line names the pattern of the route it matched, through nested routers and answers sent later, or says it matched none, and never writes a value from the address."
+    },
+    {
+      "requirement": "NFR-010",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/operations/valo-operations.test.ts",
+      "test": "messages waiting past their time, and a message that failed, raise their own alerts under the worker's runbook, past their limits only",
+      "proves": "With synthetic readings, any message waiting past its time and any message that failed raise their own alerts, each named in plain words and owned by the worker's runbook; a reading that cannot be taken raises an alert of its own, and none waiting or failed raises nothing. No alert reaches a person here."
     },
     {
       "requirement": "SEC-008",

@@ -7,7 +7,9 @@
 export { messagesReady, queueMessage } from "./valo-messages";
 export { MESSAGE_ATTEMPT_LIMIT, MESSAGE_KINDS, messageRetryAt, type MessageKind } from "./message-policy";
 export { dispatchDueMessages, dispatchMessage } from "./valo-message-dispatcher";
+export { listWorkspaceMessages } from "./valo-message-log";
 export {
+  STAND_IN_SENDER,
   configuredMessageSender,
   standInSender,
   type KeptMessage,

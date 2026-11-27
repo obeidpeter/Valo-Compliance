@@ -16,6 +16,7 @@ import {
 } from "@workspace/db";
 import { resolveWorkspace } from "../workspaces";
 import * as commerce from "./valo-commerce";
+import { purchaseReceiptFile } from "./purchase-receipt-file";
 import { PAYSTACK_API, verifiedTransaction } from "./valo-paystack-contract";
 import { quotaSubjectHash } from "../../lib/valo-quota";
 import { setting } from "../../platform/settings";
@@ -47,6 +48,10 @@ test(
     };
     const orders: string[] = [],
       eventKeys: string[] = [];
+    /** A renderer for a receipt file that must be refused before any file is made. */
+    const neverRendered = async (): Promise<Buffer> => {
+      throw Error("A receipt file was made for an order whose receipt the caller may not read.");
+    };
     async function fixture(actor = a, line = fixtureLine) {
       const id = randomUUID();
       orders.push(id);
@@ -124,6 +129,8 @@ test(
         async () => {
           assert.equal((await commerce.purchases(a)).orders[0]!.status, "created");
           await assert.rejects(commerce.purchaseReceipt(a, order!.id), { status: 409 });
+          // Nor is a receipt file made for it (PAY-009).
+          await assert.rejects(purchaseReceiptFile(a, order!.id, neverRendered), { status: 409 });
           assert.equal(
             (await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId, order!.id))).length,
             0,
@@ -135,6 +142,7 @@ test(
         async () => {
           for (const call of [
             () => commerce.purchaseReceipt(b, order!.id),
+            () => purchaseReceiptFile(b, order!.id, neverRendered),
             () => commerce.refreshOrder(b, order!.id),
             () => commerce.startCheckout(b, order!.id, "synthetic@example.test"),
             () =>
@@ -311,6 +319,21 @@ test(
           assert.match(receipt.notice, /test-mode/);
           assert.equal(receipt.deliveryStatus, "awaiting_email_configuration");
           assert.equal(receipt.receiptReference, `VALO-TEST-${order!.reference}`);
+          // The receipt as a file (PAY-009; docs/architecture/messages.md, part 5): made from the order's
+          // own record, named by the receipt's reference, with no pooled connection held while it is made.
+          let rendered: typeof order | undefined,
+            connectionsHeldWhileMade = -1;
+          const file = await purchaseReceiptFile(a, order!.id, async (record) => {
+            rendered = record;
+            connectionsHeldWhileMade = pool.totalCount - pool.idleCount;
+            return Buffer.from("%PDF-synthetic");
+          });
+          assert.equal(connectionsHeldWhileMade, 0);
+          assert.equal(rendered?.id, order!.id);
+          assert.equal(rendered?.amountKobo, 12345);
+          assert.equal(file.filename, `VALO-TEST-${order!.reference}.pdf`);
+          assert.match(file.filename, /^[A-Za-z0-9._-]+$/);
+          assert.equal(file.bytes.toString(), "%PDF-synthetic");
         },
       );
       await t.test(

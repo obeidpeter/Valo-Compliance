@@ -148,6 +148,11 @@ input recorded as a security event."
   - Built: `REMINDERS_BACKLOG` for a reminder still pending fifteen minutes past its time (a held one is
     held on purpose), and `JOB_QUEUE_BACKLOG` for a scheduled job still waiting ten minutes past its
     start. Both fall to the worker's runbook.
+  - Built too, with the messages ([design](messages.md), slice 1b): `MESSAGES_BACKLOG` for a message to a
+    customer still queued fifteen minutes past its time, or still marked as being sent fifteen minutes
+    after its attempt's lease ended (a held one is held on purpose), and `FAILED_MESSAGES_DETECTED` for a
+    message that failed in the last day. Both fall to the worker's runbook. The day is a development
+    default.
 - **The route in each request's log**: the route's pattern, such as `/workspace/documents/:id`, never
   the values in its address.
   - Built: the line written as a request ends names the route it matched, such as

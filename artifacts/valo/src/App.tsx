@@ -53,6 +53,7 @@ const AssessmentDetail = lazy(() =>
 );
 const TasksPage = lazy(() => import("@/screens/tasks"));
 const RemindersPage = lazy(() => import("@/screens/reminders"));
+const MessagesPage = lazy(() => import("@/screens/messages"));
 const AIDraftCompose = lazy(() => import("@/screens/ai-drafts").then((m) => ({ default: m.AIDraftCompose })));
 const AIDraftPreview = lazy(() => import("@/screens/ai-drafts").then((m) => ({ default: m.AIDraftPreview })));
 
@@ -408,6 +409,13 @@ function ShellRoutes() {
           {() => (
             <RequireAuth title="Purchases and licences">
               <PurchasesPage />
+            </RequireAuth>
+          )}
+        </Route>
+        <Route path="/workspace/messages">
+          {() => (
+            <RequireAuth title="Messages from Valo">
+              <MessagesPage />
             </RequireAuth>
           )}
         </Route>

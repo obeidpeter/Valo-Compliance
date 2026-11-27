@@ -78,6 +78,7 @@ const CASE_KEYS = [
   "GET /workspace/orders/{id}/dispute-information",
   "POST /workspace/orders/{id}/dispute-information",
   "GET /workspace/orders/{id}/receipt",
+  "GET /workspace/orders/{id}/receipt/file",
   "POST /workspace/orders/{id}/refresh",
   "POST /workspace/orders/{id}/refund",
   "POST /workspace/orders/{orderId}/concerns",
@@ -247,12 +248,13 @@ const PRIVATE_TABLES: Record<string, { cases: readonly string[] } | { reason: st
   },
   valo_messages: {
     reason:
-      "Messages the server queues when an order settles or a refund is processed, and the worker sends; no customer request names one.",
+      "Messages the server queues when an order settles or a refund is processed, and the worker sends; no customer request names one, and the workspace's list of them takes no identifier.",
   },
   valo_orders: {
     cases: [
       "POST /workspace/orders/{id}/checkout",
       "GET /workspace/orders/{id}/receipt",
+      "GET /workspace/orders/{id}/receipt/file",
       "POST /workspace/orders/{id}/refresh",
       "POST /workspace/orders/{id}/refund",
       "POST /workspace/orders/{orderId}/concerns",
@@ -746,6 +748,7 @@ test(
           },
         },
         "GET /workspace/orders/{id}/receipt": { params: { id: orderId } },
+        "GET /workspace/orders/{id}/receipt/file": { params: { id: orderId } },
         "POST /workspace/orders/{id}/refresh": { params: { id: orderId }, body: {} },
         "POST /workspace/orders/{id}/refund": {
           params: { id: orderId },
@@ -1199,6 +1202,7 @@ test(
           "GET /workspace/documents": {},
           "POST /workspace/form-documents": { body: () => ({ templateId: "TPL-01" }) },
           "GET /workspace/form-templates": {},
+          "GET /workspace/messages": {},
           "GET /workspace/privacy-cases": {},
           "GET /workspace/purchases": {},
           "GET /workspace/owned-template-editions": {},

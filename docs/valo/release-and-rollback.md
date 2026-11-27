@@ -201,6 +201,8 @@ checks, which are not provisioned yet.
 | `PRIVACY_REQUESTS_BACKLOG` | Any privacy request still open 14 days after it was made: the date Valo aims to finish it by, Valo's own aim and not a time limit set by law | Internal operations sample (PRV-003) |
 | `REMINDERS_BACKLOG` | Any reminder email still pending fifteen minutes past its time | Internal operations sample (NFR-010) |
 | `JOB_QUEUE_BACKLOG` | Any scheduled job still waiting ten minutes past its start | Internal operations sample (NFR-010) |
+| `MESSAGES_BACKLOG` | Any message to a customer still queued fifteen minutes past its time, or still marked as being sent fifteen minutes after its attempt's lease ended; a held one is not counted | Internal operations sample (WRK-003) |
+| `FAILED_MESSAGES_DETECTED` | Any message to a customer that failed in the last day | Internal operations sample (WRK-003) |
 | `REQUEST_FAILURES_DETECTED` | More than 10 in 1,000 of the API's requests failed unexpectedly in the last ten minutes, once there are a hundred requests or more | Internal operations sample (NFR-003) |
 | `REQUEST_TIME_DETECTED` | 95 in 100 of the API's requests in the last ten minutes did not all finish within a second, once there are a hundred requests or more | Internal operations sample (NFR-003) |
 | `DENIED_ACCESS_DETECTED` | One hashed address was refused (401 or 403) more than 20 times in ten minutes | Internal operations sample (SEC-008) |
@@ -306,8 +308,10 @@ A message that stays `held` in `valo_messages` says why in its `reason`. `SENDER
 the worker has no sender: `VALO_MESSAGE_SENDER` is unset, as it is unless a stand-in is wanted.
 `MESSAGES_PAUSED` means the staff safety pause on sending is on. Neither is a fault, and the message is
 offered once the cause is gone. A `failed` message was offered five times and not taken, or its sender
-could no longer tell a retry from a new message. No message reaches anyone: the only sender is a stand-in
-that sends nothing (see `docs/architecture/messages.md` and `docs/valo/migration-messages.md`).
+could no longer tell a retry from a new message; it raises `FAILED_MESSAGES_DETECTED` for a day. No
+message reaches anyone: the only sender is a stand-in that sends nothing (see
+`docs/architecture/messages.md` and `docs/valo/migration-messages.md`). A message the stand-in took is
+`accepted` in the table, and the workspace's log calls it recorded and "Not emailed".
 
 A customer request that answers the generic 503 with error code `42501` in its log
 ran a command `valo_workspace_scope` does not hold: the code started using a table,

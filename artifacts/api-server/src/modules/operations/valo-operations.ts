@@ -40,6 +40,16 @@ export const readinessQueries = {
     AND COALESCE(next_attempt_at, scheduled_at) < now() - interval '15 minutes' LIMIT 10001) bounded`,
   jobQueue: `SELECT count(*)::int AS value FROM (SELECT 1 FROM valo_jobs.job WHERE state IN ('created','retry')
     AND start_after < now() - interval '10 minutes' LIMIT 10001) bounded`,
+  // docs/architecture/messages.md, part 1: messages to customers still waiting fifteen minutes past their
+  // time, or still marked as being sent fifteen minutes after their attempt's lease ended. One held is
+  // held on purpose, by the pause or for want of a sender.
+  messages: `SELECT count(*)::int AS value FROM (SELECT 1 FROM valo_messages
+    WHERE (status='queued' AND COALESCE(next_attempt_at, created_at) < now() - interval '15 minutes')
+      OR (status='sending' AND lease_until < now() - interval '15 minutes') LIMIT 10001) bounded`,
+  // Messages that failed in the last day: offered five times and not taken, or past the time a retry
+  // could be told from a second message.
+  failedMessages: `SELECT count(*)::int AS value FROM (SELECT 1 FROM valo_messages
+    WHERE status='failed' AND updated_at > now() - interval '1 day' LIMIT 10001) bounded`,
   // NFR-003, by the API's request counts of the last ten minutes, once there are a hundred requests or more
   // to mean something (fewer read as nothing): how many in 1,000 failed unexpectedly, and the time 95 in
   // 100 of them took at most, in milliseconds, by the counts' fixed times (10001: longer than ten seconds).
@@ -156,6 +166,8 @@ const SERVICE_METRICS = [
   ["requestFailures", "REQUEST_FAILURES"],
   ["requestTime", "REQUEST_TIME"],
 ] as const;
+/** The reading of messages that failed (docs/architecture/messages.md) and the subject its alerts are named after. */
+const MESSAGE_METRICS = [["failedMessages", "FAILED_MESSAGES"]] as const;
 type Metric = { status: "ok" | "unavailable"; value: number | null; elapsedMs: number };
 export type OperationalSample = {
   checkedAt: string;
@@ -168,6 +180,8 @@ export type OperationalSample = {
   privacyRequests: Metric;
   reminders: Metric;
   jobQueue: Metric;
+  messages: Metric;
+  failedMessages: Metric;
   payments: Metric;
   requestFailures: Metric;
   requestTime: Metric;
@@ -199,6 +213,8 @@ export type OperationalSample = {
     privacyRequests: number;
     reminders: number;
     jobQueue: number;
+    messages: number;
+    failedMessages: number;
     workerAgeMs: number;
     requestFailures: number;
     requestTime: number;
@@ -306,6 +322,9 @@ export async function collectOperationalSample(
       // Any reminder email or scheduled job waiting past its time.
       reminders: 0,
       jobQueue: 0,
+      // Any message to a customer waiting past its time, and any that failed in the last day.
+      messages: 0,
+      failedMessages: 0,
       workerAgeMs: 90000,
       // NFR-003's own: fewer than 1 in 100 requests failing unexpectedly, and 95 in 100 within a second.
       requestFailures: 10,
@@ -360,6 +379,8 @@ export const ALERT_RUNBOOKS = {
   PRIVACY_REQUESTS: { runbook: "Deletion and recovery", accountable: "Engineering + privacy owner" },
   REMINDERS: { runbook: "Broken export / AI outage", accountable: "Engineering" },
   JOB_QUEUE: { runbook: "Broken export / AI outage", accountable: "Engineering" },
+  MESSAGES: { runbook: "Broken export / AI outage", accountable: "Engineering" },
+  FAILED_MESSAGES: { runbook: "Broken export / AI outage", accountable: "Engineering" },
   PAYMENTS: { runbook: "Payment/entitlement failure", accountable: "Finance + engineering" },
   REQUEST_FAILURES: { runbook: "Site/database unavailable", accountable: "Engineering lead" },
   REQUEST_TIME: { runbook: "Site/database unavailable", accountable: "Engineering lead" },
@@ -413,6 +434,14 @@ export const ALERT_WORDS = {
   },
   REMINDERS: { raised: "Reminder emails are waiting past their time", reading: "reminder emails" },
   JOB_QUEUE: { raised: "Scheduled jobs are waiting past their start", reading: "the job queue" },
+  MESSAGES: {
+    raised: "Messages to customers are waiting past their time",
+    reading: "the messages waiting to be sent",
+  },
+  FAILED_MESSAGES: {
+    raised: "A message to a customer failed in the last day",
+    reading: "the messages that failed",
+  },
   PAYMENTS: { raised: "A paid order is missing its access or its receipt", reading: "paid orders" },
   REQUEST_FAILURES: {
     raised: "Too many requests failed unexpectedly, counted in 1,000 over ten minutes",
@@ -494,6 +523,8 @@ const SUBJECT_READINGS: Partial<
   PRIVACY_REQUESTS: "privacyRequests",
   REMINDERS: "reminders",
   JOB_QUEUE: "jobQueue",
+  MESSAGES: "messages",
+  FAILED_MESSAGES: "failedMessages",
   PAYMENTS: "payments",
   REQUEST_FAILURES: "requestFailures",
   REQUEST_TIME: "requestTime",
@@ -654,6 +685,7 @@ async function recordOperationalAlertsLocked(sample: OperationalSample, file: st
     "privacyRequests",
     "reminders",
     "jobQueue",
+    "messages",
     "payments",
   ] as const) {
     const code =
@@ -670,7 +702,7 @@ async function recordOperationalAlertsLocked(sample: OperationalSample, file: st
     if (metric.status !== "ok") active.push(code + "_PROBE_UNAVAILABLE");
     else if (metric.value! > (name === "payments" ? 0 : sample.limits[name])) active.push(code + "_BACKLOG");
   }
-  for (const [name, subject] of [...SERVICE_METRICS, ...SECURITY_METRICS]) {
+  for (const [name, subject] of [...SERVICE_METRICS, ...MESSAGE_METRICS, ...SECURITY_METRICS]) {
     const metric = sample[name];
     if (metric.status !== "ok") active.push(subject + "_PROBE_UNAVAILABLE");
     else if (metric.value! > sample.limits[name]) active.push(subject + "_DETECTED");

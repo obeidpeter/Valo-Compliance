@@ -160,7 +160,8 @@ export const SETTINGS = {
   },
   VALO_LIMIT_EXPORT_CREATE: {
     group: "Request limits",
-    description: "Document exports asked for by one account a minute (1-10000, default 10).",
+    description:
+      "Files one account asks Valo to make a minute: document exports and receipt files (1-10000, default 10).",
     example: "10",
   },
   VALO_LIMIT_PROFILE_WRITE: {

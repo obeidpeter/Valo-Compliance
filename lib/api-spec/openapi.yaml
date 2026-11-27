@@ -395,6 +395,29 @@ paths:
                     properties:
                       notice: { type: string }
                       deliveryStatus: { type: string }
+  /workspace/orders/{id}/receipt/file:
+    get:
+      operationId: downloadCommerceReceipt
+      tags: [valo]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: The order's test receipt as a PDF, made from the order's record; never publicly cached
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+        "404": { description: "No such order in this workspace." }
+        "409":
+          description: "The order has no recorded verified original purchase receipt."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiProblem" }
+        "429":
+          description: "Too many files asked for in a short time."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiProblem" }
   /workspace/orders/{id}/refund:
     post:
       operationId: requestCommerceRefund
@@ -1383,6 +1406,15 @@ paths:
   /admin/manual-library/{id}/revisions/{version}/file: {"get":{"operationId":"previewManualLibraryFile","tags":["staff"],"parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string","format":"uuid"}},{"name":"version","in":"path","required":true,"schema":{"type":"integer"}}],"responses":{"200":{"description":"Authorized template file","content":{"application/octet-stream":{"schema":{"type":"string","format":"binary"}}}},"401":{"description":"Sign in required"},"403":{"description":"Access denied"},"404":{"description":"Unavailable"},"409":{"description":"Revision conflict or source hold"}}}}
   /account/manual-templates/{id}/download: {"get":{"operationId":"downloadManualTemplate","tags":["catalogue"],"parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string","format":"uuid"}}],"responses":{"200":{"description":"Authorized template file","content":{"application/octet-stream":{"schema":{"type":"string","format":"binary"}}}},"401":{"description":"Sign in required"},"403":{"description":"Access denied"},"404":{"description":"Unavailable"},"409":{"description":"Revision conflict or source hold"}}}}
   /workspace/manual-premium-templates/{id}/download: {"get":{"operationId":"downloadPremiumManualTemplate","tags":["catalogue"],"parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string","format":"uuid"}}],"responses":{"200":{"description":"Workspace purchase for this published premium edition","content":{"application/octet-stream":{"schema":{"type":"string","format":"binary"}}}},"401":{"description":"Sign in required"},"403":{"description":"Access denied"},"404":{"description":"Unavailable"},"409":{"description":"Revision conflict or source hold"}}}}
+  /workspace/messages:
+    get:
+      operationId: listWorkspaceMessages
+      responses:
+        "200":
+          description: The workspace's messages and what became of each; accepted is not delivered, and recorded is not emailed
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/WorkspaceMessage" } }
   /admin/operations/alerts:
     get:
       operationId: getOperationalAlerts
@@ -4446,6 +4478,27 @@ components:
         templateId: { type: [string, 'null'] }
         state: { type: string, enum: [no_template, no_form, fits, does_not_fit] }
         problems: { type: array, maxItems: 200, items: { type: string, maxLength: 400 } }
+    WorkspaceMessage:
+      type: object
+      required: [id, kind, orderId, orderReference, refundReference, forYou, status, reason, attempts, createdAt, lastAttemptAt, nextAttemptAt, acceptedAt]
+      properties:
+        id: { type: string, format: uuid }
+        kind: { type: string, enum: [purchase_receipt, refund_processed] }
+        # The order the message is about: a receipt's own, or a refund notice's refund's.
+        orderId: { type: [string, "null"] }
+        orderReference: { type: [string, "null"] }
+        refundReference: { type: [string, "null"] }
+        # Whether the message is for the member asking, or for another member of the workspace.
+        forYou: { type: boolean }
+        # accepted: an email service took the message; nothing shows it reached an inbox.
+        # recorded: a test sender that sends nothing took it; nothing was emailed.
+        status: { type: string, enum: [queued, sending, held, accepted, recorded, failed, cancelled] }
+        reason: { type: [string, "null"] }
+        attempts: { type: integer, minimum: 0 }
+        createdAt: { type: string }
+        lastAttemptAt: { type: [string, "null"] }
+        nextAttemptAt: { type: [string, "null"] }
+        acceptedAt: { type: [string, "null"] }
     OperationalAlerts:
       type: object
       additionalProperties: false

@@ -24,6 +24,7 @@ export const quotaPolicy = {
   "checkout-create": 10,
   // SEC-005's account limit on checkout, counted by the day apart from the minute's ceiling above.
   "checkout-create-day": 100,
+  // Files a member asks Valo to make: document exports, and each receipt downloaded as a PDF.
   "export-create": 10,
   "profile-write": 20,
   "profile-write-day": 200,

@@ -1891,6 +1891,13 @@ export const GetCommerceReceiptResponse = zod.object({
 }))
 
 
+export const DownloadCommerceReceiptParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const DownloadCommerceReceiptResponse = zod.unknown()
+
+
 export const RequestCommerceRefundParams = zod.object({
   "id": zod.uuid()
 })
@@ -6289,6 +6296,28 @@ export const DownloadPremiumManualTemplateParams = zod.object({
 })
 
 export const DownloadPremiumManualTemplateResponse = zod.unknown()
+
+
+export const listWorkspaceMessagesResponseAttemptsMin = 0;
+
+
+
+export const ListWorkspaceMessagesResponseItem = zod.object({
+  "id": zod.uuid(),
+  "kind": zod.enum(['purchase_receipt', 'refund_processed']),
+  "orderId": zod.string().nullable(),
+  "orderReference": zod.string().nullable(),
+  "refundReference": zod.string().nullable(),
+  "forYou": zod.boolean(),
+  "status": zod.enum(['queued', 'sending', 'held', 'accepted', 'recorded', 'failed', 'cancelled']),
+  "reason": zod.string().nullable(),
+  "attempts": zod.int().min(listWorkspaceMessagesResponseAttemptsMin),
+  "createdAt": zod.string(),
+  "lastAttemptAt": zod.string().nullable(),
+  "nextAttemptAt": zod.string().nullable(),
+  "acceptedAt": zod.string().nullable()
+})
+export const ListWorkspaceMessagesResponse = zod.array(ListWorkspaceMessagesResponseItem)
 
 
 export const getOperationalAlertsResponseActiveItemCodeRegExp = new RegExp('^[A-Z][A-Z_]{2,80}$');

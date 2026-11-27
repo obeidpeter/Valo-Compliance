@@ -59,6 +59,7 @@ export const ACCOUNT_PAGES: readonly WorkspacePage[] = [
   { href: "/workspace/account", label: "Sign-in and security" },
   { href: "/workspace/privacy", label: "Privacy and data" },
   { href: "/workspace/purchases", label: "Purchases" },
+  { href: "/workspace/messages", label: "Messages" },
   { href: "/workspace/support", label: "Support requests" },
 ];
 

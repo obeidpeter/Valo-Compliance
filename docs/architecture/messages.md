@@ -128,7 +128,34 @@ Built (slice 1a), for a workspace's messages to a member's verified address:
   ([runbook](../valo/migration-messages.md)). Until it has this one, a payment settles and a refund is
   processed as before and no message is owed: an order settled then is sent none later, as every order
   settled before this change.
-- **Not yet:** the delivery log, and an alert on failed messages, are slice 1b's.
+
+Built (slice 1b):
+- **The log** (`modules/messages/valo-message-log.ts`, `GET /workspace/messages`). Any member of a
+  workspace reads its messages, newest first:
+  - what each is, the order it is about, and the refund for a refund notice;
+  - its state and the reason for it;
+  - how often it was tried, and when it is tried next.
+
+  It says whether a message is for the member reading, and never who else it is for. It gives no message
+  text, no address and nothing of the sender.
+- **The words of its states.** The log has one state more than the table. A message the stand-in took is
+  `recorded`, never `accepted`, and the screen calls it "Not emailed". A message a sender that sends took
+  is "Accepted by email service", which the screen says does not show it reached an inbox. No state's
+  name holds "sent" or "delivered".
+- **The screen**, "Messages", among the account's pages. It lists the workspace's messages and the
+  reminders about its tasks together, newest first. A reminder is in the reminders' own words, with the
+  way to the reminders page, which keeps its own list.
+- **Where a record is shown.** Each order on the purchases screen says what became of its receipt's
+  message, and each processed refund what became of its notice, in the log's words. An order the log holds
+  no message for says that nothing was emailed about it.
+- **Two alerts** ([alerts](alerts.md), part 3), both under the worker's runbook:
+  - `MESSAGES_BACKLOG`: a message still queued fifteen minutes past its time, or still marked as being
+    sent fifteen minutes after its attempt's lease ended. One held is held on purpose, and is not
+    counted.
+  - `FAILED_MESSAGES_DETECTED`: a message that failed in the last day.
+
+  Until the messages migration reaches a database, neither reading can be taken, and each raises the
+  alert that says so.
 
 ### 2. The sender (WRK-003)
 
@@ -182,8 +209,8 @@ Built (slice 1a):
 ### 5. Receipts and refund notices (PAY-009, PAY-008)
 
 - **The PDF receipt.** The purchases screen downloads the receipt as a PDF. It is the dispute evidence's
-  rendering, with the notice that it is not proof of payment, a business invoice or an official tax
-  invoice. The JSON stays in the workspace's data download.
+  rendering, under that rendering's notice of what it is not. The JSON stays in the workspace's data
+  download.
 - **The receipt message.** A settled order owes the receipt message, as it owes the outbox row today. It
   names the order's reference, what was bought, the amount and the date, and links to the purchases screen
   for the PDF. It carries no attachment.
@@ -194,8 +221,24 @@ Built (slice 1a):
   message's own row, not this one, says what became of the message.
 
 Built (slice 1a): the two messages and their words (`modules/messages/message-text.ts`), queued as above.
-The PDF receipt is slice 1b's. What the purchases screen says of a receipt's email is unchanged: it reads
-the ledger's row, which still says no email is configured, as none is.
+
+Built (slice 1b):
+- **The PDF receipt** (`GET /workspace/orders/{id}/receipt/file`). The purchases screen's receipt is a
+  link to it. It is the dispute evidence's rendering of the order's record, under its notice: "VALO
+  DEVELOPMENT PURCHASE RECEIPT — server-verified test transaction record only. Not proof of delivery, bank
+  outcome, a government tax invoice or official approval."
+  - It is made afresh each time it is asked for, from the order's record, and nothing is stored: there is
+    no file to keep, expire or erase.
+  - The order is read, and the caller's access to its receipt checked, before the file is made. No
+    transaction or connection is held while it is made.
+  - Each file asked for counts with the files a member asks Valo to make (`VALO_LIMIT_EXPORT_CREATE`, ten
+    a minute), since making one costs far more than a read.
+- **What it does not hold yet:** Valo's business name and address as the owner approves them (the owner's
+  point 4), a customer's name, and a tax amount. Its words are a test purchase's until the owner approves
+  live payments (the plan's Phase 5).
+- **The purchases screen** says under each receipt what the receipt is not, and what became of its
+  message. It no longer reads the ledger's row for that.
+- **The JSON receipt** stays in the API and in the workspace's data download.
 
 **The words**, for the owner to review before the first real send (the owner's point 3). A test keeps
 this page's copy the same as the code's. For an order of ₦15,000.00 made in the provider's test mode:
@@ -279,7 +322,7 @@ carries its test-mode line.
 | Slice | What | State |
 | --- | --- | --- |
 | 1a | The outbox, the sender interface, the stand-in, the dispatcher and the pause, with receipts and refund notices as its first messages | Built |
-| 1b | The workspace's delivery log, the PDF receipt, and an alert on failed messages | Not built |
+| 1b | The workspace's delivery log, the PDF receipt, and alerts on messages that wait or fail | Built |
 | 2 | Delivery and bounces: the webhook, suppression and the states on the log | Not built |
 | 3 | Unsubscribe: the links, the endpoint, consent read at dispatch, and the reminders on the shared sender | Not built |
 | 4 | Support: replies to someone who cannot sign in, staff notices and the states on the case | Not built |

@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { eq, inArray } from "drizzle-orm";
-import { db, pool, valoReminderOutbox, valoRequestMinutes, valoTasks } from "@workspace/db";
+import { db, pool, valoMessages, valoReminderOutbox, valoRequestMinutes, valoTasks } from "@workspace/db";
 import { collectOperationalSample, readinessQueries } from "./valo-operations";
 import { RequestCounts, removeOldRequestMinutes, writeRequestMinutes } from "./request-counts";
 import { EXPORT_QUEUE } from "../exports";
@@ -11,8 +11,8 @@ import { resolveWorkspace } from "../workspaces";
 /**
  * NFR-003, NFR-010 (docs/architecture/alerts.md, part 3), on a real database: each process's request
  * counts add up by the minute, the table refuses counts that do not hold together, the readings take the
- * last ten minutes' counts, a week of minutes is kept, and the readings of reminders and the job queue
- * count real rows. Every row is synthetic.
+ * last ten minutes' counts, a week of minutes is kept, and the readings of reminders, the job queue and
+ * messages count real rows. Every row is synthetic.
  */
 const MINUTE = 60_000;
 const query = (text: string, values: unknown[]) => pool.query(text, values);
@@ -166,6 +166,76 @@ test(
             assert.equal(await reading("jobQueue"), waiting);
           } finally {
             await pool.query("DELETE FROM valo_jobs.job WHERE id = $1", [job.rows[0]!.id]);
+          }
+        },
+      );
+      // docs/architecture/messages.md, part 1: a message waiting past its time, and one that failed.
+      await t.test(
+        "messages waiting past their time, and messages that failed in the last day, are counted from their table",
+        async () => {
+          const actor = await resolveWorkspace(`synthetic-alert-readings-${randomUUID()}`);
+          const id = randomUUID();
+          const set = (values: Partial<typeof valoMessages.$inferInsert>) =>
+            db.update(valoMessages).set(values).where(eq(valoMessages.id, id));
+          const ago = (minutes: number) => new Date(Date.now() - minutes * MINUTE);
+          const [waiting, failed] = [await reading("messages"), await reading("failedMessages")];
+          try {
+            // Queued twenty minutes ago and never offered: nothing is taking the messages.
+            await db.insert(valoMessages).values({
+              id,
+              workspaceId: actor.workspaceId,
+              kind: "purchase_receipt",
+              class: "necessary",
+              recipientIdentityId: actor.identityId,
+              subjectId: randomUUID(),
+              createdAt: ago(20),
+            });
+            assert.equal(await reading("messages"), waiting + 1);
+            // A retry not yet due is not waiting past its time, and neither is a message held on purpose.
+            await set({ nextAttemptAt: new Date(Date.now() + 5 * MINUTE) });
+            assert.equal(await reading("messages"), waiting);
+            await set({ status: "held", reason: "MESSAGES_PAUSED", nextAttemptAt: ago(30) });
+            assert.equal(await reading("messages"), waiting);
+            // An attempt whose lease ended twenty minutes ago, with no result recorded since, is waiting.
+            const attempted = { attempts: 1, firstAttemptAt: ago(21), lastAttemptAt: ago(21) };
+            await set({
+              status: "sending",
+              reason: null,
+              nextAttemptAt: null,
+              ...attempted,
+              leaseToken: randomUUID(),
+              leaseUntil: ago(20),
+            });
+            assert.equal(await reading("messages"), waiting + 1);
+            // One still inside its lease is being sent, not waiting.
+            await set({ leaseUntil: new Date(Date.now() + MINUTE / 2) });
+            assert.equal(await reading("messages"), waiting);
+            // Failed now: counted for a day, and as failed, not as waiting.
+            await set({
+              status: "failed",
+              reason: "ATTEMPT_LIMIT_REACHED",
+              leaseToken: null,
+              leaseUntil: null,
+              updatedAt: new Date(),
+            });
+            assert.deepEqual(
+              [await reading("messages"), await reading("failedMessages")],
+              [waiting, failed + 1],
+            );
+            await set({ updatedAt: ago(25 * 60) });
+            assert.equal(await reading("failedMessages"), failed);
+            // A message a sender took is neither.
+            await set({
+              status: "accepted",
+              reason: null,
+              sender: "stand-in",
+              providerMessageId: "stand-in-synthetic",
+              acceptedAt: new Date(),
+              updatedAt: new Date(),
+            });
+            assert.deepEqual([await reading("messages"), await reading("failedMessages")], [waiting, failed]);
+          } finally {
+            await db.delete(valoMessages).where(eq(valoMessages.id, id));
           }
         },
       );

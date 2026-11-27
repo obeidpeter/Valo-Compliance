@@ -19,7 +19,7 @@ setting of its own; unset or empty, it is the default.
 | `VALO_LIMIT_PAGE_RENDER_READ` | Reads by every page the web server renders, for all visitors together, a minute | 600 |
 | `VALO_LIMIT_CUSTOMER_AI` | Drafting assistant requests by one account, a minute | 5 |
 | `VALO_LIMIT_CHECKOUT_CREATE`, `_DAY` | Checkouts begun by one account, a minute and a day | 10 and 100 |
-| `VALO_LIMIT_EXPORT_CREATE` | Document exports asked for by one account, a minute | 10 |
+| `VALO_LIMIT_EXPORT_CREATE` | Files one account asks Valo to make, a minute: document exports, and each receipt downloaded as a PDF | 10 |
 | `VALO_LIMIT_PROFILE_WRITE`, `_DAY` | Business profile changes by one account | 20 and 200 |
 | `VALO_LIMIT_DOCUMENT_WRITE`, `_DAY` | Document changes by one account | 30 and 600 |
 | `VALO_LIMIT_SUPPORT_WRITE`, `_DAY` | Support messages by one signed-in customer | 3 and 20 |

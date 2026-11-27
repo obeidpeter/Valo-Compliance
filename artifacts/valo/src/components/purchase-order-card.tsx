@@ -3,16 +3,18 @@ import { Download } from "lucide-react";
 import {
   startCommerceCheckout,
   refreshCommerceOrder,
-  getCommerceReceipt,
+  getDownloadCommerceReceiptUrl,
   requestCommerceRefund,
   type CommerceOrder,
   type OwnedCheckoutDownload,
+  type WorkspaceMessage,
 } from "@workspace/api-client-react";
 import { PaymentConcerns } from "@/components/payment-concerns";
 import { CustomerDisputeInformation, useDisputeDirty } from "@/components/dispute-workflows";
 import { describeError } from "@/lib/api";
 import { formatDateTime, formatNaira } from "@/lib/format";
 import { basePath } from "@/lib/env";
+import { MESSAGE_STATUS, messageMeaning } from "@/lib/message-words";
 
 const labels: Record<string, string> = {
   created: "Order saved — not paid",
@@ -31,18 +33,41 @@ export type BundleFile = {
   download: OwnedCheckoutDownload | undefined;
 };
 
+/** What became of a message about an order, in the delivery log's own words. */
+function MessageState({ label, message }: { label: string; message: WorkspaceMessage | null }) {
+  return (
+    <>
+      {label}:{" "}
+      {message
+        ? `${MESSAGE_STATUS[message.status]?.label ?? message.status}. ${messageMeaning(message)}`
+        : "none. Valo emailed nothing about it."}
+    </>
+  );
+}
+
 export function OrderCard({
   order,
   download,
   bundleFiles,
+  messages,
   changed,
 }: {
   order: CommerceOrder;
   download: OwnedCheckoutDownload | undefined;
   /** For a bundle's order: each template it grants (docs/architecture/commercial-settings.md, slice 4c). */
   bundleFiles?: BundleFile[] | undefined;
+  /**
+   * The workspace's delivery log (docs/architecture/messages.md, slice 1b), once it has loaded. Without
+   * it the card says nothing of this order's messages, rather than that there were none.
+   */
+  messages?: readonly WorkspaceMessage[] | undefined;
   changed: () => Promise<unknown>;
 }) {
+  const about = (kind: WorkspaceMessage["kind"], refundReference: string | null) =>
+    messages?.find(
+      (message) =>
+        message.kind === kind && message.orderId === order.id && message.refundReference === refundReference,
+    ) ?? null;
   const [busy, setBusy] = useState(false),
     [error, setError] = useState<string | null>(null);
   const [reason, setReason] = useState(""),
@@ -211,28 +236,32 @@ export function OrderCard({
           Check payment status
         </button>
         {order.receiptReference && (
-          <button
+          // PAY-009: the receipt as a file, made from the order's record each time it is asked for. Its
+          // words are short enough to stay on one line of a 320-pixel screen.
+          <a
+            href={basePath + getDownloadCommerceReceiptUrl(order.id)}
             className="btn btn-secondary"
-            disabled={busy}
-            onClick={() =>
-              void run(async () => {
-                const result = await getCommerceReceipt(order.id),
-                  url = URL.createObjectURL(
-                    new Blob([JSON.stringify(result, null, 2)], { type: "application/json" }),
-                  );
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = `${result.receiptReference}.json`;
-                a.click();
-                URL.revokeObjectURL(url);
-                setNotice(`${result.notice} Email delivery: ${result.deliveryStatus.replaceAll("_", " ")}.`);
-              })
-            }
+            aria-label={`Download test receipt (PDF) for order ${order.reference}`}
+            data-testid="order-receipt-download"
           >
-            Download test purchase receipt
-          </button>
+            <Download className="h-4 w-4" aria-hidden /> Test receipt (PDF)
+          </a>
         )}
       </div>
+      {order.receiptReference && (
+        <p className="mt-3 text-sm text-muted-foreground" data-testid="order-receipt-note">
+          This is Valo's receipt for a test purchase. It is not a live payment, a business invoice, a
+          government receipt or an official tax invoice.
+          {messages && (
+            <>
+              {" "}
+              <span data-testid="order-receipt-message">
+                <MessageState label="Receipt email" message={about("purchase_receipt", null)} />
+              </span>
+            </>
+          )}
+        </p>
+      )}
       {!!order.refunds?.length && (
         <section className="mt-6 border-t pt-4" aria-label={`Refund history for ${order.reference}`}>
           <h3 className="font-semibold">Refund history</h3>
@@ -258,6 +287,14 @@ export function OrderCard({
                   <p role="status">
                     Reconciliation: {r.failure.replaceAll("_", " ").toLowerCase()}. The request has not been
                     treated as a new payment.
+                  </p>
+                )}
+                {messages && r.status === "processed" && (
+                  <p className="text-muted-foreground" data-testid="refund-notice-message">
+                    <MessageState
+                      label="Refund notice email"
+                      message={about("refund_processed", r.reference)}
+                    />
                   </p>
                 )}
               </li>

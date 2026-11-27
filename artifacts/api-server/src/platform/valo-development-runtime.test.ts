@@ -34,7 +34,7 @@ test("actual export entries and worker startup reject before database, queue or 
       export const valoMemberships={},valoContentVersions={},valoDocuments={},valoDocumentRevisions={},valoExportJobs={},
       valoExportRequests={},valoFileAssets={},valoExportObjects={},valoEvents={},valoPrivacyTombstones={},
       valoWorkspaceExports={},valoWorkspaceExportAttempts={},valoWorkspaces={},valoPrivacyCases={},valoPrivacyEvents={},valoProfileVersions={},
-      valoPrivacyHolds={},valoStaffAccessAudit={},valoMessages={};
+      valoPrivacyHolds={},valoStaffAccessAudit={},valoMessages={},valoOrders={},valoRefundRequests={};
       // Listening for a pooled connection's failure opens no connection, so it is not an effect.
       export const onConnectionFailure=()=>()=>{};`,
     ],
@@ -101,6 +101,8 @@ test("actual export entries and worker startup reject before database, queue or 
     ],
     // The worker reaches the messages job through the messages module's index. The job itself is a
     // service effect here; the choice of its sender, which the worker makes as it starts, is the real one.
+    // The index also loads the workspace's log, which the worker never calls: its tables are names only
+    // in the database's stand-in above, and reading through them would count as a database effect.
     [
       "valo-message-dispatcher",
       "export const dispatchDueMessages=async()=>{globalThis.guardEffects.services++},dispatchMessage=dispatchDueMessages;",
