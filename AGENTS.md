@@ -169,6 +169,12 @@ Rules that apply now:
   provider's own words, and nothing of an open or a click. A message or reminder is called
   delivered only where the provider reported it (`valo_message_deliveries`), and a message the
   stand-in took never is.
+- An address whose email service sent a message back for good, or where one was marked as spam,
+  gets no more optional messages (`modules/messages/valo-email-suppression.ts`). Keep of it only
+  a keyed checksum, in `valo_email_suppressions`, never the address. A sender that reaches a real
+  address asks `addressSuppressed` of the recipient's address before it hands an optional message
+  to a provider, and sends nothing when it cannot ask. Customer code reaches the list only through
+  `valo_email_address_suppressed`, which answers yes or no.
 - API code is moving into one folder per capability under
   `artifacts/api-server/src/modules/`. Code outside a module imports it only through
   its `index.ts`; the `module-boundary` repository rule enforces this, and tests may

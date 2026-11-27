@@ -79,9 +79,12 @@ The requirements, verbatim from the specification:
   message is sent, so the outbox holds nothing a customer's own records do not.
 - **The dispatcher** is a worker job. It works as the reminder worker does:
   - it claims a due message with a lease, in its workspace's scope;
-  - in the same transaction, just before sending, it checks again everything that could stop the
-    message: the class's consent, a suppression, the safety switch and the record still being current;
+  - in the same transaction, just before sending, it checks again what could stop the message: the
+    class's consent, the safety switch and the record still being current;
   - it commits, and only then calls the sender, holding no transaction while it waits;
+  - the sender reads the recipient's address then. For an optional message it asks of that address
+    whether Valo has stopped sending there (part 3), just before it calls the provider. The dispatcher's
+    transaction cannot ask: it does not hold the address, and reading it is a call to another service;
   - it records the result in a new transaction.
 - **Retries.** A failed attempt is retried with the reminder worker's back-off, at most five times, then it
   is `failed`. An attempt the provider may have accepted is never sent afresh after the provider's
@@ -202,9 +205,10 @@ Built (slice 2a):
     now. Each refusal is counted with the payment webhook's, for the alert on signature failures.
   - It keeps a report before it answers, and a report delivered twice is one report.
 - **What is kept, and what is not.** A report keeps the provider's own id for it, what it says, the
-  provider's reference for the message, its time, and a bounce's kind. The address, the subject and the
-  provider's own words are never read. Nothing is kept of an event that says a message was handed over,
-  opened, or a link in it followed: Valo does not track opens or clicks.
+  provider's reference for the message, its time, and a bounce's kind. The subject and the provider's own
+  words are never read, and no address is kept. Since slice 2b the address of a bounce or a complaint is
+  read, to make the checksum below, and for nothing else. Nothing is kept of an event that says a message
+  was handed over, opened, or a link in it followed: Valo does not track opens or clicks.
 - **The signature** (`modules/messages/email-events.ts`) is the scheme the provider's documentation
   describes, read on 26 November 2026: the report's id, its time and the body, joined by full stops,
   under HMAC-SHA256 with the secret's key. The scheme's published example verifies in a test. No request
@@ -239,7 +243,56 @@ Built (slice 2a):
   to one test address, so only a reminder can. A report reaches Valo only once the owner sets the
   signing secret and gives the provider the webhook's address.
 
-Not built: suppression, which is slice 2b.
+Built (slice 2b), suppression (`modules/messages/valo-email-suppression.ts`):
+- **What suppresses an address.** A bounce the provider calls permanent, or a complaint: the message was
+  marked as spam. Nothing else does.
+  - A bounce the provider calls temporary or cannot classify, a delay, and a failure of the provider's
+    own do not: the address may be good.
+  - A report that the provider itself will not send to an address does not either. The provider's own
+    list already stops that message, and clearing it there is enough.
+- **Only about a message Valo holds.** A report suppresses once the worker has found the message or
+  reminder it is about, and never before. A signed report about nothing Valo sent suppresses no one, and
+  neither does one about a message the stand-in took.
+- **What is kept.** The webhook reads the one address a bounce or a complaint names and makes a keyed
+  checksum of it, under the privacy keyring's current key. The report's row keeps the checksum and the
+  key's version. The address is kept nowhere.
+  - A report that names several addresses, or none, keeps no checksum and suppresses no one. Valo sends
+    each message to one address.
+  - `valo_email_suppressions` holds one row for each checksum: why, as last reported, the first and last
+    reports' times, and when it ends. It names no person and no workspace.
+- **How long.** 180 days from the last report, which is a proposal for the owner to decide. A later
+  report keeps the suppression going and never shortens it. The worker's `messages` task removes one
+  whose time has passed. The address is then tried again, and suppressed again if its email service says
+  the same.
+- **A replaced key.** The question is asked under every key the keyring holds. A suppression made under
+  an earlier key still counts while the keyring keeps that key.
+- **Asking.** `addressSuppressed` answers yes or no for an address. A sender asks it just before it
+  calls the provider, when it holds the address and no transaction.
+  - The worker's per-workspace jobs and customer requests cannot read the list. They ask through a
+    database function, `valo_email_address_suppressed`, which answers only yes or no, for checksums the
+    caller already holds.
+  - If the question cannot be asked, nothing is sent.
+- **Which messages.** Optional ones, which today are the reminders. Their development mailer asks before
+  each send.
+  - A reminder to a suppressed address is cancelled with the reason `EMAIL_ADDRESS_SUPPRESSED`. It is not
+    counted as a try, and is not tried again. The reminders screen says why, that the task is saved, and
+    offers the way to report a problem.
+  - The outbox holds only necessary messages, a receipt and a refund's notice. A suppression does not
+    stop them: they are still owed, and a receipt that came back still shows on the purchases screen.
+  - When an optional kind joins the outbox, its sender asks the same question. That is slice 3, which
+    moves the reminders onto the shared sender.
+- **Privacy.** The processing inventory and the privacy notice name the checksum, what it is for and how
+  long it is kept. A suppression is about an address and names no account: a data download does not list
+  it, and a deletion request does not remove it. The notice says so.
+- **Before the table exists.** A database the first suppression migration has not reached takes no
+  report at all, so none is recorded without what it should have stopped; what was recorded before is
+  still shown. No address is suppressed there, and reminders go on as before. With the table and not the
+  function, which is the second migration, the question cannot be asked and no reminder is sent: the two
+  are applied together.
+
+Not built: a way to end a suppression sooner at a person's request. It ends by itself 180 days after the
+last report. Ending one by hand also needs the provider's own list cleared, so it waits for the provider
+the owner approves, and belongs with the staff's tools in slice 4.
 
 ### 4. Unsubscribe and consent read before each send (WRK-004, PRO-002)
 
@@ -374,7 +427,7 @@ carries its test-mode line.
 | 1a | The outbox, the sender interface, the stand-in, the dispatcher and the pause, with receipts and refund notices as its first messages | Built |
 | 1b | The workspace's delivery log, the PDF receipt, and alerts on messages that wait or fail | Built |
 | 2a | Delivery and bounces: the webhook, the reports recorded on messages and reminders, and their words on the log | Built |
-| 2b | Suppression: a hard bounce or a complaint stops optional messages to that address | Not built |
+| 2b | Suppression: a hard bounce or a complaint stops optional messages to that address | Built |
 | 3 | Unsubscribe: the links, the endpoint, consent read at dispatch, and the reminders on the shared sender | Not built |
 | 4 | Support: replies to someone who cannot sign in, staff notices and the states on the case | Not built |
 | 5 | Material notices by email | Not built |
@@ -388,3 +441,5 @@ carries its test-mode line.
    they could not sign in.
 3. **The messages' words**, reviewed before the first real send.
 4. **The business details on the PDF receipt**: Valo's name and address as the owner approves them.
+5. **How long things are kept**: a settled delivery report for 30 days, and a suppressed address's
+   checksum for 180 days after the last report about it. Both are proposals.

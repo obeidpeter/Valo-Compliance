@@ -4118,6 +4118,20 @@
       "proves": "Against PostgreSQL, each message carries its class, and the two kinds there are, receipts and refund notices, are necessary. Just before a message is offered the dispatcher checks again the pause, the workspace's erasure, the recipient's membership and the record it is about, and a message stopped by any of them is not handed to the sender. No optional message, unsubscribe link or consent check exists yet."
     },
     {
+      "requirement": "WRK-004",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/messages/valo-email-suppression.integration.test.ts",
+      "test": "an address whose email service sent a message back for good, or marked one as spam, gets no more optional messages, and only its checksum is kept (WRK-003, WRK-004)",
+      "proves": "Against PostgreSQL, a stop on an address is applied to optional messages alone, and just before the send: a due reminder to a stopped address is cancelled without its transport being called, while the receipt owed to the same member, a necessary message, is still offered to its sender and taken. The transport and the sender are the test's own; no message reached anyone. This is not an unsubscribe: no link or endpoint for one exists."
+    },
+    {
+      "requirement": "WRK-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/tasks/valo-reminder-resend.test.ts",
+      "test": "a reminder to an address Valo has stopped sending to never reaches transport, and neither does one whose suppression cannot be checked",
+      "proves": "The reminders' mailer asks whether Valo has stopped sending to the verified recipient's own address before it calls its transport. Where the answer is yes it sends nothing and says why; where the question cannot be answered it sends nothing either; and a recipient who is not the allowed one is refused before the question is asked. The transport is the test's own."
+    },
+    {
       "requirement": "WRK-006",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/documents/valo-workspace-documents.integration.test.ts",
@@ -4675,7 +4689,7 @@
       "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
       "test": "the reminders screen says in plain words whether emails are being sent and what has happened to each reminder",
-      "proves": "Signed in through a stand-in identity with synthetic data, the reminders screen says that reminders are off unless turned on, that each is planned for 09:00 Lagos time, and whether emails are being sent; its delivery log gives each reminder's state and reason in words, and a message the email service accepted is not called sent or delivered. A reminder is called delivered only where the answers say the email service reported it, with that service named as the one saying so and the time of its report, and one that came back says the address may be wrong. This shows the screen's words, not that a reminder is scheduled or an email sent."
+      "proves": "Signed in through a stand-in identity with synthetic data, the reminders screen says that reminders are off unless turned on, that each is planned for 09:00 Lagos time, and whether emails are being sent; its delivery log gives each reminder's state and reason in words, and a message the email service accepted is not called sent or delivered. A reminder is called delivered only where the answers say the email service reported it, with that service named as the one saying so and the time of its report, and one that came back says the address may be wrong. A reminder cancelled because Valo has stopped emailing its address says so, that it will not be sent and that the task is saved, counts no try, and offers the way to report a problem. This shows the screen's words, not that a reminder is scheduled or an email sent."
     },
     {
       "requirement": "WRK-003",
@@ -4696,7 +4710,7 @@
       "job": "foundation",
       "file": "lib/db/scripts/phase1-migrations.test.mjs",
       "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
-      "proves": "After the messages migrations, the database holds one message for each workspace's record and kind, refuses a state that does not agree with itself, such as an accepted message without its sender's reference, and lets a customer request change only a message's state, never whom or what it is for. After the delivery migrations, it holds each of an email service's reports once, in a state that agrees with itself, and the latest report about each message or reminder in its own workspace; a customer request reads and records its own workspace's reports alone, and has no access to the reports as they arrive."
+      "proves": "After the messages migrations, the database holds one message for each workspace's record and kind, refuses a state that does not agree with itself, such as an accepted message without its sender's reference, and lets a customer request change only a message's state, never whom or what it is for. After the delivery migrations, it holds each of an email service's reports once, in a state that agrees with itself, and the latest report about each message or reminder in its own workspace; a customer request reads and records its own workspace's reports alone, and has no access to the reports as they arrive. After the suppression migrations, a report keeps a checksum of its address only with its key's version and only for a bounce or a complaint, an address is stopped once under a key, and a customer request can ask only whether an address is stopped, by a checksum and its key's version together, with no access to the list."
     },
     {
       "requirement": "WRK-003",
@@ -4731,7 +4745,7 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/routes/valo-email-webhook.integration.test.ts",
       "test": "the email webhook keeps a signed report once, with no address, and takes nothing unsigned, stale or unset (WRK-003, SEC-008)",
-      "proves": "Over real HTTP against the real application and PostgreSQL, the email webhook answers that it is not set up until its signing secret is set, and outside a development runtime. With a secret the test makes, it keeps a report the test signs before it answers, once however often it is delivered, with nothing of the address, the subject or the provider's words in the row; it keeps nothing of an event saying a message was handed over, opened or a link followed, or of a signed event it cannot read; and it refuses a compressed or oversized body. No email service sent anything here."
+      "proves": "Over real HTTP against the real application and PostgreSQL, the email webhook answers that it is not set up until its signing secret is set, and outside a development runtime. With a secret the test makes, it keeps a report the test signs before it answers, once however often it is delivered, with nothing of the address, the subject or the provider's words in the row, and for a bounce called permanent a keyed checksum of the address, which a report of delivery does not have; it keeps nothing of an event saying a message was handed over, opened or a link followed, or of a signed event it cannot read; and it refuses a compressed or oversized body. No email service sent anything here."
     },
     {
       "requirement": "WRK-003",
@@ -4753,6 +4767,20 @@
       "file": "artifacts/valo/src/lib/delivery-words.test.ts",
       "test": "delivered is said to be the email service's report, with what Valo cannot see, and no other report is called delivered",
       "proves": "The words for a report of delivery say that the email service reports it and that Valo cannot see whether the message was opened or which folder it went to; no other report is labelled delivered or sent, and none claims that anyone read the message."
+    },
+    {
+      "requirement": "WRK-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/messages/valo-email-suppression.integration.test.ts",
+      "test": "an address whose email service sent a message back for good, or marked one as spam, gets no more optional messages, and only its checksum is kept (WRK-003, WRK-004)",
+      "proves": "Against PostgreSQL, with reports the test makes and a mailer whose transport is the test's own: a report that an email service sent a message back for good, or that a message was marked as spam, stops optional messages to that message's address once the message it is about is found. A delivery, a delay, a bounce not called permanent, a failure of the sending service's own, and a permanent bounce about no message of Valo's stop none. A due reminder to a stopped address is cancelled with its reason before the transport is called, is not counted as a try and is not tried again, while a reminder to another address is sent. The stop lasts 180 days from the last report, a later report keeps it going, and after it the address is tried again. Where the table is not there yet, no report is taken and no address is stopped. No email service was called, and no message reached anyone."
+    },
+    {
+      "requirement": "WRK-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/messages/email-events.test.ts",
+      "test": "a bounce or a complaint hands on its address only when it names exactly one, and one that is an address",
+      "proves": "The reading of a delivery report hands on an address only for a bounce or a complaint that names exactly one address, and one that has the form of an address. A report naming several or none, and a report of delivery, hand on none, so none of them can stop messages to an address."
     },
     {
       "requirement": "SRV-002",

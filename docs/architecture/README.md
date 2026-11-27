@@ -333,13 +333,16 @@ messages, staff assignment and escalations.
 
 `modules/messages` holds the outbox of every message Valo means to send, the worker task that offers each
 to a sender, the sender interface with its stand-in, the messages' words, the workspace's delivery log,
-and what the email provider reports about a message it took ([messages](messages.md)). It depends on one
+what the email provider reports about a message it took, and the addresses Valo has stopped sending
+optional messages to ([messages](messages.md)). It depends on one
 other module only, `modules/workspaces`, for a member's right to read the log: the event that owes a
 message records it with `queueMessage` in its own transaction, and only the dispatcher hands a message to
 a sender. No sender reaches a real address. The provider's delivery reports arrive at
 `routes/valo-email-webhook.ts`, which keeps a signed report and nothing of its address; the worker's task
 records each on the message or reminder it is about, and `modules/tasks` reads a reminder's report from
-this module when a member lists the reminders.
+this module when a member lists the reminders. A permanent bounce or a complaint suppresses its address:
+only a keyed checksum of it is kept, and the reminders' mailer in `modules/tasks` asks this module
+whether an address is suppressed before each send.
 
 The store that held workspaces, documents and support tickets together is split
 ([decision 0012](decisions/0012-split-the-store.md)):

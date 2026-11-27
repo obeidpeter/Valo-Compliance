@@ -321,6 +321,19 @@ signed report Valo cannot read is logged as `email.event_unreadable`, and means 
 changed. A report waits in `valo_email_events` as `pending` until the worker's `messages` task records
 it. One still `pending` after an hour names a message Valo does not hold, and is settled as `unmatched`.
 
+A reminder that is `cancelled` with the reason `EMAIL_ADDRESS_SUPPRESSED` was for an address Valo has
+stopped sending optional messages to: its email service sent a message back for good, or one was marked
+as spam there. It was never handed to the provider, and is not tried again. That reason on the reminder
+is how staff see that an address is suppressed. The list itself, `valo_email_suppressions`, holds a keyed
+checksum of each address and no address, so it cannot be read back into one. A suppression ends by
+itself 180 days after the last report about its address, when the worker's `messages` task removes it.
+There is no command to end one sooner: record a customer's request to on their support case. Ending one
+by hand is not built, and would also need the address cleared from the provider's own list.
+
+A reminder that stays `failed` as not confirmed, on a database that has `valo_email_suppressions` and
+not the function `valo_email_address_suppressed`, could not ask whether its address is suppressed, and
+was not sent. Apply the second suppression migration (see `docs/valo/migration-messages.md`).
+
 A customer request that answers the generic 503 with error code `42501` in its log
 ran a command `valo_workspace_scope` does not hold: the code started using a table,
 command or column before a migration granted it (`WORKSPACE_SCOPE_PRIVILEGES` in
