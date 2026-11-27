@@ -51,6 +51,13 @@
       "proves": "Against PostgreSQL, another member of a workspace reads its delivery log and is told only that a message is not theirs, another workspace's log holds none of it, and a member who has left is refused."
     },
     {
+      "requirement": "SEC-001",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/messages/valo-email-events.integration.test.ts",
+      "test": "the email service's reports are recorded on the message or reminder they are about, whatever their order, and never on a message sent to no one (WRK-003)",
+      "proves": "Against PostgreSQL, another workspace's log shows nothing of a workspace's delivery reports; in that other workspace's database scope a report is neither read nor changed nor written for the first, and the reports as they arrive are no workspace's to read."
+    },
+    {
       "requirement": "IAM-003",
       "job": "postgres",
       "file": "artifacts/api-server/src/platform/workspace-row-security.integration.test.ts",
@@ -3345,7 +3352,7 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/privacy/valo-privacy-erasure.integration.test.ts",
       "test": "resumable physical development erasure with retained exclusions and replay",
-      "proves": "A synthetic deletion request, run by privacy staff with fresh MFA and an acknowledgement, quarantines the workspace while its document still exists, then removes its documents, revisions, profile versions, saved templates, rule and edition notices, the messages Valo owed it and its private files in a controlled local file store, redacts its support and privacy-case text and clears its AI draft content, while another workspace's document, notices and message stay and the request ends partially fulfilled with the outside-processors step held."
+      "proves": "A synthetic deletion request, run by privacy staff with fresh MFA and an acknowledgement, quarantines the workspace while its document still exists, then removes its documents, revisions, profile versions, saved templates, rule and edition notices, the messages Valo owed it, what an email service reported about them and its private files in a controlled local file store, redacts its support and privacy-case text and clears its AI draft content, while another workspace's document, notices, message and report stay and the request ends partially fulfilled with the outside-processors step held."
     },
     {
       "requirement": "PRV-003",
@@ -4668,7 +4675,7 @@
       "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
       "test": "the reminders screen says in plain words whether emails are being sent and what has happened to each reminder",
-      "proves": "Signed in through a stand-in identity with synthetic data, the reminders screen says that reminders are off unless turned on, that each is planned for 09:00 Lagos time, and whether emails are being sent; its delivery log gives each reminder's state and reason in words, and a message the email service accepted is not called sent or delivered. This shows the screen's words, not that a reminder is scheduled or an email sent."
+      "proves": "Signed in through a stand-in identity with synthetic data, the reminders screen says that reminders are off unless turned on, that each is planned for 09:00 Lagos time, and whether emails are being sent; its delivery log gives each reminder's state and reason in words, and a message the email service accepted is not called sent or delivered. A reminder is called delivered only where the answers say the email service reported it, with that service named as the one saying so and the time of its report, and one that came back says the address may be wrong. This shows the screen's words, not that a reminder is scheduled or an email sent."
     },
     {
       "requirement": "WRK-003",
@@ -4689,14 +4696,14 @@
       "job": "foundation",
       "file": "lib/db/scripts/phase1-migrations.test.mjs",
       "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
-      "proves": "After the messages migrations, the database holds one message for each workspace's record and kind, refuses a state that does not agree with itself, such as an accepted message without its sender's reference, and lets a customer request change only a message's state, never whom or what it is for."
+      "proves": "After the messages migrations, the database holds one message for each workspace's record and kind, refuses a state that does not agree with itself, such as an accepted message without its sender's reference, and lets a customer request change only a message's state, never whom or what it is for. After the delivery migrations, it holds each of an email service's reports once, in a state that agrees with itself, and the latest report about each message or reminder in its own workspace; a customer request reads and records its own workspace's reports alone, and has no access to the reports as they arrive."
     },
     {
       "requirement": "WRK-003",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/messages/valo-message-log.integration.test.ts",
       "test": "a workspace's log says what became of each message, never that one reached anyone, and the receipt downloads as a PDF (WRK-003, PAY-009)",
-      "proves": "Against PostgreSQL, a workspace's delivery log lists each message Valo owes it, newest first, with the order it is about and what became of it: waiting for want of a sender, paused, not taken and to be tried again, failed after five tries, or cancelled with its reason. A message the stand-in took is called recorded and never accepted, and the log names no recipient, sender or provider reference. The stand-in sends nothing, so no message reaches anyone, and nothing records a delivery."
+      "proves": "Against PostgreSQL, a workspace's delivery log lists each message Valo owes it, newest first, with the order it is about and what became of it: waiting for want of a sender, paused, not taken and to be tried again, failed after five tries, or cancelled with its reason. A message the stand-in took is called recorded and never accepted, and the log names no recipient, sender or provider reference. The stand-in sends nothing, so no message reaches anyone, and no message here has a report of delivery: no email service reported anything."
     },
     {
       "requirement": "WRK-003",
@@ -4711,6 +4718,41 @@
       "file": "artifacts/valo/src/lib/message-words.test.ts",
       "test": "no state of a message is called sent or delivered, a message Valo only recorded is called not emailed, and only the email service's report is called delivered",
       "proves": "No state a message can be in has a name that holds sent or delivered; a message an email service took is named as accepted, with the words that this does not show it reached an inbox, and one Valo only recorded is named as not emailed, in words that claim no email. With no report from the email service a message's label is its state's; with a report of delivery the label is Delivered, and the words say that the email service reports it."
+    },
+    {
+      "requirement": "WRK-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/messages/valo-email-events.integration.test.ts",
+      "test": "the email service's reports are recorded on the message or reminder they are about, whatever their order, and never on a message sent to no one (WRK-003)",
+      "proves": "Against PostgreSQL, a report that an email service delivered, delayed, sent back or had marked as spam a message is recorded on the message or reminder that holds that service's reference, with the service's time, and the workspace's log and reminders list then give it beside the record's own state. Reports about one message leave the same record in whatever order they arrive, and one delivered twice is one. A message the stand-in took is never given a report, whatever reference a report names, and a report no record holds the reference of is settled as unmatched after an hour. Every report here is the test's own: no email service sent one, and no message reached anyone."
+    },
+    {
+      "requirement": "WRK-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-email-webhook.integration.test.ts",
+      "test": "the email webhook keeps a signed report once, with no address, and takes nothing unsigned, stale or unset (WRK-003, SEC-008)",
+      "proves": "Over real HTTP against the real application and PostgreSQL, the email webhook answers that it is not set up until its signing secret is set, and outside a development runtime. With a secret the test makes, it keeps a report the test signs before it answers, once however often it is delivered, with nothing of the address, the subject or the provider's words in the row; it keeps nothing of an event saying a message was handed over, opened or a link followed, or of a signed event it cannot read; and it refuses a compressed or oversized body. No email service sent anything here."
+    },
+    {
+      "requirement": "WRK-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/messages/email-events.test.ts",
+      "test": "the signature scheme's published example verifies, and no changed part of it does",
+      "proves": "The check of a delivery report's signature verifies the example the signature scheme's documentation publishes, and refuses it once its body, its id, its time or its signature is changed, or under another key. This shows the check agrees with the published example, not that a request from the email service has been verified: none has been received."
+    },
+    {
+      "requirement": "WRK-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/messages/email-events.test.ts",
+      "test": "a report replaces another only if it says more, so the reports about one message end the same in any order",
+      "proves": "Delayed, delivered, undelivered, sent back and marked as spam each say more than the one before, so every order of the reports about one message ends at the one that says most, and the same report again changes nothing."
+    },
+    {
+      "requirement": "WRK-003",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/delivery-words.test.ts",
+      "test": "delivered is said to be the email service's report, with what Valo cannot see, and no other report is called delivered",
+      "proves": "The words for a report of delivery say that the email service reports it and that Valo cannot see whether the message was opened or which folder it went to; no other report is labelled delivered or sent, and none claims that anyone read the message."
     },
     {
       "requirement": "SRV-002",
@@ -4809,6 +4851,13 @@
       "file": "scripts/src/valo/incident-procedure.test.ts",
       "test": "the incident procedure, its tabletop and their design give no length of time for telling the authority or the people affected",
       "proves": "The incident procedure, its tabletop script and their design contain no sentence that puts a length of time beside telling, notifying or reporting, or beside the authority, and the check finds such a sentence when one is planted."
+    },
+    {
+      "requirement": "PRV-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/messages/valo-email-events.integration.test.ts",
+      "test": "the email service's reports are recorded on the message or reminder they are about, whatever their order, and never on a message sent to no one (WRK-003)",
+      "proves": "Against PostgreSQL, a workspace's data download lists what an email service reported about its own messages, by record, report and time, and another workspace's lists none of it."
     },
     {
       "requirement": "EDT-002",
@@ -5719,6 +5768,13 @@
       "file": "scripts/src/valo/log-inventory.test.ts",
       "test": "the API's one logger writes only to its process's output, and every table the log inventory names is in the schema",
       "proves": "The API's source makes one logger, in platform/logger.ts, and one request logger, given it; the logger names no destination but the process's output and, in development, its readable printer; and every table the log inventory names is in the database's schema."
+    },
+    {
+      "requirement": "SEC-008",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-email-webhook.integration.test.ts",
+      "test": "the email webhook keeps a signed report once, with no address, and takes nothing unsigned, stale or unset (WRK-003, SEC-008)",
+      "proves": "Over real HTTP against the real application and PostgreSQL, a delivery report with a missing, altered, stale or wrongly keyed signature is refused before anything is kept, and each refusal is counted as a signature failure, the count the alert on signature failures reads. The reports and the key are the test's own."
     },
     {
       "requirement": "SEC-002",

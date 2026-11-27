@@ -191,6 +191,56 @@ Built (slice 1a):
 - **The provider.** The webhook is written for the provider the development adapter uses, behind an
   interface, so another provider needs only its adapter.
 
+Built (slice 2a):
+- **The webhook** (`routes/valo-email-webhook.ts`, `POST /api/webhooks/email`). It is mounted beside the
+  payment webhook, before the JSON parser and sign-in: the signature is over the body exactly as it was
+  sent, and the provider is no browser and no member.
+  - It answers that it is not set up unless the runtime is development and `VALO_EMAIL_WEBHOOK_SECRET`
+    holds the provider's signing secret. Only the development mailer sends through the provider, so only
+    development takes its reports.
+  - It refuses a body whose signature does not verify, or that was signed more than five minutes from
+    now. Each refusal is counted with the payment webhook's, for the alert on signature failures.
+  - It keeps a report before it answers, and a report delivered twice is one report.
+- **What is kept, and what is not.** A report keeps the provider's own id for it, what it says, the
+  provider's reference for the message, its time, and a bounce's kind. The address, the subject and the
+  provider's own words are never read. Nothing is kept of an event that says a message was handed over,
+  opened, or a link in it followed: Valo does not track opens or clicks.
+- **The signature** (`modules/messages/email-events.ts`) is the scheme the provider's documentation
+  describes, read on 26 November 2026: the report's id, its time and the body, joined by full stops,
+  under HMAC-SHA256 with the secret's key. The scheme's published example verifies in a test. No request
+  of the provider's has been checked against it, since none has been received.
+- **Recording** (`modules/messages/valo-email-events.ts`), in the worker's `messages` task. For each
+  waiting report it finds the message or reminder that holds the provider's reference. In that record's
+  workspace scope it records the report in `valo_message_deliveries`, one row for each record.
+  - A report replaces the one a record holds only if it says more: delayed, then delivered, then
+    undelivered, then bounced, then complained. So the reports about one message leave the same record in
+    whatever order they arrive.
+  - A report is about a message only if a sender of the report's provider took the message. A message
+    the stand-in took was sent to no one, and is never given a report.
+  - A report no record holds the reference of waits an hour: a report can arrive before the attempt that
+    handed the message over has recorded the reference. Then it is settled as unmatched.
+  - A settled report is removed thirty days later. What it said stays on the record.
+- **What a record shows.** The log and the reminders list give the report beside the record's own state,
+  which stays `accepted`: `delivered`, `delayed`, `bounced`, `complained` or `undelivered`, with the
+  provider's time for it.
+  - The screens say "Delivered" only for the provider's report. They name the email service as the one
+    saying so, and say that Valo cannot see whether the message was opened.
+  - A message that came back says that the address may be wrong. One the provider could not send offers
+    the way to report a problem.
+  - Each order on the purchases screen says what became of its receipt's message in the same words, so a
+    receipt that came back still shows, with that said under it.
+- **Privacy.** The processing inventory and the privacy notice name the reports. A workspace's data
+  download lists its own. An erasure removes them.
+- **Before the tables exist.** Until the two migrations reach a database, the webhook answers that it is
+  not set up, the task records nothing, and the log and the reminders list as before.
+- **The provider** is one object (`EmailEventSource`): its name, its signature check and its reading of
+  an event. Another provider needs only its own.
+- **What can have a report today.** Only the reminders' development mailer sends through the provider,
+  to one test address, so only a reminder can. A report reaches Valo only once the owner sets the
+  signing secret and gives the provider the webhook's address.
+
+Not built: suppression, which is slice 2b.
+
 ### 4. Unsubscribe and consent read before each send (WRK-004, PRO-002)
 
 - **The link.** Every optional message carries a link to unsubscribe from its kind, and the
@@ -323,7 +373,8 @@ carries its test-mode line.
 | --- | --- | --- |
 | 1a | The outbox, the sender interface, the stand-in, the dispatcher and the pause, with receipts and refund notices as its first messages | Built |
 | 1b | The workspace's delivery log, the PDF receipt, and alerts on messages that wait or fail | Built |
-| 2 | Delivery and bounces: the webhook, suppression and the states on the log | Not built |
+| 2a | Delivery and bounces: the webhook, the reports recorded on messages and reminders, and their words on the log | Built |
+| 2b | Suppression: a hard bounce or a complaint stops optional messages to that address | Not built |
 | 3 | Unsubscribe: the links, the endpoint, consent read at dispatch, and the reminders on the shared sender | Not built |
 | 4 | Support: replies to someone who cannot sign in, staff notices and the states on the case | Not built |
 | 5 | Material notices by email | Not built |
@@ -331,7 +382,8 @@ carries its test-mode line.
 ## The owner's points
 
 1. **A provider and a sender address**, and the approval to send. Until then nothing leaves Valo but the
-   development test address.
+   development test address. With them, the provider's signing secret for its delivery reports
+   (`VALO_EMAIL_WEBHOOK_SECRET`), and the webhook's address entered at the provider.
 2. **Replies to an unverified address**: whether staff may reply by email to the address someone gave when
    they could not sign in.
 3. **The messages' words**, reviewed before the first real send.

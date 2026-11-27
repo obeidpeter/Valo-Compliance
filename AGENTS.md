@@ -164,6 +164,11 @@ Rules that apply now:
   the dispatcher hands it to a sender, after checking again whatever could stop it. A row of
   `valo_messages` holds no message text and no address. The only sender is a stand-in that
   sends nothing: a sender that reaches a real address needs the owner's approval (section 1).
+- What an email provider reports about a message arrives signed at `routes/valo-email-webhook.ts`.
+  Keep of a report only what `valo_email_events` holds: never the address, the subject or the
+  provider's own words, and nothing of an open or a click. A message or reminder is called
+  delivered only where the provider reported it (`valo_message_deliveries`), and a message the
+  stand-in took never is.
 - API code is moving into one folder per capability under
   `artifacts/api-server/src/modules/`. Code outside a module imports it only through
   its `index.ts`; the `module-boundary` repository rule enforces this, and tests may

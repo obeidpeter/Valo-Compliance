@@ -30,7 +30,7 @@ No recorded evidence at all: none.
 
 ## Tests cited as evidence
 
-`docs/registers/ci-evidence.json` holds 821 citations of 576 tests for 126 requirements (decision 0010).
+`docs/registers/ci-evidence.json` holds 829 citations of 581 tests for 126 requirements (decision 0010).
 A CI job fails when a test cited for it does not pass, and each run's `readiness-report` artifact lists every citation's result.
 A citation is partial evidence: it never accepts a requirement.
 
@@ -130,7 +130,7 @@ A citation is partial evidence: it never accepts a requirement.
 | PRO-003 | 2 | foundation, postgres |
 | PRV-001 | 12 | foundation, postgres, web-performance |
 | PRV-002 | 2 | foundation |
-| PRV-003 | 16 | foundation, postgres, web-performance |
+| PRV-003 | 17 | foundation, postgres, web-performance |
 | RUL-001 | 28 | foundation, web-performance |
 | RUL-002 | 5 | foundation, web-performance |
 | RUL-003 | 3 | foundation |
@@ -140,14 +140,14 @@ A citation is partial evidence: it never accepts a requirement.
 | RUL-007 | 3 | foundation, postgres |
 | RUL-008 | 19 | foundation, postgres, web-performance |
 | RUL-009 | 4 | foundation, postgres |
-| SEC-001 | 6 | foundation, postgres |
+| SEC-001 | 7 | foundation, postgres |
 | SEC-002 | 11 | foundation, postgres |
 | SEC-003 | 15 | foundation, postgres, web-performance |
 | SEC-004 | 5 | foundation |
 | SEC-005 | 19 | foundation, postgres |
 | SEC-006 | 10 | foundation, postgres |
 | SEC-007 | 12 | foundation |
-| SEC-008 | 10 | foundation, postgres |
+| SEC-008 | 11 | foundation, postgres |
 | SRV-001 | 1 | foundation |
 | SRV-002 | 6 | foundation, postgres, web-performance |
 | SRV-003 | 1 | foundation |
@@ -158,7 +158,7 @@ A citation is partial evidence: it never accepts a requirement.
 | WEB-004 | 3 | foundation |
 | WRK-001 | 6 | postgres, web-performance |
 | WRK-002 | 2 | foundation |
-| WRK-003 | 9 | foundation, postgres, web-performance |
+| WRK-003 | 14 | foundation, postgres, web-performance |
 | WRK-004 | 3 | postgres |
 | WRK-005 | 1 | foundation |
 | WRK-006 | 3 | foundation, postgres |

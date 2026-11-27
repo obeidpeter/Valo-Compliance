@@ -77,3 +77,71 @@ The Replit development database has no Drizzle ledger. Follow the existing proce
 To roll back before any message is recorded, drop the table `valo_messages`, which drops its policy and
 grants. Once a message is recorded, keep the table: it is the record of what Valo owed each workspace and
 what became of it.
+
+## The delivery reports (slice 2a)
+
+`20261127001808_message_deliveries` and `20261127001815_message_delivery_grants` add what the email
+provider reports about a message it took ([messages](../architecture/messages.md), part 3). They need the
+two migrations above first. They have not been applied to the Replit development database yet. Apply
+both, in order.
+
+- **The first** adds two empty tables and two indexes.
+  - `valo_email_events` holds each signed report until the worker records it: the provider, its own id
+    for the report, what the report says, the provider's reference for the message, and the report's
+    time. It names no workspace and holds no address, subject or text. A report delivered twice is one
+    row (`valo_email_event_once`), and a row's state agrees with itself (`valo_email_event_shape`).
+  - `valo_message_deliveries` holds the latest report about each message or reminder of a workspace, one
+    row for each record (`valo_message_delivery_once`), with row-level security that limits a customer
+    request to its own workspace's rows.
+  - `valo_message_provider_idx` and `valo_reminder_provider_idx` find a message or a reminder by the
+    provider's reference.
+- **The second** lets customer requests read their own workspace's reports, and lets the worker's task
+  record one in that workspace's scope. Customer requests have no access to `valo_email_events`.
+- Neither changes a row.
+
+**Without these migrations, everything else works as before, and no report is taken or shown.** The code
+looks for the tables first:
+- `POST /api/webhooks/email` answers that it is not set up, so the provider sends the report again later;
+- the worker's `messages` task offers messages as before, and records no report;
+- the Messages page, the reminders and the purchases screen list as before, with no report on any row;
+- a workspace's data download lists no reports, and an erasure has none to remove.
+
+**No report arrives unless the owner sets it up.** The webhook is off unless
+`VALO_EMAIL_WEBHOOK_SECRET` holds the provider's signing secret, and the provider sends nothing until the
+webhook's address is entered there. Both are the owner's to do (the design's point 1). Only the
+reminders' development mailer sends through the provider, to one test address, so only a reminder can have
+a report.
+
+1. Confirm the database is at the message grants migration:
+   `SELECT to_regclass('public.valo_messages')` is not null, and
+   `SELECT to_regclass('public.valo_message_deliveries')` is null.
+2. Pause writes and the worker. Take a fresh encrypted backup.
+3. Apply each file on its own inside a transaction, in this order, from the repository root:
+
+   ```sh
+   PGOPTIONS='-c lock_timeout=5s -c statement_timeout=60s' \
+   psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 --single-transaction \
+     -f lib/db/drizzle/20261127001808_message_deliveries.sql
+   ```
+
+   ```sh
+   PGOPTIONS='-c lock_timeout=5s -c statement_timeout=60s' \
+   psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 --single-transaction \
+     -f lib/db/drizzle/20261127001815_message_delivery_grants.sql
+   ```
+
+4. Check that these return what follows:
+   - `SELECT count(*) FROM valo_email_events` and `SELECT count(*) FROM valo_message_deliveries` are 0.
+   - `SELECT relrowsecurity FROM pg_class WHERE oid = 'public.valo_message_deliveries'::regclass` is true.
+   - `SELECT has_table_privilege('valo_workspace_scope', 'valo_message_deliveries', 'UPDATE')` is true, and
+     the same for `DELETE` is false.
+   - `SELECT has_table_privilege('valo_workspace_scope', 'valo_email_events', 'SELECT')` is false.
+5. Record the target, commit, file hashes, operator, result and time outside customer logs.
+   Do not add rows to `drizzle.__drizzle_migrations`.
+
+The worker's `messages` task is the one already scheduled: the queue setup need not be run again for
+this.
+
+To roll back before any report is recorded, drop the two tables and the two indexes. Once a report is
+recorded, keep `valo_message_deliveries`: it is the record of what the email provider said about a
+workspace's messages.

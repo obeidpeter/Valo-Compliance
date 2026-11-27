@@ -206,7 +206,7 @@ checks, which are not provisioned yet.
 | `REQUEST_FAILURES_DETECTED` | More than 10 in 1,000 of the API's requests failed unexpectedly in the last ten minutes, once there are a hundred requests or more | Internal operations sample (NFR-003) |
 | `REQUEST_TIME_DETECTED` | 95 in 100 of the API's requests in the last ten minutes did not all finish within a second, once there are a hundred requests or more | Internal operations sample (NFR-003) |
 | `DENIED_ACCESS_DETECTED` | One hashed address was refused (401 or 403) more than 20 times in ten minutes | Internal operations sample (SEC-008) |
-| `SIGNATURE_FAILURES_DETECTED` | Any payment webhook signature was rejected in the last ten minutes | Internal operations sample (SEC-008) |
+| `SIGNATURE_FAILURES_DETECTED` | Any payment or email webhook signature was rejected in the last ten minutes | Internal operations sample (SEC-008) |
 | `SPREAD_REFUSALS_DETECTED` | Every hashed address together was refused (401 or 403) more than 100 times in ten minutes | Internal operations sample (SEC-005) |
 | `LIMITED_CALLERS_DETECTED` | A limit refused (429) more than 10 hashed addresses in ten minutes | Internal operations sample (SEC-005) |
 | `REFUSED_INPUT_DETECTED` | One hashed address sent more than 20 requests whose input was refused (400, 413, 415 or 422) in ten minutes | Internal operations sample (SEC-008) |
@@ -312,6 +312,14 @@ could no longer tell a retry from a new message; it raises `FAILED_MESSAGES_DETE
 message reaches anyone: the only sender is a stand-in that sends nothing (see
 `docs/architecture/messages.md` and `docs/valo/migration-messages.md`). A message the stand-in took is
 `accepted` in the table, and the workspace's log calls it recorded and "Not emailed".
+
+What the email provider reports about a message it took arrives at `POST /api/webhooks/email`, which
+answers 503 unless the runtime is development and `VALO_EMAIL_WEBHOOK_SECRET` is set. A report whose
+signature fails is logged as `email.signature_rejected` and counted for `SIGNATURE_FAILURES_DETECTED`,
+with the payment webhook's: check that the secret is the one the provider shows for this webhook. A
+signed report Valo cannot read is logged as `email.event_unreadable`, and means the provider's form has
+changed. A report waits in `valo_email_events` as `pending` until the worker's `messages` task records
+it. One still `pending` after an hour names a message Valo does not hold, and is settled as `unmatched`.
 
 A customer request that answers the generic 503 with error code `42501` in its log
 ran a command `valo_workspace_scope` does not hold: the code started using a table,
