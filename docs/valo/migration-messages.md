@@ -230,3 +230,71 @@ workspace's history and the limit counters.
 (`VALO_PRIVACY_KEYRING`, or the key derived from `SESSION_SECRET` where no keyring is set). Drop a key
 from the keyring, or change `SESSION_SECRET` with no keyring, and every link made under it stops
 working. Its page then says that the link does not work, and where reminders are turned off in Valo.
+
+## Notices by email (slice 5)
+
+`20261127033059_notice_digests` and `20261127033114_notice_digest_grants` add the days whose notices owe
+a workspace a message ([messages](../architecture/messages.md), part 7). They follow the suppression
+migrations in the journal's order. They have not been applied to the Replit development database yet.
+Apply both, in order, in one sitting.
+
+- **The first** adds an empty table and lets a message be about a day's notices.
+  - `valo_notice_digests` holds one row for a workspace and a Lagos day (`valo_notice_digest_once`), and
+    only for a day that has ended (`valo_notice_digest_day_ended`). It holds nothing of the notices. Row-level
+    security limits a customer request to its own workspace's rows.
+  - `valo_message_shape` is replaced by the same rule with one kind more, `notices_digest`, as a necessary
+    message. Every message there is already meets it.
+- **The second** lets customer requests read their own workspace's days. They write none: the worker
+  records them on the application's own connection.
+- Neither changes a row.
+
+**Without the first, everything else works as before, and no notice is emailed.** The code looks for the
+table first:
+- the worker's `messages` task records no day, and offers messages and records reports as before;
+- notices show on the Workspace page as before;
+- a workspace's data download lists no days, and an erasure has none to remove.
+
+**With the first and not the second, a day's message cannot be made.** The task records the day and
+queues its message. The dispatcher then reads the day in the workspace's scope, which may not read the
+table yet: each try fails, the task reports a failure each minute, and the Messages page of a workspace
+that is owed such a message answers with an error. So apply both in one sitting.
+
+**The first run catches up a week.** Once both are applied, the task records a day for each workspace
+with a correction, a changed requirement or a withdrawn template in the last seven days, one message for
+each day. No message reaches anyone: with no sender set each waits as `held`, and with the stand-in each
+is recorded as not emailed.
+
+1. Confirm the database is at the suppression check migration:
+   `SELECT to_regprocedure('valo_email_address_suppressed(text[], text[])')` is not null, and
+   `SELECT to_regclass('public.valo_notice_digests')` is null.
+2. Pause writes and the worker. Take a fresh encrypted backup.
+3. Apply each file on its own inside a transaction, in this order, from the repository root:
+
+   ```sh
+   PGOPTIONS='-c lock_timeout=5s -c statement_timeout=60s' \
+   psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 --single-transaction \
+     -f lib/db/drizzle/20261127033059_notice_digests.sql
+   ```
+
+   ```sh
+   PGOPTIONS='-c lock_timeout=5s -c statement_timeout=60s' \
+   psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 --single-transaction \
+     -f lib/db/drizzle/20261127033114_notice_digest_grants.sql
+   ```
+
+4. Check that these return what follows:
+   - `SELECT count(*) FROM valo_notice_digests` is 0.
+   - `SELECT relrowsecurity FROM pg_class WHERE oid = 'public.valo_notice_digests'::regclass` is true.
+   - `SELECT has_table_privilege('valo_workspace_scope', 'valo_notice_digests', 'SELECT')` is true, and the
+     same for `INSERT` is false.
+   - `SELECT pg_get_constraintdef(oid) LIKE '%notices_digest%' FROM pg_constraint WHERE conname = 'valo_message_shape'`
+     is true.
+5. Record the target, commit, file hashes, operator, result and time outside customer logs.
+   Do not add rows to `drizzle.__drizzle_migrations`.
+
+The worker's `messages` task is the one already scheduled: the queue setup need not be run again for
+this.
+
+To roll back before any day is recorded, drop the table `valo_notice_digests`, which drops its policy and
+grant, and put `valo_message_shape` back as the messages migration made it. Once a day is recorded, keep
+the table: its rows are what the messages about those days are about.

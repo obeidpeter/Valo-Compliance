@@ -182,6 +182,11 @@ Rules that apply now:
   carries the same words. Opening a link changes nothing. Only a POST does: it turns that one kind of
   message off for the link's workspace, as its owner, and records the choice. Answer every link Valo
   does not honour alike, and log nothing of a link.
+- A notice of a change is emailed only as its workspace's one message for the day. A change writes
+  its notice where it happens, and sends nothing. The worker's task records each ended day in
+  `valo_notice_digests` and queues its message (`modules/messages/valo-notice-digests.ts`); a kind of
+  notice that should be emailed joins `emailedNotices` there, with the owner's approval of the
+  choice. The message holds Valo's own words for a change, never what a customer wrote.
 - API code is moving into one folder per capability under
   `artifacts/api-server/src/modules/`. Code outside a module imports it only through
   its `index.ts`; the `module-boundary` repository rule enforces this, and tests may

@@ -345,7 +345,11 @@ only a keyed checksum of it is kept, and the reminders' mailer in `modules/tasks
 whether an address is suppressed before each send. The module also makes and reads the token of an
 optional message's unsubscribe link. The reminders' mailer puts that link in each reminder, and
 `modules/tasks/reminder-unsubscribe.ts` turns a workspace's reminders off from one, for the two routes
-in `routes/valo-unsubscribe.ts`: the page's, and a mail service's one-click request.
+in `routes/valo-unsubscribe.ts`: the page's, and a mail service's one-click request. The worker's task
+also records each ended day on which a workspace had a notice of a change that affects it, and queues
+the day's one message to its owner (`valo-notice-digests.ts`): it reads the notices that
+`modules/sources`, `modules/rules` and `modules/catalogue` show in the app from their tables, and
+imports none of those modules.
 
 The store that held workspaces, documents and support tickets together is split
 ([decision 0012](decisions/0012-split-the-store.md)):

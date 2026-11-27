@@ -277,8 +277,9 @@ Built (slice 2b), suppression (`modules/messages/valo-email-suppression.ts`):
   - A reminder to a suppressed address is cancelled with the reason `EMAIL_ADDRESS_SUPPRESSED`. It is not
     counted as a try, and is not tried again. The reminders screen says why, that the task is saved, and
     offers the way to report a problem.
-  - The outbox holds only necessary messages, a receipt and a refund's notice. A suppression does not
-    stop them: they are still owed, and a receipt that came back still shows on the purchases screen.
+  - The outbox holds only necessary messages: a receipt, a refund's notice and a day's notices. A
+    suppression does not stop them: they are still owed, and a receipt that came back still shows on
+    the purchases screen.
   - When an optional kind joins the outbox, its sender asks the same question. That is slice 3b, which
     moves the reminders onto the shared sender.
 - **Privacy.** The processing inventory and the privacy notice name the checksum, what it is for and how
@@ -477,9 +478,58 @@ carries its test-mode line.
   well as the notice showing there.
 - **One a day.** Several notices on one day are sent as one message.
 
+Built (slice 5), against the stand-in sender. No message reaches anyone:
+- **Which notices are emailed** (`modules/messages/valo-notice-digests.ts`). No notice carries a mark
+  saying that it is material, as the design above supposed, so the kind of notice decides:
+  - every correction notice: one of the workspace's tasks, saved results, documents or purchases used
+    a source or a version that is now held or withdrawn;
+  - every rule notice: a requirement the workspace saved a result or made a task from was replaced
+    or withdrawn. [Rule changes](rule-changes.md) already treats each such change as material;
+  - a template's withdrawal.
+
+  A template replaced by a later edition is shown in the app only. The choice is a proposal (the
+  owner's point 7).
+- **One message for a day.** The worker's `messages` task records in `valo_notice_digests` that a
+  day's notices owe their workspace one message, and queues it to the workspace's owner in the same
+  transaction, as a necessary message.
+  - A day is recorded from 07:00 the next morning on a Lagos clock. The day has ended, so its notices
+    are all there, and the message does not arrive in the night.
+  - A workspace has one row for a day, and the database holds a row to a day that has ended. A
+    second run, or a second worker, adds none.
+  - A worker that was stopped catches up a week back, with one message for each day. Notices older
+    than that stay where they have been since they were made, in the app.
+  - Once every ended day is recorded, the task does not read the week's notices again until the
+    next morning.
+- **What the message says** (`noticesMessage`). It is composed when it is sent, from the day's
+  notices as they are then:
+  - each changed requirement by its title, as replaced or withdrawn, and each withdrawn template by
+    its title: up to ten of each, with a count of the rest;
+  - how many of the workspace's saved items a correction asks it to review. An item that two changes
+    reached that day is counted once;
+  - a link to the workspace page, where each notice is. It does not link to each notice, as the
+    design above said it would: the page lists them together;
+  - why it is sent, and that it is a necessary message with no unsubscribe link.
+
+  It holds nothing the customer wrote. A title is Valo's own, and is written on one line. A day
+  with no notice left owes no message, and its message is cancelled.
+- **What stops any message stops this one**: the pause, a recipient who is no longer a member, and
+  a workspace whose deletion is recorded. No day is recorded for such a workspace in the first
+  place.
+- **What a customer sees.** The Messages page lists the message under its day, says that the notices
+  themselves are on the Workspace page, and links there.
+- **Privacy.** The processing inventory and the privacy notice name the message. A workspace's data
+  download lists its days, and an erasure removes them.
+- **Without its migrations** no day is recorded and nothing is emailed, and notices show in the app
+  as before ([the migration note](../valo/migration-messages.md)).
+
+Not built:
+- **A mark on one notice.** Nothing lets a member of staff say that a single change is not
+  material, so that it would show in the app with no email ([rule changes](rule-changes.md), the
+  owner's point 2).
+
 **The words**, for the owner to review before the first real send (the owner's point 3). A test keeps
 this page's copy the same as the code's. For a day on which two requirements changed, a template was
-withdrawn and two saved items used a source that was held:
+withdrawn and two saved items used a source or a version that was held or withdrawn:
 
 ```text
 Subject: Changes on 18 Nov 2026 that affect your Valo workspace
@@ -522,7 +572,7 @@ You receive this message because these changes affect what you saved, made or bo
 | 3a | Unsubscribe for reminders: the link in each reminder, its token, the page, the one-click address, and the choice recorded | Built |
 | 3b | The reminders on the shared sender, and consent read by the dispatcher for the first optional kind in the outbox | Not built |
 | 4 | Support: replies to someone who cannot sign in, staff notices and the states on the case | Not built |
-| 5 | Material notices by email | Not built |
+| 5 | Material notices by email: one message a day to a workspace about the changes that affect it | Built |
 
 ## The owner's points
 
@@ -538,3 +588,8 @@ You receive this message because these changes affect what you saved, made or bo
 6. **The unsubscribe link**: that it never expires while its key is kept, and that one workspace's links
    are taken ten times a minute. Both are proposals. The page's words are among the messages' words in
    point 3.
+7. **Notices by email**. All three are proposals, and the message's words are among those in point 3:
+   - which notices are emailed: every correction, every changed requirement and a withdrawn
+     template, and not a template replaced by a later edition;
+   - when: from 07:00 Lagos time the morning after, and a week back at most;
+   - that it is a necessary message, which nobody can unsubscribe from.

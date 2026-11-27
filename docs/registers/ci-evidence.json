@@ -3366,7 +3366,7 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/privacy/valo-privacy-erasure.integration.test.ts",
       "test": "resumable physical development erasure with retained exclusions and replay",
-      "proves": "A synthetic deletion request, run by privacy staff with fresh MFA and an acknowledgement, quarantines the workspace while its document still exists, then removes its documents, revisions, profile versions, saved templates, rule and edition notices, the messages Valo owed it, what an email service reported about them and its private files in a controlled local file store, redacts its support and privacy-case text and clears its AI draft content, while another workspace's document, notices, message and report stay and the request ends partially fulfilled with the outside-processors step held."
+      "proves": "A synthetic deletion request, run by privacy staff with fresh MFA and an acknowledgement, quarantines the workspace while its document still exists, then removes its documents, revisions, profile versions, saved templates, rule and edition notices, the messages Valo owed it, what an email service reported about them, the days whose notices owed it a message and its private files in a controlled local file store, redacts its support and privacy-case text and clears its AI draft content, while another workspace's document, notices, message, report and day stay and the request ends partially fulfilled with the outside-processors step held."
     },
     {
       "requirement": "PRV-003",
@@ -5529,7 +5529,7 @@
       "job": "foundation",
       "file": "lib/db/scripts/phase1-migrations.test.mjs",
       "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
-      "proves": "After the edition notices migration, the database writes one notice to each workspace that holds or used an edition when it is replaced or withdrawn in the staff library, or replaced on the reviewed route, and none to another workspace."
+      "proves": "After the edition notices migration, the database writes one notice to each workspace that holds or used an edition when it is replaced or withdrawn in the staff library, or replaced on the reviewed route, and none to another workspace. After the notice digests migrations, a workspace has one row for a day, only for a day that has ended in Lagos, a message can be about it as a necessary message and once, and a customer request reads its own workspace's days and writes none."
     },
     {
       "requirement": "EDP-011",
@@ -5880,6 +5880,55 @@
       "file": "artifacts/api-server/src/platform/login-rotation.test.ts",
       "test": "each database login is rotated, revoked in an emergency and restored, and the work that needs it stops with its own code while the process carries on (SEC-002, OPS-004)",
       "proves": "Each of the four database logins is rotated with its script, revoked in an emergency with its open sessions ended, and restored. Revoked, its work stops with the login's own code, each ended session is reported with its code and nothing is thrown, and the application's own connection goes on working."
+    },
+    {
+      "requirement": "EDP-011",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/messages/valo-notice-digests.integration.test.ts",
+      "test": "a day's notices owe a workspace one message, from 07:00 the next morning on a Lagos clock, naming what changed (EDP-011, WRK-004)",
+      "proves": "Against PostgreSQL, with synthetic notices and the stand-in sender, which sends nothing: a day's correction notices, changed requirements and withdrawn templates owe the workspace's owner one message from 07:00 the next morning on a Lagos clock and not before, however many runs there are, and a week back at most; a template replaced by a later edition owes none. The message names that day's changes alone, counts each saved item to review once, and is cancelled when no notice is left. A workspace whose deletion is recorded is owed nothing. No message reaches anyone, and no change made through the product is followed to its email here: the notices are the test's own."
+    },
+    {
+      "requirement": "SEC-001",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/messages/valo-notice-digests.integration.test.ts",
+      "test": "a day's notices owe a workspace one message, from 07:00 the next morning on a Lagos clock, naming what changed (EDP-011, WRK-004)",
+      "proves": "Against PostgreSQL, a day's message counts and names its own workspace's notices alone; asked for from another workspace the day is not found, in that workspace's database scope it is not there to read, and no customer request can add, change or remove a day, its own workspace's included. The other workspace's log lists none of it."
+    },
+    {
+      "requirement": "PRV-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/messages/valo-notice-digests.integration.test.ts",
+      "test": "a day's notices owe a workspace one message, from 07:00 the next morning on a Lagos clock, naming what changed (EDP-011, WRK-004)",
+      "proves": "Against PostgreSQL, a workspace's data download lists the days whose notices owed it a message, by the id its message is about, and another workspace's lists none of them."
+    },
+    {
+      "requirement": "EDP-011",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/messages/messages.test.ts",
+      "test": "a notices message names the day, each changed requirement and withdrawn template, and how many saved items to review, and links to the workspace page (EDP-011, WRK-004)",
+      "proves": "The notices message's words name the day, each changed requirement as replaced or withdrawn, each withdrawn template and how many saved items to review, link to the workspace page, and leave out a part with nothing in it."
+    },
+    {
+      "requirement": "WRK-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/messages/messages.test.ts",
+      "test": "a notices message names the day, each changed requirement and withdrawn template, and how many saved items to review, and links to the workspace page (EDP-011, WRK-004)",
+      "proves": "The notices message says why it is sent, and that it is a necessary message about the account with no unsubscribe link."
+    },
+    {
+      "requirement": "EDP-011",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/messages/messages.test.ts",
+      "test": "a day's notices are emailed from 07:00 the next morning on a Lagos clock, for a week back, naming ten of each sort (EDP-011)",
+      "proves": "Until 07:00 on a Lagos clock the day before is not yet owed its message, at midnight and at the turn of a year too."
+    },
+    {
+      "requirement": "EDP-011",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "the messages screen says in plain words what has happened to each message and reminder, calls none of them sent, calls delivered only one the email service reported as delivered, and says of a message Valo only recorded that nothing was emailed",
+      "proves": "In a real browser with controlled answers, the Messages page heads a message about a day's changes with that day, says that the notices themselves are on the Workspace page, and links there and not to Purchases. The answers are the test's own."
     }
   ]
 }

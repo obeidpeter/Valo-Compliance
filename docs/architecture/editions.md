@@ -93,8 +93,9 @@ Every notice ends: "Files you already downloaded are not affected." Nothing says
 takes back a file already downloaded (EDT-010).
 
 A staff-library withdrawal now records a reason of 20 to 1,000 characters, as the reviewed route's
-withdrawal does, and the notice shows it. Sending notices by email waits for a sender and the owner's
-decision on messages (phase 4).
+withdrawal does, and the notice shows it. A withdrawal's notice is also in the workspace's one
+message a day about the changes that affect it; a replacement's is shown in the app only
+([messages](messages.md), part 7). Nothing is sent until the owner approves a provider and a sender.
 
 Settled while building it:
 
@@ -134,4 +135,5 @@ There are two pull requests. The first carries this design and slices 1 and 2, t
 1. The words of the notices and the editor's notice.
 2. Decision 3 itself: a purchase that carries to every later edition at no further charge. The licence
    text that states it is still the owner's to approve.
-3. Whether notices also go by email, once a sender exists (phase 4).
+3. Which notices also go by email. Built against a stand-in sender for a withdrawal and not for a
+   replacement; the choice is the owner's point 7 in [messages](messages.md).

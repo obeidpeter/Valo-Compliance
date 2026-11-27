@@ -353,6 +353,23 @@ current key changed, may have been tried once before and once after. Its words d
 change, because its link does, and the provider's documentation says it refuses a retry whose content
 differs from the first. The reminder went at most once.
 
+A message of the kind `notices_digest` is one day's notices to a workspace of the changes that affect
+it (`docs/architecture/messages.md`, part 7). The worker's `messages` task records the day in
+`valo_notice_digests` from 07:00 the next morning on a Lagos clock, and queues the message to the
+workspace's owner. What follows is not a fault:
+- no message for a day whose only notice is a template replaced by a later edition: that notice is
+  shown in the app only;
+- no message for a notice more than a week old when the task first sees it, as after a worker was
+  stopped for longer: the notice is on the Workspace page, where it has been since it was made;
+- a message `cancelled` with the reason `NOTICES_NOT_FOUND`: the day's notices were gone when it was
+  to be sent;
+- no day recorded for a workspace whose deletion is recorded.
+
+A `messages` task that fails each minute with `permission denied for table valo_notice_digests`, on a
+database that has the table, lacks the second notice digests migration. Apply it (see
+`docs/valo/migration-messages.md`). A `valo_notice_digest_day_ended` refusal in that task means the
+worker's clock is more than seven hours ahead of the database's: correct the clock.
+
 A customer request that answers the generic 503 with error code `42501` in its log
 ran a command `valo_workspace_scope` does not hold: the code started using a table,
 command or column before a migration granted it (`WORKSPACE_SCOPE_PRIVILEGES` in

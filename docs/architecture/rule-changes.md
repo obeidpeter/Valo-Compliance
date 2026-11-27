@@ -82,7 +82,8 @@ Their proposed words:
 | Saved results | "Your 2 saved results that list it are kept as they were saved. Check again to see what applies now." | the same |
 | Tasks | "Your task made from it is marked for review, and its reminders have stopped." | the same |
 
-Sending notices by email waits for a sender and the owner's decision on messages (phase 4).
+Each notice is also in the workspace's one message a day about the changes that affect it
+([messages](messages.md), part 7). Nothing is sent until the owner approves a provider and a sender.
 
 ### 3. A saved result says which of its rules changed (CMP-005, EDP-011)
 
@@ -173,4 +174,5 @@ Sending notices by email waits for a sender and the owner's decision on messages
    material". Every change gives a reason, few rules are released, and a rule says what a business
    may have to do. So every change is treated as material. The owner may prefer a change to be
    marked as not material, which would mark tasks for review without a notice.
-3. **Whether notices also go by email**, once a sender exists (phase 4).
+3. **Whether notices also go by email.** Built against a stand-in sender for every rule notice; the
+   choice is the owner's point 7 in [messages](messages.md).
