@@ -15,9 +15,9 @@ import { useToast } from "@/hooks/use-toast";
  *
  * - under the header, wherever the header is, so that the header and its menu stay in reach, and at
  *   the top, so that it is clear of the actions a screen holds at its foot (the button just pressed);
- * - gone as soon as the keyboard moves on, so that the control that takes the focus is not hidden
- *   under it (WCAG 2.2, Focus Not Obscured). Tab inside the message itself, which F8 reaches, moves
- *   within it.
+ * - gone as soon as the keyboard has moved on to another part of the page, so that the control that
+ *   takes the focus is not hidden under it (WCAG 2.2, Focus Not Obscured). It stays while the
+ *   keyboard is in the message itself, which F8 reaches, and which follows the page's last control.
  */
 export function Toaster() {
   const { toasts, dismiss } = useToast();
@@ -33,7 +33,12 @@ export function Toaster() {
       viewport.current?.style.setProperty("top", `${Math.max(0, foot)}px`);
     };
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Tab" && !viewport.current?.contains(document.activeElement)) close.current();
+      if (event.key !== "Tab") return;
+      // Decided once the key has moved the focus, never before: a Tab that moves into the message
+      // must not find it going.
+      window.setTimeout(() => {
+        if (!viewport.current?.contains(document.activeElement)) close.current();
+      });
     };
     place();
     window.addEventListener("scroll", place, { passive: true });

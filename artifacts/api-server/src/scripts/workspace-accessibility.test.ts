@@ -5952,8 +5952,14 @@ test("the message that confirms a save has a close button with a name, lies unde
         "1",
         kind,
       );
-      // The pointer on the message keeps it on screen while it is looked at.
-      await message.hover();
+      // The pointer on the message keeps it on screen while it is looked at. It is moved there as a
+      // hand moves it. A test's own "hover" may first scroll its target into view, and a browser
+      // takes a scroll to an element as the place the keyboard carries on from.
+      const point = async () => {
+        const at = (await message.boundingBox())!;
+        await page.mouse.move(at.x + at.width / 2, at.y + at.height / 2);
+      };
+      await point();
       await settled(page);
       const box = (await message.boundingBox())!,
         header = (await page.locator("header").first().boundingBox())!,
@@ -5995,10 +6001,17 @@ test("the message that confirms a save has a close button with a name, lies unde
       await expect.poll(async () => (await under()).header > 0 && (await under()).gap === 16).toBe(true);
       await page.getByTestId("checkbox-marketing").scrollIntoViewIfNeeded();
       await expect.poll(under).toEqual({ header: 0, gap: 16 });
-      await message.hover();
-      // The keyboard moves on, and the message goes: nothing it reaches is hidden.
+      await point();
+      // The keyboard moves on from the save button, and the message goes: nothing the keyboard
+      // reaches is hidden. The focus is on the control the key moved it to, in the footer.
+      await save.focus();
       await page.keyboard.press("Tab");
       await expect(message).toHaveCount(0);
+      assert.equal(
+        await page.evaluate(`!!document.activeElement.closest("footer")`),
+        true,
+        `${kind}: the keyboard is on the control after the save button`,
+      );
       if (kind === "phone")
         assert.deepEqual(await phoneProblems(page, "the business profile after a save"), []);
       assert.deepEqual([...errors, ...unknown], [], kind);
@@ -6009,6 +6022,40 @@ test("the message that confirms a save has a close button with a name, lies unde
 });
 
 // The message itself can be reached and closed from the keyboard.
+// The message is the last thing on a page, so the keyboard reaches it after the page's last control.
+// It must not go as the keyboard arrives: the focus would be left in something that is gone.
+test("the keyboard moving on from the page's last control reaches the message that confirms a save, which stays while the keyboard is in it and goes once the keyboard leaves it", async () => {
+  const workspace = answers["GET /workspace"] as Record<string, unknown>;
+  const saved = api.SaveBusinessProfileResponse.parse({ ...workspace, profileRevision: 4 });
+  const { page, errors, unknown, close } = await phone(
+    "/workspace/profile",
+    except({ "PUT /workspace/profile": saved }),
+  );
+  try {
+    await ready(page);
+    await page.getByTestId("button-save-profile").click();
+    const message = page.getByTestId("toast").filter({ hasText: "Profile saved" });
+    await expect(message).toContainText("Saved as version 4.");
+    // On a phone the page's last control is the last link of the bar at the foot of the screen.
+    await page.getByTestId("link-bar-profile").focus();
+    await page.keyboard.press("Tab");
+    await expect(message).toBeFocused();
+    // Longer than the message takes to go.
+    await delay(600);
+    await expect(message).toBeVisible();
+    await page.keyboard.press("Tab");
+    await expect(message.getByRole("button", { name: "Close this message" })).toBeFocused();
+    await delay(600);
+    await expect(message).toBeVisible();
+    // The next key takes the keyboard out of the message and off the end of the page.
+    await page.keyboard.press("Tab");
+    await expect(message).toHaveCount(0);
+    assert.deepEqual([...errors, ...unknown], []);
+  } finally {
+    await close();
+  }
+});
+
 test("the message that confirms a save is reached with F8, and its close button closes it", async () => {
   const workspace = answers["GET /workspace"] as Record<string, unknown>;
   const { page, errors, unknown, close } = await desktop(
