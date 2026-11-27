@@ -905,6 +905,20 @@
       "proves": "Against PostgreSQL, a template, a practical guide and a regulatory article released through the staff library's own functions are each found under their own type and the guide under its industry, by a plural and an everyday word; a draft, a regulatory article the owner has not signed, a later draft's words, a held, withdrawn or replaced version and a customer's document with the same word are never found."
     },
     {
+      "requirement": "WEB-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/catalogue/public-search.test.ts",
+      "test": "an item that has every wanted word is found; when none has, the items that have the most of them are listed as the closest; and a search of marks alone lists everything",
+      "proves": "Where no item has every word a search must have, the items that have at least one of them and lack the fewest are listed and the answer says they are the closest; an item with none of the words is never listed, nothing is the closest to a word no item has, and the filters still narrow them."
+    },
+    {
+      "requirement": "WEB-003",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-server-pages.test.ts",
+      "test": "when nothing has every word of a search the library lists the items that have the most of them and says so, in the server's HTML and on a phone; a search an item answers in full says nothing of the kind, and one no item has a word of finds nothing",
+      "proves": "In a browser on a phone and in the server's HTML, the library lists the closest items to a search that no item has every word of and says that nothing has all the words, with no automated accessibility failure; it says nothing of the kind for a search an item answers in full, and shows its empty state for one no item has a word of."
+    },
+    {
       "requirement": "SRV-001",
       "job": "foundation",
       "file": "artifacts/valo/src/components/service-categories.test.tsx",
