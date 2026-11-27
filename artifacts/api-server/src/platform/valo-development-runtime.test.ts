@@ -96,8 +96,8 @@ test("actual export entries and worker startup reject before database, queue or 
     [
       "commerce",
       `const hit=async()=>{globalThis.guardEffects.services++;};
-      export const processPaymentEvents=hit,reconcilePayments=hit,processRefundQueue=hit,
-      reconcileKnownDisputes=hit,reconcileDisputeActions=hit;`,
+      export const processPaymentEvents=hit,reconcilePayments=hit,runPaymentReconciliationJob=hit,
+      processRefundQueue=hit,reconcileKnownDisputes=hit,reconcileDisputeActions=hit;`,
     ],
     // The worker reaches the messages job through the messages module's index. The job itself is a
     // service effect here; the choice of its sender, which the worker makes as it starts, is the real one.

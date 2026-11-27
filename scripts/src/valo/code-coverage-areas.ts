@@ -34,6 +34,7 @@ export const COVERAGE_AREAS = {
       api("modules/commerce/valo-payment-concerns.ts"),
       api("modules/commerce/valo-payment-disputes.ts"),
       api("modules/commerce/valo-payment-event-review.ts"),
+      api("modules/commerce/valo-payment-lists.ts"),
       api("modules/commerce/valo-payment-reconciliation.ts"),
       api("modules/commerce/valo-paystack-contract.ts"),
       api("modules/commerce/valo-receipt-provenance.ts"),

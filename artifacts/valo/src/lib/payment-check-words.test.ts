@@ -1,6 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { eventFindingWords, eventTypeWords, findingWords, OUTCOME_WORDS } from "./payment-check-words";
+import {
+  eventFindingWords,
+  eventHeading,
+  eventTimeWords,
+  eventTypeWords,
+  findingWords,
+  OUTCOME_WORDS,
+} from "./payment-check-words";
 
 // PAY-007 (docs/architecture/reconciliation.md, slices 1 and 2): finance reads what a daily payment check
 // found in plain words, a sentence for each name its finding gives.
@@ -58,4 +65,23 @@ test("why a Paystack event waits for finance, and what it was, is said in plain 
   assert.equal(eventTypeWords("refund.processed"), "A refund");
   assert.equal(eventTypeWords("charge.dispute.create"), "A dispute");
   assert.equal(eventTypeWords("transfer.success"), "An event Paystack calls transfer.success");
+});
+
+// PAY-007 (docs/architecture/reconciliation.md, slice 3b): what Paystack's own list of a day's successful
+// payments could not give is said in plain words, and named by its day, written as the site writes a day.
+test("what a day's Paystack list could not give is said in plain words, and the event is named by its day", () => {
+  for (const name of ["LISTING_UNREAD", "LISTING_INCOMPLETE"]) {
+    const words = eventFindingWords(name);
+    assert.match(words, /\.$/, name);
+    assert.doesNotMatch(words, /_[A-Z]|[A-Z]_/, `${name} is said in words, not as its name`);
+    assert.doesNotMatch(words, /does not name yet/, `${name} has words of its own`);
+  }
+  assert.match(eventFindingWords("LISTING_UNREAD"), /three times, an hour apart/);
+  assert.match(eventFindingWords("LISTING_INCOMPLETE"), /twenty pages/);
+  assert.equal(eventTypeWords("listing"), "Paystack's list of a day's successful payments");
+  assert.equal(eventHeading("listing", "2026-11-26"), "Paystack's list for 26 Nov 2026");
+  assert.equal(eventHeading("charge.success", "valo-test-synthetic-1"), "valo-test-synthetic-1");
+  assert.equal(eventHeading("charge.success", null), "No reference");
+  assert.equal(eventTimeWords("listing"), "Recorded");
+  assert.equal(eventTimeWords("charge.success"), "Received");
 });

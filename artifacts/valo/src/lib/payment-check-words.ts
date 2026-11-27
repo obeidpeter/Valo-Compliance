@@ -1,3 +1,5 @@
+import { formatDay } from "./format";
+
 /**
  * The words finance reads for a daily payment check (docs/architecture/reconciliation.md, slices 1 and 2):
  * what each finding means, and what each outcome of a settlement records.
@@ -53,6 +55,10 @@ const EVENT_FINDING_WORDS: Record<string, string> = {
   SERVER_VERIFICATION_REQUIRED: "Valo could not process it. It came before Valo named why.",
   PRIVACY_ERASURE_FINANCE_REVIEW:
     "The workspace it was about has been erased. Look at what Paystack holds for it.",
+  LISTING_UNREAD:
+    "Valo could not read Paystack's list of this day's successful payments, three times, an hour apart. Read the list at Paystack.",
+  LISTING_INCOMPLETE:
+    "Paystack's list of this day's successful payments was longer than the twenty pages Valo reads. Read the rest at Paystack.",
 };
 const UNNAMED_EVENT =
   "Valo could not process it, for a reason it does not name yet. Look for it at Paystack.";
@@ -67,5 +73,18 @@ export function eventTypeWords(eventType: string): string {
   if (eventType === "charge.success") return "A successful payment";
   if (eventType.startsWith("charge.dispute.")) return "A dispute";
   if (eventType.startsWith("refund.")) return "A refund";
+  if (eventType === "listing") return "Paystack's list of a day's successful payments";
   return `An event Paystack calls ${eventType}`;
+}
+
+/** How finance's list names an event: by the reference it names, or, for what Paystack's own list of a day
+ * could not give, by the day (docs/architecture/reconciliation.md, slice 3b). */
+export function eventHeading(eventType: string, reference: string | null): string {
+  if (eventType === "listing" && reference) return `Paystack's list for ${formatDay(reference)}`;
+  return reference ?? "No reference";
+}
+
+/** When the event reached Valo, or, for a day's list, when Valo recorded what the list could not give. */
+export function eventTimeWords(eventType: string): string {
+  return eventType === "listing" ? "Recorded" : "Received";
 }

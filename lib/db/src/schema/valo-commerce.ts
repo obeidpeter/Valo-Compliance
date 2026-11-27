@@ -300,6 +300,33 @@ export const valoPaymentEventSettlements = pgTable(
     }),
   ],
 );
+/**
+ * Each UTC day's reading of Paystack's own list of the successful payments it took
+ * (docs/architecture/reconciliation.md, slice 3b). The worker reads a day's list once the day has ended. A
+ * payment on it whose reference is no order's is recorded as a provider event that waits for finance, and
+ * so is a list that could not be read, or not read whole. It names no workspace, and a customer's request
+ * has no access to it.
+ */
+export const valoPaymentLists = pgTable(
+  "valo_payment_lists",
+  {
+    day: text("day").primaryKey(),
+    status: text("status").notNull().default("pending"),
+    attempts: integer("attempts").notNull().default(0),
+    lastAttemptAt: timestamp("last_attempt_at", { withTimezone: true }),
+    pages: integer("pages"),
+    transactions: integer("transactions"),
+    unmatched: integer("unmatched"),
+    finding: text("finding"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    finishedAt: timestamp("finished_at", { withTimezone: true }),
+  },
+  (t) => [
+    check("valo_payment_lists_day_check", sql`${t.day} ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'`),
+    check("valo_payment_lists_status_check", sql`${t.status} IN ('pending', 'listed', 'needs_review')`),
+    check("valo_payment_lists_attempts_check", sql`${t.attempts} BETWEEN 0 AND 3`),
+  ],
+);
 export const valoEntitlements = pgTable(
   "valo_entitlements",
   {

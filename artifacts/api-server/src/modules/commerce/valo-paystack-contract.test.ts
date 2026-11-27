@@ -5,7 +5,10 @@ import {
   authenticPaystackBody,
   verifiedTransaction,
   assertOrderMatch,
+  listedDayPath,
+  listedTransactions,
   orderDifferences,
+  PAYSTACK_API,
   paystack,
   paystackEventFamily,
 } from "./valo-paystack-contract";
@@ -281,6 +284,77 @@ test("no merchant call is made with a live key, in production, in a deployment o
   } finally {
     globalThis.fetch = realFetch;
     restore();
+  }
+});
+
+// PAY-007 (docs/architecture/reconciliation.md, slice 3b): Paystack's own list of a day's successful payments.
+test("a day's list of successful payments is asked for by its UTC day and a page, with no page size and only with a test key, and a page is read only as far as Valo uses it", async () => {
+  assert.equal(
+    listedDayPath("2026-11-26", 1),
+    "/transaction?status=success&from=2026-11-26T00%3A00%3A00.000Z&to=2026-11-27T00%3A00%3A00.000Z&page=1",
+  );
+  // The last day of a year ends at the first moment of the next.
+  assert.equal(
+    listedDayPath("2026-12-31", 3),
+    "/transaction?status=success&from=2026-12-31T00%3A00%3A00.000Z&to=2027-01-01T00%3A00%3A00.000Z&page=3",
+  );
+  for (const day of ["2026-11-31", "2026-02-29", "26-11-2026", "2026-11-26T00:00:00.000Z", ""])
+    assert.throws(() => listedDayPath(day, 1), { status: 400 }, day);
+  for (const page of [0, -1, 1.5, Number.NaN])
+    assert.throws(() => listedDayPath("2026-11-26", page), { status: 400 }, String(page));
+  // A page is read for each payment's id, test domain, status and reference, and for its page count. Nothing
+  // else it carries is kept, and the id is kept as text.
+  const item = {
+    id: 9001,
+    domain: "test",
+    status: "success",
+    reference: "valo-test-synthetic-1",
+    amount: 150000,
+    currency: "NGN",
+    customer: { email: "synthetic-buyer@example.invalid" },
+  };
+  const page = { data: [item], meta: { total: 1, perPage: 50, page: 1, pageCount: 1 } };
+  assert.deepEqual(listedTransactions.parse(page), {
+    data: [{ id: "9001", domain: "test", status: "success", reference: "valo-test-synthetic-1" }],
+    meta: { page: 1, pageCount: 1 },
+  });
+  // A page that names a payment outside test mode, or misses what Valo reads, is not used.
+  for (const [why, unusable] of [
+    ["a payment outside test mode", { ...page, data: [{ ...item, domain: "live" }] }],
+    ["no page count", { data: [item], meta: { page: 1 } }],
+    ["a payment with no reference", { ...page, data: [{ ...item, reference: "" }] }],
+    ["an id that is not a number", { ...page, data: [{ ...item, id: "9001 or more" }] }],
+  ] as const)
+    assert.equal(listedTransactions.safeParse(unusable).success, false, why);
+  // Through Paystack's own request: one GET for the page asked for, and none with a live key.
+  const saved = { ...process.env };
+  const realFetch = globalThis.fetch;
+  const asked: string[] = [];
+  globalThis.fetch = async (input, init) => {
+    asked.push(`${init?.method ?? "GET"} ${String(input)}`);
+    return Response.json({ status: true, data: [item], meta: page.meta });
+  };
+  try {
+    Object.assign(process.env, {
+      NODE_ENV: "development",
+      VALO_SANDBOX_CHECKOUT_ENABLED: "true",
+      PAYSTACK_SECRET_KEY: "sk_test_synthetic_control_not_a_credential",
+    });
+    delete process.env.REPLIT_DEPLOYMENT;
+    delete process.env.VALO_ISOLATED_RECOVERY;
+    const listed = await paystack.listSuccessful("2026-11-26", 2);
+    assert.deepEqual(
+      listed.data.map((transaction) => transaction.reference),
+      ["valo-test-synthetic-1"],
+    );
+    assert.deepEqual(asked, [`GET ${PAYSTACK_API}${listedDayPath("2026-11-26", 2)}`]);
+    process.env.PAYSTACK_SECRET_KEY = "sk_live_synthetic_control_not_a_credential";
+    await assert.rejects(paystack.listSuccessful("2026-11-26", 1), { status: 503 });
+    assert.equal(asked.length, 1, "no request reached the merchant with a live key");
+  } finally {
+    globalThis.fetch = realFetch;
+    for (const key of Object.keys(process.env)) if (!(key in saved)) delete process.env[key];
+    Object.assign(process.env, saved);
   }
 });
 

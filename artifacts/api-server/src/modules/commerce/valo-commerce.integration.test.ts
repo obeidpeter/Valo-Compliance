@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { and, asc, eq, inArray, isNull, lte, or, sql } from "drizzle-orm";
 import {
   db,
@@ -13,6 +13,7 @@ import {
   valoPurchaseOutbox,
   valoPaymentEvents,
   valoPaymentDisputes,
+  valoPaymentLists,
   valoPaymentReconciliations,
   valoRefundRequests,
   valoEvents,
@@ -25,6 +26,16 @@ import {
   RECONCILIATION_RETRY_MINUTES,
   reconcilePayments,
 } from "./valo-payment-reconciliation";
+import {
+  LISTING_ATTEMPTS,
+  LISTING_CATCH_UP_DAYS,
+  LISTING_PAGES,
+  LISTING_RETRY_MINUTES,
+  listingEventKey,
+  listProviderTransactions,
+  previousUtcDay,
+  runPaymentReconciliationJob,
+} from "./valo-payment-lists";
 import { readinessQueries } from "../operations/valo-operations";
 import { endedEditionOrders, priceOrderTerms } from "./checkout-editions";
 import { purchaseReceiptFile } from "./purchase-receipt-file";
@@ -1409,6 +1420,458 @@ test(
           assert.equal(await reading(), before + 1);
           await checked(first, 5, "needs_review", "EVENT_MISSING");
           assert.equal(await reading(), before + 2);
+        },
+      );
+      // PAY-007 (docs/architecture/reconciliation.md, slice 3b): Paystack's own list of the successful payments
+      // of a day that has ended. The listings table has a row a day, and every run of this test shares it: each
+      // subtest lists the day after the latest recorded, so a run on a database an earlier run used, as the
+      // coverage run is, finds its days new. Each subtest leaves no day waiting.
+      const dayAfter = (day: string, days = 1) =>
+        new Date(Date.parse(`${day}T00:00:00.000Z`) + days * 86_400_000).toISOString().slice(0, 10);
+      /** The day after the latest day recorded, or the day before today if none is, and a time on the next
+       * day, when it is the last day that has ended. */
+      const nextListing = async () => {
+        const [latest] = (
+          await db.execute<{ day: string | null }>(sql`SELECT max(day) AS day FROM valo_payment_lists`)
+        ).rows;
+        const day = latest?.day ? dayAfter(latest.day) : previousUtcDay(new Date());
+        return { day, now: new Date(`${dayAfter(day)}T12:00:00.000Z`) };
+      };
+      type Asked = { path: string; method: string; query: Record<string, string>; day: string; page: number };
+      /** Stands in for Paystack's list of transactions. What each request asked is kept for the subtest to
+       * check, since a failed assertion inside the stand-in would read as Paystack giving no answer. */
+      async function withStandInList(
+        answer: (day: string, page: number) => Response | Promise<Response>,
+        run: (asked: Asked[]) => Promise<void>,
+      ) {
+        assert.equal(Boolean(process.env.PAYSTACK_SECRET_KEY), false);
+        assert.equal(process.env.VALO_SANDBOX_CHECKOUT_ENABLED, undefined);
+        const asked: Asked[] = [];
+        const realFetch = globalThis.fetch;
+        process.env.VALO_SANDBOX_CHECKOUT_ENABLED = "true";
+        process.env.PAYSTACK_SECRET_KEY = "sk_test_synthetic_fixture_not_a_key";
+        globalThis.fetch = (async (input: Parameters<typeof fetch>[0], init?: RequestInit) => {
+          const href = input instanceof Request ? input.url : String(input);
+          if (!href.startsWith(PAYSTACK_API + "/")) return realFetch(input, init);
+          const url = new URL(href);
+          const query = Object.fromEntries(url.searchParams);
+          const day = (query.from ?? "").slice(0, 10),
+            page = Number(query.page);
+          asked.push({ path: url.pathname, method: init?.method ?? "GET", query, day, page });
+          return answer(day, page);
+        }) as typeof fetch;
+        try {
+          await run(asked);
+        } finally {
+          globalThis.fetch = realFetch;
+          delete process.env.VALO_SANDBOX_CHECKOUT_ENABLED;
+          delete process.env.PAYSTACK_SECRET_KEY;
+        }
+      }
+      type Listed = { id: number; reference: string; status?: string; domain?: string };
+      /** One page of the list, as Paystack's description gives it. */
+      const listPage = (page: number, pageCount: number, data: Listed[]) =>
+        Response.json({
+          status: true,
+          message: "Transactions retrieved",
+          data: data.map((item) => ({
+            domain: "test",
+            status: "success",
+            amount: 150000,
+            currency: "NGN",
+            paid_at: "2026-11-26T09:00:00.000Z",
+            ...item,
+          })),
+          meta: { total: data.length, perPage: 50, page, pageCount },
+        });
+      const listingOf = async (day: string) =>
+        (await db.select().from(valoPaymentLists).where(eq(valoPaymentLists.day, day)))[0];
+      const eventsAbout = (references: string[]) =>
+        db.select().from(valoPaymentEvents).where(inArray(valoPaymentEvents.reference, references));
+      const dayEvents = (day: string) =>
+        db
+          .select()
+          .from(valoPaymentEvents)
+          .where(eq(valoPaymentEvents.eventKey, listingEventKey(day)));
+      const syntheticId = () => Math.floor(Math.random() * 1e12);
+      const stray = () => `valo-test-unmatched-${randomUUID()}`;
+      const waitingEvents = async () =>
+        Number(
+          (await db.execute<{ value: number }>(sql.raw(readinessQueries.unmatchedPaymentEvents))).rows[0]!
+            .value,
+        );
+      await t.test(
+        "Paystack's list of a day that has ended is read once, every page: a successful payment whose reference no order has waits for finance as an event that matches nothing, recorded once whichever way it came, and nothing about an order changes",
+        async () => {
+          const { day, now } = await nextListing();
+          const known = await offeredOrder();
+          const before = await orderState(known);
+          const listedOnly = stray(),
+            both = stray(),
+            failed = stray();
+          const listedOnlyId = syntheticId(),
+            bothId = syntheticId();
+          // Paystack's webhook brought one of the payments no order has already.
+          const delivered = Buffer.from(
+            JSON.stringify({ event: "charge.success", data: { id: bothId, reference: both } }),
+          );
+          assert.equal((await commerce.recordPaymentEvent(delivered)).duplicate, false);
+          const pages = new Map<number, Listed[]>([
+            [
+              1,
+              [
+                { id: syntheticId(), reference: known.reference },
+                { id: listedOnlyId, reference: listedOnly },
+              ],
+            ],
+            [
+              2,
+              [
+                { id: bothId, reference: both },
+                { id: syntheticId(), reference: failed, status: "failed" },
+              ],
+            ],
+          ]);
+          const waitingBefore = await waitingEvents();
+          await withStandInList(
+            (_, page) => listPage(page, 2, pages.get(page) ?? []),
+            async (asked) => {
+              assert.deepEqual(await listProviderTransactions(now), {
+                day,
+                read: true,
+                whole: true,
+                pages: 2,
+                transactions: 3,
+                unmatched: 2,
+              });
+              // Both pages of the day are asked for, once each, by the UTC day and with no page size.
+              assert.deepEqual(
+                asked.map((request) => [request.path, request.method, request.query]),
+                [1, 2].map((page) => [
+                  "/transaction",
+                  "GET",
+                  {
+                    status: "success",
+                    from: `${day}T00:00:00.000Z`,
+                    to: `${dayAfter(day)}T00:00:00.000Z`,
+                    page: String(page),
+                  },
+                ]),
+              );
+              const row = (await listingOf(day))!;
+              assert.deepEqual(
+                [row.status, row.finding, row.attempts, row.pages, row.transactions, row.unmatched],
+                ["listed", null, 1, 2, 3, 2],
+              );
+              assert.ok(row.finishedAt);
+              // The payment only the list names waits for finance. The one the webhook brought is recorded once,
+              // as the webhook recorded it. The failed payment and the order's own are not recorded.
+              const recorded = await eventsAbout([known.reference, listedOnly, both, failed]);
+              assert.deepEqual(
+                recorded
+                  .map((event) => [
+                    event.reference,
+                    event.eventKey,
+                    event.eventType,
+                    event.status,
+                    event.failure,
+                  ])
+                  .sort((x, y) => String(x[0]).localeCompare(String(y[0]))),
+                [
+                  [
+                    listedOnly,
+                    `test:charge.success:${listedOnlyId}`,
+                    "charge.success",
+                    "needs_review",
+                    "UNMATCHED_REFERENCE",
+                  ],
+                  [both, `test:charge.success:${bothId}`, "charge.success", "pending", null],
+                ].sort((x, y) => String(x[0]).localeCompare(String(y[0]))),
+              );
+              assert.equal(
+                recorded.find((event) => event.reference === both)!.bodyHash,
+                createHash("sha256").update(delivered).digest("hex"),
+              );
+              assert.equal(await waitingEvents(), waitingBefore + 1);
+              // The day is listed once: it is not asked for again.
+              assert.equal(await listProviderTransactions(now), null);
+              assert.equal(asked.length, 2);
+            },
+          );
+          // The webhook bringing the listed payment later is a duplicate of what the list recorded.
+          const late = Buffer.from(
+            JSON.stringify({ event: "charge.success", data: { id: listedOnlyId, reference: listedOnly } }),
+          );
+          assert.equal((await commerce.recordPaymentEvent(late)).duplicate, true);
+          // Nothing about the order changed.
+          assert.deepEqual(await orderState(known), before);
+        },
+      );
+      await t.test(
+        "a day's list that cannot be used is asked for again only an hour later, three times in all, and then waits for finance as LISTING_UNREAD, once; a page that names a payment outside test mode, or that Paystack does not confirm, is no answer",
+        async () => {
+          const { day, now } = await nextListing();
+          const live = stray();
+          const answers = [
+            () => new Response("{}", { status: 502 }),
+            () => listPage(1, 1, [{ id: syntheticId(), reference: live, domain: "live" }]),
+            () => Response.json({ status: false, message: "Synthetic: not confirmed" }),
+          ];
+          let attempt = 0;
+          const lastTriedMinutesAgo = (minutes: number) =>
+            db
+              .update(valoPaymentLists)
+              .set({ lastAttemptAt: sql`now() - ${minutes} * interval '1 minute'` })
+              .where(and(eq(valoPaymentLists.day, day), eq(valoPaymentLists.status, "pending")));
+          await withStandInList(
+            () => answers[attempt]!(),
+            async (asked) => {
+              assert.deepEqual(await listProviderTransactions(now), { day, read: false, attempts: 1 });
+              let row = (await listingOf(day))!;
+              assert.deepEqual([row.status, row.attempts, row.finding], ["pending", 1, null]);
+              assert.ok(row.lastAttemptAt);
+              // Within the hour it is not asked for again: not at once, and not a minute short of the hour.
+              assert.equal(await listProviderTransactions(now), null);
+              await lastTriedMinutesAgo(LISTING_RETRY_MINUTES - 1);
+              assert.equal(await listProviderTransactions(now), null);
+              assert.equal(asked.length, 1);
+              attempt = 1;
+              await lastTriedMinutesAgo(LISTING_RETRY_MINUTES);
+              assert.deepEqual(await listProviderTransactions(now), { day, read: false, attempts: 2 });
+              attempt = 2;
+              await lastTriedMinutesAgo(LISTING_RETRY_MINUTES);
+              assert.deepEqual(await listProviderTransactions(now), {
+                day,
+                read: false,
+                attempts: LISTING_ATTEMPTS,
+              });
+              assert.equal(asked.length, LISTING_ATTEMPTS);
+              row = (await listingOf(day))!;
+              assert.deepEqual(
+                [row.status, row.finding, row.attempts, row.pages, row.finishedAt],
+                ["needs_review", "LISTING_UNREAD", LISTING_ATTEMPTS, null, null],
+              );
+              // The day waits for finance, once, as an event about the day. The live payment is not recorded.
+              assert.deepEqual(
+                (await dayEvents(day)).map((event) => [
+                  event.eventType,
+                  event.reference,
+                  event.status,
+                  event.failure,
+                ]),
+                [["listing", day, "needs_review", "LISTING_UNREAD"]],
+              );
+              assert.deepEqual(await eventsAbout([live]), []);
+              // It is not asked for again, however long after.
+              await db
+                .update(valoPaymentLists)
+                .set({ lastAttemptAt: sql`now() - interval '1 day'` })
+                .where(eq(valoPaymentLists.day, day));
+              assert.equal(await listProviderTransactions(now), null);
+              assert.equal(asked.length, LISTING_ATTEMPTS);
+            },
+          );
+        },
+      );
+      await t.test(
+        "an attempt another worker counted while this one waited for Paystack is not counted again",
+        async () => {
+          const { day, now } = await nextListing();
+          let answered = false;
+          await withStandInList(
+            async (_, page) => {
+              if (answered) return listPage(page, 1, []);
+              answered = true;
+              // Another worker counts its own attempt at the day while this one waits for Paystack.
+              await db
+                .update(valoPaymentLists)
+                .set({ attempts: sql`${valoPaymentLists.attempts} + 1`, lastAttemptAt: sql`now()` })
+                .where(eq(valoPaymentLists.day, day));
+              return new Response("{}", { status: 502 });
+            },
+            async (asked) => {
+              assert.deepEqual(await listProviderTransactions(now), { day, read: false, attempts: null });
+              const row = (await listingOf(day))!;
+              assert.deepEqual([row.status, row.attempts], ["pending", 1]);
+              // An hour later the day is read, and listed with the attempts both made.
+              await db
+                .update(valoPaymentLists)
+                .set({ lastAttemptAt: sql`now() - ${LISTING_RETRY_MINUTES} * interval '1 minute'` })
+                .where(eq(valoPaymentLists.day, day));
+              assert.ok(await listProviderTransactions(now));
+              assert.deepEqual(
+                [(await listingOf(day))!.status, (await listingOf(day))!.attempts],
+                ["listed", 2],
+              );
+              assert.equal(asked.length, 2);
+            },
+          );
+        },
+      );
+      await t.test(
+        "a day's list longer than twenty pages is read twenty pages far, what they hold is recorded, and the day waits for finance as LISTING_INCOMPLETE",
+        async () => {
+          const { day, now } = await nextListing();
+          const first = stray(),
+            last = stray(),
+            beyond = stray();
+          const holds = (page: number): Listed[] =>
+            page === 1
+              ? [{ id: syntheticId(), reference: first }]
+              : page === LISTING_PAGES
+                ? [{ id: syntheticId(), reference: last }]
+                : page === LISTING_PAGES + 1
+                  ? [{ id: syntheticId(), reference: beyond }]
+                  : [];
+          await withStandInList(
+            (_, page) => listPage(page, LISTING_PAGES + 5, holds(page)),
+            async (asked) => {
+              assert.deepEqual(await listProviderTransactions(now), {
+                day,
+                read: true,
+                whole: false,
+                pages: LISTING_PAGES,
+                transactions: 2,
+                unmatched: 2,
+              });
+              assert.deepEqual(
+                asked.map((request) => request.page),
+                Array.from({ length: LISTING_PAGES }, (_, index) => index + 1),
+              );
+              const row = (await listingOf(day))!;
+              assert.deepEqual(
+                [row.status, row.finding, row.pages, row.transactions, row.unmatched],
+                ["needs_review", "LISTING_INCOMPLETE", LISTING_PAGES, 2, 2],
+              );
+              assert.deepEqual(
+                (await eventsAbout([first, last, beyond]))
+                  .map((event) => event.reference)
+                  .sort((x, y) => String(x).localeCompare(String(y))),
+                [first, last].sort((x, y) => x.localeCompare(y)),
+              );
+              assert.deepEqual(
+                (await dayEvents(day)).map((event) => [
+                  event.eventType,
+                  event.reference,
+                  event.status,
+                  event.failure,
+                ]),
+                [["listing", day, "needs_review", "LISTING_INCOMPLETE"]],
+              );
+              assert.equal(await listProviderTransactions(now), null);
+              assert.equal(asked.length, LISTING_PAGES);
+            },
+          );
+        },
+      );
+      await t.test(
+        "with no test merchant configured, no day is recorded and Paystack is not asked",
+        async () => {
+          const { day, now } = await nextListing();
+          assert.equal(process.env.PAYSTACK_SECRET_KEY, undefined);
+          const realFetch = globalThis.fetch;
+          const asked: string[] = [];
+          globalThis.fetch = (async (input: Parameters<typeof fetch>[0], init?: RequestInit) => {
+            const href = input instanceof Request ? input.url : String(input);
+            if (!href.startsWith(PAYSTACK_API + "/")) return realFetch(input, init);
+            asked.push(href);
+            return new Response("{}", { status: 502 });
+          }) as typeof fetch;
+          try {
+            assert.equal(await listProviderTransactions(now), null);
+          } finally {
+            globalThis.fetch = realFetch;
+          }
+          assert.deepEqual(asked, []);
+          assert.equal(await listingOf(day), undefined);
+        },
+      );
+      await t.test(
+        "the days the worker did not run on are listed when it runs again, the earliest first, up to thirty-one days back, and a day is listed only once it has ended",
+        async () => {
+          const { day: first } = await nextListing();
+          const at = (day: string) => new Date(`${dayAfter(day)}T12:00:00.000Z`);
+          const recordedFrom = async (day: string) =>
+            (
+              await db
+                .select({ day: valoPaymentLists.day })
+                .from(valoPaymentLists)
+                .where(sql`${valoPaymentLists.day} >= ${day}`)
+                .orderBy(asc(valoPaymentLists.day))
+            ).map((row) => row.day);
+          await withStandInList(
+            (_, page) => listPage(page, 1, []),
+            async (asked) => {
+              const listedDays = () => asked.map((request) => request.day);
+              // The worker last ran the day before `first`, and runs again five days later: each day in between
+              // is listed, one at a time, the earliest first.
+              const fifth = dayAfter(first, 4);
+              for (let run = 0; run < 5; run++) assert.ok(await listProviderTransactions(at(fifth)));
+              assert.equal(await listProviderTransactions(at(fifth)), null);
+              assert.deepEqual(
+                listedDays(),
+                [0, 1, 2, 3, 4].map((days) => dayAfter(first, days)),
+              );
+              // A day that has not ended is not listed, however it came to be recorded.
+              const ahead = dayAfter(fifth, 2);
+              await db.insert(valoPaymentLists).values({ day: ahead });
+              assert.equal(await listProviderTransactions(at(fifth)), null);
+              assert.equal(listedDays().length, 5);
+              // Once it has ended it is listed, after the day before it.
+              for (let run = 0; run < 2; run++) assert.ok(await listProviderTransactions(at(ahead)));
+              assert.deepEqual(listedDays().slice(5), [dayAfter(fifth), ahead]);
+              // Forty days later, the last thirty-one days are recorded, and the nine before them are not.
+              const fortieth = dayAfter(ahead, 40);
+              assert.ok(await listProviderTransactions(at(fortieth)));
+              const recorded = await recordedFrom(dayAfter(ahead));
+              assert.equal(recorded.length, LISTING_CATCH_UP_DAYS);
+              assert.deepEqual([recorded[0], recorded.at(-1)], [dayAfter(ahead, 10), fortieth]);
+              for (let run = 1; run < LISTING_CATCH_UP_DAYS; run++)
+                assert.ok(await listProviderTransactions(at(fortieth)));
+              assert.equal(await listProviderTransactions(at(fortieth)), null);
+              const rows = await db
+                .select({ status: valoPaymentLists.status })
+                .from(valoPaymentLists)
+                .where(sql`${valoPaymentLists.day} >= ${first}`);
+              assert.ok(rows.every((row) => row.status === "listed"));
+            },
+          );
+        },
+      );
+      await t.test(
+        "the worker's reconciliation task runs the daily checks and the reading of a day's list each whatever became of the other, and fails when either did",
+        async () => {
+          const ran: string[] = [];
+          const check = (fails: boolean) => async () => {
+            ran.push("check");
+            if (fails) throw new Error("Synthetic: the daily checks failed");
+          };
+          const list = (fails: boolean) => async () => {
+            ran.push("list");
+            if (fails) throw new Error("Synthetic: the day's list failed");
+            return null;
+          };
+          const failure = (count: number) => (error: unknown) =>
+            error instanceof AggregateError &&
+            error.message === "PAYMENT_RECONCILIATION_PARTIALLY_FAILED" &&
+            error.errors.length === count;
+          assert.deepEqual(
+            await runPaymentReconciliationJob(new Date(), { check: check(false), list: list(false) }),
+            { checked: undefined, listed: null },
+          );
+          await assert.rejects(
+            runPaymentReconciliationJob(new Date(), { check: check(true), list: list(false) }),
+            failure(1),
+          );
+          await assert.rejects(
+            runPaymentReconciliationJob(new Date(), { check: check(false), list: list(true) }),
+            failure(1),
+          );
+          await assert.rejects(
+            runPaymentReconciliationJob(new Date(), { check: check(true), list: list(true) }),
+            failure(2),
+          );
+          assert.deepEqual(ran, ["check", "list", "check", "list", "check", "list", "check", "list"]);
         },
       );
       await t.test("no commerce call takes a second pooled connection inside a transaction", () => {

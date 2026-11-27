@@ -1741,10 +1741,10 @@ export interface PaymentCheckSettlementInput {
 
 export interface PaymentEvent {
   id: string;
-  /** Paystack's name for the event, such as charge.success */
+  /** Paystack's name for the event, such as charge.success, or listing for what Paystack's own list of a day's successful payments could not give */
   eventType: string;
   /**
-     * The reference the event names, if it names one
+     * The reference the event names, if it names one; for a day's list, the day, as YYYY-MM-DD
      * @nullable
      */
   reference: string | null;

@@ -7,7 +7,7 @@ import {
 } from "@workspace/api-client-react";
 import { describeError } from "@/lib/api";
 import { formatDateTime } from "@/lib/format";
-import { eventFindingWords, eventTypeWords } from "@/lib/payment-check-words";
+import { eventFindingWords, eventHeading, eventTimeWords, eventTypeWords } from "@/lib/payment-check-words";
 
 /** One Paystack event Valo could not match or process, with the form that settles it
  * (docs/architecture/reconciliation.md, slice 3a). Settling records what finance found and why; it changes
@@ -32,10 +32,10 @@ function WaitingEvent({ row, refresh }: { row: PaymentEvent; refresh: () => Prom
   return (
     <article className="rounded-xl border bg-card p-4" aria-labelledby={heading}>
       <h4 id={heading} className="break-all font-semibold">
-        {row.reference ?? "No reference"}
+        {eventHeading(row.eventType, row.reference)}
       </h4>
       <p className="my-2 text-sm">
-        {eventTypeWords(row.eventType)} · Received {formatDateTime(row.receivedAt)}
+        {eventTypeWords(row.eventType)} · {eventTimeWords(row.eventType)} {formatDateTime(row.receivedAt)}
       </p>
       <p className="my-2 text-sm">{eventFindingWords(row.finding)}</p>
       <form
@@ -92,8 +92,10 @@ export function FinancePaymentEvents() {
       </h3>
       <p className="my-3 text-sm">
         Each event below came from Paystack, and Valo could not match it to an order or a refund, or could not
-        process it. Recording what you found settles it. It changes nothing about the event, an order, a
-        payment or access, and your reason is kept in the staff audit.
+        process it. Each day Valo also reads Paystack&apos;s own list of the day&apos;s successful payments: a
+        payment on it that is no order of Valo&apos;s is listed here, and so is a list Valo could not read
+        whole. Recording what you found settles it. It changes nothing about the event, an order, a payment or
+        access, and your reason is kept in the staff audit.
       </p>
       {q.isLoading ? (
         <p role="status">Loading the Paystack events…</p>
@@ -122,7 +124,7 @@ export function FinancePaymentEvents() {
             <ul className="space-y-2 text-sm" aria-label="Latest settled events">
               {q.data.settled.map((row) => (
                 <li key={`${row.id}:${row.finding}`} className="rounded-lg border p-3">
-                  <span className="break-all font-medium">{row.reference ?? "No reference"}</span>:{" "}
+                  <span className="break-all font-medium">{eventHeading(row.eventType, row.reference)}</span>:{" "}
                   {eventTypeWords(row.eventType)}, settled{" "}
                   {row.resolvedAt ? formatDateTime(row.resolvedAt) : "at a time not recorded"},{" "}
                   {row.resolvedByYou ? "by you" : "by another member of finance"}.

@@ -405,4 +405,6 @@ export const tablesWithoutPersonalData: Readonly<Record<string, string>> = {
   valo_history_checks: "checks of those checksums",
   valo_operational_alerts: "the alerts the worker raised and cleared about Valo's own running",
   valo_request_minutes: "how many of the API's requests each minute failed or took how long",
+  valo_payment_lists:
+    "which days' lists of successful payments Valo read from Paystack, and how many each held",
 };

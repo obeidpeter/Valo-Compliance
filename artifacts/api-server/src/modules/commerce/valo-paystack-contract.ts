@@ -68,6 +68,52 @@ export const verifiedTransaction = z.object({
   metadata: z.object({ valoOrderId: z.string().uuid(), workspaceId: z.string().uuid() }),
 });
 export type VerifiedTransaction = z.infer<typeof verifiedTransaction>;
+/**
+ * One page of Paystack's list of transactions (`GET /transaction`), as far as Valo reads it
+ * (docs/architecture/reconciliation.md, slice 3b, and "What was read about the provider"): each
+ * transaction's id, its test domain, its status and its reference, and the page count the list's `meta`
+ * gives. Anything else the provider sends is not read. A page that names a transaction outside test mode
+ * is not used.
+ */
+export const listedTransactions = z.object({
+  data: z
+    .array(
+      z.object({
+        id: z
+          .union([
+            z.string().regex(/^\d{1,40}$/),
+            z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),
+          ])
+          .transform(String),
+        domain: z.literal("test"),
+        status: z.string().min(1).max(40),
+        reference: z.string().min(1).max(150),
+      }),
+    )
+    .max(1000),
+  meta: z.object({ page: z.number().int().min(1), pageCount: z.number().int().min(0).max(100000) }),
+});
+export type ListedTransactions = z.infer<typeof listedTransactions>;
+/** The query for one page of a UTC day's successful transactions. The page size is Paystack's own: the
+ * name of its parameter is not confirmed, so none is sent. */
+export function listedDayPath(day: string, page: number) {
+  const from = new Date(`${day}T00:00:00.000Z`);
+  if (
+    !/^\d{4}-\d{2}-\d{2}$/.test(day) ||
+    Number.isNaN(from.getTime()) ||
+    from.toISOString().slice(0, 10) !== day
+  )
+    throw new ValoProblem(400, "A day is written as YYYY-MM-DD.");
+  if (!Number.isInteger(page) || page < 1) throw new ValoProblem(400, "A page is a whole number from one.");
+  const to = new Date(from.getTime() + 86_400_000);
+  const query = new URLSearchParams({
+    status: "success",
+    from: from.toISOString(),
+    to: to.toISOString(),
+    page: String(page),
+  });
+  return `/transaction?${query.toString()}`;
+}
 export function assertOrderMatch(
   order: { id: string; workspaceId: string; reference: string; amountKobo: number; currency: string },
   data: VerifiedTransaction,
@@ -203,6 +249,10 @@ export async function paystackAnswer(
   return { status: true, data: result.data, meta: result.meta };
 }
 export const paystack = {
+  /** One page of Paystack's own list of a UTC day's successful transactions. */
+  async listSuccessful(day: string, page: number) {
+    return listedTransactions.parse(await paystackAnswer(listedDayPath(day, page)));
+  },
   async verify(reference: string) {
     return verifiedTransaction.parse(
       await paystackRequest("/transaction/verify/" + encodeURIComponent(reference)),

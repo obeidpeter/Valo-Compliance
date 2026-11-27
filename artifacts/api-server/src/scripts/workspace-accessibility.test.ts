@@ -7650,6 +7650,63 @@ test("the Finance area says why each Paystack event waits for finance, settles o
   } finally {
     await empty.close();
   }
+  // docs/architecture/reconciliation.md, slice 3b: what Paystack's own list of a day could not give waits
+  // as the day's, named by the day as the site writes a day, and recorded rather than received.
+  const listing = {
+    ...unmatchedPaymentEvent,
+    id: "00000000-0000-4000-8000-00000000e103",
+    eventType: "listing",
+    reference: "2026-11-23",
+    finding: "LISTING_UNREAD",
+  };
+  const lists: Api = async (route, method, path, query) => {
+    if (method === "GET" && path === "/admin/payment-events")
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(
+          api.GetFinancePaymentEventsResponse.parse({
+            waiting: [listing],
+            settled: [
+              {
+                ...listing,
+                id: "00000000-0000-4000-8000-00000000e104",
+                reference: "2026-11-22",
+                finding: "LISTING_INCOMPLETE",
+                resolvedAt: at(23),
+                resolvedByYou: true,
+                reason: "Synthetic: the rest of the day's list was read at Paystack.",
+              },
+            ],
+          }),
+        ),
+      });
+    await answer(route, method, path, query);
+  };
+  const daily = await phone("/staff", lists);
+  try {
+    await ready(daily.page);
+    await daily.page.getByTestId("tab-staff-finance").click();
+    const events = daily.page.getByRole("region", { name: "Paystack events waiting for finance" });
+    const day = events.getByRole("article", { name: "Paystack's list for 23 Nov 2026" });
+    await expect(day).toContainText(
+      "Paystack's list of a day's successful payments · Recorded 24 Nov 2026, 10:00",
+    );
+    await expect(day).toContainText(
+      "Valo could not read Paystack's list of this day's successful payments, three times, an hour apart.",
+    );
+    await expect(
+      events.getByRole("list", { name: "Latest settled events" }).getByRole("listitem"),
+    ).toHaveText([
+      "Paystack's list for 22 Nov 2026: Paystack's list of a day's successful payments, settled 23 Nov 2026, 10:00, by you.Synthetic: the rest of the day's list was read at Paystack.",
+    ]);
+    await settled(daily.page);
+    assert.deepEqual(await phoneProblems(daily.page, "the Finance area's Paystack lists"), []);
+    assert.deepEqual([...new Set(daily.unknown)], []);
+    assert.deepEqual(daily.errors, []);
+  } finally {
+    await daily.close();
+  }
 });
 
 // ADM-006 (docs/architecture/commercial-settings.md, slice 1): the owner previews a premium template's

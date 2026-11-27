@@ -2255,8 +2255,8 @@ export const SettleFinancePaymentCheckResponse = zod.object({
 export const GetFinancePaymentEventsResponse = zod.object({
   "waiting": zod.array(zod.object({
   "id": zod.uuid(),
-  "eventType": zod.string().describe('Paystack\'s name for the event, such as charge.success'),
-  "reference": zod.string().nullable().describe('The reference the event names, if it names one'),
+  "eventType": zod.string().describe('Paystack\'s name for the event, such as charge.success, or listing for what Paystack\'s own list of a day\'s successful payments could not give'),
+  "reference": zod.string().nullable().describe('The reference the event names, if it names one; for a day\'s list, the day, as YYYY-MM-DD'),
   "receivedAt": zod.coerce.date(),
   "finding": zod.string().describe('Why the event worker left it for finance'),
   "attempts": zod.int(),
@@ -2266,8 +2266,8 @@ export const GetFinancePaymentEventsResponse = zod.object({
 })),
   "settled": zod.array(zod.object({
   "id": zod.uuid(),
-  "eventType": zod.string().describe('Paystack\'s name for the event, such as charge.success'),
-  "reference": zod.string().nullable().describe('The reference the event names, if it names one'),
+  "eventType": zod.string().describe('Paystack\'s name for the event, such as charge.success, or listing for what Paystack\'s own list of a day\'s successful payments could not give'),
+  "reference": zod.string().nullable().describe('The reference the event names, if it names one; for a day\'s list, the day, as YYYY-MM-DD'),
   "receivedAt": zod.coerce.date(),
   "finding": zod.string().describe('Why the event worker left it for finance'),
   "attempts": zod.int(),
@@ -2296,8 +2296,8 @@ export const SettleFinancePaymentEventBody = zod.object({
 
 export const SettleFinancePaymentEventResponse = zod.object({
   "id": zod.uuid(),
-  "eventType": zod.string().describe('Paystack\'s name for the event, such as charge.success'),
-  "reference": zod.string().nullable().describe('The reference the event names, if it names one'),
+  "eventType": zod.string().describe('Paystack\'s name for the event, such as charge.success, or listing for what Paystack\'s own list of a day\'s successful payments could not give'),
+  "reference": zod.string().nullable().describe('The reference the event names, if it names one; for a day\'s list, the day, as YYYY-MM-DD'),
   "receivedAt": zod.coerce.date(),
   "finding": zod.string().describe('Why the event worker left it for finance'),
   "attempts": zod.int(),

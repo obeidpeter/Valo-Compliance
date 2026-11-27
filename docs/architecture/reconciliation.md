@@ -48,7 +48,7 @@ description was read instead, in part, through a fetching tool that returned quo
 | Point | What the description says | What follows here |
 | --- | --- | --- |
 | Verifying a transaction | `data.status` is a string, with no list of values. A 401 and a 404 answer are listed; their bodies were not read | Valo's own list of statuses is unconfirmed. What the provider answers for a reference it does not know is not known. Nothing below depends on either |
-| Listing transactions | `GET /transaction` takes `from` and `to` (date-times), `status` (success, failed, abandoned, reversed), `page` and `per_page`, and cursor fields. Each item has `id`, `domain`, `status`, `reference`, `amount`, `currency`, `paid_at`, `metadata`. `meta` has `total`, `perPage`, `page`, `pageCount` | Slice 3 reads as many pages as `meta` counts. A search result, not a page that was read, gives the page size as `perPage` rather than `per_page`: slice 3 sends neither until the provider's answer settles which |
+| Listing transactions | `GET /transaction` takes `from` and `to` (date-times), `status` (success, failed, abandoned, reversed), `page` and `per_page`, and cursor fields. Each item has `id`, `domain`, `status`, `reference`, `amount`, `currency`, `paid_at`, `metadata`. `meta` has `total`, `perPage`, `page`, `pageCount` | Slice 3b reads as many pages as `meta` counts, twenty at most. A search result, not a page that was read, gives the page size as `perPage` rather than `per_page`: slice 3b sends neither until the provider's answer settles which |
 | The address a customer returns to | `callback_url`: "Fully qualified url, e.g. https://example.com/ to redirect your customers to after a successful payment" | The names added to that address (`reference`, `trxref`) were not found in the parts read. They stay unconfirmed, as [order safety](order-safety.md) says |
 
 The first run in test mode settles each of these. Until then they are readings of a description, not of
@@ -61,7 +61,7 @@ the provider's behaviour.
 | 1 | A check says what differs, and a difference nobody has settled raises an alert | Built |
 | 2 | Finance settles a difference, with its trail | Built |
 | 3a | The provider's side: its events Valo could not match or process, in the alert and finance's list, settled with a reason | Built |
-| 3b | The provider's own daily list of transactions | Not built |
+| 3b | The provider's own daily list of transactions | Built |
 
 ## Slice 1: a check says what differs
 
@@ -223,15 +223,62 @@ are a history, so they keep a history digest, as the [audit trail](audit-trail.m
   finance found.
 - **A settlement is never undone.** One made in error stays, with its reason.
 - **Finance's reason is free text**, kept in the staff access audit, as slice 2's is.
-- **The provider's own list is not read yet.** That is slice 3b.
+- **The provider's own list is slice 3b's**, below.
 
-## Slice 3b: the provider's own list (outline)
+## Slice 3b: the provider's own list
 
-- **Once a day** the provider is asked for the day's successful transactions, as many pages as `meta`
-  counts.
-- **One whose reference is no order's** is recorded as an event that matches nothing, `UNMATCHED_REFERENCE`,
-  and waits for finance as slice 3a's events do.
-- **A list that cannot be read** is tried again an hour later, three times in all, and then reported.
+**What is read.** Once a UTC day has ended, the worker asks Paystack for that day's successful payments
+(`listProviderTransactions` in `valo-payment-lists.ts`, through `paystack.listSuccessful`): `GET
+/transaction` with `status=success`, `from` the day's first moment, `to` the next day's, and `page`. It
+reads as many pages as the first page's `meta.pageCount` gives, twenty at most. No page size is sent: the
+name of its parameter is unconfirmed, so Paystack's own size is used. A page is read for each payment's id,
+test domain, status and reference, and for its page count, and nothing else it carries is kept. A page that
+names a payment outside test mode, or misses what Valo reads, is not used. Paystack is asked outside any
+transaction.
+
+**What is recorded.** A successful payment on the list whose reference is no order's is recorded as a
+provider event that waits for finance, `UNMATCHED_REFERENCE`, with the key the webhook gives it
+(`test:charge.success:<id>`). A payment Paystack sends both ways is recorded once, as whichever came
+first: the webhook's event is left as it was, and a webhook after the list is a duplicate. A payment whose
+reference is an order's is not recorded: that order's daily check (slice 1) asks Paystack about it and
+compares. A payment that is not successful is not recorded. Nothing about an order, a payment or a grant
+changes.
+
+**Each day once.** Each day has a row in `valo_payment_lists` (migration
+`20261127231133_payment_lists`): whether it is listed or waits for finance, how many attempts were made
+and when the last was, how many pages were read, how many payments the list held, how many matched no
+order, and why the day waits, if it does. A day is listed once, and only once it has ended. A day the worker
+did not run on is recorded when it runs again, up to thirty-one days back but never before the first day it
+recorded, and the earliest is listed first. The table names no workspace, and a customer's request has no
+access to it.
+
+**A list that cannot be read.** An attempt that gives no answer that could be used is counted, and the day
+is asked for again an hour later. After the third the day waits for finance as `LISTING_UNREAD`, recorded as
+an event about the day (event type `listing`, its reference the day, keyed `listing:test:<day>`, a key no
+event Paystack sends has), and it is not asked for again. An attempt another worker counted meanwhile is not
+counted twice. A list longer than twenty pages is read that far: what those pages hold is recorded, and the
+day waits as `LISTING_INCOMPLETE`.
+
+**What finance sees.** The list's events wait in "Paystack events waiting for finance" with the others,
+raise the same alert, `UNMATCHED_PAYMENT_EVENTS_DETECTED`, and are settled the same way (slice 3a). An
+event about a day is named by the day, as the site writes a day ("Paystack's list for 26 Nov 2026"), and
+says when Valo recorded it.
+
+**The worker's task.** The `paymentReconciliation` task, each minute, runs the daily checks and the reading
+of the list (`runPaymentReconciliationJob`), each whatever became of the other, and fails when either did.
+
+**What this slice does not do.**
+
+- **It corrects nothing.** A payment that matches no order is dealt with at Paystack. Settling records what
+  finance found.
+- **It compares no amounts.** A payment whose reference is an order's is left to that order's daily check,
+  which asks Paystack and compares the amount, the transaction and the status.
+- **A payment from another use of the same Paystack account is recorded too**, and finance settles it with
+  its reason.
+- **A day more than thirty-one days back is not recorded.** One the worker missed for longer is read at
+  Paystack.
+- **Nothing has run against Paystack.** What the list holds is taken from its description, as "What was
+  read about the provider" says. The first run in test mode settles it.
 
 ## Decisions made here, for the owner to confirm
 
@@ -244,3 +291,6 @@ are a history, so they keep a history digest, as the [audit trail](audit-trail.m
 - **One kind of settlement for a provider event**, with a reason, and no outcome to choose; and the three
   names an event's finding now gives.
 - **Fifty settled events** are listed, the latest first, and a hundred that wait.
+- **Paystack's own list**: read once a day has ended, three attempts an hour apart, twenty pages at most,
+  thirty-one days of days the worker missed; a list that could not be read, or not whole, is recorded as an
+  event about the day for finance to settle; a payment from another use of the account is recorded too.

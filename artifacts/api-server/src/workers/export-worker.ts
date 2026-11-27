@@ -22,7 +22,7 @@ import { recoverAbandonedExports, reconcileExportOrphans } from "../modules/expo
 import { expireGeneratedExports } from "../modules/exports";
 import {
   processPaymentEvents,
-  reconcilePayments,
+  runPaymentReconciliationJob,
   processRefundQueue,
   reconcileDisputeActions,
   reconcileKnownDisputes,
@@ -77,7 +77,7 @@ const runOperationalJob = operationalJobRunner(
     refunds: () => processRefundQueue(),
     disputes: () => reconcileKnownDisputes(),
     disputeActions: () => reconcileDisputeActions(),
-    paymentReconciliation: () => reconcilePayments(),
+    paymentReconciliation: () => runPaymentReconciliationJob(),
     guidance: () => checkDueGuidance(),
     preparations: () => prepareRequestedCandidates(),
     historyIntegrity: () => countHistories(),
