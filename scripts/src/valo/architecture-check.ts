@@ -365,6 +365,9 @@ export function publisherConnectionReport(root = repositoryRoot): string[] {
 export const DRAFTER_CONNECTION_ENTRIES = [
   "artifacts/api-server/src/modules/ai-lanes/inference-reviewed-publication.ts",
   "artifacts/api-server/src/modules/editorial/guidance-preparation.ts",
+  // A template that states the law is kept as a candidate, as a guide is
+  // (docs/architecture/reviewed-route.md, part 4).
+  "artifacts/api-server/src/modules/editorial/law-template-preparation.ts",
   "artifacts/api-server/src/modules/editorial/operational-authoring.ts",
   "artifacts/api-server/src/modules/editorial/operational-preparation.ts",
   // A rule prepared for the reviewed route is kept as a candidate, as a guide is

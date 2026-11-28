@@ -1,0 +1,201 @@
+import { randomUUID } from "node:crypto";
+import { eq, sql } from "drizzle-orm";
+import { renderDocument } from "../../lib/valo-render";
+import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
+import { singleRow } from "../../platform/rows";
+import {
+  assembleLawTemplateBundle,
+  assertDrafterCanLogIn,
+  assertPermissionRoute,
+  buildLawTemplateCandidate,
+  capturedGuidePassages,
+  developmentPublicationOnly,
+  guideOpenReasons,
+  guideSourceSnapshots,
+  inspectOperationalExports,
+  lawTemplatePassageIds,
+  loadChatGPTPermission,
+  mappedLawTemplateIds,
+  passageLead,
+  putPublicationArtifact,
+  retainedGuidePassages,
+  savePreparedCandidate,
+  templateLawPolicy,
+  type GuideCapture,
+  type ReleaseAttestations,
+} from "../publication";
+import { currentSourceCaptures } from "../sources";
+import { termsFile, termsInHand, type TermsCopy } from "./terms-copy";
+
+/**
+ * Prepares a template that states the law for its two reviews (docs/architecture/reviewed-route.md,
+ * part 4), as a guide is prepared.
+ *
+ * The template is built from its retained draft and its claim map, bound to today's captures of the
+ * official addresses, and put through the gate with everything but the reviews: the policy for
+ * templates that state the law, its rights record, its sources' decisions, its mechanical checks and
+ * both of its files.
+ *
+ * - If the gate names anything other than the two missing reviews, the template is not ready. The
+ *   reasons are returned and no candidate is kept. While the owner has approved no text of the
+ *   policy, that is always so: the policy, the rights record whose basis it is and the scope check
+ *   each say so.
+ * - Otherwise the candidate is kept as a private artifact awaiting its reviews, with a row on
+ *   drafting's own login that lets staff find it. It becomes a version only once both reviews have
+ *   passed.
+ *
+ * Nothing here calls a model, approves anything or publishes. `captures` is for tests; the command
+ * reads the captures the daily source check stored.
+ */
+export async function prepareLawTemplateCandidateRelease(
+  id: string,
+  snapshotPath: string,
+  options: LawTemplatePreparationOptions = {},
+) {
+  return prepareLawTemplate(id, termsFile(snapshotPath), options);
+}
+/** The same, with the provider-terms copy given as a value rather than a file. */
+export async function prepareLawTemplateCandidate(
+  id: string,
+  terms: unknown,
+  options: LawTemplatePreparationOptions = {},
+) {
+  return prepareLawTemplate(id, termsInHand(terms), options);
+}
+type LawTemplatePreparationOptions = { captures?: readonly GuideCapture[]; now?: Date };
+const unique = <T>(values: readonly T[]) => [...new Set(values)];
+
+async function prepareLawTemplate(id: string, terms: TermsCopy, options: LawTemplatePreparationOptions) {
+  assertDevelopmentRuntime();
+  developmentPublicationOnly();
+  if (!mappedLawTemplateIds.includes(id)) throw Error("TEMPLATE_CLAIM_MAP_MISSING");
+  const { db, drafterDb, valoContentVersions, valoPublicationPolicies, valoPreparedCandidates } =
+    await import("@workspace/db");
+  // A template that passes is kept as a candidate, which only drafting's own login may add. The
+  // preparation finds out now, before anything is read, rendered or saved, whether drafting can log in.
+  await assertDrafterCanLogIn();
+  const now = options.now ?? new Date();
+  const snapshot = await terms();
+  if (
+    snapshot.kind !== "official_provider_terms_snapshot" ||
+    !Array.isArray(snapshot.pages) ||
+    snapshot.pages.some((p: { truncated: boolean }) => p.truncated) ||
+    !Number.isFinite(Date.parse(snapshot.retrievedAt)) ||
+    Date.parse(snapshot.retrievedAt) > +now ||
+    +now - Date.parse(snapshot.retrievedAt) > 86_400_000
+  )
+    throw Error("FRESH_ACTUAL_PROVIDER_TERMS_REQUIRED");
+
+  const versions = await db.select().from(valoContentVersions).where(eq(valoContentVersions.templateId, id));
+  const version = Math.max(0, ...versions.map((r) => r.version)) + 1;
+  // The passages come from the captures the daily check holds, read before anything else is done.
+  // Only the addresses this template's own passages are read from are asked for.
+  const retained = retainedGuidePassages();
+  const leads = unique(lawTemplatePassageIds(id).flatMap((passage) => passageLead(passage, retained) ?? []));
+  const captures = options.captures ?? (await currentSourceCaptures(leads, now));
+  // With no passage supplied the build stops, naming the template. The operator's command prints a
+  // reason only when it is a plain code, so the template's ID, which the operator gave, is left off.
+  const built = await buildLawTemplateCandidate(id, version, capturedGuidePassages(captures), now).catch(
+    (error: unknown) => {
+      if (error instanceof Error && error.message === `TEMPLATE_HAS_NO_BOUND_SOURCE:${id}`)
+        throw Error("TEMPLATE_HAS_NO_BOUND_SOURCE");
+      throw error;
+    },
+  );
+  const { policy, authority } = await templateLawPolicy();
+  const applicability = await loadChatGPTPermission(snapshot, built.provenance);
+  assertPermissionRoute(applicability.record, false);
+
+  const files = {
+    docx: await renderDocument(built.document, "docx", version, "template_sample"),
+    pdf: await renderDocument(built.document, "pdf", version, "template_sample"),
+  };
+  const exportReport = await inspectOperationalExports(built.candidate, files);
+  const provenance = await putPublicationArtifact(Buffer.from(JSON.stringify(built.provenance)), "json");
+  const snapshotRef = await putPublicationArtifact(Buffer.from(JSON.stringify(snapshot)), "json");
+  const exports = {
+    docx: await putPublicationArtifact(files.docx, "docx"),
+    pdf: await putPublicationArtifact(files.pdf, "pdf"),
+  };
+  const assembled = await assembleLawTemplateBundle({
+    built,
+    policy,
+    termsSnapshot: snapshot,
+    snapshotRef,
+    provenanceRef: provenance,
+    applicability,
+    exportReport,
+    exportHashes: { docx: exports.docx.hash, pdf: exports.pdf.hash },
+    now,
+  });
+  const reasons = [
+    ...guideOpenReasons(assembled.eligibility),
+    ...(exportReport.passed ? [] : ["export_inspection_failed"]),
+  ];
+  const outcome = {
+    template: id,
+    version,
+    candidateHash: built.candidate.hash,
+    policyHash: policy.hash,
+    sourceCheckDate: built.candidate.sourceCheckDate,
+    reviewBy: built.candidate.reviewBy!,
+    missingEvidence: built.candidate.missingEvidence,
+    rightsProblems: assembled.rightsProblems,
+    failedChecks: assembled.bundle.mechanicalChecks.filter((c) => c.result !== "pass").map((c) => c.name),
+  };
+  // Not ready: the gate names something other than the two reviews. Nothing is kept as a candidate.
+  if (reasons.length) return { ...outcome, state: "held" as const, reasons, candidateArtifact: null };
+
+  await db
+    .insert(valoPublicationPolicies)
+    .values({ id: policy.version, hash: policy.hash, policy, authority })
+    .onConflictDoNothing();
+  const storedPolicy = singleRow(
+    await db.select().from(valoPublicationPolicies).where(eq(valoPublicationPolicies.id, policy.version)),
+  );
+  if (storedPolicy.hash !== policy.hash) throw Error("POLICY_VERSION_CHANGED_CREATE_NEW_VERSION");
+
+  const rightsRef = await putPublicationArtifact(Buffer.from(JSON.stringify(assembled.rights)), "json");
+  const reportRef = await putPublicationArtifact(Buffer.from(JSON.stringify(exportReport)), "json");
+  const scopeRef = await putPublicationArtifact(Buffer.from(JSON.stringify(built.claimScope)), "json");
+  const attestations: ReleaseAttestations = {
+    sourceSnapshots: guideSourceSnapshots(built.sources, captures),
+    provenance,
+    rights: rightsRef,
+    rightsApplicabilityHash: applicability.hash,
+    reviews: [],
+    exports,
+    exportReport: reportRef,
+    claimScope: scopeRef,
+  };
+  const versionId = randomUUID();
+  const candidateArtifact = await savePreparedCandidate({
+    kind: "valo-prepared-candidate-v1",
+    versionId,
+    templateId: id,
+    version,
+    slug: id.toLowerCase(),
+    policyId: policy.version,
+    candidateHash: built.candidate.hash,
+    bundle: assembled.bundle,
+    attestations,
+    reviewBy: new Date(built.candidate.reviewBy!).toISOString(),
+    preparedAt: now.toISOString(),
+  });
+  // The artifact is the candidate; this row only lets staff find it in the Content area. It is added on
+  // drafting's own connection, as the drafter role: the database takes it from no other.
+  await drafterDb().transaction(async (tx) => {
+    await tx.execute(sql`SET LOCAL ROLE valo_content_drafter_dev`);
+    await tx.insert(valoPreparedCandidates).values({
+      artifactId: candidateArtifact.id,
+      artifactHash: candidateArtifact.hash,
+      versionId,
+      templateId: id,
+      version,
+      candidateHash: built.candidate.hash,
+      preparedAt: now,
+      reviewBy: new Date(built.candidate.reviewBy!),
+    });
+  });
+  return { ...outcome, state: "awaiting_reviews" as const, reasons: [], id: versionId, candidateArtifact };
+}

@@ -388,6 +388,28 @@ Settled while building it (slice 4a, first part):
   After its own words it shows what it covers, its limits, what it assumes and leaves open, its
   sources, how it was written and checked, and when its sources were checked.
 
+Settled while building it (slice 4a, second part):
+- **Its rights record** is a guide's, kept apart from a guide's: the provider's terms, captured within a
+  day, for its draft's wording, and the longest run of words it shares with any passage it cites,
+  against the policy's limit. Its basis is the policy for templates that state the law, so while no
+  text of that policy is approved the record clears nothing. The provider's permission binds the
+  template's wording through its row of the intake manifest, as a form's is.
+- **Its mechanical checks** are the gate's ten, measured from the candidate itself as a guide's are:
+  the claim map built again from the candidate's own sources, each source's decision, the scope and
+  limits, the dates, the rights record, the whole document built again, and a contract's assumptions
+  and the clauses it leaves open.
+- **The preparer** is `finite-inference-run.ts --prepare-law-template-candidate <template> <terms.json>`
+  ([how to run it](../valo/law-template-preparation.md)). It builds the template from today's captures,
+  renders both files and inspects them, and keeps a candidate on drafting's own login only when nothing
+  but its two reviews holds it. While no text of the policy is approved nothing is kept, and the
+  reasons it prints say so.
+- **What a test can show without the Act's words.** They are not kept in the repository, so no test
+  prepares TPL-31 from a capture. Its bundle is built from stand-in passages, under a synthetic
+  amendment record and a test's supposed approval of the policy: only its two reviews then hold it,
+  and both its files pass their inspection. Each check, and each condition of the rights record, is
+  also shown failing on its own. Database tests show the preparer keeps nothing it cannot bind, and
+  that its command, run as a process, stops with a reason an operator can look up.
+
 ## What does not change
 
 - Every gate the publisher checks. Nothing here loosens one.
@@ -408,7 +430,7 @@ Each slice is its own pull request.
 | 2b | **The owner's panel** (built). Staff → System → **Guides on the reviewed route**: the list, the candidate's text and passages, what holds it, and the check. Its contract and routes. Tests: the real-bindings database test lists GUD-02 as the owner reads it, with a stale or changed copy holding it and the owner's check counting for a day; unit tests of the inspection's states; and a browser test of the panel on a phone. | EDP-002, EDP-004, CMP-008 |
 | 3a | **A rule's bundle and its reviews** (built). The builder, the package kind and its binding checks. Database tests: a prepared rule's pair is admitted only under a package of its kind and runs with a stand-in model. A held rule keeps nothing. | EDP-003, EDP-004, EDP-006, ADM-004 |
 | 3b | **The release request and restoring a version** (built). The request command and the restore. Database tests: a reviewed rule is planned and applied from its request. A restored version is released as the next one, and saved results keep their versions. | ADM-004 |
-| 4a | **A template's claim map, its preparer and the proposed policy.** The map's builder and checks, the preparer, and the policy as a file for the owner, with TPL-31, the data processing agreement, mapped first. The first part is built: the policy file, the map and its checks, TPL-31's map, its candidate, and the publisher's choice of policy. Unit tests build TPL-31 from stand-in passages, which the gate holds; a database test shows the publisher asks no other policy about such a template. The second part: the rights record, the mechanical checks, both files, the preparer, the two review requests and their package, and the release checks. | EDP-003, EDP-005, EDP-006, ADM-005 |
+| 4a | **A template's claim map, its preparer and the proposed policy.** The map's builder and checks, the preparer, and the policy as a file for the owner, with TPL-31, the data processing agreement, mapped first. The first part is built: the policy file, the map and its checks, TPL-31's map, its candidate, and the publisher's choice of policy. Unit tests build TPL-31 from stand-in passages, which the gate holds; a database test shows the publisher asks no other policy about such a template. The second part is built: the rights record, the mechanical checks, both files and the preparer, with its command. The third part: the two review requests and their package, and the release checks. | EDP-003, EDP-005, EDP-006, ADM-005 |
 | 4b–4e | **The families' maps:** privacy, then commercial, governance and safety, and employment. | EDP-003, EDP-005 |
 
 ## The owner's points

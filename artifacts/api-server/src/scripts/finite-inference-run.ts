@@ -10,6 +10,7 @@ import {
 import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
 import {
   mappedGuideIds,
+  mappedLawTemplateIds,
   operationalInferenceTemplateIds,
   readPreparedCandidate,
   supportsOperationalInferenceTemplate,
@@ -42,6 +43,7 @@ const finiteRunCommands = [
   "--prepare-template-candidate",
   "--prepare-practical-guide-candidate",
   "--prepare-guide-candidate",
+  "--prepare-law-template-candidate",
   "--prepare-rule-candidate",
   "--verify-prepared",
   "--admit",
@@ -339,6 +341,26 @@ async function main() {
         throw Error("FINITE_RUN_ARGUMENTS_INVALID");
       const { prepareGuideCandidateRelease } = await import("../modules/editorial");
       const prepared = await prepareGuideCandidateRelease(batchId, extra[0]);
+      console.log(
+        JSON.stringify({
+          ...prepared,
+          providerCalls: 0,
+          approvalRowsWritten: 0,
+          publicationAccepted: false,
+        }),
+      );
+      return;
+    }
+    if (mode === "--prepare-law-template-candidate") {
+      // A template that states the law, with a claim map, and the path of a provider-terms snapshot
+      // taken within a day (docs/architecture/reviewed-route.md, part 4). It is bound to the captures
+      // the daily source check holds, and kept as a candidate only when the gate names nothing but its
+      // two reviews; otherwise the reasons are printed. While the owner has approved no text of the
+      // policy for such templates, the reasons always name it.
+      if (!batchId || !mappedLawTemplateIds.includes(batchId) || extra.length !== 1 || !extra[0])
+        throw Error("FINITE_RUN_ARGUMENTS_INVALID");
+      const { prepareLawTemplateCandidateRelease } = await import("../modules/editorial");
+      const prepared = await prepareLawTemplateCandidateRelease(batchId, extra[0]);
       console.log(
         JSON.stringify({
           ...prepared,

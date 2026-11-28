@@ -3,8 +3,9 @@ import { resolve } from "node:path";
 import { z } from "zod";
 import { isPracticalGuideId, sha256 } from "@workspace/valo-core";
 import { publicationWorkspaceRoot } from "./operational-policy";
-import { readGuidanceIntake, readOperationalIntake } from "./operational-intake";
+import { readGuidanceIntake, readOperationalIntake, readTemplateIntake } from "./operational-intake";
 import { supportsOperationalInferenceTemplate } from "./inference-operational-coverage";
+import { mappedLawTemplateIds } from "./template-law-maps";
 /** The scope a guide's own wording is recorded under; a blank form keeps the scope it always had. */
 import { practicalProvenancePath, practicalSourcePath, readPracticalGuideIntake } from "./practical-guide";
 const practicalScope = "chatgpt_original_practical_article_provider_permission_only";
@@ -146,7 +147,10 @@ export function chatGPTPermissionRecord(
       ? manifest.guidance
       : manifest.templates;
     if (
-      (!guide && !supportsOperationalInferenceTemplate(binding.templateId)) ||
+      // A form's wording, or a mapped template's that states the law: both are rows of the manifest.
+      (!guide &&
+        !supportsOperationalInferenceTemplate(binding.templateId) &&
+        !mappedLawTemplateIds.includes(binding.templateId)) ||
       !manifest.authoring?.context?.includes("ChatGPT") ||
       manifest.authoring.upstreamProviderExecutionReceiptsRecorded !== false ||
       !rows?.some(
@@ -262,7 +266,10 @@ export async function loadChatGPTPermission(
   // TPL-09 shares the legacy source file but uses the exact intake-manifest
   // lineage. Select that route by the retained note, never by source path alone.
   if (provenance && (provenance.path !== chatGPTSourcePath || provenance.note.trimStart().startsWith("{"))) {
-    const intake = await readOperationalIntake(provenance.templateId, provenance.version);
+    // A template that states the law is read from the same manifest, by its own row.
+    const intake = mappedLawTemplateIds.includes(provenance.templateId)
+      ? await readTemplateIntake(provenance.templateId, provenance.version)
+      : await readOperationalIntake(provenance.templateId, provenance.version);
     if (
       provenance.path !== intake.sourcePath ||
       provenance.hash !== intake.sourceHash ||

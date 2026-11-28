@@ -1,4 +1,4 @@
-import { candidateDigest, disclosure, type PublicationBundle } from "@workspace/valo-core";
+import { candidateDigest, digest, disclosure, type PublicationBundle } from "@workspace/valo-core";
 import { documentInput } from "../../lib/valo-validation";
 import { decidedSource, guideSourceDecision, type AmendmentRecord } from "./guidance-amendments";
 import type { GuideClaimScope } from "./guidance-bundle";
@@ -210,4 +210,68 @@ export async function buildLawTemplateCandidate(
       transformation: `${intake.provenance.transformation}; what it covers, its limits, what it assumes and leaves open, and its sources added after its own words`,
     },
   };
+}
+
+/**
+ * Builds a candidate's claims and source decisions again from its own sources and its recorded claim
+ * scope, with today's claim map and amendment records, and says what differs, as a guide's check
+ * does. An empty list means the candidate's claims and assumptions are exactly what the map yields
+ * from those sources, and each source carries the decision its record supports now.
+ */
+export async function lawTemplateClaimScopeProblems(
+  bundle: Pick<PublicationBundle, "candidate" | "sources">,
+  scope: TemplateClaimScope,
+  now: Date,
+  records?: readonly AmendmentRecord[],
+) {
+  const c = bundle.candidate,
+    problems: string[] = [];
+  const map = templateLawClaimMaps.find((m) => m.id === c.id);
+  if (!map) return [`no claim map exists for ${c.id}`];
+  if (scope.template !== c.id || scope.mapDigest !== digest(map))
+    problems.push("the claim map has changed since the candidate was built");
+  if (map.risk !== c.risk) problems.push("the candidate's risk class is not the claim map's");
+  const held = new Map<string, GuidePassage>();
+  for (const recorded of scope.passages) {
+    const source = bundle.sources.find((s) => s.id === recorded.id);
+    if (
+      !source ||
+      source.url !== recorded.instrument.url ||
+      source.title !== recorded.instrument.title ||
+      source.retrievedAt !== recorded.instrument.retrievedAt ||
+      source.effectiveFrom !== recorded.instrument.effectiveFrom
+    ) {
+      problems.push(`the recorded passage ${recorded.id} does not describe a source of the candidate`);
+      continue;
+    }
+    held.set(recorded.id, { ...recorded, text: source.text, hash: source.hash });
+  }
+  if (held.size !== bundle.sources.length) problems.push("a source has no recorded passage");
+  if (problems.length) return problems;
+
+  const intake = await readTemplateIntake(c.id, c.version);
+  let rebuilt;
+  try {
+    rebuilt = buildTemplateClaims(map, intake.document.content.blocks, (id) => held.get(id));
+  } catch (error) {
+    return [`the claim map no longer builds from the candidate's sources: ${(error as Error).message}`];
+  }
+  if (digest(rebuilt.claims) !== digest(c.claims))
+    problems.push("the candidate's claims are not what the claim map yields from its sources");
+  if (digest(rebuilt.assumptions) !== digest(c.assumptions))
+    problems.push("the candidate's assumptions are not what the claim map states");
+  for (const line of rebuilt.missingEvidence) problems.push(line);
+  for (const source of bundle.sources) {
+    const quotes = c.claims.filter((claim) => claim.sourceId === source.id).map((claim) => claim.quote);
+    const decision = guideSourceDecision(held.get(source.id)!, now, records, quotes);
+    if (
+      decision.status !== source.status ||
+      decision.operativeTextConfirmed !== source.operativeTextConfirmed ||
+      decision.amendmentsResolved !== source.amendmentsResolved
+    )
+      problems.push(`the decision recorded for ${source.id} is not the one its amendment record supports`);
+    if (decision.status !== "approved")
+      problems.push(`${source.id} is not marked current: ${decision.reasons.join("; ")}`);
+  }
+  return problems;
 }
