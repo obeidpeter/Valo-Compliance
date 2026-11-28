@@ -727,6 +727,10 @@ jobs:
         run: |
           mkdir -p generated-artifacts/readiness
           VALO_EVIDENCE_RESULTS_DIR="$PWD/generated-artifacts/test-results" pnpm --filter @workspace/scripts exec tsx src/valo/readiness.ts > generated-artifacts/readiness/readiness.json
+      - name: Write the acceptance pack, each user-test pack's evidence from this run
+        # It accepts no pack: it places each part of a pack's required evidence as a script's, the
+        # owner's or a person's, with the cited tests' results (docs/architecture/acceptance-pack.md).
+        run: VALO_EVIDENCE_RESULTS_DIR="$PWD/generated-artifacts/test-results" pnpm --filter @workspace/scripts valo:acceptance-pack "$PWD/generated-artifacts/readiness/acceptance-pack.json"
       - name: Check every cited test passed in this run
         run: VALO_EVIDENCE_RESULTS_DIR="$PWD/generated-artifacts/test-results" pnpm --filter @workspace/scripts valo:ci-evidence --all
       - name: Check no test was skipped in every job that ran it
@@ -740,4 +744,11 @@ jobs:
         with:
           name: readiness-report
           path: generated-artifacts/readiness/readiness.json
+          if-no-files-found: ignore
+      - name: Retain the acceptance pack
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: acceptance-pack
+          path: generated-artifacts/readiness/acceptance-pack.json
           if-no-files-found: ignore
