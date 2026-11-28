@@ -57,6 +57,7 @@
     "test:valo-exports": "tsx --test src/modules/exports/valo-exports.integration.test.ts",
     "test:valo-exports-portable-db": "VALO_RUN_DB_TESTS=synthetic-development-only VALO_RUN_EXPORT_TESTS=synthetic-development-only NODE_ENV=development node src/test-support/run-private-file-tests.mjs src/modules/exports/valo-exports.integration.test.ts",
     "test:valo-export-library-db": "VALO_RUN_DB_TESTS=synthetic-development-only VALO_RUN_EXPORT_TESTS=synthetic-development-only NODE_ENV=development node src/test-support/run-private-file-tests.mjs src/modules/exports/valo-export-library.integration.test.ts",
+    "test:valo-free-journey-db": "VALO_RUN_DB_TESTS=synthetic-development-only VALO_RUN_EXPORT_TESTS=synthetic-development-only NODE_ENV=development node src/test-support/run-private-file-tests.mjs src/scripts/free-journey.integration.test.ts",
     "test:valo-tester-tasks-db": "VALO_RUN_DB_TESTS=synthetic-development-only VALO_RUN_EXPORT_TESTS=synthetic-development-only NODE_ENV=development node src/test-support/run-private-file-tests.mjs src/scripts/tester-tasks.integration.test.ts",
     "test:valo-release-record-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development tsx --test src/lib/valo-release-record.integration.test.ts",
     "test:valo-staff-prepared-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development tsx --test src/modules/staff/valo-staff-prepared-candidates.integration.test.ts",

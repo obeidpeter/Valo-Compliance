@@ -1,7 +1,13 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { readiness, requirements } from "@workspace/valo-records";
-import { acceptancePack, acceptanceSummary, evidenceParts, packRequirementIds } from "./acceptance-pack";
+import {
+  FREE_JOURNEY,
+  acceptancePack,
+  acceptanceSummary,
+  evidenceParts,
+  packRequirementIds,
+} from "./acceptance-pack";
 import { readCitations, type TestRecord } from "./ci-evidence";
 
 /**
@@ -68,8 +74,37 @@ test("each pack covers requirements the register holds, and each part a script g
           `${id} has a cited test`,
         );
       }
+      // A test a part names is cited for one of its requirements, so a renamed test cannot drop out.
+      for (const name of part.only ?? [])
+        assert.ok(
+          citations.some((c) => c.test === name && part.requirements!.includes(c.requirement)),
+          `${pack.id}: "${name}" is cited for ${part.requirements.join(" or ")}`,
+        );
     }
   }
+});
+
+test("UAT-01's recording is the free journey's test, and its part counts that test alone", () => {
+  const part = evidenceParts["UAT-01"]![0]!;
+  assert.equal(part.text, "Recorded mobile/desktop journey;");
+  assert.equal(part.by, "script");
+  assert.deepEqual(part.only, [FREE_JOURNEY]);
+  const journey = citations.filter((c) => c.test === FREE_JOURNEY);
+  assert.deepEqual(journey.map((c) => c.requirement).sort(), ["DOC-005", "EDT-002"]);
+  assert.ok(journey.every((c) => c.job === "postgres"));
+  // The requirements it names have other tests cited too, which the part does not count.
+  assert.ok(citations.filter((c) => part.requirements!.includes(c.requirement)).length > journey.length);
+  const records: TestRecord[] = journey.map((c) => ({
+    file: c.file,
+    path: [c.test],
+    status: "pass",
+    kind: "test",
+  }));
+  const run = acceptancePack(citations, records);
+  const counted = run.packs.find((p) => p.id === "UAT-01")!.parts[0]!;
+  assert.ok("tests" in counted && counted.tests);
+  assert.equal(counted.tests.cited, journey.length);
+  assert.equal(counted.tests.pass, journey.length);
 });
 
 test("the pack counts each part's cited tests by their results in a run, and accepts no pack", () => {

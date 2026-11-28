@@ -220,6 +220,8 @@ export async function startApp(account: keyof typeof identities) {
 
   return {
     origin,
+    /** A page on the screen `options` describes, such as a phone or a desktop that is recorded. */
+    open,
     /** A phone-sized page (Moto G4). */
     phone: (path: string, api: Api) => open(path, api, { ...devices["Moto G4"] }),
     /** A page as wide as a desktop screen, where the app lays itself out in full. */

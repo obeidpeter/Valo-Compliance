@@ -40,7 +40,14 @@ export type EvidencePart = {
   how: string;
   /** For a part a script gives: the requirements whose cited tests give it. */
   requirements?: readonly string[];
+  /** When only some of those requirements' cited tests give it: those tests' names, each cited for
+   * one of the requirements named. */
+  only?: readonly string[];
 };
+
+/** The test that records UAT-01's journey (docs/architecture/acceptance-pack.md). */
+export const FREE_JOURNEY =
+  "the free journey, recorded on a phone and on a desktop: a visitor finds the invoice, signs up, saves it and downloads its files, made from its stored revision";
 
 /**
  * Each pack's required evidence, placed part by part. The parts, joined with spaces, are the
@@ -51,8 +58,10 @@ export const evidenceParts: Readonly<Record<string, readonly EvidencePart[]>> = 
   "UAT-01": [
     {
       text: "Recorded mobile/desktop journey;",
-      by: "not_scripted",
-      how: "A recording of the journey on a phone and on a desktop. The browser rehearsal of a business owner's first tasks runs a journey like it, unrecorded.",
+      by: "script",
+      how: "The free journey, recorded on a phone and on a desktop against the real API and database: a visitor finds the invoice among the home page's tasks, signs up, answers its questions and downloads its finished PDF and Word files. CI keeps the recordings, the files and what they were made from as the run's uat-01-free-journey artifact. The identity provider's own sign-up form is stood in for.",
+      requirements: ["EDT-002", "DOC-005"],
+      only: [FREE_JOURNEY],
     },
     {
       text: "correct output and stored revision.",
@@ -264,7 +273,11 @@ export function acceptancePack(citations: readonly Citation[], records: TestReco
           ...(part.requirements
             ? {
                 tests: count(
-                  citations.filter((c) => part.requirements!.includes(c.requirement)),
+                  citations.filter(
+                    (c) =>
+                      part.requirements!.includes(c.requirement) &&
+                      (!part.only || part.only.includes(c.test)),
+                  ),
                   records,
                 ),
               }

@@ -6629,6 +6629,20 @@
       "file": "artifacts/api-server/src/modules/tasks/valo-reminder-resend.test.ts",
       "test": "a reminder goes through any sender of the shared kind, as an optional message under its own key, and a sender's answer that the address is stopped is the reminders' own refusal",
       "proves": "A reminder is handed to a sender as an optional message with its unsubscribe link in its words and headers and no task title or identifier in them, the same on every attempt. A sender's answer that the address is stopped is never taken for a sent reminder, and without its link a reminder is handed to no sender."
+    },
+    {
+      "requirement": "EDT-002",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/scripts/free-journey.integration.test.ts",
+      "test": "the free journey, recorded on a phone and on a desktop: a visitor finds the invoice, signs up, saves it and downloads its files, made from its stored revision",
+      "proves": "On an emulated phone and on a desktop, in a browser against the real API and a real database, a new account's invoice is saved and its finished Word file and PDF are made from that one saved version: both hold its answers and the totals worked out from them, each export was made from the stored revision whose hash is its content's, and each downloaded file is the one stored for it. The identity provider's sign-up and the queue's worker are stood in for."
+    },
+    {
+      "requirement": "DOC-005",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/scripts/free-journey.integration.test.ts",
+      "test": "the free journey, recorded on a phone and on a desktop: a visitor finds the invoice, signs up, saves it and downloads its files, made from its stored revision",
+      "proves": "On an emulated phone and on a desktop, a visitor who finds the invoice among the home page's tasks and signs up downloads its finished Word file and PDF, and the business library lists both with the saved version and what they were made from, Valo's own invoice questions. The identity provider's sign-up and the queue's worker are stood in for."
     }
   ]
 }

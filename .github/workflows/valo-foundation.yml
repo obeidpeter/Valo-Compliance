@@ -515,6 +515,20 @@ jobs:
           name: tester-tasks-invoices
           path: generated-artifacts/tester-tasks
           if-no-files-found: ignore
+      # UAT-01's recorded journey (docs/architecture/acceptance-pack.md): the home page from the
+      # compiled web server built above, then sign-up and the workspace from the browser app, each
+      # against this job's API and database, on a phone and on a desktop.
+      - name: Record the free journey on a phone and a desktop against the real API and database (UAT-01)
+        env:
+          VALO_FREE_JOURNEY_FILES: ${{ github.workspace }}/generated-artifacts/free-journey
+        run: pnpm --filter @workspace/api-server test:valo-free-journey-db
+      - name: Retain the free journey's recordings, files and what they were made from
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: uat-01-free-journey
+          path: generated-artifacts/free-journey
+          if-no-files-found: ignore
       - name: Draw markup saved through the API on the customer's and staff's screens, and find it shown as text (SEC-003)
         run: pnpm --filter @workspace/api-server test:valo-stored-markup-db
       - name: Prove the release record names the commit, migrations, content and rule versions and known issues (OPS-005)
