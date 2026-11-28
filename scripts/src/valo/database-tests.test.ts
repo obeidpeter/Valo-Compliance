@@ -1,8 +1,18 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { test } from "node:test";
 import { repositoryRoot } from "./architecture-check";
-import { LOCAL_SKIPS, WORKFLOW, githubEnvSettings, readDatabaseJob, stepEnvironment } from "./database-tests";
+import {
+  LOCAL_SKIPS,
+  WORKFLOW,
+  chooseRelease,
+  githubEnvSettings,
+  readDatabaseJob,
+  setsUpTheDatabase,
+  stepEnvironment,
+} from "./database-tests";
 
 const workflow = readFileSync(`${repositoryRoot}/${WORKFLOW}`, "utf8");
 
@@ -131,4 +141,52 @@ test("the checkout's root stands in for github.workspace, and any other expressi
       () => readDatabaseJob(job("", service + `      ODD: ${expression}\n`), "/checkout"),
       /uses an expression other than github\.workspace/,
     );
+});
+
+test("another release's job runs against this schema: only the steps that set up the database come from this checkout", () => {
+  // The steps of CI's database job that make its schema, its logins and its queue.
+  const setup = readDatabaseJob(workflow)
+    .steps.filter((step) => !step.skip && setsUpTheDatabase(step))
+    .map((step) => step.name);
+  assert.deepEqual(setup, [
+    "Apply tracked migrations to empty synthetic database",
+    "Let customer requests connect as the workspace login, and check nothing widens it",
+    "Let the publisher connect as the publisher login",
+    "Let drafting connect as the drafting login",
+    "Let review connect as the review login",
+    "Install reviewed durable queue before payload and erasure tests",
+  ]);
+  const other = mkdtempSync(join(tmpdir(), "valo-previous-release-"));
+  try {
+    mkdirSync(join(other, ".github", "workflows"), { recursive: true });
+    writeFileSync(join(other, WORKFLOW), workflow);
+    const release = chooseRelease(["--previous", other, "--keep-going"]);
+    assert.equal(release.previous, true);
+    assert.equal(release.jobRoot, other);
+    const migrate = {
+      run: "pnpm --filter @workspace/db exec drizzle-kit migrate --config ./drizzle.config.ts",
+    };
+    const login = { run: "url=$(node lib/db/scripts/workspace-login.mjs --print-url)" };
+    const tests = { run: "pnpm --filter @workspace/api-server test:valo-db-core" };
+    assert.equal(release.folderFor(migrate), repositoryRoot);
+    assert.equal(release.folderFor(login), repositoryRoot);
+    assert.equal(release.folderFor(tests), other);
+    // Without --previous every step runs here.
+    const here = chooseRelease(["--keep-going"]);
+    assert.equal(here.previous, false);
+    assert.equal(here.folderFor(tests), repositoryRoot);
+    // It names another checkout, with its own workflow, and nothing else is taken.
+    for (const args of [
+      ["--other"],
+      ["--other", "--keep-going"],
+      ["--previous"],
+      ["--previous", "--keep-going"],
+      ["--previous", repositoryRoot],
+      ["--previous", join(other, "missing")],
+      ["--previous", other, "--other"],
+    ])
+      assert.throws(() => chooseRelease(args), /DATABASE_TESTS_ARGUMENTS_INVALID/, args.join(" "));
+  } finally {
+    rmSync(other, { recursive: true, force: true });
+  }
 });

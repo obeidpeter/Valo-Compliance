@@ -1,0 +1,4 @@
+{
+  "about": "Statements of a migration that the expand-only check (lib/db/scripts/expand-only.mjs) refuses, kept with a reviewed reason why the previous release still runs on the schema it leaves. A statement is named by its migration's tag and the SHA-256 of its text as the check prints it. One that changes data also names the runbook for it, which, as an irreversible migration, needs the owner's approval before it is merged (OPS-008; docs/valo/release-and-rollback.md). An entry for a migration the previous release already has is not read.",
+  "exceptions": []
+}

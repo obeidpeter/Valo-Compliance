@@ -1,0 +1,283 @@
+{
+  "about": "Tests of the previous release that fail by design when its database job runs against this release's schema (OPS-008; docs/architecture/rollback.md), in two ways that are not what the release does: the test checks the schema itself, or it sets itself up by writing rows straight into the database in a shape the release's own code never writes, which a guard this schema adds refuses. Each entry names the migrations that cause it, one test file, the tests of that file that fail for that reason, each by its full name, and why the previous release still runs. An entry is read only while one of its migrations is new to the previous release. Any other failure fails the rollback job, and so does a listed test that does not fail.",
+  "failures": [
+    {
+      "migrations": [
+        "20261127172934_order_price_book_guard"
+      ],
+      "file": "artifacts/api-server/src/modules/operations/activity-readings.integration.test.ts",
+      "tests": [
+        [
+          "the money, drafting assistant and whole-workspace readings count every workspace's rows of the last hour, and no older one"
+        ]
+      ],
+      "reason": "The test writes its checkouts straight into the database, each at an amount its one price does not give, to count the money of the last hour, so it stops before it reads anything. The guard that 20261127172934_order_price_book_guard adds refuses an order whose amount, line or price in effect is not its price's own (PAY-001), by design. The previous release's own code never writes such an order: its createOrder and its bundle order take the amount, currency and line from the price or the bundle in effect, which is what the guard requires."
+    },
+    {
+      "migrations": [
+        "20261127172934_order_price_book_guard",
+        "20261127001808_message_deliveries",
+        "20261127033059_notice_digests"
+      ],
+      "file": "artifacts/api-server/src/routes/valo-tenant-substitution.integration.test.ts",
+      "tests": [
+        [
+          "another workspace's identifiers are refused exactly like unknown ones and change nothing"
+        ]
+      ],
+      "reason": "The test writes orders straight into the database to set up its cases, with an amount and line their price does not give, so it stops before its cases run. The guard that 20261127172934_order_price_book_guard adds refuses an order whose amount, line or price in effect is not its price's own (PAY-001), by design. The previous release's own code never writes such an order: its createOrder and its bundle order take the amount, currency and line from the price or the bundle in effect, which is what the guard requires. Were its orders their prices' own, its list of the tables row-level security limits to one workspace would still differ from the database's, which 20261127001808_message_deliveries and 20261127033059_notice_digests lengthen with two tables the previous release never reads or writes."
+    },
+    {
+      "migrations": [
+        "20261127172934_order_price_book_guard"
+      ],
+      "file": "artifacts/api-server/src/modules/catalogue/valo-template-entitlement.integration.test.ts",
+      "tests": [
+        [
+          "only the purchasing workspace's active entitlement releases a premium master"
+        ]
+      ],
+      "reason": "The test writes a purchase straight into the database, with an amount and line its price does not give, to grant a premium master. The guard that 20261127172934_order_price_book_guard adds refuses an order whose amount, line or price in effect is not its price's own (PAY-001), by design. The previous release's own code never writes such an order: its createOrder and its bundle order take the amount, currency and line from the price or the bundle in effect, which is what the guard requires."
+    },
+    {
+      "migrations": [
+        "20261127172934_order_price_book_guard"
+      ],
+      "file": "artifacts/api-server/src/modules/commerce/valo-dispute-actions.integration.test.ts",
+      "tests": [
+        [
+          "durable dispute intents: development PostgreSQL, controlled PSP and actual receipt PDF",
+          "terminal/archived observations alone do not suspend or restore access"
+        ],
+        [
+          "durable dispute intents: development PostgreSQL, controlled PSP and actual receipt PDF",
+          "actual HTTP read/prepare checks finance permission, fresh MFA and hostile origins"
+        ],
+        [
+          "durable dispute intents: development PostgreSQL, controlled PSP and actual receipt PDF",
+          "customer statements are selected-order scoped, consented, exact and retry-safe"
+        ],
+        [
+          "durable dispute intents: development PostgreSQL, controlled PSP and actual receipt PDF",
+          "real generated purchase PDF is readable and uploaded once under racing clicks"
+        ],
+        [
+          "durable dispute intents: development PostgreSQL, controlled PSP and actual receipt PDF",
+          "timeout after acceptance remains unknown, is never re-sent and reconciles exact merchant state"
+        ],
+        [
+          "durable dispute intents: development PostgreSQL, controlled PSP and actual receipt PDF",
+          "fraud decline binds the acknowledged receipt and exact customer evidence before preparation"
+        ],
+        [
+          "durable dispute intents: development PostgreSQL, controlled PSP and actual receipt PDF",
+          "unknown terminal/null resolution, mismatched and stale state cannot establish success"
+        ],
+        [
+          "durable dispute intents: development PostgreSQL, controlled PSP and actual receipt PDF",
+          "revocation before dispatch cancels safely, preserving the immutable financial trail"
+        ],
+        [
+          "durable dispute intents: development PostgreSQL, controlled PSP and actual receipt PDF",
+          "a pre-existing uncertain refund cannot be spent again by a merchant acceptance"
+        ],
+        [
+          "durable dispute intents: development PostgreSQL, controlled PSP and actual receipt PDF",
+          "altered source records and stale finance MFA cannot dispatch a prepared decision"
+        ],
+        [
+          "durable dispute intents: development PostgreSQL, controlled PSP and actual receipt PDF",
+          "unsent cancellation and privacy fencing preserve unknown liabilities"
+        ],
+        [
+          "durable dispute intents: development PostgreSQL, controlled PSP and actual receipt PDF",
+          "standalone customer concerns retain thread text, tenant privacy and safe exported financial status"
+        ],
+        [
+          "durable dispute intents: development PostgreSQL, controlled PSP and actual receipt PDF",
+          "saved action requires separate acknowledgement, hold revision and immutable payload"
+        ],
+        [
+          "durable dispute intents: development PostgreSQL, controlled PSP and actual receipt PDF",
+          "role, hold, reversal and canonical changes during actual adapter GET deny every mutation"
+        ],
+        [
+          "durable dispute intents: development PostgreSQL, controlled PSP and actual receipt PDF",
+          "a disabled preflight after receipt rendering is provably unsent, not an unknown liability"
+        ],
+        [
+          "durable dispute intents: development PostgreSQL, controlled PSP and actual receipt PDF",
+          "support, concern and message erasure share 100 rows without skipping a family"
+        ],
+        [
+          "durable dispute intents: development PostgreSQL, controlled PSP and actual receipt PDF",
+          "awaiting canonical labels cannot establish an observed financial decision"
+        ],
+        [
+          "durable dispute intents: development PostgreSQL, controlled PSP and actual receipt PDF",
+          "SIGKILL after controlled provider mutation recovers by GET without resending"
+        ]
+      ],
+      "reason": "Each test sets up a disputed purchase through the shared dispute fixture, which writes the order straight into the database with an amount and line its price does not give. The guard that 20261127172934_order_price_book_guard adds refuses an order whose amount, line or price in effect is not its price's own (PAY-001), by design. The previous release's own code never writes such an order: its createOrder and its bundle order take the amount, currency and line from the price or the bundle in effect, which is what the guard requires."
+    },
+    {
+      "migrations": [
+        "20261127172934_order_price_book_guard"
+      ],
+      "file": "artifacts/api-server/src/routes/valo-disputes-http.integration.test.ts",
+      "tests": [
+        [
+          "actual dispute HTTP routers enforce managed finance authority, tenant binding and same-origin writes"
+        ]
+      ],
+      "reason": "The test sets up a disputed purchase through the shared dispute fixture, which writes the order straight into the database with an amount and line its price does not give. The guard that 20261127172934_order_price_book_guard adds refuses an order whose amount, line or price in effect is not its price's own (PAY-001), by design. The previous release's own code never writes such an order: its createOrder and its bundle order take the amount, currency and line from the price or the bundle in effect, which is what the guard requires."
+    },
+    {
+      "migrations": [
+        "20261127001808_message_deliveries",
+        "20261127001815_message_delivery_grants",
+        "20261127005802_email_suppressions",
+        "20261127005804_email_suppression_check",
+        "20261127033059_notice_digests",
+        "20261127033114_notice_digest_grants",
+        "20261127152513_order_terms_guard",
+        "20261127172934_order_price_book_guard",
+        "20261127191526_reconciliation_attempt_time",
+        "20261127194336_payment_check_settlements",
+        "20261127194345_payment_check_guard",
+        "20261127203546_payment_event_settlements",
+        "20261127203554_payment_event_settlement_guard",
+        "20261127231133_payment_lists"
+      ],
+      "file": "artifacts/api-server/src/lib/valo-release-record.integration.test.ts",
+      "tests": [
+        [
+          "the release record names the commit, the migrations shipped and applied, every content and rule version and the known issues"
+        ]
+      ],
+      "reason": "The test checks the release record against the database it runs on, and requires the migrations the release ships and those the database has applied to match. Here the database has applied this release's new migrations as well, so the record says, truly, that they do not match. It checks the schema itself, not what the release does."
+    },
+    {
+      "migrations": [
+        "20261127172934_order_price_book_guard"
+      ],
+      "file": "artifacts/api-server/src/modules/commerce/valo-commerce.integration.test.ts",
+      "tests": [
+        [
+          "controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication",
+          "a failed fulfilment constraint rolls back settlement and outbox atomically"
+        ],
+        [
+          "controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication",
+          "pending, abandoned and failed provider controls do not grant; a late success can recover"
+        ],
+        [
+          "controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication",
+          "membership revoked while settlement waits on an order lock prevents the eventual customer write"
+        ],
+        [
+          "controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication",
+          "no merchant setup means no provider calls, false match, consumed event attempt or claimed delivery"
+        ],
+        [
+          "controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication",
+          "with a test merchant, the event worker checks a recorded charge with Paystack on the server and settles it once, sends an unmatched reference to review at once, and stops retrying a charge it cannot check after five attempts"
+        ],
+        [
+          "controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication",
+          "two event workers at once settle a charge once: one purchase, one grant, one receipt to send and one settlement in the audit trail"
+        ],
+        [
+          "controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication",
+          "a status refresh checks an interrupted payment with Paystack on the server and recovers the purchase, and the order then refuses a second payment"
+        ],
+        [
+          "controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication",
+          "checkout of a product that is not released is refused"
+        ]
+      ],
+      "reason": "Each test writes its orders straight into the database through the file's own fixture, on a price that is not in effect when the order is written. The guard that 20261127172934_order_price_book_guard adds refuses an order whose amount, line or price in effect is not its price's own (PAY-001), by design. The previous release's own code never writes such an order: its createOrder and its bundle order take the amount, currency and line from the price or the bundle in effect, which is what the guard requires. The tests of the same file that write no such order, the refusal of an order for held content among them, pass on this schema."
+    },
+    {
+      "migrations": [
+        "20261127172934_order_price_book_guard"
+      ],
+      "file": "artifacts/api-server/src/modules/commerce/valo-refunds.integration.test.ts",
+      "tests": [
+        [
+          "refund lifecycle: actual development PostgreSQL and controlled provider, not a real refund",
+          "strict amounts, tenant isolation, idempotent retries and changed-key conflicts"
+        ],
+        [
+          "refund lifecycle: actual development PostgreSQL and controlled provider, not a real refund",
+          "no role, wrong role, missing/stale/future MFA and stale revision cannot approve"
+        ],
+        [
+          "refund lifecycle: actual development PostgreSQL and controlled provider, not a real refund",
+          "concurrent partial requests cannot reserve more than the paid amount"
+        ],
+        [
+          "refund lifecycle: actual development PostgreSQL and controlled provider, not a real refund",
+          "racing approve/reject decisions record one revision and one decision reason"
+        ],
+        [
+          "refund lifecycle: actual development PostgreSQL and controlled provider, not a real refund",
+          "provider pending is not complete; partial then full processing preserves private drafts"
+        ],
+        [
+          "refund lifecycle: actual development PostgreSQL and controlled provider, not a real refund",
+          "timeout after provider acceptance reuses one reference and creates no second refund"
+        ],
+        [
+          "refund lifecycle: actual development PostgreSQL and controlled provider, not a real refund",
+          "parallel workers and changed provider facts never duplicate or falsely complete"
+        ],
+        [
+          "refund lifecycle: actual development PostgreSQL and controlled provider, not a real refund",
+          "SIGKILL after committed claim recovers with the same reference and bounded attempts"
+        ],
+        [
+          "refund lifecycle: actual development PostgreSQL and controlled provider, not a real refund",
+          "committed membership and finance revocations defeat writes waiting on an order"
+        ],
+        [
+          "refund lifecycle: actual development PostgreSQL and controlled provider, not a real refund",
+          "canonical disputes suspend reuse, cannot be forged across transactions, and block double compensation"
+        ],
+        [
+          "refund lifecycle: actual development PostgreSQL and controlled provider, not a real refund",
+          "first-observed terminal disputes preserve active grants without inventing financial outcomes"
+        ],
+        [
+          "refund lifecycle: actual development PostgreSQL and controlled provider, not a real refund",
+          "dispute observations preserve separately suspended grants and reversed orders"
+        ],
+        [
+          "refund lifecycle: actual development PostgreSQL and controlled provider, not a real refund",
+          "an explicitly exhausted refund counter blocks writes without losing saved history"
+        ],
+        [
+          "refund lifecycle: actual development PostgreSQL and controlled provider, not a real refund",
+          "legacy unknown amounts cannot be authorized; rejection is explicit and auditable"
+        ],
+        [
+          "refund lifecycle: actual development PostgreSQL and controlled provider, not a real refund",
+          "a verified failed provider refund releases funds; needs-attention does not invent completion"
+        ],
+        [
+          "refund lifecycle: actual development PostgreSQL and controlled provider, not a real refund",
+          "a late worker response cannot replace a newer completed observation"
+        ],
+        [
+          "refund lifecycle: actual development PostgreSQL and controlled provider, not a real refund",
+          "reversed payment or a late processed refund blocks a newly unsafe dispatch"
+        ],
+        [
+          "refund lifecycle: actual development PostgreSQL and controlled provider, not a real refund",
+          "the database rejects changes to financial transition history"
+        ]
+      ],
+      "reason": "Each test writes paid orders straight into the database through the finance fixture, with an amount and line their price does not give; the last reads the refund history the others would have made. The guard that 20261127172934_order_price_book_guard adds refuses an order whose amount, line or price in effect is not its price's own (PAY-001), by design. The previous release's own code never writes such an order: its createOrder and its bundle order take the amount, currency and line from the price or the bundle in effect, which is what the guard requires."
+    }
+  ]
+}
