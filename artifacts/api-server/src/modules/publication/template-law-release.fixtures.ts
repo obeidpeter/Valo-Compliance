@@ -13,9 +13,9 @@ import { assembleLawTemplateBundle } from "./template-law-release";
 
 /**
  * Stand-ins for the tests of a template that states the law (docs/architecture/reviewed-route.md,
- * part 4). The Data Protection Act's words are not kept in the repository, so TPL-31 is built from
- * stand-in passages: their words hold the quoted words and are otherwise not the Act's or the
- * directive's. None of it is evidence about the law.
+ * part 4). The Data Protection Act's words are not kept in the repository, so TPL-31 and TPL-29 are
+ * built from stand-in passages: their words hold the quoted words and are otherwise not the Act's or
+ * the directive's. None of it is evidence about the law.
  *
  * - A passage's identity is synthetic, an address and a checksum of no real file, with a synthetic
  *   amendment record standing for a search that found nothing later; or it is the one the repository's
@@ -33,6 +33,25 @@ export const standInWords: Record<string, string> = {
   "GAID-34":
     "Article 34: Data Processing Agreement (stand-in words) every data controller or data processor shall (stand-in words) carry out data processing.",
   "NDPA-40": "40.—(1) Where a personal data breach has occurred (stand-in words) under this section.",
+};
+
+/** Stand-in words for the passages TPL-29's claims rest on. */
+export const noticeStandInWords: Record<string, string> = {
+  "NDPA-25":
+    "25.—(1) (stand-in words) (a) the data subject has given and not withdrawn consent (stand-in words) personal data is to be processed ; or (stand-in words).",
+  "NDPA-26":
+    "26.—(1) (stand-in words).\n(5) The withdrawal of consent under subsection (4) shall not affect (stand-in words) consent.",
+  "NDPA-27":
+    "27.—(1) (stand-in words) (f ) right to lodge a complaint with the Commission (stand-in words) section 46 (1) of this Act ; and (stand-in words).",
+  "NDPA-34":
+    "34.—(1) (stand-in words) (a) confirmation as to whether the data controller (stand-in words) and where that is the case — (stand-in words) (b) a copy of data subject’s personal data (stand-in words) to bear some or all of such costs ; (c) the correction or, if correction is not feasible or suitable (stand-in words) or misleading ; (stand-in words) (e) restriction of data processing pending — (stand-in words) defense of legal claims.\n(2) A data controller shall erase personal data without undue delay, (stand-in words) lawful basis to retain the personal\ndata.",
+  "NDPA-36": "36.—(1) A data subject shall have the right to object (stand-in words) of the data subject.",
+  "NDPA-37":
+    "37.—(1) A data subject shall have the right not to be subject to a decision (stand-in words) concerning the data subject.\n(3) The data controller shall implement suitable measures (stand-in words) (c) contest the decision.",
+  "NDPA-38":
+    "38.—(1) (stand-in words).\n(2) Right of data portability under this Act shall entitle the data (stand-in words) from one data controller to another.",
+  "GAID-37":
+    "Article 37: Exercise of Right to Data Portability (stand-in words) (2) The right to data portability shall apply where (stand-in words) instrument issued by the Commission.",
 };
 
 /** A recorded passage of the repository's captured texts, with stand-in words, read at `readAt`. */
@@ -117,11 +136,13 @@ export const passingFormat = {
 };
 
 /**
- * TPL-31 built from stand-ins read an hour before `now`, with controlled provider terms captured half
- * an hour before it, and its bundle assembled: under the policy as it stands unless another is given.
+ * TPL-31, or another mapped template, built from stand-ins read an hour before `now`, with controlled
+ * provider terms captured half an hour before it, and its bundle assembled: under the policy as it
+ * stands unless another is given.
  */
 export async function assembledLawTemplate(options: {
   now: Date;
+  template?: "TPL-31" | "TPL-29";
   policy?: PublicationBundle["policy"];
   records?: readonly AmendmentRecord[];
   text?: Record<string, string>;
@@ -129,11 +150,13 @@ export async function assembledLawTemplate(options: {
   pdf?: typeof passingFormat;
 }) {
   const { now } = options;
+  const template = options.template ?? "TPL-31";
   const readAt = new Date(+now - 3_600_000).toISOString();
+  const text = options.text ?? (template === "TPL-29" ? noticeStandInWords : standInWords);
   const built = await buildLawTemplateCandidate(
-    "TPL-31",
+    template,
     1,
-    lawTemplateStandIns(readAt, options.text, options.identity),
+    lawTemplateStandIns(readAt, text, options.identity),
     now,
     options.records,
   );
@@ -146,7 +169,7 @@ export async function assembledLawTemplate(options: {
     {
       path: built.provenance.path,
       notePath: "docs/content-candidates/r1-content-intake-manifest.json",
-      templateId: "TPL-31",
+      templateId: template,
     },
   );
   const policy = options.policy ?? (await templateLawPolicy()).policy;
@@ -161,7 +184,7 @@ export async function assembledLawTemplate(options: {
       passed: !options.pdf || Object.values(options.pdf).every(Boolean),
       formats: { docx: passingFormat, pdf: options.pdf ?? passingFormat },
     },
-    exportHashes: { docx: sha256("TPL-31 docx"), pdf: sha256("TPL-31 pdf") },
+    exportHashes: { docx: sha256(`${template} docx`), pdf: sha256(`${template} pdf`) },
     now,
     ...(options.records ? { amendmentRecords: options.records } : {}),
   });

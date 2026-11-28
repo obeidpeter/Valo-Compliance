@@ -12,7 +12,8 @@ import {
   type TemplateSentence,
 } from "./template-claim-map";
 import { privacyTemplateClaimMaps } from "./template-claims-privacy";
-import { lawTemplatePassageIds, mappedLawTemplateIds } from "./template-law-maps";
+import { lawTemplatePassageIds, mappedLawTemplateIds, templateLawClaimMaps } from "./template-law-maps";
+import { guidanceOfficialHosts } from "../../platform/guidance-hosts";
 
 /**
  * A template's claim map (docs/architecture/reviewed-route.md, part 4). The Data Protection Act's
@@ -28,7 +29,7 @@ const supports = (m: TemplateClaimMap) =>
   m.sentences.flatMap((s) => ("support" in s ? (s.support ?? []) : []));
 
 test("TPL-31's map places every word of its retained draft, in order, with nothing left over", async () => {
-  assert.deepEqual(mappedLawTemplateIds, ["TPL-31"]);
+  assert.deepEqual(mappedLawTemplateIds, ["TPL-31", "TPL-29"]);
   const words = templateWords(await blocks());
   assert.equal(flat(tpl31.sentences.map((s) => s.text).join(" ")), flat(words));
   const built = buildTemplateClaims(tpl31, await blocks(), () => undefined);
@@ -69,6 +70,59 @@ test("with no passage supplied, TPL-31's map still builds, and each sentence abo
   assert.deepEqual(built.sources, []);
   assert.equal(built.missingEvidence.length, supports(tpl31).length);
   assert.ok(built.missingEvidence.every((line) => /is not among the passages supplied/.test(line)));
+});
+
+const tpl29 = privacyTemplateClaimMaps.find((m) => m.id === "TPL-29")!;
+const noticeBlocks = async () => (await readTemplateIntake("TPL-29")).document.content.blocks;
+
+test("TPL-29's map places every word of its retained draft, in order, with nothing left over", async () => {
+  const words = templateWords(await noticeBlocks());
+  assert.equal(flat(tpl29.sentences.map((s) => s.text).join(" ")), flat(words));
+  const built = buildTemplateClaims(tpl29, await noticeBlocks(), () => undefined);
+  assert.equal(built.scope.template, "TPL-29");
+  assert.equal(built.scope.sentences, tpl29.sentences.length);
+  // A notice, not a contract: it states what it describes of the law, and exposes no parties' terms.
+  assert.equal(tpl29.risk, "privacy");
+  assert.equal(tpl29.contract, undefined);
+  assert.equal(built.statesLaw, true);
+  assert.deepEqual(built.assumptions, []);
+  // What the business says of itself and of what it does are its own statements; the rights it
+  // describes are readings of the Act, and a blank to complete is a practice.
+  assert.deepEqual(built.scope.byKind, {
+    source_statement: 0,
+    interpretation: 6,
+    party_term: 40,
+    optional_practice: 5,
+    template_limit: 0,
+    not_a_claim: 47,
+  });
+});
+
+test("each of TPL-29's sentences about the law names a recorded passage, quoted as the privacy guides quote it", async () => {
+  const recorded = new Set(capturedPassages.map((p) => p.id));
+  const guideQuotes = new Set(
+    privacyClaimMaps.flatMap((m) =>
+      m.sentences.flatMap((s) => ("support" in s ? (s.support ?? []) : [])).map((q) => JSON.stringify(q)),
+    ),
+  );
+  for (const q of supports(tpl29)) {
+    assert.ok(recorded.has(q.passage), `${q.passage} is a recorded passage`);
+    assert.ok(guideQuotes.has(JSON.stringify(q)), `${q.passage} ${q.locator} is quoted as a guide quotes it`);
+  }
+  assert.deepEqual(lawTemplatePassageIds("TPL-29").sort(), [
+    "GAID-37",
+    "NDPA-25",
+    "NDPA-26",
+    "NDPA-27",
+    "NDPA-34",
+    "NDPA-36",
+    "NDPA-37",
+    "NDPA-38",
+  ]);
+  // With no passage supplied the map still builds, and each sentence about the law is reported unbound.
+  const built = buildTemplateClaims(tpl29, await noticeBlocks(), () => undefined);
+  assert.deepEqual(built.claims, []);
+  assert.equal(built.missingEvidence.length, supports(tpl29).length);
 });
 
 test("TPL-31 exposes what it assumes about its parties and its use, and the clauses it leaves open (EDP-005)", async () => {
@@ -251,16 +305,24 @@ test("the builder refuses a map that misplaces, leaves out or misclassifies a te
     () => build(placed, { ownNumbers: [{ text: "1. Stand-in clause", why: " " }] }),
     /TEMPLATE_CLAIM_MAP_OWN_NUMBER/,
   );
-  // A template with a link in its words is not built: no host list checks it.
-  assert.throws(
-    () =>
-      buildTemplateClaims(
-        standInMap([{ kind: "not_a_claim", text: "See https://ndpc.gov.ng/" }], { ownNumbers: [] }),
-        [{ type: "paragraph", text: "See https://ndpc.gov.ng/", rows: [] }],
-        standInPassages,
-      ),
-    /TEMPLATE_CLAIM_MAP_LINK/,
+});
+
+test("a template's links are reported by their hosts, for the mechanical checks to hold to the policy's", async () => {
+  const words =
+    "See https://ndpc.gov.ng/complaints and https://example.com/x, or https://ndpc.gov.ng again, not https://[unreadable.";
+  const built = buildTemplateClaims(
+    standInMap([{ kind: "not_a_claim", text: words }], { ownNumbers: [] }),
+    [{ type: "paragraph", text: words, rows: [] }],
+    standInPassages,
   );
+  assert.deepEqual(built.linkHosts, ["ndpc.gov.ng", "example.com"]);
+  // The mapped templates link only to hosts the proposed policy lists: TPL-29 to the Commission's.
+  for (const map of templateLawClaimMaps) {
+    const own = (await readTemplateIntake(map.id)).document.content.blocks;
+    const { linkHosts } = buildTemplateClaims(map, own, () => undefined);
+    for (const host of linkHosts)
+      assert.ok((guidanceOfficialHosts as readonly string[]).includes(host), `${map.id} links to ${host}`);
+  }
 });
 
 test("a template whose map places no sentence about the law is not the source-backed policy's", () => {

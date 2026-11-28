@@ -49,6 +49,92 @@ const breachNotice = q(
   "section 40(1)",
 );
 
+/** The rights and consent a privacy notice describes, quoted as the privacy guides quote them (GUD-11 to GUD-15). */
+/** Withdrawing consent leaves earlier lawful processing as it was, section 26(5). */
+const withdrawalKeepsEarlier = q(
+  "NDPA-26",
+  "(5) The withdrawal of consent under subsection (4) shall not affect",
+  "consent.",
+  "section 26(5)",
+);
+/** Consent counts as a lawful basis only while it is given and not withdrawn, section 25(1)(a). */
+const consentGround = q(
+  "NDPA-25",
+  "(a) the data subject has given and not withdrawn consent",
+  "personal data is to be processed ; or",
+  "section 25(1)(a)",
+);
+/** A person's rights to confirmation, a copy, correction and restriction, section 34(1), and erasure, section 34(2). */
+const confirmation = q(
+  "NDPA-34",
+  "(a) confirmation as to whether the data controller",
+  "and where that is the case —",
+  "section 34(1)(a)",
+);
+const copy = q(
+  "NDPA-34",
+  "(b) a copy of data subject’s personal data",
+  "to bear some or all of such costs ;",
+  "section 34(1)(b)",
+);
+const correction = q(
+  "NDPA-34",
+  "(c) the correction or, if correction is not feasible or suitable",
+  "or misleading ;",
+  "section 34(1)(c)",
+);
+const restriction = q(
+  "NDPA-34",
+  "(e) restriction of data processing pending —",
+  "defense of legal claims.",
+  "section 34(1)(e)",
+);
+const erase = q(
+  "NDPA-34",
+  "(2) A data controller shall erase personal data without undue delay,",
+  "lawful basis to retain the personal\ndata.",
+  "section 34(2)",
+);
+/** Portability, section 38(2), and where the directive applies it, Article 37(2). */
+const portability = q(
+  "NDPA-38",
+  "(2) Right of data portability under this Act shall entitle the data",
+  "from one data controller to another.",
+  "section 38(2)",
+);
+const portabilityScope = q(
+  "GAID-37",
+  "(2) The right to data portability shall apply where",
+  "instrument issued by the Commission.",
+  gaid.a37,
+);
+/** The right to object, section 36(1)–(2), and the safeguards for decisions made by automated means alone, section 37. */
+const objection = q(
+  "NDPA-36",
+  "36.—(1) A data subject shall have the right to object",
+  "of the data subject.",
+  "section 36(1)–(2)",
+);
+const automated = q(
+  "NDPA-37",
+  "37.—(1) A data subject shall have the right not to be subject to a decision",
+  "concerning the data subject.",
+  "section 37(1)",
+);
+const contest = q(
+  "NDPA-37",
+  "(3) The data controller shall implement suitable measures",
+  "(c) contest the decision.",
+  "section 37(3)",
+);
+/** The right to complain to the Commission, which a notice must tell a person of, section 27(1)(f). */
+const complaint = q(
+  "NDPA-27",
+  "(f ) right to lodge a complaint with the Commission",
+  "section 46 (1) of this Act ; and",
+  "section 27(1)(f)",
+);
+
 /** A schedule's table, row by row: each label states nothing, and so does a plain blank. */
 const blank = (label: string, entry = "[Details]") => [none(label), none(entry)];
 
@@ -307,6 +393,183 @@ export const privacyTemplateClaimMaps: readonly TemplateClaimMap[] = [
 
       none("For the Controller: [authorised name, role, signature, date]"),
       none("For the Processor: [authorised name, role, signature, date]"),
+    ],
+  },
+  {
+    id: "TPL-29",
+    // A business's notice of its own processing. What it says of itself and of what it does are its own
+    // statements, placed as its terms: they say nothing about what the law requires. The rights and the
+    // consent rules it describes are readings of the Act, each bound to a passage the privacy guides quote.
+    risk: "privacy",
+    ownNumbers: [
+      { text: "Record 1", why: "The first row of the purposes table, as the document numbers it." },
+      { text: "Record 2", why: "The second row of the purposes table, as the document numbers it." },
+    ],
+    sentences: [
+      none("Privacy notice"),
+      none("[Legal business name], trading as [trading name, if applicable]"),
+      none("Effective date: [date] · Notice version: [version]"),
+      none("Applies to: [website, shop, service and audience covered]"),
+
+      none("Who is responsible for your information"),
+      term(
+        "[Legal business name] decides why and how the personal information described in this notice is used.",
+      ),
+      term("Our business address is [address]."),
+      term("Contact us at [privacy email], [telephone or accessible alternative] or [postal address]."),
+      term(
+        "Our representative or data protection officer, where one has actually been appointed for this processing, can be contacted at [details; remove if inapplicable].",
+      ),
+      term("This notice explains our own processing for [scope]."),
+      term(
+        "Where we handle information solely on another organisation's instructions, that organisation's notice explains its purposes;",
+      ),
+      term("contact [appropriate route] to identify it and direct a request correctly."),
+
+      none("What we use and why"),
+      term(
+        "We collect information using [actual website forms, telephone, in-person records, connected systems or other means].",
+      ),
+      none("The following table describes each distinct purpose."),
+      term("We do not treat your reading this notice as consent."),
+      none("Record 1"),
+      none("Field"),
+      none("Entry"),
+      none("Purpose"),
+      none("[One defined purpose]"),
+      none("Information used"),
+      none("[Only the data actually required]"),
+      none("Where it comes from"),
+      none("[You / named source or source category]"),
+      none("Specific lawful basis and why it applies"),
+      none("[Applicable basis and purpose-specific explanation]"),
+      none("Retention period and when it starts"),
+      none("[Determinate period and trigger]"),
+      none("Record 2"),
+      none("Field"),
+      none("Entry"),
+      none("Purpose"),
+      none("[Next purpose]"),
+      none("Information used"),
+      none("[Data categories]"),
+      none("Where it comes from"),
+      none("[Source]"),
+      none("Specific lawful basis and why it applies"),
+      none("[Basis and explanation]"),
+      none("Retention period and when it starts"),
+      none("[Period and trigger]"),
+      term(
+        "Information marked [identify required fields] is necessary for [specific service, contract or legal requirement].",
+      ),
+      term("Without it, [actual consequence]."),
+      term("Other information is optional;"),
+      term("choosing not to provide it has [actual consequence or none]."),
+      term(
+        "We will explain a new purpose and its lawful basis before using information for that new purpose where required.",
+      ),
+      term("Where we rely on consent, we request it separately for the identified purpose."),
+      term("You can withdraw it through [a route as easy to use as the original consent method]."),
+      reading(
+        "Withdrawal does not retrospectively undo processing already carried out lawfully.",
+        withdrawalKeepsEarlier,
+      ),
+      term(
+        "We stop the processing that depends on that consent and explain any independently applicable basis for retaining particular records;",
+      ),
+      reading("withdrawal does not itself create a replacement lawful basis.", consentGround),
+
+      none("Who receives information"),
+      term("We restrict access to people and organisations with a need for the stated purpose."),
+      none("Recipient or recipient category"),
+      none("Information shared"),
+      none("Reason for access"),
+      none("Location of processing or access"),
+      none("[Actual service provider / recipient]"),
+      none("[Data categories]"),
+      none("[Purpose]"),
+      none("[Country or countries]"),
+      practice(
+        "[If information can be accessed outside Nigeria, describe the actual destinations, recipient roles and verified transfer arrangements, and explain how a person can request relevant information about those safeguards. If there is no such access, state that only after checking hosting, support, backup and subcontractor access.]",
+      ),
+      term("We may disclose information to a competent authority when there is a valid legal requirement."),
+      term("We assess the request and limit disclosure to the information the requirement covers."),
+
+      none("Marketing, cookies and similar technology"),
+      practice(
+        "[If direct marketing is used: describe its purpose and channels, the separate consent choice and consent record, and the usable withdrawal/objection control. Do not treat a purchase, account creation or acceptance of this notice as marketing consent.]",
+      ),
+      term("To stop direct marketing, use [unsubscribe or equivalent easy channel]."),
+      term(
+        "This does not stop essential messages about an existing order or service where those messages have a separate lawful purpose;",
+      ),
+      term("those messages do not include marketing after you have opted out."),
+      practice(
+        "[For a website using cookies or comparable tracking: link the accurate list of purposes, providers, durations and controls. Explain the conspicuous accept/reject choice and withdrawal route for optional technologies, and enable them only after the required choice. Separately identify any narrowly necessary technology and its verified treatment; do not label analytics, advertising or tracking necessary merely because it is useful. If none are used, remove this paragraph.]",
+      ),
+
+      none("Automated decisions and sensitive information"),
+      practice(
+        "[Describe any automated decision-making or profiling actually used, including its purpose, information used, significance and expected consequences. Separately identify whether any decision is based solely on automated processing and has legal or similarly significant effects; for such decisions, explain the verified condition permitting it and the routes to human intervention, to express a view and to contest the decision. If none exists, state only the fact that has been checked: absence of solely automated significant decisions does not imply absence of all profiling or automation.]",
+      ),
+      practice(
+        "[If sensitive information or children's information is processed, explain the actual categories, purpose, applicable additional condition, safeguards and audience-appropriate information. Do not state that all business customers are adults without evidence. Remove this paragraph only if these processing activities are genuinely outside scope.]",
+      ),
+
+      none("Keeping information safe and ending retention"),
+      term(
+        "We use [accurate, proportionate access, storage and transmission safeguards that are actually in place].",
+      ),
+      term("These measures reduce risk;"),
+      term("no system can be promised to be completely secure."),
+      term(
+        "We restrict retained records when their original use has ended and delete or genuinely anonymise them when their retention period expires, unless an identified lawful reason requires continued retention.",
+      ),
+      term("Such exceptions are limited to the relevant information and reviewed."),
+
+      none("Your choices and requests"),
+      reading(
+        "You may ask whether we hold your information and request access or a copy, correction, erasure or restriction.",
+        confirmation,
+        copy,
+        correction,
+        restriction,
+        erase,
+      ),
+      reading(
+        "Where the portability right applies to information you provided for consent-based or contractual processing, you may request a structured, commonly used, machine-readable copy and transfer to another controller, directly where technically possible and without prejudicing others' rights.",
+        portability,
+        portabilityScope,
+      ),
+      reading(
+        "You may object to processing, withdraw consent where consent is used, and challenge qualifying automated decisions.",
+        objection,
+        withdrawalKeepsEarlier,
+        automated,
+        contest,
+      ),
+      term("Some rights depend on the circumstances and applicable law;"),
+      term(
+        "we will explain any lawful limitation and available next step rather than treating a request as automatically rejected.",
+      ),
+      term("Contact [working rights channel]."),
+      term("Tell us enough to locate the relevant information and understand your request."),
+      term(
+        "We may request proportionate identity or authority verification so that we do not disclose information to the wrong person.",
+      ),
+      term(
+        "We will acknowledge and handle requests under the applicable requirements and explain any further information needed.",
+      ),
+      term("You may raise a concern through [internal complaint channel]."),
+      reading("You also have the right to complain to the Nigeria Data Protection Commission;", complaint),
+      term("current contact and complaint information is available at https://ndpc.gov.ng ."),
+      term("You do not have to give up that right to use our internal process."),
+
+      none("Changes to this notice"),
+      term("We identify the effective date and version above."),
+      term(
+        "If a change materially affects how your information is used, we will notify affected people through [actual appropriate method] and obtain fresh consent where that is required.",
+      ),
+      term("Earlier versions can be requested at [route]."),
     ],
   },
 ];

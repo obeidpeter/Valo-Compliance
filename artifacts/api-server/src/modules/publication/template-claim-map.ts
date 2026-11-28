@@ -96,6 +96,9 @@ export type BuiltTemplateClaims = {
   statesLaw: boolean;
   /** For a contract, what it assumes and leaves open, as the candidate's assumptions (EDP-005). */
   assumptions: string[];
+  /** Every host an https address in the template's own words goes to. The mechanical checks hold
+   * each link the words give to the policy's official hosts, as a guide's are held. */
+  linkHosts: string[];
   /** The whole classification, kept with the candidate as the record of its claim scope. */
   scope: {
     template: string;
@@ -231,7 +234,17 @@ export function buildTemplateClaims(
   // the checksums taken of them here.
   for (const words of [...sources.map((s) => s.text), ...claims.flatMap((c) => [c.text, c.quote, c.locator])])
     if (words !== words.trim()) fail(`TEMPLATE_CLAIM_NOT_TRIMMED:${template}:${preview(words.trim())}`);
-  if (/https?:\/\//.test(text)) fail(`TEMPLATE_CLAIM_MAP_LINK:${template}`);
+  const hostOf = (address: string) => {
+    try {
+      return new URL(address).hostname;
+    } catch {
+      // An address that cannot be read has no host to report: the mechanical checks refuse it.
+      return null;
+    }
+  };
+  const linkHosts = [
+    ...new Set([...text.matchAll(/https:\/\/[^\s)]+/g)].map((m) => hostOf(m[0])).filter((h) => h !== null)),
+  ];
 
   return {
     claims,
@@ -239,6 +252,7 @@ export function buildTemplateClaims(
     missingEvidence,
     statesLaw: byKind.source_statement + byKind.interpretation > 0,
     assumptions: map.contract ? contractAssumptions(map.contract) : [],
+    linkHosts,
     scope: { template, sentences: map.sentences.length, byKind, mapDigest: digest(map) },
   };
 }

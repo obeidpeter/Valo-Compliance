@@ -52,8 +52,8 @@ part 4, proposes.
 
 ## The official hosts
 
-A template's sources, and the places searched for later amendments, must be on one of these hosts,
-the same as for guides:
+A template's sources, the links in its own words and the places searched for later amendments must
+be on one of these hosts, the same as for guides:
 
 - `icrp.cac.gov.ng` and `www.cac.gov.ng` (Corporate Affairs Commission)
 - `nass.gov.ng` (National Assembly)

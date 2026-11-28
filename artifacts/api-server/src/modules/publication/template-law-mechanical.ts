@@ -46,6 +46,8 @@ const professionalClaim =
   /lawyer.approved|professionally (?:verified|reviewed|certified)|guaranteed (?:compliant|valid|enforceable)|reviewed by (?:a|our) (?:lawyer|solicitor|tax adviser|accountant|regulator)/i;
 /** A formula. A template computes nothing, and no check here could verify a calculation. */
 const formula = /[=×÷]|\d\s*[+*]\s*\d/;
+/** An address in a template's own words, as a guide's checks find one. */
+const address = /https?:\/\/[^\s)]+/g;
 
 /**
  * The mechanical checks for a template that states the law: the ten checks the gate requires, each
@@ -138,6 +140,7 @@ export async function lawTemplateMechanicalChecks(input: {
       return false;
     }
   };
+  const links = own === null ? [] : [...own.matchAll(address)].map((m) => m[0]);
   const policyProblems = [
     ...(digest(p) === digest(input.trustedPolicy)
       ? []
@@ -163,6 +166,8 @@ export async function lawTemplateMechanicalChecks(input: {
     ...bundle.sources
       .filter((source) => !official(source.url))
       .map((source) => `a source is not on an official host: ${source.id}`),
+    // A link the template's own words give goes to one of the policy's hosts, as a guide's does.
+    ...links.filter((url) => !official(url)).map((url) => `a link is not on an official host: ${url}`),
   ];
 
   const checked = Date.parse(c.sourceCheckDate),

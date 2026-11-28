@@ -141,6 +141,54 @@ test("with every source current and a supposed approval of the policy, only its 
   assert.deepEqual(guideOpenReasons(eligibility), [], eligibility.reasons.join(", "));
 });
 
+test("with every source current and a supposed approval of the policy, only its two reviews hold TPL-29", async () => {
+  const { bundle, rightsProblems, eligibility } = await assembled({
+    template: "TPL-29",
+    policy: await approvedPolicy(),
+    records,
+  });
+  assert.equal(bundle.candidate.id, "TPL-29");
+  assert.equal(bundle.candidate.risk, "privacy");
+  assert.equal(bundle.candidate.legalScopeStatus, "verified");
+  assert.deepEqual(bundle.candidate.missingEvidence, []);
+  assert.ok(bundle.sources.every((s) => s.status === "approved"));
+  assert.deepEqual(rightsProblems, []);
+  assert.equal(bundle.rights.status, "cleared");
+  assert.deepEqual(failed(bundle), []);
+  assert.equal(eligibility.decision, "hold");
+  assert.deepEqual(guideOpenReasons(eligibility), [], eligibility.reasons.join(", "));
+  // A notice, not a contract: it carries no parties' assumptions.
+  assert.deepEqual(bundle.candidate.assumptions, []);
+});
+
+test("a link in a template's own words goes only to one of the policy's official hosts", async () => {
+  const base = await assembled({ template: "TPL-29", policy: await approvedPolicy(), records });
+  const body = JSON.stringify(base.built.document);
+  // TPL-29's words give one link, to the Commission's own site, which the policy lists.
+  const link = "https://ndpc.gov.ng ";
+  assert.equal(body.split(link).length, 2);
+  assert.equal(lawTemplateOwnWords(base.bundle.candidate.body).split(link).length, 2);
+  assert.deepEqual(await failing(base), []);
+  // The body changed, and taken as the template built again, so that only its link is tested.
+  const relinked = (to: string) => {
+    const changed = body.replace(link, `${to} `);
+    return {
+      candidate: (c: PublicationBundle["candidate"]) => ({ ...c, body: changed }),
+      canonicalBody: changed,
+    };
+  };
+  for (const to of [
+    "https://example.com",
+    "http://ndpc.gov.ng",
+    "https://www.ndpc.gov.ng",
+    "https://ndpc.gov.ng.example.com",
+    "https://[unreadable",
+  ])
+    assert.deepEqual(await failing(base, relinked(to)), ["scope"], to);
+  // Another of the policy's hosts is a link it allows.
+  assert.deepEqual(await failing(base, relinked("https://www.ncc.gov.ng")), []);
+});
+
 test("under the policy as it stands, TPL-31 is held for the owner's approval as well as its reviews", async () => {
   const { bundle, rightsProblems, eligibility } = await assembled({ records });
   assert.equal(bundle.policy.ownerApproved, false);
@@ -399,21 +447,22 @@ test("a file that fails its inspection holds the template", async () => {
   assert.deepEqual(guideOpenReasons(eligibility), ["export_not_passed:pdf"]);
 });
 
-test("TPL-31's Word and PDF files hold its whole document and pass the export inspection", async () => {
-  after(closeRenderer);
-  const { built } = await assembled({ policy: await approvedPolicy(), records });
-  const files = {
-    docx: await renderDocument(built.document, "docx", 1, "template_sample"),
-    pdf: await renderDocument(built.document, "pdf", 1, "template_sample"),
-  };
-  const report = await inspectOperationalExports(built.candidate, files);
-  assert.equal(report.passed, true, JSON.stringify(report.formats));
-  for (const format of ["docx", "pdf"] as const) {
-    const f = report.formats[format];
-    assert.deepEqual(
-      [f.parsed, f.disclosureIncluded, f.scopeIncluded, f.limitationsIncluded, f.sourceDateIncluded],
-      [true, true, true, true, true],
-      format,
-    );
-  }
-});
+for (const template of ["TPL-31", "TPL-29"] as const)
+  test(`${template}'s Word and PDF files hold its whole document and pass the export inspection`, async () => {
+    after(closeRenderer);
+    const { built } = await assembled({ template, policy: await approvedPolicy(), records });
+    const files = {
+      docx: await renderDocument(built.document, "docx", 1, "template_sample"),
+      pdf: await renderDocument(built.document, "pdf", 1, "template_sample"),
+    };
+    const report = await inspectOperationalExports(built.candidate, files);
+    assert.equal(report.passed, true, JSON.stringify(report.formats));
+    for (const format of ["docx", "pdf"] as const) {
+      const f = report.formats[format];
+      assert.deepEqual(
+        [f.parsed, f.disclosureIncluded, f.scopeIncluded, f.limitationsIncluded, f.sourceDateIncluded],
+        [true, true, true, true, true],
+        format,
+      );
+    }
+  });

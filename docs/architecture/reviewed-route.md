@@ -458,6 +458,37 @@ Settled while building it (slice 4a, fourth part):
   of the policy, its candidate is kept for its two reviews and the request names it. Nothing is kept
   the first two times, and nothing is sent, spent or published.
 
+Settled while building it (slice 4b, the privacy family):
+- **TPL-29's map**, the privacy notice, places 98 sentences: 6 readings of the law, 40 statements the
+  business makes of itself and its choices, recorded as its own terms, 5 practices and 47 titles,
+  labels and blanks. Its readings quote sections 25(1)(a), 26(5), 27(1)(f), 34(1) and (2), 36, 37
+  and 38(2) of the Data Protection Act and Article 37 of the directive, each in the very words a
+  privacy guide's map quotes (GUD-11 to GUD-15), so no new quotation was written. It is a notice, not
+  a contract, so it carries no parties' assumptions.
+- **A link in a template's words.** TPL-29 gives the address of the Data Protection Commission's site
+  for its current contact and complaint details. Slice 4a refused any template whose words held a
+  link, since no list of hosts checked one. A link is now checked as a guide's is: the claim map
+  reports each link's host, and the mechanical checks refuse a link that is not an https address on
+  one of the policy's official hosts, when a template is prepared and again when it is released. The
+  policy file says so, as the guidance policy does. No text of the file was approved, so changing it
+  ends no approval; its checksum changes with it.
+- **TPL-32**, the data retention policy, read sentence by sentence, states nothing about what the
+  law requires: each sentence is the business's own rule, a practice, a blank or a heading. So it is
+  not this policy's. Nor is it the templates' own policy's, whose checks release only the seventeen
+  original forms, of general subject, while TPL-32's subject is privacy. It waits for the owner's
+  decision on a template of a high-impact subject that states no law. No map of it is added, since a
+  map in this list makes a template this policy's. The reading is a drafter's, not a review.
+- **TPL-30**, the website terms and conditions, speaks of consumer rights, which rest on the consumer
+  protection Act. The only official copy of that Act is a scan the extractor misreads (decision 0017,
+  decision 9), so TPL-30 waits with the consumer guides, GUD-16 to GUD-18.
+- **What a test can show without the Act's words.** As for TPL-31: TPL-29's map places every word of
+  its retained draft, and each sentence about the law names a recorded passage, quoted as a privacy
+  guide quotes it. Built from stand-in passages, under a synthetic amendment record and a test's
+  supposed approval of the policy, only its two reviews hold it, and both its files pass their
+  inspection. Its link changed to an address on a host the policy does not list (another site, a
+  name under the Commission's, and one that only begins with it), to an http address or to one that
+  cannot be read, fails the scope check; changed to another of the policy's hosts, it passes.
+
 ## What does not change
 
 - Every gate the publisher checks. Nothing here loosens one.
@@ -479,7 +510,8 @@ Each slice is its own pull request.
 | 3a | **A rule's bundle and its reviews** (built). The builder, the package kind and its binding checks. Database tests: a prepared rule's pair is admitted only under a package of its kind and runs with a stand-in model. A held rule keeps nothing. | EDP-003, EDP-004, EDP-006, ADM-004 |
 | 3b | **The release request and restoring a version** (built). The request command and the restore. Database tests: a reviewed rule is planned and applied from its request. A restored version is released as the next one, and saved results keep their versions. | ADM-004 |
 | 4a | **A template's claim map, its preparer and the proposed policy.** The map's builder and checks, the preparer, and the policy as a file for the owner, with TPL-31, the data processing agreement, mapped first. The first part is built: the policy file, the map and its checks, TPL-31's map, its candidate, and the publisher's choice of policy. Unit tests build TPL-31 from stand-in passages, which the gate holds; a database test shows the publisher asks no other policy about such a template. The second part is built: the rights record, the mechanical checks, both files and the preparer, with its command. The third part is built: the two review requests and their package, and the release checks. The fourth part is built: preparing it from review work. | EDP-003, EDP-005, EDP-006, ADM-005 |
-| 4b–4e | **The families' maps:** privacy, then commercial, governance and safety, and employment. | EDP-003, EDP-005 |
+| 4b | **The privacy family's maps** (built). TPL-29, the privacy notice, is mapped, and a link in a template's words is held to the policy's hosts. TPL-32 states no law and waits for the owner's decision; TPL-30 waits for a readable copy of the consumer protection Act. Unit tests build TPL-29 from stand-in passages, which only its two reviews then hold, and check its link and both its files. | EDP-003, EDP-005 |
+| 4c–4e | **The other families' maps:** commercial, governance and safety, and employment. | EDP-003, EDP-005 |
 
 ## The owner's points
 
@@ -494,3 +526,5 @@ Each slice is its own pull request.
 6. Part 3: the rights basis for a rule released on the reviewed route. Each rule's rights record adopts
    a version's wording by the owner's signature, which this route does not have, so the route holds
    every rule until the owner chooses a rights record for it.
+7. Part 4: a template of a high-impact subject whose words state no law, such as TPL-32, the data
+   retention policy. Neither policy releases it as written: which, if either, should.

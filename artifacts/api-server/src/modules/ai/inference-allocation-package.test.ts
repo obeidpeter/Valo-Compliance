@@ -405,7 +405,9 @@ test("only a package of templates that state the law admits their review pairs, 
   assert.deepEqual(lawTemplates.laneAttemptLimits, templates.laneAttemptLimits);
   assert.equal(requestDigest(lawTemplates.allocation), requestDigest(additionalInferenceAllocation));
   assert.ok(
-    lawTemplates.holds[0]!.startsWith("Supported review pairs of templates that state the law: TPL-31; "),
+    lawTemplates.holds[0]!.startsWith(
+      "Supported review pairs of templates that state the law: TPL-31, TPL-29; ",
+    ),
     lawTemplates.holds[0],
   );
   assert.match(
@@ -427,17 +429,16 @@ test("only a package of templates that state the law admits their review pairs, 
     };
     return w;
   };
-  // TPL-31's planned pair, factual or challenge, belongs to the package of templates that state the law.
-  assert.doesNotThrow(() => assertWorkPackageMembership(planned("TPL-31"), lawTemplates, "TPL-31"));
-  assert.doesNotThrow(() =>
-    assertWorkPackageMembership(planned("TPL-31", { role: "challenge" }), lawTemplates, "TPL-31"),
-  );
-  // No other package admits it, the templates' own among them.
-  for (const other of [templates, guides, rules, checker, editorial])
-    assert.throws(
-      () => assertWorkPackageMembership(planned("TPL-31"), other, "TPL-31"),
-      /WORK_OUTSIDE_PACKAGE/,
+  // A mapped template's planned pair, factual or challenge, belongs to the package of templates that
+  // state the law, and no other package admits it, the templates' own among them.
+  for (const id of ["TPL-31", "TPL-29"]) {
+    assert.doesNotThrow(() => assertWorkPackageMembership(planned(id), lawTemplates, id));
+    assert.doesNotThrow(() =>
+      assertWorkPackageMembership(planned(id, { role: "challenge" }), lawTemplates, id),
     );
+    for (const other of [templates, guides, rules, checker, editorial])
+      assert.throws(() => assertWorkPackageMembership(planned(id), other, id), /WORK_OUTSIDE_PACKAGE/, id);
+  }
   // Its work must be a planned review pair of the template its candidate names, and nothing more.
   const unplanned = planned("TPL-31");
   delete unplanned.bindings.operationalPlan;
