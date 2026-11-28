@@ -153,7 +153,9 @@ Rules that apply now:
   rule's rights record adopts a version's wording by the owner's signature, which that route does not
   have, so the route holds a rule until the owner chooses a rights record for it there
   (`reviewedRouteRights`). Never set one without the owner's explicit, current choice of its exact
-  text.
+  text. A rule's two reviews run only under a package of their own kind
+  (`finitePackagePreparers.rulePairs`), which admits nothing else: never admit a rule's pair under
+  another kind of package, or other work under that one.
 - A guide that says what the law requires is released only under the guidance policy
   (`guidancePolicy`, read from `docs/valo/policies/guidance-publication-policy.md`), never under
   the templates' policy; the owner's sign-off in the staff library and its readers check the same

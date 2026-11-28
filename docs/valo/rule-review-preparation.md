@@ -1,11 +1,14 @@
 # Preparing a rule for its two reviews
 
-This note is for the person who runs commands in the development environment. It covers one step on
-the reviewed route: building a requirements-check rule prepared in the repository into a candidate
-that is ready for its two AI reviews ([the reviewed route](../architecture/reviewed-route.md), part 3).
+This note is for the person who runs commands in the development environment. It covers the first
+steps on the reviewed route for a requirements-check rule prepared in the repository: building it into
+a candidate that is ready for its two AI reviews, and running those reviews
+([the reviewed route](../architecture/reviewed-route.md), part 3). Releasing a reviewed rule on this
+route is not built yet.
 
-The command calls no AI model, approves nothing and releases nothing. Today it keeps no rule at all:
-see "Why every rule is held today" below.
+Preparing calls no AI model, approves nothing and releases nothing. The reviews run only under a
+package of rule reviews the owner approves. Today no rule is kept at all: see "Why every rule is held
+today" below.
 
 ## What must be in place
 
@@ -43,6 +46,40 @@ One line of JSON. Its `state` is one of two.
 `version` is the rule's next version: the number after every version either route has stored. If the
 owner signs a version of the rule under that number first, the candidate's review ends, and the list
 says so; prepare it again.
+
+## Its two reviews
+
+The reviews are AI checks: a factual check and a separate challenge, each given the rule, its scenarios,
+its records and its sources, and neither the other's verdict. They are never legal, tax or regulatory
+review. Run each command from the repository root, as above.
+
+1. `... finite-allocation-approval.ts prepare <package.json> --rule-pairs` writes a package of the rules'
+   kind. It admits the review pairs of the four rules and nothing else, and no other package admits
+   them. Only the owner approves it, with `approve`, as any package; approving it allows spending up to
+   the allocation's cap.
+2. `... finite-inference-run.ts --prepare <package id> --candidate=<artifact id>:<sha256>` plans the
+   pair for a prepared rule and writes the private report. It calls no model. `--prepare new
+   --rule-pairs --candidate=…` plans it under a new package of the rules' kind, for the owner to
+   approve.
+3. `... finite-inference-run.ts --admit <report id> <sha256> [<version id>]` admits the pair under the
+   approved package. It calls no model and reserves nothing.
+4. `... finite-inference-run.ts --execute <batch id>` sends the two reviews and prints the run report,
+   with `publicationAccepted: false`. Their attempts are recorded on review's own login
+   (`VALO_REVIEWER_DATABASE_URL`).
+
+Before admitting the pair, and again before sending it, the rule is built again from its own sources
+and records and must be exactly the candidate that was kept. What stops it:
+
+- `SOURCE_CURRENT_CAPTURE_REQUIRED`: a copy the rule is bound to is no longer the current one, or was
+  not checked within the last day. Its release will ask for the same. Wait for the daily source check,
+  or prepare the rule again.
+- `SOURCE_PASSAGE_SNAPSHOT_MISMATCH`: that copy no longer holds the rule's passage or its quotations.
+  Prepare the rule again.
+- `SAVED_PLAN_INPUT_CHANGED` or `SAVED_PLAN_MECHANICAL_HOLD`: the rule, its records or the guidance
+  policy have changed since the candidate was kept, or something now holds it. Prepare it again.
+- `CANDIDATE_ALREADY_SAVED`: a version of the rule is stored under its number. Prepare it again.
+- `CANDIDATE_UNAVAILABLE_OR_STALE`: the candidate's review date has passed. Prepare it again.
+- `WORK_OUTSIDE_PACKAGE`: the package is not of the rules' kind.
 
 ## Why every rule is held today
 

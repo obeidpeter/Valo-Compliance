@@ -2372,7 +2372,21 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/lib/managed-callers-real-bindings.integration.test.ts",
       "test": "actual managed callers with real PostgreSQL, source/candidate/case checks and zero-network SDK",
-      "proves": "In a disposable copy of the database, a guide's factual review and its challenge are admitted only under an approved package of guide reviews and after the development owner's check of that exact candidate's sources, and are sent as the two separate requests planned, each settled once against that batch; before the check, or a day after it, nothing is admitted, sent or reserved."
+      "proves": "In a disposable copy of the database, a guide's factual review and its challenge are admitted only under an approved package of guide reviews and after the development owner's check of that exact candidate's sources, and are sent as the two separate requests planned, each settled once against that batch, while before the check, or a day after it, nothing is admitted, sent or reserved; a requirements-check rule's two reviews are admitted only under an approved package of rule reviews, not under an approval of template, guide or checker-challenge work, and are sent as planned only while each copy the rule is bound to is still the current one."
+    },
+    {
+      "requirement": "EDP-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/reviewed-rule-review.test.ts",
+      "test": "a rule's two review requests carry the rule, its scenarios, its records and its sources, and each runs the enhanced checks",
+      "proves": "A requirements-check rule on the reviewed route gets a factual check and a separate challenge with different tasks, each given the rule's candidate, its scenarios with the result the requirements check gives for each, its rights record, how it was written, its files' inspection and its sources whole, with each prompt's version and hash recorded."
+    },
+    {
+      "requirement": "EDP-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/reviewed-rule-review.test.ts",
+      "test": "neither review is given another review's verdict, and the requests name this candidate and its source check",
+      "proves": "A rule's review request that would carry another review's verdict, in its rights record, scenarios, provenance or sources, is refused, as is one whose server evidence names another candidate or source check, or that carries no sources."
     },
     {
       "requirement": "EDP-005",
@@ -2450,6 +2464,13 @@
       "file": "artifacts/api-server/src/modules/editorial/reviewed-rule.test.ts",
       "test": "a source with no copy checked within the last day, a copy that lacks its passage, or an amendment record out of date holds the rule",
       "proves": "A rule on the reviewed route is held whole when its source has no copy checked within the last day, when the copy lacks the passage the rule quotes, or when the text's amendment record is out of date; its legal scope is then unverified and its source is not marked current."
+    },
+    {
+      "requirement": "EDP-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/reviewed-rule-review.test.ts",
+      "test": "a rule's two review requests carry the rule, its scenarios, its records and its sources, and each runs the enhanced checks",
+      "proves": "A rule classed as governance content asks each of its two reviewers to run EDP-005's five enhanced checks, quoting the passage each relied on, and to answer in the enhanced review's shape."
     },
     {
       "requirement": "EDP-006",
