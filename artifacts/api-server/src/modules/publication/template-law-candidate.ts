@@ -6,7 +6,7 @@ import { guideReferences, guideSourceLines, lagosDay } from "./guidance-document
 import { retainedGuidePassages, type GuidePassage, type GuidePassages } from "./guidance-passages";
 import { readTemplateIntake } from "./operational-intake";
 import { buildTemplateClaims, type TemplateClaimMap } from "./template-claim-map";
-import { privacyTemplateClaimMaps } from "./template-claims-privacy";
+import { templateLawClaimMaps } from "./template-law-maps";
 
 /**
  * A template that states the law, as a candidate for the reviewed route
@@ -18,23 +18,6 @@ import { privacyTemplateClaimMaps } from "./template-claims-privacy";
  * every source is current, both reviews pass and the source-backed policy for templates is the text
  * the owner approved (template-law-policy.ts).
  */
-
-/** Every template that states the law and has a claim map. A template without one is not built. */
-export const templateLawClaimMaps: readonly TemplateClaimMap[] = [...privacyTemplateClaimMaps];
-export const mappedLawTemplateIds = templateLawClaimMaps.map((m) => m.id);
-
-/** Every passage a template's claim map names. */
-export function lawTemplatePassageIds(id: string) {
-  const map = templateLawClaimMaps.find((m) => m.id === id);
-  if (!map) throw Error(`TEMPLATE_CLAIM_MAP_MISSING:${id}`);
-  return [
-    ...new Set(
-      map.sentences
-        .flatMap((sentence) => ("support" in sentence ? (sentence.support ?? []) : []))
-        .map((s) => s.passage),
-    ),
-  ];
-}
 
 /** What every such template covers, in the words its files show under "What it covers". */
 export const TEMPLATE_LAW_SCOPE =

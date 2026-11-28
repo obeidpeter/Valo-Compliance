@@ -12,7 +12,7 @@ import {
   type TemplateSentence,
 } from "./template-claim-map";
 import { privacyTemplateClaimMaps } from "./template-claims-privacy";
-import { lawTemplatePassageIds, mappedLawTemplateIds } from "./template-law-candidate";
+import { lawTemplatePassageIds, mappedLawTemplateIds } from "./template-law-maps";
 
 /**
  * A template's claim map (docs/architecture/reviewed-route.md, part 4). The Data Protection Act's

@@ -11,11 +11,11 @@ import { operationalPolicy, publicationWorkspaceRoot } from "./operational-polic
 import { privacyTemplateClaimMaps } from "./template-claims-privacy";
 import {
   buildLawTemplateCandidate,
-  lawTemplatePassageIds,
   TEMPLATE_LAW_LIMITATIONS,
   TEMPLATE_LAW_PART,
   TEMPLATE_LAW_SCOPE,
 } from "./template-law-candidate";
+import { lawTemplatePassageIds } from "./template-law-maps";
 import {
   releasePolicyKind,
   TEMPLATE_LAW_POLICY_PATH,
