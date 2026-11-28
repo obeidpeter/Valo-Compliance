@@ -4696,7 +4696,7 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/exports/valo-export-library.integration.test.ts",
       "test": "ready exports appear in the business library with their revision and the template version their document came from",
-      "proves": "In PostgreSQL with portable private files, a workspace's export enters its business library only once the file is ready, newest first, with the document's title and revision at export time and the template version the document was made from; a later revision keeps that link, a document not made from a template shows none, another workspace sees none of them and an expired file leaves the list. The template version is a held synthetic fixture that was never released, so the release path is not exercised."
+      "proves": "In PostgreSQL with portable private files, a workspace's export enters its business library only once the file is ready, newest first, with the document's title and revision at export time and the template version the document was made from; a later revision keeps that link, a document not made from a template shows none, a document answered from Valo's own invoice questions names them, one answered from a released form names that release as made from it, another workspace sees none of them and an expired file leaves the list. The template version is a held synthetic fixture that was never released, so the release path is not exercised."
     },
     {
       "requirement": "DOC-005",
@@ -6643,6 +6643,13 @@
       "file": "artifacts/api-server/src/scripts/free-journey.integration.test.ts",
       "test": "the free journey, recorded on a phone and on a desktop: a visitor finds the invoice, signs up, saves it and downloads its files, made from its stored revision",
       "proves": "On an emulated phone and on a desktop, a visitor who finds the invoice among the home page's tasks and signs up downloads its finished Word file and PDF, and the business library lists both with the saved version and what they were made from, Valo's own invoice questions. The identity provider's sign-up and the queue's worker are stood in for."
+    },
+    {
+      "requirement": "DOC-005",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/library-exports.test.tsx",
+      "test": "a file made from Valo's own questions, or from a released template's form, names where it came from",
+      "proves": "The business library says a file made from Valo's own invoice questions was made from them, and one made from a released template's form was made from that release, by its title and version, where both had said they were made from no template."
     }
   ]
 }
