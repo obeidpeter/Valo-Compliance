@@ -309,6 +309,24 @@ Settled while building it (slice 3b, first part: the release request):
   admits it as an editorial release only while its bundle stays eligible.
 - **Nothing runs today.** Every rule is still held on its rights record for this route (above).
 
+Settled while building it (slice 3b, second part: restoring a version):
+- **The command.** `rule-release.ts restore <rule> <version>` prepares a stored version of the rule,
+  earlier than its latest, as the rule's next version. It is kept for its two reviews as any prepared
+  rule is, and nothing calls a model.
+- **What is restored.** The version's words, condition and calculation as stored: its title, place,
+  dates of effect, reason, next step, related templates, official route and figures. Its sources,
+  claims, scenarios, scope, limits and rights stay the repository's, so a version is restored only when
+  it quotes its sources as the repository does. One that does not is refused, and its text is restored
+  by preparing it in the repository. The latest version, and a version never stored, are refused.
+- **Built and reviewed again.** The restored rule goes through the same builder, on today's captures,
+  and must pass today's scenarios, so a failed critical scenario blocks a restore as it blocks any
+  release. Its candidate keeps which version it restores and that version's manifest hash, and is
+  built again from that version as stored before its reviews are admitted and sent.
+- **Its reason.** Its release request's reason begins "Restores version N of this rule", and the
+  businesses that saved a result under the version it replaces are told it.
+- **History.** Releasing it supersedes the version before it, as any release does. No version is
+  changed or removed, and saved results keep the versions they were made under.
+
 ### Part 4: the twenty-three templates
 
 - **A template's claim map.** As a guide's map does, it places every sentence of the template: as a
@@ -357,7 +375,7 @@ Each slice is its own pull request.
 | 2a | **The owner's source check for a guide, in the database and the route** (built). Part 2 apart from the panel: the kept check, the admission's and the publisher's checks, and two migrations for the database's check, with their upgrade tests and runbook. Database tests: with no check, or a day-old one, GUD-02's reviews are not admitted or sent and the guide is not saved or released. With the owner's check of the exact candidate, the stand-in reviews run and the real publisher releases it, bound to the captures checked. Another person's check, a check of another candidate or other captures, and a check while a capture is stale record or release nothing. | EDP-002, EDP-004, EDP-005, EDP-006, ADM-005 |
 | 2b | **The owner's panel** (built). Staff → System → **Guides on the reviewed route**: the list, the candidate's text and passages, what holds it, and the check. Its contract and routes. Tests: the real-bindings database test lists GUD-02 as the owner reads it, with a stale or changed copy holding it and the owner's check counting for a day; unit tests of the inspection's states; and a browser test of the panel on a phone. | EDP-002, EDP-004, CMP-008 |
 | 3a | **A rule's bundle and its reviews** (built). The builder, the package kind and its binding checks. Database tests: a prepared rule's pair is admitted only under a package of its kind and runs with a stand-in model. A held rule keeps nothing. | EDP-003, EDP-004, EDP-006, ADM-004 |
-| 3b | **The release request and restoring a version** (first part built: the release request). The request command and the restore. Database tests: a reviewed rule is planned and applied from its request. A restored version is released as the next one, and saved results keep their versions. | ADM-004 |
+| 3b | **The release request and restoring a version** (built). The request command and the restore. Database tests: a reviewed rule is planned and applied from its request. A restored version is released as the next one, and saved results keep their versions. | ADM-004 |
 | 4a | **A template's claim map, its preparer and the proposed policy.** The map's builder and checks, the preparer, and the policy as a file for the owner, with TPL-31, the data processing agreement, mapped first. | EDP-003, EDP-005, EDP-006, ADM-005 |
 | 4b–4e | **The families' maps:** privacy, then commercial, governance and safety, and employment. | EDP-003, EDP-005 |
 

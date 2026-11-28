@@ -1867,6 +1867,155 @@ test(
             // The prepared candidate's review has ended: its version is stored.
             await assert.rejects(readReviewedRuleReadiness(binding), /CANDIDATE_ALREADY_SAVED/);
             assert.equal(calls - before, 2, "releasing calls no model");
+
+            // ADM-004: restoring a version. A later version of the rule is stored first, synthetic and with a
+            // next step of its own (its bundle is a stand-in, so the requirements check never admits it), and
+            // a result a business saved under it.
+            const reviewedRule = request.rule as { version: number; nextStep: string };
+            const laterVersion = reviewedRule.version + 1;
+            await scoped.query(
+              "UPDATE valo_rule_releases SET status = 'superseded' WHERE rule_id = 'cac-business-name-814' AND version = $1",
+              [reviewedRule.version],
+            );
+            await scoped.query(
+              `INSERT INTO valo_rule_releases(id,rule_id,version,status,rule,publication_bundle,manifest_hash,published_at)
+               VALUES($1,'cac-business-name-814',$2,'published',$3,'{"synthetic":true}',$4,now())`,
+              [
+                randomUUID(),
+                laterVersion,
+                JSON.stringify({
+                  ...reviewedRule,
+                  version: laterVersion,
+                  nextStep: "A later next step, in a synthetic version.",
+                }),
+                "c".repeat(64),
+              ],
+            );
+            const savedResult = randomUUID();
+            await scoped.query(
+              `INSERT INTO valo_assessments(id,workspace_id,facts,facts_hash,result,result_hash,ruleset_version,as_of_date,consent_version,actor_id)
+               VALUES($1,$2,'{"synthetic":true}',$3,$4,$5,$6,current_date,'synthetic-consent','synthetic-actor')`,
+              [
+                savedResult,
+                randomUUID(),
+                "d".repeat(64),
+                JSON.stringify({ items: [{ ruleId: "cac-business-name-814", version: laterVersion }] }),
+                "e".repeat(64),
+                `cac-business-name-814@${laterVersion}`,
+              ],
+            );
+            const savedRow = async () =>
+              (
+                await scoped.query("SELECT to_jsonb(a) AS row FROM valo_assessments a WHERE id = $1", [
+                  savedResult,
+                ])
+              ).rows[0].row;
+            const savedBefore = await savedRow();
+            // The latest version is not restored, nor one that was never stored.
+            await assert.rejects(
+              prepareReviewedRuleCandidate("cac-business-name-814", { restore: laterVersion }),
+              /RULE_VERSION_ALREADY_CURRENT/,
+            );
+            await assert.rejects(
+              prepareReviewedRuleCandidate("cac-business-name-814", { restore: laterVersion + 50 }),
+              /RULE_VERSION_UNKNOWN/,
+            );
+            // The reviewed version is restored as the next one, through the same builder: its words again.
+            const restoring = await prepareReviewedRuleCandidate("cac-business-name-814", {
+              restore: reviewedRule.version,
+            });
+            assert.equal(restoring.state, "awaiting_reviews", restoring.reasons.join("; "));
+            assert.ok(restoring.candidateArtifact && restoring.id);
+            assert.deepEqual(
+              [restoring.version, restoring.restores],
+              [laterVersion + 1, reviewedRule.version],
+            );
+            const restoredBinding = {
+              candidateVersionId: restoring.id,
+              candidateArtifact: restoring.candidateArtifact,
+            };
+            const restored = await readReviewedRuleReadiness(restoredBinding);
+            assert.deepEqual(restored.restores, {
+              version: reviewedRule.version,
+              manifestHash: assembled.manifestHash,
+            });
+            assert.equal(restored.rule.nextStep, reviewedRule.nextStep);
+            // Like any version, it is reviewed again: its own pair under the same approval, sent as planned.
+            const restoredPlan = await saveRuleReviewPlan(
+              restored.candidate,
+              restored.reviewInputs,
+              restored.serverEvidence,
+              undefined,
+              restored.bundle.sources,
+            );
+            const restoredManifest = prepareOperationalFiniteManifest({
+              ...restoredBinding,
+              candidateHash: restored.candidate.hash,
+              bundleHash: requestDigest(restored.bundle),
+              sourceHashes: restored.bundle.sources.map((source) => source.hash),
+              sourceFiles: [],
+              plan: restoredPlan,
+            });
+            const restoredBatch = await registerPreparedInferenceSubmanifest(
+              store,
+              { ...restoredManifest, packageId: rules.packageId },
+              new Date(
+                Math.min(Date.parse(rules.expiresAt), Date.parse(restoredPlan.manifest.expiresAt)),
+              ).toISOString(),
+              assertFiniteWorkBindings,
+            );
+            const restoredReviews = await run(() =>
+              withApprovedInferencePair(restoredBatch.batchId, restoredManifest.works[0]!.pair!, () =>
+                executeRuleReviewPlan(restoredPlan, restored.candidate, restored.serverEvidence),
+              ),
+            );
+            assert.equal(calls - before, 4, "two more calls to the stand-in, one for each review");
+            // Its release request's reason names the version it restores.
+            const restoreAssembled = await assembleReviewedRuleRelease({
+              batchId: restoredBatch.batchId,
+              reviews: restoredReviews.map((r) => r.artifact),
+            });
+            assert.equal(restoreAssembled.state, "ready", restoreAssembled.reasons.join("; "));
+            const restoreRequest = await readReviewedRuleReleaseRequest(restoreAssembled.request!);
+            const restoreReason = `Restores version ${reviewedRule.version} of this rule.`;
+            assert.equal(restoreRequest.reason, restoreReason);
+            const restoreApplied = await applyStoredRuleRelease(
+              restoreRequest,
+              restoreAssembled.manifestHash!,
+            );
+            assert.deepEqual(
+              [restoreApplied.version, restoreApplied.superseded],
+              [laterVersion + 1, [laterVersion]],
+            );
+            // The requirements check uses the restored version, with the reviewed version's words, and the
+            // change is recorded with its reason.
+            const afterRestore = await releasedRegistry(fixtureDb, new Date());
+            const live = afterRestore.rules.find((r) => r.id === "cac-business-name-814");
+            assert.deepEqual([live?.version, live?.nextStep], [laterVersion + 1, reviewedRule.nextStep]);
+            assert.deepEqual(
+              (
+                await scoped.query(
+                  "SELECT kind, replacement_version, reason FROM valo_rule_changes WHERE rule_id = 'cac-business-name-814' AND version = $1",
+                  [laterVersion],
+                )
+              ).rows,
+              [{ kind: "replaced", replacement_version: laterVersion + 1, reason: restoreReason }],
+            );
+            // Every earlier version is kept, and the result saved under the later one is as it was.
+            assert.deepEqual(
+              (
+                await scoped.query(
+                  "SELECT version, status FROM valo_rule_releases WHERE rule_id = 'cac-business-name-814' AND version >= $1 ORDER BY version",
+                  [reviewedRule.version],
+                )
+              ).rows.map((r) => [r.version, r.status]),
+              [
+                [reviewedRule.version, "superseded"],
+                [laterVersion, "superseded"],
+                [laterVersion + 1, "published"],
+              ],
+            );
+            assert.deepEqual(await savedRow(), savedBefore);
           } finally {
             t.mock.timers.enable({ apis: ["Date"], now: clockBefore });
           }

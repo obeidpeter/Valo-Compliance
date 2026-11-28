@@ -1,7 +1,12 @@
 import { readFile } from "node:fs/promises";
 import { pool } from "@workspace/db";
 import { assembleReviewedRuleRelease, readReviewedRuleReleaseRequest } from "../modules/ai-lanes";
-import { applyStoredRuleRelease, planStoredRuleRelease, type RuleReleaseRequest } from "../modules/editorial";
+import {
+  applyStoredRuleRelease,
+  planStoredRuleRelease,
+  prepareReviewedRuleCandidate,
+  type RuleReleaseRequest,
+} from "../modules/editorial";
 import { getPublicationArtifact } from "../modules/publication";
 
 /**
@@ -21,9 +26,16 @@ import { getPublicationArtifact } from "../modules/publication";
  *   NODE_ENV=development pnpm --filter @workspace/api-server exec tsx src/scripts/rule-release.ts request <batch id> <result artifact id> <sha256> [--reason <what changed>]
  *
  * A version that replaces a released one needs its reason, of 20 to 1,000 characters.
+ *
+ * `restore` prepares a stored version of a rule, earlier than its latest, as the rule's next version
+ * (ADM-004): its words, condition and calculation, with the repository's sources, claims, scenarios and
+ * records, built for the reviewed route from today's captures. It is kept for its two reviews as any
+ * prepared rule is, and its release request's reason names the version it restores. It calls no model:
+ *
+ *   NODE_ENV=development pnpm --filter @workspace/api-server exec tsx src/scripts/rule-release.ts restore <rule> <version>
  */
 const usage =
-  "usage: rule-release.ts plan|apply <request.json | --request=<id>:<sha256>> [--confirm <manifest hash>] | request <batch id> <result artifact id> <sha256> [--reason <text>]";
+  "usage: rule-release.ts plan|apply <request.json | --request=<id>:<sha256>> [--confirm <manifest hash>] | request <batch id> <result artifact id> <sha256> [--reason <text>] | restore <rule> <version>";
 const [mode, ...args] = process.argv.slice(2);
 
 /** A request named by its kept artifact, or read from a file. */
@@ -34,7 +46,22 @@ async function readRequest(named: string): Promise<RuleReleaseRequest> {
 }
 
 try {
-  if (mode === "request") {
+  if (mode === "restore") {
+    const [ruleId, version, ...extra] = args;
+    if (
+      !ruleId ||
+      !/^[a-z0-9-]{1,80}$/.test(ruleId) ||
+      !version ||
+      !/^[1-9][0-9]{0,5}$/.test(version) ||
+      extra.length
+    )
+      throw new Error(usage);
+    const prepared = await prepareReviewedRuleCandidate(ruleId, { restore: Number(version) });
+    process.stdout.write(
+      `${JSON.stringify({ ...prepared, providerCalls: 0, approvalRowsWritten: 0, publicationAccepted: false })}\n`,
+    );
+    if (prepared.state !== "awaiting_reviews") process.exitCode = 1;
+  } else if (mode === "request") {
     const [batchId, id, hash, ...rest] = args;
     const reason = rest[0] === "--reason" && rest.length === 2 ? rest[1] : undefined;
     if (

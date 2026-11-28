@@ -23,7 +23,7 @@ export const REVIEWED_RULE_RELEASE_REQUEST = "reviewed-rule-release-request-v1";
  *
  * When the gate finds the bundle eligible, the request the release command reads is kept as a private
  * artifact: the rule with its manifest hash, the bundle, the scenarios, the captures its sources are
- * bound to and the reason, if one is given. When the gate holds it, the reasons are returned and
+ * bound to and the reason, if one is given. A restore's reason begins by naming the version it restores. When the gate holds it, the reasons are returned and
  * nothing is kept. Nothing is released and no model is called.
  */
 export async function assembleReviewedRuleRelease(input: {
@@ -37,8 +37,6 @@ export async function assembleReviewedRuleRelease(input: {
     throw Error("REVIEWED_PAIR_ARGUMENTS_INVALID");
   // Loaded only when a request is assembled, so that this module's index loads no database client.
   const [{ db }, editorial] = await Promise.all([import("@workspace/db"), import("../editorial")]);
-  const reason = input.reason === undefined ? undefined : editorial.ruleChangeReason(input.reason);
-  if (reason === null) throw Error("RULE_RELEASE_REASON_INVALID");
   const pair = await readReviewedPairBatch(db, input.batchId);
   if (!isPreparedRuleId(pair.candidateArtifact.templateId)) throw Error("REVIEWED_PAIR_NOT_A_RULE");
   const now = input.now ?? new Date();
@@ -51,6 +49,13 @@ export async function assembleReviewedRuleRelease(input: {
     requestDigest(current.bundle) !== pair.first.caseHash
   )
     throw Error("CANDIDATE_BINDING_CHANGED");
+  // A restore's reason says which version it restores (ADM-004); any other reason is the operator's.
+  const given = input.reason?.trim() || undefined;
+  const stated = current.restores
+    ? `Restores version ${current.restores.version} of this rule${given ? `: ${given}` : "."}`
+    : given;
+  const reason = stated === undefined ? undefined : editorial.ruleChangeReason(stated);
+  if (reason === null) throw Error("RULE_RELEASE_REASON_INVALID");
   const reviewed = await verifiedPairReviews(
     db,
     { ...pair, batchId: input.batchId, reviews: input.reviews },

@@ -10,6 +10,7 @@ import {
   preparedRuleIds,
   sha256,
   type PublicationBundle,
+  type ReleasedRule,
 } from "@workspace/valo-core";
 import { GUIDANCE_NOTICE, noticeFor, savedLine } from "@workspace/valo-core/printed-page";
 
@@ -174,6 +175,84 @@ test("a rule with today's capture of its source, a current amendment record and 
       now,
     ),
   );
+});
+
+// ADM-004: a restore releases a stored version's words, condition and calculation again, through the same
+// builder, with the repository's sources, claims, scenarios and records.
+test("a restore takes a stored version's words, condition and calculation, and keeps the repository's sources, claims and scenarios", () => {
+  const built = build();
+  const stored = {
+    ...built.rule,
+    version: 1,
+    title: "Register the name you trade under, as version 1 said it",
+    nextStep: "An earlier next step, as version 1 said it.",
+    relatedTemplateIds: [],
+    manifestHash: "a".repeat(64),
+  } as ReleasedRule;
+  const restored = reviewed.restoredRuleCandidate(prepared, stored);
+  assert.deepEqual(
+    [restored.rule.title, restored.rule.nextStep, restored.rule.relatedTemplateIds],
+    [stored.title, stored.nextStep, []],
+  );
+  assert.deepEqual(restored.rule.condition, stored.condition);
+  assert.deepEqual(
+    [restored.rule.id, restored.rule.requirementVersionId],
+    [prepared.rule.id, prepared.rule.requirementVersionId],
+  );
+  assert.deepEqual(
+    [restored.sources, restored.claims, restored.scenarios, restored.rights, restored.reviewedRouteRights],
+    [prepared.sources, prepared.claims, prepared.scenarios, prepared.rights, prepared.reviewedRouteRights],
+  );
+  // Built as the rule's next version, it shows the stored words and waits only for its reviews.
+  const captures = [captureOf()];
+  const next = reviewed.buildReviewedRule(restored, {
+    version: 3,
+    captures,
+    passages: capturedGuidePassages(captures),
+    records: guideAmendmentRecords,
+    policy,
+    now,
+  });
+  assert.deepEqual(next.holds, []);
+  assert.deepEqual(
+    [next.rule.version, next.rule.nextStep, next.rule.title],
+    [3, stored.nextStep, stored.title],
+  );
+  assert.ok(next.mechanicalChecks.every((c) => c.result === "pass"));
+  // What the stored version computes with is carried as it was: its calculation, or a condition in its
+  // place, never the repository's. (The repository's rules compute with a calculation of their source's
+  // family; these two stand in for versions that computed otherwise.)
+  assert.ok(prepared.rule.evaluator && !prepared.rule.condition);
+  const otherCalculation = { ...prepared.rule.evaluator, algorithmHash: "b".repeat(64) };
+  assert.deepEqual(
+    reviewed.restoredRuleCandidate(prepared, { ...stored, evaluator: otherCalculation }).rule.evaluator,
+    otherCalculation,
+  );
+  const condition = {
+    mode: "all" as const,
+    predicates: [{ field: "legalForm" as const, op: "eq" as const, value: "business_name" }],
+  };
+  const { evaluator: _calculation, ...withoutCalculation } = stored;
+  const byCondition = reviewed.restoredRuleCandidate(prepared, {
+    ...withoutCalculation,
+    condition,
+  } as ReleasedRule);
+  assert.deepEqual([byCondition.rule.condition, byCondition.rule.evaluator], [condition, undefined]);
+  // Another rule's version, or a version that quotes its sources otherwise, is not restored here.
+  for (const other of [{ id: "another-rule" }, { requirementVersionId: "ANOTHER-RULE" }])
+    assert.throws(
+      () => reviewed.restoredRuleCandidate(prepared, { ...stored, ...other }),
+      /RULE_RESTORE_MISMATCH/,
+    );
+  for (const sources of [
+    [{ ...stored.sources[0]!, quote: "Other words than the repository quotes." }],
+    [{ ...stored.sources[0]!, locator: "section 815" }],
+    [...stored.sources, { ...stored.sources[0]!, id: "another-source" }],
+  ])
+    assert.throws(
+      () => reviewed.restoredRuleCandidate(prepared, { ...stored, sources }),
+      /RULE_RESTORE_SOURCES_CHANGED/,
+    );
 });
 
 test("with no rights record for this route, each rule is held and its bundle's rights are not cleared", () => {

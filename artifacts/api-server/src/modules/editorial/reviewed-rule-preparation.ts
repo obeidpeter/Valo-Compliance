@@ -7,6 +7,7 @@ import {
   evaluatePublication,
   isPreparedRuleId,
   publicationSchema,
+  ruleSchema,
 } from "@workspace/valo-core";
 import { renderDocument } from "../../lib/valo-render";
 import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
@@ -30,6 +31,7 @@ import { currentSourceCaptures, verifyReleasedSources, type CurrentSourceCapture
 import { ownerRuleCandidates, type OwnerRuleCandidate } from "./owner-rule-candidates";
 import {
   buildReviewedRule,
+  restoredRuleCandidate,
   reviewedRuleBundle,
   ruleScenarioResults,
   RULE_SHEET_NOTICE,
@@ -37,8 +39,11 @@ import {
 import type { RuleReviewInputs, RuleServerEvidence } from "./reviewed-rule-review";
 import { unique } from "./rule-sources";
 
+/** The stored version a restore releases again, by its number and its release's manifest hash. */
+export type RestoredVersion = { version: number; manifestHash: string };
+
 /** Where a rule on the reviewed route was written, as its candidate keeps it: what is known, and no more. */
-export function repositoryRuleProvenance(prepared: OwnerRuleCandidate) {
+export function repositoryRuleProvenance(prepared: OwnerRuleCandidate, restores?: RestoredVersion) {
   return {
     kind: "repository-rule-v1" as const,
     ruleId: prepared.rule.id,
@@ -47,12 +52,46 @@ export function repositoryRuleProvenance(prepared: OwnerRuleCandidate) {
     path: "artifacts/api-server/src/modules/editorial/owner-rule-candidates.ts",
     written:
       "Prepared in the repository for the owner's sign-off (decision 0020) and built for the reviewed route from that preparation. Its rights record says how its wording came to be. The model that drafted it is not recorded, and no model run of Valo's own produced it.",
+    // A restore releases a stored version's words, condition and calculation again (ADM-004).
+    ...(restores
+      ? {
+          restores,
+          restored: `Restores the words, condition and calculation of version ${restores.version} as it was stored, with the repository's sources, claims, scenarios and records.`,
+        }
+      : {}),
+  };
+}
+
+/**
+ * The stored version of a rule a restore names, and the repository's rule with that version's words,
+ * condition and calculation. Only a version earlier than the rule's latest can be restored.
+ */
+async function storedVersionToRestore(prepared: OwnerRuleCandidate, version: number) {
+  if (!Number.isInteger(version) || version < 1) throw Error("RULE_VERSION_UNKNOWN");
+  const { db } = await import("@workspace/db");
+  const rows = (
+    await db.execute<{ rule: unknown; manifest_hash: string; latest: number }>(
+      sql`select rule, manifest_hash,
+            (select max(version) from valo_rule_releases where rule_id = ${prepared.rule.id})::int as latest
+          from valo_rule_releases where rule_id = ${prepared.rule.id} and version = ${version}`,
+    )
+  ).rows;
+  const row = rows[0];
+  if (!row) throw Error("RULE_VERSION_UNKNOWN");
+  if (version >= Number(row.latest)) throw Error("RULE_VERSION_ALREADY_CURRENT");
+  const stored = ruleSchema.parse(row.rule);
+  return {
+    restores: { version, manifestHash: row.manifest_hash },
+    prepared: restoredRuleCandidate(prepared, stored),
   };
 }
 
 type Options = {
   /** Stands in for the repository's rules (tests). */
   candidates?: readonly OwnerRuleCandidate[];
+  /** A stored version of the rule, earlier than its latest, whose words, condition and calculation are
+   * prepared again as its next version (ADM-004). */
+  restore?: number;
   /** Stands in for the captures the daily source check holds (tests). */
   captures?: readonly CurrentSourceCapture[];
   records?: readonly AmendmentRecord[];
@@ -78,8 +117,13 @@ type Options = {
 export async function prepareReviewedRuleCandidate(ruleId: string, options: Options = {}) {
   assertDevelopmentRuntime();
   developmentPublicationOnly();
-  const prepared = (options.candidates ?? ownerRuleCandidates).find((c) => c.rule.id === ruleId);
-  if (!prepared || !isPreparedRuleId(prepared.rule.requirementVersionId)) throw Error("RULE_NOT_PREPARED");
+  const repository = (options.candidates ?? ownerRuleCandidates).find((c) => c.rule.id === ruleId);
+  if (!repository || !isPreparedRuleId(repository.rule.requirementVersionId))
+    throw Error("RULE_NOT_PREPARED");
+  // A restore prepares a stored version's words, condition and calculation as the next version.
+  const restoring =
+    options.restore === undefined ? null : await storedVersionToRestore(repository, options.restore);
+  const prepared = restoring?.prepared ?? repository;
   const { db, drafterDb, valoPreparedCandidates } = await import("@workspace/db");
   // A rule that passes is kept as a candidate, which only drafting's own login may add. The preparation
   // finds out now, before anything is read, rendered or saved, whether drafting can log in.
@@ -126,12 +170,13 @@ export async function prepareReviewedRuleCandidate(ruleId: string, options: Opti
     sourceCheckDate: built.candidate.sourceCheckDate,
     reviewBy: built.candidate.reviewBy!,
     failedChecks: built.mechanicalChecks.filter((c) => c.result !== "pass").map((c) => c.name),
+    restores: restoring?.restores.version ?? null,
   };
   // Not ready: something other than the two reviews holds it. Nothing is kept.
   if (reasons.length) return { ...outcome, state: "held" as const, reasons, candidateArtifact: null };
 
   const provenance = await putPublicationArtifact(
-    Buffer.from(JSON.stringify(repositoryRuleProvenance(prepared))),
+    Buffer.from(JSON.stringify(repositoryRuleProvenance(prepared, restoring?.restores))),
     "json",
   );
   const exports = {
@@ -238,12 +283,23 @@ export async function readReviewedRuleReadiness(
     throw Error("CANDIDATE_BINDING_CHANGED");
   const now = options.now ?? new Date();
   if (Date.parse(row.reviewBy) <= +now) throw Error("CANDIDATE_UNAVAILABLE_OR_STALE");
-  const prepared = (options.candidates ?? ownerRuleCandidates).find(
+  const repository = (options.candidates ?? ownerRuleCandidates).find(
     (c) => c.rule.requirementVersionId === row.templateId,
   );
-  if (!prepared || prepared.rule.id !== row.slug) throw Error("CANDIDATE_REQUEST_PREPARER_UNAVAILABLE");
+  if (!repository || repository.rule.id !== row.slug) throw Error("CANDIDATE_REQUEST_PREPARER_UNAVAILABLE");
   const bundle = publicationSchema.parse(row.bundle),
     a = ruleAttestations.parse(row.attestations);
+  // How the rule was written, as its candidate keeps it. A restore names the stored version whose words,
+  // condition and calculation it releases again; the rule is built again from that version as stored.
+  const provenance = JSON.parse((await getPublicationArtifact(a.provenance)).toString()) as {
+    restores?: RestoredVersion;
+  };
+  const restoring = provenance.restores
+    ? await storedVersionToRestore(repository, provenance.restores.version)
+    : null;
+  if (restoring && restoring.restores.manifestHash !== provenance.restores?.manifestHash)
+    throw Error("SAVED_PLAN_INPUT_CHANGED");
+  const prepared = restoring?.prepared ?? repository;
   if (
     bundle.candidate.id !== row.templateId ||
     bundle.candidate.version !== row.version ||
@@ -311,8 +367,7 @@ export async function readReviewedRuleReadiness(
     throw Error("SAVED_PLAN_INPUT_CHANGED");
   // Nothing but its two reviews may hold it now, as when it was kept.
   if (guideOpenReasons(evaluatePublication(bundle, now)).length) throw Error("SAVED_PLAN_MECHANICAL_HOLD");
-  const provenance = JSON.parse((await getPublicationArtifact(a.provenance)).toString());
-  if (digest(provenance) !== digest(repositoryRuleProvenance(prepared)))
+  if (digest(provenance) !== digest(repositoryRuleProvenance(prepared, restoring?.restores)))
     throw Error("SAVED_PLAN_INPUT_CHANGED");
 
   const serverEvidence: RuleServerEvidence = {
@@ -351,5 +406,7 @@ export async function readReviewedRuleReadiness(
     exportReport,
     serverEvidence,
     reviewInputs,
+    // The stored version this candidate restores, if it is a restore (ADM-004).
+    restores: restoring?.restores ?? null,
   };
 }

@@ -66,6 +66,48 @@ const placeholderManifest = "0".repeat(64);
 
 /** A rule as the reviewed route releases it, before its manifest hash is known. */
 export type ReviewedRuleContent = Omit<ReleasedRule, "manifestHash">;
+
+/**
+ * A rule prepared in the repository, with the words, condition and calculation a stored version of it
+ * was released with: what a restore releases again as the rule's next version (ADM-004;
+ * docs/architecture/reviewed-route.md, part 3). Its sources, claims, scenarios, scope, limits and rights
+ * stay the repository's, so the stored version must quote its sources as the repository does. One that
+ * does not is refused: its text is restored by preparing it in the repository. Nothing is read or
+ * written.
+ */
+export function restoredRuleCandidate(
+  prepared: OwnerRuleCandidate,
+  stored: ReleasedRule,
+): OwnerRuleCandidate {
+  if (stored.id !== prepared.rule.id || stored.requirementVersionId !== prepared.rule.requirementVersionId)
+    throw Error("RULE_RESTORE_MISMATCH");
+  const quoted = (sources: readonly { id: string; locator: string; quote: string }[]) =>
+    digest(
+      sources
+        .map(({ id, locator, quote }) => ({ id, locator, quote }))
+        .sort((a, b) => a.id.localeCompare(b.id)),
+    );
+  if (quoted(stored.sources) !== quoted(prepared.sources)) throw Error("RULE_RESTORE_SOURCES_CHANGED");
+  const { title, jurisdiction, validFrom, validTo, reason, nextStep, relatedTemplateIds } = stored;
+  return {
+    ...prepared,
+    rule: {
+      id: prepared.rule.id,
+      requirementVersionId: prepared.rule.requirementVersionId,
+      title,
+      jurisdiction,
+      validFrom,
+      validTo,
+      reason,
+      nextStep,
+      relatedTemplateIds,
+      ...(stored.condition ? { condition: stored.condition } : {}),
+      ...(stored.evaluator ? { evaluator: stored.evaluator } : {}),
+      ...(stored.officialRoute ? { officialRoute: stored.officialRoute } : {}),
+      ...(stored.figures ? { figures: stored.figures } : {}),
+    },
+  };
+}
 export type ReviewedRuleInput = {
   version: number;
   captures: readonly RuleSourceCapture[];
