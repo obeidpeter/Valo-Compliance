@@ -1496,6 +1496,7 @@ test(
           const { ownerRuleCandidates } = await import("../modules/editorial/owner-rule-candidates");
           const { retainedGuidePassages } = await import("../modules/publication/guidance-passages");
           const { guideAmendmentRecords } = await import("../modules/publication/guidance-amendments");
+          const { db: fixtureDb } = await import("@workspace/db");
           const clockBefore = Date.now();
           // On the real clock, as the guide's subtest runs, and for the same reasons: the database stamps
           // approvals, admissions and attempts with the real time.
@@ -1803,6 +1804,69 @@ test(
               reviews.map((r) => r.record.role),
               ["factual", "challenge"],
             );
+
+            // Slice 3b: with both reviews passed, the rule's release request is assembled from the batch.
+            // Each review must be the one the batch settled, and the rule is built again first.
+            const { assembleReviewedRuleRelease, readReviewedRuleReleaseRequest } =
+              await import("../modules/ai-lanes/inference-reviewed-rule-release");
+            const { applyStoredRuleRelease, planStoredRuleRelease } =
+              await import("../modules/editorial/valo-rule-release");
+            const { releasedRegistry } = await import("../modules/rules/valo-assessments");
+            const refs = reviews.map((r) => r.artifact);
+            await assert.rejects(
+              assembleReviewedRuleRelease({ batchId: id, reviews: [refs[0]!, refs[0]!] }),
+              /REVIEWS_NOT_INDEPENDENT/,
+            );
+            await assert.rejects(
+              assembleReviewedRuleRelease({ batchId: id, reviews: refs, reason: "Too short." }),
+              /RULE_RELEASE_REASON_INVALID/,
+            );
+            const reason = "Released on the reviewed route in a test, with stand-in reviews.";
+            const assembled = await assembleReviewedRuleRelease({ batchId: id, reviews: refs, reason });
+            assert.equal(assembled.state, "ready", assembled.reasons.join("; "));
+            assert.ok(assembled.request && assembled.manifestHash);
+            assert.deepEqual(
+              [assembled.ruleId, assembled.version, assembled.candidateHash],
+              ["cac-business-name-814", prepared.version, current.candidate.hash],
+            );
+            assert.equal(calls - before, 2, "assembling the request calls no model");
+            assert.equal(await releases(), releasedBefore, "and releases nothing");
+            const request = await readReviewedRuleReleaseRequest(assembled.request);
+            assert.deepEqual(request.snapshotIds, { "cama-814": snapshotId });
+            assert.equal(request.reason, reason);
+            assert.deepEqual(
+              (request.bundle as { reviews: { role: string; verdict: string }[] }).reviews.map((r) => [
+                r.role,
+                r.verdict,
+              ]),
+              [
+                ["factual", "pass"],
+                ["challenge", "pass"],
+              ],
+            );
+            // The release command plans it and applies it, confirmed by its manifest hash.
+            const releasePlan = await planStoredRuleRelease(request);
+            assert.equal(releasePlan.decision, "ready", releasePlan.reasons.join(","));
+            await assert.rejects(
+              applyStoredRuleRelease(request, "f".repeat(64)),
+              /RULE_RELEASE_NOT_CONFIRMED/,
+            );
+            const applied = await applyStoredRuleRelease(request, assembled.manifestHash);
+            assert.deepEqual([applied.ruleId, applied.version], ["cac-business-name-814", prepared.version]);
+            assert.equal(await releases(), releasedBefore + 1);
+            // The registry admits the reviewed version, and the requirements check reads it.
+            const registry = await releasedRegistry(fixtureDb, new Date());
+            assert.ok(
+              registry.rules.some(
+                (r) =>
+                  r.id === "cac-business-name-814" &&
+                  r.version === prepared.version &&
+                  r.provenance === "editorial_release",
+              ),
+            );
+            // The prepared candidate's review has ended: its version is stored.
+            await assert.rejects(readReviewedRuleReadiness(binding), /CANDIDATE_ALREADY_SAVED/);
+            assert.equal(calls - before, 2, "releasing calls no model");
           } finally {
             t.mock.timers.enable({ apis: ["Date"], now: clockBefore });
           }

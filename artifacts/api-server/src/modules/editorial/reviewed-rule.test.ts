@@ -140,16 +140,27 @@ test("a rule with today's capture of its source, a current amendment record and 
     findings: [],
     receivedOtherVerdict: false,
   });
+  const enhancedChecks = mandatoryEnhancedChecks.map((name) => ({
+    name,
+    candidateHash: built.candidate.hash,
+    result: "pass" as const,
+    evidenceHash: sha256(`synthetic ${name}`),
+  }));
   const complete = reviewed.reviewedRuleBundle(built, inspected(built), {
     reviews: [run("factual"), run("challenge")],
-    enhancedChecks: mandatoryEnhancedChecks.map((name) => ({
-      name,
-      candidateHash: built.candidate.hash,
-      result: "pass" as const,
-      evidenceHash: sha256(`synthetic ${name}`),
-    })),
+    enhancedChecks,
   });
+  assert.equal(complete.bundle.manifest.status, "eligible");
   assert.deepEqual(evaluatePublication(complete.bundle, now), { decision: "eligible", reasons: [] });
+  // A review that holds, or passes with a finding, leaves the bundle under review, and the gate holds it.
+  for (const change of [{ verdict: "hold" as const }, { findings: ["A finding a review recorded."] }]) {
+    const held = reviewed.reviewedRuleBundle(built, inspected(built), {
+      reviews: [run("factual"), { ...run("challenge"), ...change }],
+      enhancedChecks,
+    });
+    assert.equal(held.bundle.manifest.status, "review");
+    assert.equal(evaluatePublication(held.bundle, now).decision, "hold");
+  }
   assert.ok(
     ruleReleaseEligible(
       {

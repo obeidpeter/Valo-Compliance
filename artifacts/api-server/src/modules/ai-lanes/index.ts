@@ -23,6 +23,7 @@ export * from "./inference-history-loader";
 export * from "./inference-operational-ready";
 export * from "./inference-prepared-report";
 export * from "./inference-reviewed-publication";
+export * from "./inference-reviewed-rule-release";
 export * from "./inference-work-bindings";
 export * from "./valo-customer-ai";
 export * from "./valo-customer-ai-domain";

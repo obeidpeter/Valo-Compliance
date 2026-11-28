@@ -516,7 +516,7 @@ export type BuiltReviewedRule = ReturnType<typeof buildReviewedRule>;
 /**
  * The rule's publication bundle, with its two files' inspection and, once they have run, its reviews
  * and the enhanced checks they ran. The manifest binds every part; it is eligible only once both
- * reviews have passed, and the rule's manifest hash is the manifest's digest.
+ * reviews have passed with nothing found, and the rule's manifest hash is the manifest's digest.
  */
 export function reviewedRuleBundle(
   built: BuiltReviewedRule,
@@ -558,7 +558,12 @@ export function reviewedRuleBundle(
       checksHash: digest({ mechanical: parts.mechanicalChecks, enhanced: parts.enhancedChecks }),
       exportsHash: digest(exports),
       // A bundle with no reviews is never eligible.
-      status: reviewed.reviews.length ? "eligible" : "review",
+      // Eligible only once both reviews have passed with nothing found, as a template's bundle is.
+      status:
+        reviewed.reviews.length === 2 &&
+        reviewed.reviews.every((r) => r.verdict === "pass" && !r.findings.length)
+          ? "eligible"
+          : "review",
     },
   };
   return { bundle, rule: { ...built.rule, manifestHash: digest(bundle.manifest) } as ReleasedRule };

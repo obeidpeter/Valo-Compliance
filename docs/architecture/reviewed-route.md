@@ -286,6 +286,29 @@ Settled while building it (slice 3a, second part: the reviews):
   `finite-inference-run.ts --prepare`, `--admit` and `--execute`, as for a guide. The reviews are
   recorded on review's own login.
 
+Settled while building it (slice 3b, first part: the release request):
+- **The command.** `rule-release.ts request <batch id> <result artifact id> <sha256> [--reason <text>]`
+  reads the report `--execute` printed for a rule's two reviews. It calls no model and releases nothing.
+- **Built again, and checked against the batch.** The rule is built again from its own sources and
+  records, as before admission and dispatch, and must still be the candidate the batch reviewed. Each
+  review must be the one the batch settled for that candidate, plan and request, and the two must come
+  from two provider responses, one for each role. This is the check a template's or a guide's reviews
+  pass (`verifiedPairReviews`).
+- **Its bundle.** The bundle is made with the two reviews and the enhanced checks both reviews ran. It is
+  eligible only when both reviews passed with nothing found. When the gate holds it, the command prints
+  the gate's reasons and keeps nothing. The candidate stays as it was, and is prepared again for another
+  pair of reviews.
+- **The request.** When the bundle is eligible, the request the release command reads is kept as a
+  private file: the rule with its manifest hash, the bundle, the scenarios, the captures its sources are
+  bound to and the reason. `rule-release.ts plan` and `apply` take its reference,
+  `--request=<id>:<sha256>`. A version that replaces a released one needs its reason, of 20 to 1,000
+  characters, as on the owner's route.
+- **The release.** `apply` releases the request's rule as the next version, as the release command
+  always has (`applyStoredRuleRelease`). Its sources' captures are checked again, earlier versions are
+  superseded, and the businesses that saved a result under them are told what changed. The registry
+  admits it as an editorial release only while its bundle stays eligible.
+- **Nothing runs today.** Every rule is still held on its rights record for this route (above).
+
 ### Part 4: the twenty-three templates
 
 - **A template's claim map.** As a guide's map does, it places every sentence of the template: as a
@@ -334,7 +357,7 @@ Each slice is its own pull request.
 | 2a | **The owner's source check for a guide, in the database and the route** (built). Part 2 apart from the panel: the kept check, the admission's and the publisher's checks, and two migrations for the database's check, with their upgrade tests and runbook. Database tests: with no check, or a day-old one, GUD-02's reviews are not admitted or sent and the guide is not saved or released. With the owner's check of the exact candidate, the stand-in reviews run and the real publisher releases it, bound to the captures checked. Another person's check, a check of another candidate or other captures, and a check while a capture is stale record or release nothing. | EDP-002, EDP-004, EDP-005, EDP-006, ADM-005 |
 | 2b | **The owner's panel** (built). Staff → System → **Guides on the reviewed route**: the list, the candidate's text and passages, what holds it, and the check. Its contract and routes. Tests: the real-bindings database test lists GUD-02 as the owner reads it, with a stale or changed copy holding it and the owner's check counting for a day; unit tests of the inspection's states; and a browser test of the panel on a phone. | EDP-002, EDP-004, CMP-008 |
 | 3a | **A rule's bundle and its reviews** (built). The builder, the package kind and its binding checks. Database tests: a prepared rule's pair is admitted only under a package of its kind and runs with a stand-in model. A held rule keeps nothing. | EDP-003, EDP-004, EDP-006, ADM-004 |
-| 3b | **The release request and restoring a version.** The request command and the restore. Database tests: a reviewed rule is planned and applied from its request. A restored version is released as the next one, and saved results keep their versions. | ADM-004 |
+| 3b | **The release request and restoring a version** (first part built: the release request). The request command and the restore. Database tests: a reviewed rule is planned and applied from its request. A restored version is released as the next one, and saved results keep their versions. | ADM-004 |
 | 4a | **A template's claim map, its preparer and the proposed policy.** The map's builder and checks, the preparer, and the policy as a file for the owner, with TPL-31, the data processing agreement, mapped first. | EDP-003, EDP-005, EDP-006, ADM-005 |
 | 4b–4e | **The families' maps:** privacy, then commercial, governance and safety, and employment. | EDP-003, EDP-005 |
 

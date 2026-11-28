@@ -345,6 +345,10 @@ export async function readReviewedRuleReadiness(
     bundle,
     candidate: bundle.candidate,
     rule: built.rule,
+    // The rule built again and its files' inspection, from which its bundle is made once its reviews
+    // have run (slice 3b).
+    built,
+    exportReport,
     serverEvidence,
     reviewInputs,
   };
