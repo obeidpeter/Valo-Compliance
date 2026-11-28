@@ -85,7 +85,7 @@ test("a preparation says whether the worker has it, what came of it, and that th
   );
   assert.equal(
     preparationLine({ ...done, status: "prepared" }),
-    'Version 3 was prepared on 25 Nov 2026, 10:30. It waits for its two reviews, under "Templates and guides awaiting their reviews"; they run only under an AI allocation the owner approves.',
+    'Version 3 was prepared on 25 Nov 2026, 10:30. It waits for its two reviews, under "Templates, guides and rules awaiting their reviews"; they run only under an AI allocation the owner approves.',
   );
   assert.equal(
     preparationLine({ ...done, status: "held" }),

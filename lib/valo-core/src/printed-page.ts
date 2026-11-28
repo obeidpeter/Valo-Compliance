@@ -47,9 +47,13 @@ export type RenderMode =
   | "purchase_receipt"
   | "guidance"
   | "guidance_draft"
-  | "practical_guide";
+  | "practical_guide"
+  /** A requirements-check rule's sheet: the sample files a rule on the reviewed route is released
+   * with (docs/architecture/reviewed-route.md, part 3). It prints as a guide does, under the
+   * guidance notice, and names the rule's version. */
+  | "rule_sheet";
 export const guide = (mode: RenderMode) =>
-  mode === "guidance" || mode === "guidance_draft" || mode === "practical_guide";
+  mode === "guidance" || mode === "guidance_draft" || mode === "practical_guide" || mode === "rule_sheet";
 /** A customer's own document, as a marked draft or as a finished file. */
 export const customer = (mode: RenderMode) => mode === "business_draft" || mode === "business_finished";
 /** A named part's name and the rest of its text, or nothing when the block is not one. */
@@ -67,7 +71,7 @@ export const noticeFor = (mode: RenderMode) =>
       ? TEMPLATE_NOTICE
       : mode === "practical_guide"
         ? PRACTICAL_GUIDE_NOTICE
-        : mode === "guidance"
+        : mode === "guidance" || mode === "rule_sheet"
           ? GUIDANCE_NOTICE
           : mode === "guidance_draft"
             ? GUIDANCE_DRAFT_NOTICE
@@ -77,13 +81,16 @@ export const noticeFor = (mode: RenderMode) =>
 type Fields = Record<keyof typeof DOCUMENT_FIELD_LABELS, string>;
 /** The line under a document's title. A customer's own document says "version", as the site does. A
  * template sample and a purchase receipt are left as they were: their words belong with the
- * templates' own review and with the purchases screen's. A guide names its own version. */
+ * templates' own review and with the purchases screen's. A guide names its own version, and a rule's
+ * sheet the rule's. */
 export const savedLine = (mode: RenderMode, revision: number) =>
-  guide(mode)
-    ? `Valo · Guide version ${revision}`
-    : customer(mode)
-      ? `Valo · Saved version ${revision}`
-      : `Valo · Saved revision ${revision}`;
+  mode === "rule_sheet"
+    ? `Valo · Rule version ${revision}`
+    : guide(mode)
+      ? `Valo · Guide version ${revision}`
+      : customer(mode)
+        ? `Valo · Saved version ${revision}`
+        : `Valo · Saved revision ${revision}`;
 /**
  * A document's own fields as its file prints them, each with its name. A document made from
  * questions prints its note alone: its other fields are answers, printed with their questions.

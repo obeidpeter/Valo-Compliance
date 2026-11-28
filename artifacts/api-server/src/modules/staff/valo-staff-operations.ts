@@ -111,9 +111,14 @@ export async function staffOperations(actor: StaffActor, area: StaffArea) {
           preparedAt: valoPreparedCandidates.preparedAt,
           reviewBy: valoPreparedCandidates.reviewBy,
           savedStatus: valoContentVersions.status,
-          versionTaken: sql<boolean>`exists(select 1 from valo_content_versions t
+          // A rule's version number is taken once either route has stored a version of that rule
+          // under it (docs/architecture/reviewed-route.md, part 3).
+          versionTaken: sql<boolean>`(exists(select 1 from valo_content_versions t
             where t.template_id = ${valoPreparedCandidates.templateId}
-            and t.version = ${valoPreparedCandidates.version} and t.id <> ${valoPreparedCandidates.versionId})`,
+            and t.version = ${valoPreparedCandidates.version} and t.id <> ${valoPreparedCandidates.versionId})
+            or exists(select 1 from valo_rule_releases r
+            where r.rule->>'requirementVersionId' = ${valoPreparedCandidates.templateId}
+            and r.version = ${valoPreparedCandidates.version} and r.id <> ${valoPreparedCandidates.versionId}))`,
         })
         .from(valoPreparedCandidates)
         .leftJoin(valoContentVersions, eq(valoContentVersions.id, valoPreparedCandidates.versionId))

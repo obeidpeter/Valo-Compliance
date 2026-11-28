@@ -43,6 +43,12 @@ export type OwnerRuleCandidate = {
   }[];
   claims: PublicationBundle["candidate"]["claims"];
   rights: PublicationBundle["rights"];
+  /**
+   * The rights record of a version released on the reviewed route, once the owner has chosen one
+   * (docs/architecture/reviewed-route.md, part 3). `rights` adopts each version's wording by the
+   * owner's signature, which that route does not have, so without this the route holds the rule.
+   */
+  reviewedRouteRights?: PublicationBundle["rights"];
   scenarios: OwnerRuleBundle["scenarios"];
 };
 

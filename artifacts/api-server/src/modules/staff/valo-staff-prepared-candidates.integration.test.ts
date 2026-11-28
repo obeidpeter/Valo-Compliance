@@ -8,6 +8,7 @@ import {
   valoContentVersions,
   valoPreparedCandidates,
   valoPublicationPolicies,
+  valoRuleReleases,
   valoStaffAssignments,
 } from "@workspace/db";
 import { preparedCandidateState, staffOperations } from "./valo-staff-operations";
@@ -69,16 +70,30 @@ test(
         reviewBy: change.reviewBy ?? new Date(now + 30 * day),
       });
       // 1 awaits its reviews; 2 was saved and held; 3 passed its review date; 4 lost its version
-      // number to another candidate saved first.
+      // number to another candidate saved first; 5 is a rule's candidate whose version number another
+      // release of the rule took first (docs/architecture/reviewed-route.md, part 3).
       const savedId = randomUUID();
       const rows = [
         prepared(1),
         prepared(2, { versionId: savedId }),
         prepared(3, { reviewBy: new Date(now - day) }),
         prepared(4),
+        prepared(5),
       ];
       await version(savedId, template(2), "held");
       await version(randomUUID(), template(4), "candidate");
+      // A synthetic rule's release under version 1, withdrawn: the requirements check never reads it.
+      const ruleReleaseId = randomUUID();
+      await db.insert(valoRuleReleases).values({
+        id: ruleReleaseId,
+        ruleId: `synthetic-rule-${run}`,
+        version: 1,
+        status: "withdrawn",
+        rule: { id: `synthetic-rule-${run}`, version: 1, requirementVersionId: template(5) },
+        publicationBundle: { synthetic: true },
+        manifestHash: hex("b"),
+        publishedAt: new Date(now - day),
+      });
       await draftSynthetic((tx) => tx.insert(valoPreparedCandidates).values(rows));
 
       const actor = { identityId: staff, recentMfa: true, verifiedAt: Date.now() };
@@ -90,6 +105,7 @@ test(
       assert.deepEqual(
         listed.map((c) => [c.templateId, c.state, c.savedStatus]),
         [
+          [template(5), "version_taken", null],
           [template(4), "version_taken", null],
           [template(3), "expired", null],
           [template(2), "saved", "held"],
@@ -125,6 +141,7 @@ test(
       // Content versions and staff access records are append-only, so only the prepared records
       // are removed; the rest stay in the disposable database under their synthetic names.
       await db.execute(sql`delete from valo_prepared_candidates where template_id like ${`SYNTH-${run}-%`}`);
+      await db.execute(sql`delete from valo_rule_releases where rule_id = ${`synthetic-rule-${run}`}`);
       await pool.end();
     }
   },

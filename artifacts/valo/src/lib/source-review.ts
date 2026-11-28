@@ -109,7 +109,7 @@ export function preparationLine(preparation: Preparation) {
     case "running":
       return `A new candidate is being prepared, ${asked}.`;
     case "prepared":
-      return `${version} was prepared on ${when}. It waits for its two reviews, under "Templates and guides awaiting their reviews"; they run only under an AI allocation the owner approves.`;
+      return `${version} was prepared on ${when}. It waits for its two reviews, under "Templates, guides and rules awaiting their reviews"; they run only under an AI allocation the owner approves.`;
     case "held":
       return `${version} failed a check on ${when} and was saved as held.`;
     case "not_ready":

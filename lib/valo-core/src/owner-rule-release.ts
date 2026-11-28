@@ -17,6 +17,22 @@ import {
  * the owner's sign-off is recorded in the database, against this bundle's manifest.
  */
 
+/**
+ * The rules prepared in the repository for release (`ownerRuleCandidates` in the API), by the requirement
+ * version each releases. Either route may release them: the owner's sign-off, and the reviewed route,
+ * which prepares only these and whose package of rule reviews admits only their pairs
+ * (docs/architecture/reviewed-route.md, part 3). A test holds this list to the repository's rules.
+ */
+export const preparedRuleIds = [
+  "CAC-BUSINESS-NAME-814",
+  "NDPA-27-COLLECTION-INFORMATION",
+  "NTAA-11-COMPANY-RETURN",
+  "NAFDAC-F33-PRODUCT-REGISTRATION",
+] as const;
+export function isPreparedRuleId(id: string): id is (typeof preparedRuleIds)[number] {
+  return preparedRuleIds.some((value) => value === id);
+}
+
 /** EDP-005's enhanced checks, which the owner confirms one by one for any risk but `general`. */
 export const ownerConfirmedChecks = mandatoryEnhancedChecks;
 export type OwnerConfirmedCheck = (typeof ownerConfirmedChecks)[number];

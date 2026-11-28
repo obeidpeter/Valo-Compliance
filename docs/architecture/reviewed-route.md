@@ -203,6 +203,57 @@ Settled while building it (slice 2b):
   again on today's sources, and its reason says which version it restores. Saved results keep the
   versions they were made under, so no assessment history is lost.
 
+Settled while building it (slice 3a, first part: the builder):
+- **Two parts.** Slice 3a is built in two pull requests: first the builder, the kept candidate and its
+  command; then the reviews, with the package kind and its binding checks.
+- **Which rules.** Only a rule prepared in the repository (`ownerRuleCandidates`), named by its id. The
+  core library lists their requirement versions (`preparedRuleIds`), and a test holds that list to the
+  repository's rules. The route builds the rule's next version: the number after every version either
+  route has stored.
+- **The same binding as the owner's route.** The rule's sources are bound to today's captures by the
+  owner route's own code (`bindRuleSources`, moved out of the sign-off unchanged). A source is current
+  only on its amendment record's decision. On this route nobody confirms EDP-005's checks: the two reviews
+  run them, as they do a guide's (decision 0014).
+- **The rule and its candidate.** The rule is the owner route's, released as an `editorial_release`. The
+  candidate's body is the rule without its manifest hash, so the registry admits the release only while
+  the two match. It carries the reviewed route's disclosure ("AI drafted and reviewed; not reviewed by a
+  Nigerian legal, tax or sector specialist") and the scope, limits, assumptions and claims the repository
+  records. Its review date is the rule's.
+- **How it was written.** The drafting record says only what is known: the rule was written in the
+  repository from research notes, and the model that drafted it is not recorded. No model run of Valo's
+  own made it.
+- **The rights record holds every rule today.** Each rule's rights record adopts each version's wording
+  by the development owner's signature, and this route has none. So a version released here is covered
+  only by a rights record the owner chooses for this route (`reviewedRouteRights`). None is chosen, so
+  the route holds all four rules with "No rights record covers this rule on the reviewed route", and the
+  bundle's rights are not cleared. The tests stand in a synthetic one, and say so.
+- **Ten mechanical checks of its own,** measured from the rule against the one prepared in the
+  repository:
+  - its schema and canonical body;
+  - each claim and quotation in its source's passage, none over twenty words;
+  - its dates, and a review date no later than its sources stay fresh;
+  - its scope, the guidance policy and the official hosts;
+  - the numbers in its claims and its figures;
+  - its rights record for this route, and its required fields;
+  - the disclosure;
+  - its arithmetic, which is its source family's calculation bound by its hash;
+  - its scenarios, run through the requirements check with the rule in place.
+- **Its two files are the rule's sheet.** The sheet holds:
+  - what the check shows for the rule, and where to act;
+  - the figures it shows, what it covers, its limits and assumptions;
+  - its sources with the words it quotes;
+  - how it was written and checked, and when its sources were checked.
+
+  It is rendered as Word and PDF, under the guidance notice, and names the rule's version. Both files are
+  inspected as a guide's are, for the whole sheet. They are the samples EDP-006 and ADM-005 ask for. The
+  check itself shows the rule on screen.
+- **What is kept.** When nothing but the two reviews holds the rule, it is kept as a prepared candidate,
+  as a guide is: a private file with its evidence, and a row on drafting's own login. Staff → Content
+  lists it under "Templates, guides and rules awaiting their reviews". Another version of the rule stored
+  under its number, on either route, ends its review there. When anything else holds it, nothing is kept,
+  and the command says why.
+- **The command.** `finite-inference-run.ts --prepare-rule-candidate <rule>`. Nothing calls a model.
+
 ### Part 4: the twenty-three templates
 
 - **A template's claim map.** As a guide's map does, it places every sentence of the template: as a
@@ -250,7 +301,7 @@ Each slice is its own pull request.
 | 1 | **A replaced version closes** (built). This design, then part 1, with a migration for the forms' check, its upgrade test and runbook. Unit tests of which version is live for each mix of states. A database test: the real-bindings test publishes TPL-07's version 2 after version 1 through the real publisher, with two passing synthetic reviews. Version 1 then leaves the catalogue, its file and a new document from it are refused, version 2's are served, and a document made from version 1 reads replaced. | DOC-007, EDT-010, ADM-005 |
 | 2a | **The owner's source check for a guide, in the database and the route** (built). Part 2 apart from the panel: the kept check, the admission's and the publisher's checks, and two migrations for the database's check, with their upgrade tests and runbook. Database tests: with no check, or a day-old one, GUD-02's reviews are not admitted or sent and the guide is not saved or released. With the owner's check of the exact candidate, the stand-in reviews run and the real publisher releases it, bound to the captures checked. Another person's check, a check of another candidate or other captures, and a check while a capture is stale record or release nothing. | EDP-002, EDP-004, EDP-005, EDP-006, ADM-005 |
 | 2b | **The owner's panel** (built). Staff → System → **Guides on the reviewed route**: the list, the candidate's text and passages, what holds it, and the check. Its contract and routes. Tests: the real-bindings database test lists GUD-02 as the owner reads it, with a stale or changed copy holding it and the owner's check counting for a day; unit tests of the inspection's states; and a browser test of the panel on a phone. | EDP-002, EDP-004, CMP-008 |
-| 3a | **A rule's bundle and its reviews.** The builder, the package kind and its binding checks. Database tests: a prepared rule's pair is admitted only under a package of its kind and runs with a stand-in model. A held rule keeps nothing. | EDP-003, EDP-004, EDP-006, ADM-004 |
+| 3a | **A rule's bundle and its reviews** (first part built: the builder, the kept candidate and its command). The builder, the package kind and its binding checks. Database tests: a prepared rule's pair is admitted only under a package of its kind and runs with a stand-in model. A held rule keeps nothing. | EDP-003, EDP-004, EDP-006, ADM-004 |
 | 3b | **The release request and restoring a version.** The request command and the restore. Database tests: a reviewed rule is planned and applied from its request. A restored version is released as the next one, and saved results keep their versions. | ADM-004 |
 | 4a | **A template's claim map, its preparer and the proposed policy.** The map's builder and checks, the preparer, and the policy as a file for the owner, with TPL-31, the data processing agreement, mapped first. | EDP-003, EDP-005, EDP-006, ADM-005 |
 | 4b–4e | **The families' maps:** privacy, then commercial, governance and safety, and employment. | EDP-003, EDP-005 |
@@ -264,3 +315,6 @@ Each slice is its own pull request.
 4. The words of the refusal of a replaced file, and of the owner's panel.
 5. The Labour Act's reference copy (decision 0017, decision 8). It holds the employment templates as
    it holds the employment guides.
+6. Part 3: the rights basis for a rule released on the reviewed route. Each rule's rights record adopts
+   a version's wording by the owner's signature, which this route does not have, so the route holds
+   every rule until the owner chooses a rights record for it.

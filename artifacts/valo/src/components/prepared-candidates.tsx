@@ -8,23 +8,23 @@ const STATES: Record<Exclude<StaffPreparedCandidate["state"], "saved">, string> 
 };
 
 /**
- * Templates and guides prepared for their two AI reviews (decisions 0014 and 0017). Until the
- * reviews are checked, a candidate is a private file, not a content version, so it has no
- * publication record to open or version to hold. The reference is what an operator passes to the
- * review planning command.
+ * Templates, guides and requirements-check rules prepared for their two AI reviews (decisions 0014
+ * and 0017; docs/architecture/reviewed-route.md, part 3). Until the reviews are checked, a candidate
+ * is a private file, not a released version, so it has no publication record to open or version to
+ * hold. The reference is what an operator passes to the review planning command.
  */
 export function PreparedCandidates({ candidates }: { candidates: StaffPreparedCandidate[] }) {
   return (
     <section className="mt-8" aria-labelledby="prepared-candidates-title" data-testid="prepared-candidates">
       <h2 id="prepared-candidates-title" className="font-display text-2xl">
-        Templates and guides awaiting their reviews
+        Templates, guides and rules awaiting their reviews
       </h2>
       <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-        A prepared template or guide stays a private file until its two AI reviews are checked, and becomes a
-        content version only then. Most recent 100.
+        A prepared template, guide or requirements-check rule stays a private file until its two AI reviews
+        are checked, and is released as a version only then. Most recent 100.
       </p>
       {candidates.length === 0 ? (
-        <p className="mt-3 text-sm">No prepared templates or guides.</p>
+        <p className="mt-3 text-sm">No prepared templates, guides or rules.</p>
       ) : (
         <ul className="mt-3 divide-y">
           {candidates.map((c) => (

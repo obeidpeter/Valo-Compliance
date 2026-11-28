@@ -37,6 +37,7 @@ const finiteRunCommands = [
   "--prepare-template-candidate",
   "--prepare-practical-guide-candidate",
   "--prepare-guide-candidate",
+  "--prepare-rule-candidate",
   "--verify-prepared",
   "--admit",
   "--execute",
@@ -314,6 +315,24 @@ async function main() {
         throw Error("FINITE_RUN_ARGUMENTS_INVALID");
       const { prepareGuideCandidateRelease } = await import("../modules/editorial");
       const prepared = await prepareGuideCandidateRelease(batchId, extra[0]);
+      console.log(
+        JSON.stringify({
+          ...prepared,
+          providerCalls: 0,
+          approvalRowsWritten: 0,
+          publicationAccepted: false,
+        }),
+      );
+      return;
+    }
+    if (mode === "--prepare-rule-candidate") {
+      // A rule prepared in the repository, by its id, built for the reviewed route from the captures
+      // the daily source check holds. It is kept as a candidate only when nothing but its two reviews
+      // holds it; otherwise the reasons are printed (docs/architecture/reviewed-route.md, part 3).
+      if (!batchId || !/^[a-z0-9-]{1,80}$/.test(batchId) || extra.length)
+        throw Error("FINITE_RUN_ARGUMENTS_INVALID");
+      const { prepareReviewedRuleCandidate } = await import("../modules/editorial");
+      const prepared = await prepareReviewedRuleCandidate(batchId);
       console.log(
         JSON.stringify({
           ...prepared,

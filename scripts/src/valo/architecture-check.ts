@@ -367,6 +367,9 @@ export const DRAFTER_CONNECTION_ENTRIES = [
   "artifacts/api-server/src/modules/editorial/guidance-preparation.ts",
   "artifacts/api-server/src/modules/editorial/operational-authoring.ts",
   "artifacts/api-server/src/modules/editorial/operational-preparation.ts",
+  // A rule prepared for the reviewed route is kept as a candidate, as a guide is
+  // (docs/architecture/reviewed-route.md, part 3).
+  "artifacts/api-server/src/modules/editorial/reviewed-rule-preparation.ts",
   "artifacts/api-server/src/modules/publication/drafting-login.ts",
 ];
 
