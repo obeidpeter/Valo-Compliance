@@ -1,9 +1,11 @@
 import { and, eq, sql } from "drizzle-orm";
+import type { db as Database } from "@workspace/db";
 import { digest, publicationSchema, type PublicationBundle } from "@workspace/valo-core";
 import {
   additionalInferenceAllocation,
   requestDigest,
   type FiniteManifest,
+  type FiniteWork,
   type ManagedCompletionResult,
 } from "../ai";
 import {
@@ -64,25 +66,17 @@ type ReviewRecord = {
   output: unknown;
 };
 
+type Reader = Pick<typeof Database, "execute">;
+
 /**
- * Decision 0014: publish a prepared candidate once its two finite reviews have run. Each review
- * record must be the one the owner-approved batch settled for this candidate: the same candidate,
- * plan, request and server evidence, and the provider response the ledger recorded for its work.
- * The version is then saved, with its reviews, under the ID chosen when it was prepared, and handed
- * to the publisher, which rechecks every gate. A bundle that fails a gate is saved and held instead,
- * as TPL-07's one-step path does. Nothing here calls a model.
+ * An approved batch of one prepared candidate's review pair, as the reviewed route's commands read it
+ * (decision 0014): two works of the publication lane, one for each role, of the same pair, candidate,
+ * candidate artifact and plan.
  */
-export async function publishReviewedOperationalCandidate(input: {
-  batchId: string;
-  reviews: ArtifactRef[];
-}) {
-  assertDevelopmentRuntime();
-  if (!/^[-a-zA-Z0-9_:]{1,160}$/.test(input.batchId) || input.reviews.length !== 2)
-    throw Error("REVIEWED_PAIR_ARGUMENTS_INVALID");
-  const { db, drafterDb, valoContentVersions } = await import("@workspace/db");
+export async function readReviewedPairBatch(reader: Reader, batchId: string) {
   const [batch] = (
-    await db.execute(
-      sql`select manifest, manifest_hash, results from valo_inference_batches where id=${input.batchId}`,
+    await reader.execute(
+      sql`select manifest, manifest_hash, results from valo_inference_batches where id=${batchId}`,
     )
   ).rows as { manifest: FiniteManifest; manifest_hash: string; results: Record<string, unknown> }[];
   if (!batch || requestDigest(batch.manifest) !== batch.manifest_hash)
@@ -106,56 +100,47 @@ export async function publishReviewedOperationalCandidate(input: {
     new Set(works.map((w) => w.role)).size !== 2
   )
     throw Error("REVIEWED_PAIR_BATCH_INVALID");
-  const versionId = first.bindings.candidateVersionId;
-
-  // A version already saved under this ID (a rerun after a stop) goes straight to its outcome: one
-  // still a candidate is published or held as the first run would have done, and the publisher
-  // rechecks its gates.
-  const [saved] = await db.select().from(valoContentVersions).where(eq(valoContentVersions.id, versionId));
-  if (saved) {
-    if (saved.candidateHash !== first.candidateHash) throw Error("CANDIDATE_ALREADY_SAVED");
-    if (saved.status !== "candidate")
-      return { id: versionId, decision: saved.status, idempotent: true, rerun: true };
-    const eligibility = evaluateOperationalRelease(saved.bundle);
-    await assertGuideCheckedBeforeRelease(
-      db,
-      versionId,
-      publicationSchema.parse(saved.bundle),
-      saved.attestations as ReleaseAttestations,
-      eligibility,
-    );
-    const release = await releaseOrHold(versionId, eligibility);
-    return { id: versionId, decision: release.decision, release, rerun: true };
-  }
-
-  const current = await readOperationalInferenceReadiness({
-    candidateVersionId: versionId,
+  return {
+    works,
+    results: batch.results,
+    first,
+    candidateVersionId: first.bindings.candidateVersionId,
     candidateArtifact: first.bindings.candidateArtifact,
-  });
-  if (current.row.candidateHash !== first.candidateHash || requestDigest(current.bundle) !== first.caseHash)
-    throw Error("CANDIDATE_BINDING_CHANGED");
+  };
+}
 
+/**
+ * The two reviews of an approved batch's pair. Each review record must be the one the batch settled
+ * for this candidate: the provider response and result the ledger recorded for its work, and the same
+ * candidate, plan, request and server evidence. Each output is read with the candidate's review
+ * schema, and the two must come from two provider responses, one for each role.
+ */
+export async function verifiedPairReviews(
+  reader: Reader,
+  pair: { batchId: string; works: FiniteWork[]; results: Record<string, unknown>; reviews: ArtifactRef[] },
+  current: { candidate: PublicationBundle["candidate"]; serverEvidence: unknown; bundle: PublicationBundle },
+) {
   // The finite allocation's ledger: a review counts only once its work there is settled, with the
   // provider response and result the batch recorded.
   const [ledger] = (
-    await db.execute(
+    await reader.execute(
       sql`select state from valo_inference_budgets where id=${additionalInferenceAllocation.id}`,
     )
   ).rows as {
     state: { entries?: { runKey: string; status: string; responseId?: string; resultRef?: string }[] };
   }[];
   const records = await Promise.all(
-    input.reviews.map(async (ref) => ({
+    pair.reviews.map(async (ref) => ({
       ref,
       record: JSON.parse((await getPublicationArtifact(ref)).toString()) as ReviewRecord,
     })),
   );
   const providerIds = new Set<string>();
   const reviewed = records.map(({ ref, record }) => {
-    const work = works.find((w) => w.role === record.role);
-    const settled = work ? (batch.results[work.key] as ManagedCompletionResult | undefined) : undefined;
+    const work = pair.works.find((w) => w.role === record.role);
+    const settled = work ? (pair.results[work.key] as ManagedCompletionResult | undefined) : undefined;
     const entry = work
-      ? ledger?.state.entries?.find((e) => e.runKey === `${input.batchId}:${work.key}`)
+      ? ledger?.state.entries?.find((e) => e.runKey === `${pair.batchId}:${work.key}`)
       : undefined;
     if (
       !work ||
@@ -181,12 +166,18 @@ export async function publishReviewedOperationalCandidate(input: {
   });
   if (providerIds.size !== 2 || new Set(reviewed.map((r) => r.record.role)).size !== 2)
     throw Error("REVIEWS_NOT_INDEPENDENT");
+  return reviewed;
+}
 
-  // The prepared bundle, now with its two reviews and, for content that is not general, the
-  // enhanced checks both reviews ran.
-  const prepared = current.bundle;
-  const bundle: PublicationBundle = {
-    ...prepared,
+/**
+ * What a prepared bundle gains from its two reviews: the reviews themselves and, for content that is
+ * not general, the enhanced checks both reviews ran.
+ */
+export function pairReviewParts(
+  prepared: PublicationBundle,
+  reviewed: Awaited<ReturnType<typeof verifiedPairReviews>>,
+): Pick<PublicationBundle, "reviews" | "enhancedChecks"> {
+  return {
     reviews: reviewed.map(({ record, output }) => ({
       runId: record.providerResponseId,
       model: record.model,
@@ -206,6 +197,65 @@ export async function publishReviewedOperationalCandidate(input: {
             reviewed.map(({ record, output }) => ({ role: record.role, output })),
           ),
   };
+}
+
+/**
+ * Decision 0014: publish a prepared candidate once its two finite reviews have run. Each review
+ * record must be the one the owner-approved batch settled for this candidate: the same candidate,
+ * plan, request and server evidence, and the provider response the ledger recorded for its work.
+ * The version is then saved, with its reviews, under the ID chosen when it was prepared, and handed
+ * to the publisher, which rechecks every gate. A bundle that fails a gate is saved and held instead,
+ * as TPL-07's one-step path does. Nothing here calls a model.
+ */
+export async function publishReviewedOperationalCandidate(input: {
+  batchId: string;
+  reviews: ArtifactRef[];
+}) {
+  assertDevelopmentRuntime();
+  if (!/^[-a-zA-Z0-9_:]{1,160}$/.test(input.batchId) || input.reviews.length !== 2)
+    throw Error("REVIEWED_PAIR_ARGUMENTS_INVALID");
+  const { db, drafterDb, valoContentVersions } = await import("@workspace/db");
+  const pair = await readReviewedPairBatch(db, input.batchId);
+  const { first } = pair;
+  const versionId = pair.candidateVersionId;
+
+  // A version already saved under this ID (a rerun after a stop) goes straight to its outcome: one
+  // still a candidate is published or held as the first run would have done, and the publisher
+  // rechecks its gates.
+  const [saved] = await db.select().from(valoContentVersions).where(eq(valoContentVersions.id, versionId));
+  if (saved) {
+    if (saved.candidateHash !== first.candidateHash) throw Error("CANDIDATE_ALREADY_SAVED");
+    if (saved.status !== "candidate")
+      return { id: versionId, decision: saved.status, idempotent: true, rerun: true };
+    const eligibility = evaluateOperationalRelease(saved.bundle);
+    await assertGuideCheckedBeforeRelease(
+      db,
+      versionId,
+      publicationSchema.parse(saved.bundle),
+      saved.attestations as ReleaseAttestations,
+      eligibility,
+    );
+    const release = await releaseOrHold(versionId, eligibility);
+    return { id: versionId, decision: release.decision, release, rerun: true };
+  }
+
+  const current = await readOperationalInferenceReadiness({
+    candidateVersionId: versionId,
+    candidateArtifact: pair.candidateArtifact,
+  });
+  if (current.row.candidateHash !== first.candidateHash || requestDigest(current.bundle) !== first.caseHash)
+    throw Error("CANDIDATE_BINDING_CHANGED");
+
+  const reviewed = await verifiedPairReviews(
+    db,
+    { ...pair, batchId: input.batchId, reviews: input.reviews },
+    current,
+  );
+
+  // The prepared bundle, now with its two reviews and, for content that is not general, the
+  // enhanced checks both reviews ran.
+  const prepared = current.bundle;
+  const bundle: PublicationBundle = { ...prepared, ...pairReviewParts(prepared, reviewed) };
   bundle.manifest = {
     ...prepared.manifest,
     status:
