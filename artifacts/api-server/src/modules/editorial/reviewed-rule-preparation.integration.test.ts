@@ -84,13 +84,28 @@ test(
         )
       ).rows;
     const before = await rows();
-    const latest = Number(
-      (
-        await db.execute<{ version: number }>(
-          sql`select coalesce(max(version), 0)::int as version from valo_rule_releases where rule_id = 'cac-business-name-814'`,
-        )
-      ).rows[0]!.version,
+    const latestStored = async () =>
+      Number(
+        (
+          await db.execute<{ version: number }>(
+            sql`select coalesce(max(version), 0)::int as version from valo_rule_releases where rule_id = 'cac-business-name-814'`,
+          )
+        ).rows[0]!.version,
+      );
+    // A stored version of the rule, synthetic and withdrawn, so that the next version is counted past one
+    // (the requirements check never reads it). It is taken away again.
+    const earlier = { id: randomUUID(), version: (await latestStored()) + 1 };
+    await db.execute(
+      sql`insert into valo_rule_releases (id, rule_id, version, status, rule, publication_bundle, manifest_hash, published_at)
+          values (${earlier.id}::uuid, 'cac-business-name-814', ${earlier.version}, 'withdrawn',
+            ${JSON.stringify({ id: "cac-business-name-814", version: earlier.version, synthetic: true })}::jsonb,
+            '{"synthetic":true}'::jsonb, ${"b".repeat(64)}, now())`,
     );
+    t.after(async () => {
+      await db.execute(sql`delete from valo_rule_releases where id = ${earlier.id}::uuid`);
+    });
+    const latest = await latestStored();
+    assert.ok(latest >= 1, "a version is stored");
 
     // 1. Held: with no rights record for this route, the rule waits on the owner. Nothing is kept.
     const held = await prepareReviewedRuleCandidate("cac-business-name-814", { captures: [capture], now });
