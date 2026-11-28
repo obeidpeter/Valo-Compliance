@@ -1431,6 +1431,13 @@
     },
     {
       "requirement": "ADM-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/editorial/review-preparation-law-template.integration.test.ts",
+      "test": "review work on a held template that states the law prepares its next candidate with that template's own preparer, from the daily check's captures of its sources",
+      "proves": "Against real PostgreSQL, the worker prepares a held version of TPL-31 from its review work with that template's own preparer: with no capture of its sources it stops with TEMPLATE_HAS_NO_BOUND_SOURCE, with stand-in captures and no approved policy it is not ready for policy_not_owner_approved and nothing is kept, and only under a supposed approval of the policy is its candidate kept for its two reviews, with nothing sent to a model, spent or published."
+    },
+    {
+      "requirement": "ADM-003",
       "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
       "test": "review work on a held template asks for its next candidate, and says where each preparation stands and that its reviews wait for the owner's allocation",
