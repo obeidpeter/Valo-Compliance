@@ -103,6 +103,11 @@ A guide that says what the law requires takes the same steps 2 to 5, under a pac
 kind and after its own preparation. [Preparing a guide for its two reviews](guidance-preparation.md)
 says what differs.
 
+A requirements-check rule from the repository is prepared for the same route:
+[Preparing a rule for its two reviews](rule-review-preparation.md) says how. Its reviews and its
+release request are not built yet, and every rule is held today on its rights record, which only the
+owner can give for this route.
+
 A candidate past its review date, or one whose version ID or version number is already saved, is
 refused from step 2 on; prepare it again. For content that is not general, the two reviews also
 answer EDP-005's enhanced checks. A check passes only when both reviews pass it and quote a passage

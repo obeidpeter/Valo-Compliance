@@ -148,6 +148,12 @@ Rules that apply now:
   source check under a day old; such a release changes only its status, and is never published
   again once superseded or withdrawn. Its sources are marked current only by `guideSourceDecision`,
   as a guide's are.
+- A rule is prepared for the reviewed route only from the repository's prepared rules
+  (`preparedRuleIds`), by `buildReviewedRule` (`docs/architecture/reviewed-route.md`, part 3). Each
+  rule's rights record adopts a version's wording by the owner's signature, which that route does not
+  have, so the route holds a rule until the owner chooses a rights record for it there
+  (`reviewedRouteRights`). Never set one without the owner's explicit, current choice of its exact
+  text.
 - A guide that says what the law requires is released only under the guidance policy
   (`guidancePolicy`, read from `docs/valo/policies/guidance-publication-policy.md`), never under
   the templates' policy; the owner's sign-off in the staff library and its readers check the same

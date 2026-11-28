@@ -2333,6 +2333,13 @@
       "proves": "For each of the four employment guides, every word of the guide is placed in its claim map and every sentence about the Labour Act names a passage; with no passage supplied each such sentence is reported as not bound and no claim is made. The test has no official words to read, so it does not show that a quotation is in the Act."
     },
     {
+      "requirement": "EDP-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/reviewed-rule.test.ts",
+      "test": "a rule with today's capture of its source, a current amendment record and a rights record for this route waits only for its two reviews, and the registry admits it once they pass",
+      "proves": "A rule prepared in the repository is built for the reviewed route with its source bound to today's capture of its official text and current on the text's amendment record, its claims, the guidance policy and a drafting record that says only what is known of how it was written; nothing but its two reviews holds it, and with two passing stand-in reviews the rule registry admits the release."
+    },
+    {
       "requirement": "EDP-004",
       "job": "foundation",
       "file": "scripts/src/valo/publication.test.ts",
@@ -2438,6 +2445,13 @@
       "proves": "In a disposable copy of the database, with stand-in reviews that are not reviews, a guide is released by the real publisher with the five enhanced checks (controlling text, amendments, effective dates, exceptions and jurisdiction) recorded as passed by both reviews on its stored version, and only on the development owner's check of that exact candidate's sources from within the last day."
     },
     {
+      "requirement": "EDP-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/reviewed-rule.test.ts",
+      "test": "a source with no copy checked within the last day, a copy that lacks its passage, or an amendment record out of date holds the rule",
+      "proves": "A rule on the reviewed route is held whole when its source has no copy checked within the last day, when the copy lacks the passage the rule quotes, or when the text's amendment record is out of date; its legal scope is then unverified and its source is not marked current."
+    },
+    {
       "requirement": "EDP-006",
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/publication/operational-mechanical.test.ts",
@@ -2478,6 +2492,20 @@
       "file": "artifacts/api-server/src/modules/publication/guidance-release.test.ts",
       "test": "without the owner's approval the gate holds each guide built from the repository for the policy and what rests on it",
       "proves": "Supposing no approval of the policy file is recorded, eight of the ten mechanical checks pass and the scope and rights checks fail for each of the ten guides whose passages the repository keeps, and the gate holds each guide for the policy and the rights record that rests on it, and for no other reason apart from an unbound sentence in two guides and the two missing reviews."
+    },
+    {
+      "requirement": "EDP-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/reviewed-rule.test.ts",
+      "test": "each mechanical check fails on what it measures",
+      "proves": "Each of the ten mechanical checks the gate requires of a rule fails on the fault it measures: a body that is not the rule, a quotation its passage lacks, a review date past its sources' freshness, a policy other than the guidance policy, a number its quotation lacks, another rights record, a blank title, another disclosure, a calculation hash that is not the code's, and a critical scenario the rule does not give."
+    },
+    {
+      "requirement": "EDP-006",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/editorial/reviewed-rule-preparation.integration.test.ts",
+      "test": "a rule prepared in the repository is kept for its two reviews only when nothing else holds it",
+      "proves": "On a real database a rule prepared in the repository is kept for its reviews only when nothing else holds it: with no rights record for the reviewed route, or no copy of its source checked within the last day, no row or file is kept; once kept, through drafting's own login, as its next version, its Word and PDF files hold the whole rule sheet and read back exactly as they were inspected."
     },
     {
       "requirement": "EDP-007",
