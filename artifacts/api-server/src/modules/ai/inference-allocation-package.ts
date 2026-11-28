@@ -3,6 +3,8 @@ import { resolve } from "node:path";
 import {
   invoiceQuotationGuideIds,
   isPracticalGuideId,
+  isPreparedRuleId,
+  preparedRuleIds,
   reminderInventoryGuideIds,
 } from "@workspace/valo-core";
 import { createHash } from "node:crypto";
@@ -49,8 +51,9 @@ export type FiniteAllocationPackage = {
  * The request preparers a package admits work from. A package names exactly one set, so each owner
  * approval covers one kind of work: the template review pairs (with the customer cases the
  * original package already covered), the case-bound editorial cases (decision 0015), the review
- * pairs of guides that say what the law requires (decision 0017), or the challenges of the
- * requirements check's frozen scenarios (RUL-008).
+ * pairs of guides that say what the law requires (decision 0017), the challenges of the
+ * requirements check's frozen scenarios (RUL-008), or the review pairs of requirements-check rules
+ * prepared for the reviewed route (docs/architecture/reviewed-route.md, part 3).
  */
 export const finitePackagePreparers = {
   templatePairs: ["operational-template-pair-v1"],
@@ -59,6 +62,7 @@ export const finitePackagePreparers = {
   guidePairs: ["guide-review-pair-v1"],
   practicalPairs: ["practical-business-guide-pair-v1"],
   reminderInventoryPairs: ["practical-reminder-inventory-pair-v1"],
+  rulePairs: ["rule-review-pair-v1"],
 } as const;
 export type FinitePackagePreparers = (typeof finitePackagePreparers)[keyof typeof finitePackagePreparers];
 /**
@@ -114,6 +118,7 @@ export async function prepareFiniteAllocationPackage(
   const editorialCases = selected === finitePackagePreparers.editorialCases;
   const checkerChallenges = selected === finitePackagePreparers.checkerChallenges;
   const guidePairs = selected === finitePackagePreparers.guidePairs;
+  const rulePairs = selected === finitePackagePreparers.rulePairs;
   const practical = practicalReviewLimitsFor(selected);
   const sources = await Promise.all(
     scopePaths.map(async (path) => {
@@ -183,18 +188,25 @@ export async function prepareFiniteAllocationPackage(
               "Template review pairs, customer cases, other content and other evaluation lanes are outside this package.",
               "The allocation is a maximum additional spend, not a guarantee of completing every permitted attempt.",
             ]
-          : guidePairs
+          : rulePairs
             ? [
-                `Supported guide review pairs: ${mappedGuideIds.join(", ")}; each requires a prepared candidate bound to current captures of its official sources, under the guidance policy as the owner approved it.`,
-                guideReviewsNeedOwnerCheck,
-                "Template review pairs, editorial cases, customer cases and other content are outside this package.",
+                `Supported rule review pairs: ${preparedRuleIds.join(", ")}; each requires a rule prepared in the repository and built for the reviewed route from current captures of its official sources, under the guidance policy as the owner approved it and with a rights record the owner chose for that route.`,
+                "Each pair is built again from the rule's own sources and records and checked before admission and dispatch. A review is an AI check, never legal, tax or regulatory review.",
+                "Template review pairs, guides, editorial cases, checker challenges, customer cases and other content are outside this package.",
                 "The allocation is a maximum additional spend, not a guarantee of completing every permitted attempt.",
               ]
-            : [
-                `Supported exact operational preparers: ${operationalInferenceTemplateIds.join(", ")}; each requires a saved candidate and verified private evidence.`,
-                "Other content and all evaluation lanes require their real request preparers and eligibility checks before delegated admission.",
-                "The allocation is a maximum additional spend, not a guarantee of completing every permitted attempt.",
-              ],
+            : guidePairs
+              ? [
+                  `Supported guide review pairs: ${mappedGuideIds.join(", ")}; each requires a prepared candidate bound to current captures of its official sources, under the guidance policy as the owner approved it.`,
+                  guideReviewsNeedOwnerCheck,
+                  "Template review pairs, editorial cases, customer cases and other content are outside this package.",
+                  "The allocation is a maximum additional spend, not a guarantee of completing every permitted attempt.",
+                ]
+              : [
+                  `Supported exact operational preparers: ${operationalInferenceTemplateIds.join(", ")}; each requires a saved candidate and verified private evidence.`,
+                  "Other content and all evaluation lanes require their real request preparers and eligibility checks before delegated admission.",
+                  "The allocation is a maximum additional spend, not a guarantee of completing every permitted attempt.",
+                ],
   };
 }
 export function allocationPackageId(value: FiniteAllocationPackage) {
@@ -291,6 +303,27 @@ export function assertWorkPackageMembership(
     return;
   }
   if (contentId && isPracticalGuideId(contentId)) throw Error("WORK_OUTSIDE_PACKAGE");
+  // A rule package admits the review pairs of the rules prepared in the repository and nothing else, and
+  // no other package admits a rule's pair. The binding checks build each pair again from the rule's own
+  // sources and records before admission and dispatch (docs/architecture/reviewed-route.md, part 3).
+  const rulePairs = requestDigest(pkg.supportedPreparers) === requestDigest(finitePackagePreparers.rulePairs);
+  if (Boolean(contentId && isPreparedRuleId(contentId)) !== rulePairs) throw Error("WORK_OUTSIDE_PACKAGE");
+  if (rulePairs) {
+    if (
+      work.lane !== "publication" ||
+      !contentId ||
+      workContentId(work) !== contentId ||
+      !work.pair ||
+      !["factual", "challenge"].includes(work.role) ||
+      work.retryOf !== undefined ||
+      !work.bindings.candidateVersionId ||
+      !work.bindings.operationalPlan ||
+      work.bindings.caseId !== null ||
+      work.bindings.corpus !== null
+    )
+      throw Error("WORK_OUTSIDE_PACKAGE");
+    return;
+  }
   // An editorial-case package admits its case pairs and nothing else; no other package admits them.
   // The binding checks rebuild each pair from the case preparer before admission and dispatch.
   const editorialCases =

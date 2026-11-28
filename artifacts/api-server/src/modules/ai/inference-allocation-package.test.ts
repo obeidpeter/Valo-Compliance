@@ -12,6 +12,7 @@ import {
 import { additionalInferenceAllocation, requestDigest } from "./inference-budget";
 import type { FiniteWork } from "./inference-batch-dispatch";
 import { readFile } from "node:fs/promises";
+import { preparedRuleIds } from "@workspace/valo-core";
 const work = (): FiniteWork => ({
   key: "controlled-factual",
   lane: "publication",
@@ -265,6 +266,126 @@ test("only a guide package admits a guide's review pairs, and a guide package ad
   assert.throws(() => assertWorkPackageMembership(evaluation, guides, null), /WORK_OUTSIDE_PACKAGE/);
 });
 
+// docs/architecture/reviewed-route.md, part 3: only a package of the rules' kind admits a rule's review
+// pair, and it admits nothing else. The binding check the dispatcher makes before admission and dispatch
+// builds the pair again from the rule's own sources and records (tested in the real-bindings database test).
+test("only a rule package admits a rule's review pairs, and a rule package admits nothing else", async () => {
+  const at = new Date();
+  const templates = await prepareFiniteAllocationPackage(at),
+    guides = await prepareFiniteAllocationPackage(at, finitePackagePreparers.guidePairs),
+    checker = await prepareFiniteAllocationPackage(at, finitePackagePreparers.checkerChallenges),
+    editorial = await prepareFiniteAllocationPackage(at, finitePackagePreparers.editorialCases),
+    rules = await prepareFiniteAllocationPackage(at, finitePackagePreparers.rulePairs);
+  validateAllocationPackage(rules);
+  assert.deepEqual(rules.supportedPreparers, ["rule-review-pair-v1"]);
+  assert.equal(new Set([templates, guides, checker, editorial, rules].map(allocationPackageId)).size, 5);
+  // The same inventory, allocation and attempt limits as the other packages: only the kind differs.
+  assert.deepEqual(rules.contentIds, templates.contentIds);
+  assert.deepEqual(rules.laneAttemptLimits, templates.laneAttemptLimits);
+  assert.equal(requestDigest(rules.allocation), requestDigest(additionalInferenceAllocation));
+  assert.ok(
+    rules.holds[0]!.startsWith(
+      "Supported rule review pairs: CAC-BUSINESS-NAME-814, NDPA-27-COLLECTION-INFORMATION, NTAA-11-COMPANY-RETURN, NAFDAC-F33-PRODUCT-REGISTRATION; ",
+    ),
+    rules.holds[0],
+  );
+  assert.match(rules.holds[0]!, /with a rights record the owner chose for that route/);
+  assert.match(rules.holds[1]!, /never legal, tax or regulatory review/);
+
+  // The factual work of a planned review pair of `templateId`'s prepared candidate.
+  const planned = (templateId: string, change: Partial<FiniteWork> = {}): FiniteWork => {
+    const w = { ...work(), ...change };
+    w.bindings = {
+      ...w.bindings,
+      candidateArtifact: {
+        id: "33333333-3333-4333-8333-333333333333",
+        hash: "d".repeat(64),
+        extension: "json",
+        templateId,
+      },
+    };
+    return w;
+  };
+  // Each rule prepared in the repository, factual or challenge, with its plan, belongs to the rule package.
+  for (const id of preparedRuleIds) {
+    assert.doesNotThrow(() => assertWorkPackageMembership(planned(id), rules, id));
+    assert.doesNotThrow(() => assertWorkPackageMembership(planned(id, { role: "challenge" }), rules, id));
+  }
+  // No other package admits a rule's pair.
+  for (const other of [templates, guides, checker, editorial])
+    assert.throws(
+      () => assertWorkPackageMembership(planned("CAC-BUSINESS-NAME-814"), other, "CAC-BUSINESS-NAME-814"),
+      /WORK_OUTSIDE_PACKAGE/,
+    );
+  // A rule's work must be a planned review pair of the rule its candidate names, and nothing more.
+  const unplanned = planned("CAC-BUSINESS-NAME-814");
+  delete unplanned.bindings.operationalPlan;
+  const unbound = planned("CAC-BUSINESS-NAME-814");
+  unbound.bindings.candidateVersionId = null;
+  const withCase = planned("CAC-BUSINESS-NAME-814");
+  withCase.bindings.caseId = "EVAL-EDP-C001";
+  for (const [outside, contentId] of [
+    [planned("CAC-BUSINESS-NAME-814"), "NTAA-11-COMPANY-RETURN"],
+    [planned("CAC-BUSINESS-NAME-814", { pair: null }), "CAC-BUSINESS-NAME-814"],
+    [planned("CAC-BUSINESS-NAME-814", { retryOf: "earlier" }), "CAC-BUSINESS-NAME-814"],
+    [planned("CAC-BUSINESS-NAME-814", { role: "customer" }), "CAC-BUSINESS-NAME-814"],
+    [unplanned, "CAC-BUSINESS-NAME-814"],
+    [unbound, "CAC-BUSINESS-NAME-814"],
+    [withCase, "CAC-BUSINESS-NAME-814"],
+    // The rule's own id is not its requirement version, and no other rule is prepared.
+    [planned("cac-business-name-814"), "cac-business-name-814"],
+    [planned("CAC-BUSINESS-NAME-815"), "CAC-BUSINESS-NAME-815"],
+  ] as const)
+    assert.throws(() => assertWorkPackageMembership(outside, rules, contentId), /WORK_OUTSIDE_PACKAGE/);
+  // And the rule package admits nothing else: not a template's pair or a guide's, even one planned for its
+  // own prepared candidate, a customer case, an editorial case or a checker challenge.
+  for (const id of ["TPL-07", "GUD-01"]) {
+    assert.throws(() => assertWorkPackageMembership(work(), rules, id), /WORK_OUTSIDE_PACKAGE/);
+    assert.throws(() => assertWorkPackageMembership(planned(id), rules, id), /WORK_OUTSIDE_PACKAGE/);
+  }
+  const customerCase = rules.corpora.find((c) => c.name === "customer-ai")!.cases[0]!;
+  const customer: FiniteWork = {
+    ...work(),
+    lane: "customer",
+    role: "customer",
+    pair: null,
+    caseHash: customerCase.hash,
+    bindings: { candidateVersionId: null, corpus: "customer-ai", caseId: customerCase.id, sourceFiles: [] },
+  };
+  assert.throws(() => assertWorkPackageMembership(customer, rules, null), /WORK_OUTSIDE_PACKAGE/);
+  const editorialCase = rules.corpora.find((c) => c.name === "editorial")!.cases[0]!;
+  const evaluation: FiniteWork = {
+    ...work(),
+    lane: "editorial_evaluation",
+    caseHash: editorialCase.hash,
+    bindings: {
+      candidateVersionId: "702d4a86-27de-5ff7-8d76-d590426594ec",
+      corpus: "editorial",
+      caseId: editorialCase.id,
+      sourceFiles: [],
+      historicalCutoff: at.toISOString(),
+    },
+  };
+  assert.throws(() => assertWorkPackageMembership(evaluation, rules, null), /WORK_OUTSIDE_PACKAGE/);
+  const checkerCase = rules.corpora.find((c) => c.name === "checker")!.cases[0]!;
+  const challenge: FiniteWork = {
+    ...work(),
+    lane: "checker_challenge",
+    role: "challenge",
+    pair: null,
+    caseHash: checkerCase.hash,
+    bindings: {
+      candidateVersionId: "44444444-4444-4444-8444-444444444444",
+      corpus: "checker",
+      caseId: checkerCase.id,
+      sourceFiles: [],
+      historicalCutoff: at.toISOString(),
+    },
+  };
+  assert.doesNotThrow(() => assertWorkPackageMembership(challenge, checker, null));
+  assert.throws(() => assertWorkPackageMembership(challenge, rules, null), /WORK_OUTSIDE_PACKAGE/);
+});
+
 test("a package names one known preparer set", async () => {
   await assert.rejects(
     () => prepareFiniteAllocationPackage(new Date(), ["another-preparer"] as never),
@@ -275,6 +396,7 @@ test("a package names one known preparer set", async () => {
     [],
     ["editorial-case-pair-v1", "operational-template-pair-v1"],
     ["guide-review-pair-v1", "operational-template-pair-v1"],
+    ["rule-review-pair-v1", "guide-review-pair-v1"],
     ["x"],
   ])
     assert.throws(

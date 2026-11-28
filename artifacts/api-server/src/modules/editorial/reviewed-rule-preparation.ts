@@ -1,6 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { sql } from "drizzle-orm";
-import { digest, evaluatePublication, isPreparedRuleId } from "@workspace/valo-core";
+import { z } from "zod";
+import {
+  candidateDigest,
+  digest,
+  evaluatePublication,
+  isPreparedRuleId,
+  publicationSchema,
+} from "@workspace/valo-core";
 import { renderDocument } from "../../lib/valo-render";
 import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
 import {
@@ -9,15 +16,25 @@ import {
   developmentPublicationOnly,
   guideAmendmentRecords,
   guidancePolicy,
+  getPublicationArtifact,
   guideOpenReasons,
   inspectOperationalExports,
   putPublicationArtifact,
+  readPreparedCandidate,
   savePreparedCandidate,
   type AmendmentRecord,
+  type GuideInstrument,
+  type GuidePassages,
 } from "../publication";
-import { currentSourceCaptures, type CurrentSourceCapture } from "../sources";
+import { currentSourceCaptures, verifyReleasedSources, type CurrentSourceCapture } from "../sources";
 import { ownerRuleCandidates, type OwnerRuleCandidate } from "./owner-rule-candidates";
-import { buildReviewedRule, reviewedRuleBundle, RULE_SHEET_NOTICE } from "./reviewed-rule";
+import {
+  buildReviewedRule,
+  reviewedRuleBundle,
+  ruleScenarioResults,
+  RULE_SHEET_NOTICE,
+} from "./reviewed-rule";
+import type { RuleReviewInputs, RuleServerEvidence } from "./reviewed-rule-review";
 import { unique } from "./rule-sources";
 
 /** Where a rule on the reviewed route was written, as its candidate keeps it: what is known, and no more. */
@@ -163,4 +180,172 @@ export async function prepareReviewedRuleCandidate(ruleId: string, options: Opti
     });
   });
   return { ...outcome, state: "awaiting_reviews" as const, reasons: [], id: versionId, candidateArtifact };
+}
+
+const artifactRef = z
+  .object({
+    id: z.string().regex(/^[a-f0-9-]{36}$/),
+    hash: z.string().regex(/^[a-f0-9]{64}$/),
+    extension: z.enum(["json", "docx", "pdf"]),
+  })
+  .strict();
+/** What a rule's prepared candidate keeps of its evidence. */
+const ruleAttestations = z
+  .object({
+    sourceSnapshots: z.record(z.string(), z.string()),
+    passages: z.array(
+      z
+        .object({
+          sourceId: z.string(),
+          id: z.string(),
+          recordedLocator: z.string(),
+          sections: z.array(z.string()),
+          instrument: z.custom<GuideInstrument>((v) => typeof v === "object" && v !== null),
+        })
+        .strict(),
+    ),
+    provenance: artifactRef,
+    exports: z.object({ docx: artifactRef, pdf: artifactRef }).strict(),
+    exportReport: artifactRef,
+    reviews: z.array(z.unknown()).length(0),
+  })
+  .strict();
+
+/**
+ * A rule's prepared candidate, read back and checked before its reviews are admitted or sent: the kept
+ * artifact must be a prepared rule's, not past its review date, and no version of the rule stored
+ * under its number on either route. Each capture its sources are bound to must still be the current one,
+ * checked within the last day and holding the words the rule quotes, as its release will require. It is
+ * built again from the repository's rule and its own sources, the captures they were bound to and the
+ * passages read from them, under the guidance policy as it stands, and must be exactly what is kept: its
+ * candidate, sources, rights record, checks, files and manifest. Its files are inspected again. Nothing
+ * is written and no model is called. It reads private storage, so it runs outside any transaction.
+ */
+export async function readReviewedRuleReadiness(
+  binding: {
+    candidateVersionId: string;
+    candidateArtifact: { id: string; hash: string; extension: "json"; templateId: string };
+  },
+  options: Omit<Options, "captures"> = {},
+) {
+  if (!/^[a-f0-9-]{36}$/.test(binding.candidateVersionId)) throw Error("CANDIDATE_VERSION_REQUIRED");
+  const row = await readPreparedCandidate(binding.candidateArtifact);
+  if (
+    row.versionId !== binding.candidateVersionId ||
+    row.templateId !== binding.candidateArtifact.templateId ||
+    !isPreparedRuleId(row.templateId)
+  )
+    throw Error("CANDIDATE_BINDING_CHANGED");
+  const now = options.now ?? new Date();
+  if (Date.parse(row.reviewBy) <= +now) throw Error("CANDIDATE_UNAVAILABLE_OR_STALE");
+  const prepared = (options.candidates ?? ownerRuleCandidates).find(
+    (c) => c.rule.requirementVersionId === row.templateId,
+  );
+  if (!prepared || prepared.rule.id !== row.slug) throw Error("CANDIDATE_REQUEST_PREPARER_UNAVAILABLE");
+  const bundle = publicationSchema.parse(row.bundle),
+    a = ruleAttestations.parse(row.attestations);
+  if (
+    bundle.candidate.id !== row.templateId ||
+    bundle.candidate.version !== row.version ||
+    bundle.candidate.hash !== row.candidateHash ||
+    candidateDigest(bundle.candidate) !== row.candidateHash
+  )
+    throw Error("CANDIDATE_BINDING_CHANGED");
+  // A version of the rule stored under its number, on either route, ends its review.
+  const { db } = await import("@workspace/db");
+  const taken = await db.execute(
+    sql`select 1 from valo_rule_releases where rule_id = ${prepared.rule.id} and version = ${row.version} limit 1`,
+  );
+  if (taken.rows.length) throw Error("CANDIDATE_ALREADY_SAVED");
+  // The release's own check of its sources: each bound capture is still the current copy of its official
+  // source, checked within the last day, and holds the passage and every quotation.
+  await verifyReleasedSources(db, bundle, a.sourceSnapshots, now);
+
+  // The captures its sources were bound to, and the passages read from them, as the candidate keeps them.
+  const captures = bundle.sources.flatMap((s) => {
+    const source = prepared.sources.find((x) => x.id === s.id),
+      read = a.passages.find((p) => p.sourceId === s.id),
+      snapshotId = a.sourceSnapshots[s.id];
+    return source && read && snapshotId
+      ? [{ leadId: source.leadId, url: s.url, snapshotId, checkedAt: s.retrievedAt }]
+      : [];
+  });
+  const passages: GuidePassages = (id) => {
+    const read = a.passages.find((p) => p.id === id),
+      source = read && bundle.sources.find((s) => s.id === read.sourceId);
+    return read && source
+      ? {
+          id: read.id,
+          recordedLocator: read.recordedLocator,
+          sections: read.sections,
+          instrument: read.instrument,
+          text: source.text,
+          hash: source.hash,
+        }
+      : undefined;
+  };
+  const { policy } = await guidancePolicy();
+  const built = buildReviewedRule(prepared, {
+    version: row.version,
+    captures,
+    passages,
+    records: options.records ?? guideAmendmentRecords,
+    policy,
+    now,
+  });
+  const files = {
+    docx: await getPublicationArtifact(a.exports.docx),
+    pdf: await getPublicationArtifact(a.exports.pdf),
+  };
+  const exportReport = await inspectOperationalExports(
+    built.candidate,
+    files,
+    RULE_SHEET_NOTICE,
+    built.sheet,
+  );
+  const kept = JSON.parse((await getPublicationArtifact(a.exportReport)).toString());
+  if (!exportReport.passed || digest(exportReport) !== digest(kept))
+    throw Error("SAVED_EXPORT_CHECK_CHANGED");
+  const rebuilt = reviewedRuleBundle(built, exportReport);
+  if (built.holds.length || digest(rebuilt.bundle) !== digest(bundle))
+    throw Error("SAVED_PLAN_INPUT_CHANGED");
+  // Nothing but its two reviews may hold it now, as when it was kept.
+  if (guideOpenReasons(evaluatePublication(bundle, now)).length) throw Error("SAVED_PLAN_MECHANICAL_HOLD");
+  const provenance = JSON.parse((await getPublicationArtifact(a.provenance)).toString());
+  if (digest(provenance) !== digest(repositoryRuleProvenance(prepared)))
+    throw Error("SAVED_PLAN_INPUT_CHANGED");
+
+  const serverEvidence: RuleServerEvidence = {
+    candidateHash: bundle.candidate.hash,
+    policyHash: policy.hash,
+    sourceCheckedAt: bundle.candidate.sourceCheckDate,
+    ruleId: prepared.rule.id,
+    version: row.version,
+    sourceSnapshots: a.sourceSnapshots,
+    provenanceArtifactHash: a.provenance.hash,
+    exportReportArtifactHash: a.exportReport.hash,
+    authoringRoute: "repository-rule",
+    sourceAttribution: "Written in the repository; no independently recorded drafting model or run",
+    performedChecks: bundle.mechanicalChecks.map((c) => c.name),
+  };
+  const reviewInputs: RuleReviewInputs = {
+    rights: bundle.rights,
+    provenance,
+    exports: exportReport.formats,
+    // What the requirements check gives for each scenario, beside what the rule expects.
+    scenarios: ruleScenarioResults(prepared, built.rule, now).map((result) => ({
+      ...result,
+      facts: prepared.scenarios.find((s) => s.id === result.id)?.facts,
+      asOfDate: prepared.scenarios.find((s) => s.id === result.id)?.asOfDate,
+    })),
+  };
+  return {
+    row,
+    prepared,
+    bundle,
+    candidate: bundle.candidate,
+    rule: built.rule,
+    serverEvidence,
+    reviewInputs,
+  };
 }

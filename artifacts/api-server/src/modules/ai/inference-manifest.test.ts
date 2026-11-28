@@ -197,6 +197,7 @@ test("a prepared candidate may be a template or a guide, named by its exact ID",
     "GUIDE-C02",
     "GUIDE-C03",
     "GUIDE-C04",
+    "NTAA-11-COMPANY-RETURN",
   ]) {
     const value = input();
     value.candidateArtifact.templateId = id;
@@ -209,7 +210,17 @@ test("a prepared candidate may be a template or a guide, named by its exact ID",
       ],
     );
   }
-  for (const id of ["GUD-1", "GUD-001", "GUIDE-C05", "GUIDE-C1", "gud-01", "GUD-01 ", "RULE-01", ""]) {
+  for (const id of [
+    "GUD-1",
+    "GUD-001",
+    "GUIDE-C05",
+    "GUIDE-C1",
+    "gud-01",
+    "GUD-01 ",
+    "RULE-01",
+    "",
+    "ntaa-11-company-return",
+  ]) {
     const value = input();
     value.candidateArtifact.templateId = id;
     assert.throws(() => prepareOperationalFiniteManifest(value, now), /FINITE_PREPARATION_BINDING_INVALID/);

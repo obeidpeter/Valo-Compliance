@@ -32,4 +32,5 @@ export * from "./valo-rule-release";
 export * from "./owner-rule-signoff";
 export * from "./reviewed-rule";
 export * from "./reviewed-rule-preparation";
+export * from "./reviewed-rule-review";
 export * from "./reviewed-guide-checks";

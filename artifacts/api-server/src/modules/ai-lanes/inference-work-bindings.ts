@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { createHash } from "node:crypto";
 import { eq, sql } from "drizzle-orm";
-import { candidateDigest, publicationSchema } from "@workspace/valo-core";
+import { candidateDigest, isPreparedRuleId, publicationSchema } from "@workspace/valo-core";
 import { requestDigest, assertFiniteWorkShape } from "../ai";
 import type { FiniteWork } from "../ai";
 const root = resolve(import.meta.dirname, "../../../../..");
@@ -91,17 +91,48 @@ export async function assertFiniteWorkBindings(work: FiniteWork) {
       { db },
       { getPublicationArtifact, OWNER_SOURCE_CHECK_REQUIRED, reviewedGuideChecked },
       { readOperationalInferenceReadiness },
-      { operationalReviewRequests },
+      { operationalReviewRequests, readReviewedRuleReadiness, ruleReviewRequests, RULE_REVIEW_LANE },
     ] = await Promise.all([
       import("@workspace/db"),
       import("../publication"),
       import("./inference-operational-ready"),
       import("../editorial"),
     ]);
-    const current = await readOperationalInferenceReadiness({
-      candidateVersionId: b.candidateVersionId,
-      candidateArtifact: b.candidateArtifact,
-    });
+    const binding = { candidateVersionId: b.candidateVersionId, candidateArtifact: b.candidateArtifact };
+    // A rule prepared in the repository is built again from its own sources and records, and its two
+    // requests from that (docs/architecture/reviewed-route.md, part 3); a template or a guide is read as
+    // it was prepared, and its requests built from that.
+    const rule = isPreparedRuleId(b.candidateArtifact.templateId);
+    type Requests = (reviewAsOf: string) => { role: string; request: unknown }[];
+    const current = rule
+      ? await readReviewedRuleReadiness(binding).then((r) => ({
+          row: r.row,
+          bundle: r.bundle,
+          serverEvidence: r.serverEvidence as unknown,
+          requests: ((reviewAsOf) =>
+            ruleReviewRequests(
+              r.candidate,
+              r.reviewInputs,
+              r.serverEvidence,
+              reviewAsOf,
+              r.bundle.sources,
+            )) as Requests,
+        }))
+      : await readOperationalInferenceReadiness(binding).then((r) => ({
+          row: r.row,
+          bundle: r.bundle,
+          serverEvidence: r.serverEvidence as unknown,
+          requests: ((reviewAsOf) =>
+            operationalReviewRequests(
+              r.candidate,
+              r.rightsInput,
+              r.provenanceInput,
+              r.exportReport,
+              r.serverEvidence,
+              reviewAsOf,
+              r.bundle.sources,
+            )) as Requests,
+        }));
     if (
       current.row.candidateHash !== work.candidateHash ||
       candidateDigest(current.bundle.candidate) !== work.candidateHash
@@ -111,21 +142,15 @@ export async function assertFiniteWorkBindings(work: FiniteWork) {
     if (requestDigest(current.bundle) !== work.caseHash) throw Error("PUBLICATION_BUNDLE_CHANGED");
     const retained = JSON.parse((await getPublicationArtifact(b.operationalPlan)).toString());
     if (
+      // A rule's plan names its own lane, and no other plan does.
+      (retained.manifest?.lane === RULE_REVIEW_LANE) !== rule ||
       retained.manifest?.candidateHash !== work.candidateHash ||
       requestDigest(retained.manifest?.serverEvidence) !== requestDigest(current.serverEvidence) ||
       !Number.isFinite(Date.parse(retained.manifest?.expiresAt)) ||
       Date.parse(retained.manifest.expiresAt) <= Date.now()
     )
       throw Error("OPERATIONAL_PLAN_BINDING_CHANGED");
-    const expected = operationalReviewRequests(
-      current.candidate,
-      current.rightsInput,
-      current.provenanceInput,
-      current.exportReport,
-      current.serverEvidence,
-      retained.manifest.preparedAt,
-      current.bundle.sources,
-    );
+    const expected = current.requests(retained.manifest.preparedAt);
     if (
       requestDigest(expected) !== requestDigest(retained.entries) ||
       requestDigest(expected.find((e) => e.role === work.role)?.request) !== requestDigest(work.request)
@@ -141,7 +166,10 @@ export async function assertFiniteWorkBindings(work: FiniteWork) {
     if (unknown.rows.length) throw Error("HISTORICAL_EXACT_REQUEST_COMPLETION_UNKNOWN");
     // A guide's reviews are admitted and sent only once the development owner has checked its exact
     // candidate's sources, within the last day (decision 0018; docs/architecture/reviewed-route.md, part 2).
+    // A rule's are not: they are admitted and sent only while each capture its sources are bound to is
+    // still the current one, checked within the last day, which the rule's readiness checks (part 3).
     if (
+      !rule &&
       current.bundle.candidate.contentClass === "sourced_guidance" &&
       !(await reviewedGuideChecked(
         db,

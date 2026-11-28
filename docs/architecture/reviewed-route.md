@@ -254,6 +254,38 @@ Settled while building it (slice 3a, first part: the builder):
   and the command says why.
 - **The command.** `finite-inference-run.ts --prepare-rule-candidate <rule>`. Nothing calls a model.
 
+Settled while building it (slice 3a, second part: the reviews):
+- **A package of its own.** `finitePackagePreparers.rulePairs` (`rule-review-pair-v1`) admits the
+  review pairs of the rules prepared in the repository and nothing else, and no other kind admits a
+  rule's pair. Each pair is a factual check and a challenge of one kept candidate, with its plan, and
+  never a retry. Only the owner approves such a package, as any other.
+- **The two requests.** Each reviewer is given:
+  - the rule's candidate, whose body is the rule;
+  - its scenarios, each with its answers, its date and the result the requirements check gives for it;
+  - its rights record, how it was written and its files' inspection;
+  - its sources whole.
+
+  Neither is given the other's verdict (EDP-004). The factual check asks whether the rule says only what
+  its passages support. The challenge looks for a business the rule would mislead, missing exceptions
+  or thresholds, wrong dates or jurisdiction, and scenarios the passages do not support. A rule that is
+  not general also runs EDP-005's five enhanced checks, as a guide does. The requests are kept as a plan
+  of their own lane (`rule_publication_review`). They are run by the executor every review pair runs
+  on, which takes each request's rebuild as an argument.
+- **Built again before admission and dispatch.** The binding checks read the kept candidate and build
+  the rule again with the builder. They build it from the repository's rule, the captures its sources
+  were bound to, the passages read from them and their amendment records, under the guidance policy as
+  it stands. The rebuilt candidate, sources, rights, checks, files and manifest must be exactly the kept
+  ones, and the two requests exactly the planned ones.
+- **Current sources, not an owner's check.** A guide's pair waits on the owner's check of its sources
+  (part 2). A rule's waits on its sources themselves. Each capture it is bound to must still be the
+  current copy of its official source, checked within the last day and holding the rule's passage and
+  quotations. Its release will make the same check (`verifyReleasedSources`).
+- **What it releases: nothing.** The release request and the command that applies it are slice 3b.
+  Every rule is still held on its rights record (above), so no rule's reviews can run today.
+- **The commands.** `finite-allocation-approval.ts prepare <file> --rule-pairs`, then
+  `finite-inference-run.ts --prepare`, `--admit` and `--execute`, as for a guide. The reviews are
+  recorded on review's own login.
+
 ### Part 4: the twenty-three templates
 
 - **A template's claim map.** As a guide's map does, it places every sentence of the template: as a
@@ -301,7 +333,7 @@ Each slice is its own pull request.
 | 1 | **A replaced version closes** (built). This design, then part 1, with a migration for the forms' check, its upgrade test and runbook. Unit tests of which version is live for each mix of states. A database test: the real-bindings test publishes TPL-07's version 2 after version 1 through the real publisher, with two passing synthetic reviews. Version 1 then leaves the catalogue, its file and a new document from it are refused, version 2's are served, and a document made from version 1 reads replaced. | DOC-007, EDT-010, ADM-005 |
 | 2a | **The owner's source check for a guide, in the database and the route** (built). Part 2 apart from the panel: the kept check, the admission's and the publisher's checks, and two migrations for the database's check, with their upgrade tests and runbook. Database tests: with no check, or a day-old one, GUD-02's reviews are not admitted or sent and the guide is not saved or released. With the owner's check of the exact candidate, the stand-in reviews run and the real publisher releases it, bound to the captures checked. Another person's check, a check of another candidate or other captures, and a check while a capture is stale record or release nothing. | EDP-002, EDP-004, EDP-005, EDP-006, ADM-005 |
 | 2b | **The owner's panel** (built). Staff → System → **Guides on the reviewed route**: the list, the candidate's text and passages, what holds it, and the check. Its contract and routes. Tests: the real-bindings database test lists GUD-02 as the owner reads it, with a stale or changed copy holding it and the owner's check counting for a day; unit tests of the inspection's states; and a browser test of the panel on a phone. | EDP-002, EDP-004, CMP-008 |
-| 3a | **A rule's bundle and its reviews** (first part built: the builder, the kept candidate and its command). The builder, the package kind and its binding checks. Database tests: a prepared rule's pair is admitted only under a package of its kind and runs with a stand-in model. A held rule keeps nothing. | EDP-003, EDP-004, EDP-006, ADM-004 |
+| 3a | **A rule's bundle and its reviews** (built). The builder, the package kind and its binding checks. Database tests: a prepared rule's pair is admitted only under a package of its kind and runs with a stand-in model. A held rule keeps nothing. | EDP-003, EDP-004, EDP-006, ADM-004 |
 | 3b | **The release request and restoring a version.** The request command and the restore. Database tests: a reviewed rule is planned and applied from its request. A restored version is released as the next one, and saved results keep their versions. | ADM-004 |
 | 4a | **A template's claim map, its preparer and the proposed policy.** The map's builder and checks, the preparer, and the policy as a file for the owner, with TPL-31, the data processing agreement, mapped first. | EDP-003, EDP-005, EDP-006, ADM-005 |
 | 4b–4e | **The families' maps:** privacy, then commercial, governance and safety, and employment. | EDP-003, EDP-005 |

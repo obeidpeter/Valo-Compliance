@@ -61,13 +61,34 @@ test("a publication review names the exact prepared candidate it reads", () => {
     assert.throws(() => assertFiniteWorkShape(w), /PUBLICATION_CANDIDATE_REQUIRED/);
   }
 });
-test("a publication review may read a prepared template or a prepared guide", () => {
-  for (const id of ["TPL-12", "GUD-01", "GUD-30", "GUIDE-C01", "GUIDE-C02", "GUIDE-C03", "GUIDE-C04"]) {
+test("a publication review may read a prepared template, a prepared guide or a prepared rule", () => {
+  for (const id of [
+    "TPL-12",
+    "GUD-01",
+    "GUD-30",
+    "GUIDE-C01",
+    "GUIDE-C02",
+    "GUIDE-C03",
+    "GUIDE-C04",
+    // A rule prepared in the repository, by its requirement version (the reviewed route, part 3).
+    "CAC-BUSINESS-NAME-814",
+    "NAFDAC-F33-PRODUCT-REGISTRATION",
+  ]) {
     const w = work("publication");
     w.bindings.candidateArtifact!.templateId = id;
     assert.doesNotThrow(() => assertFiniteWorkShape(w));
   }
-  for (const id of ["GUD-1", "GUD-001", "GUIDE-C05", "GUIDE-C1", "gud-01", ""]) {
+  for (const id of [
+    "GUD-1",
+    "GUD-001",
+    "GUIDE-C05",
+    "GUIDE-C1",
+    "gud-01",
+    "",
+    // A rule's own id is not its requirement version, and no other rule is prepared.
+    "cac-business-name-814",
+    "CAC-BUSINESS-NAME-815",
+  ]) {
     const w = work("publication");
     w.bindings.candidateArtifact!.templateId = id;
     assert.throws(() => assertFiniteWorkShape(w), /PUBLICATION_CANDIDATE_REQUIRED/);
