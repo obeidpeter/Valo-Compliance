@@ -3292,6 +3292,55 @@
       "proves": "A restore's replay journal is accepted only when signed with the independent recovery key, from the expected source database and cut between the snapshot and the present, and a tampered, wrongly keyed, wrong-source, stale, pre-snapshot or future journal is refused."
     },
     {
+      "requirement": "OPS-008",
+      "job": "foundation",
+      "file": "lib/db/scripts/expand-only.test.mjs",
+      "test": "a statement that removes, renames or narrows what the previous release uses is refused",
+      "proves": "A migration statement that drops or renames a table, a column, a constraint, an index, a trigger or a function, narrows a column, adds a required column with no default, takes a privilege, changes a role, changes data or runs code the check cannot read is refused, so that the previous release still runs on the schema it leaves."
+    },
+    {
+      "requirement": "OPS-008",
+      "job": "foundation",
+      "file": "lib/db/scripts/expand-only.test.mjs",
+      "test": "a migration the previous release has is never changed or removed",
+      "proves": "A migration the previous release has that is changed by one byte, or gone from the journal, is refused, and only the migrations added since are read for what they do."
+    },
+    {
+      "requirement": "OPS-008",
+      "job": "foundation",
+      "file": "lib/db/scripts/expand-only.test.mjs",
+      "test": "a refused statement passes only on a reviewed exception for its exact text",
+      "proves": "A refused statement passes only on an exception for its exact text that gives a reason, and one that changes data only when its exception names a runbook that exists; an exception that names no refused statement is refused itself."
+    },
+    {
+      "requirement": "OPS-008",
+      "job": "foundation",
+      "file": "scripts/src/valo/database-tests.test.ts",
+      "test": "another release's job runs against this schema: only the steps that set up the database come from this checkout",
+      "proves": "Run against another release's checkout, the database job takes its migrations, logins and queue from this checkout and every other step from that release, and it takes nothing but another checkout with its own workflow."
+    },
+    {
+      "requirement": "OPS-008",
+      "job": "foundation",
+      "file": "scripts/ops/previous_release.test.mjs",
+      "test": "any other branch is rolled back to where it leaves the integration branch",
+      "proves": "A change on any branch but the integration branch and main is checked against the commit where it leaves the integration branch, and a branch with no history in common with it, or a scheduled run, names no previous release."
+    },
+    {
+      "requirement": "OPS-008",
+      "job": "foundation",
+      "file": "scripts/ops/previous_release.test.mjs",
+      "test": "a pull request is rolled back to the commit it would merge into",
+      "proves": "A pull request is checked against the commit of the branch it would merge into, and one that names no base commit is refused."
+    },
+    {
+      "requirement": "OPS-008",
+      "job": "foundation",
+      "file": "scripts/src/valo/rollback-failures.test.ts",
+      "test": "the previous release runs on this schema only when every failure is one the register expects",
+      "proves": "Run against a newer schema, the previous release's database job passes only when every test that failed is one the register of expected failures names, its evidence check fails only because of those, and every expected failure did fail."
+    },
+    {
       "requirement": "PAY-001",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/commerce/valo-commerce.integration.test.ts",

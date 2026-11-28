@@ -285,6 +285,17 @@ workflow run for the exact commit before reporting CI status.
 
 - Migrations in `lib/db/drizzle` are append-only. Never edit, rename or delete a
   migration that has been merged into the integration branch.
+- A migration only adds, so that the previous release still runs on the schema it
+  leaves (OPS-008, `docs/valo/release-and-rollback.md`). CI's rollback job refuses one
+  that removes, renames or narrows what the previous release may use, or changes data,
+  unless `lib/db/expand-only-exceptions.json` names the exact statement with a reviewed
+  reason, and a change of data its runbook, which the owner approves before merge. It
+  then runs the previous release's own database job against the new schema, where only
+  the failures `lib/db/rollback-expected-failures.json` records may happen: tests that
+  check the schema itself, or that set themselves up by writing rows straight into the
+  database in a shape the release's own code never writes and a new guard refuses; never
+  what the release does. Never add an exception or an expected failure to let a migration
+  through: make it only add, and remove the old shape in a later release.
 - Change the Drizzle schema, then run
   `pnpm --filter @workspace/db exec drizzle-kit generate --name <change>`. New
   files are timestamp-named. For functions, triggers or grants use

@@ -97,6 +97,20 @@ later release, once a release that no longer uses the old shape is running. A
 change that cannot follow this rule needs a written plan with a maintenance
 window and a restore point, reviewed before merge.
 
+CI checks the rule on every push and pull request
+([rollback.md](../architecture/rollback.md)). `lib/db/scripts/expand-only.mjs` refuses a
+migration the previous release has that was changed or removed, and, in a migration
+added since, a statement that removes, renames or narrows what the previous release may
+use, or changes data, unless `lib/db/expand-only-exceptions.json` names that exact
+statement with a reviewed reason. A change of data also names its runbook, which the owner
+approves before it is merged. When a migration was added, the job then runs the previous
+release's own database job against the new schema (`pnpm test:db --previous <checkout>`). A test of
+the previous release may fail there only as `lib/db/rollback-expected-failures.json` records, with its
+reason, and only when it checks the schema itself, or sets itself up by writing rows straight into the
+database in a shape the release's own code never writes and a guard the new schema adds refuses. A
+test that fails because the release's own code is refused shows a migration that does not only add: the
+migration is changed, never the register.
+
 ## Deploying
 
 1. Drain writes and the worker, as the migration plan describes.
