@@ -552,6 +552,77 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/RefundRecord" }
+  /admin/payment-checks:
+    get:
+      operationId: getFinancePaymentChecks
+      tags: [admin]
+      summary: The daily payment checks' differences nobody has settled, and the latest settled (PAY-007)
+      description: >-
+        Each order whose latest finished daily check found a difference that no settlement covers, and
+        the latest settlements with what finance found and why (docs/architecture/reconciliation.md,
+        slice 2). An active finance role and a fresh second factor are required.
+      responses:
+        "200":
+          description: The differences and the latest settlements. Nothing here is Paystack's own record.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FinancePaymentChecks" }
+  /admin/payment-checks/{id}/settlement:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      operationId: settleFinancePaymentCheck
+      tags: [admin]
+      summary: Finance records what it found about a difference a daily payment check found (PAY-007)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PaymentCheckSettlementInput" }
+      responses:
+        "200":
+          description: >-
+            The settled check. Nothing about the order, its payment or its grants is changed, and the
+            reason is kept in the staff access audit.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaymentCheck" }
+  /admin/payment-events:
+    get:
+      operationId: getFinancePaymentEvents
+      tags: [admin]
+      summary: The Paystack events Valo could not match or process that finance has not settled, and the latest settled (PAY-007)
+      description: >-
+        Each provider event that the event worker left for finance, with why, that no settlement covers
+        with the finding it has now, and the latest settlements with who made them and why
+        (docs/architecture/reconciliation.md, slice 3a). An active finance role and a fresh second factor
+        are required.
+      responses:
+        "200":
+          description: The events waiting and the latest settlements. Nothing here is Paystack's own record.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FinancePaymentEvents" }
+  /admin/payment-events/{id}/settlement:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      operationId: settleFinancePaymentEvent
+      tags: [admin]
+      summary: Finance records what it found about a Paystack event Valo could not match or process (PAY-007)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PaymentEventSettlementInput" }
+      responses:
+        "200":
+          description: >-
+            The settled event. The event itself, and every order, payment and grant, is left as it was,
+            and the reason is kept in the staff access audit.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaymentEvent" }
   /admin/owner-prices:
     get:
       operationId: listOwnerPrices
@@ -1411,10 +1482,36 @@ paths:
       operationId: listWorkspaceMessages
       responses:
         "200":
-          description: The workspace's messages and what became of each; accepted is not delivered, and recorded is not emailed
+          description: The workspace's messages and what became of each; accepted is not delivered, recorded is not emailed, and a delivery is only what the email service reported
           content:
             application/json:
               schema: { type: array, items: { $ref: "#/components/schemas/WorkspaceMessage" } }
+  /public/unsubscribe:
+    post:
+      operationId: unsubscribe
+      tags: [messages]
+      summary: Stop one kind of optional message, from the link in one of them; needs no account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UnsubscribeInput" }
+      responses:
+        "200":
+          description: That kind of message is off for the workspace the link was made for, whether or not it was before. The choice is recorded as the workspace's own.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UnsubscribeAck" }
+        "400":
+          description: Not a link Valo made, or one it no longer honours. Nothing was changed, and the answer does not say which.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiProblem" }
+        "429":
+          description: Too many tries with one workspace's links in a short time. This try changed nothing, and the answer says when to try again.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiProblem" }
   /admin/operations/alerts:
     get:
       operationId: getOperationalAlerts
@@ -2349,6 +2446,10 @@ components:
         replacementVersion: { type: [integer, "null"], description: "The version that replaced it, for a replaced version." }
         reason: { type: string, description: "What changed, or why it was withdrawn, as the person who made the change wrote it." }
         changedAt: { type: string, description: "When the version was replaced or withdrawn, as an ISO 8601 time." }
+    MessageDelivery:
+      type: string
+      description: What the email service last reported about a message it took. `delivered` means the address's email service took it, never that anyone read it; `delayed` that the email service is still trying; `bounced` that the address's email service refused it; `complained` that it was marked as spam; `undelivered` that the email service could not send it.
+      enum: [delivered, delayed, bounced, complained, undelivered]
     RequirementRoute:
       type: object
       description: The authority's own official page for a requirement, as its rule records it. Absent when the rule records none, and in a result saved before routes were recorded.
@@ -2872,6 +2973,9 @@ components:
         total: { type: integer }
         page: { type: integer }
         heldTemplates: { type: integer }
+        closest:
+          type: boolean
+          description: True when no item has every word of the search, and the items listed are the ones that have the most of its words (docs/architecture/public-search.md). Absent otherwise.
     DisputeHistory: {"type":"object","additionalProperties":false,"required":["id","action","reason","actorType","createdAt"],"properties":{"id":{"type":"string"},"action":{"type":"string"},"reason":{"type":"string"},"actorType":{"type":"string","enum":["customer","finance","worker"]},"createdAt":{"type":"string"}}}
     PaymentConcern: {"type":"object","additionalProperties":false,"required":["id","orderId","orderReference","message","status","latestReply","version","createdAt","updatedAt","history"],"properties":{"id":{"type":"string"},"orderId":{"type":"string"},"orderReference":{"type":"string"},"message":{"type":"string"},"status":{"type":"string","enum":["open","needs_information","responded","closed"]},"latestReply":{"type":["string","null"]},"version":{"type":"integer"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"history":{"type":"array","items":{"$ref":"#/components/schemas/DisputeHistory"}}}}
     PaymentConcernInput: {"type":"object","additionalProperties":false,"required":["requestKey","message","acknowledgement"],"properties":{"requestKey":{"type":"string","format":"uuid"},"message":{"type":"string","minLength":20,"maxLength":2000},"acknowledgement":{"type":"boolean","enum":[true]}}}
@@ -3308,6 +3412,70 @@ components:
         decision: { type: string, enum: [approve, reject] }
         reason: { type: string, minLength: 10, maxLength: 1500 }
         expectedVersion: { type: integer, minimum: 1 }
+    PaymentCheck:
+      type: object
+      additionalProperties: false
+      required: [id, orderId, reference, amountKobo, currency, orderStatus, day, status, finding, attempts, outcome, resolvedAt, resolvedByYou, reason]
+      properties:
+        id: { type: string, format: uuid }
+        orderId: { type: string, format: uuid }
+        reference: { type: string }
+        amountKobo: { type: integer }
+        currency: { type: string }
+        orderStatus: { type: string }
+        day: { type: string, description: "The UTC date the check is for, as YYYY-MM-DD" }
+        status: { type: string, enum: [needs_review, resolved] }
+        finding: { type: string, description: "What differs: one or more names, joined with ';'" }
+        attempts: { type: integer }
+        outcome: { type: [string, "null"], enum: [explained, no_payment_stands, null] }
+        resolvedAt: { type: [string, "null"], format: date-time }
+        resolvedByYou: { type: boolean }
+        reason: { type: [string, "null"], description: "Why finance settled it, as the staff access audit keeps it" }
+    FinancePaymentChecks:
+      type: object
+      additionalProperties: false
+      required: [differences, settled]
+      properties:
+        differences: { type: array, items: { $ref: "#/components/schemas/PaymentCheck" } }
+        settled: { type: array, items: { $ref: "#/components/schemas/PaymentCheck" } }
+    PaymentCheckSettlementInput:
+      type: object
+      additionalProperties: false
+      required: [outcome, reason]
+      properties:
+        outcome: { type: string, enum: [explained, no_payment_stands] }
+        reason: { type: string, minLength: 10, maxLength: 1500 }
+    PaymentEvent:
+      type: object
+      additionalProperties: false
+      required: [id, eventType, reference, receivedAt, finding, attempts, resolvedAt, resolvedByYou, reason]
+      properties:
+        id: { type: string, format: uuid }
+        eventType:
+          type: string
+          description: "Paystack's name for the event, such as charge.success, or listing for what Paystack's own list of a day's successful payments could not give"
+        reference:
+          type: [string, "null"]
+          description: "The reference the event names, if it names one; for a day's list, the day, as YYYY-MM-DD"
+        receivedAt: { type: string, format: date-time }
+        finding: { type: string, description: "Why the event worker left it for finance" }
+        attempts: { type: integer }
+        resolvedAt: { type: [string, "null"], format: date-time }
+        resolvedByYou: { type: boolean }
+        reason: { type: [string, "null"], description: "Why finance settled it, as the staff access audit keeps it" }
+    FinancePaymentEvents:
+      type: object
+      additionalProperties: false
+      required: [waiting, settled]
+      properties:
+        waiting: { type: array, items: { $ref: "#/components/schemas/PaymentEvent" } }
+        settled: { type: array, items: { $ref: "#/components/schemas/PaymentEvent" } }
+    PaymentEventSettlementInput:
+      type: object
+      additionalProperties: false
+      required: [reason]
+      properties:
+        reason: { type: string, minLength: 10, maxLength: 1500 }
     RefundRecord:
       type: object
       required: [id, orderId, amountKobo, status, reference, reason, decisionReason, policyVersion, version, attempts, createdAt, checkedAt, completedAt, failure]
@@ -4305,7 +4473,7 @@ components:
     LibraryExport:
       type: object
       additionalProperties: false
-      required: [id, documentId, documentTitle, revisionId, revision, format, finished, readyAt, expiresAt, downloadUrl, template]
+      required: [id, documentId, documentTitle, revisionId, revision, format, finished, readyAt, expiresAt, downloadUrl, template, questions]
       properties:
         id: { type: string, format: uuid }
         documentId: { type: string, format: uuid }
@@ -4321,6 +4489,18 @@ components:
           anyOf:
             - { $ref: "#/components/schemas/LibraryTemplateVersion" }
             - { type: "null" }
+        questions:
+          description: "For a file made from Valo's own questions for a guided template, which template: such a document came from no released version, so its `template` is null. Null for any other file."
+          anyOf:
+            - { $ref: "#/components/schemas/LibraryQuestions" }
+            - { type: "null" }
+    LibraryQuestions:
+      type: object
+      additionalProperties: false
+      required: [templateId, title]
+      properties:
+        templateId: { type: string, pattern: "^TPL-[0-9]{2}$" }
+        title: { type: string, description: "The guided template's name, such as Invoice." }
     LibraryTemplateVersion:
       type: object
       additionalProperties: false
@@ -4328,7 +4508,8 @@ components:
       properties:
         versionId: { type: string, format: uuid }
         templateId: { type: string }
-        title: { type: string, description: "The title a staff-library template was released under, for a document copied from it." }
+        title: { type: string, description: "The title a staff-library template was released under, for a document copied from it or made from its form." }
+        form: { type: boolean, description: "True for a document made by answering a staff-library template's form (forms v2), not copied from its text." }
         version: { type: integer }
     SessionMfaVerification:
       type: object
@@ -4478,16 +4659,32 @@ components:
         templateId: { type: [string, 'null'] }
         state: { type: string, enum: [no_template, no_form, fits, does_not_fit] }
         problems: { type: array, maxItems: 200, items: { type: string, maxLength: 400 } }
+    UnsubscribeInput:
+      type: object
+      additionalProperties: false
+      required: [token]
+      properties:
+        # The token from the link, as it was written there.
+        token: { type: string, minLength: 1, maxLength: 181 }
+    UnsubscribeAck:
+      type: object
+      required: [consent, state]
+      properties:
+        # The kind of optional message that is now off.
+        consent: { type: string, enum: [reminders] }
+        state: { type: string, enum: ["off"] }
     WorkspaceMessage:
       type: object
-      required: [id, kind, orderId, orderReference, refundReference, forYou, status, reason, attempts, createdAt, lastAttemptAt, nextAttemptAt, acceptedAt]
+      required: [id, kind, orderId, orderReference, refundReference, noticesDay, forYou, status, reason, attempts, createdAt, lastAttemptAt, nextAttemptAt, acceptedAt, delivery, deliveryAt]
       properties:
         id: { type: string, format: uuid }
-        kind: { type: string, enum: [purchase_receipt, refund_processed] }
+        kind: { type: string, enum: [purchase_receipt, refund_processed, notices_digest] }
         # The order the message is about: a receipt's own, or a refund notice's refund's.
         orderId: { type: [string, "null"] }
         orderReference: { type: [string, "null"] }
         refundReference: { type: [string, "null"] }
+        # The Lagos day whose notices a notices message is about, as YYYY-MM-DD. Null for any other kind.
+        noticesDay: { type: [string, "null"] }
         # Whether the message is for the member asking, or for another member of the workspace.
         forYou: { type: boolean }
         # accepted: an email service took the message; nothing shows it reached an inbox.
@@ -4499,6 +4696,10 @@ components:
         lastAttemptAt: { type: [string, "null"] }
         nextAttemptAt: { type: [string, "null"] }
         acceptedAt: { type: [string, "null"] }
+        # What the email service last reported about an accepted message, and its time for that. Null while it
+        # has reported nothing, and always for a message that was only recorded.
+        delivery: { anyOf: [{ $ref: "#/components/schemas/MessageDelivery" }, { type: "null" }] }
+        deliveryAt: { type: [string, "null"] }
     OperationalAlerts:
       type: object
       additionalProperties: false
@@ -6810,7 +7011,7 @@ components:
         deliveryBlocker: { type: [string, "null"] }
     ReminderRecord:
       type: object
-      required: [id, taskId, scheduledAt, status, reason, deliveredAt, attempts, nextAttemptAt, lastAttemptAt]
+      required: [id, taskId, scheduledAt, status, reason, deliveredAt, attempts, nextAttemptAt, lastAttemptAt, delivery, deliveryAt]
       properties:
         id: { type: string }
         taskId: { type: string }
@@ -6820,7 +7021,12 @@ components:
         nextAttemptAt: { type: string, nullable: true }
         lastAttemptAt: { type: string, nullable: true }
         reason: { type: [string, "null"] }
+        # When the email service reported that the address's email service took the reminder, or null.
         deliveredAt: { type: [string, "null"] }
+        # What the email service last reported about a reminder it accepted, and its time for that. Null
+        # while it has reported nothing.
+        delivery: { anyOf: [{ $ref: "#/components/schemas/MessageDelivery" }, { type: "null" }] }
+        deliveryAt: { type: [string, "null"] }
     Profile:
       type: object
       additionalProperties: false
@@ -6862,3 +7068,21 @@ components:
             - { $ref: "#/components/schemas/Profile" }
             - { type: "null" }
         documentCount: { type: integer }
+        recheck:
+          description: Present when a new requirements check is offered (PRO-003). The business profile has changed an answer the check reads since the latest saved result, and that result was not worked out from the new answer. A change to the business name or the marketing choice alone offers nothing.
+          $ref: "#/components/schemas/ProfileRecheck"
+    ProfileRecheck:
+      type: object
+      additionalProperties: false
+      required: [assessmentId, savedAt, changed]
+      properties:
+        assessmentId: { type: string, format: uuid, description: "The workspace's latest saved result, which a new check would follow. It is kept as it was saved." }
+        savedAt: { type: string, format: date-time, description: "When that result was saved." }
+        changed:
+          type: array
+          minItems: 1
+          maxItems: 14
+          description: The profile's changed answers, in the order the profile asks them.
+          items:
+            type: string
+            enum: [legalForm, registrationStatus, activities, state, lga, employees, turnoverBand, turnoverYear, turnoverMetric, turnoverCurrency, premises, manufacturing, importing, personalData]

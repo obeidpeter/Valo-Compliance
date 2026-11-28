@@ -14,17 +14,8 @@ import { CustomerDisputeInformation, useDisputeDirty } from "@/components/disput
 import { describeError } from "@/lib/api";
 import { formatDateTime, formatNaira } from "@/lib/format";
 import { basePath } from "@/lib/env";
-import { MESSAGE_STATUS, messageMeaning } from "@/lib/message-words";
-
-const labels: Record<string, string> = {
-  created: "Order saved — not paid",
-  pending: "Awaiting verified payment",
-  abandoned: "Payment not completed",
-  failed: "Payment failed",
-  verified_success: "Test purchase verified",
-  needs_review: "Staff reconciliation required",
-  reversed: "Payment reversed — access suspended",
-};
+import { messageLabel, messageMeaning } from "@/lib/message-words";
+import { ORDER_STATUS_LABELS } from "@/lib/order-status-words";
 
 /** A template a bundle's order grants, with its download while the purchase holds it. */
 export type BundleFile = {
@@ -39,7 +30,7 @@ function MessageState({ label, message }: { label: string; message: WorkspaceMes
     <>
       {label}:{" "}
       {message
-        ? `${MESSAGE_STATUS[message.status]?.label ?? message.status}. ${messageMeaning(message)}`
+        ? `${messageLabel(message)}. ${messageMeaning(message)}`
         : "none. Valo emailed nothing about it."}
     </>
   );
@@ -94,7 +85,7 @@ export function OrderCard({
       <div className="flex flex-wrap justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold">{order.title}</h2>
-          <p className="mt-1 text-sm">{labels[order.status]}</p>
+          <p className="mt-1 text-sm">{ORDER_STATUS_LABELS[order.status]}</p>
         </div>
         <p className="font-semibold">{formatNaira(order.amountKobo)}</p>
       </div>

@@ -7,12 +7,13 @@ import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   ALERT_RUNBOOKS,
-  alertTitle,
   alertRunbook,
+  alertTitle,
   collectOperationalSample,
+  ENQUIRY_WAIT_HOURS,
+  readinessQueries,
   recordOperationalAlerts,
   recordWorkerHeartbeat,
-  readinessQueries,
 } from "./valo-operations";
 import { versionedEvidencePath } from "../../lib/versioned-evidence-path";
 import { PRIVACY_REQUEST_AIM_DAYS } from "../../lib/valo-privacy-state";
@@ -72,8 +73,8 @@ test("internal probes measure failures independently and persist/deduplicate/rec
   try {
     await recordWorkerHeartbeat(worker.snapshot(), dir);
     // The security readings, the reading of privacy requests past Valo's own aim, and the readings of
-    // reminders, the job queue, messages and the request counts are zero here; their alerts have their own
-    // tests.
+    // reminders, the job queue, messages, enquiries and the request counts are zero here; their alerts
+    // have their own tests.
     const security = new Set<string>([
       ...securityQueries,
       readinessQueries.spreadRefusals,
@@ -94,6 +95,10 @@ test("internal probes measure failures independently and persist/deduplicate/rec
       readinessQueries.jobQueue,
       readinessQueries.messages,
       readinessQueries.failedMessages,
+      readinessQueries.newEnquiries,
+      readinessQueries.waitingEnquiries,
+      readinessQueries.paymentDifferences,
+      readinessQueries.unmatchedPaymentEvents,
       readinessQueries.requestFailures,
       readinessQueries.requestTime,
     ]);
@@ -605,6 +610,223 @@ test("messages waiting past their time, and a message that failed, raise their o
       readinessQueries.failedMessages,
       /status='failed' AND updated_at > now\(\) - interval '1 day'/,
     );
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { recursive: true, force: true });
+    if (old === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = old;
+  }
+});
+
+// PAY-007 (docs/architecture/reconciliation.md, slice 1): "alert on unmatched amounts, missing events and
+// fulfilment differences." An order whose latest daily payment check found a difference raises an alert
+// for finance and engineering. What the reading counts is tested against PostgreSQL with the check itself.
+test("an order whose latest daily payment check found a difference raises an alert under the payment runbook, and none while no check has", async () => {
+  const old = process.env.NODE_ENV;
+  process.env.NODE_ENV = "development";
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => {
+    throw Error("EXTERNAL_MESSAGES_FORBIDDEN");
+  };
+  const dir = await mkdtemp(join(tmpdir(), "valo-ops-payment-differences-"));
+  const worker = new WorkerHealth();
+  worker.finish(worker.begin()!, true);
+  try {
+    await recordWorkerHeartbeat(worker.snapshot(), dir);
+    const sample = (differences: number, unreadable = false) =>
+      collectOperationalSample(async (sql) => {
+        if (unreadable && sql === readinessQueries.paymentDifferences) throw Error("SYNTHETIC_PROBE_FAILURE");
+        return {
+          rows: [
+            {
+              value:
+                sql === readinessQueries.database
+                  ? 1
+                  : sql === readinessQueries.paymentDifferences
+                    ? differences
+                    : 0,
+            },
+          ],
+        };
+      }, dir);
+    const owner = { runbook: "Payment/entitlement failure", accountable: "Finance + engineering" };
+    // No difference raises nothing.
+    assert.deepEqual((await recordOperationalAlerts(await sample(0), dir)).active, []);
+    // One order with a difference raises the alert, with the count it was raised on.
+    const raised = await recordOperationalAlerts(await sample(1), dir);
+    assert.deepEqual(raised.owners, [{ code: "PAYMENT_DIFFERENCES_DETECTED", ...owner }]);
+    const journal = JSON.parse(await readFile(join(dir, "alerts.json"), "utf8")) as {
+      events: { code: string; state: string; reading: number; threshold: number }[];
+    };
+    assert.deepEqual(
+      journal.events.map(({ code, state, reading, threshold }) => ({ code, state, reading, threshold })),
+      [{ code: "PAYMENT_DIFFERENCES_DETECTED", state: "active", reading: 1, threshold: 0 }],
+    );
+    // It says in plain words what it is about, and what Valo could not read when its reading fails.
+    assert.equal(alertTitle("PAYMENT_DIFFERENCES_DETECTED"), "A daily payment check found a difference");
+    assert.equal(
+      alertTitle("PAYMENT_DIFFERENCES_PROBE_UNAVAILABLE"),
+      "Valo cannot read the daily payment checks",
+    );
+    // A reading that cannot be taken is an alert of its own, and clears the one it replaces.
+    assert.deepEqual((await recordOperationalAlerts(await sample(0, true), dir)).owners, [
+      { code: "PAYMENT_DIFFERENCES_PROBE_UNAVAILABLE", ...owner },
+    ]);
+    // Once no order's latest check has a difference, nothing is raised.
+    assert.deepEqual((await recordOperationalAlerts(await sample(0), dir)).active, []);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { recursive: true, force: true });
+    if (old === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = old;
+  }
+});
+
+// PAY-007 (docs/architecture/reconciliation.md, slice 3a): a provider event Valo could not match or process,
+// that finance has not settled, raises an alert of its own for finance and engineering. What the reading
+// counts is tested against PostgreSQL with the event worker and finance's settlement.
+test("a Paystack event that matched nothing, and that finance has not settled, raises an alert under the payment runbook, and none once none waits", async () => {
+  const old = process.env.NODE_ENV;
+  process.env.NODE_ENV = "development";
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => {
+    throw Error("EXTERNAL_MESSAGES_FORBIDDEN");
+  };
+  const dir = await mkdtemp(join(tmpdir(), "valo-ops-payment-events-"));
+  const worker = new WorkerHealth();
+  worker.finish(worker.begin()!, true);
+  try {
+    await recordWorkerHeartbeat(worker.snapshot(), dir);
+    const sample = (events: number, unreadable = false) =>
+      collectOperationalSample(async (sql) => {
+        if (unreadable && sql === readinessQueries.unmatchedPaymentEvents)
+          throw Error("SYNTHETIC_PROBE_FAILURE");
+        return {
+          rows: [
+            {
+              value:
+                sql === readinessQueries.database
+                  ? 1
+                  : sql === readinessQueries.unmatchedPaymentEvents
+                    ? events
+                    : 0,
+            },
+          ],
+        };
+      }, dir);
+    const owner = { runbook: "Payment/entitlement failure", accountable: "Finance + engineering" };
+    // No event waiting raises nothing.
+    assert.deepEqual((await recordOperationalAlerts(await sample(0), dir)).active, []);
+    // One event waiting raises the alert, with the count it was raised on, and no other.
+    const raised = await recordOperationalAlerts(await sample(1), dir);
+    assert.deepEqual(raised.owners, [{ code: "UNMATCHED_PAYMENT_EVENTS_DETECTED", ...owner }]);
+    const journal = JSON.parse(await readFile(join(dir, "alerts.json"), "utf8")) as {
+      events: { code: string; state: string; reading: number; threshold: number }[];
+    };
+    assert.deepEqual(
+      journal.events.map(({ code, state, reading, threshold }) => ({ code, state, reading, threshold })),
+      [{ code: "UNMATCHED_PAYMENT_EVENTS_DETECTED", state: "active", reading: 1, threshold: 0 }],
+    );
+    // It says in plain words what it is about, and what Valo could not read when its reading fails.
+    assert.equal(
+      alertTitle("UNMATCHED_PAYMENT_EVENTS_DETECTED"),
+      "A Paystack event matched nothing in Valo, or could not be processed",
+    );
+    assert.equal(
+      alertTitle("UNMATCHED_PAYMENT_EVENTS_PROBE_UNAVAILABLE"),
+      "Valo cannot read the Paystack events waiting for finance",
+    );
+    // A reading that cannot be taken is an alert of its own, and clears the one it replaces.
+    assert.deepEqual((await recordOperationalAlerts(await sample(0, true), dir)).owners, [
+      { code: "UNMATCHED_PAYMENT_EVENTS_PROBE_UNAVAILABLE", ...owner },
+    ]);
+    // Once no event waits, nothing is raised.
+    assert.deepEqual((await recordOperationalAlerts(await sample(0), dir)).active, []);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { recursive: true, force: true });
+    if (old === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = old;
+  }
+});
+
+// SRV-002 (docs/architecture/messages.md, part 6): a new enquiry, or one waiting past its time, raises an
+// alert in the staff alert list.
+test("an enquiry nobody has taken, and one that has waited on Valo past its aim, raise their own alerts under the enquiries runbook, past their limits only", async () => {
+  const old = process.env.NODE_ENV;
+  process.env.NODE_ENV = "development";
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => {
+    throw Error("EXTERNAL_MESSAGES_FORBIDDEN");
+  };
+  const dir = await mkdtemp(join(tmpdir(), "valo-ops-enquiries-"));
+  const worker = new WorkerHealth();
+  worker.finish(worker.begin()!, true);
+  try {
+    await recordWorkerHeartbeat(worker.snapshot(), dir);
+    type Readings = Partial<Record<"newEnquiries" | "waitingEnquiries", number>>;
+    const sample = (readings: Readings, unreadable?: keyof Readings) =>
+      collectOperationalSample(async (sql) => {
+        if (unreadable && sql === readinessQueries[unreadable]) throw Error("SYNTHETIC_PROBE_FAILURE");
+        const named = (Object.keys(readings) as (keyof Readings)[]).find(
+          (name) => readinessQueries[name] === sql,
+        );
+        return {
+          rows: [{ value: sql === readinessQueries.database ? 1 : named ? readings[named] : 0 }],
+        };
+      }, dir);
+    const owner = { runbook: "Provider enquiry dispute", accountable: "Support" };
+    // No enquiry waiting on anyone at Valo raises nothing.
+    assert.deepEqual((await recordOperationalAlerts(await sample({}), dir)).active, []);
+    // One nobody has taken raises its alert alone: it has not waited past the aim yet.
+    assert.deepEqual((await recordOperationalAlerts(await sample({ newEnquiries: 1 }), dir)).owners, [
+      { code: "NEW_ENQUIRIES_DETECTED", ...owner },
+    ]);
+    // One that has waited past the aim raises the other as well.
+    const raised = await recordOperationalAlerts(await sample({ newEnquiries: 1, waitingEnquiries: 3 }), dir);
+    assert.deepEqual(raised.owners, [
+      { code: "NEW_ENQUIRIES_DETECTED", ...owner },
+      { code: "WAITING_ENQUIRIES_DETECTED", ...owner },
+    ]);
+    // Taken, with one still untouched past the aim: the first alert clears and the second stays.
+    const taken = await recordOperationalAlerts(await sample({ waitingEnquiries: 3 }), dir);
+    assert.deepEqual(taken.owners, [{ code: "WAITING_ENQUIRIES_DETECTED", ...owner }]);
+    // Each says in plain words what it is about, and what Valo could not read when its reading fails.
+    assert.equal(
+      alertTitle("NEW_ENQUIRIES_DETECTED"),
+      "An enquiry is waiting for someone at Valo to take it",
+    );
+    assert.equal(
+      alertTitle("WAITING_ENQUIRIES_DETECTED"),
+      "An enquiry has waited on Valo for more than two days",
+    );
+    assert.equal(
+      alertTitle("NEW_ENQUIRIES_PROBE_UNAVAILABLE"),
+      "Valo cannot read the enquiries nobody has taken",
+    );
+    assert.equal(
+      alertTitle("WAITING_ENQUIRIES_PROBE_UNAVAILABLE"),
+      "Valo cannot read the enquiries waiting on Valo",
+    );
+    // A reading that cannot be taken is an alert of its own, and clears the one it replaces.
+    assert.deepEqual((await recordOperationalAlerts(await sample({}, "waitingEnquiries"), dir)).owners, [
+      { code: "WAITING_ENQUIRIES_PROBE_UNAVAILABLE", ...owner },
+    ]);
+    assert.deepEqual((await recordOperationalAlerts(await sample({}, "newEnquiries"), dir)).owners, [
+      { code: "NEW_ENQUIRIES_PROBE_UNAVAILABLE", ...owner },
+    ]);
+    assert.deepEqual((await recordOperationalAlerts(await sample({}), dir)).active, []);
+    // The readings. Nobody has taken it: the case is open. Waiting on Valo: open or in progress, and
+    // untouched for longer than the aim, which the alert's words give in days. Never one that waits on
+    // its customer, or is resolved.
+    assert.match(readinessQueries.newEnquiries, /FROM valo_support_cases\s+WHERE status='open' LIMIT/);
+    assert.equal(ENQUIRY_WAIT_HOURS, 48);
+    assert.match(
+      readinessQueries.waitingEnquiries,
+      /status IN \('open','in_progress'\)\s+AND updated_at < now\(\) - interval '48 hours'/,
+    );
+    for (const query of [readinessQueries.newEnquiries, readinessQueries.waitingEnquiries])
+      assert.doesNotMatch(query, /awaiting_customer|resolved/);
   } finally {
     globalThis.fetch = originalFetch;
     await rm(dir, { recursive: true, force: true });

@@ -12,4 +12,5 @@ export type WorkspaceMessageKind = typeof WorkspaceMessageKind[keyof typeof Work
 export const WorkspaceMessageKind = {
   purchase_receipt: 'purchase_receipt',
   refund_processed: 'refund_processed',
+  notices_digest: 'notices_digest',
 } as const;

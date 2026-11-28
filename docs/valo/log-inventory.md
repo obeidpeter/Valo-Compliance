@@ -49,13 +49,16 @@ is that inventory, part 4 of [alerts that reach a person](../architecture/alerts
 | `request.failed` | The API's error handler | A request failed in a way Valo did not expect, by the error's class |
 | `request.refused_by_guard` | The API's error handler | A database guard refused what a request sent, by the guard's name |
 | `origin.rejected` | The API's identity check | A change was sent from another site's page |
-| `quota.denied` | The API's read limit | A limit refused a read, by the limit's name |
+| `quota.denied` | The API's read limit, and its unsubscribe routes | A limit refused a read, or a use of an unsubscribe link, by the limit's name |
 | `quota.purge_failed` | The API's limits | Expired limit counters could not be removed |
 | `security_signal.failed` | The API's security signals | A refusal could not be counted, by its kind and the error's class |
 | `security_signal.unavailable` | The API's security signals | A refusal could not be counted because the key for its hash is not set |
 | `security_signal.purge_failed` | The API's security signals | Expired signals could not be removed |
 | `clerk_proxy.upstream_failed` | The API's identity provider proxy | The identity provider could not be reached |
 | `payment.signature_rejected` | The API's payment webhook | A message from the payment provider failed its signature check |
+| `email.signature_rejected` | The API's email webhook | A delivery report failed its signature check |
+| `email.event_unreadable` | The API's email webhook | A signed delivery report was not in the form the email provider documents |
+| `unsubscribe.refused` | The API's unsubscribe routes | An unsubscribe link was not one Valo made, or not one it still honours. The link is not logged |
 | `price.recorded` | The owner's price screen | The owner recorded a price |
 | `bundle.recorded` | The owner's bundle screen | The owner recorded a bundle |
 | `commercial_setting.recorded` | The owner's settings screen | The owner recorded a commercial setting |

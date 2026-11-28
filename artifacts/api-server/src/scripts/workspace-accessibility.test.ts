@@ -389,6 +389,46 @@ function acceptanceRun(corpus: string) {
   });
 }
 
+/** A difference a daily payment check found for a paid order, and one for an abandoned order (PAY-007). */
+const paymentDifference = {
+  id: "00000000-0000-4000-8000-00000000c101",
+  orderId: "00000000-0000-4000-8000-00000000a102",
+  reference: "valo-test-synthetic-paid",
+  amountKobo: 250000,
+  currency: "NGN",
+  orderStatus: "verified_success",
+  day: "2026-11-24",
+  status: "needs_review" as const,
+  finding: "EVENT_MISSING;ENTITLEMENT_DIFFERENCE",
+  attempts: 0,
+  outcome: null,
+  resolvedAt: null,
+  resolvedByYou: false,
+  reason: null,
+};
+const abandonedPaymentDifference = {
+  ...paymentDifference,
+  id: "00000000-0000-4000-8000-00000000c102",
+  orderId: "00000000-0000-4000-8000-00000000a103",
+  reference: "valo-test-synthetic-abandoned",
+  amountKobo: 150000,
+  orderStatus: "abandoned",
+  finding: "NO_ANSWER",
+  attempts: 3,
+};
+/** A Paystack event Valo could not match, waiting for finance (PAY-007, docs/architecture/reconciliation.md,
+ * slice 3a). */
+const unmatchedPaymentEvent = {
+  id: "00000000-0000-4000-8000-00000000e101",
+  eventType: "charge.success",
+  reference: "valo-test-synthetic-unknown",
+  receivedAt: "2026-11-24T09:00:00.000Z",
+  finding: "UNMATCHED_REFERENCE",
+  attempts: 1,
+  resolvedAt: null,
+  resolvedByYou: false,
+  reason: null,
+};
 const answers: Record<string, unknown> = {
   // The workspace's support requests page (WRK-001) lists the customer's own requests.
   "GET /workspace/support-cases": api.ListCustomerSupportCasesResponse.parse({
@@ -484,6 +524,8 @@ const answers: Record<string, unknown> = {
       lastAttemptAt: null,
       reason: "Synthetic test fixture.",
       deliveredAt: null,
+      delivery: null,
+      deliveryAt: null,
     },
   ]),
   [`GET /workspace/purchases`]: api.GetCustomerPurchasesResponse.parse({
@@ -529,6 +571,7 @@ const answers: Record<string, unknown> = {
       orderId: "00000000-0000-4000-8000-00000000a101",
       orderReference: "ORD-SYNTH-1",
       refundReference: null,
+      noticesDay: null,
       forYou: true,
       status: "held",
       reason: "SENDER_NOT_CONFIGURED",
@@ -537,6 +580,8 @@ const answers: Record<string, unknown> = {
       lastAttemptAt: null,
       nextAttemptAt: at(13),
       acceptedAt: null,
+      delivery: null,
+      deliveryAt: null,
     },
   ]),
   [`GET /workspace/data-exports`]: api.ListWorkspaceDataExportsResponse.parse({
@@ -954,6 +999,7 @@ const answers: Record<string, unknown> = {
       expiresAt: at(25),
       downloadUrl: "/api/v1/exports/00000000-0000-4000-8000-00000000a601/file",
       template: null,
+      questions: null,
     },
   ]),
   [`GET /v1/documents/${DOCUMENT}/exports`]: api.ListDocumentExportsResponse.parse([
@@ -1038,6 +1084,40 @@ const answers: Record<string, unknown> = {
   [`GET /admin/payment-concerns`]: api.GetFinancePaymentConcernsResponse.parse({
     concerns: [],
     notice: "Synthetic test fixture.",
+  }),
+  // docs/architecture/reconciliation.md, slice 2: two differences the daily payment checks found, one
+  // for a paid order and one for an abandoned one, and one settled.
+  [`GET /admin/payment-checks`]: api.GetFinancePaymentChecksResponse.parse({
+    differences: [paymentDifference, abandonedPaymentDifference],
+    settled: [
+      {
+        ...paymentDifference,
+        id: "00000000-0000-4000-8000-00000000c103",
+        reference: "valo-test-synthetic-settled",
+        finding: "AMOUNT_DIFFERENCE",
+        status: "resolved",
+        outcome: "explained",
+        resolvedAt: at(20),
+        resolvedByYou: true,
+        reason: "Synthetic: Paystack's own record shows the order's amount.",
+      },
+    ],
+  }),
+  // docs/architecture/reconciliation.md, slice 3a: one Paystack event waiting for finance, and one settled.
+  [`GET /admin/payment-events`]: api.GetFinancePaymentEventsResponse.parse({
+    waiting: [unmatchedPaymentEvent],
+    settled: [
+      {
+        ...unmatchedPaymentEvent,
+        id: "00000000-0000-4000-8000-00000000e102",
+        eventType: "refund.processed",
+        reference: "valo-test-synthetic-refund",
+        finding: "RECORD_DIFFERENCE",
+        resolvedAt: at(21),
+        resolvedByYou: false,
+        reason: "Synthetic: the refund was made at Paystack's dashboard.",
+      },
+    ],
   }),
   [`GET /admin/owner-guidance`]: api.ListOwnerGuidanceResponse.parse({
     items: [
@@ -3642,6 +3722,8 @@ test("the reminders screen says in plain words whether emails are being sent and
     lastAttemptAt: null,
     reason: null,
     deliveredAt: null,
+    delivery: null,
+    deliveryAt: null,
     ...fields,
   });
   const records = api.ListRemindersResponse.parse([
@@ -3668,6 +3750,26 @@ test("the reminders screen says in plain words whether emails are being sent and
       lastAttemptAt: at(23),
       nextAttemptAt: at(24),
     }),
+    // What the email service reported about two reminders it had accepted.
+    reminder(6, {
+      status: "sent",
+      scheduledAt: at(19),
+      attempts: 1,
+      lastAttemptAt: at(19),
+      deliveredAt: at(19),
+      delivery: "delivered",
+      deliveryAt: at(19),
+    }),
+    reminder(7, {
+      status: "sent",
+      scheduledAt: at(18),
+      attempts: 1,
+      lastAttemptAt: at(18),
+      delivery: "bounced",
+      deliveryAt: at(18),
+    }),
+    // One that was never handed to the email service: Valo had stopped emailing its address.
+    reminder(8, { status: "cancelled", reason: "EMAIL_ADDRESS_SUPPRESSED", scheduledAt: at(17) }),
   ]);
   const preferences = (deliveryAvailable: boolean) =>
     api.GetReminderPreferencesResponse.parse({
@@ -3742,6 +3844,35 @@ test("the reminders screen says in plain words whether emails are being sent and
       await expect(row(page, 5)).toContainText(
         "Tried 2 times. Last tried 23 Nov 2026, 10:00.Valo tries again after 24 Nov 2026, 10:00, if reminders are still on.",
       );
+      // The email service reported a delivery. Only then is a reminder called delivered, and the row says
+      // who says so and what Valo cannot see.
+      await expect(row(page, 6).locator(".pill")).toHaveText("Delivered");
+      await expect(row(page, 6)).toContainText(
+        "The email service reports that this message was delivered. Valo cannot see whether it was opened, or which folder it went to.",
+      );
+      await expect(row(page, 6)).toContainText("The email service reported this on 19 Nov 2026, 10:00.");
+      // One that came back says the address may be wrong. Valo's staff cannot clear that, so no report is offered.
+      await expect(row(page, 7).locator(".pill")).toHaveText("Not delivered");
+      await expect(row(page, 7)).toContainText(
+        "The email service reports that this message came back: the address did not take it. The email address may be wrong or no longer in use.",
+      );
+      await expect(row(page, 7)).toContainText("The email service reported this on 18 Nov 2026, 10:00.");
+      await expect(row(page, 7).getByRole("link", { name: "Report a problem" })).toHaveCount(0);
+      // Valo had stopped emailing the address, so the email service was never asked. The row says why, and
+      // that the task is safe. Only Valo's staff can look at that, so the way to report it is here. It
+      // was not a try, and the row does not count one.
+      await expect(row(page, 8).locator(".pill")).toHaveText("Cancelled");
+      await expect(row(page, 8)).toContainText(
+        "Valo has stopped emailing the address this reminder was for: an earlier email to it came back, or was marked as spam. This reminder will not be sent. Your task is saved.",
+      );
+      await expect(row(page, 8).getByRole("link", { name: "Report a problem" })).toHaveAttribute(
+        "href",
+        "/support",
+      );
+      assert.doesNotMatch(await row(page, 8).innerText(), /Tried|tries again/);
+      // No reminder but those two is called delivered or not delivered.
+      for (const n of [1, 2, 3, 4, 5, 8])
+        assert.doesNotMatch(await row(page, n).innerText(), /delivered/i, `reminder ${n}`);
 
       // None of the system's own words, and no note written for operators.
       const shown = (await page.locator("main").innerText()).replace(/\s+/g, " ");
@@ -3895,6 +4026,142 @@ test("a saved request reads 'Enquiry received' with what has not happened, and t
     assert.deepEqual(unknown, []);
   } finally {
     await close();
+  }
+});
+
+// WEB-002: "keyboard, empty, loading, error and mobile states are covered for every primary route."
+// The support page as a signed-in customer has it: the list of their own requests, and the form.
+test("signed in, the support page says its list of requests is loading, says when there are none and offers another try when the list cannot be read; its form says what is missing, keeps what was typed when a save fails and says so, and saves on the next try", async () => {
+  const none = api.ListCustomerSupportCasesResponse.parse({
+    cases: [],
+    page: 1,
+    pageSize: 25,
+    hasMore: false,
+    notice: "Synthetic test fixture: a note in the server's own words.",
+  });
+  const failure = { status: 500, contentType: "application/json", body: '{"error":"Synthetic failure"}' };
+  const typed = "Synthetic request: the file would not open.";
+
+  // The list while it is read, and with nothing in it.
+  {
+    let release = () => {};
+    const held = new Promise<void>((done) => (release = done));
+    const { page, errors, unknown, close } = await phone("/support", async (route, method, path, query) => {
+      if (method === "GET" && path === "/workspace/support-cases") {
+        await held;
+        await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(none) });
+      } else await answer(route, method, path, query);
+    });
+    try {
+      const requests = page.getByTestId("customer-support-cases");
+      const loading = requests.getByRole("status");
+      await expect(loading).toHaveText("Loading your support requests…");
+      await expect(requests.getByRole("button", { name: "Refresh requests" })).toBeDisabled();
+      // The form does not wait for the list.
+      await expect(page.getByTestId("form-ticket")).toBeVisible();
+      assert.equal(await requests.getByTestId("status-error").count(), 0, "no error while the list is read");
+      assert.deepEqual((await wcagFailures(page)).failures, [], "/support while its list is read");
+      release();
+      await expect(requests).toContainText(
+        "No requests on this page. To make one, use the form above, then refresh this list.",
+      );
+      await expect(loading).toHaveCount(0);
+      await expect(requests.getByRole("button", { name: "Refresh requests" })).toBeEnabled();
+      assert.deepEqual(await phoneProblems(page, "/support with no requests"), []);
+      assert.deepEqual(errors, []);
+      assert.deepEqual(unknown, []);
+    } finally {
+      release();
+      await close();
+    }
+  }
+
+  // The list when it cannot be read, and the form.
+  {
+    let listFails = true,
+      saveFails = true,
+      release = () => {};
+    const sent: unknown[] = [];
+    const { page, errors, unknown, close } = await phone("/support", async (route, method, path, query) => {
+      if (method === "GET" && path === "/workspace/support-cases")
+        await route.fulfill(
+          listFails ? failure : { status: 200, contentType: "application/json", body: JSON.stringify(none) },
+        );
+      else if (method === "POST" && path === "/workspace/support") {
+        sent.push(route.request().postDataJSON());
+        if (saveFails) return route.fulfill(failure);
+        // The next try is held, so that the form can be read while it saves.
+        await new Promise<void>((done) => (release = done));
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify(
+            api.CreateSupportTicketResponse.parse({
+              reference: "VALO-SUP-SYNTHETIC-3",
+              message: "Synthetic test fixture: a note in the server's own words.",
+              dispatchStatus: "awaiting_staff",
+            }),
+          ),
+        });
+      } else await answer(route, method, path, query);
+    });
+    try {
+      const requests = page.getByTestId("customer-support-cases");
+      const alert = requests.getByTestId("status-error");
+      await expect(alert).toHaveAttribute("role", "alert");
+      await expect(alert).toContainText("We could not load this");
+      assert.equal(await requests.getByRole("status").count(), 0, "the list is not still said to be loading");
+      assert.deepEqual((await wcagFailures(page)).failures, [], "/support when its list cannot be read");
+      listFails = false;
+      await alert.getByTestId("button-retry").click();
+      await expect(requests).toContainText("No requests on this page.");
+      await expect(alert).toHaveCount(0);
+
+      // Nothing typed: the form says what is missing, and sends nothing.
+      const form = page.getByTestId("form-ticket"),
+        box = page.getByTestId("input-scope"),
+        save = page.getByTestId("button-submit-ticket");
+      await expect(form).toContainText("At least 10 characters.");
+      await expect(box).toHaveAttribute("aria-invalid", "false");
+      await save.click();
+      await expect(form).toContainText("Describe what you need in at least 10 characters.");
+      await expect(box).toHaveAttribute("aria-invalid", "true");
+      assert.equal(sent.length, 0, "an incomplete request is not sent");
+      assert.deepEqual((await wcagFailures(page)).failures, [], "/support with its form's problems shown");
+
+      // A save that fails says so, and keeps what was typed.
+      await box.fill(typed);
+      await expect(box).toHaveAttribute("aria-invalid", "false");
+      await save.click();
+      const failed = page.getByTestId("text-ticket-error");
+      await expect(failed).toHaveAttribute("role", "alert");
+      await expect(failed).toHaveText("Synthetic failure");
+      await expect(box).toHaveValue(typed);
+      await expect(save).toBeEnabled();
+      await expect(page.getByTestId("ticket-receipt")).toHaveCount(0);
+      assert.equal(sent.length, 1);
+      assert.deepEqual((await wcagFailures(page)).failures, [], "/support after a save that failed");
+
+      // The next try: the button cannot be pressed twice while it saves, and the receipt follows.
+      saveFails = false;
+      await save.click();
+      await expect(save).toBeDisabled();
+      await expect(box).toHaveValue(typed);
+      await expect.poll(() => sent.length).toBe(2);
+      release();
+      await expect(page.getByTestId("ticket-receipt")).toContainText("Enquiry received");
+      await expect(page.getByTestId("text-ticket-reference")).toHaveText("VALO-SUP-SYNTHETIC-3");
+      await expect(failed).toHaveCount(0);
+      assert.deepEqual(
+        sent.map((body) => (body as { scope: string }).scope),
+        [typed, typed],
+      );
+      assert.deepEqual(errors, []);
+      assert.deepEqual(unknown, []);
+    } finally {
+      release();
+      await close();
+    }
   }
 });
 
@@ -4587,6 +4854,177 @@ test("a bundle on sale lists its templates and terms, and a bundle's order downl
   }
 });
 
+// PAY-006 (docs/architecture/order-safety.md, slice 3): coming back from the payment page is not proof of
+// payment. The purchases screen asks the server once about the workspace's own order named in the address,
+// says what the server found, and takes the reference out of the address.
+test("back from the payment page, the purchases screen asks once for the status of the workspace's own order named in the address, says what the server found, and takes the reference out of the address", async () => {
+  const order = (n: number, reference: string, title: string, verified: boolean) => {
+    const edition = "00000000-0000-4000-8000-00000000c" + String(n).padStart(3, "0");
+    return {
+      id: "00000000-0000-4000-8000-00000000d" + String(n).padStart(3, "0"),
+      reference,
+      title,
+      amountKobo: 250000,
+      currency: "NGN",
+      status: verified ? ("verified_success" as const) : ("pending" as const),
+      createdAt: at(20),
+      lastCheckedAt: verified ? at(21) : null,
+      licenceVersion: "synthetic-licence-1",
+      licenceText: "Synthetic licence.",
+      taxTreatment: "Synthetic tax treatment.",
+      contentVersionId: edition,
+      editions: [{ contentVersionId: edition, title }],
+      carriesToLaterEditions: true,
+      refundStatus: null,
+      receiptReference: verified ? "RCT-SYNTH-" + String(n) : null,
+      refunds: [],
+      refundableKobo: verified ? 250000 : 0,
+      refundedKobo: 0,
+      refundPolicy: "Synthetic refund policy.",
+      disputeStatus: null,
+    };
+  };
+  const waiting = order(1, "ORD-SYNTH-RETURN", "Synthetic agreement", false);
+  const earlier = order(2, "ORD-SYNTH-EARLIER", "Synthetic policy", true);
+  const refresh = `/workspace/orders/${waiting.id}/refresh`;
+  // The server, stood in for: it says what the provider said of the order when it was last asked, and
+  // can be made unable to ask.
+  const server = { paid: false, down: false, unread: false, asked: [] as string[] };
+  const returning: Api = async (route, method, path, query) => {
+    const json = (status: number, body: unknown) =>
+      route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) });
+    if (method === "POST" && /^\/workspace\/orders\/[^/]+\/refresh$/.test(path)) {
+      server.asked.push(path);
+      if (server.down)
+        return json(503, {
+          error:
+            "Paystack did not respond. Keep this order and refresh its status before starting another payment.",
+        });
+      server.paid = true;
+      return json(
+        200,
+        api.RefreshCommerceOrderResponse.parse(order(1, waiting.reference, waiting.title, true)),
+      );
+    }
+    if (method === "GET" && path === "/workspace/purchases") {
+      if (server.unread) return json(500, { error: "Synthetic failure: the orders cannot be read." });
+      return json(
+        200,
+        api.GetCustomerPurchasesResponse.parse({
+          available: true,
+          message: "Synthetic purchases.",
+          livePaymentsEnabled: false,
+          purchaseCarriesToLaterEditions: true,
+          bundles: [],
+          orders: [order(1, waiting.reference, waiting.title, server.paid), earlier],
+          products: [],
+          ownedDownloads: [],
+        }),
+      );
+    }
+    await answer(route, method, path, query);
+  };
+  const back = (search: string) => phone("/workspace/purchases" + search, returning);
+
+  // An address with the order's reference under both names, as the provider is expected to send the
+  // customer back. The server is asked once, and the screen says what it answered.
+  const paid = await back("?trxref=ORD-SYNTH-RETURN&reference=ORD-SYNTH-RETURN");
+  try {
+    await ready(paid.page);
+    const notice = paid.page.getByTestId("payment-return");
+    await expect(notice).toHaveText(
+      "Test purchase verifiedYour payment for Synthetic agreement is verified. Its order is below.",
+    );
+    assert.equal(await notice.getAttribute("role"), "status");
+    assert.deepEqual(server.asked, [refresh]);
+    // The order below reads as the notice does, once the list has been read again: the notice's title,
+    // this order and the earlier one.
+    await expect(paid.page.getByText("Test purchase verified", { exact: true })).toHaveCount(3);
+    // The reference has left the address, so opening the address again asks nothing.
+    assert.equal(new URL(paid.page.url()).search, "");
+    await settled(paid.page);
+    assert.deepEqual(await phoneProblems(paid.page, "the purchases screen back from the payment page"), []);
+    await paid.page.reload();
+    await ready(paid.page);
+    await expect(paid.page.getByRole("heading", { name: "Your orders" })).toBeVisible();
+    await expect(paid.page.getByTestId("payment-return")).toHaveCount(0);
+    assert.deepEqual(server.asked, [refresh]);
+    assert.deepEqual(paid.errors, []);
+    assert.deepEqual(paid.unknown, []);
+  } finally {
+    await paid.close();
+  }
+
+  // When the server cannot ask, the screen says so in the server's own words and points at the order's
+  // own button. Nothing is called verified.
+  Object.assign(server, { paid: false, down: true, asked: [] });
+  const unasked = await back("?reference=ORD-SYNTH-RETURN");
+  try {
+    await ready(unasked.page);
+    const notice = unasked.page.getByTestId("payment-return");
+    await expect(notice).toHaveText(
+      'Your payment could not be checked just nowPaystack did not respond. Keep this order and refresh its status before starting another payment. Use "Check payment status" on the order for Synthetic agreement below.',
+    );
+    assert.deepEqual(server.asked, [refresh]);
+    await expect(unasked.page.getByText("Awaiting verified payment", { exact: true })).toBeVisible();
+    assert.equal(new URL(unasked.page.url()).search, "");
+    assert.deepEqual(unasked.unknown, []);
+  } finally {
+    await unasked.close();
+  }
+
+  // An order already verified is not asked about again, and a reference no listed order has is nobody's
+  // here: the server is asked nothing for either.
+  Object.assign(server, { paid: false, down: false, asked: [] });
+  for (const [search, words] of [
+    [
+      "?reference=ORD-SYNTH-EARLIER",
+      "Test purchase verifiedYour payment for Synthetic policy is verified. Its order is below.",
+    ],
+    [
+      "?trxref=ORD-SYNTH-ANOTHER-WORKSPACE",
+      "No order found for this paymentNo order listed here has the reference this page was opened with. Your orders are below.",
+    ],
+  ] as const) {
+    const shown = await back(search);
+    try {
+      await ready(shown.page);
+      await expect(shown.page.getByTestId("payment-return")).toHaveText(words);
+      assert.equal(new URL(shown.page.url()).search, "");
+      assert.deepEqual(shown.errors, []);
+      assert.deepEqual(shown.unknown, []);
+    } finally {
+      await shown.close();
+    }
+  }
+  assert.deepEqual(server.asked, []);
+
+  // When the orders cannot be read, the order is not looked for and the screen says so. The reference
+  // stays in the address until they can be read: "Try again" reads them, and the order is asked about
+  // once.
+  Object.assign(server, { paid: false, down: false, unread: true, asked: [] });
+  const unread = await back("?reference=ORD-SYNTH-RETURN");
+  try {
+    await ready(unread.page);
+    const notice = unread.page.getByTestId("payment-return");
+    await expect(notice).toHaveText(
+      'Your payment has not been checked yetYour orders could not be read, so the order you have come back from paying for has not been looked for. Use "Try again" below.',
+    );
+    assert.deepEqual(server.asked, []);
+    assert.equal(new URL(unread.page.url()).search, "?reference=ORD-SYNTH-RETURN");
+    server.unread = false;
+    await unread.page.getByTestId("button-retry").click();
+    await expect(notice).toHaveText(
+      "Test purchase verifiedYour payment for Synthetic agreement is verified. Its order is below.",
+    );
+    assert.deepEqual(server.asked, [refresh]);
+    assert.equal(new URL(unread.page.url()).search, "");
+    assert.deepEqual(unread.unknown, []);
+  } finally {
+    await unread.close();
+  }
+});
+
 test("My Templates lists owned editions once, including older purchases and closed offers", async () => {
   const id = (suffix: number) => "00000000-0000-4000-8000-" + String(suffix).padStart(12, "0");
   const edition = (n: number, title: string, reviewed = false) => ({
@@ -4802,13 +5240,14 @@ test("purchase history offers the exact owned file on a verified order and keeps
 // WRK-003: "... and a delivery log." The workspace's log of every message, in the customer's words. No
 // message is called sent or delivered, and one Valo only recorded is said not to have been emailed
 // (docs/architecture/messages.md, slice 1b).
-test("the messages screen says in plain words what has happened to each message and reminder, calls none of them sent or delivered, and says of a message Valo only recorded that nothing was emailed", async () => {
+test("the messages screen says in plain words what has happened to each message and reminder, calls none of them sent, calls delivered only one the email service reported as delivered, and says of a message Valo only recorded that nothing was emailed", async () => {
   const message = (n: number, fields: Record<string, unknown>) => ({
     id: `00000000-0000-4000-8000-00000000d20${n}`,
     kind: "purchase_receipt",
     orderId: "00000000-0000-4000-8000-00000000a101",
     orderReference: "ORD-SYNTH-1",
     refundReference: null,
+    noticesDay: null,
     forYou: true,
     status: "queued",
     reason: null,
@@ -4817,8 +5256,21 @@ test("the messages screen says in plain words what has happened to each message 
     lastAttemptAt: null,
     nextAttemptAt: null,
     acceptedAt: null,
+    delivery: null,
+    deliveryAt: null,
     ...fields,
   });
+  /** A message an email service accepted on `day`, and what that service reported about it since. */
+  const reported = (n: number, day: number, delivery: string) =>
+    message(n, {
+      status: "accepted",
+      attempts: 1,
+      createdAt: at(day),
+      lastAttemptAt: at(day),
+      acceptedAt: at(day),
+      delivery,
+      deliveryAt: at(day),
+    });
   const records = api.ListWorkspaceMessagesResponse.parse([
     message(1, { status: "held", reason: "SENDER_NOT_CONFIGURED", createdAt: at(24), nextAttemptAt: at(25) }),
     message(2, {
@@ -4860,6 +5312,22 @@ test("the messages screen says in plain words what has happened to each message 
       lastAttemptAt: at(19),
       nextAttemptAt: at(26),
     }),
+    reported(7, 18, "delivered"),
+    reported(8, 17, "bounced"),
+    reported(9, 16, "undelivered"),
+    // A day's notices of changes that affect the workspace, which Valo only recorded the morning after.
+    message(10, {
+      id: "00000000-0000-4000-8000-00000000d2a0",
+      kind: "notices_digest",
+      orderId: null,
+      orderReference: null,
+      noticesDay: "2026-11-14",
+      status: "recorded",
+      attempts: 1,
+      createdAt: at(15),
+      lastAttemptAt: at(15),
+      acceptedAt: at(15),
+    }),
   ]);
   const reminders = api.ListRemindersResponse.parse(answers["GET /workspace/reminders"]);
   const row = (page: Page, n: number) => page.getByTestId(`row-message-${records[n - 1]!.id}`);
@@ -4872,16 +5340,28 @@ test("the messages screen says in plain words what has happened to each message 
       await ready(page);
       await expect(page.getByRole("heading", { level: 1 })).toHaveText("Messages from Valo");
       await expect(page.getByTestId("text-messages-intro")).toHaveText(
-        "Each message Valo owes this workspace about a purchase or a refund, and each reminder about a task, with what has happened to it. " +
-          "No message is shown as delivered: the most Valo knows is that an email service accepted it.",
+        "Each message Valo owes this workspace about a purchase, a refund or a change that affects it, and each reminder about a task, with what has happened to it. " +
+          "A message is shown as delivered only when the email service reports that it was. Until then, the most Valo knows is that an email service accepted it.",
       );
       // Newest first, the reminder among the messages.
       const rows = page.getByTestId("list-messages").locator("> li");
-      await expect(rows).toHaveCount(7);
+      await expect(rows).toHaveCount(11);
       assert.deepEqual(
         await rows.evaluateAll((items) => items.map((item) => item.getAttribute("data-testid"))),
         [`row-reminder-${reminders[0]!.id}`, ...records.map((record) => `row-message-${record.id}`)],
       );
+      // A day's notices: headed by the day they are about, with where the notices themselves are.
+      await expect(row(page, 10).locator("p").first()).toHaveText(
+        "Changes on 14 Nov 2026 that affect your workspace",
+      );
+      await expect(row(page, 10)).toContainText("15 Nov 2026, 10:00 · For you");
+      await expect(row(page, 10).locator(".pill")).toHaveText("Not emailed");
+      await expect(row(page, 10)).toContainText("The notices themselves are on your Workspace page.");
+      await expect(row(page, 10).getByRole("link", { name: "Go to Workspace" })).toHaveAttribute(
+        "href",
+        "/workspace",
+      );
+      await expect(row(page, 10).getByRole("link", { name: "Go to Purchases" })).toHaveCount(0);
 
       // Waiting because nothing is emailed yet. The receipt itself is where it always is.
       await expect(row(page, 1)).toContainText("Receipt for order ORD-SYNTH-1");
@@ -4936,6 +5416,30 @@ test("the messages screen says in plain words what has happened to each message 
       await expect(row(page, 6)).toContainText(
         "Tried 2 times. Last tried 19 Nov 2026, 10:00.Valo tries again after 26 Nov 2026, 10:00.",
       );
+      // The email service reported that it delivered this one. Only then is a message called delivered, and
+      // the row says who says so, when, and what Valo cannot see.
+      await expect(row(page, 7).locator(".pill")).toHaveText("Delivered");
+      await expect(row(page, 7)).toContainText(
+        "The email service reports that this message was delivered. Valo cannot see whether it was opened, or which folder it went to.",
+      );
+      await expect(row(page, 7)).toContainText("The email service reported this on 18 Nov 2026, 10:00.");
+      assert.doesNotMatch(await row(page, 7).innerText(), /\bsent\b|\bread\b/i);
+      // One that came back says the address may be wrong. Valo's staff cannot clear that, so no report is offered.
+      await expect(row(page, 8).locator(".pill")).toHaveText("Not delivered");
+      await expect(row(page, 8)).toContainText(
+        "The email service reports that this message came back: the address did not take it. The email address may be wrong or no longer in use.",
+      );
+      await expect(row(page, 8).getByRole("link", { name: "Report a problem" })).toHaveCount(0);
+      // One the email service could not send is Valo's to look at.
+      await expect(row(page, 9).locator(".pill")).toHaveText("Not delivered");
+      await expect(row(page, 9)).toContainText("The email service could not send this message.");
+      await expect(row(page, 9).getByRole("link", { name: "Report a problem" })).toHaveAttribute(
+        "href",
+        "/support",
+      );
+      // No message the email service made no report about is called delivered, or not delivered.
+      for (const n of [1, 2, 3, 4, 5, 6])
+        assert.doesNotMatch(await row(page, n).innerText(), /delivered/i, `message ${n}`);
       // The reminder, in the reminders' own words, with the way to its own page.
       const reminder = page.getByTestId(`row-reminder-${reminders[0]!.id}`);
       await expect(reminder).toContainText("Reminder: Synthetic task 1");
@@ -4965,7 +5469,7 @@ test("the messages screen says in plain words what has happened to each message 
   );
   try {
     await ready(page);
-    assert.deepEqual(await phoneProblems(page, "the messages, with seven in the log"), []);
+    assert.deepEqual(await phoneProblems(page, "the messages, with eleven in the log"), []);
     assert.deepEqual(errors, []);
     assert.deepEqual(unknown, []);
   } finally {
@@ -5610,6 +6114,359 @@ test("a saved result whose rule changed since says so above it and under that ru
     assert.deepEqual(await phoneProblems(page, "a saved result whose rule changed"), []);
     assert.deepEqual(errors, []);
     assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
+
+// PRO-003: "Version relevant profile changes and offer a new requirements assessment without overwriting
+// the prior result. Accept: changed location, activities or employee count produces a dated comparison
+// and preserves user-created tasks." The server decides when a new check is offered and names the
+// changed answers (`Workspace.recheck`); these are the screens that show its offer.
+test("a new requirements check is offered where the server offers one: with the profile's save, on the home page and on the result it follows, and the result saved from it opens compared with that one", async () => {
+  const workspace = answers["GET /workspace"] as Record<string, unknown>;
+  const recheck = {
+    assessmentId: ASSESSMENT,
+    savedAt: assessment.createdAt,
+    changed: ["state", "employees"],
+  };
+  const offered = api.GetWorkspaceResponse.parse({ ...workspace, recheck });
+  const href = `/workspace/checker?prefill=profile&since=${ASSESSMENT}`;
+  const changed =
+    "These answers have changed since the result saved on 18 Nov 2026, 10:00: State or FCT and Employees.";
+  const offer = async (page: Page) => {
+    const notice = page.getByTestId("notice-check-again");
+    await expect(notice).toContainText("Your business profile has changed since your last saved result");
+    await expect(notice).toContainText(changed);
+    await expect(notice).toContainText(
+      "Check again to see what that means for your requirements. Your saved results and your tasks stay as they are.",
+    );
+    await expect(notice.getByRole("link", { name: "Check again with my profile" })).toHaveAttribute(
+      "href",
+      href,
+    );
+    return notice;
+  };
+
+  // The profile's page offers nothing until a save brings the offer, and then brings it into view.
+  {
+    const { page, errors, unknown, close } = await phone(
+      "/workspace/profile",
+      except({
+        "PUT /workspace/profile": api.SaveBusinessProfileResponse.parse({
+          ...workspace,
+          profileRevision: 4,
+          profile: { ...profile, state: "Bayelsa", employees: "6" },
+          recheck,
+        }),
+      }),
+    );
+    try {
+      await ready(page);
+      await expect(page.getByTestId("notice-check-again")).toHaveCount(0);
+      await page.getByTestId("input-state").selectOption("Bayelsa");
+      await page.getByTestId("input-employees").fill("6");
+      // Saved from the foot of the form, where the head of the page is out of sight.
+      await page.getByTestId("checkbox-marketing").scrollIntoViewIfNeeded();
+      await page.getByTestId("button-save-profile").click();
+      await expect(await offer(page)).toBeInViewport({ ratio: 1 });
+      await expect(page.getByTestId("text-profile-revision")).toHaveText("Version 4");
+      assert.deepEqual([...errors, ...unknown], []);
+    } finally {
+      await close();
+    }
+  }
+  // It is still offered when the page is opened again. (The sweep runs here, on the page at rest:
+  // the message that confirms a save is on screen for some seconds after one.)
+  {
+    const { page, errors, unknown, close } = await phone(
+      "/workspace/profile",
+      except({ "GET /workspace": offered }),
+    );
+    try {
+      await ready(page);
+      await offer(page);
+      await settled(page);
+      assert.deepEqual(await phoneProblems(page, "the business profile with a new check offered"), []);
+      assert.deepEqual([...errors, ...unknown], []);
+    } finally {
+      await close();
+    }
+  }
+
+  // The home page lists it with what needs attention, and says so beside the latest result.
+  {
+    const { page, errors, unknown, close } = await phone("/workspace", except({ "GET /workspace": offered }));
+    try {
+      await ready(page);
+      const item = page.getByTestId("attention-stale-check");
+      await expect(item).toContainText("Your business profile has changed since your last saved result");
+      await expect(item).toContainText(changed);
+      await expect(item.getByRole("link", { name: "Check again with my profile" })).toHaveAttribute(
+        "href",
+        href,
+      );
+      const beside = page.getByTestId("status-profile-changed-since-check");
+      await expect(beside).toContainText("Your business profile has changed since this saved result.");
+      await expect(beside.getByRole("link", { name: "Check again with my profile" })).toHaveAttribute(
+        "href",
+        href,
+      );
+      await settled(page);
+      assert.deepEqual(await phoneProblems(page, "the home page with a new check offered"), []);
+      assert.deepEqual([...errors, ...unknown], []);
+    } finally {
+      await close();
+    }
+  }
+
+  // The result it follows shows it too, and is itself as it was saved.
+  {
+    const { page, errors, unknown, close } = await phone(
+      `/workspace/assessments/${ASSESSMENT}`,
+      except({ "GET /workspace": offered }),
+    );
+    try {
+      await ready(page);
+      await offer(page);
+      await expect(page.getByTestId(`card-item-${assessment.result.items[0]!.ruleId}`)).toContainText(
+        assessment.result.items[0]!.reason,
+      );
+      await settled(page);
+      assert.deepEqual(await phoneProblems(page, "a saved result with a new check offered"), []);
+      assert.deepEqual([...errors, ...unknown], []);
+    } finally {
+      await close();
+    }
+  }
+
+  // Without the server's offer no screen makes one: not when the profile's version is newer than
+  // the one a result names, which a change to the business name alone brings about.
+  const renamed = api.GetWorkspaceResponse.parse({ ...workspace, profileRevision: 5 });
+  for (const path of ["/workspace", `/workspace/assessments/${ASSESSMENT}`, "/workspace/profile"]) {
+    const { page, errors, unknown, close } = await phone(path, except({ "GET /workspace": renamed }));
+    try {
+      await ready(page);
+      await settled(page);
+      for (const id of ["notice-check-again", "attention-stale-check", "status-profile-changed-since-check"])
+        await expect(page.getByTestId(id), `${path}: ${id}`).toHaveCount(0);
+      assert.deepEqual([...errors, ...unknown], [], path);
+    } finally {
+      await close();
+    }
+  }
+
+  // The check the offer opens is filled in from the profile. The result saved from it opens compared
+  // with the one it follows, each under the time it was saved, and the offer is not repeated on it.
+  {
+    const NEXT = "00000000-0000-4000-8000-00000000a002";
+    const next = { ...assessment, id: NEXT, profileRevision: null, createdAt: at(19) };
+    const { page, errors, unknown, close } = await phone(
+      href,
+      except({
+        "GET /workspace": offered,
+        "POST /workspace/checker/preview": api.PreviewWorkspaceAssessmentResponse.parse(assessment.result),
+        "POST /workspace/assessments": api.CreateAssessmentResponse.parse(next),
+        "GET /workspace/assessments": api.ListAssessmentsResponse.parse([next, assessment]),
+        [`GET /workspace/assessments/${NEXT}`]: api.GetAssessmentResponse.parse(next),
+        [`GET /workspace/assessments/${NEXT}/compare/${ASSESSMENT}`]: api.CompareAssessmentsResponse.parse({
+          previousId: ASSESSMENT,
+          currentId: NEXT,
+          changedFacts: ["employees", "state"],
+          addedRuleIds: [],
+          removedRuleIds: [],
+          changedRuleIds: [],
+          explanations: [],
+        }),
+      }),
+    );
+    try {
+      await ready(page);
+      await expect(page.getByText("Filled in from your business profile.")).toBeAttached();
+      await page.getByTestId("button-step-5").click();
+      await page.getByTestId("button-run").click();
+      await page.getByTestId("checkbox-save-consent").check();
+      await page.getByTestId("button-save-assessment").click();
+      await page.waitForURL(`**/workspace/assessments/${NEXT}?compare=${ASSESSMENT}`);
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText("Result saved 19 Nov 2026, 10:00");
+      const earlier = page.getByTestId("select-compare");
+      await expect(earlier).toHaveValue(ASSESSMENT);
+      await expect(earlier.locator("option:checked")).toHaveText("18 Nov 2026, 10:00");
+      await expect(page.getByTestId("comparison")).toContainText("Changed answers (2)");
+      await expect(page.getByTestId("notice-check-again")).toHaveCount(0);
+      assert.deepEqual([...errors, ...unknown], []);
+    } finally {
+      await close();
+    }
+  }
+});
+
+// NFR-006: the message that confirms an action shows for a few seconds over the page. It must not
+// hide the header, the button just pressed, or the control the keyboard moves to next.
+test("the message that confirms a save has a close button with a name, lies under the header and clear of the save button, passes the automated checks while it shows, and goes when the keyboard moves on", async () => {
+  const workspace = answers["GET /workspace"] as Record<string, unknown>;
+  const saved = api.SaveBusinessProfileResponse.parse({ ...workspace, profileRevision: 4 });
+  /** Whether two boxes share any area. */
+  const overlap = (a: { x: number; y: number; width: number; height: number }, b: typeof a) =>
+    a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+  for (const [kind, open] of [
+    ["phone", phone],
+    ["desktop", desktop],
+  ] as const) {
+    const { page, errors, unknown, close } = await open(
+      "/workspace/profile",
+      except({ "PUT /workspace/profile": saved }),
+    );
+    try {
+      await ready(page);
+      const save = page.getByTestId("button-save-profile");
+      // The save button is held at the foot of the screen while the form runs on below it.
+      await save.click();
+      const message = page.getByTestId("toast").filter({ hasText: "Profile saved" });
+      await expect(message).toContainText("Saved as version 4.");
+      // Its close button shows without a pointer over the message, as on a phone.
+      const shut = message.getByRole("button", { name: "Close this message" });
+      await expect(shut).toBeVisible();
+      assert.equal(
+        await page.evaluate(
+          `getComputedStyle(document.querySelector('[data-testid="toast"] button')).opacity`,
+        ),
+        "1",
+        kind,
+      );
+      // The pointer on the message keeps it on screen while it is looked at. It is moved there as a
+      // hand moves it. A test's own "hover" may first scroll its target into view, and a browser
+      // takes a scroll to an element as the place the keyboard carries on from.
+      const point = async () => {
+        const at = (await message.boundingBox())!;
+        await page.mouse.move(at.x + at.width / 2, at.y + at.height / 2);
+      };
+      await point();
+      await settled(page);
+      const box = (await message.boundingBox())!,
+        header = (await page.locator("header").first().boundingBox())!,
+        button = (await save.boundingBox())!,
+        view = page.viewportSize()!;
+      assert.ok(box.y >= header.y + header.height - 1, `${kind}: the message lies over the header`);
+      assert.ok(!overlap(box, button), `${kind}: the message lies over the save button`);
+      assert.ok(box.x >= 0 && box.x + box.width <= view.width, `${kind}: the message leaves the screen`);
+      // The automated checks, with the message showing.
+      const { passes, failures } = await wcagFailures(page);
+      assert.ok(passes > 10, kind);
+      assert.deepEqual(failures, [], kind);
+      // Only the message takes a tap: the room around it leaves the page beneath in reach.
+      assert.equal(
+        await page.evaluate(
+          `document.elementFromPoint(${box.x - 8}, ${box.y + box.height / 2}) !==
+            document.querySelector('[data-testid="toast"]').parentElement`,
+        ),
+        true,
+        `${kind}: the room beside the message takes taps`,
+      );
+      // The header's own controls stay in reach under the pointer.
+      const logo = (await page.locator("header a").first().boundingBox())!;
+      assert.equal(
+        await page.evaluate(
+          `!!document.elementFromPoint(${logo.x + logo.width / 2}, ${logo.y + logo.height / 2})?.closest("header")`,
+        ),
+        true,
+        `${kind}: the header is under the message`,
+      );
+      // The message follows the header. At the head of the page the header sits lower, under the
+      // development banner; further down it rests at the top of the screen.
+      const under = async () => {
+        const at = (await message.boundingBox())!,
+          head = (await page.locator("header").first().boundingBox())!;
+        return { header: Math.round(head.y), gap: Math.round(at.y - (head.y + head.height)) };
+      };
+      await page.evaluate("window.scrollTo(0, 0)");
+      await expect.poll(async () => (await under()).header > 0 && (await under()).gap === 16).toBe(true);
+      await page.getByTestId("checkbox-marketing").scrollIntoViewIfNeeded();
+      await expect.poll(under).toEqual({ header: 0, gap: 16 });
+      await point();
+      // The keyboard moves on from the save button, and the message goes: nothing the keyboard
+      // reaches is hidden. The focus is on the control the key moved it to, in the footer.
+      await save.focus();
+      await page.keyboard.press("Tab");
+      await expect(message).toHaveCount(0);
+      assert.equal(
+        await page.evaluate(`!!document.activeElement.closest("footer")`),
+        true,
+        `${kind}: the keyboard is on the control after the save button`,
+      );
+      if (kind === "phone")
+        assert.deepEqual(await phoneProblems(page, "the business profile after a save"), []);
+      assert.deepEqual([...errors, ...unknown], [], kind);
+    } finally {
+      await close();
+    }
+  }
+});
+
+// The message itself can be reached and closed from the keyboard.
+// The message is the last thing on a page, so the keyboard reaches it after the page's last control.
+// It must not go as the keyboard arrives: the focus would be left in something that is gone.
+test("the keyboard moving on from the page's last control reaches the message that confirms a save, which stays while the keyboard is in it and goes once the keyboard leaves it", async () => {
+  const workspace = answers["GET /workspace"] as Record<string, unknown>;
+  const saved = api.SaveBusinessProfileResponse.parse({ ...workspace, profileRevision: 4 });
+  const { page, errors, unknown, close } = await phone(
+    "/workspace/profile",
+    except({ "PUT /workspace/profile": saved }),
+  );
+  try {
+    await ready(page);
+    await page.getByTestId("button-save-profile").click();
+    const message = page.getByTestId("toast").filter({ hasText: "Profile saved" });
+    await expect(message).toContainText("Saved as version 4.");
+    // On a phone the page's last control is the last link of the bar at the foot of the screen.
+    await page.getByTestId("link-bar-profile").focus();
+    await page.keyboard.press("Tab");
+    await expect(message).toBeFocused();
+    // Longer than the message takes to go.
+    await delay(600);
+    await expect(message).toBeVisible();
+    await page.keyboard.press("Tab");
+    await expect(message.getByRole("button", { name: "Close this message" })).toBeFocused();
+    await delay(600);
+    await expect(message).toBeVisible();
+    // The next key takes the keyboard out of the message and off the end of the page.
+    await page.keyboard.press("Tab");
+    await expect(message).toHaveCount(0);
+    assert.deepEqual([...errors, ...unknown], []);
+  } finally {
+    await close();
+  }
+});
+
+test("the message that confirms a save is reached with F8, and its close button closes it", async () => {
+  const workspace = answers["GET /workspace"] as Record<string, unknown>;
+  const { page, errors, unknown, close } = await desktop(
+    "/workspace/profile",
+    except({
+      "PUT /workspace/profile": api.SaveBusinessProfileResponse.parse({ ...workspace, profileRevision: 4 }),
+    }),
+  );
+  try {
+    await ready(page);
+    await page.getByTestId("button-save-profile").click();
+    const message = page.getByTestId("toast").filter({ hasText: "Profile saved" });
+    await expect(message).toBeVisible();
+    await page.keyboard.press("F8");
+    // Tab from the messages' own region moves to the message, then to its close button, and does
+    // not dismiss it on the way.
+    await page.keyboard.press("Tab");
+    await expect(message).toBeFocused();
+    // A message that is on its way out stays a moment longer: it must still be there after one.
+    await delay(600);
+    await expect(message).toBeVisible();
+    await page.keyboard.press("Tab");
+    const shut = message.getByRole("button", { name: "Close this message" });
+    await expect(shut).toBeFocused();
+    await delay(600);
+    await expect(message).toBeVisible();
+    await page.keyboard.press("Enter");
+    await expect(message).toHaveCount(0);
+    assert.deepEqual([...errors, ...unknown], []);
   } finally {
     await close();
   }
@@ -6604,6 +7461,252 @@ test("the System area's alerts say in plain words what is active now and what ch
     assert.deepEqual(empty.errors, []);
   } finally {
     await empty.close();
+  }
+});
+
+// PAY-007 (docs/architecture/reconciliation.md, slice 2): in the Finance area, a member of finance reads each
+// difference a daily payment check found in plain words, and settles one only with what they found and why.
+test("the Finance area says what each daily payment check found, settles a difference only with an outcome and a reason, and fits a phone", async () => {
+  const settlements: unknown[] = [];
+  const reason = "Synthetic: Paystack's record shows the event was sent an hour late.";
+  const finance: Api = async (route, method, path, query) => {
+    const settling = [paymentDifference, abandonedPaymentDifference].find(
+      (row) => method === "POST" && path === `/admin/payment-checks/${row.id}/settlement`,
+    );
+    if (settling) {
+      const sent = route.request().postDataJSON() as {
+        outcome: "explained" | "no_payment_stands";
+        reason: string;
+      };
+      settlements.push(sent);
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(
+          api.SettleFinancePaymentCheckResponse.parse({
+            ...settling,
+            status: "resolved",
+            outcome: sent.outcome,
+            resolvedAt: at(25),
+            resolvedByYou: true,
+            reason: sent.reason,
+          }),
+        ),
+      });
+    }
+    await answer(route, method, path, query);
+  };
+  const { page, unknown, errors, close } = await phone("/staff", finance);
+  try {
+    await ready(page);
+    await page.getByTestId("tab-staff-finance").click();
+    const checks = page.getByRole("region", { name: "Daily payment checks" });
+    const paid = checks.getByRole("article", { name: "valo-test-synthetic-paid" });
+    await expect(paid).toContainText("₦2,500.00 · Test purchase verified · Checked for 24 Nov 2026");
+    await expect(paid.getByRole("list", { name: "What differs" }).getByRole("listitem")).toHaveText([
+      "The order has been paid for more than an hour, and Paystack's event for the payment has not arrived.",
+      "The order is paid, and a template it bought is not available to the workspace, with no refund in full or dispute on record to explain it.",
+    ]);
+    // A paid order cannot be settled as having no payment.
+    await expect(paid.getByRole("radio", { name: /^No payment stands/ })).toBeDisabled();
+    await expect(paid).toContainText(
+      "Valo holds this order as paid, so it cannot be settled as having no payment.",
+    );
+    // Nothing is recorded without an outcome and a reason of ten characters or more.
+    const record = paid.getByRole("button", { name: "Record what you found" });
+    await expect(record).toBeDisabled();
+    await paid.getByRole("radio", { name: /^Explained/ }).check();
+    await expect(record).toBeDisabled();
+    await paid.getByLabel(/^Why: what you looked at/).fill("Too short");
+    await expect(record).toBeDisabled();
+    await paid.getByLabel(/^Why: what you looked at/).fill(reason);
+    await record.click();
+    await expect.poll(() => settlements).toEqual([{ outcome: "explained", reason }]);
+    // An abandoned order the provider never answered for can be settled as having no payment.
+    const abandoned = checks.getByRole("article", { name: "valo-test-synthetic-abandoned" });
+    await expect(abandoned.getByRole("list", { name: "What differs" }).getByRole("listitem")).toHaveText([
+      "Paystack gave no answer that could be used, three times, an hour apart.",
+    ]);
+    await expect(abandoned.getByRole("radio", { name: /^No payment stands/ })).toBeEnabled();
+    // The outcome sent is the one chosen.
+    const neverPaid = "Synthetic: Paystack's dashboard shows no payment for this reference.";
+    await abandoned.getByRole("radio", { name: /^No payment stands/ }).check();
+    await abandoned.getByLabel(/^Why: what you looked at/).fill(neverPaid);
+    await abandoned.getByRole("button", { name: "Record what you found" }).click();
+    await expect
+      .poll(() => settlements)
+      .toEqual([
+        { outcome: "explained", reason },
+        { outcome: "no_payment_stands", reason: neverPaid },
+      ]);
+    // The latest settled, with what was found, when, by whom and why.
+    await expect(checks.getByRole("list", { name: "Latest settled" }).getByRole("listitem")).toHaveText([
+      "valo-test-synthetic-settled: Explained, 20 Nov 2026, 10:00, by you.Synthetic: Paystack's own record shows the order's amount.",
+    ]);
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "the Finance area's daily payment checks"), []);
+    assert.deepEqual([...new Set(unknown)], []);
+    assert.deepEqual(errors, []);
+  } finally {
+    await close();
+  }
+  // With nothing found, and with the checks unreadable, each says so.
+  const quiet: Api = async (route, method, path, query) => {
+    if (method === "GET" && path === "/admin/payment-checks")
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(api.GetFinancePaymentChecksResponse.parse({ differences: [], settled: [] })),
+      });
+    await answer(route, method, path, query);
+  };
+  const empty = await phone("/staff", quiet);
+  try {
+    await ready(empty.page);
+    await empty.page.getByTestId("tab-staff-finance").click();
+    const checks = empty.page.getByRole("region", { name: "Daily payment checks" });
+    await expect(checks).toContainText("No difference is waiting to be settled.");
+    await expect(checks).toContainText("Nothing has been settled yet.");
+    assert.deepEqual([...new Set(empty.unknown)], []);
+    assert.deepEqual(empty.errors, []);
+  } finally {
+    await empty.close();
+  }
+});
+
+// PAY-007 (docs/architecture/reconciliation.md, slice 3a): finance reads why each Paystack event waits for it,
+// and settles one only with a reason.
+test("the Finance area says why each Paystack event waits for finance, settles one only with a reason, and fits a phone", async () => {
+  const settlements: unknown[] = [];
+  const reason = "Synthetic: Paystack's dashboard shows a test payment that no order of Valo's made.";
+  const finance: Api = async (route, method, path, query) => {
+    if (method === "POST" && path === `/admin/payment-events/${unmatchedPaymentEvent.id}/settlement`) {
+      const sent = route.request().postDataJSON() as { reason: string };
+      settlements.push(sent);
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(
+          api.SettleFinancePaymentEventResponse.parse({
+            ...unmatchedPaymentEvent,
+            resolvedAt: at(25),
+            resolvedByYou: true,
+            reason: sent.reason,
+          }),
+        ),
+      });
+    }
+    await answer(route, method, path, query);
+  };
+  const { page, unknown, errors, close } = await phone("/staff", finance);
+  try {
+    await ready(page);
+    await page.getByTestId("tab-staff-finance").click();
+    const events = page.getByRole("region", { name: "Paystack events waiting for finance" });
+    const waiting = events.getByRole("article", { name: "valo-test-synthetic-unknown" });
+    await expect(waiting).toContainText("A successful payment · Received 24 Nov 2026, 10:00");
+    await expect(waiting).toContainText(
+      "It names a reference that is no order or refund of Valo's, or no reference at all.",
+    );
+    // Nothing is recorded without a reason of ten characters or more.
+    const record = waiting.getByRole("button", { name: "Record what you found" });
+    await expect(record).toBeDisabled();
+    await waiting.getByLabel(/^What did you find\?/).fill("Too short");
+    await expect(record).toBeDisabled();
+    await waiting.getByLabel(/^What did you find\?/).fill(reason);
+    await record.click();
+    await expect.poll(() => settlements).toEqual([{ reason }]);
+    // The latest settled, with what it was, when, by whom and why.
+    await expect(
+      events.getByRole("list", { name: "Latest settled events" }).getByRole("listitem"),
+    ).toHaveText([
+      "valo-test-synthetic-refund: A refund, settled 21 Nov 2026, 10:00, by another member of finance.Synthetic: the refund was made at Paystack's dashboard.",
+    ]);
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "the Finance area's Paystack events"), []);
+    assert.deepEqual([...new Set(unknown)], []);
+    assert.deepEqual(errors, []);
+  } finally {
+    await close();
+  }
+  // With nothing waiting, it says so.
+  const quiet: Api = async (route, method, path, query) => {
+    if (method === "GET" && path === "/admin/payment-events")
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(api.GetFinancePaymentEventsResponse.parse({ waiting: [], settled: [] })),
+      });
+    await answer(route, method, path, query);
+  };
+  const empty = await phone("/staff", quiet);
+  try {
+    await ready(empty.page);
+    await empty.page.getByTestId("tab-staff-finance").click();
+    const events = empty.page.getByRole("region", { name: "Paystack events waiting for finance" });
+    await expect(events).toContainText("No event is waiting for finance.");
+    await expect(events).toContainText("No event has been settled yet.");
+    assert.deepEqual([...new Set(empty.unknown)], []);
+    assert.deepEqual(empty.errors, []);
+  } finally {
+    await empty.close();
+  }
+  // docs/architecture/reconciliation.md, slice 3b: what Paystack's own list of a day could not give waits
+  // as the day's, named by the day as the site writes a day, and recorded rather than received.
+  const listing = {
+    ...unmatchedPaymentEvent,
+    id: "00000000-0000-4000-8000-00000000e103",
+    eventType: "listing",
+    reference: "2026-11-23",
+    finding: "LISTING_UNREAD",
+  };
+  const lists: Api = async (route, method, path, query) => {
+    if (method === "GET" && path === "/admin/payment-events")
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(
+          api.GetFinancePaymentEventsResponse.parse({
+            waiting: [listing],
+            settled: [
+              {
+                ...listing,
+                id: "00000000-0000-4000-8000-00000000e104",
+                reference: "2026-11-22",
+                finding: "LISTING_INCOMPLETE",
+                resolvedAt: at(23),
+                resolvedByYou: true,
+                reason: "Synthetic: the rest of the day's list was read at Paystack.",
+              },
+            ],
+          }),
+        ),
+      });
+    await answer(route, method, path, query);
+  };
+  const daily = await phone("/staff", lists);
+  try {
+    await ready(daily.page);
+    await daily.page.getByTestId("tab-staff-finance").click();
+    const events = daily.page.getByRole("region", { name: "Paystack events waiting for finance" });
+    const day = events.getByRole("article", { name: "Paystack's list for 23 Nov 2026" });
+    await expect(day).toContainText(
+      "Paystack's list of a day's successful payments · Recorded 24 Nov 2026, 10:00",
+    );
+    await expect(day).toContainText(
+      "Valo could not read Paystack's list of this day's successful payments, three times, an hour apart.",
+    );
+    await expect(
+      events.getByRole("list", { name: "Latest settled events" }).getByRole("listitem"),
+    ).toHaveText([
+      "Paystack's list for 22 Nov 2026: Paystack's list of a day's successful payments, settled 23 Nov 2026, 10:00, by you.Synthetic: the rest of the day's list was read at Paystack.",
+    ]);
+    await settled(daily.page);
+    assert.deepEqual(await phoneProblems(daily.page, "the Finance area's Paystack lists"), []);
+    assert.deepEqual([...new Set(daily.unknown)], []);
+    assert.deepEqual(daily.errors, []);
+  } finally {
+    await daily.close();
   }
 });
 

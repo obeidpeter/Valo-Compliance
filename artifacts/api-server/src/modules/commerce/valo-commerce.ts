@@ -12,7 +12,6 @@ import {
   valoRefundRequests,
   valoPaymentEvents,
   valoEvents,
-  valoPaymentReconciliations,
   valoPaymentDisputes,
   valoWorkspaces,
 } from "@workspace/db";
@@ -24,8 +23,10 @@ import { ValoProblem } from "../../platform/valo-problem";
 import { consumeQuota, quotaLimit, quotaSubjectHash } from "../../lib/valo-quota";
 import {
   assertOrderMatch,
+  paymentEventFinding,
   paystack,
   paystackEventFamily,
+  UnmatchedPaymentEvent,
   verifiedTransaction,
   sandboxPaymentsConfigured,
   type VerifiedTransaction,
@@ -42,10 +43,13 @@ import { singleRow } from "../../platform/rows";
 import { queueMessage } from "../messages";
 import {
   assertPayableOrder,
+  bundleOrderTerms,
+  endedEditionOrders,
   lockCheckoutWorkspace,
   openEditionOrder,
   orderEditions,
   orderLineEditions,
+  priceOrderTerms,
   verifiedEditions,
 } from "./checkout-editions";
 import { bundleForOrder, bundleOffers } from "./bundle-orders";
@@ -377,16 +381,82 @@ export async function purchases(actor: WorkspaceActor) {
     ownedDownloads: catalogue.ownedDownloads,
   };
 }
+/** Ends an order's or a checkout's transaction before it writes anything: the provider is to be asked
+ * about these earlier orders first. Only afterALookAtEndedOrders catches it. */
+class EndedOrdersUnchecked extends Error {
+  constructor(readonly orders: string[]) {
+    super("ENDED_ORDERS_UNCHECKED");
+  }
+}
+/**
+ * PAY-006 (docs/architecture/order-safety.md, slice 4). Called in the transaction that is about to make
+ * another order for these editions, or to start a payment for one, once its other checks have passed. An
+ * earlier order for one of them that ended abandoned or failed may have been paid since. So the
+ * transaction ends here, with nothing written, for the provider to be asked outside it. Without a
+ * merchant there is nobody to ask, and no payment can be started either.
+ */
+async function endedOrdersLookedAt(tx: Tx, actor: WorkspaceActor, editions: string[], looked: boolean) {
+  if (looked || !sandboxPaymentsConfigured()) return;
+  const ended = await endedEditionOrders(tx, actor, editions);
+  if (ended.length) throw new EndedOrdersUnchecked(ended);
+}
+/**
+ * Runs `attempt`. Where it stops for earlier orders to be asked about, the provider is asked about each,
+ * outside any transaction, and `attempt` runs once more. An order paid since is settled by the asking,
+ * so the second run finds a payment on record and makes or starts nothing. One the provider still calls
+ * unpaid leaves the second run to do what the first would have. If the provider cannot be asked, nothing
+ * new is made or started: Valo cannot tell whether the customer has paid.
+ */
+async function afterALookAtEndedOrders<T>(actor: WorkspaceActor, attempt: (looked: boolean) => Promise<T>) {
+  try {
+    return await attempt(false);
+  } catch (stopped) {
+    if (!(stopped instanceof EndedOrdersUnchecked)) throw stopped;
+    for (const id of stopped.orders) {
+      try {
+        await refreshOrder(actor, id);
+      } catch (problem) {
+        // The provider's own refusals speak of "this order"; here the customer asked for another.
+        if (problem instanceof ValoProblem && problem.status === 503)
+          throw new ValoProblem(
+            503,
+            "Paystack could not be asked about your earlier order just now, so nothing new was started. Try again in a few minutes.",
+          );
+        throw problem;
+      }
+    }
+    return attempt(true);
+  }
+}
 export async function createOrder(actor: WorkspaceActor, raw: unknown) {
   const input = CreateCommerceOrderBody.strict().parse(raw);
   // An order buys one template's price or one bundle's version (docs/architecture/commercial-settings.md,
   // slice 4c).
   if ((input.priceId === undefined) === (input.bundleId === undefined))
     throw new ValoProblem(422, "Choose one template or one bundle to buy. No order was created.");
-  if (input.bundleId !== undefined) return createBundleOrder(actor, { ...input, bundleId: input.bundleId });
+  const { bundleId } = input;
+  if (bundleId !== undefined)
+    return afterALookAtEndedOrders(actor, (looked) =>
+      createBundleOrder(actor, { ...input, bundleId }, looked),
+    );
   const priceId = input.priceId!;
   // Before the transaction: see commerceProducts.
   const offer = (await commercialCatalogue()).offers.find((entry) => entry.product.id === priceId);
+  return afterALookAtEndedOrders(actor, (looked) => priceOrder(actor, { ...input, priceId }, offer, looked));
+}
+/** A template's order, made in one transaction from the price book: see createOrder. */
+async function priceOrder(
+  actor: WorkspaceActor,
+  input: {
+    priceId: string;
+    acceptedLicenceVersion: string;
+    acceptedCarriesToLaterEditions: boolean;
+    requestKey: string;
+  },
+  offer: { manual: boolean } | undefined,
+  looked: boolean,
+) {
+  const { priceId } = input;
   return db.transaction(async (tx) => {
     await assertSafetyActive(tx, "checkout");
     // Serialize one tenant's idempotency/price selection without trusting browser prices.
@@ -454,6 +524,7 @@ export async function createOrder(actor: WorkspaceActor, raw: unknown) {
         );
       return presentOrder(tx, existing);
     }
+    await endedOrdersLookedAt(tx, actor, [price.contentVersionId], looked);
     await limit(tx, actor);
     const id = randomUUID();
     const order = singleRow(
@@ -465,18 +536,9 @@ export async function createOrder(actor: WorkspaceActor, raw: unknown) {
           requestedBy: actor.identityId,
           requestKey: input.requestKey,
           reference: `valo-test-${id}`,
-          priceId: price.id,
-          amountKobo: price.amountKobo,
-          currency: price.currency,
+          ...priceOrderTerms(price),
           // The database refuses any rule but the one in effect, which this transaction holds.
           carriesToLaterEditions: carries,
-          line: {
-            title: price.title,
-            contentVersionId: price.contentVersionId,
-            licenceVersion: price.licenceVersion,
-            licenceText: price.licenceText,
-            taxTreatment: price.taxTreatment,
-          },
         })
         .returning(),
     );
@@ -507,6 +569,7 @@ async function createBundleOrder(
     acceptedCarriesToLaterEditions: boolean;
     requestKey: string;
   },
+  looked: boolean,
 ) {
   return db.transaction(async (tx) => {
     await assertSafetyActive(tx, "checkout");
@@ -557,6 +620,7 @@ async function createBundleOrder(
         );
       return presentOrder(tx, existing);
     }
+    await endedOrdersLookedAt(tx, actor, editions, looked);
     await limit(tx, actor);
     const id = randomUUID();
     const order = singleRow(
@@ -568,22 +632,9 @@ async function createBundleOrder(
           requestedBy: actor.identityId,
           requestKey: input.requestKey,
           reference: `valo-test-${id}`,
-          bundleId: version.id,
-          amountKobo: version.amountKobo,
-          currency: version.currency,
+          ...bundleOrderTerms(version, templates),
           // The database refuses any rule but the one in effect, which this transaction holds.
           carriesToLaterEditions: carries,
-          line: {
-            title: version.title,
-            bundle: version.bundleKey,
-            licenceVersion: version.licenceVersion,
-            licenceText: version.licenceText,
-            taxTreatment: version.taxTreatment,
-            editions: templates.map((template) => ({
-              contentVersionId: template.edition,
-              title: template.title,
-            })),
-          },
         })
         .returning(),
     );
@@ -613,7 +664,41 @@ export async function startCheckout(actor: WorkspaceActor, id: string, email: st
   const products = await commerceProducts();
   const bundles = await bundleOffers();
   const origin = trustedSiteOrigin();
-  const order = await db.transaction(async (tx) => {
+  const order = await afterALookAtEndedOrders(actor, (looked) =>
+    checkoutOrder(actor, id, { products, bundles, origin }, looked),
+  );
+  if (order.checkoutUrl) return { url: order.checkoutUrl };
+  // No membership lock across provider I/O. Stable provider reference prevents
+  // a retry from becoming a different order; never mint another reference on error.
+  const url = await withSafetyDispatch("checkout", async () => {
+    if (!(await stillOnSale(order)))
+      throw new ValoProblem(409, "This product is no longer available for new checkout.");
+    return paystack.initialise(order, email, `${origin}/workspace/purchases`);
+  });
+  return db.transaction(async (tx) => {
+    await assertSafetyActive(tx, "checkout");
+    await lockCheckoutWorkspace(tx, actor.workspaceId);
+    const current = await ownedOrder(tx, actor, id);
+    await assertPayableOrder(tx, actor, current);
+    if (current.checkoutUrl) return { url: current.checkoutUrl };
+    await tx.update(valoOrders).set({ checkoutUrl: url, status: "pending" }).where(eq(valoOrders.id, id));
+    await audit(tx, actor.workspaceId, actor.identityId, "checkout.initialised", id);
+    return { url };
+  });
+}
+/** The order a payment is about to be started for, after the checks that come before the merchant is
+ * asked, in one transaction: see startCheckout. */
+async function checkoutOrder(
+  actor: WorkspaceActor,
+  id: string,
+  {
+    products,
+    bundles,
+    origin,
+  }: { products: { id: string }[]; bundles: { id: string }[]; origin: string | undefined },
+  looked: boolean,
+) {
+  return db.transaction(async (tx) => {
     await assertSafetyActive(tx, "checkout");
     await lockCheckoutWorkspace(tx, actor.workspaceId);
     const order = await ownedOrder(tx, actor, id);
@@ -631,6 +716,7 @@ export async function startCheckout(actor: WorkspaceActor, id: string, email: st
         "This product is unavailable for new checkout. Your order history and drafts are unchanged.",
       );
     await assertPayableOrder(tx, actor, order);
+    await endedOrdersLookedAt(tx, actor, orderEditions(order.line), looked);
     if (order.checkoutUrl) return order;
     if (!origin) throw new ValoProblem(503, "The trusted checkout return address is not configured.");
     if (!sandboxPaymentsConfigured())
@@ -656,24 +742,6 @@ export async function startCheckout(actor: WorkspaceActor, id: string, email: st
     await tx.update(valoOrders).set({ status: "pending" }).where(eq(valoOrders.id, id));
     await audit(tx, actor.workspaceId, actor.identityId, "checkout.starting", id);
     return order;
-  });
-  if (order.checkoutUrl) return { url: order.checkoutUrl };
-  // No membership lock across provider I/O. Stable provider reference prevents
-  // a retry from becoming a different order; never mint another reference on error.
-  const url = await withSafetyDispatch("checkout", async () => {
-    if (!(await stillOnSale(order)))
-      throw new ValoProblem(409, "This product is no longer available for new checkout.");
-    return paystack.initialise(order, email, `${origin}/workspace/purchases`);
-  });
-  return db.transaction(async (tx) => {
-    await assertSafetyActive(tx, "checkout");
-    await lockCheckoutWorkspace(tx, actor.workspaceId);
-    const current = await ownedOrder(tx, actor, id);
-    await assertPayableOrder(tx, actor, current);
-    if (current.checkoutUrl) return { url: current.checkoutUrl };
-    await tx.update(valoOrders).set({ checkoutUrl: url, status: "pending" }).where(eq(valoOrders.id, id));
-    await audit(tx, actor.workspaceId, actor.identityId, "checkout.initialised", id);
-    return { url };
   });
 }
 /** Called ONLY with schema-validated data obtained by the server's verify API adapter.
@@ -1019,7 +1087,7 @@ export async function processPaymentEvents() {
     .limit(20);
   for (const event of events) {
     try {
-      if (!event.reference) throw new ValoProblem(409, "Missing reference");
+      if (!event.reference) throw new UnmatchedPaymentEvent("Missing reference");
       if (event.eventType.startsWith("refund.")) {
         if (!(await handleRefundEvent(event.reference))) continue;
         await db
@@ -1037,64 +1105,19 @@ export async function processPaymentEvents() {
         continue;
       }
       const [order] = await db.select().from(valoOrders).where(eq(valoOrders.reference, event.reference));
-      if (!order) throw new ValoProblem(409, "Unmatched reference");
+      if (!order) throw new UnmatchedPaymentEvent("Unmatched reference");
       await settleVerifiedOrder(order.id, await paystack.verify(order.reference));
       await db
         .update(valoPaymentEvents)
         .set({ status: "processed", failure: null })
         .where(eq(valoPaymentEvents.id, event.id));
     } catch (error) {
-      // Atomic attempts bound retries even across multiple worker processes.
+      // Atomic attempts bound retries even across multiple worker processes. A refusal ends the event at
+      // once; anything else is tried again, five times in all. Its finding says which, for finance
+      // (docs/architecture/reconciliation.md, slice 3a).
       await db.execute(sql`update valo_payment_events set attempts=LEAST(attempts+1,5),
         status=case when attempts>=4 or ${error instanceof ValoProblem && error.status === 409} then 'needs_review' else 'pending' end,
-        failure='SERVER_VERIFICATION_REQUIRED' where id=${event.id} and status='pending'`);
-    }
-  }
-}
-/** Durable daily reconciliation queue. A worker restart cannot erase the day/order key.
- * Missing credentials do not consume attempts or manufacture matched results. */
-export async function reconcilePayments() {
-  if (!sandboxPaymentsConfigured()) return;
-  await db.execute(sql`insert into valo_payment_reconciliations(id,workspace_id,order_id,day)
-    select gen_random_uuid(),workspace_id,id,to_char(now() at time zone 'UTC','YYYY-MM-DD')
-    from valo_orders where status <> 'created'
-    on conflict(order_id,day) do nothing`);
-  const pending = await db
-    .select()
-    .from(valoPaymentReconciliations)
-    .where(eq(valoPaymentReconciliations.status, "pending"))
-    .limit(10);
-  for (const job of pending) {
-    try {
-      const [order] = await db
-        .select()
-        .from(valoOrders)
-        .where(and(eq(valoOrders.id, job.orderId), eq(valoOrders.workspaceId, job.workspaceId)));
-      if (!order) throw new Error("ORDER_MISSING");
-      await settleVerifiedOrder(order.id, await paystack.verify(order.reference));
-      const [grant] = await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId, order.id));
-      const [receipt] = await db
-        .select()
-        .from(valoPurchaseOutbox)
-        .where(
-          and(eq(valoPurchaseOutbox.orderId, order.id), eq(valoPurchaseOutbox.kind, "purchase_receipt")),
-        );
-      const current = singleRow(await db.select().from(valoOrders).where(eq(valoOrders.id, order.id)));
-      const gaps =
-        current.status === "verified_success"
-          ? [
-              ...(grant?.status !== "active" ? ["ENTITLEMENT_DIFFERENCE"] : []),
-              ...(!receipt ? ["RECEIPT_OUTBOX_MISSING"] : []),
-            ]
-          : [];
-      await db
-        .update(valoPaymentReconciliations)
-        .set({ status: gaps.length ? "needs_review" : "matched", finding: gaps.join(";") || null })
-        .where(eq(valoPaymentReconciliations.id, job.id));
-    } catch {
-      await db.execute(sql`update valo_payment_reconciliations set attempts=LEAST(attempts+1,3),
-        status=case when attempts>=2 then 'needs_review' else 'pending' end,
-        finding='VERIFICATION_OR_FULFILMENT_DIFFERENCE' where id=${job.id} and status='pending'`);
+        failure=${paymentEventFinding(error)} where id=${event.id} and status='pending'`);
     }
   }
 }

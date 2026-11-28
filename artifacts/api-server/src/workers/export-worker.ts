@@ -17,12 +17,12 @@ import { executeExport, developmentExportsOnly } from "../modules/exports";
 import { closeRenderer } from "../lib/valo-render";
 import { logger } from "../platform/logger";
 import { reconcileDueReminders } from "../modules/tasks";
-import { configuredMessageSender, dispatchDueMessages } from "../modules/messages";
+import { configuredMessageSender, runMessagesJob } from "../modules/messages";
 import { recoverAbandonedExports, reconcileExportOrphans } from "../modules/exports";
 import { expireGeneratedExports } from "../modules/exports";
 import {
   processPaymentEvents,
-  reconcilePayments,
+  runPaymentReconciliationJob,
   processRefundQueue,
   reconcileDisputeActions,
   reconcileKnownDisputes,
@@ -77,11 +77,11 @@ const runOperationalJob = operationalJobRunner(
     refunds: () => processRefundQueue(),
     disputes: () => reconcileKnownDisputes(),
     disputeActions: () => reconcileDisputeActions(),
-    paymentReconciliation: () => reconcilePayments(),
+    paymentReconciliation: () => runPaymentReconciliationJob(),
     guidance: () => checkDueGuidance(),
     preparations: () => prepareRequestedCandidates(),
     historyIntegrity: () => countHistories(),
-    messages: () => dispatchDueMessages(messageSender),
+    messages: () => runMessagesJob(messageSender),
   },
   (domain, healthy) => {
     operationalHealth.set(domain, healthy);

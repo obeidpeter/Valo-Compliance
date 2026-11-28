@@ -156,7 +156,11 @@ test("standard database CI invokes the non-skipped HTTP privacy suite and keeps 
     new URL("../../../../../.github/workflows/valo-foundation.yml", import.meta.url),
     "utf8",
   );
-  assert.match(pkg.scripts["test:valo-db"], /test:valo-db-core && pnpm run test:valo-privacy-http-db/);
+  // The standard script runs the core files, then the messages' files one at a time, then the HTTP suite.
+  assert.equal(
+    pkg.scripts["test:valo-db"],
+    "pnpm run test:valo-db-core && pnpm run test:valo-messages-db && pnpm run test:valo-privacy-http-db",
+  );
   assert.match(pkg.scripts["test:valo-privacy-http-db"], /VALO_RUN_DB_TESTS=synthetic-development-only/);
   assert.match(
     pkg.scripts["test:valo-privacy-http-db"],
@@ -164,6 +168,7 @@ test("standard database CI invokes the non-skipped HTTP privacy suite and keeps 
   );
   assert.match(pkg.scripts["test:valo-db-core"], /inference-budget-inspection\.integration\.test\.ts/);
   assert.match(workflow, /run: pnpm --filter @workspace\/api-server test:valo-db-core\n/);
+  assert.match(workflow, /run: pnpm --filter @workspace\/api-server test:valo-messages-db\n/);
   assert.match(
     workflow,
     /name: Prove actual HTTP privacy-role and session boundary\n\s+if:.*!cancelled\(\).*\n\s+run: pnpm --filter @workspace\/api-server test:valo-privacy-http-db\n/,

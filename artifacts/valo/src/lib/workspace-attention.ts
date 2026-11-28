@@ -1,6 +1,7 @@
-import type { WorkspaceTask } from "@workspace/api-client-react";
+import type { ProfileRecheck, WorkspaceTask } from "@workspace/api-client-react";
 import { dueDateUrgency } from "./date-shortcuts";
 import { lagosToday } from "./format";
+import { recheckHref, recheckWords } from "./recheck";
 
 export type WorkspaceAttentionTone = "destructive" | "ochre" | "ink";
 
@@ -15,11 +16,12 @@ export type WorkspaceAttentionItem = {
 
 /**
  * Surfaces prioritized actionable workspace items for the Workspace Home strip. Returns an empty
- * array when no urgent task, changed-rule review, or stale profile check needs attention.
+ * array when no urgent task, changed-rule review, or offer of a new check (PRO-003, `Workspace.recheck`)
+ * needs attention.
  */
 export function buildWorkspaceAttention(input: {
   openTasks: readonly Pick<WorkspaceTask, "dueDate" | "state" | "needsReview">[];
-  profileMovedAhead: boolean;
+  recheck: ProfileRecheck | undefined;
   today?: string;
 }): WorkspaceAttentionItem[] {
   const today = input.today ?? lagosToday();
@@ -49,14 +51,15 @@ export function buildWorkspaceAttention(input: {
       href: "/workspace/tasks?focus=review",
     });
   }
-  if (input.profileMovedAhead) {
+  if (input.recheck) {
+    const words = recheckWords(input.recheck);
     items.push({
       id: "stale-check",
       tone: "ochre",
-      title: "Business profile changed since your last check",
-      detail: "Re-run your requirements check using the updated profile to see if anything changed.",
-      actionLabel: "Check with updated profile",
-      href: "/workspace/checker?prefill=profile",
+      title: words.title,
+      detail: words.changed,
+      actionLabel: words.action,
+      href: recheckHref(input.recheck),
     });
   }
   if (dueSoon > 0) {

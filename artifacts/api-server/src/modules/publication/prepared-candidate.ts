@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { isPracticalGuideId } from "@workspace/valo-core";
+import { isPracticalGuideId, isPreparedRuleId } from "@workspace/valo-core";
 import { getPublicationArtifact, type ArtifactRef } from "./publication-artifacts";
 
 /**
@@ -13,8 +13,12 @@ export const preparedCandidateSchema = z
   .object({
     kind: z.literal("valo-prepared-candidate-v1"),
     versionId: z.string().regex(/^[a-f0-9-]{36}$/),
-    // A template's ID or a guide's.
-    templateId: z.string().refine((id) => /^(?:TPL-\d{2,3}|GUD-\d{2})$/.test(id) || isPracticalGuideId(id)),
+    // A template's ID, a guide's, or the requirement version of a rule prepared in the repository.
+    templateId: z
+      .string()
+      .refine(
+        (id) => /^(?:TPL-\d{2,3}|GUD-\d{2})$/.test(id) || isPracticalGuideId(id) || isPreparedRuleId(id),
+      ),
     version: z.number().int().positive(),
     slug: z.string().min(1),
     policyId: z.string().min(1),

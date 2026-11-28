@@ -253,6 +253,77 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/RefundRecord" }
+  /admin/payment-checks:
+    get:
+      operationId: getFinancePaymentChecks
+      tags: [admin]
+      summary: The daily payment checks' differences nobody has settled, and the latest settled (PAY-007)
+      description: >-
+        Each order whose latest finished daily check found a difference that no settlement covers, and
+        the latest settlements with what finance found and why (docs/architecture/reconciliation.md,
+        slice 2). An active finance role and a fresh second factor are required.
+      responses:
+        "200":
+          description: The differences and the latest settlements. Nothing here is Paystack's own record.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FinancePaymentChecks" }
+  /admin/payment-checks/{id}/settlement:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      operationId: settleFinancePaymentCheck
+      tags: [admin]
+      summary: Finance records what it found about a difference a daily payment check found (PAY-007)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PaymentCheckSettlementInput" }
+      responses:
+        "200":
+          description: >-
+            The settled check. Nothing about the order, its payment or its grants is changed, and the
+            reason is kept in the staff access audit.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaymentCheck" }
+  /admin/payment-events:
+    get:
+      operationId: getFinancePaymentEvents
+      tags: [admin]
+      summary: The Paystack events Valo could not match or process that finance has not settled, and the latest settled (PAY-007)
+      description: >-
+        Each provider event that the event worker left for finance, with why, that no settlement covers
+        with the finding it has now, and the latest settlements with who made them and why
+        (docs/architecture/reconciliation.md, slice 3a). An active finance role and a fresh second factor
+        are required.
+      responses:
+        "200":
+          description: The events waiting and the latest settlements. Nothing here is Paystack's own record.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FinancePaymentEvents" }
+  /admin/payment-events/{id}/settlement:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      operationId: settleFinancePaymentEvent
+      tags: [admin]
+      summary: Finance records what it found about a Paystack event Valo could not match or process (PAY-007)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PaymentEventSettlementInput" }
+      responses:
+        "200":
+          description: >-
+            The settled event. The event itself, and every order, payment and grant, is left as it was,
+            and the reason is kept in the staff access audit.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaymentEvent" }
   /admin/owner-prices:
     get:
       operationId: listOwnerPrices
@@ -874,6 +945,70 @@ schemas:
       decision: { type: string, enum: [approve, reject] }
       reason: { type: string, minLength: 10, maxLength: 1500 }
       expectedVersion: { type: integer, minimum: 1 }
+  PaymentCheck:
+    type: object
+    additionalProperties: false
+    required: [id, orderId, reference, amountKobo, currency, orderStatus, day, status, finding, attempts, outcome, resolvedAt, resolvedByYou, reason]
+    properties:
+      id: { type: string, format: uuid }
+      orderId: { type: string, format: uuid }
+      reference: { type: string }
+      amountKobo: { type: integer }
+      currency: { type: string }
+      orderStatus: { type: string }
+      day: { type: string, description: "The UTC date the check is for, as YYYY-MM-DD" }
+      status: { type: string, enum: [needs_review, resolved] }
+      finding: { type: string, description: "What differs: one or more names, joined with ';'" }
+      attempts: { type: integer }
+      outcome: { type: [string, "null"], enum: [explained, no_payment_stands, null] }
+      resolvedAt: { type: [string, "null"], format: date-time }
+      resolvedByYou: { type: boolean }
+      reason: { type: [string, "null"], description: "Why finance settled it, as the staff access audit keeps it" }
+  FinancePaymentChecks:
+    type: object
+    additionalProperties: false
+    required: [differences, settled]
+    properties:
+      differences: { type: array, items: { $ref: "#/components/schemas/PaymentCheck" } }
+      settled: { type: array, items: { $ref: "#/components/schemas/PaymentCheck" } }
+  PaymentCheckSettlementInput:
+    type: object
+    additionalProperties: false
+    required: [outcome, reason]
+    properties:
+      outcome: { type: string, enum: [explained, no_payment_stands] }
+      reason: { type: string, minLength: 10, maxLength: 1500 }
+  PaymentEvent:
+    type: object
+    additionalProperties: false
+    required: [id, eventType, reference, receivedAt, finding, attempts, resolvedAt, resolvedByYou, reason]
+    properties:
+      id: { type: string, format: uuid }
+      eventType:
+        type: string
+        description: "Paystack's name for the event, such as charge.success, or listing for what Paystack's own list of a day's successful payments could not give"
+      reference:
+        type: [string, "null"]
+        description: "The reference the event names, if it names one; for a day's list, the day, as YYYY-MM-DD"
+      receivedAt: { type: string, format: date-time }
+      finding: { type: string, description: "Why the event worker left it for finance" }
+      attempts: { type: integer }
+      resolvedAt: { type: [string, "null"], format: date-time }
+      resolvedByYou: { type: boolean }
+      reason: { type: [string, "null"], description: "Why finance settled it, as the staff access audit keeps it" }
+  FinancePaymentEvents:
+    type: object
+    additionalProperties: false
+    required: [waiting, settled]
+    properties:
+      waiting: { type: array, items: { $ref: "#/components/schemas/PaymentEvent" } }
+      settled: { type: array, items: { $ref: "#/components/schemas/PaymentEvent" } }
+  PaymentEventSettlementInput:
+    type: object
+    additionalProperties: false
+    required: [reason]
+    properties:
+      reason: { type: string, minLength: 10, maxLength: 1500 }
   RefundRecord:
     type: object
     required: [id, orderId, amountKobo, status, reference, reason, decisionReason, policyVersion, version, attempts, createdAt, checkedAt, completedAt, failure]

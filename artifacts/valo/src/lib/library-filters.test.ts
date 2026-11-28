@@ -34,6 +34,10 @@ test("the library reads its filters from the address, with anything unknown read
   });
   assert.equal(libraryFilters(new URLSearchParams("page=3")).page, 3);
   assert.equal(libraryFilters(new URLSearchParams("page=2.5")).page, 1);
+  // The search is read as the box shows it and the API reads it: without the spaces around it, and
+  // no longer than a search may be. The page so never has to correct its own address.
+  assert.equal(libraryFilters(new URLSearchParams("q=%20invoice%20")).q, "invoice");
+  assert.equal(libraryFilters(new URLSearchParams("q=" + "a".repeat(500))).q, "a".repeat(120));
 });
 
 test("the library asks the catalogue for its filters, and links to a filter change from the first page without defaults", () => {
@@ -109,6 +113,7 @@ test("library categories cover every reviewed, manual and directory category wit
     "Practical business guides",
     "Industry guidance",
     "Industry introductions",
+    "Industry packs",
     "Location guidance",
     "Industry directory",
     "Service enquiries",

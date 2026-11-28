@@ -249,7 +249,17 @@ its index loads no database client, model SDK or provider transport, and
 reconciliation, receipts and their recovery, refunds, payment concerns, disputes and the Paystack
 contract. Its `index.ts` re-exports what the routes, the worker and the privacy code use; the
 merchant transports, the dispute schema and the test fixtures stay internal. The routes stay in
-`src/routes`.
+`src/routes`. The database takes a new order only with the amount and the line of a price or a
+bundle's version in effect, and once an order is made it keeps its amount, its line and the price
+or bundle it names, whoever asks to change them ([order safety](order-safety.md)). The daily
+payment check (`valo-payment-reconciliation.ts`) names what the provider's answer, or Valo's own
+record, says differently about an order, and an order whose latest check found a difference raises
+an alert. Finance settles a difference in the staff console, with its reason in the staff access
+audit, and the database keeps a finished check. A Paystack event Valo could not match or process
+raises an alert of its own, and finance settles it the same way, in a row of its own that the
+database keeps. Once a day has ended, the worker also reads Paystack's own list of that day's
+successful payments (`valo-payment-lists.ts`), and a payment on it that is no order's waits for
+finance as such an event does ([reconciliation](reconciliation.md)).
 
 `modules/rules` holds the released-rule registry the checker uses, saved assessments, their
 comparison and the admission check for a rule release. The rule release command itself lives in
@@ -270,8 +280,9 @@ The editorial code is three modules, each depending only on the ones after it:
   publisher. The catalogue reads published content through it,
   and it loads no AI code.
 - `modules/editorial` holds the AI pipeline and its model adapter, operational authoring and review,
-  release preparation, the editorial lifecycle with its dispatch and sandbox, evaluation evidence
-  and the rule release command. It also prepares a candidate a Content editor asks for from review
+  release preparation, the editorial lifecycle with its dispatch and sandbox, evaluation evidence,
+  the rule release command, and the builder of a rule for the reviewed route with its two reviews
+  ([the reviewed route](reviewed-route.md), part 3). It also prepares a candidate a Content editor asks for from review
   work ([the source register](source-register.md), slice 4): the review queue lives in
   `modules/sources`, which cannot import the preparers, so it takes from here which templates and
   guides a preparer serves.
@@ -332,10 +343,24 @@ support case from a ticket or an access or privacy request, and the support life
 messages, staff assignment and escalations.
 
 `modules/messages` holds the outbox of every message Valo means to send, the worker task that offers each
-to a sender, the sender interface with its stand-in, the messages' words, and the workspace's delivery
-log ([messages](messages.md)). It depends on one other module only, `modules/workspaces`, for a member's
-right to read the log: the event that owes a message records it with `queueMessage` in its own
-transaction, and only the dispatcher hands a message to a sender. No sender reaches a real address.
+to a sender, the sender interface with its stand-in, the messages' words, the workspace's delivery log,
+what the email provider reports about a message it took, and the addresses Valo has stopped sending
+optional messages to ([messages](messages.md)). It depends on one
+other module only, `modules/workspaces`, for a member's right to read the log: the event that owes a
+message records it with `queueMessage` in its own transaction, and only the dispatcher hands a message to
+a sender. No sender reaches a real address. The provider's delivery reports arrive at
+`routes/valo-email-webhook.ts`, which keeps a signed report and nothing of its address; the worker's task
+records each on the message or reminder it is about, and `modules/tasks` reads a reminder's report from
+this module when a member lists the reminders. A permanent bounce or a complaint suppresses its address:
+only a keyed checksum of it is kept, and the reminders' mailer in `modules/tasks` asks this module
+whether an address is suppressed before each send. The module also makes and reads the token of an
+optional message's unsubscribe link. The reminders' mailer puts that link in each reminder, and
+`modules/tasks/reminder-unsubscribe.ts` turns a workspace's reminders off from one, for the two routes
+in `routes/valo-unsubscribe.ts`: the page's, and a mail service's one-click request. The worker's task
+also records each ended day on which a workspace had a notice of a change that affects it, and queues
+the day's one message to its owner (`valo-notice-digests.ts`): it reads the notices that
+`modules/sources`, `modules/rules` and `modules/catalogue` show in the app from their tables, and
+imports none of those modules.
 
 The store that held workspaces, documents and support tickets together is split
 ([decision 0012](decisions/0012-split-the-store.md)):

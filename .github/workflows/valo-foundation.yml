@@ -131,6 +131,7 @@ jobs:
         run: |
           pnpm --filter @workspace/db test:schema-drift
           pnpm --filter @workspace/db test:schema-guard
+          pnpm --filter @workspace/db test:expand-only
       - name: Reject first-factor-only staff sessions and untrusted proxy chains
         run: pnpm --filter @workspace/api-server exec node --import tsx --test src/lib/valo-managed-session.test.ts src/lib/valo-proxy-boundary.test.ts src/middlewares/valo-quota.test.ts src/middlewares/clerkProxyMiddleware.test.ts ../valo/src/lib/content-security-policy.test.ts
       - name: Prove bounded native workspace storage and versioned UI helpers
@@ -225,7 +226,7 @@ jobs:
           echo /usr/lib/postgresql/16/bin >> "$GITHUB_PATH"
       - name: Reject stale recovery controls, unsafe archives and false backup success
         run: |
-          node --test scripts/ops/recovery_contract.test.mjs scripts/ops/export_retention_contract.test.mjs
+          node --test scripts/ops/recovery_contract.test.mjs scripts/ops/export_retention_contract.test.mjs scripts/ops/previous_release.test.mjs
           VALO_REQUIRE_REAL_RESTIC=1 python3 -m unittest discover -s scripts/ops -p 'test_*.py'
           systemd-analyze verify scripts/ops/systemd/*.service scripts/ops/systemd/*.timer
       - name: Restore old export deadlines with authenticated current controls
@@ -473,6 +474,12 @@ jobs:
           PUBLIC_OBJECT_SEARCH_PATHS: ""
       - name: Prove tenant boundaries, conflicts and history
         run: pnpm --filter @workspace/api-server test:valo-db-core
+      - name: Prove the messages' outbox, log, delivery reports, suppression and daily notices, one file at a time
+        # Each of these files writes the staff pause on messages, which is one row for every
+        # workspace, so they run one at a time. They were part of the step before, and run
+        # whatever became of it.
+        if: ${{ !cancelled() }}
+        run: pnpm --filter @workspace/api-server test:valo-messages-db
       - name: Prove actual HTTP privacy-role and session boundary
         if: ${{ !cancelled() }}
         run: pnpm --filter @workspace/api-server test:valo-privacy-http-db
@@ -507,6 +514,20 @@ jobs:
         with:
           name: tester-tasks-invoices
           path: generated-artifacts/tester-tasks
+          if-no-files-found: ignore
+      # UAT-01's recorded journey (docs/architecture/acceptance-pack.md): the home page from the
+      # compiled web server built above, then sign-up and the workspace from the browser app, each
+      # against this job's API and database, on a phone and on a desktop.
+      - name: Record the free journey on a phone and a desktop against the real API and database (UAT-01)
+        env:
+          VALO_FREE_JOURNEY_FILES: ${{ github.workspace }}/generated-artifacts/free-journey
+        run: pnpm --filter @workspace/api-server test:valo-free-journey-db
+      - name: Retain the free journey's recordings, files and what they were made from
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: uat-01-free-journey
+          path: generated-artifacts/free-journey
           if-no-files-found: ignore
       - name: Draw markup saved through the API on the customer's and staff's screens, and find it shown as text (SEC-003)
         run: pnpm --filter @workspace/api-server test:valo-stored-markup-db
@@ -574,6 +595,54 @@ jobs:
           persist-credentials: false
       - name: Build the API and web images and prove PDF rendering, refusal without configuration, web headers and no source control metadata
         run: scripts/ops/check-container-images.sh
+  rollback:
+    # OPS-008 (docs/architecture/rollback.md): the release before this one still runs on the schema
+    # this one leaves, so that a code fault is rolled back by deploying it again.
+    name: The previous release on this schema (OPS-008)
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-24.04
+    # Two installs, a browser download and, only when a migration was added, the previous release's
+    # database job, which takes 10 to 13 minutes on its own.
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          # The previous release's commit and its migrations are read from the history.
+          fetch-depth: 0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "24"
+      - name: Set up pinned pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.26.1 --activate
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Name the previous release
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          BEFORE: ${{ github.event.before }}
+          REF: ${{ github.ref }}
+        run: node scripts/ops/previous_release.mjs >> "$GITHUB_ENV"
+      - name: Check that every migration since the previous release only adds, and none it has changed (OPS-008)
+        run: node lib/db/scripts/expand-only.mjs --since "$VALO_PREVIOUS_RELEASE"
+      - name: Install PostgreSQL, Chromium and the PDF reader the previous release's database job needs
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y postgresql-16 poppler-utils
+          pnpm --filter @workspace/api-server exec playwright install --with-deps chromium
+          echo "CHROMIUM_EXECUTABLE_PATH=$(pnpm --filter @workspace/api-server exec node --input-type=module -e 'import {chromium} from "playwright"; process.stdout.write(chromium.executablePath())')" >> "$GITHUB_ENV"
+      - name: Run the previous release's database job on this schema, when a migration was added since it (OPS-008)
+        run: |
+          if git diff --quiet "$VALO_PREVIOUS_RELEASE" HEAD -- lib/db/drizzle; then
+            echo "No migration was added since $VALO_PREVIOUS_RELEASE: its schema is this one."
+            exit 0
+          fi
+          git worktree add --detach "$RUNNER_TEMP/previous-release" "$VALO_PREVIOUS_RELEASE"
+          (cd "$RUNNER_TEMP/previous-release" && pnpm install --frozen-lockfile)
+          pnpm test:db --previous "$RUNNER_TEMP/previous-release" --keep-going
   web-performance:
     name: Public pages on an emulated phone (NFR-002 lab check)
     if: github.event_name != 'schedule'
@@ -626,6 +695,10 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-component-styles
       - name: Prove both journeys are one tap from the home page's hero, the mobile menu and the dock (WEB-001)
         run: pnpm --filter @workspace/api-server test:valo-primary-journeys-browser
+      # The harness the browser tests above share. A page they close, or an answer that fails, must
+      # not fail whichever test is running at the time.
+      - name: Check that a page closed while its answers are on their way, or an answer that fails, fails no other browser test
+        run: pnpm --filter @workspace/api-server test:valo-browser-harness
       - name: Check every test the evidence register cites for this job passed
         run: pnpm --filter @workspace/scripts valo:ci-evidence --job web-performance
       - name: Retain this job's test results for the evidence job
@@ -668,6 +741,10 @@ jobs:
         run: |
           mkdir -p generated-artifacts/readiness
           VALO_EVIDENCE_RESULTS_DIR="$PWD/generated-artifacts/test-results" pnpm --filter @workspace/scripts exec tsx src/valo/readiness.ts > generated-artifacts/readiness/readiness.json
+      - name: Write the acceptance pack, each user-test pack's evidence from this run
+        # It accepts no pack: it places each part of a pack's required evidence as a script's, the
+        # owner's or a person's, with the cited tests' results (docs/architecture/acceptance-pack.md).
+        run: VALO_EVIDENCE_RESULTS_DIR="$PWD/generated-artifacts/test-results" pnpm --filter @workspace/scripts valo:acceptance-pack "$PWD/generated-artifacts/readiness/acceptance-pack.json"
       - name: Check every cited test passed in this run
         run: VALO_EVIDENCE_RESULTS_DIR="$PWD/generated-artifacts/test-results" pnpm --filter @workspace/scripts valo:ci-evidence --all
       - name: Check no test was skipped in every job that ran it
@@ -681,4 +758,11 @@ jobs:
         with:
           name: readiness-report
           path: generated-artifacts/readiness/readiness.json
+          if-no-files-found: ignore
+      - name: Retain the acceptance pack
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: acceptance-pack
+          path: generated-artifacts/readiness/acceptance-pack.json
           if-no-files-found: ignore

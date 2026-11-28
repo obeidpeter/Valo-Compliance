@@ -11,6 +11,7 @@ import { describeError } from "@/lib/api";
 import { checkerQuestion, type AskedQuestion } from "@workspace/valo-core/checker-questionnaire";
 import { displayFact, factLabel, isMarker } from "@/lib/checker";
 import { lagosToday } from "@/lib/format";
+import { savedResultHref } from "@/lib/recheck";
 import { factAtPath, isRichMarker, type RichCheckerFacts } from "@/lib/rich-checker";
 import { cn } from "@/lib/utils";
 
@@ -93,11 +94,14 @@ export function SavePanel({
   profileRevision,
   hasProfile,
   stale,
+  follows = "",
 }: {
   facts: RichCheckerFacts;
   profileRevision: number;
   hasProfile: boolean;
   stale: boolean;
+  /** The earlier saved result this check follows, when it was offered after the profile changed. */
+  follows?: string;
 }) {
   const qc = useQueryClient();
   const [, setLocation] = useLocation();
@@ -120,7 +124,7 @@ export function SavePanel({
       {
         onSuccess: (a) => {
           void qc.invalidateQueries({ queryKey: getListAssessmentsQueryKey() });
-          setLocation("/workspace/assessments/" + a.id);
+          setLocation(savedResultHref(a.id, follows));
         },
         onError: (er) => {
           if (describeError(er).kind === "conflict")

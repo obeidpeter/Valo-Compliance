@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { LibraryExportFormat } from './libraryExportFormat';
+import type { LibraryQuestions } from './libraryQuestions';
 import type { LibraryTemplateVersion } from './libraryTemplateVersion';
 
 export interface LibraryExport {
@@ -22,4 +23,6 @@ export interface LibraryExport {
   expiresAt: Date | null;
   downloadUrl: string;
   template: LibraryTemplateVersion | null;
+  /** For a file made from Valo's own questions for a guided template, which template: such a document came from no released version, so its `template` is null. Null for any other file. */
+  questions: LibraryQuestions | null;
 }

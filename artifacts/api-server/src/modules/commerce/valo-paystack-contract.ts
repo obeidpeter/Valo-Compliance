@@ -68,6 +68,52 @@ export const verifiedTransaction = z.object({
   metadata: z.object({ valoOrderId: z.string().uuid(), workspaceId: z.string().uuid() }),
 });
 export type VerifiedTransaction = z.infer<typeof verifiedTransaction>;
+/**
+ * One page of Paystack's list of transactions (`GET /transaction`), as far as Valo reads it
+ * (docs/architecture/reconciliation.md, slice 3b, and "What was read about the provider"): each
+ * transaction's id, its test domain, its status and its reference, and the page count the list's `meta`
+ * gives. Anything else the provider sends is not read. A page that names a transaction outside test mode
+ * is not used.
+ */
+export const listedTransactions = z.object({
+  data: z
+    .array(
+      z.object({
+        id: z
+          .union([
+            z.string().regex(/^\d{1,40}$/),
+            z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),
+          ])
+          .transform(String),
+        domain: z.literal("test"),
+        status: z.string().min(1).max(40),
+        reference: z.string().min(1).max(150),
+      }),
+    )
+    .max(1000),
+  meta: z.object({ page: z.number().int().min(1), pageCount: z.number().int().min(0).max(100000) }),
+});
+export type ListedTransactions = z.infer<typeof listedTransactions>;
+/** The query for one page of a UTC day's successful transactions. The page size is Paystack's own: the
+ * name of its parameter is not confirmed, so none is sent. */
+export function listedDayPath(day: string, page: number) {
+  const from = new Date(`${day}T00:00:00.000Z`);
+  if (
+    !/^\d{4}-\d{2}-\d{2}$/.test(day) ||
+    Number.isNaN(from.getTime()) ||
+    from.toISOString().slice(0, 10) !== day
+  )
+    throw new ValoProblem(400, "A day is written as YYYY-MM-DD.");
+  if (!Number.isInteger(page) || page < 1) throw new ValoProblem(400, "A page is a whole number from one.");
+  const to = new Date(from.getTime() + 86_400_000);
+  const query = new URLSearchParams({
+    status: "success",
+    from: from.toISOString(),
+    to: to.toISOString(),
+    page: String(page),
+  });
+  return `/transaction?${query.toString()}`;
+}
 export function assertOrderMatch(
   order: { id: string; workspaceId: string; reference: string; amountKobo: number; currency: string },
   data: VerifiedTransaction,
@@ -84,11 +130,56 @@ export function assertOrderMatch(
       "The payment verification does not match this order. No purchase was granted; staff reconciliation is required.",
     );
 }
+/** What the provider's answer for an order's reference says differently from the order
+ * (docs/architecture/reconciliation.md, slice 1). `settleVerifiedOrder` refuses each of them; the daily
+ * check names them, so that finance reads which it is. */
+export function orderDifferences(
+  order: {
+    id: string;
+    workspaceId: string;
+    reference: string;
+    amountKobo: number;
+    currency: string;
+    status: string;
+    providerTransactionId: string | null;
+  },
+  data: VerifiedTransaction,
+) {
+  return [
+    ...(data.amount !== order.amountKobo || data.currency !== order.currency ? ["AMOUNT_DIFFERENCE"] : []),
+    ...(data.reference !== order.reference ||
+    data.metadata.valoOrderId !== order.id ||
+    data.metadata.workspaceId !== order.workspaceId ||
+    (order.providerTransactionId !== null && order.providerTransactionId !== data.id)
+      ? ["TRANSACTION_DIFFERENCE"]
+      : []),
+    ...(order.status === "reversed" && data.status !== "reversed" ? ["REVERSAL_DIFFERENCE"] : []),
+  ];
+}
 /**
  * The Paystack events Valo processes: one-time charges, refunds and disputes. Any other event,
  * such as a subscription, invoice, transfer or payment request, is stored as ignored and never
  * processed: R1 keeps recurring billing, wallets, split settlements and collections off (PAY-010).
  */
+/**
+ * A provider event that names nothing of Valo's: no reference, or a reference that no order or refund
+ * request holds (docs/architecture/reconciliation.md, slice 3a). The event worker ends it at once for
+ * finance, as it does any refusal, and names it `UNMATCHED_REFERENCE`.
+ */
+export class UnmatchedPaymentEvent extends ValoProblem {
+  constructor(message: string) {
+    super(409, message);
+  }
+}
+/** Why the event worker left a provider event for finance (docs/architecture/reconciliation.md, slice 3a):
+ * it names nothing of Valo's; what the provider says differs from Valo's record; or no answer that could
+ * be used came, five times. Events from before slice 3 keep `SERVER_VERIFICATION_REQUIRED`, and an
+ * erasure writes `PRIVACY_ERASURE_FINANCE_REVIEW`. */
+export function paymentEventFinding(error: unknown) {
+  if (error instanceof UnmatchedPaymentEvent) return "UNMATCHED_REFERENCE";
+  if (error instanceof ValoProblem && error.status === 409) return "RECORD_DIFFERENCE";
+  return "NO_ANSWER";
+}
 export function paystackEventFamily(event: string): "charge" | "refund" | "dispute" | undefined {
   if (event === "charge.success") return "charge";
   if (/^refund\.(pending|processing|needs-attention|failed|processed)$/.test(event)) return "refund";
@@ -125,6 +216,15 @@ export async function paystackRequest(
   body?: unknown,
   method: "GET" | "POST" | "PUT" = body ? "POST" : "GET",
 ): Promise<unknown> {
+  return (await paystackAnswer(path, body, method)).data;
+}
+/** Paystack's whole answer to one request, once it is known to have succeeded: its `data`, and whatever
+ * else it carries beside it, such as the `meta` of a list. Every Paystack request goes through here. */
+export async function paystackAnswer(
+  path: string,
+  body?: unknown,
+  method: "GET" | "POST" | "PUT" = body ? "POST" : "GET",
+): Promise<{ status: true; data?: unknown; meta?: unknown }> {
   assertRecoveryEffectsAllowed();
   const key = testSecret();
   let response: Response;
@@ -144,11 +244,15 @@ export async function paystackRequest(
   }
   if (!response.ok)
     throw new ValoProblem(503, "Paystack could not complete this request. No successful payment is assumed.");
-  const result = (await response.json()) as { status?: unknown; data?: unknown };
+  const result = (await response.json()) as { status?: unknown; data?: unknown; meta?: unknown };
   if (result.status !== true) throw new ValoProblem(503, "Paystack has not confirmed this request.");
-  return result.data;
+  return { status: true, data: result.data, meta: result.meta };
 }
 export const paystack = {
+  /** One page of Paystack's own list of a UTC day's successful transactions. */
+  async listSuccessful(day: string, page: number) {
+    return listedTransactions.parse(await paystackAnswer(listedDayPath(day, page)));
+  },
   async verify(reference: string) {
     return verifiedTransaction.parse(
       await paystackRequest("/transaction/verify/" + encodeURIComponent(reference)),

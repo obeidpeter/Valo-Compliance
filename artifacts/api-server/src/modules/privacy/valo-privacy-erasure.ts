@@ -35,7 +35,7 @@ import {
 } from "./valo-erasure-seal";
 import { ValoProblem } from "../../platform/valo-problem";
 import { cancelUnsentDisputeWork } from "../commerce";
-import { messagesReady } from "../messages";
+import { emailEventsReady, messagesReady, noticeDigestsReady } from "../messages";
 import { retireWorkspaceExports, workspaceExportScratch } from "./valo-workspace-export-jobs";
 import { copyPhases, erasePrivateCopyPhase, fencePrivateCopies } from "./valo-private-copy-inventory";
 import { erasureProgressReason } from "./valo-privacy-redactions";
@@ -76,15 +76,19 @@ const legacyPhases = [
  * or a template edition, was replaced or withdrawn, and the history of its optional choices
  * (docs/architecture/processing-inventory.md, slices 5 and 4), then the messages Valo owed it
  * (docs/architecture/messages.md, slice 1a). The dispatcher sends no message of a workspace whose erasure
- * has begun, so none is sent before this phase removes them. Append only: every earlier phase keeps its
- * index, so an erasure in progress resumes where it stopped and runs these at its end. A finished erasure is
- * not reopened.
+ * has begun, so none is sent before this phase removes them. Last, what the email provider reported about
+ * the workspace's messages and reminders (slice 2a): a report that arrives after them finds no record
+ * to be about, and is recorded nowhere. Then the days whose notices owed the workspace a message (slice 5),
+ * after the messages that were about them. Append only: every earlier phase keeps its index, so an erasure
+ * in progress resumes where it stopped and runs these at its end. A finished erasure is not reopened.
  */
 const laterPhases = [
   "valo_rule_notices",
   "valo_edition_notices",
   "valo_consent_changes",
   "valo_messages",
+  "valo_message_deliveries",
+  "valo_notice_digests",
 ] as const;
 const phases = [...legacyPhases, ...copyPhases, ...laterPhases] as const;
 /** How many application phases a current erasure, or its replay, runs one at a time. */
@@ -346,6 +350,10 @@ async function eraseSection(
     AND status<>'privacy_erased' LIMIT 100)`);
   // A database the messages migration has not reached holds no message to remove.
   if (section === "valo_messages" && !(await messagesReady(tx))) return { rowCount: 0 };
+  // Nor does one the delivery migration has not reached hold any report to remove.
+  if (section === "valo_message_deliveries" && !(await emailEventsReady(tx))) return { rowCount: 0 };
+  // Nor does one the notice digests migration has not reached hold any day to remove.
+  if (section === "valo_notice_digests" && !(await noticeDigestsReady(tx))) return { rowCount: 0 };
   const table = sql.identifier(section);
   return tx.execute(sql`DELETE FROM ${table} WHERE ctid IN
     (SELECT ctid FROM ${table} WHERE workspace_id=${workspaceId}::uuid LIMIT 100)`);

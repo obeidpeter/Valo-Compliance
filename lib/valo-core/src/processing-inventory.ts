@@ -152,12 +152,15 @@ export const processingInventory: readonly ProcessingActivity[] = [
     data: [
       "your reminder setting and the days before a due date you chose",
       "the reminders waiting to be sent",
+      "what the email service reported about a reminder it took: that it was delivered, delayed, sent back or marked as spam",
+      "whether Valo has stopped emailing your address, after an email to it came back for good or was marked as spam",
+      "the link in each reminder that stops them without signing in: it tells Valo which workspace and which reminder it came from, and holds no name or address",
     ],
     subjects: ["account holders"],
     staff: null,
     services: ["Replit", "Resend, through Replit Connectors"],
     retention:
-      "Your setting is kept while your account is open. Reminders are not yet sent to real addresses: only test mail goes out, to one test address.",
+      "Your setting is kept while your account is open. Valo stops emailing an address for 180 days after the last report that an email to it came back for good or was marked as spam. Reminders are not yet sent to real addresses: only test mail goes out, to one test address.",
     consent: "Turning reminders on in your workspace.",
     tables: ["valo_reminder_preferences", "valo_reminder_outbox"],
   },
@@ -193,6 +196,7 @@ export const processingInventory: readonly ProcessingActivity[] = [
       "valo_dispute_actions",
       "valo_dispute_transitions",
       "valo_payment_reconciliations",
+      "valo_payment_event_settlements",
       "valo_payment_concerns",
       "valo_payment_concern_events",
       "valo_concern_messages",
@@ -202,21 +206,29 @@ export const processingInventory: readonly ProcessingActivity[] = [
     id: "messages",
     title: "Messages about your account",
     purpose:
-      "To email you what you need to know about your account, such as the receipt for a purchase and a refund the payment provider processed.",
+      "To email you what you need to know about your account, such as the receipt for a purchase, a refund the payment provider processed, and a change that affects what you saved, made or bought.",
     basis: "contract",
     basisReason:
-      "Needed to give you what you bought and to tell you what happened to it. These messages carry no marketing.",
+      "Needed to give you what you bought, to tell you what happened to it, and to tell you when something you rely on in Valo was corrected, replaced or withdrawn. These messages carry no marketing.",
     data: [
-      "which message Valo owes you, and the order or refund it is about",
+      "which message Valo owes you, and the order, refund or day's changes it is about",
       "whether it is waiting, was taken for sending, or why it stopped",
+      "what the email service reported about a message it took: that it was delivered, delayed, sent back or marked as spam",
+      "a keyed checksum of an email address, where its email service sent an email back for good or an email to it was marked as spam, so that Valo stops sending optional emails to that address; the address itself is not kept with it",
     ],
-    subjects: ["buyers"],
+    subjects: ["account holders"],
     staff: null,
     services: ["Replit"],
     retention:
-      "Kept while your account is open. A verified deletion request removes them. These messages are not yet sent to real addresses.",
+      "Kept while your account is open. A verified deletion request removes them. The email service's own report is kept for 30 days after Valo records what it said. An address's checksum is kept for 180 days after the last report about it; a deletion request does not remove it, because it is about the address and names no account. These messages are not yet sent to real addresses.",
     consent: null,
-    tables: ["valo_messages"],
+    tables: [
+      "valo_messages",
+      "valo_message_deliveries",
+      "valo_email_events",
+      "valo_email_suppressions",
+      "valo_notice_digests",
+    ],
   },
   {
     id: "ai_drafting",
@@ -393,4 +405,6 @@ export const tablesWithoutPersonalData: Readonly<Record<string, string>> = {
   valo_history_checks: "checks of those checksums",
   valo_operational_alerts: "the alerts the worker raised and cleared about Valo's own running",
   valo_request_minutes: "how many of the API's requests each minute failed or took how long",
+  valo_payment_lists:
+    "which days' lists of successful payments Valo read from Paystack, and how many each held",
 };

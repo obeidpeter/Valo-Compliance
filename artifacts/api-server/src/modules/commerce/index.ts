@@ -8,6 +8,9 @@
  * the crash-test child and the test fixtures are internal and are not re-exported.
  */
 export * from "./valo-commerce";
+export * from "./valo-payment-reconciliation";
+export * from "./valo-payment-event-review";
+export * from "./valo-payment-lists";
 export * from "./valo-dispute-actions";
 export * from "./purchase-receipt-file";
 export * from "./valo-payment-concerns";

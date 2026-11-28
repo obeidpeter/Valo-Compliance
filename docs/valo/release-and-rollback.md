@@ -97,6 +97,20 @@ later release, once a release that no longer uses the old shape is running. A
 change that cannot follow this rule needs a written plan with a maintenance
 window and a restore point, reviewed before merge.
 
+CI checks the rule on every push and pull request
+([rollback.md](../architecture/rollback.md)). `lib/db/scripts/expand-only.mjs` refuses a
+migration the previous release has that was changed or removed, and, in a migration
+added since, a statement that removes, renames or narrows what the previous release may
+use, or changes data, unless `lib/db/expand-only-exceptions.json` names that exact
+statement with a reviewed reason. A change of data also names its runbook, which the owner
+approves before it is merged. When a migration was added, the job then runs the previous
+release's own database job against the new schema (`pnpm test:db --previous <checkout>`). A test of
+the previous release may fail there only as `lib/db/rollback-expected-failures.json` records, with its
+reason, and only when it checks the schema itself, or sets itself up by writing rows straight into the
+database in a shape the release's own code never writes and a guard the new schema adds refuses. A
+test that fails because the release's own code is refused shows a migration that does not only add: the
+migration is changed, never the register.
+
 ## Deploying
 
 1. Drain writes and the worker, as the migration plan describes.
@@ -198,15 +212,19 @@ checks, which are not provisioned yet.
 | `EXPORT_RETENTION_BACKLOG` | Any ready export past its retention date | Internal operations sample |
 | `WORKSPACE_CLEANUP_BACKLOG` | Any workspace export attempt overdue for cleanup or with a cleanup error | Internal operations sample |
 | `PAYMENTS_BACKLOG` | Any verified payment without its entitlement or receipt | Internal operations sample |
+| `PAYMENT_DIFFERENCES_DETECTED` | Any order whose latest finished daily payment check found a difference: an amount, a transaction, a reversal, a grant, a receipt or a missing event, or no answer from the provider after three attempts | Internal operations sample (PAY-007) |
+| `UNMATCHED_PAYMENT_EVENTS_DETECTED` | Any Paystack event that the event worker left for finance, that finance has not settled: one that names no order or refund of Valo's, one whose answer differs from Valo's record, or one with no answer after five attempts; and from Paystack's own list of a day's successful payments, a payment that is no order's, or a day whose list could not be read whole | Internal operations sample (PAY-007) |
 | `PRIVACY_REQUESTS_BACKLOG` | Any privacy request still open 14 days after it was made: the date Valo aims to finish it by, Valo's own aim and not a time limit set by law | Internal operations sample (PRV-003) |
 | `REMINDERS_BACKLOG` | Any reminder email still pending fifteen minutes past its time | Internal operations sample (NFR-010) |
 | `JOB_QUEUE_BACKLOG` | Any scheduled job still waiting ten minutes past its start | Internal operations sample (NFR-010) |
 | `MESSAGES_BACKLOG` | Any message to a customer still queued fifteen minutes past its time, or still marked as being sent fifteen minutes after its attempt's lease ended; a held one is not counted | Internal operations sample (WRK-003) |
 | `FAILED_MESSAGES_DETECTED` | Any message to a customer that failed in the last day | Internal operations sample (WRK-003) |
+| `NEW_ENQUIRIES_DETECTED` | Any enquiry nobody has taken: its case is open | Internal operations sample (SRV-002) |
+| `WAITING_ENQUIRIES_DETECTED` | Any enquiry waiting on Valo, open or in progress, that nobody has touched for more than 48 hours: Valo's own aim, and no promise to anyone | Internal operations sample (SRV-002) |
 | `REQUEST_FAILURES_DETECTED` | More than 10 in 1,000 of the API's requests failed unexpectedly in the last ten minutes, once there are a hundred requests or more | Internal operations sample (NFR-003) |
 | `REQUEST_TIME_DETECTED` | 95 in 100 of the API's requests in the last ten minutes did not all finish within a second, once there are a hundred requests or more | Internal operations sample (NFR-003) |
 | `DENIED_ACCESS_DETECTED` | One hashed address was refused (401 or 403) more than 20 times in ten minutes | Internal operations sample (SEC-008) |
-| `SIGNATURE_FAILURES_DETECTED` | Any payment webhook signature was rejected in the last ten minutes | Internal operations sample (SEC-008) |
+| `SIGNATURE_FAILURES_DETECTED` | Any payment or email webhook signature was rejected in the last ten minutes | Internal operations sample (SEC-008) |
 | `SPREAD_REFUSALS_DETECTED` | Every hashed address together was refused (401 or 403) more than 100 times in ten minutes | Internal operations sample (SEC-005) |
 | `LIMITED_CALLERS_DETECTED` | A limit refused (429) more than 10 hashed addresses in ten minutes | Internal operations sample (SEC-005) |
 | `REFUSED_INPUT_DETECTED` | One hashed address sent more than 20 requests whose input was refused (400, 413, 415 or 422) in ten minutes | Internal operations sample (SEC-008) |
@@ -312,6 +330,63 @@ could no longer tell a retry from a new message; it raises `FAILED_MESSAGES_DETE
 message reaches anyone: the only sender is a stand-in that sends nothing (see
 `docs/architecture/messages.md` and `docs/valo/migration-messages.md`). A message the stand-in took is
 `accepted` in the table, and the workspace's log calls it recorded and "Not emailed".
+
+What the email provider reports about a message it took arrives at `POST /api/webhooks/email`, which
+answers 503 unless the runtime is development and `VALO_EMAIL_WEBHOOK_SECRET` is set. A report whose
+signature fails is logged as `email.signature_rejected` and counted for `SIGNATURE_FAILURES_DETECTED`,
+with the payment webhook's: check that the secret is the one the provider shows for this webhook. A
+signed report Valo cannot read is logged as `email.event_unreadable`, and means the provider's form has
+changed. A report waits in `valo_email_events` as `pending` until the worker's `messages` task records
+it. One still `pending` after an hour names a message Valo does not hold, and is settled as `unmatched`.
+
+A reminder that is `cancelled` with the reason `EMAIL_ADDRESS_SUPPRESSED` was for an address Valo has
+stopped sending optional messages to: its email service sent a message back for good, or one was marked
+as spam there. It was never handed to the provider, and is not tried again. That reason on the reminder
+is how staff see that an address is suppressed. The list itself, `valo_email_suppressions`, holds a keyed
+checksum of each address and no address, so it cannot be read back into one. A suppression ends by
+itself 180 days after the last report about its address, when the worker's `messages` task removes it.
+There is no command to end one sooner: record a customer's request to on their support case. Ending one
+by hand is not built, and would also need the address cleared from the provider's own list.
+
+A reminder that stays `failed` as not confirmed, on a database that has `valo_email_suppressions` and
+not the function `valo_email_address_suppressed`, could not ask whether its address is suppressed, and
+was not sent. Apply the second suppression migration (see `docs/valo/migration-messages.md`).
+
+Each reminder holds a link that turns its workspace's reminders off without sign-in
+(`docs/architecture/messages.md`, part 4). The workspace's activity then has `reminders.stopped_by_link`
+for the reminder that carried the link, and its consent history has the choice, as the owner's.
+`unsubscribe.refused` in the API's log is a link Valo did not honour. The line does not say why, and
+holds nothing of the link. The causes are these:
+- it is not a link Valo made, or it was cut short;
+- its key has left the keyring: `SESSION_SECRET` was changed, or a key was dropped from
+  `VALO_PRIVACY_KEYRING`. That ends every link made under the key;
+- it was made for someone who is no longer the workspace's owner;
+- its workspace is gone, its owner's access is off, or its deletion is recorded.
+
+`quota.denied` with the bucket `unsubscribe-link` is one workspace's links used more than ten times in
+a minute (`VALO_LIMIT_UNSUBSCRIBE_LINK`).
+
+A reminder that ends `failed` as not confirmed just after this release, or just after the keyring's
+current key changed, may have been tried once before and once after. Its words differ across the
+change, because its link does, and the provider's documentation says it refuses a retry whose content
+differs from the first. The reminder went at most once.
+
+A message of the kind `notices_digest` is one day's notices to a workspace of the changes that affect
+it (`docs/architecture/messages.md`, part 7). The worker's `messages` task records the day in
+`valo_notice_digests` from 07:00 the next morning on a Lagos clock, and queues the message to the
+workspace's owner. What follows is not a fault:
+- no message for a day whose only notice is a template replaced by a later edition: that notice is
+  shown in the app only;
+- no message for a notice more than a week old when the task first sees it, as after a worker was
+  stopped for longer: the notice is on the Workspace page, where it has been since it was made;
+- a message `cancelled` with the reason `NOTICES_NOT_FOUND`: the day's notices were gone when it was
+  to be sent;
+- no day recorded for a workspace whose deletion is recorded.
+
+A `messages` task that fails each minute with `permission denied for table valo_notice_digests`, on a
+database that has the table, lacks the second notice digests migration. Apply it (see
+`docs/valo/migration-messages.md`). A `valo_notice_digest_day_ended` refusal in that task means the
+worker's clock is more than seven hours ahead of the database's: correct the clock.
 
 A customer request that answers the generic 503 with error code `42501` in its log
 ran a command `valo_workspace_scope` does not hold: the code started using a table,

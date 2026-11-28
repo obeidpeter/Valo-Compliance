@@ -4,7 +4,8 @@
  * AI preparation is supported, a guide's document and its canonical content, its claim map, its own
  * policy, rights record, amendment records, mechanical checks and assembled bundle, the prepared
  * candidates awaiting their reviews, their mechanical, export, rights and final checks, the check that
- * drafting can log in, and the publisher that releases a reviewed version. Code outside
+ * drafting can log in, the templates that state the law (their claim maps, candidate, policy and
+ * assembled bundle), and the publisher that releases a reviewed version. Code outside
  * artifacts/api-server/src/modules/publication imports only this file (repository rule `module-boundary`);
  * tests may import the module's files directly.
  *
@@ -44,3 +45,9 @@ export * from "./provider-terms-capture";
 export * from "./reviewed-guide-check";
 export * from "./rights-applicability";
 export * from "./source-facts";
+export * from "./template-law-candidate";
+export * from "./template-law-maps";
+export * from "./template-law-mechanical";
+export * from "./template-law-policy";
+export * from "./template-law-release";
+export * from "./template-law-rights";

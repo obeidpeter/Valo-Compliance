@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, isNotNull, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull, or, sql } from "drizzle-orm";
 import { db, valoBundles, valoOrders, valoPrices, type ValoOrderLine } from "@workspace/db";
 import type { WorkspaceActor } from "../workspaces";
 import { ValoProblem } from "../../platform/valo-problem";
@@ -39,6 +39,48 @@ export const orderEditions = (line: ValoOrderLine) =>
 
 /** What an order buys: a template's price or a bundle's version. */
 export type OrderOffer = { priceId: string | null; bundleId: string | null };
+
+/** What an order takes from the price it is made from: which price, the amount, the currency and the line. */
+export function priceOrderTerms(price: typeof valoPrices.$inferSelect) {
+  return {
+    priceId: price.id,
+    amountKobo: price.amountKobo,
+    currency: price.currency,
+    line: {
+      title: price.title,
+      contentVersionId: price.contentVersionId,
+      licenceVersion: price.licenceVersion,
+      licenceText: price.licenceText,
+      taxTreatment: price.taxTreatment,
+    },
+  };
+}
+
+/**
+ * What an order takes from the bundle's version it is made from, and the released edition of each of
+ * the bundle's templates: which version, the amount, the currency and the line.
+ */
+export function bundleOrderTerms(
+  version: typeof valoBundles.$inferSelect,
+  templates: { edition: string; title: string }[],
+) {
+  return {
+    bundleId: version.id,
+    amountKobo: version.amountKobo,
+    currency: version.currency,
+    line: {
+      title: version.title,
+      bundle: version.bundleKey,
+      licenceVersion: version.licenceVersion,
+      licenceText: version.licenceText,
+      taxTreatment: version.taxTreatment,
+      editions: templates.map((template) => ({
+        contentVersionId: template.edition,
+        title: template.title,
+      })),
+    },
+  };
+}
 
 /** Whether an order's line names any of these editions. */
 const namesAny = (editions: string[]) =>
@@ -91,6 +133,33 @@ export async function openEditionOrder(tx: Tx, actor: WorkspaceActor, editions: 
     );
   }
   return row?.order;
+}
+
+/**
+ * PAY-006 (docs/architecture/order-safety.md, slice 4): the workspace's orders for any of these editions
+ * that ended abandoned or failed, the five most recent. Each ended so because the provider said so when
+ * it was last asked, and may have been paid since. An order the provider was never asked to take a
+ * payment for is not one of them.
+ */
+export async function endedEditionOrders(tx: Tx, actor: WorkspaceActor, editions: string[]) {
+  if (!editions.length) return [];
+  const rows = await tx
+    .select({ id: valoOrders.id })
+    .from(valoOrders)
+    .where(
+      and(
+        eq(valoOrders.workspaceId, actor.workspaceId),
+        namesAny(editions),
+        inArray(valoOrders.status, ["abandoned", "failed"]),
+        or(isNotNull(valoOrders.checkoutUrl), isNotNull(valoOrders.providerTransactionId)),
+        // Finance settled that no payment stands for it (docs/architecture/reconciliation.md, slice 2).
+        sql`NOT EXISTS (SELECT 1 FROM valo_payment_reconciliations c WHERE c.order_id = ${valoOrders.id}
+          AND c.workspace_id = ${valoOrders.workspaceId} AND c.outcome = 'no_payment_stands')`,
+      ),
+    )
+    .orderBy(desc(valoOrders.createdAt), desc(valoOrders.id))
+    .limit(5);
+  return rows.map((row) => row.id);
 }
 
 export async function assertPayableOrder(

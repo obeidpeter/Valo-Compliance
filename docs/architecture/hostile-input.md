@@ -158,9 +158,10 @@ The payloads live in one test-support list. They cover:
   also `no-store`.
 - **A fix.** The API's security headers move ahead of reading the body, so that every answer carries
   them, including the 400 for a malformed body.
-- **The web app.** The pages the server draws that read a query, the library's search and the
-  services page's category, are fetched with hostile values. The HTML holds them only escaped, and a
-  browser that loads them runs nothing.
+- **The web app.** The pages the server draws that read a query are fetched with hostile values: the
+  library's search and filters, the search of the guides, industries and help pages, the guides'
+  industry filter, and the services page's category. The HTML holds them only escaped, and a browser
+  that loads them runs nothing.
 - **Injection.** SQL text and wildcards saved through the API come back byte for byte. A search for
   `%`, `_` or `\`, or for SQL text, finds only what holds that text.
 
@@ -240,6 +241,21 @@ The payloads live in one test-support list. They cover:
 - **Slice 3: what the HTML rule reviews.** Two places hand a browser HTML: the PDF renderer, which
   escapes every text, and the reader of an official source's page, with scripts off and every request
   refused.
+- **Afterwards: a page closed in mid-answer.** The stored-markup test once stopped with "Route is
+  already handled!", on a local run of a later change that touches neither the test nor its harness.
+  Run again on the same commit, it passed.
+  - **The cause.** The test passes each request a page makes to the real API: it fetches the answer,
+    then hands it to the page. A page closed between those two steps left the browser without the
+    answer it was to hand over. The harness took that failure for a request the test had no answer
+    for, and answered the request itself. A request can be answered once, so that second answer
+    failed too, and nothing caught it: it failed whichever test was running, and named no cause. It was
+    reproduced by closing a page a moment before its answers were handed over.
+  - **What changed.** The harness leaves a request alone once the test has closed its page, and does
+    not throw when its own answer cannot be given because one had begun. On an open page it still
+    names a failed answer among the page's unanswered requests, which each test checks.
+  - **Its test** (`test-support/app-in-browser.test.ts`, the web job) closes pages at that instant,
+    with the answers handed over at once and a little later. With the harness as it was, it fails
+    with the same error.
 
 ## The owner's points
 

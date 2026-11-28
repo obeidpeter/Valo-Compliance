@@ -76,7 +76,9 @@ import type {
   ExportRetryInput,
   FinanceDispute,
   FinanceDisputeLink,
+  FinancePaymentChecks,
   FinancePaymentConcerns,
+  FinancePaymentEvents,
   FinanceRefunds,
   FindSupportLibraryEntriesParams,
   FormDocumentStart,
@@ -138,10 +140,14 @@ import type {
   OwnerSettingRecord,
   OwnerSettingRecorded,
   OwnerSettingTerms,
+  PaymentCheck,
+  PaymentCheckSettlementInput,
   PaymentConcern,
   PaymentConcernAction,
   PaymentConcernInput,
   PaymentConcernResponse,
+  PaymentEvent,
+  PaymentEventSettlementInput,
   PrivacyCase,
   PrivacyCaseConfirmation,
   PrivacyCaseDetail,
@@ -202,6 +208,8 @@ import type {
   TaskUpdate,
   TicketInput,
   TicketReceipt,
+  UnsubscribeAck,
+  UnsubscribeInput,
   VerifyStaffRoleTarget200,
   VerifyStaffRoleTargetInput,
   Workspace,
@@ -3487,6 +3495,408 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getReconcileFinanceRefundMutationOptions(options), queryClient);
+    }
+
+export const getGetFinancePaymentChecksUrl = () => {
+
+
+
+
+  return `/api/admin/payment-checks`
+}
+
+/**
+ * Each order whose latest finished daily check found a difference that no settlement covers, and the latest settlements with what finance found and why (docs/architecture/reconciliation.md, slice 2). An active finance role and a fresh second factor are required.
+ * @summary The daily payment checks' differences nobody has settled, and the latest settled (PAY-007)
+ */
+export const getFinancePaymentChecks = async ( options?: Parameters<typeof customFetch>[1]): Promise<FinancePaymentChecks> => {
+
+  return customFetch<FinancePaymentChecks>(getGetFinancePaymentChecksUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetFinancePaymentChecksQueryKey = () => {
+    return [
+    "getFinancePaymentChecks"
+    ] as const;
+    }
+
+
+export const getGetFinancePaymentChecksQueryOptions = <TData = Awaited<ReturnType<typeof getFinancePaymentChecks>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFinancePaymentChecks>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetFinancePaymentChecksQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFinancePaymentChecks>>> = ({ signal }) => getFinancePaymentChecks({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFinancePaymentChecks>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetFinancePaymentChecksQueryResult = NonNullable<Awaited<ReturnType<typeof getFinancePaymentChecks>>>
+export type GetFinancePaymentChecksQueryError = ErrorType<unknown>
+
+
+/**
+ * Each order whose latest finished daily check found a difference that no settlement covers, and the latest settlements with what finance found and why (docs/architecture/reconciliation.md, slice 2). An active finance role and a fresh second factor are required.
+ * @summary The daily payment checks' differences nobody has settled, and the latest settled (PAY-007)
+ */
+export function useGetFinancePaymentChecks<TData = Awaited<ReturnType<typeof getFinancePaymentChecks>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFinancePaymentChecks>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getFinancePaymentChecks>>,
+          TError,
+          Awaited<ReturnType<typeof getFinancePaymentChecks>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Each order whose latest finished daily check found a difference that no settlement covers, and the latest settlements with what finance found and why (docs/architecture/reconciliation.md, slice 2). An active finance role and a fresh second factor are required.
+ * @summary The daily payment checks' differences nobody has settled, and the latest settled (PAY-007)
+ */
+export function useGetFinancePaymentChecks<TData = Awaited<ReturnType<typeof getFinancePaymentChecks>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFinancePaymentChecks>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getFinancePaymentChecks>>,
+          TError,
+          Awaited<ReturnType<typeof getFinancePaymentChecks>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Each order whose latest finished daily check found a difference that no settlement covers, and the latest settlements with what finance found and why (docs/architecture/reconciliation.md, slice 2). An active finance role and a fresh second factor are required.
+ * @summary The daily payment checks' differences nobody has settled, and the latest settled (PAY-007)
+ */
+export function useGetFinancePaymentChecks<TData = Awaited<ReturnType<typeof getFinancePaymentChecks>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFinancePaymentChecks>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Each order whose latest finished daily check found a difference that no settlement covers, and the latest settlements with what finance found and why (docs/architecture/reconciliation.md, slice 2). An active finance role and a fresh second factor are required.
+ * @summary The daily payment checks' differences nobody has settled, and the latest settled (PAY-007)
+ */
+export function useGetFinancePaymentChecks<TData = Awaited<ReturnType<typeof getFinancePaymentChecks>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFinancePaymentChecks>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetFinancePaymentChecksQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSettleFinancePaymentCheckUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/payment-checks/${encodeURIComponent(String(id))}/settlement`
+}
+
+/**
+ * @summary Finance records what it found about a difference a daily payment check found (PAY-007)
+ */
+export const settleFinancePaymentCheck = async (id: string,
+    paymentCheckSettlementInput: PaymentCheckSettlementInput, options?: Parameters<typeof customFetch>[1]): Promise<PaymentCheck> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<PaymentCheck>(getSettleFinancePaymentCheckUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(paymentCheckSettlementInput)
+  }
+);}
+
+
+
+
+
+export const getSettleFinancePaymentCheckMutationKey = () => ['settleFinancePaymentCheck'] as const;
+
+export const getSettleFinancePaymentCheckMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof settleFinancePaymentCheck>>, TError,SettleFinancePaymentCheckMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof settleFinancePaymentCheck>>, TError,SettleFinancePaymentCheckMutationVariables, TContext> => {
+
+const mutationKey = getSettleFinancePaymentCheckMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof settleFinancePaymentCheck>>, SettleFinancePaymentCheckMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  settleFinancePaymentCheck(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SettleFinancePaymentCheckMutationResult = NonNullable<Awaited<ReturnType<typeof settleFinancePaymentCheck>>>
+    export type SettleFinancePaymentCheckMutationBody = BodyType<PaymentCheckSettlementInput>
+    export type SettleFinancePaymentCheckMutationError = ErrorType<unknown>
+    export type SettleFinancePaymentCheckMutationVariables = {id: string;data: BodyType<PaymentCheckSettlementInput>}
+
+    /** @summary Finance records what it found about a difference a daily payment check found (PAY-007) */
+export const useSettleFinancePaymentCheck = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof settleFinancePaymentCheck>>, TError,SettleFinancePaymentCheckMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof settleFinancePaymentCheck>>,
+        TError,
+        SettleFinancePaymentCheckMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSettleFinancePaymentCheckMutationOptions(options), queryClient);
+    }
+
+export const getGetFinancePaymentEventsUrl = () => {
+
+
+
+
+  return `/api/admin/payment-events`
+}
+
+/**
+ * Each provider event that the event worker left for finance, with why, that no settlement covers with the finding it has now, and the latest settlements with who made them and why (docs/architecture/reconciliation.md, slice 3a). An active finance role and a fresh second factor are required.
+ * @summary The Paystack events Valo could not match or process that finance has not settled, and the latest settled (PAY-007)
+ */
+export const getFinancePaymentEvents = async ( options?: Parameters<typeof customFetch>[1]): Promise<FinancePaymentEvents> => {
+
+  return customFetch<FinancePaymentEvents>(getGetFinancePaymentEventsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetFinancePaymentEventsQueryKey = () => {
+    return [
+    "getFinancePaymentEvents"
+    ] as const;
+    }
+
+
+export const getGetFinancePaymentEventsQueryOptions = <TData = Awaited<ReturnType<typeof getFinancePaymentEvents>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFinancePaymentEvents>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetFinancePaymentEventsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFinancePaymentEvents>>> = ({ signal }) => getFinancePaymentEvents({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFinancePaymentEvents>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetFinancePaymentEventsQueryResult = NonNullable<Awaited<ReturnType<typeof getFinancePaymentEvents>>>
+export type GetFinancePaymentEventsQueryError = ErrorType<unknown>
+
+
+/**
+ * Each provider event that the event worker left for finance, with why, that no settlement covers with the finding it has now, and the latest settlements with who made them and why (docs/architecture/reconciliation.md, slice 3a). An active finance role and a fresh second factor are required.
+ * @summary The Paystack events Valo could not match or process that finance has not settled, and the latest settled (PAY-007)
+ */
+export function useGetFinancePaymentEvents<TData = Awaited<ReturnType<typeof getFinancePaymentEvents>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFinancePaymentEvents>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getFinancePaymentEvents>>,
+          TError,
+          Awaited<ReturnType<typeof getFinancePaymentEvents>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Each provider event that the event worker left for finance, with why, that no settlement covers with the finding it has now, and the latest settlements with who made them and why (docs/architecture/reconciliation.md, slice 3a). An active finance role and a fresh second factor are required.
+ * @summary The Paystack events Valo could not match or process that finance has not settled, and the latest settled (PAY-007)
+ */
+export function useGetFinancePaymentEvents<TData = Awaited<ReturnType<typeof getFinancePaymentEvents>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFinancePaymentEvents>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getFinancePaymentEvents>>,
+          TError,
+          Awaited<ReturnType<typeof getFinancePaymentEvents>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Each provider event that the event worker left for finance, with why, that no settlement covers with the finding it has now, and the latest settlements with who made them and why (docs/architecture/reconciliation.md, slice 3a). An active finance role and a fresh second factor are required.
+ * @summary The Paystack events Valo could not match or process that finance has not settled, and the latest settled (PAY-007)
+ */
+export function useGetFinancePaymentEvents<TData = Awaited<ReturnType<typeof getFinancePaymentEvents>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFinancePaymentEvents>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Each provider event that the event worker left for finance, with why, that no settlement covers with the finding it has now, and the latest settlements with who made them and why (docs/architecture/reconciliation.md, slice 3a). An active finance role and a fresh second factor are required.
+ * @summary The Paystack events Valo could not match or process that finance has not settled, and the latest settled (PAY-007)
+ */
+export function useGetFinancePaymentEvents<TData = Awaited<ReturnType<typeof getFinancePaymentEvents>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFinancePaymentEvents>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetFinancePaymentEventsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSettleFinancePaymentEventUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/payment-events/${encodeURIComponent(String(id))}/settlement`
+}
+
+/**
+ * @summary Finance records what it found about a Paystack event Valo could not match or process (PAY-007)
+ */
+export const settleFinancePaymentEvent = async (id: string,
+    paymentEventSettlementInput: PaymentEventSettlementInput, options?: Parameters<typeof customFetch>[1]): Promise<PaymentEvent> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<PaymentEvent>(getSettleFinancePaymentEventUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(paymentEventSettlementInput)
+  }
+);}
+
+
+
+
+
+export const getSettleFinancePaymentEventMutationKey = () => ['settleFinancePaymentEvent'] as const;
+
+export const getSettleFinancePaymentEventMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof settleFinancePaymentEvent>>, TError,SettleFinancePaymentEventMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof settleFinancePaymentEvent>>, TError,SettleFinancePaymentEventMutationVariables, TContext> => {
+
+const mutationKey = getSettleFinancePaymentEventMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof settleFinancePaymentEvent>>, SettleFinancePaymentEventMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  settleFinancePaymentEvent(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SettleFinancePaymentEventMutationResult = NonNullable<Awaited<ReturnType<typeof settleFinancePaymentEvent>>>
+    export type SettleFinancePaymentEventMutationBody = BodyType<PaymentEventSettlementInput>
+    export type SettleFinancePaymentEventMutationError = ErrorType<unknown>
+    export type SettleFinancePaymentEventMutationVariables = {id: string;data: BodyType<PaymentEventSettlementInput>}
+
+    /** @summary Finance records what it found about a Paystack event Valo could not match or process (PAY-007) */
+export const useSettleFinancePaymentEvent = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof settleFinancePaymentEvent>>, TError,SettleFinancePaymentEventMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof settleFinancePaymentEvent>>,
+        TError,
+        SettleFinancePaymentEventMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSettleFinancePaymentEventMutationOptions(options), queryClient);
     }
 
 export const getListOwnerPricesUrl = () => {
@@ -10113,6 +10523,92 @@ export function useListWorkspaceMessages<TData = Awaited<ReturnType<typeof listW
 
 
 
+
+export const getUnsubscribeUrl = () => {
+
+
+
+
+  return `/api/public/unsubscribe`
+}
+
+/**
+ * @summary Stop one kind of optional message, from the link in one of them; needs no account
+ */
+export const unsubscribe = async (unsubscribeInput: UnsubscribeInput, options?: Parameters<typeof customFetch>[1]): Promise<UnsubscribeAck> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<UnsubscribeAck>(getUnsubscribeUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(unsubscribeInput)
+  }
+);}
+
+
+
+
+
+export const getUnsubscribeMutationKey = () => ['unsubscribe'] as const;
+
+export const getUnsubscribeMutationOptions = <TError = ErrorType<ApiProblem>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unsubscribe>>, TError,UnsubscribeMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof unsubscribe>>, TError,UnsubscribeMutationVariables, TContext> => {
+
+const mutationKey = getUnsubscribeMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof unsubscribe>>, UnsubscribeMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  unsubscribe(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UnsubscribeMutationResult = NonNullable<Awaited<ReturnType<typeof unsubscribe>>>
+    export type UnsubscribeMutationBody = BodyType<UnsubscribeInput>
+    export type UnsubscribeMutationError = ErrorType<ApiProblem>
+    export type UnsubscribeMutationVariables = {data: BodyType<UnsubscribeInput>}
+
+    /** @summary Stop one kind of optional message, from the link in one of them; needs no account */
+export const useUnsubscribe = <TError = ErrorType<ApiProblem>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unsubscribe>>, TError,UnsubscribeMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof unsubscribe>>,
+        TError,
+        UnsubscribeMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUnsubscribeMutationOptions(options), queryClient);
+    }
 
 export const getGetOperationalAlertsUrl = () => {
 

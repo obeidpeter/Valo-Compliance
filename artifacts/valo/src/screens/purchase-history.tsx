@@ -10,6 +10,7 @@ import {
   createCommerceOrder,
 } from "@workspace/api-client-react";
 import { DisputeFormsBoundary } from "@/components/dispute-workflows";
+import { PaymentReturn } from "@/components/payment-return";
 import { OrderCard } from "@/components/purchase-order-card";
 import { MyTemplates, OwnedChoice } from "@/components/purchase-owned-templates";
 import { WorkspaceNav } from "@/components/workspace-nav";
@@ -109,6 +110,7 @@ function PurchaseHistoryContent() {
           </p>
         )}
       </header>
+      <PaymentReturn orders={q.data?.orders} unread={q.isError} changed={refresh} />
       <Notice title="Real payments are switched off" className="mb-6">
         Where a checkout is offered here, it is a test, in Paystack's test mode. Do not enter a real card, or
         real or confidential customer details. A receipt sent by email is not shown as delivered unless its

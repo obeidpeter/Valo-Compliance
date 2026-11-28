@@ -44,6 +44,9 @@ test("quota defaults preserve the requested initial ceilings", () => {
     "staff-support-write-day": 200,
     "refund-create": 10,
     "refund-create-day": 50,
+    // Added with the unsubscribe link (docs/architecture/messages.md, part 4), which nobody signs in to
+    // use: its uses are counted by the link's workspace. It raises none of the ceilings above.
+    "unsubscribe-link": 10,
   });
 });
 

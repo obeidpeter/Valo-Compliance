@@ -98,6 +98,8 @@ export async function startWebServer(answer: Answer) {
   return {
     origin,
     api,
+    /** A page on the screen `options` describes, such as a phone or a desktop that is recorded. */
+    open,
     /** A phone-sized page (Moto G4). */
     phone: (path: string) => open(path, { ...devices["Moto G4"] }),
     /** A page as wide as a desktop screen, where the site lays itself out in full. */

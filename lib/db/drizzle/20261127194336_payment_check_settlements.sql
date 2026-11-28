@@ -1,0 +1,7 @@
+ALTER TABLE "valo_payment_reconciliations" DROP CONSTRAINT "valo_payment_reconciliations_status_check";--> statement-breakpoint
+ALTER TABLE "valo_payment_reconciliations" ADD COLUMN "outcome" text;--> statement-breakpoint
+ALTER TABLE "valo_payment_reconciliations" ADD COLUMN "resolved_by" text;--> statement-breakpoint
+ALTER TABLE "valo_payment_reconciliations" ADD COLUMN "resolved_at" timestamp with time zone;--> statement-breakpoint
+ALTER TABLE "valo_payment_reconciliations" ADD CONSTRAINT "valo_payment_reconciliations_outcome_check" CHECK ("valo_payment_reconciliations"."outcome" IS NULL OR "valo_payment_reconciliations"."outcome" IN ('explained', 'no_payment_stands'));--> statement-breakpoint
+ALTER TABLE "valo_payment_reconciliations" ADD CONSTRAINT "valo_payment_reconciliations_resolution_check" CHECK (("valo_payment_reconciliations"."status" = 'resolved') = ("valo_payment_reconciliations"."outcome" IS NOT NULL AND "valo_payment_reconciliations"."resolved_by" IS NOT NULL AND "valo_payment_reconciliations"."resolved_at" IS NOT NULL));--> statement-breakpoint
+ALTER TABLE "valo_payment_reconciliations" ADD CONSTRAINT "valo_payment_reconciliations_status_check" CHECK ("valo_payment_reconciliations"."status" IN ('pending', 'matched', 'needs_review', 'resolved'));

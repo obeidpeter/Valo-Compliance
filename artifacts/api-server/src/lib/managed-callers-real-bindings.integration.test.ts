@@ -277,6 +277,30 @@ test(
           },
         },
       });
+      // A rule on the reviewed route is covered only by a rights record the owner chooses for that route,
+      // and none is chosen (docs/architecture/reviewed-route.md, part 3). For the rule subtest at the end,
+      // the business-name rule is given a synthetic one; the owner's route reads no such record.
+      const realRuleCandidates = await import("../modules/editorial/owner-rule-candidates");
+      const ruleRightsEvidence =
+        "Synthetic rights record for a test of the reviewed route; not the owner's choice.";
+      t.mock.module(new URL("../modules/editorial/owner-rule-candidates.ts", import.meta.url).href, {
+        namedExports: {
+          ...realRuleCandidates,
+          ownerRuleCandidates: realRuleCandidates.ownerRuleCandidates.map((c) =>
+            c.rule.id === "cac-business-name-814"
+              ? {
+                  ...c,
+                  reviewedRouteRights: {
+                    status: "cleared" as const,
+                    evidence: ruleRightsEvidence,
+                    evidenceHash: sha(Buffer.from(ruleRightsEvidence)),
+                    commercialUse: true,
+                  },
+                }
+              : c,
+          ),
+        },
+      });
       // Everything below is the real entry, real callers, real binding checker and real SQL store.
       // Only the model SDK and private file adapter are controlled; no checker is stubbed.
       // The dispatcher loads the publication index, so it too loads only after the stand-ins.
@@ -1450,6 +1474,558 @@ test(
             assert.ok(!(await releasedResources()).some((resource) => resource.id === prepared.id));
           } finally {
             guideApproval.absent = false;
+            t.mock.timers.enable({ apis: ["Date"], now: clockBefore });
+          }
+        },
+      );
+      // docs/architecture/reviewed-route.md, part 3: a requirements-check rule prepared in the repository is
+      // built for the reviewed route from the capture the daily check holds of its official source, and its
+      // two reviews are admitted and sent only under an approval of rule reviews, each time built again from
+      // the rule's own sources and records. The rights record for this route is the synthetic one stood in
+      // above; the approvals of AI spending are synthetic ones recorded in this schema, and the model is the
+      // stand-in. Nothing is released.
+      await t.test(
+        "a rule's review pair is admitted only under an approval of rule reviews, and sent only as built again from its own sources",
+        async () => {
+          await reset();
+          const { prepareReviewedRuleCandidate, readReviewedRuleReadiness } =
+            await import("../modules/editorial/reviewed-rule-preparation");
+          const { executeRuleReviewPlan, RULE_REVIEW_LANE, RULE_REVIEW_PREPARER, saveRuleReviewPlan } =
+            await import("../modules/editorial/reviewed-rule-review");
+          const { REVIEWED_ROUTE_RIGHTS_MISSING } = await import("../modules/editorial/reviewed-rule");
+          const { ownerRuleCandidates } = await import("../modules/editorial/owner-rule-candidates");
+          const { retainedGuidePassages } = await import("../modules/publication/guidance-passages");
+          const { guideAmendmentRecords } = await import("../modules/publication/guidance-amendments");
+          const { db: fixtureDb } = await import("@workspace/db");
+          const clockBefore = Date.now();
+          // On the real clock, as the guide's subtest runs, and for the same reasons: the database stamps
+          // approvals, admissions and attempts with the real time.
+          t.mock.timers.reset();
+          try {
+            const now = new Date(),
+              checkedAt = new Date(+now - 3_600_000);
+            // The capture the daily check would hold of the Act the rule quotes (SV-010): the passage kept
+            // in the repository, under the checksum the Act's amendment record describes.
+            const passage = retainedGuidePassages()("CAMA-814")!;
+            const rawChecksum = guideAmendmentRecords.find(
+              (r) => r.instrument === passage.instrument.id,
+            )!.rawSha256;
+            const snapshotId = randomUUID(),
+              text = `Front matter.\n\f\n${passage.text}\n\f\nMore of the Act.`;
+            captureTexts.set(snapshotId, text);
+            await scoped.query(
+              `INSERT INTO valo_source_snapshots(id,source_id,url,final_url,attempted_at,fetched_at,status,http_status,mime,raw_checksum,text_checksum,raw_object_key,text_object_key,extraction_version,metadata)
+               VALUES($1,'SV-010',$2,$2,$3,$3,'retrieved_unreviewed',200,'application/pdf',$4,$5,'synthetic-in-memory','synthetic-in-memory','synthetic','{"synthetic":true}')`,
+              [snapshotId, passage.instrument.url, checkedAt, rawChecksum, sha(Buffer.from(text))],
+            );
+            await scoped.query(
+              `INSERT INTO valo_source_watches(source_id,url,risk,last_snapshot_id,last_raw_hash,checked_at,failure_code)
+               VALUES('SV-010',$1,'high',$2,$3,$4,null)
+               ON CONFLICT (source_id) DO UPDATE SET url = excluded.url, last_snapshot_id = excluded.last_snapshot_id,
+                 last_raw_hash = excluded.last_raw_hash, checked_at = excluded.checked_at, failure_code = null`,
+              [passage.instrument.url, snapshotId, rawChecksum, checkedAt],
+            );
+            const releases = async () =>
+              (
+                await scoped.query(
+                  "SELECT count(*)::int AS n FROM valo_rule_releases WHERE rule_id = 'cac-business-name-814'",
+                )
+              ).rows[0].n;
+            const releasedBefore = await releases();
+
+            // A rule with no rights record for this route keeps nothing.
+            const ntaa = ownerRuleCandidates.find(
+              (c) => c.rule.requirementVersionId === "NTAA-11-COMPANY-RETURN",
+            )!;
+            const heldRule = await prepareReviewedRuleCandidate(ntaa.rule.id);
+            assert.equal(heldRule.state, "held");
+            assert.ok(heldRule.reasons.includes(REVIEWED_ROUTE_RIGHTS_MISSING), heldRule.reasons.join("; "));
+
+            // The business-name rule is prepared from the stored capture, as the operator's command prepares it.
+            const prepared = await prepareReviewedRuleCandidate("cac-business-name-814");
+            assert.equal(prepared.state, "awaiting_reviews", prepared.reasons.join(", "));
+            assert.ok(prepared.candidateArtifact && prepared.id);
+            const binding = {
+              candidateVersionId: prepared.id,
+              candidateArtifact: prepared.candidateArtifact,
+            };
+            const current = await readReviewedRuleReadiness(binding);
+            assert.equal(current.candidate.hash, prepared.candidateHash);
+            assert.deepEqual(
+              [
+                current.serverEvidence.ruleId,
+                current.serverEvidence.version,
+                current.serverEvidence.sourceSnapshots,
+                current.serverEvidence.authoringRoute,
+              ],
+              ["cac-business-name-814", prepared.version, { "cama-814": snapshotId }, "repository-rule"],
+            );
+            // Each scenario goes to the reviewers with its answers, its date and what the check gives for it.
+            const scenarios = current.reviewInputs.scenarios as {
+              id: string;
+              passed: boolean;
+              facts: unknown;
+              asOfDate: string;
+            }[];
+            assert.deepEqual(
+              scenarios.map((s) => [s.id, s.passed, s.asOfDate]),
+              current.prepared.scenarios.map((s) => [s.id, true, s.asOfDate]),
+            );
+            assert.ok(scenarios.every((s) => s.facts));
+
+            // Its two requests are kept as a plan of their own lane, not reserved.
+            const plan = await saveRuleReviewPlan(
+              current.candidate,
+              current.reviewInputs,
+              current.serverEvidence,
+              undefined,
+              current.bundle.sources,
+            );
+            assert.deepEqual(
+              [plan.manifest.lane, plan.manifest.preparer, plan.manifest.status],
+              [RULE_REVIEW_LANE, RULE_REVIEW_PREPARER, "mechanically_planned_not_reserved"],
+            );
+            assert.ok(
+              Date.parse(plan.manifest.expiresAt) <= Date.parse(plan.manifest.preparedAt) + 3_600_000,
+            );
+            assert.ok(plan.manifest.entries.every((entry) => !("request" in entry)));
+            const manifest = prepareOperationalFiniteManifest({
+              ...binding,
+              candidateHash: current.candidate.hash,
+              bundleHash: requestDigest(current.bundle),
+              sourceHashes: current.bundle.sources.map((source) => source.hash),
+              sourceFiles: [],
+              plan,
+            });
+
+            const {
+              allocationPackageId,
+              approveFiniteAllocationPackage,
+              finitePackagePreparers,
+              prepareFiniteAllocationPackage,
+              registerPreparedInferenceSubmanifest,
+              revokeFiniteAllocationPackage,
+            } = await import("../modules/ai/inference-allocation-package");
+            // One approval is current at a time: the earlier subtests' approvals are revoked first.
+            for (const row of (
+              await scoped.query(
+                "SELECT id FROM valo_inference_batches WHERE id LIKE 'finite-package:%' AND enabled AND approved_at IS NOT NULL",
+              )
+            ).rows)
+              await revokeFiniteAllocationPackage(scoped, row.id, schema);
+            const packageOf = (kind: keyof typeof finitePackagePreparers) =>
+              prepareFiniteAllocationPackage(new Date(Date.now() - 60_000), finitePackagePreparers[kind]);
+            const approve = (pkg: Awaited<ReturnType<typeof packageOf>>) =>
+              approveFiniteAllocationPackage(
+                scoped,
+                pkg,
+                {
+                  confirmPackageId: allocationPackageId(pkg),
+                  approvedBy: "synthetic-owner",
+                  reference: "Synthetic approval in a disposable schema, not the owner's",
+                  hours: 1,
+                },
+                schema,
+              );
+            const admit = (packageId: string, packageExpiresAt: string) =>
+              registerPreparedInferenceSubmanifest(
+                store,
+                { ...manifest, packageId },
+                new Date(
+                  Math.min(Date.parse(packageExpiresAt), Date.parse(plan.manifest.expiresAt)),
+                ).toISOString(),
+                assertFiniteWorkBindings,
+              );
+            const callsBeforeAdmission = calls;
+            // Nobody has approved the package of rule reviews, so it admits nothing.
+            const rulePackage = await packageOf("rulePairs");
+            await assert.rejects(
+              admit(allocationPackageId(rulePackage), new Date(Date.now() + 3_600_000).toISOString()),
+              /ALLOCATION_PACKAGE_NOT_AUTHORIZED/,
+            );
+            // An approval of another kind of work does not admit a rule's pair.
+            for (const kind of ["templatePairs", "guidePairs", "checkerChallenges"] as const) {
+              const other = await approve(await packageOf(kind));
+              await assert.rejects(admit(other.packageId, other.expiresAt), /WORK_OUTSIDE_PACKAGE/);
+              await revokeFiniteAllocationPackage(scoped, other.packageId, schema);
+            }
+            // Under an approval of rule reviews the pair is admitted; approving and admitting call no model
+            // and reserve nothing.
+            const rules = await approve(rulePackage);
+            const admitted = await admit(rules.packageId, rules.expiresAt);
+            assert.equal(admitted.packageId, rules.packageId);
+            assert.match(admitted.batchId, /^finite-submanifest:[a-f0-9]{64}$/);
+            assert.equal(calls, callsBeforeAdmission, "approving and admitting call no model");
+            assert.equal((await state()).entries.length, 0, "and reserve nothing");
+            const id = admitted.batchId,
+              pair = manifest.works[0]!.pair!;
+
+            // The binding checks build the pair again from the rule: a work whose bundle or request is not
+            // the one built is refused.
+            const [factual, challenge] = manifest.works as [
+              (typeof manifest.works)[number],
+              (typeof manifest.works)[number],
+            ];
+            await assert.rejects(
+              assertFiniteWorkBindings({ ...factual, caseHash: "f".repeat(64) }),
+              /PUBLICATION_BUNDLE_CHANGED/,
+            );
+            await assert.rejects(
+              assertFiniteWorkBindings({ ...factual, request: challenge.request }),
+              /OPERATIONAL_PLAN_REQUEST_CHANGED/,
+            );
+            // A plan whose requests the rule's own inputs do not build is refused, even with works that
+            // match it: here, one that would keep the scenarios from the reviewers.
+            const forged = await saveRuleReviewPlan(
+              current.candidate,
+              { ...current.reviewInputs, scenarios: [] },
+              current.serverEvidence,
+              undefined,
+              current.bundle.sources,
+            );
+            const forgedManifest = prepareOperationalFiniteManifest({
+              ...binding,
+              candidateHash: current.candidate.hash,
+              bundleHash: requestDigest(current.bundle),
+              sourceHashes: current.bundle.sources.map((source) => source.hash),
+              sourceFiles: [],
+              plan: forged,
+            });
+            await assert.rejects(
+              assertFiniteWorkBindings(forgedManifest.works[0]!),
+              /OPERATIONAL_PLAN_REQUEST_CHANGED/,
+            );
+            // The rule is built again under the guidance policy as it stands: with the policy's approval
+            // supposed absent, it is not the rule that was kept.
+            guideApproval.absent = true;
+            try {
+              await assert.rejects(assertFiniteWorkBindings(factual), /SAVED_PLAN_INPUT_CHANGED/);
+            } finally {
+              guideApproval.absent = false;
+            }
+            // Once a version of the rule is stored under its number, on either route, its review ends. The
+            // stored version here is a synthetic withdrawn one, taken away again.
+            const releaseId = randomUUID();
+            await scoped.query(
+              `INSERT INTO valo_rule_releases(id,rule_id,version,status,rule,publication_bundle,manifest_hash,published_at)
+               VALUES($1,'cac-business-name-814',$2,'withdrawn',$3,'{"synthetic":true}',$4,now())`,
+              [
+                releaseId,
+                prepared.version,
+                JSON.stringify({ id: "cac-business-name-814", version: prepared.version, synthetic: true }),
+                "b".repeat(64),
+              ],
+            );
+            try {
+              await assert.rejects(assertFiniteWorkBindings(factual), /CANDIDATE_ALREADY_SAVED/);
+            } finally {
+              await scoped.query("DELETE FROM valo_rule_releases WHERE id = $1", [releaseId]);
+            }
+            assert.equal(calls, callsBeforeAdmission, "the refusals call no model");
+
+            // The stand-in answers each request with a pass and the five enhanced checks, each quoting the
+            // first source the request itself carries. It is not a review.
+            answer = async (request) => {
+              const sent = JSON.parse((request.messages[1] as { content: string }).content) as {
+                sources: { text: string }[];
+              };
+              return response(
+                JSON.stringify({
+                  verdict: "pass",
+                  findings: [],
+                  missingEvidence: [],
+                  observations: ["Controlled fixture; not a genuine review"],
+                  enhancedChecks: mandatoryEnhancedChecks.map((name) => ({
+                    name,
+                    result: "pass",
+                    passage: sent.sources[0]!.text.slice(0, 200),
+                    note: "Controlled fixture; not a genuine check",
+                  })),
+                }),
+              );
+            };
+            const before = calls,
+              sentBefore = captured.length;
+            const sendReviews = () =>
+              run(() =>
+                withApprovedInferencePair(id, pair, () =>
+                  executeRuleReviewPlan(plan, current.candidate, current.serverEvidence),
+                ),
+              );
+            // While the Act's file has changed since the capture the rule is bound to, nothing is sent: the
+            // daily check must find the capture current, as the rule's release will.
+            const watch = (value: string) =>
+              scoped.query("UPDATE valo_source_watches SET last_raw_hash = $2 WHERE source_id = $1", [
+                "SV-010",
+                value,
+              ]);
+            await watch("e".repeat(64));
+            await assert.rejects(sendReviews(), /SOURCE_CURRENT_CAPTURE_REQUIRED/);
+            assert.equal(calls, before, "refusing calls no model");
+            assert.equal(captured.length, sentBefore, "and sends nothing");
+            assert.equal((await state()).entries.length, 0, "and reserves nothing");
+            await watch(rawChecksum!);
+
+            const reviews = await sendReviews();
+            assert.equal(reviews.length, 2);
+            assert.equal(calls - before, 2, "one call to the stand-in for each review");
+            // Both were charged to the batch admitted under the approval of rule reviews.
+            assert.deepEqual(
+              (await state()).entries.map((e) => [e.runKey.startsWith(`${id}:`), e.lane, e.status]),
+              [
+                [true, "publication", "settled"],
+                [true, "publication", "settled"],
+              ],
+            );
+            // What was sent is what was planned: the rule's own two requests, each with the rule, its
+            // scenarios and its sources.
+            const sentRequests = captured.slice(sentBefore);
+            assert.deepEqual(
+              sentRequests.map((request) => requestDigest(request)).sort(),
+              plan.entries.map((entry) => entry.meter.requestHash).sort(),
+            );
+            for (const request of sentRequests) {
+              const input = JSON.parse((request.messages[1] as { content: string }).content) as {
+                candidate: { hash: string };
+                scenarios: unknown[];
+                sources: { id: string }[];
+              };
+              assert.equal(input.candidate.hash, current.candidate.hash);
+              assert.equal(input.scenarios.length, scenarios.length);
+              assert.deepEqual(
+                input.sources.map((source) => source.id),
+                ["cama-814"],
+              );
+            }
+            // Nothing is released: the reviews are AI checks, and the rule is released only by the
+            // reviewed route's release command.
+            assert.equal(await releases(), releasedBefore);
+            assert.deepEqual(
+              reviews.map((r) => r.record.role),
+              ["factual", "challenge"],
+            );
+
+            // Slice 3b: with both reviews passed, the rule's release request is assembled from the batch.
+            // Each review must be the one the batch settled, and the rule is built again first.
+            const { assembleReviewedRuleRelease, readReviewedRuleReleaseRequest } =
+              await import("../modules/ai-lanes/inference-reviewed-rule-release");
+            const { applyStoredRuleRelease, planStoredRuleRelease } =
+              await import("../modules/editorial/valo-rule-release");
+            const { releasedRegistry } = await import("../modules/rules/valo-assessments");
+            const refs = reviews.map((r) => r.artifact);
+            await assert.rejects(
+              assembleReviewedRuleRelease({ batchId: id, reviews: [refs[0]!, refs[0]!] }),
+              /REVIEWS_NOT_INDEPENDENT/,
+            );
+            await assert.rejects(
+              assembleReviewedRuleRelease({ batchId: id, reviews: refs, reason: "Too short." }),
+              /RULE_RELEASE_REASON_INVALID/,
+            );
+            const reason = "Released on the reviewed route in a test, with stand-in reviews.";
+            const assembled = await assembleReviewedRuleRelease({ batchId: id, reviews: refs, reason });
+            assert.equal(assembled.state, "ready", assembled.reasons.join("; "));
+            assert.ok(assembled.request && assembled.manifestHash);
+            assert.deepEqual(
+              [assembled.ruleId, assembled.version, assembled.candidateHash],
+              ["cac-business-name-814", prepared.version, current.candidate.hash],
+            );
+            assert.equal(calls - before, 2, "assembling the request calls no model");
+            assert.equal(await releases(), releasedBefore, "and releases nothing");
+            const request = await readReviewedRuleReleaseRequest(assembled.request);
+            assert.deepEqual(request.snapshotIds, { "cama-814": snapshotId });
+            assert.equal(request.reason, reason);
+            assert.deepEqual(
+              (request.bundle as { reviews: { role: string; verdict: string }[] }).reviews.map((r) => [
+                r.role,
+                r.verdict,
+              ]),
+              [
+                ["factual", "pass"],
+                ["challenge", "pass"],
+              ],
+            );
+            // The release command plans it and applies it, confirmed by its manifest hash.
+            const releasePlan = await planStoredRuleRelease(request);
+            assert.equal(releasePlan.decision, "ready", releasePlan.reasons.join(","));
+            await assert.rejects(
+              applyStoredRuleRelease(request, "f".repeat(64)),
+              /RULE_RELEASE_NOT_CONFIRMED/,
+            );
+            const applied = await applyStoredRuleRelease(request, assembled.manifestHash);
+            assert.deepEqual([applied.ruleId, applied.version], ["cac-business-name-814", prepared.version]);
+            assert.equal(await releases(), releasedBefore + 1);
+            // The registry admits the reviewed version, and the requirements check reads it.
+            const registry = await releasedRegistry(fixtureDb, new Date());
+            assert.ok(
+              registry.rules.some(
+                (r) =>
+                  r.id === "cac-business-name-814" &&
+                  r.version === prepared.version &&
+                  r.provenance === "editorial_release",
+              ),
+            );
+            // The prepared candidate's review has ended: its version is stored.
+            await assert.rejects(readReviewedRuleReadiness(binding), /CANDIDATE_ALREADY_SAVED/);
+            assert.equal(calls - before, 2, "releasing calls no model");
+
+            // ADM-004: restoring a version. A later version of the rule is stored first, synthetic and with a
+            // next step of its own (its bundle is a stand-in, so the requirements check never admits it), and
+            // a result a business saved under it.
+            const reviewedRule = request.rule as { version: number; nextStep: string };
+            const laterVersion = reviewedRule.version + 1;
+            await scoped.query(
+              "UPDATE valo_rule_releases SET status = 'superseded' WHERE rule_id = 'cac-business-name-814' AND version = $1",
+              [reviewedRule.version],
+            );
+            await scoped.query(
+              `INSERT INTO valo_rule_releases(id,rule_id,version,status,rule,publication_bundle,manifest_hash,published_at)
+               VALUES($1,'cac-business-name-814',$2,'published',$3,'{"synthetic":true}',$4,now())`,
+              [
+                randomUUID(),
+                laterVersion,
+                JSON.stringify({
+                  ...reviewedRule,
+                  version: laterVersion,
+                  nextStep: "A later next step, in a synthetic version.",
+                }),
+                "c".repeat(64),
+              ],
+            );
+            const savedResult = randomUUID();
+            await scoped.query(
+              `INSERT INTO valo_assessments(id,workspace_id,facts,facts_hash,result,result_hash,ruleset_version,as_of_date,consent_version,actor_id)
+               VALUES($1,$2,'{"synthetic":true}',$3,$4,$5,$6,current_date,'synthetic-consent','synthetic-actor')`,
+              [
+                savedResult,
+                randomUUID(),
+                "d".repeat(64),
+                JSON.stringify({ items: [{ ruleId: "cac-business-name-814", version: laterVersion }] }),
+                "e".repeat(64),
+                `cac-business-name-814@${laterVersion}`,
+              ],
+            );
+            const savedRow = async () =>
+              (
+                await scoped.query("SELECT to_jsonb(a) AS row FROM valo_assessments a WHERE id = $1", [
+                  savedResult,
+                ])
+              ).rows[0].row;
+            const savedBefore = await savedRow();
+            // The latest version is not restored, nor one that was never stored.
+            await assert.rejects(
+              prepareReviewedRuleCandidate("cac-business-name-814", { restore: laterVersion }),
+              /RULE_VERSION_ALREADY_CURRENT/,
+            );
+            await assert.rejects(
+              prepareReviewedRuleCandidate("cac-business-name-814", { restore: laterVersion + 50 }),
+              /RULE_VERSION_UNKNOWN/,
+            );
+            // The repository's rule has moved on since the reviewed version: its next step is now another.
+            // A restore takes the stored version's words, never the repository's.
+            const movedOn = "A next step the repository's rule has now, in a synthetic change.";
+            assert.notEqual(reviewedRule.nextStep, movedOn);
+            const repositoryNow = ownerRuleCandidates.map((c) =>
+              c.rule.id === "cac-business-name-814" ? { ...c, rule: { ...c.rule, nextStep: movedOn } } : c,
+            );
+            // The reviewed version is restored as the next one, through the same builder: its words again.
+            const restoring = await prepareReviewedRuleCandidate("cac-business-name-814", {
+              restore: reviewedRule.version,
+              candidates: repositoryNow,
+            });
+            assert.equal(restoring.state, "awaiting_reviews", restoring.reasons.join("; "));
+            assert.ok(restoring.candidateArtifact && restoring.id);
+            assert.deepEqual(
+              [restoring.version, restoring.restores],
+              [laterVersion + 1, reviewedRule.version],
+            );
+            const restoredBinding = {
+              candidateVersionId: restoring.id,
+              candidateArtifact: restoring.candidateArtifact,
+            };
+            // Built again from the version it restores, as stored, whatever the repository's rule says now.
+            const restored = await readReviewedRuleReadiness(restoredBinding, { candidates: repositoryNow });
+            assert.deepEqual(restored.restores, {
+              version: reviewedRule.version,
+              manifestHash: assembled.manifestHash,
+            });
+            assert.equal(restored.rule.nextStep, reviewedRule.nextStep);
+            // Like any version, it is reviewed again: its own pair under the same approval, sent as planned.
+            const restoredPlan = await saveRuleReviewPlan(
+              restored.candidate,
+              restored.reviewInputs,
+              restored.serverEvidence,
+              undefined,
+              restored.bundle.sources,
+            );
+            const restoredManifest = prepareOperationalFiniteManifest({
+              ...restoredBinding,
+              candidateHash: restored.candidate.hash,
+              bundleHash: requestDigest(restored.bundle),
+              sourceHashes: restored.bundle.sources.map((source) => source.hash),
+              sourceFiles: [],
+              plan: restoredPlan,
+            });
+            const restoredBatch = await registerPreparedInferenceSubmanifest(
+              store,
+              { ...restoredManifest, packageId: rules.packageId },
+              new Date(
+                Math.min(Date.parse(rules.expiresAt), Date.parse(restoredPlan.manifest.expiresAt)),
+              ).toISOString(),
+              assertFiniteWorkBindings,
+            );
+            const restoredReviews = await run(() =>
+              withApprovedInferencePair(restoredBatch.batchId, restoredManifest.works[0]!.pair!, () =>
+                executeRuleReviewPlan(restoredPlan, restored.candidate, restored.serverEvidence),
+              ),
+            );
+            assert.equal(calls - before, 4, "two more calls to the stand-in, one for each review");
+            // Its release request's reason names the version it restores.
+            const restoreAssembled = await assembleReviewedRuleRelease({
+              batchId: restoredBatch.batchId,
+              reviews: restoredReviews.map((r) => r.artifact),
+            });
+            assert.equal(restoreAssembled.state, "ready", restoreAssembled.reasons.join("; "));
+            const restoreRequest = await readReviewedRuleReleaseRequest(restoreAssembled.request!);
+            const restoreReason = `Restores version ${reviewedRule.version} of this rule.`;
+            assert.equal(restoreRequest.reason, restoreReason);
+            const restoreApplied = await applyStoredRuleRelease(
+              restoreRequest,
+              restoreAssembled.manifestHash!,
+            );
+            assert.deepEqual(
+              [restoreApplied.version, restoreApplied.superseded],
+              [laterVersion + 1, [laterVersion]],
+            );
+            // The requirements check uses the restored version, with the reviewed version's words, and the
+            // change is recorded with its reason.
+            const afterRestore = await releasedRegistry(fixtureDb, new Date());
+            const live = afterRestore.rules.find((r) => r.id === "cac-business-name-814");
+            assert.deepEqual([live?.version, live?.nextStep], [laterVersion + 1, reviewedRule.nextStep]);
+            assert.deepEqual(
+              (
+                await scoped.query(
+                  "SELECT kind, replacement_version, reason FROM valo_rule_changes WHERE rule_id = 'cac-business-name-814' AND version = $1",
+                  [laterVersion],
+                )
+              ).rows,
+              [{ kind: "replaced", replacement_version: laterVersion + 1, reason: restoreReason }],
+            );
+            // Every earlier version is kept, and the result saved under the later one is as it was.
+            assert.deepEqual(
+              (
+                await scoped.query(
+                  "SELECT version, status FROM valo_rule_releases WHERE rule_id = 'cac-business-name-814' AND version >= $1 ORDER BY version",
+                  [reviewedRule.version],
+                )
+              ).rows.map((r) => [r.version, r.status]),
+              [
+                [reviewedRule.version, "superseded"],
+                [laterVersion, "superseded"],
+                [laterVersion + 1, "published"],
+              ],
+            );
+            assert.deepEqual(await savedRow(), savedBefore);
+          } finally {
             t.mock.timers.enable({ apis: ["Date"], now: clockBefore });
           }
         },

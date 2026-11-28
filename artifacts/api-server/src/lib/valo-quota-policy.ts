@@ -37,6 +37,9 @@ export const quotaPolicy = {
   "staff-support-write-day": 200,
   "refund-create": 10,
   "refund-create-day": 50,
+  // Uses of one workspace's unsubscribe links, by whoever holds one. Nobody is signed in, and a mail
+  // service asks for many people from the same addresses, so the count is by the link's workspace.
+  "unsubscribe-link": 10,
 } as const;
 export type QuotaBucket = keyof typeof quotaPolicy;
 
@@ -85,7 +88,7 @@ export type QuotaDecision = {
 };
 export function quotaSubjectHash(
   secret: string | undefined,
-  subjectKind: "ip" | "user",
+  subjectKind: "ip" | "user" | "workspace",
   subject: string,
 ): string {
   if (!secret || secret.length < 32 || !subject) throw new Error("QuotaConfigurationUnavailable");

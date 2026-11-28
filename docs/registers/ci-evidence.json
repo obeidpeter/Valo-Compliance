@@ -51,6 +51,13 @@
       "proves": "Against PostgreSQL, another member of a workspace reads its delivery log and is told only that a message is not theirs, another workspace's log holds none of it, and a member who has left is refused."
     },
     {
+      "requirement": "SEC-001",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/messages/valo-email-events.integration.test.ts",
+      "test": "the email service's reports are recorded on the message or reminder they are about, whatever their order, and never on a message sent to no one (WRK-003)",
+      "proves": "Against PostgreSQL, another workspace's log shows nothing of a workspace's delivery reports; in that other workspace's database scope a report is neither read nor changed nor written for the first, and the reports as they arrive are no workspace's to read."
+    },
+    {
       "requirement": "IAM-003",
       "job": "postgres",
       "file": "artifacts/api-server/src/platform/workspace-row-security.integration.test.ts",
@@ -104,7 +111,7 @@
       "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/public-server-pages.test.ts",
       "test": "hostile markup in a page's address is drawn only as text: the server's HTML holds it escaped, and the page runs none of it (SEC-003)",
-      "proves": "On the compiled web app, the library and services pages given hostile markup in every value of their address hold it only escaped in the server's HTML, and in a browser run none of it and make none of its elements, while the library's search box shows it as text."
+      "proves": "On the compiled web app, the library, services, guides, industries and help pages given hostile markup in every value of their address hold it only escaped in the server's HTML, and in a browser run none of it and make none of its elements, while the search box of each page that has one shows it as text and the industries page says it back as text."
     },
     {
       "requirement": "SEC-003",
@@ -863,6 +870,55 @@
       "proves": "Type, industry, access and category filters combine, name and recency sorts order the results, and an unknown query or filter returns nothing."
     },
     {
+      "requirement": "WEB-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/catalogue/public-search.test.ts",
+      "test": "the list a search is judged on is the library's own, were every draft kept in the repository released: 40 templates, 30 guides to the rules, 38 articles, 20 industry pages and 7 service categories",
+      "proves": "The list the searches below run over is built by the catalogue's own functions from the 108 drafts kept in the repository, the 20 industry pages and the 7 service categories: 135 items of the five kinds, each read by its title and a description of at most 260 characters. Nothing is released to make it."
+    },
+    {
+      "requirement": "WEB-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/catalogue/public-search.test.ts",
+      "test": "50 curated searches across templates, guides to the rules, articles, industry pages and service categories each find the expected item in the first three results, whichever order the list is in",
+      "proves": "Each of 50 searches across the five kinds, worded as a business owner might type them, finds its expected item in the first three results with the list in either order. The searches and their expected items are the builder's, the search was built against them, and no pass threshold is agreed."
+    },
+    {
+      "requirement": "WEB-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/catalogue/public-search.test.ts",
+      "test": "of two further sets of 50 searches across the five kinds, 50 and 45 find their item in the first three results, and the five that do not are the ones named",
+      "proves": "Two further sets of 50 searches, each first run before anything was changed for it, now find 50 and 45 of their items, six of them among the closest items to a search that no item has every word of; the five they miss are named, so that a search that starts to pass or to fail fails the test."
+    },
+    {
+      "requirement": "WEB-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/catalogue/public-search.test.ts",
+      "test": "the type and industry filters narrow a search over all five kinds, alone and together",
+      "proves": "Over all five kinds, a type lists every item of that kind and no other, an industry lists what is filed under it and what is for every industry, and the two combine with each other and with a search."
+    },
+    {
+      "requirement": "WEB-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/catalogue/valo-catalogue-visibility.integration.test.ts",
+      "test": "public search lists what the staff library has released under its type and its industry, in a visitor's words, and never a draft, an unsigned guide, a held, withdrawn or replaced version or a customer's document",
+      "proves": "Against PostgreSQL, a template, a practical guide and a regulatory article released through the staff library's own functions are each found under their own type and the guide under its industry, by a plural and an everyday word; a draft, a regulatory article the owner has not signed, a later draft's words, a held, withdrawn or replaced version and a customer's document with the same word are never found."
+    },
+    {
+      "requirement": "WEB-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/catalogue/public-search.test.ts",
+      "test": "an item that has every wanted word is found; when none has, the items that have the most of them are listed as the closest; and a search of marks alone lists everything",
+      "proves": "Where no item has every word a search must have, the items that have at least one of them and lack the fewest are listed and the answer says they are the closest; an item with none of the words is never listed, nothing is the closest to a word no item has, and the filters still narrow them."
+    },
+    {
+      "requirement": "WEB-003",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-server-pages.test.ts",
+      "test": "when nothing has every word of a search the library lists the items that have the most of them and says so, in the server's HTML and on a phone; a search an item answers in full says nothing of the kind, and one no item has a word of finds nothing",
+      "proves": "In a browser on a phone and in the server's HTML, the library lists the closest items to a search that no item has every word of and says that nothing has all the words, with no automated accessibility failure; it says nothing of the kind for a search an item answers in full, and shows its empty state for one no item has a word of."
+    },
+    {
       "requirement": "SRV-001",
       "job": "foundation",
       "file": "artifacts/valo/src/components/service-categories.test.tsx",
@@ -1375,6 +1431,13 @@
     },
     {
       "requirement": "ADM-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/editorial/review-preparation-law-template.integration.test.ts",
+      "test": "review work on a held template that states the law prepares its next candidate with that template's own preparer, from the daily check's captures of its sources",
+      "proves": "Against real PostgreSQL, the worker prepares a held version of TPL-31 from its review work with that template's own preparer: with no capture of its sources it stops with TEMPLATE_HAS_NO_BOUND_SOURCE, with stand-in captures and no approved policy it is not ready for policy_not_owner_approved and nothing is kept, and only under a supposed approval of the policy is its candidate kept for its two reviews, with nothing sent to a model, spent or published."
+    },
+    {
+      "requirement": "ADM-003",
       "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
       "test": "review work on a held template asks for its next candidate, and says where each preparation stands and that its reviews wait for the owner's allocation",
@@ -1414,6 +1477,62 @@
       "file": "artifacts/api-server/src/lib/managed-callers-real-bindings.integration.test.ts",
       "test": "actual managed callers with real PostgreSQL, source/candidate/case checks and zero-network SDK",
       "proves": "In a disposable copy of the database, the real publisher releases a guide (GUD-02) only on the development owner's check of that exact candidate's sources from within the last day, and its stored version is then eligible under the guidance policy as the owner approved it, carries both passing synthetic reviews and its enhanced checks, and is bound to the captures the owner checked; a day-old check saves and releases nothing."
+    },
+    {
+      "requirement": "ADM-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-law-release.test.ts",
+      "test": "under the policy as it stands, TPL-31 is held for the owner's approval as well as its reviews",
+      "proves": "Assembled as it would be prepared today, TPL-31's bundle is held for the owner's approval of the policy for templates that state the law, on which its rights record and its scope check rest, as well as for its two reviews."
+    },
+    {
+      "requirement": "ADM-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-law-release.test.ts",
+      "test": "with every source current and a supposed approval of the policy, only its two reviews hold TPL-31",
+      "proves": "With stand-in passages under a synthetic amendment record and a test's supposed approval of the policy, TPL-31's bundle clears its rights record and passes its ten mechanical checks, and the gate holds it for its two reviews alone."
+    },
+    {
+      "requirement": "ADM-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-law-release.test.ts",
+      "test": "with every source current and a supposed approval of the policy, only its two reviews hold TPL-29",
+      "proves": "With stand-in passages under a synthetic amendment record and a test's supposed approval of the policy, TPL-29's bundle clears its rights record and passes its ten mechanical checks, and the gate holds it for its two reviews alone."
+    },
+    {
+      "requirement": "ADM-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-law-release.test.ts",
+      "test": "with every source current and a supposed approval of the policy, only its two reviews hold TPL-36",
+      "proves": "With a stand-in passage under a synthetic amendment record and a test's supposed approval of the policy, TPL-36's bundle clears its rights record and passes its ten mechanical checks, and the gate holds it for its two reviews alone."
+    },
+    {
+      "requirement": "ADM-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-law-release.test.ts",
+      "test": "each condition of a template's rights record is measured again",
+      "proves": "A template's rights record that is for another kind of content, accepts a customer licence, names another draft, route, permission, rule or policy file, rests on an unverified permission, has expired, no longer matches the template's review date or no longer measures what the template shares with its passages is refused, each for its own reason; the words measured are the template's own, and no record is made without the policy file it rests on."
+    },
+    {
+      "requirement": "ADM-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-law-release.test.ts",
+      "test": "a file that fails its inspection holds the template",
+      "proves": "A template that states the law whose PDF file fails its inspection is held for that file, whatever else it passes."
+    },
+    {
+      "requirement": "ADM-005",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/editorial/law-template-route.integration.test.ts",
+      "test": "a template that states the law, under a supposed approval of its policy, is prepared, measured for its reviews and passes every publisher check on a real database, with nothing published",
+      "proves": "On a real database, a reviewed TPL-31 version passes every check the publisher makes, in a transaction that is rolled back, only under the policy for templates that state the law as approved; with that approval supposed absent the publisher refuses it, and nothing is saved or published."
+    },
+    {
+      "requirement": "ADM-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/catalogue/valo-released-law-templates.test.ts",
+      "test": "a published template that states the law is shown only while its own policy stands and its permission is current",
+      "proves": "A released template that states the law is shown only while the policy it was released under is that policy as it stands and approved, its sources are current and the provider's permission for its wording is current, and never after its review date or once withdrawn."
     },
     {
       "requirement": "ADM-009",
@@ -2144,6 +2263,20 @@
       "proves": "On a real database the publisher refuses a guide bound to the templates' policy and a form bound to the guidance policy, and holds a guide under the guidance policy, which the owner has not approved; none of the three synthetic candidates is published."
     },
     {
+      "requirement": "EDP-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-law-policy.test.ts",
+      "test": "no text of the policy for templates that state the law is approved, so every such template is held",
+      "proves": "The policy for templates that state the law is read from its proposed file, allows only templates, Nigeria and subjects that take the enhanced checks, binds the file's checksum and each sentence the code depends on, and is not approved, because no approval of the file's text is recorded."
+    },
+    {
+      "requirement": "EDP-001",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/publication/publication-guards.integration.test.ts",
+      "test": "a template that rests on the law is checked only against its own policy, and held while no text of it is approved",
+      "proves": "On a real database the publisher holds a synthetic template that rests on the law under the policy for such templates, for want of the owner's approval among its reasons, and refuses it bound to the templates' own policy or to an approval the code does not record; an original form bound to that policy is refused too, and none is published."
+    },
+    {
       "requirement": "EDP-002",
       "job": "foundation",
       "file": "scripts/src/valo/publication.test.ts",
@@ -2221,6 +2354,20 @@
       "proves": "A source whose stored copy cannot be read, or whose copy lacks the passage the guide rests on, is reported as holding the guide rather than passed over."
     },
     {
+      "requirement": "EDP-002",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/editorial/law-template-preparation.integration.test.ts",
+      "test": "a template that states the law is not prepared without a current capture of each of its sources, and nothing is kept",
+      "proves": "On a real database, a template that states the law whose sources have no current capture, or captures that do not hold the recorded passages, is not prepared and nothing is kept, as a template with no claim map or terms more than a day old is not."
+    },
+    {
+      "requirement": "EDP-002",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/editorial/law-template-preparation.integration.test.ts",
+      "test": "run as a process, the command for a template that states the law stops with a plain reason, and refuses a template with no claim map",
+      "proves": "Run as a process against a real database, the command for a template that states the law stops with a reason an operator can look up when no capture holds its passages, refuses a template with no claim map or a call without the terms file, and keeps nothing."
+    },
+    {
       "requirement": "EDP-003",
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/editorial/pipeline-contract.test.ts",
@@ -2277,6 +2424,55 @@
       "proves": "For each of the four employment guides, every word of the guide is placed in its claim map and every sentence about the Labour Act names a passage; with no passage supplied each such sentence is reported as not bound and no claim is made. The test has no official words to read, so it does not show that a quotation is in the Act."
     },
     {
+      "requirement": "EDP-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/reviewed-rule.test.ts",
+      "test": "a rule with today's capture of its source, a current amendment record and a rights record for this route waits only for its two reviews, and the registry admits it once they pass",
+      "proves": "A rule prepared in the repository is built for the reviewed route with its source bound to today's capture of its official text and current on the text's amendment record, its claims, the guidance policy and a drafting record that says only what is known of how it was written; nothing but its two reviews holds it, and with two passing stand-in reviews the rule registry admits the release."
+    },
+    {
+      "requirement": "EDP-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-claim-map.test.ts",
+      "test": "TPL-31's map places every word of its retained draft, in order, with nothing left over",
+      "proves": "TPL-31's claim map places every word of the data processing agreement's retained draft in order, each sentence as a statement of the law or a reading of one, a term the parties agree, a practice, a limit or a heading, and states the law, so only the policy for templates that state the law can release it."
+    },
+    {
+      "requirement": "EDP-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-claim-map.test.ts",
+      "test": "the builder refuses a map that misplaces, leaves out or misclassifies a template's words",
+      "proves": "A template's claim map is refused when its words are out of order or not the template's, are left unplaced, state the law with no passage, give a term, a limit or a heading a passage, quote words not in the passage or a place it does not bear out, or let a number stand that the quotation lacks."
+    },
+    {
+      "requirement": "EDP-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-claim-map.test.ts",
+      "test": "TPL-29's map places every word of its retained draft, in order, with nothing left over",
+      "proves": "TPL-29's claim map places every word of the privacy notice's retained draft in order, each sentence as a reading of the law, a statement the business makes of itself, a practice or a heading, and states the law, so only the policy for templates that state the law can release it."
+    },
+    {
+      "requirement": "EDP-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-claim-map.test.ts",
+      "test": "each of TPL-29's sentences about the law names a recorded passage, quoted as the privacy guides quote it",
+      "proves": "Each of TPL-29's sentences about the law rests on a recorded passage of the Data Protection Act or the directive, quoted exactly as a privacy guide's map quotes it, and with no passage supplied each is reported as missing evidence instead of becoming a claim."
+    },
+    {
+      "requirement": "EDP-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-claim-map.test.ts",
+      "test": "TPL-36's map places every word of its retained draft, in order, with nothing left over",
+      "proves": "TPL-36's claim map places every word of the product recall plan's retained draft in order, each sentence as a reading of the law, a practice, a limit of the plan or a heading, label or blank, and states the law, so only the policy for templates that state the law can release it."
+    },
+    {
+      "requirement": "EDP-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-claim-map.test.ts",
+      "test": "TPL-36's sentence about the law names a recorded passage, quoted as the food guides quote it",
+      "proves": "TPL-36's one sentence about the law rests on a recorded passage of the Agency's good manufacturing practice guidelines, quoted exactly as a food guide's map quotes it, and with no passage supplied it is reported as missing evidence instead of becoming a claim."
+    },
+    {
       "requirement": "EDP-004",
       "job": "foundation",
       "file": "scripts/src/valo/publication.test.ts",
@@ -2309,7 +2505,42 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/lib/managed-callers-real-bindings.integration.test.ts",
       "test": "actual managed callers with real PostgreSQL, source/candidate/case checks and zero-network SDK",
-      "proves": "In a disposable copy of the database, a guide's factual review and its challenge are admitted only under an approved package of guide reviews and after the development owner's check of that exact candidate's sources, and are sent as the two separate requests planned, each settled once against that batch; before the check, or a day after it, nothing is admitted, sent or reserved."
+      "proves": "In a disposable copy of the database, a guide's factual review and its challenge are admitted only under an approved package of guide reviews and after the development owner's check of that exact candidate's sources, and are sent as the two separate requests planned, each settled once against that batch, while before the check, or a day after it, nothing is admitted, sent or reserved; a requirements-check rule's two reviews are admitted only under an approved package of rule reviews, not under an approval of template, guide or checker-challenge work, and are sent as planned only while each copy the rule is bound to is still the current one."
+    },
+    {
+      "requirement": "EDP-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/reviewed-rule-review.test.ts",
+      "test": "a rule's two review requests carry the rule, its scenarios, its records and its sources, and each runs the enhanced checks",
+      "proves": "A requirements-check rule on the reviewed route gets a factual check and a separate challenge with different tasks, each given the rule's candidate, its scenarios with the result the requirements check gives for each, its rights record, how it was written, its files' inspection and its sources whole, with each prompt's version and hash recorded."
+    },
+    {
+      "requirement": "EDP-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/reviewed-rule-review.test.ts",
+      "test": "neither review is given another review's verdict, and the requests name this candidate and its source check",
+      "proves": "A rule's review request that would carry another review's verdict, in its rights record, scenarios, provenance or sources, is refused, as is one whose server evidence names another candidate or source check, or that carries no sources."
+    },
+    {
+      "requirement": "EDP-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/ai/inference-allocation-package.test.ts",
+      "test": "only a package of templates that state the law admits their review pairs, and it admits nothing else",
+      "proves": "Only a package of its own kind admits the two planned reviews of a template that states the law, and that package admits no form's, guide's, rule's or other work, and no work that is not such a pair."
+    },
+    {
+      "requirement": "EDP-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/template-law-reviews.test.ts",
+      "test": "TPL-31's two review requests are within its policy's limit and carry its sources and their amendment basis",
+      "proves": "TPL-31's factual review and its separate challenge each run the five enhanced checks, within the limit its policy states, and are sent its sources whole, the measure of the words it repeats from them and each text's amendment basis, not the draft a second time."
+    },
+    {
+      "requirement": "EDP-004",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/editorial/law-template-route.integration.test.ts",
+      "test": "a template that states the law, under a supposed approval of its policy, is prepared, measured for its reviews and passes every publisher check on a real database, with nothing published",
+      "proves": "On a real database, TPL-31 prepared from stand-in passages under a supposed approval of its policy is built again for its two reviews, which are within its policy's limit and found unchanged by the dispatcher's check, and only a package of its own kind takes the pair; without the approval, the candidate and its planned pair are refused."
     },
     {
       "requirement": "EDP-005",
@@ -2382,6 +2613,34 @@
       "proves": "In a disposable copy of the database, with stand-in reviews that are not reviews, a guide is released by the real publisher with the five enhanced checks (controlling text, amendments, effective dates, exceptions and jurisdiction) recorded as passed by both reviews on its stored version, and only on the development owner's check of that exact candidate's sources from within the last day."
     },
     {
+      "requirement": "EDP-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/reviewed-rule.test.ts",
+      "test": "a source with no copy checked within the last day, a copy that lacks its passage, or an amendment record out of date holds the rule",
+      "proves": "A rule on the reviewed route is held whole when its source has no copy checked within the last day, when the copy lacks the passage the rule quotes, or when the text's amendment record is out of date; its legal scope is then unverified and its source is not marked current."
+    },
+    {
+      "requirement": "EDP-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/reviewed-rule-review.test.ts",
+      "test": "a rule's two review requests carry the rule, its scenarios, its records and its sources, and each runs the enhanced checks",
+      "proves": "A rule classed as governance content asks each of its two reviewers to run EDP-005's five enhanced checks, quoting the passage each relied on, and to answer in the enhanced review's shape."
+    },
+    {
+      "requirement": "EDP-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-claim-map.test.ts",
+      "test": "TPL-31 exposes what it assumes about its parties and its use, and the clauses it leaves open (EDP-005)",
+      "proves": "TPL-31, a contract, gives the parties and use it assumes and every clause it leaves for the parties to settle as the candidate's assumptions, each clause with a blank among them, and a contract's map without them is refused."
+    },
+    {
+      "requirement": "EDP-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-law-release.test.ts",
+      "test": "the mechanical checks are measured from the candidate itself, and a changed candidate fails them",
+      "proves": "A contract template that states the law fails its scope and required-fields checks when one of the clauses it leaves open is missing from what it exposes."
+    },
+    {
       "requirement": "EDP-006",
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/publication/operational-mechanical.test.ts",
@@ -2422,6 +2681,69 @@
       "file": "artifacts/api-server/src/modules/publication/guidance-release.test.ts",
       "test": "without the owner's approval the gate holds each guide built from the repository for the policy and what rests on it",
       "proves": "Supposing no approval of the policy file is recorded, eight of the ten mechanical checks pass and the scope and rights checks fail for each of the ten guides whose passages the repository keeps, and the gate holds each guide for the policy and the rights record that rests on it, and for no other reason apart from an unbound sentence in two guides and the two missing reviews."
+    },
+    {
+      "requirement": "EDP-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/reviewed-rule.test.ts",
+      "test": "each mechanical check fails on what it measures",
+      "proves": "Each of the ten mechanical checks the gate requires of a rule fails on the fault it measures: a body that is not the rule, a quotation its passage lacks, a review date past its sources' freshness, a policy other than the guidance policy, a number its quotation lacks, another rights record, a blank title, another disclosure, a calculation hash that is not the code's, and a critical scenario the rule does not give."
+    },
+    {
+      "requirement": "EDP-006",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/editorial/reviewed-rule-preparation.integration.test.ts",
+      "test": "a rule prepared in the repository is kept for its two reviews only when nothing else holds it",
+      "proves": "On a real database a rule prepared in the repository is kept for its reviews only when nothing else holds it: with no rights record for the reviewed route, or no copy of its source checked within the last day, no row or file is kept; once kept, through drafting's own login, as its next version, its Word and PDF files hold the whole rule sheet and read back exactly as they were inspected."
+    },
+    {
+      "requirement": "EDP-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-law-release.test.ts",
+      "test": "the mechanical checks are measured from the candidate itself, and a changed candidate fails them",
+      "proves": "A template that states the law has the gate's ten mechanical checks measured from the candidate itself: a body, assumption, limit, review date, quotation, claim or claim map that is not what its sources and claim map give fails exactly the checks that read it."
+    },
+    {
+      "requirement": "EDP-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-law-release.test.ts",
+      "test": "the checks hold the provider's terms, the policy and each source's decision to what they are now",
+      "proves": "A template that states the law fails its checks when the provider's pages are not the ones its permission quotes, when the policy the code reads today is not the candidate's or no longer names its sources' host, or when a source's decision is not the one its amendment record supports."
+    },
+    {
+      "requirement": "EDP-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-law-release.test.ts",
+      "test": "TPL-31's Word and PDF files hold its whole document and pass the export inspection",
+      "proves": "TPL-31's document, rendered as Word and as PDF, holds its own words, its disclosure, scope, limits and source check date, and passes the export inspection."
+    },
+    {
+      "requirement": "EDP-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-law-release.test.ts",
+      "test": "TPL-29's Word and PDF files hold its whole document and pass the export inspection",
+      "proves": "TPL-29's document, rendered as Word and as PDF, holds its own words, its disclosure, scope, limits and source check date, and passes the export inspection."
+    },
+    {
+      "requirement": "EDP-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-law-release.test.ts",
+      "test": "TPL-36's Word and PDF files hold its whole document and pass the export inspection",
+      "proves": "TPL-36's document, rendered as Word and as PDF, holds its own words, its disclosure, scope, limits and source check date, and passes the export inspection."
+    },
+    {
+      "requirement": "EDP-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-law-release.test.ts",
+      "test": "a link in a template's own words goes only to one of the policy's official hosts",
+      "proves": "A template that states the law fails its scope check when a link in its own words goes to a host the policy does not list, to a name under or beginning with a listed host, to an http address or to one that cannot be read, and passes with a link to another host the policy lists."
+    },
+    {
+      "requirement": "EDP-006",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/editorial/law-template-route.integration.test.ts",
+      "test": "a template that states the law, under a supposed approval of its policy, is prepared, measured for its reviews and passes every publisher check on a real database, with nothing published",
+      "proves": "On a real database, the readiness check and the publisher each build TPL-31 again from its draft and its claim scope and run its ten mechanical checks again before its reviews and its release, and a version without its claim scope, or with a capture that is no longer current, is refused."
     },
     {
       "requirement": "EDP-007",
@@ -2499,6 +2821,13 @@
       "file": "artifacts/api-server/src/modules/catalogue/valo-released-guides.test.ts",
       "test": "a published guide is shown only while its policy stands, its sources are current and its permission is current",
       "proves": "A guide the gate calls eligible is listed on the site only while the policy it was released under is the guidance policy as it stands with the owner's approval; once that approval no longer stands, or the policy file is edited and approved anew, or a source or the provider permission is no longer current, or its review date passes, it is not listed. The guide is an object in memory, built under the policy as the owner approved it, with made-up reviews; the approval's absence is supposed inside the test; nothing is published."
+    },
+    {
+      "requirement": "EDP-007",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/reviewed-rule.test.ts",
+      "test": "a rule with today's capture of its source, a current amendment record and a rights record for this route waits only for its two reviews, and the registry admits it once they pass",
+      "proves": "A rule's bundle on the reviewed route is eligible only once both reviews have passed with nothing found: a review that holds, or passes with a finding, leaves its manifest under review and the gate holds it."
     },
     {
       "requirement": "EDP-009",
@@ -2862,7 +3191,7 @@
       "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/public-screens-accessibility.test.ts",
       "test": "on a phone, each public screen the primary-page checks leave out names itself in the page title, fits 360 and 320 pixels, moves keyboard focus only to visible outlined elements and has no automated WCAG 2.2 AA failure",
-      "proves": "For a signed-out visitor with synthetic data, the requirements check, the page for trouble signing in and the sign-in and sign-up frames each name themselves in the page title, do not scroll sideways at 360 or 320 pixels, move keyboard focus only to visible outlined elements that come to rest on screen and clear of the header, the phone's bottom bar and any other bar that stays on screen, going forward with Tab and back with Shift+Tab, and show no failing axe-core WCAG 2.0, 2.1 or 2.2 A or AA rule; the identity provider's own sign-in forms are not checked."
+      "proves": "For a signed-out visitor with synthetic data, the requirements check, the page for trouble signing in, the page an unsubscribe link opens and the sign-in and sign-up frames each name themselves in the page title, do not scroll sideways at 360 or 320 pixels, move keyboard focus only to visible outlined elements that come to rest on screen and clear of the header, the phone's bottom bar and any other bar that stays on screen, going forward with Tab and back with Shift+Tab, and show no failing axe-core WCAG 2.0, 2.1 or 2.2 A or AA rule; the identity provider's own sign-in forms are not checked."
     },
     {
       "requirement": "NFR-006",
@@ -3033,11 +3362,60 @@
       "proves": "A restore's replay journal is accepted only when signed with the independent recovery key, from the expected source database and cut between the snapshot and the present, and a tampered, wrongly keyed, wrong-source, stale, pre-snapshot or future journal is refused."
     },
     {
+      "requirement": "OPS-008",
+      "job": "foundation",
+      "file": "lib/db/scripts/expand-only.test.mjs",
+      "test": "a statement that removes, renames or narrows what the previous release uses is refused",
+      "proves": "A migration statement that drops or renames a table, a column, a constraint, an index, a trigger or a function, narrows a column, adds a required column with no default, takes a privilege, changes a role, changes data or runs code the check cannot read is refused, so that the previous release still runs on the schema it leaves."
+    },
+    {
+      "requirement": "OPS-008",
+      "job": "foundation",
+      "file": "lib/db/scripts/expand-only.test.mjs",
+      "test": "a migration the previous release has is never changed or removed",
+      "proves": "A migration the previous release has that is changed by one byte, or gone from the journal, is refused, and only the migrations added since are read for what they do."
+    },
+    {
+      "requirement": "OPS-008",
+      "job": "foundation",
+      "file": "lib/db/scripts/expand-only.test.mjs",
+      "test": "a refused statement passes only on a reviewed exception for its exact text",
+      "proves": "A refused statement passes only on an exception for its exact text that gives a reason, and one that changes data only when its exception names a runbook that exists; an exception that names no refused statement is refused itself."
+    },
+    {
+      "requirement": "OPS-008",
+      "job": "foundation",
+      "file": "scripts/src/valo/database-tests.test.ts",
+      "test": "another release's job runs against this schema: only the steps that set up the database come from this checkout",
+      "proves": "Run against another release's checkout, the database job takes its migrations, logins and queue from this checkout and every other step from that release, and it takes nothing but another checkout with its own workflow."
+    },
+    {
+      "requirement": "OPS-008",
+      "job": "foundation",
+      "file": "scripts/ops/previous_release.test.mjs",
+      "test": "any other branch is rolled back to where it leaves the integration branch",
+      "proves": "A change on any branch but the integration branch and main is checked against the commit where it leaves the integration branch, and a branch with no history in common with it, or a scheduled run, names no previous release."
+    },
+    {
+      "requirement": "OPS-008",
+      "job": "foundation",
+      "file": "scripts/ops/previous_release.test.mjs",
+      "test": "a pull request is rolled back to the commit it would merge into",
+      "proves": "A pull request is checked against the commit of the branch it would merge into, and one that names no base commit is refused."
+    },
+    {
+      "requirement": "OPS-008",
+      "job": "foundation",
+      "file": "scripts/src/valo/rollback-failures.test.ts",
+      "test": "the previous release runs on this schema only when every failure is one the register expects",
+      "proves": "Run against a newer schema, the previous release's database job passes only when every test that failed is one the register of expected failures names, its evidence check fails only because of those, and every expected failure did fail."
+    },
+    {
       "requirement": "PAY-001",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/commerce/valo-commerce.integration.test.ts",
       "test": "controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication",
-      "proves": "Order requests for a held product are refused, including one that adds its own amount and currency, and no order is saved; a payment result one kobo above a synthetic order's amount does not settle it; and after a new price version the order's receipt still shows the amount and licence text it was created with."
+      "proves": "Order requests for a held product are refused, including one that adds its own amount and currency, and no order is saved; a payment result one kobo above a synthetic order's amount does not settle it; after a new price version the order's receipt still shows the amount and licence text it was created with; and the database refuses a change to a synthetic order's amount, currency, line, price, bundle, workspace, reference, request key, creation time or id, from the application's login and from a customer's workspace scope alike, while its status, checkout address, last check and provider transaction still change, and who placed it changes only to the mark the erasure's own statement writes. The database also refuses a new synthetic order unless it names a price in effect and has that price's amount, currency and whole line: eleven wrong amounts, currencies and lines, and a closed, a future and a missing price, are each refused from the application's login and from a customer's workspace scope, and an order with exactly its price's terms is made by both."
     },
     {
       "requirement": "PAY-001",
@@ -3045,6 +3423,20 @@
       "file": "artifacts/api-server/src/modules/commerce/valo-paystack-contract.test.ts",
       "test": "checkout asks Paystack only for a one-time charge, with no plan, split, subaccount or saved card",
       "proves": "Checkout's request to Paystack, captured by a controlled transport, has exactly the fields for a reference, amount, currency, email, return address and metadata, with only order-ID and workspace-ID keys in the metadata, the order's amount in kobo and naira as the currency, so no discount, plan or other price field reaches the charge."
+    },
+    {
+      "requirement": "PAY-001",
+      "job": "foundation",
+      "file": "lib/db/scripts/phase1-migrations.test.mjs",
+      "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
+      "proves": "The order terms guard migration applies to a database that holds orders, with or without a migration ledger, and rolls back whole; afterwards each of fourteen changes to a synthetic order's amount, line, price, bundle, currency, workspace, reference, request key, creation time or id is refused, who placed it is refused every value but the erasure's mark, and its status, checkout address and provider transaction still change. The order price book guard migration likewise keeps every row, an order from before it with a line that names nothing among them, and rolls back whole; afterwards a new synthetic order is refused with a wrong amount, currency or line, or from a closed, future or missing price, also inside a customer's workspace scope, and is made with its price's own terms."
+    },
+    {
+      "requirement": "PAY-001",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-manual-library.integration.test.ts",
+      "test": "manual publishing through staff HTTP routes and public readers",
+      "proves": "Against the real staff library, a synthetic order made directly for a bundle is taken by the database only with the amount and the line of the bundle's version in effect, naming the released edition of each of its templates once, in any order: a wrong amount, licence text or bundle name, a template left out, named twice or added, another title or edition for a template, the version once it has closed, an edition a later one has replaced, and a bundle whose template was withdrawn are each refused."
     },
     {
       "requirement": "PAY-002",
@@ -3114,14 +3506,70 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/commerce/valo-commerce.integration.test.ts",
       "test": "controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication",
-      "proves": "A synthetic order given a pending, abandoned or failed payment result is left in that state with no entitlement, and a later successful result for the same order settles it; another workspace's refresh of the order is refused as not found, and without a configured merchant a refresh is refused as unavailable. A pending synthetic order whose payment succeeded while the customer was away is recovered by a status refresh that checks it with a stood-in Paystack on the server, and a checkout for it is then refused as already verified."
+      "proves": "A synthetic order given a pending, abandoned or failed payment result is left in that state with no entitlement, and a later successful result for the same order settles it; another workspace's refresh of the order is refused as not found, and without a configured merchant a refresh is refused as unavailable. A pending synthetic order whose payment succeeded while the customer was away is recovered by a status refresh that checks it with a stood-in Paystack on the server, and a checkout for it is then refused as already verified. The look for a workspace's orders that ended abandoned or failed, run on the application's own login, which sees every workspace's orders, returns only that workspace's orders for the editions asked about that the provider was offered, the five latest first."
     },
     {
       "requirement": "PAY-007",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/commerce/valo-refunds.integration.test.ts",
       "test": "refund lifecycle: actual development PostgreSQL and controlled provider, not a real refund",
-      "proves": "The database refuses to update or delete a recorded refund status transition, and the row keeps its original reason."
+      "proves": "The database refuses to update or delete a recorded refund status transition, and the row keeps its original reason. A member of finance with a fresh second factor settles a synthetic difference a daily payment check found: the check records the outcome, who and when, the staff access audit keeps the reason from the same transaction, the order, its payment and its grants are unchanged, and the alert's reading and finance's list leave it out until a later check finds something more or follows a check that matched; support and content staff, finance without a fresh second factor, a reason under ten characters, a second settlement, a check that is not its order's latest difference, and no payment for an order held as paid are all refused, and an abandoned order settled as having no payment is no longer looked at before another order for its edition. Direct statements on the application's login cannot settle a check without finance's reason in the same transaction, settle it twice, or change a finished check's finding, attempts, status or day, while an erasure may rewrite its finding and nothing else. A member of finance with a fresh second factor settles a synthetic Paystack event Valo could not match: the settlement is a row of its own with the finding, who and when, the staff access audit keeps the reason from the same transaction, the event is left as it was, and the alert's reading and finance's list leave it out until its finding changes. The database refuses a settlement of an event without finance's reason in the same transaction, with another finding or of an event that does not need review, and refuses any change to or removal of one."
+    },
+    {
+      "requirement": "PAY-007",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/commerce/valo-paystack-contract.test.ts",
+      "test": "what the provider's answer says differently from an order is named: the amount, the transaction, or a reversal the provider does not hold",
+      "proves": "An answer a kobo either way, or for an order in another currency, is named AMOUNT_DIFFERENCE; one for another reference, order or workspace, or for another transaction than the one the order holds, TRANSACTION_DIFFERENCE; one that is not reversed, for an order Valo holds as reversed, REVERSAL_DIFFERENCE; every answer the settlement's own comparison refuses is named, and an answer that agrees is named nothing, whatever it says became of the payment."
+    },
+    {
+      "requirement": "PAY-007",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/operations/valo-operations.test.ts",
+      "test": "an order whose latest daily payment check found a difference raises an alert under the payment runbook, and none while no check has",
+      "proves": "One order whose latest daily payment check found a difference raises PAYMENT_DIFFERENCES_DETECTED, owned by the payment runbook for finance and engineering and recorded with the reading it was raised on; a reading that cannot be taken raises an alert of its own in its place; no difference raises nothing."
+    },
+    {
+      "requirement": "PAY-007",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/operations/valo-operations.test.ts",
+      "test": "a Paystack event that matched nothing, and that finance has not settled, raises an alert under the payment runbook, and none once none waits",
+      "proves": "One Paystack event waiting for finance raises UNMATCHED_PAYMENT_EVENTS_DETECTED under the payment runbook for finance and engineering, with the count it was raised on; none waiting raises nothing; and a reading that cannot be taken raises an alert of its own."
+    },
+    {
+      "requirement": "PAY-007",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/commerce/valo-commerce.integration.test.ts",
+      "test": "controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication",
+      "proves": "The daily payment check, with Paystack stood in for: a paid synthetic order is settled once, with its grant and receipt, and its check matches; an answer a kobo short, one that names another order, one with another transaction than the order holds, and one that is not reversed for an order Valo holds as reversed each leave the order as it was, and its check reads AMOUNT_DIFFERENCE, TRANSACTION_DIFFERENCE or REVERSAL_DIFFERENCE; an order the provider was never offered has no check. A provider that gives no answer is asked again only an hour later, and after the third attempt the check reads NO_ANSWER with the order unchanged. A paid order's next check matches after a processed refund of its whole amount or with a dispute on record, and reads ENTITLEMENT_DIFFERENCE after a processed refund a kobo short of it, with a grant suspended and nothing on record, or with a grant gone and a refused refund request on record; a grant gone with nothing on record is put back; one paid an hour ago with no charge event reads EVENT_MISSING, and one paid a minute less does not. The alert's reading counts each order whose latest finished check found a difference once, until a later check of it matches. The event worker leaves an event for finance with why: a reference no order has at once, an answer that differs from the order at once, and no answer after five attempts. Paystack's own list of a day that has ended, stood in for, is read once, every page, by the UTC day: a successful payment whose reference no order has waits for finance as UNMATCHED_REFERENCE, one the webhook brought is recorded once, a failed payment and an order's own are not recorded, and the order is unchanged; a list that gives no answer is asked for again only an hour later and after the third attempt waits as LISTING_UNREAD; one longer than twenty pages is read twenty pages far and waits as LISTING_INCOMPLETE; days the worker missed are listed earliest first, thirty-one days back at most, and a day only once it has ended; with no test merchant nothing is asked; and the worker's task runs the checks and the list each whatever became of the other."
+    },
+    {
+      "requirement": "PAY-007",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-manual-library.integration.test.ts",
+      "test": "manual publishing through staff HTTP routes and public readers",
+      "proves": "The daily check's look at a bundle's paid order finds nothing wanting, and reads ENTITLEMENT_DIFFERENCE while either of the two templates' grants is suspended with nothing on record to explain it."
+    },
+    {
+      "requirement": "PAY-007",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "the Finance area says what each daily payment check found, settles a difference only with an outcome and a reason, and fits a phone",
+      "proves": "In the staff console's Finance area on a phone, each difference a daily payment check found is said in plain words with its order's amount, status and day; a paid order cannot be settled as having no payment; nothing is recorded without an outcome and a reason of ten characters or more, and the settlement sent is exactly the outcome and reason given; the latest settled show what was found, when, by whom and why; and the area has no automated phone problems."
+    },
+    {
+      "requirement": "PAY-007",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "the Finance area says why each Paystack event waits for finance, settles one only with a reason, and fits a phone",
+      "proves": "In the staff console's Finance area on a phone, each Paystack event waiting for finance is said in plain words with its reference, kind and time; nothing is recorded without a reason of ten characters or more; the reason is what is sent; the latest settled events show when, by whom and why; what a day's list from Paystack could not give is named by the day, as the site writes a day, and said in plain words; and the page passes the phone, keyboard and automated accessibility checks."
+    },
+    {
+      "requirement": "PAY-007",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/commerce/valo-paystack-contract.test.ts",
+      "test": "a day's list of successful payments is asked for by its UTC day and a page, with no page size and only with a test key, and a page is read only as far as Valo uses it",
+      "proves": "The list of a day's successful payments is asked for from the day's first moment to the next day's, by page, with no page size; a day that is not a calendar date, or a page that is not a whole number from one, is refused; a page is kept as each payment's id, test domain, status and reference and its page count, and one naming a payment outside test mode, or missing a reference or its page count, is not used; and with a live key no request is made."
     },
     {
       "requirement": "PAY-008",
@@ -3229,6 +3677,55 @@
       "proves": "The assessment comparison helper explains a changed recommendation in sentences that name the changed answers by their question labels (Operates from premises and Employees in the test) and the rule's version change, and explains a rule that is new or no longer in the result; the saved-assessments page's source calls it under “Why results changed”."
     },
     {
+      "requirement": "PRO-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/workspaces/valo-profile-recheck.integration.test.ts",
+      "test": "PRO-003: a new requirements check is offered after the profile changes an answer the check reads, and the earlier result and the tasks are kept",
+      "proves": "For a synthetic workspace, run in its database scope as a customer request is: a profile version that changes only the business name and the marketing choice is saved and offers nothing; one that changes the state, the area, an activity and the employee count is answered with an offer of a new check that names the workspace's latest saved result and those four answers, and the workspace's summary gives the same offer; a new result saved from the new answers ends the offer, its comparison with the earlier result names the four changed answers, each result keeps its own time, the earlier result reads exactly as it was saved, and the two tasks the business made, one from that result and one of its own, read exactly as before. An answer given differently on the check's page is not offered until the profile changes it to something else."
+    },
+    {
+      "requirement": "PRO-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/workspaces/profile-recheck.test.ts",
+      "test": "PRO-003: a changed location, activity or employee count is offered for a new check, in the profile's order",
+      "proves": "The comparison that decides the offer lists a changed state, area, activities or employee count, each alone, and several changed answers in the order the profile asks them."
+    },
+    {
+      "requirement": "PRO-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/workspaces/profile-recheck.test.ts",
+      "test": "PRO-003: a change the check does not read offers nothing",
+      "proves": "The comparison lists nothing for a profile that is unchanged, or whose business name or marketing choice alone changed."
+    },
+    {
+      "requirement": "PRO-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/workspaces/profile-recheck.test.ts",
+      "test": "PRO-003: an answer the result was already worked out from is not offered again",
+      "proves": "When a result was worked out from an answer the check's page was given differently from the profile, the comparison lists nothing once the profile takes that answer, lists it when the profile moves to another, and lists nothing for the difference while the profile has not changed that answer."
+    },
+    {
+      "requirement": "PRO-003",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/recheck.test.ts",
+      "test": "PRO-003: the offer names the changed answers as a saved result names them, and the result's time on a Lagos clock",
+      "proves": "The offer's words name one changed answer, two and four by the names a saved result gives them, with the result's time on a Lagos clock, and say that saved results and tasks stay as they are."
+    },
+    {
+      "requirement": "PRO-003",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/recheck.test.ts",
+      "test": "PRO-003: the offer opens the check filled in from the profile, and the new result opens compared with the one it follows",
+      "proves": "The offer's link opens the check filled in from the profile and names the result it follows; only a saved result's own identifier is taken from the check's address; and a result saved from that check opens with the earlier one chosen to compare with, never with itself."
+    },
+    {
+      "requirement": "PRO-003",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "a new requirements check is offered where the server offers one: with the profile's save, on the home page and on the result it follows, and the result saved from it opens compared with that one",
+      "proves": "In a browser, with the API answered from synthetic data: the business profile's page shows no offer until a save is answered with one, then shows it in view, naming the changed answers and the result's time, and shows it when opened again; the home page lists it with what needs attention and beside the latest result; the result it follows shows it; no screen makes an offer the server did not make, even when the profile's version is newer than the one a result names; and the check the offer opens is filled in from the profile, and the result saved from it opens with the earlier result chosen to compare with, each under its own time."
+    },
+    {
       "requirement": "PRV-001",
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai.test.ts",
@@ -3327,6 +3824,13 @@
       "proves": "On the compiled web server, the contact form in the page's HTML links the privacy notice before any script runs."
     },
     {
+      "requirement": "PRV-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/messages/unsubscribe-token.test.ts",
+      "test": "a link names no one: it holds neither the identity nor a plain checksum of it",
+      "proves": "The token of a reminder's unsubscribe link, which the processing inventory describes as holding no name or address, holds neither the identifier of the person it was made for nor a plain checksum of it, nor a mark made under the keyring's key itself: only a mark under a key made for these links. The key and identifiers are synthetic."
+    },
+    {
       "requirement": "PRO-002",
       "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
@@ -3341,11 +3845,18 @@
       "proves": "On a disposable database, turning task reminders on and off again is each recorded once in the consent history, with the privacy notice's version and who made the change, while a save that keeps reminders on records nothing."
     },
     {
+      "requirement": "PRO-002",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-unsubscribe.integration.test.ts",
+      "test": "an unsubscribe link turns its workspace's reminders off without sign-in, records the choice, and does nothing else (WRK-004, PRO-002)",
+      "proves": "Against PostgreSQL, a choice made by an unsubscribe link is recorded in the workspace's consent history as one made in the app is: that reminders were turned off, as the workspace's owner, with the version of the privacy notice in force. A link used again records nothing more, and reminders turned on again in the app and stopped again by the link leave each change in the history in order. A link that is refused records nothing. The workspaces and links are synthetic."
+    },
+    {
       "requirement": "PRV-003",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/privacy/valo-privacy-erasure.integration.test.ts",
       "test": "resumable physical development erasure with retained exclusions and replay",
-      "proves": "A synthetic deletion request, run by privacy staff with fresh MFA and an acknowledgement, quarantines the workspace while its document still exists, then removes its documents, revisions, profile versions, saved templates, rule and edition notices, the messages Valo owed it and its private files in a controlled local file store, redacts its support and privacy-case text and clears its AI draft content, while another workspace's document, notices and message stay and the request ends partially fulfilled with the outside-processors step held."
+      "proves": "A synthetic deletion request, run by privacy staff with fresh MFA and an acknowledgement, quarantines the workspace while its document still exists, then removes its documents, revisions, profile versions, saved templates, rule and edition notices, the messages Valo owed it, what an email service reported about them, the days whose notices owed it a message and its private files in a controlled local file store, redacts its support and privacy-case text and clears its AI draft content, while another workspace's document, notices, message, report and day stay and the request ends partially fulfilled with the outside-processors step held."
     },
     {
       "requirement": "PRV-003",
@@ -3845,6 +4356,13 @@
       "proves": "Against PostgreSQL, each receipt file an account asks for is counted with the files it asks Valo to make, a refused one too, and at that limit no file is made and the answer says when to try again."
     },
     {
+      "requirement": "SEC-005",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-unsubscribe.integration.test.ts",
+      "test": "an unsubscribe link turns its workspace's reminders off without sign-in, records the choice, and does nothing else (WRK-004, PRO-002)",
+      "proves": "Against PostgreSQL over real HTTP, the eleventh use of one workspace's unsubscribe links in a minute is refused with 429, a Retry-After and a sentence that says how long to wait and that the try changed nothing, whichever way it comes and whoever the link was made for. The count is kept under a keyed checksum of the workspace, a refused try is not counted, another workspace's link is not held up, and a request that holds no link Valo signed is counted against no workspace."
+    },
+    {
       "requirement": "SEC-006",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/publication/publication-guards.integration.test.ts",
@@ -4108,7 +4626,49 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/messages/valo-messages.integration.test.ts",
       "test": "messages wait in the outbox and are offered to the sender once, after every check is made again (WRK-003, WRK-004, PAY-008, PAY-009)",
-      "proves": "Against PostgreSQL, each message carries its class, and the two kinds there are, receipts and refund notices, are necessary. Just before a message is offered the dispatcher checks again the pause, the workspace's erasure, the recipient's membership and the record it is about, and a message stopped by any of them is not handed to the sender. No optional message, unsubscribe link or consent check exists yet."
+      "proves": "Against PostgreSQL, each message carries its class, and receipts and refund notices are necessary. Just before a message is offered the dispatcher checks again the pause, the workspace's erasure, the recipient's membership and the record it is about, and a message stopped by any of them is not handed to the sender. The outbox holds no optional message and makes no consent check yet. A sender's answer that an address is stopped, which only an optional message is given, is no acceptance of one of the outbox's necessary messages, and neither is a blank reference: the message is not taken and is offered again."
+    },
+    {
+      "requirement": "WRK-004",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/messages/valo-email-suppression.integration.test.ts",
+      "test": "an address whose email service sent a message back for good, or marked one as spam, gets no more optional messages, and only its checksum is kept (WRK-003, WRK-004)",
+      "proves": "Against PostgreSQL, a stop on an address is applied to optional messages alone, and just before the send: a due reminder to a stopped address is cancelled without its transport being called, while the receipt owed to the same member, a necessary message, is still offered to its sender and taken. The transport and the sender are the test's own; no message reached anyone. This is not an unsubscribe, which has its own tests."
+    },
+    {
+      "requirement": "WRK-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/tasks/valo-reminder-resend.test.ts",
+      "test": "a reminder to an address Valo has stopped sending to never reaches transport, and neither does one whose suppression cannot be checked",
+      "proves": "The reminders' mailer asks whether Valo has stopped sending to the verified recipient's own address before it calls its transport. Where the answer is yes it sends nothing and says why; where the question cannot be answered it sends nothing either; and a recipient who is not the allowed one is refused before the question is asked. The transport is the test's own."
+    },
+    {
+      "requirement": "WRK-004",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-unsubscribe.integration.test.ts",
+      "test": "an unsubscribe link turns its workspace's reminders off without sign-in, records the choice, and does nothing else (WRK-004, PRO-002)",
+      "proves": "Over real HTTP against PostgreSQL, with synthetic workspaces and links the test makes under the run's own key: a request from the unsubscribe page, and a mail service's one-click request with no origin, session or readable body, each turn the link's workspace's reminders off. Opening the link's address changes nothing and sends the person to the page. What was waiting is cancelled, a reminder cancelled earlier keeps its own reason, and one already sent stays sent. Enforced before dispatch: the reminder that was due is then offered to a sender, which is handed nothing. The link stops reminders only, and only for its own workspace: the task is as it was, and another workspace's reminders stay on. A link that is not Valo's, was changed, was made for someone who is not the workspace's owner, or is for a workspace that is not there, whose owner's access is off or whose deletion is recorded is refused in the same words and changes nothing, and the page's address refuses a request from another site. One workspace's links are taken ten times a minute, and the next use is told when to try again. The mailer's transport is the test's own: no email service was called, and no message reached anyone."
+    },
+    {
+      "requirement": "WRK-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/tasks/valo-reminder-resend.test.ts",
+      "test": "a reminder carries its unsubscribe link in its words and in the headers a mail program reads, the same on every attempt, and never goes without one",
+      "proves": "The reminders' mailer puts the unsubscribe link in each reminder's words and in its List-Unsubscribe and List-Unsubscribe-Post headers, with the same token in both, and the body it would send is the same on every attempt. Where the link cannot be made, or is not in a token's form, it sends nothing. The transport is the test's own. The headers' form is the one the provider's documentation gives; no request has been checked against the provider."
+    },
+    {
+      "requirement": "WRK-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/messages/unsubscribe-token.test.ts",
+      "test": "a link changed anywhere is no link, and neither is anything that is not one",
+      "proves": "The token of an unsubscribe link is read only as Valo wrote it: one changed in any part, cut short, lengthened, given parts in another order, spelt another way or signed under a key's name the keyring does not hold reads as nothing, and so does anything that is not a token. Every key and identifier is synthetic."
+    },
+    {
+      "requirement": "WRK-004",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-screens-accessibility.test.ts",
+      "test": "the unsubscribe page stops nothing when it is opened, asks once when its button is pressed and says what was stopped; a link that does not work is said to in the server's words, and a link with no token offers no button",
+      "proves": "In a browser on an emulated phone, with the API answered in the page by synthetic data: opening the unsubscribe page asks the API nothing, so following the link stops no reminder. Pressing its button asks once, with the link's token and nothing else, and the page then says that reminder emails are off and what became of waiting reminders. A link the server refuses is said to in the server's words, with nothing called stopped, and a link with no token offers no button. Each state passes the automated WCAG 2.2 A and AA rules. It is not a manual or assistive-technology review."
     },
     {
       "requirement": "WRK-006",
@@ -4136,7 +4696,7 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/exports/valo-export-library.integration.test.ts",
       "test": "ready exports appear in the business library with their revision and the template version their document came from",
-      "proves": "In PostgreSQL with portable private files, a workspace's export enters its business library only once the file is ready, newest first, with the document's title and revision at export time and the template version the document was made from; a later revision keeps that link, a document not made from a template shows none, another workspace sees none of them and an expired file leaves the list. The template version is a held synthetic fixture that was never released, so the release path is not exercised."
+      "proves": "In PostgreSQL with portable private files, a workspace's export enters its business library only once the file is ready, newest first, with the document's title and revision at export time and the template version the document was made from; a later revision keeps that link, a document not made from a template shows none, a document answered from Valo's own invoice questions names them, one answered from a released form names that release as made from it, another workspace sees none of them and an expired file leaves the list. The template version is a held synthetic fixture that was never released, so the release path is not exercised."
     },
     {
       "requirement": "DOC-005",
@@ -4668,7 +5228,7 @@
       "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
       "test": "the reminders screen says in plain words whether emails are being sent and what has happened to each reminder",
-      "proves": "Signed in through a stand-in identity with synthetic data, the reminders screen says that reminders are off unless turned on, that each is planned for 09:00 Lagos time, and whether emails are being sent; its delivery log gives each reminder's state and reason in words, and a message the email service accepted is not called sent or delivered. This shows the screen's words, not that a reminder is scheduled or an email sent."
+      "proves": "Signed in through a stand-in identity with synthetic data, the reminders screen says that reminders are off unless turned on, that each is planned for 09:00 Lagos time, and whether emails are being sent; its delivery log gives each reminder's state and reason in words, and a message the email service accepted is not called sent or delivered. A reminder is called delivered only where the answers say the email service reported it, with that service named as the one saying so and the time of its report, and one that came back says the address may be wrong. A reminder cancelled because Valo has stopped emailing its address says so, that it will not be sent and that the task is saved, counts no try, and offers the way to report a problem. This shows the screen's words, not that a reminder is scheduled or an email sent."
     },
     {
       "requirement": "WRK-003",
@@ -4689,28 +5249,77 @@
       "job": "foundation",
       "file": "lib/db/scripts/phase1-migrations.test.mjs",
       "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
-      "proves": "After the messages migrations, the database holds one message for each workspace's record and kind, refuses a state that does not agree with itself, such as an accepted message without its sender's reference, and lets a customer request change only a message's state, never whom or what it is for."
+      "proves": "After the messages migrations, the database holds one message for each workspace's record and kind, refuses a state that does not agree with itself, such as an accepted message without its sender's reference, and lets a customer request change only a message's state, never whom or what it is for. After the delivery migrations, it holds each of an email service's reports once, in a state that agrees with itself, and the latest report about each message or reminder in its own workspace; a customer request reads and records its own workspace's reports alone, and has no access to the reports as they arrive. After the suppression migrations, a report keeps a checksum of its address only with its key's version and only for a bounce or a complaint, an address is stopped once under a key, and a customer request can ask only whether an address is stopped, by a checksum and its key's version together, with no access to the list."
     },
     {
       "requirement": "WRK-003",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/messages/valo-message-log.integration.test.ts",
       "test": "a workspace's log says what became of each message, never that one reached anyone, and the receipt downloads as a PDF (WRK-003, PAY-009)",
-      "proves": "Against PostgreSQL, a workspace's delivery log lists each message Valo owes it, newest first, with the order it is about and what became of it: waiting for want of a sender, paused, not taken and to be tried again, failed after five tries, or cancelled with its reason. A message the stand-in took is called recorded and never accepted, and the log names no recipient, sender or provider reference. The stand-in sends nothing, so no message reaches anyone, and nothing records a delivery."
+      "proves": "Against PostgreSQL, a workspace's delivery log lists each message Valo owes it, newest first, with the order it is about and what became of it: waiting for want of a sender, paused, not taken and to be tried again, failed after five tries, or cancelled with its reason. A message the stand-in took is called recorded and never accepted, and the log names no recipient, sender or provider reference. The stand-in sends nothing, so no message reaches anyone, and no message here has a report of delivery: no email service reported anything."
     },
     {
       "requirement": "WRK-003",
       "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
-      "test": "the messages screen says in plain words what has happened to each message and reminder, calls none of them sent or delivered, and says of a message Valo only recorded that nothing was emailed",
-      "proves": "In a real browser with controlled answers, the Messages page lists the workspace's messages and the reminders about its tasks together, newest first, each with its state in plain words. A message an email service accepted is not called sent or delivered, and one Valo only recorded is called not emailed and shows no tries. The page has no automated WCAG 2.2 AA failure and fits a phone. No assistive technology is used."
+      "test": "the messages screen says in plain words what has happened to each message and reminder, calls none of them sent, calls delivered only one the email service reported as delivered, and says of a message Valo only recorded that nothing was emailed",
+      "proves": "In a real browser with controlled answers, the Messages page lists the workspace's messages and the reminders about its tasks together, newest first, each with its state in plain words. A message an email service accepted is not called sent or delivered, and one Valo only recorded is called not emailed and shows no tries. Only a message the answers say the email service reported as delivered is called delivered, with that service named as the one saying so, the time of its report, and that Valo cannot see whether it was opened; one that came back says the address may be wrong, and one the email service could not send offers the way to report it. The page has no automated WCAG 2.2 AA failure and fits a phone. No assistive technology is used, and no email service reported anything here: the answers are the test's own."
     },
     {
       "requirement": "WRK-003",
       "job": "foundation",
       "file": "artifacts/valo/src/lib/message-words.test.ts",
-      "test": "no state of a message is called sent or delivered, and a message Valo only recorded is called not emailed",
-      "proves": "No state a message can be in has a name that holds sent or delivered; a message an email service took is named as accepted, with the words that this does not show it reached an inbox, and one Valo only recorded is named as not emailed, in words that claim no email."
+      "test": "no state of a message is called sent or delivered, a message Valo only recorded is called not emailed, and only the email service's report is called delivered",
+      "proves": "No state a message can be in has a name that holds sent or delivered; a message an email service took is named as accepted, with the words that this does not show it reached an inbox, and one Valo only recorded is named as not emailed, in words that claim no email. With no report from the email service a message's label is its state's; with a report of delivery the label is Delivered, and the words say that the email service reports it."
+    },
+    {
+      "requirement": "WRK-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/messages/valo-email-events.integration.test.ts",
+      "test": "the email service's reports are recorded on the message or reminder they are about, whatever their order, and never on a message sent to no one (WRK-003)",
+      "proves": "Against PostgreSQL, a report that an email service delivered, delayed, sent back or had marked as spam a message is recorded on the message or reminder that holds that service's reference, with the service's time, and the workspace's log and reminders list then give it beside the record's own state. Reports about one message leave the same record in whatever order they arrive, and one delivered twice is one. A message the stand-in took is never given a report, whatever reference a report names, and a report no record holds the reference of is settled as unmatched after an hour. Every report here is the test's own: no email service sent one, and no message reached anyone."
+    },
+    {
+      "requirement": "WRK-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-email-webhook.integration.test.ts",
+      "test": "the email webhook keeps a signed report once, with no address, and takes nothing unsigned, stale or unset (WRK-003, SEC-008)",
+      "proves": "Over real HTTP against the real application and PostgreSQL, the email webhook answers that it is not set up until its signing secret is set, and outside a development runtime. With a secret the test makes, it keeps a report the test signs before it answers, once however often it is delivered, with nothing of the address, the subject or the provider's words in the row, and for a bounce called permanent a keyed checksum of the address, which a report of delivery does not have; it keeps nothing of an event saying a message was handed over, opened or a link followed, or of a signed event it cannot read; and it refuses a compressed or oversized body. No email service sent anything here."
+    },
+    {
+      "requirement": "WRK-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/messages/email-events.test.ts",
+      "test": "the signature scheme's published example verifies, and no changed part of it does",
+      "proves": "The check of a delivery report's signature verifies the example the signature scheme's documentation publishes, and refuses it once its body, its id, its time or its signature is changed, or under another key. This shows the check agrees with the published example, not that a request from the email service has been verified: none has been received."
+    },
+    {
+      "requirement": "WRK-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/messages/email-events.test.ts",
+      "test": "a report replaces another only if it says more, so the reports about one message end the same in any order",
+      "proves": "Delayed, delivered, undelivered, sent back and marked as spam each say more than the one before, so every order of the reports about one message ends at the one that says most, and the same report again changes nothing."
+    },
+    {
+      "requirement": "WRK-003",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/delivery-words.test.ts",
+      "test": "delivered is said to be the email service's report, with what Valo cannot see, and no other report is called delivered",
+      "proves": "The words for a report of delivery say that the email service reports it and that Valo cannot see whether the message was opened or which folder it went to; no other report is labelled delivered or sent, and none claims that anyone read the message."
+    },
+    {
+      "requirement": "WRK-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/messages/valo-email-suppression.integration.test.ts",
+      "test": "an address whose email service sent a message back for good, or marked one as spam, gets no more optional messages, and only its checksum is kept (WRK-003, WRK-004)",
+      "proves": "Against PostgreSQL, with reports the test makes and a mailer whose transport is the test's own: a report that an email service sent a message back for good, or that a message was marked as spam, stops optional messages to that message's address once the message it is about is found. A delivery, a delay, a bounce not called permanent, a failure of the sending service's own, and a permanent bounce about no message of Valo's stop none. A due reminder to a stopped address is cancelled with its reason before the transport is called, is not counted as a try and is not tried again, while a reminder to another address is sent. The stop lasts 180 days from the last report, a later report keeps it going, and after it the address is tried again. Where the table is not there yet, no report is taken and no address is stopped. No email service was called, and no message reached anyone."
+    },
+    {
+      "requirement": "WRK-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/messages/email-events.test.ts",
+      "test": "a bounce or a complaint hands on its address only when it names exactly one, and one that is an address",
+      "proves": "The reading of a delivery report hands on an address only for a bounce or a complaint that names exactly one address, and one that has the form of an address. A report naming several or none, and a report of delivery, hand on none, so none of them can stop messages to an address."
     },
     {
       "requirement": "SRV-002",
@@ -4811,6 +5420,13 @@
       "proves": "The incident procedure, its tabletop script and their design contain no sentence that puts a length of time beside telling, notifying or reporting, or beside the authority, and the check finds such a sentence when one is planted."
     },
     {
+      "requirement": "PRV-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/messages/valo-email-events.integration.test.ts",
+      "test": "the email service's reports are recorded on the message or reminder they are about, whatever their order, and never on a message sent to no one (WRK-003)",
+      "proves": "Against PostgreSQL, a workspace's data download lists what an email service reported about its own messages, by record, report and time, and another workspace's lists none of it."
+    },
+    {
       "requirement": "EDT-002",
       "job": "postgres",
       "file": "artifacts/api-server/src/scripts/tester-tasks.integration.test.ts",
@@ -4851,6 +5467,20 @@
       "file": "artifacts/api-server/src/modules/editorial/owner-rule-signoff.integration.test.ts",
       "test": "the development owner watches a prepared rule's sources, signs the exact version shown, supersedes it and withdraws it",
       "proves": "A prepared rule stays out of the checker until its sources are watched and read and the recently verified development owner signs the exact version shown; the checker then gives it with the owner's release notice, the next signed version supersedes it, and a withdrawal takes it out of the checker."
+    },
+    {
+      "requirement": "ADM-004",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/managed-callers-real-bindings.integration.test.ts",
+      "test": "actual managed callers with real PostgreSQL, source/candidate/case checks and zero-network SDK",
+      "proves": "In a disposable copy of the database, a rule prepared for the reviewed route whose two stand-in reviews settled under an approved package of rule reviews is assembled into a release request only from that batch's own settled reviews, then planned and applied as the rule's next version, which the registry admits as an editorial release; two records of one review, a reason too short and a wrong confirmation are refused; and a stored earlier version is restored as the next version, through the same builder, two reviews of its own and a request whose reason names the version it restores, while every earlier version and a result saved under the later one are kept."
+    },
+    {
+      "requirement": "ADM-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/reviewed-rule.test.ts",
+      "test": "a restore takes a stored version's words, condition and calculation, and keeps the repository's sources, claims and scenarios",
+      "proves": "Restoring a stored version of a rule on the reviewed route takes that version's words, condition and calculation with the repository's sources, claims, scenarios and rights, builds as the next version waiting only for its reviews, and refuses another rule's version or one that quotes its sources otherwise."
     },
     {
       "requirement": "ADM-007",
@@ -5004,7 +5634,21 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/routes/valo-manual-library.integration.test.ts",
       "test": "manual publishing through staff HTTP routes and public readers",
-      "proves": "Through the API, with Paystack stood in for, a status refresh of a pending premium order checks the payment on the server and grants the edition once it is verified, and a further checkout is refused with \"This purchase is already verified. Do not pay again.\""
+      "proves": "Through the API, with Paystack stood in for, a status refresh of a pending premium order checks the payment on the server and grants the edition once it is verified, and a further checkout is refused with \"This purchase is already verified. Do not pay again.\"; and before another order for an edition, a payment for one or its saved payment page handed out again, the provider is asked about each earlier order of the workspace for it that ended abandoned or failed, so that one paid since is settled and granted with no second order or payment, a bundle's among them, one still unpaid lets the request go on, nothing new is made or started while the provider cannot be asked, and nobody else's order, one never offered to the provider, and anything without a merchant are not asked about."
+    },
+    {
+      "requirement": "PAY-006",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "back from the payment page, the purchases screen asks once for the status of the workspace's own order named in the address, says what the server found, and takes the reference out of the address",
+      "proves": "In a browser on a phone, with the server stood in for, the purchases screen opened with an order's reference in its address asks the server once for that order's status, says the payment is verified only when the server's answer says so, under the name the order below carries, shows the server's own sentence when it could not ask, asks nothing for an order already verified or for a reference no listed order has, and takes the reference out of the address, so that opening it again asks nothing; while the orders cannot be read it asks nothing, says so and keeps the reference, and asks once when they have been read."
+    },
+    {
+      "requirement": "PAY-006",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/payment-return.test.ts",
+      "test": "each status is said in words that claim only what the provider reported, and only a verified payment is called verified",
+      "proves": "The words the purchases screen uses for an order it was sent back for carry the order card's own name for each status, call a payment verified for the verified status alone, and say of an abandoned, failed, pending, reviewed, reversed or unknown status only what that status means."
     },
     {
       "requirement": "RUL-009",
@@ -5245,6 +5889,13 @@
       "proves": "A staff-library template's page says whether AI drafted it, that a Valo Content editor read the version, that Valo ran no AI review of it and that no Nigerian legal, tax or sector specialist reviewed it, and for a version released before its drafting was recorded says only what is known."
     },
     {
+      "requirement": "EDP-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-law-release.test.ts",
+      "test": "a template's words carry its notices, claim no professional review and hold no formula",
+      "proves": "A template that states the law fails its disclosures check when its words claim lawyer approval or lose the sentence saying what its review means, and its arithmetic check when its own words hold a formula."
+    },
+    {
       "requirement": "DOC-006",
       "job": "foundation",
       "file": "lib/db/scripts/phase1-migrations.test.mjs",
@@ -5403,7 +6054,7 @@
       "job": "foundation",
       "file": "lib/db/scripts/phase1-migrations.test.mjs",
       "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
-      "proves": "After the edition notices migration, the database writes one notice to each workspace that holds or used an edition when it is replaced or withdrawn in the staff library, or replaced on the reviewed route, and none to another workspace."
+      "proves": "After the edition notices migration, the database writes one notice to each workspace that holds or used an edition when it is replaced or withdrawn in the staff library, or replaced on the reviewed route, and none to another workspace. After the notice digests migrations, a workspace has one row for a day, only for a day that has ended in Lagos, a message can be about it as a necessary message and once, and a customer request reads its own workspace's days and writes none."
     },
     {
       "requirement": "EDP-011",
@@ -5721,6 +6372,13 @@
       "proves": "The API's source makes one logger, in platform/logger.ts, and one request logger, given it; the logger names no destination but the process's output and, in development, its readable printer; and every table the log inventory names is in the database's schema."
     },
     {
+      "requirement": "SEC-008",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-email-webhook.integration.test.ts",
+      "test": "the email webhook keeps a signed report once, with no address, and takes nothing unsigned, stale or unset (WRK-003, SEC-008)",
+      "proves": "Over real HTTP against the real application and PostgreSQL, a delivery report with a missing, altered, stale or wrongly keyed signature is refused before anything is kept, and each refusal is counted as a signature failure, the count the alert on signature failures reads. The reports and the key are the test's own."
+    },
+    {
       "requirement": "SEC-002",
       "job": "foundation",
       "file": "artifacts/api-server/src/lib/bundle-secrets.test.ts",
@@ -5747,6 +6405,251 @@
       "file": "artifacts/api-server/src/platform/login-rotation.test.ts",
       "test": "each database login is rotated, revoked in an emergency and restored, and the work that needs it stops with its own code while the process carries on (SEC-002, OPS-004)",
       "proves": "Each of the four database logins is rotated with its script, revoked in an emergency with its open sessions ended, and restored. Revoked, its work stops with the login's own code, each ended session is reported with its code and nothing is thrown, and the application's own connection goes on working."
+    },
+    {
+      "requirement": "EDP-011",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/messages/valo-notice-digests.integration.test.ts",
+      "test": "a day's notices owe a workspace one message, from 07:00 the next morning on a Lagos clock, naming what changed (EDP-011, WRK-004)",
+      "proves": "Against PostgreSQL, with synthetic notices and the stand-in sender, which sends nothing: a day's correction notices, changed requirements and withdrawn templates owe the workspace's owner one message from 07:00 the next morning on a Lagos clock and not before, however many runs there are, and a week back at most; a template replaced by a later edition owes none. The message names that day's changes alone, counts each saved item to review once, and is cancelled when no notice is left. A workspace whose deletion is recorded is owed nothing. No message reaches anyone, and no change made through the product is followed to its email here: the notices are the test's own."
+    },
+    {
+      "requirement": "SEC-001",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/messages/valo-notice-digests.integration.test.ts",
+      "test": "a day's notices owe a workspace one message, from 07:00 the next morning on a Lagos clock, naming what changed (EDP-011, WRK-004)",
+      "proves": "Against PostgreSQL, a day's message counts and names its own workspace's notices alone; asked for from another workspace the day is not found, in that workspace's database scope it is not there to read, and no customer request can add, change or remove a day, its own workspace's included. The other workspace's log lists none of it."
+    },
+    {
+      "requirement": "PRV-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/messages/valo-notice-digests.integration.test.ts",
+      "test": "a day's notices owe a workspace one message, from 07:00 the next morning on a Lagos clock, naming what changed (EDP-011, WRK-004)",
+      "proves": "Against PostgreSQL, a workspace's data download lists the days whose notices owed it a message, by the id its message is about, and another workspace's lists none of them."
+    },
+    {
+      "requirement": "EDP-011",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/messages/messages.test.ts",
+      "test": "a notices message names the day, each changed requirement and withdrawn template, and how many saved items to review, and links to the workspace page (EDP-011, WRK-004)",
+      "proves": "The notices message's words name the day, each changed requirement as replaced or withdrawn, each withdrawn template and how many saved items to review, link to the workspace page, and leave out a part with nothing in it."
+    },
+    {
+      "requirement": "WRK-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/messages/messages.test.ts",
+      "test": "a notices message names the day, each changed requirement and withdrawn template, and how many saved items to review, and links to the workspace page (EDP-011, WRK-004)",
+      "proves": "The notices message says why it is sent, and that it is a necessary message about the account with no unsubscribe link."
+    },
+    {
+      "requirement": "EDP-011",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/messages/messages.test.ts",
+      "test": "a day's notices are emailed from 07:00 the next morning on a Lagos clock, for a week back, naming ten of each sort (EDP-011)",
+      "proves": "Until 07:00 on a Lagos clock the day before is not yet owed its message, at midnight and at the turn of a year too."
+    },
+    {
+      "requirement": "EDP-011",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "the messages screen says in plain words what has happened to each message and reminder, calls none of them sent, calls delivered only one the email service reported as delivered, and says of a message Valo only recorded that nothing was emailed",
+      "proves": "In a real browser with controlled answers, the Messages page heads a message about a day's changes with that day, says that the notices themselves are on the Workspace page, and links there and not to Purchases. The answers are the test's own."
+    },
+    {
+      "requirement": "SRV-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/operations/valo-operations.test.ts",
+      "test": "an enquiry nobody has taken, and one that has waited on Valo past its aim, raise their own alerts under the enquiries runbook, past their limits only",
+      "proves": "With synthetic readings, any enquiry nobody has taken and any enquiry waiting on Valo past 48 hours raise their own alerts, each named in plain words and owned by the enquiries runbook and the support role, and a reading that cannot be taken raises an alert of its own. It does not show a failed dispatch of a reply: no reply is sent by email yet."
+    },
+    {
+      "requirement": "NFR-010",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/operations/valo-operations.test.ts",
+      "test": "an enquiry nobody has taken, and one that has waited on Valo past its aim, raise their own alerts under the enquiries runbook, past their limits only",
+      "proves": "With synthetic readings, the two alerts on enquiries name the enquiries runbook and the support role as accountable, as a row of the operating runbooks does."
+    },
+    {
+      "requirement": "SRV-002",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/operations/request-counts.integration.test.ts",
+      "test": "request counts: each process's minutes add up, the readings take the last ten minutes, a week is kept, and reminders and jobs are read from their own tables",
+      "proves": "On a real database, with a synthetic enquiry: just received, it is counted as one nobody has taken; untouched for more than 48 hours it is also counted as waiting on Valo, and for a little less it is not; once someone has taken it, it is no longer counted as untaken; touched again, waiting on its customer or resolved, it is not counted as waiting on Valo."
+    },
+    {
+      "requirement": "NFR-006",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "a new requirements check is offered where the server offers one: with the profile's save, on the home page and on the result it follows, and the result saved from it opens compared with that one",
+      "proves": "On an emulated phone, the business profile, the home page and a saved result, each showing the offer of a new requirements check, fit 360 and 320 pixels, move keyboard focus only to visible outlined controls clear of the bars that stay on screen, and have no automated WCAG 2.2 AA failure. This is an automated check, not a manual or assistive-technology review."
+    },
+    {
+      "requirement": "SEC-001",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/workspaces/valo-profile-recheck.integration.test.ts",
+      "test": "PRO-003: a new requirements check is offered after the profile changes an answer the check reads, and the earlier result and the tasks are kept",
+      "proves": "The offer of a new requirements check is read from the workspace's own profile versions and saved results: another synthetic workspace's later result and its newer profile version, which holds the very answers this workspace changes to, alter neither the result the offer names nor the answers it lists, and that workspace is offered nothing."
+    },
+    {
+      "requirement": "NFR-006",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "the message that confirms a save has a close button with a name, lies under the header and clear of the save button, passes the automated checks while it shows, and goes when the keyboard moves on",
+      "proves": "On an emulated phone and on a desktop, the message that confirms a saved business profile has a close button named for a screen reader that shows without a pointer over it, lies under the header and clear of the save button held at the foot of the screen, leaves the page beside it in reach, follows the header as the page scrolls, has no automated WCAG 2.2 AA failure while it shows, and goes once Tab has moved the focus from the save button to the control after it, where the focus then is; on the phone, no control the keyboard then reaches is hidden behind a bar that stays on screen. This is an automated check, not a manual or assistive-technology review."
+    },
+    {
+      "requirement": "NFR-006",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "the message that confirms a save is reached with F8, and its close button closes it",
+      "proves": "On a desktop, F8 reaches the message that confirms a saved business profile, Tab moves to the message and then to its close button without dismissing it, and Enter on the button closes it."
+    },
+    {
+      "requirement": "NFR-006",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "the keyboard moving on from the page's last control reaches the message that confirms a save, which stays while the keyboard is in it and goes once the keyboard leaves it",
+      "proves": "On an emulated phone, Tab from the page's last control moves the focus onto the message that confirms a saved business profile, which stays while the focus is on it and then on its close button, and goes once the next Tab takes the focus out of it. This is an automated check, not a manual or assistive-technology review."
+    },
+    {
+      "requirement": "WEB-002",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/page-filters.test.ts",
+      "test": "a page's search and filters make one address for each view, and the plain page keeps its plain address",
+      "proves": "The address made for a guides, industries or help view carries its search and its filter, leaves out an empty one so that the plain page keeps its plain address, drops the spaces around a search, and carries whatever a visitor types as text."
+    },
+    {
+      "requirement": "WEB-002",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/page-filters.test.ts",
+      "test": "an address gives back the search and the filter it was made with, and nothing longer than a search may be",
+      "proves": "Reading an address gives back the search and the filter it was made with, and from an address someone else wrote a search without the spaces around it and no longer than 120 characters, a filter no longer than 80, and the first of a filter given twice."
+    },
+    {
+      "requirement": "WEB-002",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-page-states.test.ts",
+      "test": "the guides, industries and help pages keep their search and filter in the address: a copied address opens the same view, and Back undoes a change",
+      "proves": "On an emulated phone, a copied guides, industries or help address opens the view it names with the search box filled and the filter chosen; a changed filter and what is typed are in the address, the plain page keeps its plain address, an address written with spaces around its search is not rewritten, a space typed at the end of a search stays in the box, and the Back button undoes each change and refills the box."
+    },
+    {
+      "requirement": "WEB-002",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-server-pages.test.ts",
+      "test": "the server renders the view a guides, industries or help address asks for: the box holds the search, the filter is chosen, and the guides and industries listed are the ones found",
+      "proves": "On the compiled web server, the HTML for a guides address with a search and an industry lists the one guide found with the box filled and the industry chosen, the HTML for an industries search lists the industries it names, and the HTML for a help search fills the box and keeps every question."
+    },
+    {
+      "requirement": "WEB-002",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-server-pages.test.ts",
+      "test": "the library's filters, sort and page live in its address: the server renders the results an address asks for, a reload keeps them, a new search starts again from the first page, and clearing the filters empties the address",
+      "proves": "On the compiled web server, a library address with its category, access, industry, sort and page is rendered by the server as the results it asks for, survives a reload, and is emptied when the filters are cleared."
+    },
+    {
+      "requirement": "WEB-002",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-server-pages.test.ts",
+      "test": "the library's search box keeps a space typed at the end of a word while its address follows, so the next word can be typed, and Back refills the box",
+      "proves": "On an emulated phone, the library's search box keeps a space typed at the end of a word after its address has followed, takes the next word after it, is refilled by the Back button, and leaves an address written with spaces around its search as it is."
+    },
+    {
+      "requirement": "WEB-002",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-page-states.test.ts",
+      "test": "the industries page waiting for its data shows a loading placeholder, then lists every industry and says of each that it has no guides when none is published; a search that names no industry says so and offers the whole list again",
+      "proves": "On an emulated phone, the compiled industries page shows a loading placeholder, no error and no industry while its data is held back, then every industry with \"No guides yet\" when none is published and the number of guides where some are, and a search that names no industry says so and offers the whole list again."
+    },
+    {
+      "requirement": "WEB-002",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-page-states.test.ts",
+      "test": "the pricing page waiting to learn whether payments are on shows a placeholder, then says what the API answered; when the API refuses or cannot be reached it says they are switched off, and shows no error",
+      "proves": "On an emulated phone, the compiled pricing page shows a placeholder while it waits to learn whether payments are on, then says what the API answered, and says \"Switched off\" with no error when the API refuses or cannot be reached."
+    },
+    {
+      "requirement": "WEB-002",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-page-states.test.ts",
+      "test": "the services, support, help, privacy and terms pages wait for nothing and have nothing that can fail to load: with the API failing each shows its whole content, and until the sign-in service answers each form's place shows the way to sign in or to write without an account",
+      "proves": "On an emulated phone with the API failing and the sign-in service unreachable, the compiled services, support, help, privacy and terms pages ask the API for nothing and show their heading and content with no placeholder, nothing waiting and no error, and the services and support pages show the way to sign in, to create an account or to write without one in their form's place."
+    },
+    {
+      "requirement": "WEB-002",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "signed in, the support page says its list of requests is loading, says when there are none and offers another try when the list cannot be read; its form says what is missing, keeps what was typed when a save fails and says so, and saves on the next try",
+      "proves": "On an emulated phone, the support page of a signed-in customer says its list of requests is loading, says when there are none and offers another try when the list cannot be read; its form says what is missing and sends nothing, a save that fails says so and keeps what was typed, the button cannot be pressed while it saves, and the next try saves."
+    },
+    {
+      "requirement": "NFR-006",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-page-states.test.ts",
+      "test": "the industries page waiting for its data shows a loading placeholder, then lists every industry and says of each that it has no guides when none is published; a search that names no industry says so and offers the whole list again",
+      "proves": "axe-core finds no WCAG 2.0, 2.1 or 2.2 A or AA rule failing on the compiled industries page at phone width with no guide published, or with a search that names no industry; no manual or assistive-technology review is recorded."
+    },
+    {
+      "requirement": "NFR-006",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-page-states.test.ts",
+      "test": "the pricing page waiting to learn whether payments are on shows a placeholder, then says what the API answered; when the API refuses or cannot be reached it says they are switched off, and shows no error",
+      "proves": "axe-core finds no WCAG 2.0, 2.1 or 2.2 A or AA rule failing on the compiled pricing page at phone width once it says whether payments are on, or when the API refuses or cannot be reached; no manual or assistive-technology review is recorded."
+    },
+    {
+      "requirement": "NFR-006",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-page-states.test.ts",
+      "test": "the services, support, help, privacy and terms pages wait for nothing and have nothing that can fail to load: with the API failing each shows its whole content, and until the sign-in service answers each form's place shows the way to sign in or to write without an account",
+      "proves": "axe-core finds no WCAG 2.0, 2.1 or 2.2 A or AA rule failing on the compiled services, support, help, privacy and terms pages at phone width with the API failing and the sign-in service unreachable; no manual or assistive-technology review is recorded."
+    },
+    {
+      "requirement": "NFR-006",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "signed in, the support page says its list of requests is loading, says when there are none and offers another try when the list cannot be read; its form says what is missing, keeps what was typed when a save fails and says so, and saves on the next try",
+      "proves": "axe-core finds no WCAG 2.0, 2.1 or 2.2 A or AA rule failing on a signed-in customer's support page at phone width while its list is read, when the list cannot be read, with the form's missing details shown and after a save that failed, and the failed list and the failed save are each announced in a role=\"alert\" element; no manual or assistive-technology review is recorded."
+    },
+    {
+      "requirement": "WRK-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/tasks/valo-reminder-resend.test.ts",
+      "test": "the request the provider is sent for a reminder is, to the byte, what it was before the reminders moved onto the shared sender",
+      "proves": "A reminder handed to the shared sender reaches the email provider as the same request as before, with the same idempotency key and the same body in the same order, so a reminder retried across that change is the first request again and is sent once."
+    },
+    {
+      "requirement": "WRK-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/tasks/valo-reminder-resend.test.ts",
+      "test": "the development mailer sends whatever message it is handed: one with no headers or labels goes without them, and only an optional one is asked about its address",
+      "proves": "The reminders' development mailer, as a sender of the shared kind, sends a necessary message without asking whether Valo has stopped sending to its address, and asks for an optional one alone: stopped, it sends nothing and says so. A key, a subject or a header that is not one plain line never reaches its transport."
+    },
+    {
+      "requirement": "WRK-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/tasks/valo-reminder-resend.test.ts",
+      "test": "a reminder goes through any sender of the shared kind, as an optional message under its own key, and a sender's answer that the address is stopped is the reminders' own refusal",
+      "proves": "A reminder is handed to a sender as an optional message with its unsubscribe link in its words and headers and no task title or identifier in them, the same on every attempt. A sender's answer that the address is stopped is never taken for a sent reminder, and without its link a reminder is handed to no sender."
+    },
+    {
+      "requirement": "EDT-002",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/scripts/free-journey.integration.test.ts",
+      "test": "the free journey, recorded on a phone and on a desktop: a visitor finds the invoice, signs up, saves it and downloads its files, made from its stored revision",
+      "proves": "On an emulated phone and on a desktop, in a browser against the real API and a real database, a new account's invoice is saved and its finished Word file and PDF are made from that one saved version: both hold its answers and the totals worked out from them, each export was made from the stored revision whose hash is its content's, and each downloaded file is the one stored for it. The identity provider's sign-up and the queue's worker are stood in for."
+    },
+    {
+      "requirement": "DOC-005",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/scripts/free-journey.integration.test.ts",
+      "test": "the free journey, recorded on a phone and on a desktop: a visitor finds the invoice, signs up, saves it and downloads its files, made from its stored revision",
+      "proves": "On an emulated phone and on a desktop, a visitor who finds the invoice among the home page's tasks and signs up downloads its finished Word file and PDF, and the business library lists both with the saved version and what they were made from, Valo's own invoice questions. The identity provider's sign-up and the queue's worker are stood in for."
+    },
+    {
+      "requirement": "DOC-005",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/library-exports.test.tsx",
+      "test": "a file made from Valo's own questions, or from a released template's form, names where it came from",
+      "proves": "The business library says a file made from Valo's own invoice questions was made from them, and one made from a released template's form was made from that release, by its title and version, where both had said they were made from no template."
     }
   ]
 }

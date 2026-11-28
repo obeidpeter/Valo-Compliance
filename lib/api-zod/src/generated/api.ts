@@ -1173,7 +1173,8 @@ export const ListPublicCatalogueResponse = zod.object({
 })),
   "total": zod.int(),
   "page": zod.int(),
-  "heldTemplates": zod.int()
+  "heldTemplates": zod.int(),
+  "closest": zod.boolean().optional().describe('True when no item has every word of the search, and the items listed are the ones that have the most of its words (docs/architecture/public-search.md). Absent otherwise.')
 })
 
 
@@ -1440,7 +1441,8 @@ export const ListOperationalRecommendationsResponse = zod.object({
 })),
   "total": zod.int(),
   "page": zod.int(),
-  "heldTemplates": zod.int()
+  "heldTemplates": zod.int(),
+  "closest": zod.boolean().optional().describe('True when no item has every word of the search, and the items listed are the ones that have the most of its words (docs/architecture/public-search.md). Absent otherwise.')
 })
 
 
@@ -2168,6 +2170,140 @@ export const ReconcileFinanceRefundResponse = zod.object({
   "checkedAt": zod.string().nullable(),
   "completedAt": zod.string().nullable(),
   "failure": zod.string().nullable()
+})
+
+
+/**
+ * Each order whose latest finished daily check found a difference that no settlement covers, and the latest settlements with what finance found and why (docs/architecture/reconciliation.md, slice 2). An active finance role and a fresh second factor are required.
+ * @summary The daily payment checks' differences nobody has settled, and the latest settled (PAY-007)
+ */
+export const GetFinancePaymentChecksResponse = zod.object({
+  "differences": zod.array(zod.object({
+  "id": zod.uuid(),
+  "orderId": zod.uuid(),
+  "reference": zod.string(),
+  "amountKobo": zod.int(),
+  "currency": zod.string(),
+  "orderStatus": zod.string(),
+  "day": zod.string().describe('The UTC date the check is for, as YYYY-MM-DD'),
+  "status": zod.enum(['needs_review', 'resolved']),
+  "finding": zod.string().describe('What differs: one or more names, joined with \';\''),
+  "attempts": zod.int(),
+  "outcome": zod.union([zod.literal('explained'),zod.literal('no_payment_stands'),zod.literal(null)]).nullable(),
+  "resolvedAt": zod.coerce.date().nullable(),
+  "resolvedByYou": zod.boolean(),
+  "reason": zod.string().nullable().describe('Why finance settled it, as the staff access audit keeps it')
+})),
+  "settled": zod.array(zod.object({
+  "id": zod.uuid(),
+  "orderId": zod.uuid(),
+  "reference": zod.string(),
+  "amountKobo": zod.int(),
+  "currency": zod.string(),
+  "orderStatus": zod.string(),
+  "day": zod.string().describe('The UTC date the check is for, as YYYY-MM-DD'),
+  "status": zod.enum(['needs_review', 'resolved']),
+  "finding": zod.string().describe('What differs: one or more names, joined with \';\''),
+  "attempts": zod.int(),
+  "outcome": zod.union([zod.literal('explained'),zod.literal('no_payment_stands'),zod.literal(null)]).nullable(),
+  "resolvedAt": zod.coerce.date().nullable(),
+  "resolvedByYou": zod.boolean(),
+  "reason": zod.string().nullable().describe('Why finance settled it, as the staff access audit keeps it')
+}))
+})
+
+
+/**
+ * @summary Finance records what it found about a difference a daily payment check found (PAY-007)
+ */
+export const SettleFinancePaymentCheckParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const settleFinancePaymentCheckBodyReasonMin = 10;
+export const settleFinancePaymentCheckBodyReasonMax = 1500;
+
+
+
+export const SettleFinancePaymentCheckBody = zod.object({
+  "outcome": zod.enum(['explained', 'no_payment_stands']),
+  "reason": zod.string().min(settleFinancePaymentCheckBodyReasonMin).max(settleFinancePaymentCheckBodyReasonMax)
+})
+
+export const SettleFinancePaymentCheckResponse = zod.object({
+  "id": zod.uuid(),
+  "orderId": zod.uuid(),
+  "reference": zod.string(),
+  "amountKobo": zod.int(),
+  "currency": zod.string(),
+  "orderStatus": zod.string(),
+  "day": zod.string().describe('The UTC date the check is for, as YYYY-MM-DD'),
+  "status": zod.enum(['needs_review', 'resolved']),
+  "finding": zod.string().describe('What differs: one or more names, joined with \';\''),
+  "attempts": zod.int(),
+  "outcome": zod.union([zod.literal('explained'),zod.literal('no_payment_stands'),zod.literal(null)]).nullable(),
+  "resolvedAt": zod.coerce.date().nullable(),
+  "resolvedByYou": zod.boolean(),
+  "reason": zod.string().nullable().describe('Why finance settled it, as the staff access audit keeps it')
+})
+
+
+/**
+ * Each provider event that the event worker left for finance, with why, that no settlement covers with the finding it has now, and the latest settlements with who made them and why (docs/architecture/reconciliation.md, slice 3a). An active finance role and a fresh second factor are required.
+ * @summary The Paystack events Valo could not match or process that finance has not settled, and the latest settled (PAY-007)
+ */
+export const GetFinancePaymentEventsResponse = zod.object({
+  "waiting": zod.array(zod.object({
+  "id": zod.uuid(),
+  "eventType": zod.string().describe('Paystack\'s name for the event, such as charge.success, or listing for what Paystack\'s own list of a day\'s successful payments could not give'),
+  "reference": zod.string().nullable().describe('The reference the event names, if it names one; for a day\'s list, the day, as YYYY-MM-DD'),
+  "receivedAt": zod.coerce.date(),
+  "finding": zod.string().describe('Why the event worker left it for finance'),
+  "attempts": zod.int(),
+  "resolvedAt": zod.coerce.date().nullable(),
+  "resolvedByYou": zod.boolean(),
+  "reason": zod.string().nullable().describe('Why finance settled it, as the staff access audit keeps it')
+})),
+  "settled": zod.array(zod.object({
+  "id": zod.uuid(),
+  "eventType": zod.string().describe('Paystack\'s name for the event, such as charge.success, or listing for what Paystack\'s own list of a day\'s successful payments could not give'),
+  "reference": zod.string().nullable().describe('The reference the event names, if it names one; for a day\'s list, the day, as YYYY-MM-DD'),
+  "receivedAt": zod.coerce.date(),
+  "finding": zod.string().describe('Why the event worker left it for finance'),
+  "attempts": zod.int(),
+  "resolvedAt": zod.coerce.date().nullable(),
+  "resolvedByYou": zod.boolean(),
+  "reason": zod.string().nullable().describe('Why finance settled it, as the staff access audit keeps it')
+}))
+})
+
+
+/**
+ * @summary Finance records what it found about a Paystack event Valo could not match or process (PAY-007)
+ */
+export const SettleFinancePaymentEventParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const settleFinancePaymentEventBodyReasonMin = 10;
+export const settleFinancePaymentEventBodyReasonMax = 1500;
+
+
+
+export const SettleFinancePaymentEventBody = zod.object({
+  "reason": zod.string().min(settleFinancePaymentEventBodyReasonMin).max(settleFinancePaymentEventBodyReasonMax)
+})
+
+export const SettleFinancePaymentEventResponse = zod.object({
+  "id": zod.uuid(),
+  "eventType": zod.string().describe('Paystack\'s name for the event, such as charge.success, or listing for what Paystack\'s own list of a day\'s successful payments could not give'),
+  "reference": zod.string().nullable().describe('The reference the event names, if it names one; for a day\'s list, the day, as YYYY-MM-DD'),
+  "receivedAt": zod.coerce.date(),
+  "finding": zod.string().describe('Why the event worker left it for finance'),
+  "attempts": zod.int(),
+  "resolvedAt": zod.coerce.date().nullable(),
+  "resolvedByYou": zod.boolean(),
+  "reason": zod.string().nullable().describe('Why finance settled it, as the staff access audit keeps it')
 })
 
 
@@ -5488,6 +5624,9 @@ export const CreateDocumentExportResponse = zod.object({
 })
 
 
+export const listWorkspaceExportsResponseQuestionsOneTemplateIdRegExp = new RegExp('^TPL-[0-9]{2}$');
+
+
 export const ListWorkspaceExportsResponseItem = zod.object({
   "id": zod.uuid(),
   "documentId": zod.uuid(),
@@ -5502,9 +5641,14 @@ export const ListWorkspaceExportsResponseItem = zod.object({
   "template": zod.union([zod.object({
   "versionId": zod.uuid(),
   "templateId": zod.string(),
-  "title": zod.string().optional().describe('The title a staff-library template was released under, for a document copied from it.'),
+  "title": zod.string().optional().describe('The title a staff-library template was released under, for a document copied from it or made from its form.'),
+  "form": zod.boolean().optional().describe('True for a document made by answering a staff-library template\'s form (forms v2), not copied from its text.'),
   "version": zod.int()
-}),zod.null()])
+}),zod.null()]),
+  "questions": zod.union([zod.object({
+  "templateId": zod.string().regex(listWorkspaceExportsResponseQuestionsOneTemplateIdRegExp),
+  "title": zod.string().describe('The guided template\'s name, such as Invoice.')
+}),zod.null()]).describe('For a file made from Valo\'s own questions for a guided template, which template: such a document came from no released version, so its `template` is null. Null for any other file.')
 })
 export const ListWorkspaceExportsResponse = zod.array(ListWorkspaceExportsResponseItem)
 
@@ -6304,10 +6448,11 @@ export const listWorkspaceMessagesResponseAttemptsMin = 0;
 
 export const ListWorkspaceMessagesResponseItem = zod.object({
   "id": zod.uuid(),
-  "kind": zod.enum(['purchase_receipt', 'refund_processed']),
+  "kind": zod.enum(['purchase_receipt', 'refund_processed', 'notices_digest']),
   "orderId": zod.string().nullable(),
   "orderReference": zod.string().nullable(),
   "refundReference": zod.string().nullable(),
+  "noticesDay": zod.string().nullable(),
   "forYou": zod.boolean(),
   "status": zod.enum(['queued', 'sending', 'held', 'accepted', 'recorded', 'failed', 'cancelled']),
   "reason": zod.string().nullable(),
@@ -6315,9 +6460,28 @@ export const ListWorkspaceMessagesResponseItem = zod.object({
   "createdAt": zod.string(),
   "lastAttemptAt": zod.string().nullable(),
   "nextAttemptAt": zod.string().nullable(),
-  "acceptedAt": zod.string().nullable()
+  "acceptedAt": zod.string().nullable(),
+  "delivery": zod.union([zod.enum(['delivered', 'delayed', 'bounced', 'complained', 'undelivered']).describe('What the email service last reported about a message it took. `delivered` means the address\'s email service took it, never that anyone read it; `delayed` that the email service is still trying; `bounced` that the address\'s email service refused it; `complained` that it was marked as spam; `undelivered` that the email service could not send it.'),zod.null()]),
+  "deliveryAt": zod.string().nullable()
 })
 export const ListWorkspaceMessagesResponse = zod.array(ListWorkspaceMessagesResponseItem)
+
+
+/**
+ * @summary Stop one kind of optional message, from the link in one of them; needs no account
+ */
+export const unsubscribeBodyTokenMax = 181;
+
+
+
+export const UnsubscribeBody = zod.object({
+  "token": zod.string().min(1).max(unsubscribeBodyTokenMax)
+})
+
+export const UnsubscribeResponse = zod.object({
+  "consent": zod.enum(['reminders']),
+  "state": zod.enum(['off'])
+})
 
 
 export const getOperationalAlertsResponseActiveItemCodeRegExp = new RegExp('^[A-Z][A-Z_]{2,80}$');
@@ -10779,7 +10943,9 @@ export const ListRemindersResponseItem = zod.object({
   "nextAttemptAt": zod.string().nullable(),
   "lastAttemptAt": zod.string().nullable(),
   "reason": zod.string().nullable(),
-  "deliveredAt": zod.string().nullable()
+  "deliveredAt": zod.string().nullable(),
+  "delivery": zod.union([zod.enum(['delivered', 'delayed', 'bounced', 'complained', 'undelivered']).describe('What the email service last reported about a message it took. `delivered` means the address\'s email service took it, never that anyone read it; `delayed` that the email service is still trying; `bounced` that the address\'s email service refused it; `complained` that it was marked as spam; `undelivered` that the email service could not send it.'),zod.null()]),
+  "deliveryAt": zod.string().nullable()
 })
 export const ListRemindersResponse = zod.array(ListRemindersResponseItem)
 
@@ -10794,6 +10960,8 @@ export const getWorkspaceResponseProfileOneLgaMax = 100;
 
 export const getWorkspaceResponseProfileOneEmployeesRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{1,7})$');
 export const getWorkspaceResponseProfileOneTurnoverYearRegExp = new RegExp('^(unknown|[0-9]{4})$');
+export const getWorkspaceResponseRecheckChangedMax = 14;
+
 
 
 export const GetWorkspaceResponse = zod.object({
@@ -10817,7 +10985,12 @@ export const GetWorkspaceResponse = zod.object({
   "personalData": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
   "marketingConsent": zod.boolean()
 }),zod.null()]),
-  "documentCount": zod.int()
+  "documentCount": zod.int(),
+  "recheck": zod.object({
+  "assessmentId": zod.uuid().describe('The workspace\'s latest saved result, which a new check would follow. It is kept as it was saved.'),
+  "savedAt": zod.coerce.date().describe('When that result was saved.'),
+  "changed": zod.array(zod.enum(['legalForm', 'registrationStatus', 'activities', 'state', 'lga', 'employees', 'turnoverBand', 'turnoverYear', 'turnoverMetric', 'turnoverCurrency', 'premises', 'manufacturing', 'importing', 'personalData'])).min(1).max(getWorkspaceResponseRecheckChangedMax).describe('The profile\'s changed answers, in the order the profile asks them.')
+}).optional().describe('Present when a new requirements check is offered (PRO-003). The business profile has changed an answer the check reads since the latest saved result, and that result was not worked out from the new answer. A change to the business name or the marketing choice alone offers nothing.')
 })
 
 
@@ -10867,6 +11040,8 @@ export const saveBusinessProfileResponseProfileOneLgaMax = 100;
 
 export const saveBusinessProfileResponseProfileOneEmployeesRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{1,7})$');
 export const saveBusinessProfileResponseProfileOneTurnoverYearRegExp = new RegExp('^(unknown|[0-9]{4})$');
+export const saveBusinessProfileResponseRecheckChangedMax = 14;
+
 
 
 export const SaveBusinessProfileResponse = zod.object({
@@ -10890,7 +11065,12 @@ export const SaveBusinessProfileResponse = zod.object({
   "personalData": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
   "marketingConsent": zod.boolean()
 }),zod.null()]),
-  "documentCount": zod.int()
+  "documentCount": zod.int(),
+  "recheck": zod.object({
+  "assessmentId": zod.uuid().describe('The workspace\'s latest saved result, which a new check would follow. It is kept as it was saved.'),
+  "savedAt": zod.coerce.date().describe('When that result was saved.'),
+  "changed": zod.array(zod.enum(['legalForm', 'registrationStatus', 'activities', 'state', 'lga', 'employees', 'turnoverBand', 'turnoverYear', 'turnoverMetric', 'turnoverCurrency', 'premises', 'manufacturing', 'importing', 'personalData'])).min(1).max(saveBusinessProfileResponseRecheckChangedMax).describe('The profile\'s changed answers, in the order the profile asks them.')
+}).optional().describe('Present when a new requirements check is offered (PRO-003). The business profile has changed an answer the check reads since the latest saved result, and that result was not worked out from the new answer. A change to the business name or the marketing choice alone offers nothing.')
 })
 
 

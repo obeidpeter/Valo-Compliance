@@ -35,6 +35,7 @@ const StaffPage = lazy(() => import("@/screens/staff"));
 const PrivacyOperations = lazy(() => import("@/screens/privacy-operations"));
 const AcceptanceReview = lazy(() => import("@/screens/acceptance-review"));
 const Support = lazy(() => import("@/screens/support"));
+const Unsubscribe = lazy(() => import("@/screens/unsubscribe"));
 const WorkspaceSupportPage = lazy(() =>
   import("@/screens/support").then((m) => ({ default: m.WorkspaceSupportPage })),
 );
@@ -318,6 +319,7 @@ function ShellRoutes() {
       <Switch>
         <Route path="/account-access" component={AccountAccess} />
         <Route path="/support" component={Support} />
+        <Route path="/unsubscribe" component={Unsubscribe} />
         <Route path="/development" component={Development} />
         <Route path="/checker" component={Checker} />
         <Route path="/workspace/assessments">

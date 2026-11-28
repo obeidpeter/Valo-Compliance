@@ -3,10 +3,16 @@ import { isPracticalGuideId } from "@workspace/valo-core";
 import { ValoProblem } from "../../platform/valo-problem";
 import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
 import { logger } from "../../platform/logger";
-import { captureProviderTerms, mappedGuideIds, supportsOperationalInferenceTemplate } from "../publication";
+import {
+  captureProviderTerms,
+  mappedGuideIds,
+  mappedLawTemplateIds,
+  supportsOperationalInferenceTemplate,
+} from "../publication";
 import { requireSourceStaff, reviewWorkQueue, type SourceStaffActor, type SourceTx } from "../sources";
 import { prepareOperationalCandidate } from "./operational-preparation";
 import { prepareGuideCandidate } from "./guidance-preparation";
+import { prepareLawTemplateCandidate } from "./law-template-preparation";
 
 /**
  * A prepared candidate from review work (docs/architecture/source-register.md, slice 4, ADM-003 and
@@ -17,10 +23,14 @@ import { prepareGuideCandidate } from "./guidance-preparation";
  * under an AI allocation the owner approves. Nothing here calls a model, sends anything or publishes.
  */
 
-/** The preparer a template or guide is prepared with from review work, if it has one. */
-export function reviewPreparer(templateId: string): "template" | "guide" | null {
+/**
+ * The preparer a template or guide is prepared with from review work, if it has one. A template that
+ * states the law has its own (docs/architecture/reviewed-route.md, part 4).
+ */
+export function reviewPreparer(templateId: string): "template" | "guide" | "law_template" | null {
   if (supportsOperationalInferenceTemplate(templateId) || isPracticalGuideId(templateId)) return "template";
   if (mappedGuideIds.includes(templateId)) return "guide";
+  if (mappedLawTemplateIds.includes(templateId)) return "law_template";
   return null;
 }
 export const reviewPreparable = (templateId: string) => reviewPreparer(templateId) !== null;
@@ -171,7 +181,12 @@ async function prepare(templateId: string, readPage: Parameters<typeof capturePr
       reasons: reasons.length ? reasons : [result.providerFailure ?? "OPERATIONAL_CANDIDATE_HELD"],
     } as const;
   }
-  const result = await prepareGuideCandidate(templateId, snapshot);
+  // A guide, and a template that states the law, are built from today's captures of their sources and
+  // kept only when nothing but their two reviews holds them.
+  const result =
+    preparer === "law_template"
+      ? await prepareLawTemplateCandidate(templateId, snapshot)
+      : await prepareGuideCandidate(templateId, snapshot);
   if (result.state === "awaiting_reviews")
     return { status: "prepared", artifactId: result.candidateArtifact.id, version: result.version } as const;
   return { status: "not_ready", version: result.version, reasons: result.reasons } as const;

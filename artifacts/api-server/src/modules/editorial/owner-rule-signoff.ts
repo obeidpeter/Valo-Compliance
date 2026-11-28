@@ -33,11 +33,9 @@ import {
   type CurrentSourceCapture,
 } from "../sources";
 import {
-  AMENDMENT_RECORD_DAYS,
   capturedGuidePassages,
   guideAmendmentRecords,
   guidancePolicy,
-  guideSourceDecision,
   type AmendmentRecord,
   type GuidePassages,
 } from "../publication";
@@ -46,6 +44,7 @@ import { ownerRuleReferrals } from "../support";
 import { ValoProblem } from "../../platform/valo-problem";
 import { planStoredRuleRelease, recordRuleChanges, ruleChangeReason } from "./valo-rule-release";
 import { ownerRuleCandidates, type OwnerRuleCandidate } from "./owner-rule-candidates";
+import { bindRuleSources, unique } from "./rule-sources";
 
 /**
  * Requirements-checker rules released on the development owner's sign-off (decision 0020).
@@ -61,15 +60,11 @@ import { ownerRuleCandidates, type OwnerRuleCandidate } from "./owner-rule-candi
  * without that sign-off (migration rule_owner_signoffs).
  */
 export { ownerRuleCandidates, type OwnerRuleCandidate } from "./owner-rule-candidates";
+export { OWNER_RULE_QUOTE_WORDS } from "./rule-sources";
 
 const refusal = "Only the designated development owner can sign requirements-checker rules.";
 const replacementReasonNeeded =
   "Say what changed in this version, in 20 to 1,000 characters. It replaces the released one.";
-const day = 86_400_000;
-/** The guidance policy's point 7: no more than this many words in a row from a passage. */
-export const OWNER_RULE_QUOTE_WORDS = 20;
-const unique = <T>(values: T[]) => [...new Set(values)];
-const wordCount = (text: string) => text.trim().split(/\s+/u).filter(Boolean).length;
 
 type Policy = PublicationBundle["policy"];
 type ReadText = (snapshotId: string, checksum: string) => Promise<string>;
@@ -210,50 +205,8 @@ export function prepareOwnerRule(
     now: Date;
   },
 ) {
-  const holds: string[] = [];
-  /** The sources whose own holds already say why they are not resolved. */
-  const explained = new Set<string>();
-  const hold = (sourceId: string, text: string) => {
-    holds.push(text);
-    explained.add(sourceId);
-  };
+  const { parts, holds, explained, checkedAt, freshUntil, passageText } = bindRuleSources(candidate, input);
   const has = (check: OwnerConfirmedCheck) => input.confirmed.includes(check);
-  const parts = candidate.sources.map((source) => {
-    const lead = allSourceLeads.find((l) => l.id === source.leadId);
-    const capture = input.captures.find((c) => c.leadId === source.leadId && c.url === lead?.url);
-    const found = capture ? input.passages(source.passageId) : undefined;
-    const passage = found && found.instrument.url === lead?.url ? found : undefined;
-    const title = passage?.instrument.title ?? lead?.title ?? source.passageId;
-    const quotes = [
-      source.quote,
-      ...candidate.claims.filter((c) => c.sourceId === source.id).map((c) => c.quote),
-    ];
-    if (!lead) hold(source.id, `Passage ${source.passageId} is not read from a registered official source.`);
-    else if (!capture)
-      hold(source.id, `${title} has no copy of its official source checked within the last day.`);
-    else if (!passage) hold(source.id, `Today's copy of ${title} does not hold passage ${source.passageId}.`);
-    else if (quotes.some((q) => !passage.text.includes(q)))
-      holds.push(`${title}: passage ${source.passageId} does not hold the words the rule quotes.`);
-    for (const quote of unique(quotes))
-      if (wordCount(quote) > OWNER_RULE_QUOTE_WORDS)
-        holds.push(
-          `${title}: a quotation is ${wordCount(quote)} words; the guidance policy allows ${OWNER_RULE_QUOTE_WORDS} in a row.`,
-        );
-    const decision = passage ? guideSourceDecision(passage, input.now, input.records, quotes) : undefined;
-    for (const reason of decision?.reasons ?? []) hold(source.id, `${title}: ${reason}.`);
-    const record = passage ? input.records.find((r) => r.instrument === passage.instrument.id) : undefined;
-    return { source, lead, capture, passage, title, decision, record };
-  });
-  const checks = parts.flatMap((p) => (p.capture ? [Date.parse(p.capture.checkedAt)] : []));
-  const checkedAt = new Date(checks.length ? Math.min(...checks) : +input.now);
-  const searches = parts.flatMap((p) => p.record?.searches.map((s) => Date.parse(s.searchedAt)) ?? []);
-  const freshUntil = new Date(
-    Math.min(
-      +checkedAt + (candidate.risk === "general" ? 90 : 30) * day,
-      ...(searches.length ? [Math.min(...searches) + AMENDMENT_RECORD_DAYS * day] : []),
-    ),
-  ).toISOString();
-  const passageText = (p: (typeof parts)[number]) => p.passage?.text ?? p.source.quote;
   const content = {
     ...candidate.rule,
     version: input.version,
@@ -338,7 +291,7 @@ export function prepareOwnerRule(
     rule,
     bundle,
     holds,
-    explained: [...explained],
+    explained,
     snapshotIds,
     sourceCheckedAt: checkedAt,
     evidence,

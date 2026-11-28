@@ -30,6 +30,20 @@ export interface RuleChange {
 }
 
 /**
+ * What the email service last reported about a message it took. `delivered` means the address's email service took it, never that anyone read it; `delayed` that the email service is still trying; `bounced` that the address's email service refused it; `complained` that it was marked as spam; `undelivered` that the email service could not send it.
+ */
+export type MessageDelivery = typeof MessageDelivery[keyof typeof MessageDelivery];
+
+
+export const MessageDelivery = {
+  delivered: 'delivered',
+  delayed: 'delayed',
+  bounced: 'bounced',
+  complained: 'complained',
+  undelivered: 'undelivered',
+} as const;
+
+/**
  * The authority's own official page for a requirement, as its rule records it. Absent when the rule records none, and in a result saved before routes were recorded.
  */
 export interface RequirementRoute {
@@ -895,6 +909,8 @@ export interface CataloguePage {
   total: number;
   page: number;
   heldTemplates: number;
+  /** True when no item has every word of the search, and the items listed are the ones that have the most of its words (docs/architecture/public-search.md). Absent otherwise. */
+  closest?: boolean;
 }
 
 export type DisputeHistoryActorType = typeof DisputeHistoryActorType[keyof typeof DisputeHistoryActorType];
@@ -1655,6 +1671,108 @@ export interface RefundDecisionInput {
   reason: string;
   /** @minimum 1 */
   expectedVersion: number;
+}
+
+export type PaymentCheckStatus = typeof PaymentCheckStatus[keyof typeof PaymentCheckStatus];
+
+
+export const PaymentCheckStatus = {
+  needs_review: 'needs_review',
+  resolved: 'resolved',
+} as const;
+
+/**
+ * @nullable
+ */
+export type PaymentCheckOutcome = typeof PaymentCheckOutcome[keyof typeof PaymentCheckOutcome] | null;
+
+
+export const PaymentCheckOutcome = {
+  explained: 'explained',
+  no_payment_stands: 'no_payment_stands',
+} as const;
+
+export interface PaymentCheck {
+  id: string;
+  orderId: string;
+  reference: string;
+  amountKobo: number;
+  currency: string;
+  orderStatus: string;
+  /** The UTC date the check is for, as YYYY-MM-DD */
+  day: string;
+  status: PaymentCheckStatus;
+  /** What differs: one or more names, joined with ';' */
+  finding: string;
+  attempts: number;
+  /** @nullable */
+  outcome: PaymentCheckOutcome;
+  /** @nullable */
+  resolvedAt: string | null;
+  resolvedByYou: boolean;
+  /**
+     * Why finance settled it, as the staff access audit keeps it
+     * @nullable
+     */
+  reason: string | null;
+}
+
+export interface FinancePaymentChecks {
+  differences: PaymentCheck[];
+  settled: PaymentCheck[];
+}
+
+export type PaymentCheckSettlementInputOutcome = typeof PaymentCheckSettlementInputOutcome[keyof typeof PaymentCheckSettlementInputOutcome];
+
+
+export const PaymentCheckSettlementInputOutcome = {
+  explained: 'explained',
+  no_payment_stands: 'no_payment_stands',
+} as const;
+
+export interface PaymentCheckSettlementInput {
+  outcome: PaymentCheckSettlementInputOutcome;
+  /**
+     * @minLength 10
+     * @maxLength 1500
+     */
+  reason: string;
+}
+
+export interface PaymentEvent {
+  id: string;
+  /** Paystack's name for the event, such as charge.success, or listing for what Paystack's own list of a day's successful payments could not give */
+  eventType: string;
+  /**
+     * The reference the event names, if it names one; for a day's list, the day, as YYYY-MM-DD
+     * @nullable
+     */
+  reference: string | null;
+  receivedAt: string;
+  /** Why the event worker left it for finance */
+  finding: string;
+  attempts: number;
+  /** @nullable */
+  resolvedAt: string | null;
+  resolvedByYou: boolean;
+  /**
+     * Why finance settled it, as the staff access audit keeps it
+     * @nullable
+     */
+  reason: string | null;
+}
+
+export interface FinancePaymentEvents {
+  waiting: PaymentEvent[];
+  settled: PaymentEvent[];
+}
+
+export interface PaymentEventSettlementInput {
+  /**
+     * @minLength 10
+     * @maxLength 1500
+     */
+  reason: string;
 }
 
 export type DisputeInformationInputConsentVersion = typeof DisputeInformationInputConsentVersion[keyof typeof DisputeInformationInputConsentVersion];
@@ -3195,9 +3313,18 @@ export const LibraryExportFormat = {
 export interface LibraryTemplateVersion {
   versionId: string;
   templateId: string;
-  /** The title a staff-library template was released under, for a document copied from it. */
+  /** The title a staff-library template was released under, for a document copied from it or made from its form. */
   title?: string;
+  /** True for a document made by answering a staff-library template's form (forms v2), not copied from its text. */
+  form?: boolean;
   version: number;
+}
+
+export interface LibraryQuestions {
+  /** @pattern ^TPL-[0-9]{2}$ */
+  templateId: string;
+  /** The guided template's name, such as Invoice. */
+  title: string;
 }
 
 export interface LibraryExport {
@@ -3214,6 +3341,8 @@ export interface LibraryExport {
   expiresAt: string | null;
   downloadUrl: string;
   template: LibraryTemplateVersion | null;
+  /** For a file made from Valo's own questions for a guided template, which template: such a document came from no released version, so its `template` is null. Null for any other file. */
+  questions: LibraryQuestions | null;
 }
 
 export interface SessionMfaVerification {
@@ -3892,12 +4021,40 @@ export interface ManualLibraryHold {
   reason: string;
 }
 
+export interface UnsubscribeInput {
+  /**
+     * @minLength 1
+     * @maxLength 181
+     */
+  token: string;
+}
+
+export type UnsubscribeAckConsent = typeof UnsubscribeAckConsent[keyof typeof UnsubscribeAckConsent];
+
+
+export const UnsubscribeAckConsent = {
+  reminders: 'reminders',
+} as const;
+
+export type UnsubscribeAckState = typeof UnsubscribeAckState[keyof typeof UnsubscribeAckState];
+
+
+export const UnsubscribeAckState = {
+  off: 'off',
+} as const;
+
+export interface UnsubscribeAck {
+  consent: UnsubscribeAckConsent;
+  state: UnsubscribeAckState;
+}
+
 export type WorkspaceMessageKind = typeof WorkspaceMessageKind[keyof typeof WorkspaceMessageKind];
 
 
 export const WorkspaceMessageKind = {
   purchase_receipt: 'purchase_receipt',
   refund_processed: 'refund_processed',
+  notices_digest: 'notices_digest',
 } as const;
 
 export type WorkspaceMessageStatus = typeof WorkspaceMessageStatus[keyof typeof WorkspaceMessageStatus];
@@ -3922,6 +4079,8 @@ export interface WorkspaceMessage {
   orderReference: string | null;
   /** @nullable */
   refundReference: string | null;
+  /** @nullable */
+  noticesDay: string | null;
   forYou: boolean;
   status: WorkspaceMessageStatus;
   /** @nullable */
@@ -3935,6 +4094,9 @@ export interface WorkspaceMessage {
   nextAttemptAt: string | null;
   /** @nullable */
   acceptedAt: string | null;
+  delivery: MessageDelivery | null;
+  /** @nullable */
+  deliveryAt: string | null;
 }
 
 export type OperationalAlertState = typeof OperationalAlertState[keyof typeof OperationalAlertState];
@@ -6003,6 +6165,9 @@ export interface ReminderRecord {
   reason: string | null;
   /** @nullable */
   deliveredAt: string | null;
+  delivery: MessageDelivery | null;
+  /** @nullable */
+  deliveryAt: string | null;
 }
 
 export type ProfileLegalForm = typeof ProfileLegalForm[keyof typeof ProfileLegalForm];
@@ -6139,11 +6304,46 @@ export interface ProfileInput {
   profile: Profile;
 }
 
+export type ProfileRecheckChangedItem = typeof ProfileRecheckChangedItem[keyof typeof ProfileRecheckChangedItem];
+
+
+export const ProfileRecheckChangedItem = {
+  legalForm: 'legalForm',
+  registrationStatus: 'registrationStatus',
+  activities: 'activities',
+  state: 'state',
+  lga: 'lga',
+  employees: 'employees',
+  turnoverBand: 'turnoverBand',
+  turnoverYear: 'turnoverYear',
+  turnoverMetric: 'turnoverMetric',
+  turnoverCurrency: 'turnoverCurrency',
+  premises: 'premises',
+  manufacturing: 'manufacturing',
+  importing: 'importing',
+  personalData: 'personalData',
+} as const;
+
+export interface ProfileRecheck {
+  /** The workspace's latest saved result, which a new check would follow. It is kept as it was saved. */
+  assessmentId: string;
+  /** When that result was saved. */
+  savedAt: string;
+  /**
+     * The profile's changed answers, in the order the profile asks them.
+     * @minItems 1
+     * @maxItems 14
+     */
+  changed: ProfileRecheckChangedItem[];
+}
+
 export interface Workspace {
   id: string;
   profileRevision: number;
   profile: Profile | null;
   documentCount: number;
+  /** Present when a new requirements check is offered (PRO-003). The business profile has changed an answer the check reads since the latest saved result, and that result was not worked out from the new answer. A change to the business name or the marketing choice alone offers nothing. */
+  recheck?: ProfileRecheck;
 }
 
 export type WriteLimitResponseCode = typeof WriteLimitResponseCode[keyof typeof WriteLimitResponseCode];

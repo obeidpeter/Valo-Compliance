@@ -25,6 +25,9 @@ import {
 import { resolveWorkspace } from "../workspaces";
 import { ValoProblem } from "../../platform/valo-problem";
 import { financeHeldFixture } from "./valo-finance-test-fixture";
+import { priceOrderTerms } from "./checkout-editions";
+import { singleRow } from "../../platform/rows";
+import { plantOrderLine } from "../../test-support/planted-order-line";
 import { storeVerifiedDispute } from "./valo-payment-disputes";
 import { makeDisputeTransport } from "./valo-dispute-provider";
 import {
@@ -75,17 +78,22 @@ test(
     });
     const held = await financeHeldFixture(),
       price = randomUUID();
-    await db.insert(valoPrices).values({
-      id: price,
-      contentVersionId: held.id,
-      title: "CONTROLLED DISPUTE FIXTURE — NOT RELEASED",
-      amountKobo: 10000,
-      licenceVersion: "test-only",
-      licenceText: "No live commercial approval.",
-      taxTreatment: "No tax claim.",
-      approvalReference: "CONTROLLED_FIXTURE_NOT_APPROVAL",
-      effectiveFrom: new Date(),
-    });
+    const offer = singleRow(
+      await db
+        .insert(valoPrices)
+        .values({
+          id: price,
+          contentVersionId: held.id,
+          title: "CONTROLLED DISPUTE FIXTURE — NOT RELEASED",
+          amountKobo: 10000,
+          licenceVersion: "test-only",
+          licenceText: "No live commercial approval.",
+          taxTreatment: "No tax claim.",
+          approvalReference: "CONTROLLED_FIXTURE_NOT_APPROVAL",
+          effectiveFrom: new Date(),
+        })
+        .returning(),
+    );
     const canonical = new Map<string, Record<string, unknown>>(),
       calls: { method: string; path: string; body: unknown }[] = [];
     let serial = Number.parseInt(randomUUID().replaceAll("-", "").slice(0, 10), 16),
@@ -165,18 +173,11 @@ test(
         workspaceId: customer.workspaceId,
         requestedBy: customer.identityId,
         requestKey: randomUUID(),
-        priceId: price,
         reference: "valo-test-" + order,
-        amountKobo: 10000,
+        // Made with its price's own amount and line, as the application makes an order.
+        ...priceOrderTerms(offer),
         status: "verified_success",
         providerTransactionId: transactionId,
-        line: {
-          title: "Controlled purchase",
-          contentVersionId: held.id,
-          licenceVersion: "test-only",
-          licenceText: "No live commercial approval.",
-          taxTreatment: "No tax claim.",
-        },
       });
       await db.insert(valoEntitlements).values({
         id: randomUUID(),
@@ -638,12 +639,23 @@ test(
           );
           const [original] = await db.select().from(valoOrders).where(eq(valoOrders.id, f.order));
           assert.ok(original);
+          // The database keeps an order's line (migration order_terms_guard). So the fault is put
+          // beneath its triggers, as a restore or a direct edit of the table would put it.
+          const beneathTheGuard = (line: typeof original.line) => plantOrderLine(f.order, line);
+          await assert.rejects(
+            () =>
+              db
+                .update(valoOrders)
+                .set({ line: { ...original.line, title: "Altered fixture source" } })
+                .where(eq(valoOrders.id, f.order)),
+            (error: unknown) =>
+              /An order keeps the offer, the line and the amount/.test(
+                String((error as { cause?: unknown }).cause ?? error),
+              ),
+          );
           try {
             // Fault injection into this newly owned synthetic row, not a repair.
-            await db
-              .update(valoOrders)
-              .set({ line: { ...original.line, title: "Altered fixture source" } })
-              .where(eq(valoOrders.id, f.order));
+            await beneathTheGuard({ ...original.line, title: "Altered fixture source" });
             await assert.rejects(
               () =>
                 controlDisputeAction(
@@ -658,7 +670,7 @@ test(
             assert.equal(calls.length, before);
             assert.equal((await row(a.id))!.attempts, 0);
           } finally {
-            await db.update(valoOrders).set({ line: original.line }).where(eq(valoOrders.id, f.order));
+            await beneathTheGuard(original.line);
           }
           const u = await fixture(),
             held = await action(u, "merchant_decision", {
@@ -923,16 +935,8 @@ test(
             workspaceId: fresh.workspaceId,
             requestedBy: fresh.identityId,
             requestKey: randomUUID(),
-            priceId: price,
             reference: "valo-test-" + order,
-            amountKobo: 10000,
-            line: {
-              title: "Owned erasure test",
-              contentVersionId: held.id,
-              licenceVersion: "synthetic",
-              licenceText: "No sale",
-              taxTreatment: "No tax assertion",
-            },
+            ...priceOrderTerms(offer),
           });
           await db.insert(valoSupportTickets).values({
             id: randomUUID(),

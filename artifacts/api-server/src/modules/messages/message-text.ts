@@ -40,9 +40,21 @@ export function naira(kobo: number) {
 
 export type ComposedMessage = { subject: string; text: string };
 
-/** Where a message links to: the site's own address, or none when it has no configured address. */
-const link = (origin: string | null, path: string, words: string) =>
-  origin ? `${words}: ${origin}${path}` : `${words}: open Valo and choose Purchases.`;
+/** A Lagos day, given as YYYY-MM-DD, as the site writes a date: "18 Nov 2026". */
+export function lagosDate(day: string) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(day);
+  const month = match && MONTHS[Number(match[2]) - 1];
+  if (!match || !month || Number(match[3]) < 1 || Number(match[3]) > 31) throw Error("MESSAGE_DAY_INVALID");
+  return `${Number(match[3])} ${month} ${match[1]}`;
+}
+
+/** Where a message links to: the site's own address, or the way there when it has no configured address. */
+const link = (
+  origin: string | null,
+  path: string,
+  words: string,
+  otherwise = "open Valo and choose Purchases",
+) => (origin ? `${words}: ${origin}${path}` : `${words}: ${otherwise}.`);
 
 const necessaryFooter = (why: string) =>
   `You receive this message because ${why}. It is a necessary message about your account, so it has no unsubscribe link.`;
@@ -108,6 +120,75 @@ export function refundMessage(
         : []),
       "",
       necessaryFooter("a refund was processed on your purchase"),
+    ].join("\n"),
+  };
+}
+
+/** One line of Valo's own words for a message: no line break, and no longer than a title is. */
+const oneLine = (text: string) => text.replace(/\s+/g, " ").trim().slice(0, 200);
+const listed = (lines: string[], more: number, one: string, many: string) => [
+  ...lines.map((line) => `- ${line}`),
+  ...(more > 0 ? [`- and ${more} more ${more === 1 ? one : many}`] : []),
+];
+
+/**
+ * One day's notices to a workspace (EDP-011): the changes that day that affect what the workspace saved,
+ * made or bought. It names each change's subject in Valo's own words, a rule's or a template's title, and
+ * counts the saved items a correction notice asks the workspace to review. It holds nothing the customer
+ * wrote. Each notice itself is in the app.
+ */
+export function noticesMessage(
+  notices: {
+    /** The Lagos day the notices were made on, as YYYY-MM-DD. */
+    day: string;
+    rules: { title: string; kind: "replaced" | "withdrawn" }[];
+    moreRules: number;
+    templates: { title: string }[];
+    moreTemplates: number;
+    /** How many of the workspace's saved items used a source or a version that was held or withdrawn that day. */
+    corrections: number;
+  },
+  origin: string | null,
+): ComposedMessage {
+  const date = lagosDate(notices.day);
+  const rules = listed(
+    notices.rules.map((rule) =>
+      rule.kind === "withdrawn"
+        ? `Withdrawn: ${oneLine(rule.title)}`
+        : `Replaced by a later version: ${oneLine(rule.title)}`,
+    ),
+    notices.moreRules,
+    "requirement",
+    "requirements",
+  );
+  const templates = listed(
+    notices.templates.map((template) => `Withdrawn: ${oneLine(template.title)}`),
+    notices.moreTemplates,
+    "template",
+    "templates",
+  );
+  return {
+    subject: `Changes on ${date} that affect your Valo workspace`,
+    text: [
+      `On ${date} Valo recorded changes that affect what you saved, made or bought in your workspace.`,
+      ...(rules.length ? ["", "Requirements Valo checks:", ...rules] : []),
+      ...(templates.length ? ["", "Templates:", ...templates] : []),
+      ...(notices.corrections
+        ? [
+            "",
+            "Saved items to review:",
+            `- ${notices.corrections} of your tasks, saved results, documents or purchases used a source or a version that is now held or withdrawn. What you saved and the files you made are unchanged.`,
+          ]
+        : []),
+      "",
+      link(
+        origin,
+        "/workspace",
+        "Each change, and what it affects, is on your workspace page",
+        "open Valo and choose Workspace",
+      ),
+      "",
+      necessaryFooter("these changes affect what you saved, made or bought in Valo"),
     ].join("\n"),
   };
 }

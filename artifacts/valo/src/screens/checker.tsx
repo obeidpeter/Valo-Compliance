@@ -64,6 +64,7 @@ import {
   factLabel,
 } from "@/lib/checker";
 import { lagosToday } from "@/lib/format";
+import { followedResult } from "@/lib/recheck";
 import { formatRequirementsBrief } from "@/lib/requirements-brief";
 import { cn } from "@/lib/utils";
 import { useAccountEpoch } from "@/components/account-state-boundary";
@@ -90,6 +91,8 @@ export default function Checker() {
     () => new URLSearchParams(search).get("fromAssessment")?.trim() ?? "",
     [search],
   );
+  // PRO-003: a check offered after the profile changed says which saved result it follows.
+  const follows = useMemo(() => followedResult(search), [search]);
   const autoPrefilled = useRef(false);
   const loadedFromAssessment = useRef<string | null>(null);
   const [loadedPreviousCheck, setLoadedPreviousCheck] = useState(false);
@@ -719,6 +722,7 @@ export default function Checker() {
                   profileRevision={ws.data?.profileRevision ?? 0}
                   hasProfile={!!profile}
                   stale={!!stale}
+                  follows={follows}
                 />
               ) : (
                 <Notice className="mt-6" tone="ink" title="Want to keep this?">

@@ -977,7 +977,7 @@
       "bears_on": [
         "SEC-003"
       ],
-      "control": "The API's answers and the web app's pages and files carry Referrer-Policy: same-origin, so no address is sent to another site.",
+      "control": "The API's answers and the web app's pages and files carry Referrer-Policy: same-origin, so no address is sent to another site. The page an unsubscribe link opens, whose address holds the link's token, carries no-referrer, so no request it makes names it, to Valo's own servers or anyone's.",
       "code": [
         "artifacts/api-server/src/platform/security-headers.ts#securityHeaders",
         "artifacts/valo/next.config.mjs"

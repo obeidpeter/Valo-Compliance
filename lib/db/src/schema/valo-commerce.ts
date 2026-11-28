@@ -275,6 +275,58 @@ export const valoPaymentEvents = pgTable(
     ),
   ],
 );
+/**
+ * Finance's settlement of a provider event Valo could not match or process (docs/architecture/
+ * reconciliation.md, slice 3a): one for each event and the finding it was settled with. Why is a row of the
+ * staff access audit. The database's guard, `valo_payment_event_settlements_kept`, takes a settlement only
+ * from finance with that row written in the same transaction, and never changes or removes one. A customer's
+ * request has no access to it.
+ */
+export const valoPaymentEventSettlements = pgTable(
+  "valo_payment_event_settlements",
+  {
+    id: uuid("id").primaryKey(),
+    eventId: uuid("event_id").notNull(),
+    finding: text("finding").notNull(),
+    resolvedBy: text("resolved_by").notNull(),
+    resolvedAt: timestamp("resolved_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("valo_payment_event_settlement_unique").on(t.eventId, t.finding),
+    foreignKey({
+      name: "valo_payment_event_settlement_event_fk",
+      columns: [t.eventId],
+      foreignColumns: [valoPaymentEvents.id],
+    }),
+  ],
+);
+/**
+ * Each UTC day's reading of Paystack's own list of the successful payments it took
+ * (docs/architecture/reconciliation.md, slice 3b). The worker reads a day's list once the day has ended. A
+ * payment on it whose reference is no order's is recorded as a provider event that waits for finance, and
+ * so is a list that could not be read, or not read whole. It names no workspace, and a customer's request
+ * has no access to it.
+ */
+export const valoPaymentLists = pgTable(
+  "valo_payment_lists",
+  {
+    day: text("day").primaryKey(),
+    status: text("status").notNull().default("pending"),
+    attempts: integer("attempts").notNull().default(0),
+    lastAttemptAt: timestamp("last_attempt_at", { withTimezone: true }),
+    pages: integer("pages"),
+    transactions: integer("transactions"),
+    unmatched: integer("unmatched"),
+    finding: text("finding"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    finishedAt: timestamp("finished_at", { withTimezone: true }),
+  },
+  (t) => [
+    check("valo_payment_lists_day_check", sql`${t.day} ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'`),
+    check("valo_payment_lists_status_check", sql`${t.status} IN ('pending', 'listed', 'needs_review')`),
+    check("valo_payment_lists_attempts_check", sql`${t.attempts} BETWEEN 0 AND 3`),
+  ],
+);
 export const valoEntitlements = pgTable(
   "valo_entitlements",
   {
@@ -561,7 +613,15 @@ export const valoPaymentReconciliations = pgTable(
     day: text("day").notNull(),
     status: text("status").notNull().default("pending"),
     attempts: integer("attempts").notNull().default(0),
+    // When the provider last gave no answer that could be used. A waiting row is not tried again within
+    // the hour (docs/architecture/reconciliation.md, slice 1).
+    lastAttemptAt: timestamp("last_attempt_at", { withTimezone: true }),
     finding: text("finding"),
+    // Finance's settlement of a difference the check found (docs/architecture/reconciliation.md, slice 2):
+    // what finance found, who settled it and when. Why is a row of the staff access audit.
+    outcome: text("outcome"),
+    resolvedBy: text("resolved_by"),
+    resolvedAt: timestamp("resolved_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
@@ -574,7 +634,15 @@ export const valoPaymentReconciliations = pgTable(
     check("valo_payment_reconciliations_attempts_check", sql`${t.attempts} BETWEEN 0 AND 3`),
     check(
       "valo_payment_reconciliations_status_check",
-      sql`${t.status} IN ('pending', 'matched', 'needs_review')`,
+      sql`${t.status} IN ('pending', 'matched', 'needs_review', 'resolved')`,
+    ),
+    check(
+      "valo_payment_reconciliations_outcome_check",
+      sql`${t.outcome} IS NULL OR ${t.outcome} IN ('explained', 'no_payment_stands')`,
+    ),
+    check(
+      "valo_payment_reconciliations_resolution_check",
+      sql`(${t.status} = 'resolved') = (${t.outcome} IS NOT NULL AND ${t.resolvedBy} IS NOT NULL AND ${t.resolvedAt} IS NOT NULL)`,
     ),
     workspaceRowPolicy(t.workspaceId),
   ],

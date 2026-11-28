@@ -92,7 +92,7 @@ export function guidanceDocument(section: OriginalSection) {
 }
 
 /** The day an instant falls on in Lagos (UTC+01:00, no daylight saving), as a file prints a day. */
-function lagosDay(instant: string) {
+export function lagosDay(instant: string) {
   const time = Date.parse(instant);
   if (!Number.isFinite(time)) throw Error("GUIDANCE_SOURCE_CHECK_DATE_INVALID");
   return printedCalendarDate(new Date(time + 3_600_000).toISOString().slice(0, 10));

@@ -38,6 +38,8 @@ after(() => app.close());
 const SCREENS: { path: string; title: string; ready?: string; minimumStops?: number }[] = [
   { path: "/checker", title: "Check your requirements — Valo" },
   { path: "/account-access", title: "Trouble signing in — Valo" },
+  // Where a reminder email's unsubscribe link leads. The link's token here is the test's own.
+  { path: "/unsubscribe?t=synthetic.unsubscribe.token", title: "Stop reminder emails — Valo" },
   // An address the site does not have.
   { path: "/synthetic-missing-page", title: "Page not found — Valo" },
   // The sign-in pages draw no site shell; the provider's card holds their heading and form. Their own
@@ -1364,5 +1366,117 @@ test("someone who cannot sign in is told before writing that no reply is emailed
     assert.deepEqual(unknown, []);
   } finally {
     await close();
+  }
+});
+
+// WRK-004: "Separate necessary account/purchase messages from optional reminders and marketing. Accept:
+// unsubscribe and preference changes are enforced before dispatch, not just when the job was created."
+// The page a reminder's unsubscribe link opens. What the API then does is its own tests' to show.
+test("the unsubscribe page stops nothing when it is opened, asks once when its button is pressed and says what was stopped; a link that does not work is said to in the server's words, and a link with no token offers no button", async () => {
+  const token = "synthetic.unsubscribe.token";
+  const asked: unknown[] = [];
+  const answering =
+    (reply: { status: number; body: unknown }): Api =>
+    async (route, method, path, query) => {
+      if (method === "POST" && path === "/public/unsubscribe") {
+        asked.push(route.request().postDataJSON());
+        await route.fulfill({
+          status: reply.status,
+          contentType: "application/json",
+          body: JSON.stringify(reply.body),
+        });
+      } else await answer(route, method, path, query);
+    };
+  const reminders = (page: Page) => page.getByTestId("link-unsubscribe-reminders");
+  {
+    const { page, errors, unknown, close } = await app.phone(
+      "/unsubscribe?t=" + token,
+      answering({ status: 200, body: api.UnsubscribeResponse.parse({ consent: "reminders", state: "off" }) }),
+    );
+    try {
+      await ready(page);
+      await expect(page.locator("main h1")).toHaveText("Stop reminder emails");
+      await expect(page.locator("main")).toContainText(
+        "Press the button to stop Valo's reminder emails for the workspace this link came from. Nothing changes until you do.",
+      );
+      await expect(page.getByTestId("text-unsubscribe-effect")).toHaveText(
+        "Reminders that are waiting will be cancelled. Your tasks and their due dates stay as they are, and you do not need to sign in.",
+      );
+      await expect(reminders(page)).toHaveAttribute("href", "/workspace/reminders");
+      // Opening the page asked the API nothing: a mail program that follows the link stops no reminder.
+      assert.deepEqual(asked, []);
+      await page.getByTestId("button-unsubscribe").click();
+      const done = page.getByTestId("unsubscribe-done");
+      await expect(done).toContainText("Reminder emails are off");
+      await expect(done).toContainText(
+        "Valo will send no more reminder emails for the workspace this link came from. Any reminder that was waiting has been cancelled. Your tasks and their due dates are as they were.",
+      );
+      await expect(done).toContainText(
+        "You can turn reminder emails off or on in Valo: sign in and open Reminders.",
+      );
+      // Asked once, with the token as the link gave it and nothing else.
+      assert.deepEqual(asked, [{ token }]);
+      await expect(page.getByTestId("button-unsubscribe")).toHaveCount(0);
+      assert.doesNotMatch(
+        (await page.locator("main").innerText()).replace(/\s+/g, " "),
+        /unsubscrib|token|consent|opt.?out/i,
+      );
+      assert.deepEqual((await wcagFailures(page)).failures, []);
+      assert.deepEqual(await phoneProblems(page, "reminder emails stopped"), []);
+      assert.deepEqual(errors, []);
+      assert.deepEqual(unknown, []);
+    } finally {
+      await close();
+    }
+  }
+  // A link Valo does not honour: the page says so in the server's words, and nothing is called stopped.
+  asked.length = 0;
+  const refused =
+    "This link does not work. It may be incomplete, or older than Valo still accepts. Nothing was changed.";
+  {
+    const { page, unknown, close } = await app.phone(
+      "/unsubscribe?t=" + token,
+      answering({ status: 400, body: { error: refused } }),
+    );
+    try {
+      await ready(page);
+      await page.getByTestId("button-unsubscribe").click();
+      await expect(page.getByTestId("text-unsubscribe-error")).toHaveText(refused);
+      await expect(page.getByTestId("unsubscribe-done")).toHaveCount(0);
+      // The way to do it in Valo is still offered, and the button is still there.
+      await expect(reminders(page)).toHaveAttribute("href", "/workspace/reminders");
+      await expect(page.getByTestId("button-unsubscribe")).toBeEnabled();
+      assert.deepEqual(asked, [{ token }]);
+      assert.deepEqual((await wcagFailures(page)).failures, []);
+      assert.deepEqual(await phoneProblems(page, "a link that does not work"), []);
+      assert.deepEqual(unknown, []);
+    } finally {
+      await close();
+    }
+  }
+  // No token in the address: nothing to press, and nothing asked.
+  asked.length = 0;
+  {
+    const { page, errors, unknown, close } = await app.phone(
+      "/unsubscribe",
+      answering({ status: 500, body: { error: "Synthetic test fixture: never asked." } }),
+    );
+    try {
+      await ready(page);
+      await expect(page.locator("main")).toContainText(
+        "This link is incomplete, so there is nothing here to stop.",
+      );
+      await expect(page.getByTestId("text-unsubscribe-incomplete")).toContainText(
+        "Open the link from the reminder email again, in full.",
+      );
+      await expect(page.getByTestId("button-unsubscribe")).toHaveCount(0);
+      await expect(reminders(page)).toHaveAttribute("href", "/workspace/reminders");
+      assert.deepEqual(asked, []);
+      assert.deepEqual((await wcagFailures(page)).failures, []);
+      assert.deepEqual(errors, []);
+      assert.deepEqual(unknown, []);
+    } finally {
+      await close();
+    }
   }
 });

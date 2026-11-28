@@ -190,6 +190,10 @@ try {
     ["/api/workspace", "GET"],
     ["/api/admin/staff-roles", "GET"],
     ["/api/webhooks/paystack", "POST"],
+    ["/api/webhooks/email", "POST"],
+    ["/api/public/unsubscribe", "POST"],
+    ["/api/public/unsubscribe/one-click?t=synthetic", "POST"],
+    ["/api/public/unsubscribe/one-click?t=synthetic", "GET"],
     ["/api/public/catalogue", "GET"],
     ["/", "GET"],
   ] as const) {

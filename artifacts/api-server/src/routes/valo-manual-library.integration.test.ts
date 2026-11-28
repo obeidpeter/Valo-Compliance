@@ -19,6 +19,7 @@ import { exerciseOwnerBundleRoutes } from "../test-support/owner-bundle-routes";
 import { exerciseBundlePurchase } from "../test-support/bundle-purchase";
 import { exerciseOwnerSettingRoutes } from "../test-support/owner-setting-routes";
 import { exerciseOrderAccessRule } from "../test-support/order-access-rule";
+import { exerciseSecondLook } from "../test-support/order-second-look";
 import { createOwnerPriceRouter } from "./valo-owner-prices";
 import { createOwnerBundleRouter } from "./valo-owner-bundles";
 import { createOwnerSettingRouter } from "./valo-owner-settings";
@@ -808,6 +809,10 @@ test(
     await t.test(
       "each order records whether its purchase carries to the template's later editions, as the owner's rule was when it was made, and keeps it",
       () => exerciseOrderAccessRule(call, editor),
+    );
+    await t.test(
+      "before another order or payment for an edition, the provider is asked again about an earlier order that ended abandoned or failed, and one paid since is settled with nothing more made or started",
+      () => exerciseSecondLook(call, editor),
     );
     await t.test(
       "only the recently verified development owner reaches the checker rule sign-off routes, and only from Valo's own pages",

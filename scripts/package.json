@@ -7,6 +7,7 @@
     "hello": "tsx ./src/hello.ts",
     "test:valo": "tsx --test ./src/valo/*.test.ts",
     "valo:readiness": "tsx ./src/valo/readiness.ts",
+    "valo:acceptance-pack": "tsx ./src/valo/acceptance-pack.ts",
     "valo:status": "tsx ./src/valo/status.ts",
     "valo:architecture": "tsx ./src/valo/architecture-check.ts",
     "valo:database-tests": "tsx ./src/valo/database-tests.ts",

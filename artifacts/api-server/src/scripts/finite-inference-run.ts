@@ -1,10 +1,16 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { resolve } from "node:path";
-import { isPracticalGuideId, publicationSchema } from "@workspace/valo-core";
+import {
+  isPracticalGuideId,
+  isPreparedRuleId,
+  preparedRuleIds,
+  publicationSchema,
+} from "@workspace/valo-core";
 import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
 import {
   mappedGuideIds,
+  mappedLawTemplateIds,
   operationalInferenceTemplateIds,
   readPreparedCandidate,
   supportsOperationalInferenceTemplate,
@@ -37,6 +43,8 @@ const finiteRunCommands = [
   "--prepare-template-candidate",
   "--prepare-practical-guide-candidate",
   "--prepare-guide-candidate",
+  "--prepare-law-template-candidate",
+  "--prepare-rule-candidate",
   "--verify-prepared",
   "--admit",
   "--execute",
@@ -70,7 +78,14 @@ async function main() {
     { readOperationalInferenceReadiness },
     { assertFiniteWorkBindings },
     { withApprovedInferencePair, provideFiniteWorkBindings, InferenceBudgetStore },
-    { saveOperationalReviewPlan, executeOperationalReviewPlan, assertReviewerCanLogIn },
+    {
+      saveOperationalReviewPlan,
+      executeOperationalReviewPlan,
+      assertReviewerCanLogIn,
+      readReviewedRuleReadiness,
+      saveRuleReviewPlan,
+      executeRuleReviewPlan,
+    },
     { getPublicationArtifact, putPublicationArtifact },
     { publicationWorkspaceRoot },
   ] = await Promise.all([
@@ -116,7 +131,13 @@ async function main() {
     if (mode === "--prepare-customer") {
       if (!batchId) throw Error("FINITE_RUN_ARGUMENTS_INVALID");
       const options = parseFinitePreparationOptions(extra);
-      if (options.candidates.length || options.guidePairs || options.practicalPairs)
+      if (
+        options.candidates.length ||
+        options.guidePairs ||
+        options.practicalPairs ||
+        options.rulePairs ||
+        options.lawTemplatePairs
+      )
         throw Error("FINITE_RUN_ARGUMENTS_INVALID");
       const { prepareCustomerFiniteManifest } = await import("../modules/ai-lanes");
       const existing = options.packageId
@@ -170,7 +191,14 @@ async function main() {
       // package: the case is named by its corpus id, as in --prepare-editorial-case EVAL-EDP-C019.
       if (!batchId || !/^EVAL-EDP-C\d{3}$/.test(batchId)) throw Error("FINITE_RUN_ARGUMENTS_INVALID");
       const options = parseFinitePreparationOptions(extra);
-      if (options.candidates.length || options.retry || options.guidePairs || options.practicalPairs)
+      if (
+        options.candidates.length ||
+        options.retry ||
+        options.guidePairs ||
+        options.practicalPairs ||
+        options.rulePairs ||
+        options.lawTemplatePairs
+      )
         throw Error("FINITE_RUN_ARGUMENTS_INVALID");
       const { prepareEditorialCaseManifest, isControlledFailureEditorialCase } =
         await import("../modules/editorial");
@@ -231,7 +259,14 @@ async function main() {
       // package: the rule is named by its id, as in --prepare-checker-challenge cac-business-name-814.
       if (!batchId || !/^[a-z0-9][a-z0-9-]{2,79}$/.test(batchId)) throw Error("FINITE_RUN_ARGUMENTS_INVALID");
       const options = parseFinitePreparationOptions(extra);
-      if (options.candidates.length || options.retry || options.guidePairs || options.practicalPairs)
+      if (
+        options.candidates.length ||
+        options.retry ||
+        options.guidePairs ||
+        options.practicalPairs ||
+        options.rulePairs ||
+        options.lawTemplatePairs
+      )
         throw Error("FINITE_RUN_ARGUMENTS_INVALID");
       const { prepareCheckerChallengeManifest } = await import("../modules/rules");
       const existing = options.packageId
@@ -314,6 +349,44 @@ async function main() {
         throw Error("FINITE_RUN_ARGUMENTS_INVALID");
       const { prepareGuideCandidateRelease } = await import("../modules/editorial");
       const prepared = await prepareGuideCandidateRelease(batchId, extra[0]);
+      console.log(
+        JSON.stringify({
+          ...prepared,
+          providerCalls: 0,
+          approvalRowsWritten: 0,
+          publicationAccepted: false,
+        }),
+      );
+      return;
+    }
+    if (mode === "--prepare-law-template-candidate") {
+      // A template that states the law, with a claim map, and the path of a provider-terms snapshot
+      // taken within a day (docs/architecture/reviewed-route.md, part 4). It is bound to the captures
+      // the daily source check holds, and kept as a candidate only when the gate names nothing but its
+      // two reviews; otherwise the reasons are printed. While the owner has approved no text of the
+      // policy for such templates, the reasons always name it.
+      if (!batchId || !mappedLawTemplateIds.includes(batchId) || extra.length !== 1 || !extra[0])
+        throw Error("FINITE_RUN_ARGUMENTS_INVALID");
+      const { prepareLawTemplateCandidateRelease } = await import("../modules/editorial");
+      const prepared = await prepareLawTemplateCandidateRelease(batchId, extra[0]);
+      console.log(
+        JSON.stringify({
+          ...prepared,
+          providerCalls: 0,
+          approvalRowsWritten: 0,
+          publicationAccepted: false,
+        }),
+      );
+      return;
+    }
+    if (mode === "--prepare-rule-candidate") {
+      // A rule prepared in the repository, by its id, built for the reviewed route from the captures
+      // the daily source check holds. It is kept as a candidate only when nothing but its two reviews
+      // holds it; otherwise the reasons are printed (docs/architecture/reviewed-route.md, part 3).
+      if (!batchId || !/^[a-z0-9-]{1,80}$/.test(batchId) || extra.length)
+        throw Error("FINITE_RUN_ARGUMENTS_INVALID");
+      const { prepareReviewedRuleCandidate } = await import("../modules/editorial");
+      const prepared = await prepareReviewedRuleCandidate(batchId);
       console.log(
         JSON.stringify({
           ...prepared,
@@ -415,10 +488,13 @@ async function main() {
         } else {
           if (!first.bindings.candidateVersionId || !first.bindings.candidateArtifact)
             throw Error("PREPARED_CANDIDATE_REQUIRED");
-          await readOperationalInferenceReadiness({
+          const binding = {
             candidateVersionId: first.bindings.candidateVersionId,
             candidateArtifact: first.bindings.candidateArtifact,
-          });
+          };
+          await (isPreparedRuleId(binding.candidateArtifact.templateId)
+            ? readReviewedRuleReadiness(binding)
+            : readOperationalInferenceReadiness(binding));
         }
       }
       const live = await new InferenceBudgetStore(pool, "public", "additional-new").inspect();
@@ -487,9 +563,17 @@ async function main() {
           preparationOptions!.retry ||
           preparationOptions!.packageId ||
           // --guide-pairs chooses the kind of a new package; an approved package has its kind already.
-          ((preparationOptions!.guidePairs || preparationOptions!.practicalPairs) && batchId !== "new") ||
+          ((preparationOptions!.guidePairs ||
+            preparationOptions!.practicalPairs ||
+            preparationOptions!.rulePairs ||
+            preparationOptions!.lawTemplatePairs) &&
+            batchId !== "new") ||
           !preparationOptions!.candidates.length)) ||
-      (selection && (preparationOptions!.guidePairs || preparationOptions!.practicalPairs)) ||
+      (selection &&
+        (preparationOptions!.guidePairs ||
+          preparationOptions!.practicalPairs ||
+          preparationOptions!.rulePairs ||
+          preparationOptions!.lawTemplatePairs)) ||
       (mode === "--execute" && (!batchId || !/^[-a-zA-Z0-9_:]{1,160}$/.test(batchId)))
     )
       throw Error("FINITE_RUN_ARGUMENTS_INVALID");
@@ -502,22 +586,33 @@ async function main() {
             new Date(),
             preparationOptions!.guidePairs
               ? finitePackagePreparers.guidePairs
-              : preparationOptions!.reminderInventoryPairs
-                ? finitePackagePreparers.reminderInventoryPairs
-                : preparationOptions!.practicalPairs
-                  ? finitePackagePreparers.practicalPairs
-                  : finitePackagePreparers.templatePairs,
+              : preparationOptions!.rulePairs
+                ? finitePackagePreparers.rulePairs
+                : preparationOptions!.lawTemplatePairs
+                  ? finitePackagePreparers.lawTemplatePairs
+                  : preparationOptions!.reminderInventoryPairs
+                    ? finitePackagePreparers.reminderInventoryPairs
+                    : preparationOptions!.practicalPairs
+                      ? finitePackagePreparers.practicalPairs
+                      : finitePackagePreparers.templatePairs,
           )),
         packageId = allocationPackageId(allocationPackage);
-      // A package admits one kind of work: the templates' review pairs, or the guides'.
+      // A package admits one kind of work: the templates' review pairs, the guides', the rules' or those
+      // of templates that state the law.
       const guidePackage =
         requestDigest(allocationPackage.supportedPreparers) ===
         requestDigest(finitePackagePreparers.guidePairs);
+      const rulePackage =
+        requestDigest(allocationPackage.supportedPreparers) ===
+        requestDigest(finitePackagePreparers.rulePairs);
+      const lawTemplatePackage =
+        requestDigest(allocationPackage.supportedPreparers) ===
+        requestDigest(finitePackagePreparers.lawTemplatePairs);
       const practicalReviewLimits = practicalReviewLimitsFor(allocationPackage.supportedPreparers);
       const practicalPackage = !!practicalReviewLimits;
       if (
         allocationPackage.supportedPreparers[0] === finitePackagePreparers.editorialCases[0] ||
-        (selection && (guidePackage || practicalPackage)) ||
+        (selection && (guidePackage || practicalPackage || rulePackage || lawTemplatePackage)) ||
         (practicalReviewLimits &&
           preparationOptions!.candidates.length > practicalReviewLimits.articleIds.length)
       )
@@ -535,9 +630,22 @@ async function main() {
           templateId = saved.templateId;
           const guide = mappedGuideIds.includes(saved.templateId);
           const practical = isPracticalGuideId(saved.templateId);
-          if (!guide && !practical && !supportsOperationalInferenceTemplate(saved.templateId))
+          const rule = isPreparedRuleId(saved.templateId);
+          const lawTemplate = mappedLawTemplateIds.includes(saved.templateId);
+          if (
+            !guide &&
+            !practical &&
+            !rule &&
+            !lawTemplate &&
+            !supportsOperationalInferenceTemplate(saved.templateId)
+          )
             throw Error("CANDIDATE_REQUEST_PREPARER_UNAVAILABLE");
-          if (guide !== guidePackage || practical !== practicalPackage)
+          if (
+            guide !== guidePackage ||
+            practical !== practicalPackage ||
+            rule !== rulePackage ||
+            lawTemplate !== lawTemplatePackage
+          )
             throw Error("CANDIDATE_OUTSIDE_PACKAGE_KIND");
           console.error(
             JSON.stringify({
@@ -553,30 +661,55 @@ async function main() {
             practicalArticles.add(saved.templateId);
           }
           const candidateArtifact = { ...ref, templateId: saved.templateId };
-          const current = await readOperationalInferenceReadiness({
-            candidateVersionId: saved.versionId,
-            candidateArtifact,
-          });
-          const plan = await saveOperationalReviewPlan(
-            current.candidate,
-            current.rightsInput,
-            current.provenanceInput,
-            current.exportReport,
-            current.serverEvidence,
-            undefined,
-            current.bundle.sources,
-          );
-          const manifest = prepareOperationalFiniteManifest({
-            candidateVersionId: saved.versionId,
-            candidateArtifact,
-            candidateHash: current.row.candidateHash,
-            bundleHash: requestDigest(current.bundle),
-            sourceHashes: current.bundle.sources.map((s) => s.hash),
-            sourceFiles: [
-              { path: current.provenanceInput.sourcePath, sha256: current.serverEvidence.sourceHash },
-            ],
-            plan,
-          });
+          const binding = { candidateVersionId: saved.versionId, candidateArtifact };
+          // A rule is built again from its own sources and records, and its review pair planned from that
+          // (docs/architecture/reviewed-route.md, part 3). Its sources are bound by their hashes and the
+          // rule by its provenance record, so no repository file is named for it.
+          const { plan, manifest } = rule
+            ? await readReviewedRuleReadiness(binding).then(async (current) => {
+                const plan = await saveRuleReviewPlan(
+                  current.candidate,
+                  current.reviewInputs,
+                  current.serverEvidence,
+                  undefined,
+                  current.bundle.sources,
+                );
+                return {
+                  plan,
+                  manifest: prepareOperationalFiniteManifest({
+                    ...binding,
+                    candidateHash: current.row.candidateHash,
+                    bundleHash: requestDigest(current.bundle),
+                    sourceHashes: current.bundle.sources.map((s) => s.hash),
+                    sourceFiles: [],
+                    plan,
+                  }),
+                };
+              })
+            : await readOperationalInferenceReadiness(binding).then(async (current) => {
+                const plan = await saveOperationalReviewPlan(
+                  current.candidate,
+                  current.rightsInput,
+                  current.provenanceInput,
+                  current.exportReport,
+                  current.serverEvidence,
+                  undefined,
+                  current.bundle.sources,
+                );
+                return {
+                  plan,
+                  manifest: prepareOperationalFiniteManifest({
+                    ...binding,
+                    candidateHash: current.row.candidateHash,
+                    bundleHash: requestDigest(current.bundle),
+                    sourceHashes: current.bundle.sources.map((s) => s.hash),
+                    sourceFiles: [
+                      { path: current.provenanceInput.sourcePath, sha256: current.serverEvidence.sourceHash },
+                    ],
+                    plan,
+                  }),
+                };
+              });
           manifest.packageId = packageId;
           for (const work of manifest.works) await assertFiniteWorkBindings(work);
           prepared.push(
@@ -654,9 +787,13 @@ async function main() {
             ? `one factual and challenge pair each for ${practicalReviewLimits.articleIds.join(" and ")}`
             : guidePackage
               ? "one exact review pair per verified prepared guide"
-              : "one exact operational review pair per verified prepared candidate",
-        supportedTemplateIds: guidePackage || practicalPackage ? [] : operationalInferenceTemplateIds,
+              : rulePackage
+                ? "one exact review pair per verified prepared rule"
+                : "one exact operational review pair per verified prepared candidate",
+        supportedTemplateIds:
+          guidePackage || practicalPackage || rulePackage ? [] : operationalInferenceTemplateIds,
         supportedGuideIds: practicalReviewLimits?.articleIds ?? (guidePackage ? mappedGuideIds : []),
+        ...(rulePackage ? { supportedRuleIds: [...preparedRuleIds] } : {}),
         ...(practicalPackage ? { practicalReviewLimits } : {}),
         candidatesInspected: preparationOptions!.candidates.length,
         proposals: prepared,
@@ -823,6 +960,62 @@ async function main() {
       requestDigest(first.bindings.operationalPlan) !== requestDigest(second.bindings.operationalPlan)
     )
       throw Error("RUNNER_PAIR_BINDING_INVALID");
+    if (isPreparedRuleId(first.bindings.candidateArtifact.templateId)) {
+      // A rule's review pair (docs/architecture/reviewed-route.md, part 3): the rule is built again from
+      // its own sources and records, and the pair's manifest rebuilt from that at its original moment.
+      const current = await readReviewedRuleReadiness({
+        candidateVersionId: first.bindings.candidateVersionId,
+        candidateArtifact: first.bindings.candidateArtifact,
+      });
+      const artifact = first.bindings.operationalPlan;
+      const retained = JSON.parse((await getPublicationArtifact(artifact)).toString());
+      const plan = { manifest: retained.manifest, entries: retained.entries, artifact } as Awaited<
+        ReturnType<typeof saveRuleReviewPlan>
+      >;
+      const expected = prepareOperationalFiniteManifest(
+        {
+          candidateVersionId: current.row.versionId,
+          candidateArtifact: first.bindings.candidateArtifact,
+          candidateHash: current.row.candidateHash,
+          bundleHash: requestDigest(current.bundle),
+          sourceHashes: current.bundle.sources.map((s) => s.hash),
+          sourceFiles: [],
+          plan,
+        },
+        new Date(manifest.preparedAt),
+      );
+      expected.packageId = manifest.packageId;
+      if (requestDigest(expected) !== row.manifest_hash) throw Error("RUNNER_MANIFEST_CHANGED");
+      for (const work of manifest.works) await assertFiniteWorkBindings(work);
+      // Recorded on review's own connection, as a template's or a guide's are.
+      await assertReviewerCanLogIn();
+      const reviews = await withApprovedInferencePair(batchId!, first.pair, () =>
+        executeRuleReviewPlan(plan, current.candidate, current.serverEvidence),
+      );
+      const report = {
+        kind: "rule-review-run-v1",
+        completedAt: new Date().toISOString(),
+        batchId,
+        manifestHash: row.manifest_hash,
+        ruleId: current.prepared.rule.id,
+        version: current.row.version,
+        reviews: reviews.map((r) => ({
+          role: r.record.role,
+          artifact: r.artifact,
+          providerResponseId: r.record.providerResponseId,
+        })),
+        expectedIndependentReviews: 2,
+        complete: reviews.length === 2,
+        // A review is an AI check, never legal, tax or regulatory review. The rule is released only by
+        // the reviewed route's release command (part 3, slice 3b), which checks these reviews against
+        // this batch and the gate.
+        publicationAccepted: false,
+        candidateVersionId: current.row.versionId,
+      };
+      const resultArtifact = await putPublicationArtifact(Buffer.from(JSON.stringify(report)), "json");
+      console.log(JSON.stringify({ ...report, resultArtifact }));
+      return;
+    }
     const current = await readOperationalInferenceReadiness({
       candidateVersionId: first.bindings.candidateVersionId,
       candidateArtifact: first.bindings.candidateArtifact,

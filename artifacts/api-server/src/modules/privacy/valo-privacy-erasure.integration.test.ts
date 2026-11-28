@@ -30,6 +30,8 @@ import {
   valoEditionNotices,
   valoConsentChanges,
   valoMessages,
+  valoMessageDeliveries,
+  valoNoticeDigests,
 } from "@workspace/db";
 import { eq, inArray, sql } from "drizzle-orm";
 import { guardRefusal } from "../../platform/http-errors";
@@ -128,6 +130,21 @@ test(
           class: "necessary",
           recipientIdentityId: workspace.identityId,
           subjectId: randomUUID(),
+        });
+        // What an email service reported about one of each workspace's messages (slice 2a).
+        await db.insert(valoMessageDeliveries).values({
+          id: randomUUID(),
+          workspaceId: workspace.workspaceId,
+          source: "message",
+          recordId: randomUUID(),
+          delivery: "delivered",
+          reportedAt: new Date(),
+        });
+        // A day whose notices owed each workspace a message (slice 5): a day that has ended.
+        await db.insert(valoNoticeDigests).values({
+          id: randomUUID(),
+          workspaceId: workspace.workspaceId,
+          day: new Date(Date.now() - 3 * 86400000).toISOString().slice(0, 10),
         });
       }
       await db.insert(valoSavedTemplates).values(
@@ -475,12 +492,21 @@ test(
             valoEditionNotices,
             valoConsentChanges,
             valoMessages,
+            valoMessageDeliveries,
+            valoNoticeDigests,
           ])
             assert.equal(
               (await db.select().from(table).where(eq(table.workspaceId, a.workspaceId))).length,
               0,
             );
-          for (const table of [valoRuleNotices, valoEditionNotices, valoConsentChanges, valoMessages])
+          for (const table of [
+            valoRuleNotices,
+            valoEditionNotices,
+            valoConsentChanges,
+            valoMessages,
+            valoMessageDeliveries,
+            valoNoticeDigests,
+          ])
             assert.equal(
               (await db.select().from(table).where(eq(table.workspaceId, b.workspaceId))).length,
               1,
@@ -830,6 +856,8 @@ test(
         valoEditionNotices,
         valoConsentChanges,
         valoMessages,
+        valoMessageDeliveries,
+        valoNoticeDigests,
         valoMemberships,
       ])
         await db.delete(table).where(inArray(table.workspaceId, ids));

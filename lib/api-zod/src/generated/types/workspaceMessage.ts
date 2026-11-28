@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { MessageDelivery } from './messageDelivery';
 import type { WorkspaceMessageKind } from './workspaceMessageKind';
 import type { WorkspaceMessageStatus } from './workspaceMessageStatus';
 
@@ -17,6 +18,8 @@ export interface WorkspaceMessage {
   orderReference: string | null;
   /** @nullable */
   refundReference: string | null;
+  /** @nullable */
+  noticesDay: string | null;
   forYou: boolean;
   status: WorkspaceMessageStatus;
   /** @nullable */
@@ -30,4 +33,7 @@ export interface WorkspaceMessage {
   nextAttemptAt: string | null;
   /** @nullable */
   acceptedAt: string | null;
+  delivery: MessageDelivery | null;
+  /** @nullable */
+  deliveryAt: string | null;
 }

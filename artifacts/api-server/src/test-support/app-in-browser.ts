@@ -182,18 +182,24 @@ export async function startApp(account: keyof typeof identities) {
     const page = await context.newPage();
     const unknown: string[] = [],
       errors: string[] = [];
+    // Set when the test closes the page. A request still on its way then is no longer the page's.
+    let closed = false;
     page.on("pageerror", (error) => errors.push(error.message));
     await page.route(`${origin}/api/**`, (route) => {
       const request = route.request(),
         url = new URL(request.url()),
         apiPath = url.pathname.replace(/^\/api/, "");
-      return api(route, request.method(), apiPath, url.searchParams).catch((error: unknown) => {
+      return api(route, request.method(), apiPath, url.searchParams).catch(async (error: unknown) => {
+        // A page the test has closed waits for no answer, and the browser may already have let go of
+        // one that was on its way. That is not a request the test left without an answer.
+        if (closed || page.isClosed()) return;
         unknown.push(`${request.method()} ${apiPath}: ${String(error)}`);
-        return route.fulfill({
-          status: 404,
-          contentType: "application/json",
-          body: '{"error":"No test answer"}',
-        });
+        await route
+          .fulfill({ status: 404, contentType: "application/json", body: '{"error":"No test answer"}' })
+          .catch(() => {
+            // The answer had begun before it failed, so the request cannot be answered again. Its
+            // failure is in `unknown`, which the test reads.
+          });
       });
     });
     await page.route(
@@ -201,11 +207,21 @@ export async function startApp(account: keyof typeof identities) {
       (route) => route.abort(),
     );
     await page.goto(origin + path, { waitUntil: "load" });
-    return { page, unknown, errors, close: () => context.close() };
+    return {
+      page,
+      unknown,
+      errors,
+      close: () => {
+        closed = true;
+        return context.close();
+      },
+    };
   }
 
   return {
     origin,
+    /** A page on the screen `options` describes, such as a phone or a desktop that is recorded. */
+    open,
     /** A phone-sized page (Moto G4). */
     phone: (path: string, api: Api) => open(path, api, { ...devices["Moto G4"] }),
     /** A page as wide as a desktop screen, where the app lays itself out in full. */

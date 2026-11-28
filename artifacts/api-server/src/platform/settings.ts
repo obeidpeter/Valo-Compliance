@@ -214,6 +214,12 @@ export const SETTINGS = {
     description: "Refund requests by one account a day (1-10000, default 50).",
     example: "50",
   },
+  VALO_LIMIT_UNSUBSCRIBE_LINK: {
+    group: "Request limits",
+    description:
+      "Uses of one workspace's unsubscribe links a minute, by whoever holds one (1-10000, default 10).",
+    example: "10",
+  },
 
   DATABASE_URL: { group: "Database", description: "PostgreSQL connection string.", secret: true },
 
@@ -285,6 +291,12 @@ export const SETTINGS = {
   VALO_EMAIL_TEST_RECIPIENT: {
     group: "Email",
     description: "The only recipient test email may reach; must match the user's verified address.",
+  },
+  VALO_EMAIL_WEBHOOK_SECRET: {
+    group: "Email",
+    description:
+      "The email service's signing secret for its delivery reports (`whsec_…`; several separated by commas while one is replaced). Unset, POST /api/webhooks/email answers that it is not set up. Development only.",
+    secret: true,
   },
   VALO_MESSAGE_SENDER: {
     group: "Email",

@@ -1,7 +1,8 @@
 import { and, desc, eq, inArray } from "drizzle-orm";
-import { db, valoMessages, valoOrders, valoRefundRequests } from "@workspace/db";
+import { db, valoMessages, valoNoticeDigests, valoOrders, valoRefundRequests } from "@workspace/db";
 import { authorizeWorkspaceRead, type WorkspaceActor } from "../workspaces";
 import { STAND_IN_SENDER } from "./message-sender";
+import { deliveriesOf } from "./valo-email-events";
 import { messagesReady } from "./valo-messages";
 
 /** How many of a workspace's latest messages its log lists. */
@@ -19,9 +20,11 @@ export function logStatus(row: { status: string; sender: string | null }) {
 /**
  * The workspace's delivery log (docs/architecture/messages.md, part 1): each message Valo owes the
  * workspace and what became of it, newest first, for any member who may read the workspace. It names the
- * order each message is about, and the refund for a refund notice. It says whether the message is for the
- * member asking, and never who else it is for. It gives no message text, no address, and nothing of the
- * sender's but whether one took the message.
+ * order each message is about, the refund for a refund notice, and the day for a day's notices. It says
+ * whether the message is for the member asking, and never who else it is for. It gives no message text,
+ * no address, and nothing of the sender's but whether one took the message and what the email service has
+ * reported about it since. A delivery is that service's report alone, and only a message a sender that
+ * sends took can have one.
  *
  * A database the messages migration has not reached has none to list.
  */
@@ -65,6 +68,25 @@ export async function listWorkspaceMessages(actor: WorkspaceActor) {
           .where(and(eq(valoOrders.workspaceId, actor.workspaceId), inArray(valoOrders.id, orderIds)))
       : [];
     const orderReference = new Map(orders.map((order) => [order.id, order.reference]));
+    const digestIds = rows.filter((row) => row.kind === "notices_digest").map((row) => row.subjectId);
+    const digests = digestIds.length
+      ? await tx
+          .select({ id: valoNoticeDigests.id, day: valoNoticeDigests.day })
+          .from(valoNoticeDigests)
+          .where(
+            and(
+              eq(valoNoticeDigests.workspaceId, actor.workspaceId),
+              inArray(valoNoticeDigests.id, digestIds),
+            ),
+          )
+      : [];
+    const dayOf = new Map(digests.map((digest) => [digest.id, digest.day]));
+    const reports = await deliveriesOf(
+      tx,
+      actor.workspaceId,
+      "message",
+      rows.filter((row) => row.status === "accepted" && row.sender !== STAND_IN_SENDER).map((row) => row.id),
+    );
     return rows.map((row) => {
       const refund = row.kind === "refund_processed" ? refundOf.get(row.subjectId) : undefined;
       const orderId = row.kind === "purchase_receipt" ? row.subjectId : (refund?.orderId ?? null);
@@ -76,6 +98,8 @@ export async function listWorkspaceMessages(actor: WorkspaceActor) {
         orderId: known ? orderId : null,
         orderReference: known ? orderReference.get(orderId)! : null,
         refundReference: refund?.reference ?? null,
+        // The Lagos day a notices message is about; none for any other kind.
+        noticesDay: row.kind === "notices_digest" ? (dayOf.get(row.subjectId) ?? null) : null,
         forYou: row.recipientIdentityId === actor.identityId,
         status: logStatus(row),
         reason: row.reason,
@@ -84,6 +108,8 @@ export async function listWorkspaceMessages(actor: WorkspaceActor) {
         lastAttemptAt: row.lastAttemptAt?.toISOString() ?? null,
         nextAttemptAt: row.nextAttemptAt?.toISOString() ?? null,
         acceptedAt: row.acceptedAt?.toISOString() ?? null,
+        delivery: reports.get(row.id)?.delivery ?? null,
+        deliveryAt: reports.get(row.id)?.deliveryAt ?? null,
       };
     });
   });

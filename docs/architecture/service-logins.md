@@ -18,10 +18,11 @@ permission; automation cannot grant roles, change policy or suppress its own aud
     The database publishes a content version only in a session that logged in as it, and its
     connection string goes only to the command that publishes (decision 0017, point 6).
 - **Drafting runs on the application's login.**
-  - Three code paths add content: the template preparer (`modules/editorial/operational-preparation.ts`)
-    and the guide preparer (`guidance-preparation.ts`) add a prepared candidate or a candidate version,
-    and the reviewed route's command (`ai-lanes/inference-reviewed-publication.ts`) adds a version with
-    its two reviews.
+  - Five code paths add content: the template preparer (`modules/editorial/operational-preparation.ts`),
+    the guide preparer (`guidance-preparation.ts`), and the preparers for the reviewed route of a rule
+    (`reviewed-rule-preparation.ts`) and of a template that states the law
+    (`law-template-preparation.ts`) add a prepared candidate or a candidate version, and the reviewed
+    route's command (`ai-lanes/inference-reviewed-publication.ts`) adds a version with its two reviews.
   - Each switches to the drafter role (`SET LOCAL ROLE valo_content_drafter_dev`) for that one insert.
   - The operator commands that prepare run them, and so does the worker's preparation job. The API
     only asks for a preparation (`valo_source_review_preparations`); the worker carries it out.

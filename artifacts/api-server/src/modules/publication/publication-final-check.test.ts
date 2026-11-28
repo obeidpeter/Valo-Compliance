@@ -7,6 +7,7 @@ import { GUIDANCE_POLICY_PATH, guidancePolicy } from "./guidance-policy";
 import { operationalPolicy, publicationWorkspaceRoot } from "./operational-policy";
 import { practicalGuidePreparationPolicy, practicalGuideReleasePolicy } from "./practical-guide";
 import { finalOperationalPublicationCheck } from "./publication-final-check";
+import { releasePolicyKind, templateLawPolicy } from "./template-law-policy";
 import { heldSourceBundle } from "../sources/valo-source-controls.fixtures";
 
 test("the reminder and inventory release decision covers only their first reviewed versions and can be withdrawn", async () => {
@@ -183,4 +184,29 @@ test("final check holds a guide to the guidance policy, which the owner's restri
     process.chdir(original);
     await rm(folder, { recursive: true, force: true });
   }
+});
+// A template that states the law answers to its own policy, never the templates' (docs/architecture/
+// reviewed-route.md, part 4). The fixture is the form above, said to be prepared from the law.
+test("final check holds a template that states the law to its own policy, not the templates'", async () => {
+  const form = heldSourceBundle(new Date(), false);
+  const lawTemplate = { ...form, candidate: { ...form.candidate, evidenceMode: "regulatory" as const } };
+  assert.equal(releasePolicyKind(lawTemplate.candidate), "template_law");
+  const templates = await operationalPolicy(),
+    own = await templateLawPolicy();
+  assert.notEqual(own.policy.hash, templates.policy.hash);
+  // The templates' policy is not its policy: its hash is refused as a changed policy.
+  await assert.rejects(
+    finalOperationalPublicationCheck(
+      lawTemplate,
+      templates.policy.hash,
+      new Date("2099-01-01"),
+      "2099-01-01T00:00:00Z",
+    ),
+    /POLICY_CHANGED_DURING_VALIDATION/,
+  );
+  // Under its own policy the time guard applies as it does to a form.
+  await assert.rejects(
+    finalOperationalPublicationCheck(lawTemplate, own.policy.hash, new Date(0), "2099-01-01T00:00:00Z"),
+    /STALE_RELEASE/,
+  );
 });

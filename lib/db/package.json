@@ -12,7 +12,8 @@
     "push-force": "node ./scripts/schema-push.mjs --force",
     "test:schema-guard": "node --test ./scripts/schema-push.test.mjs",
     "test:phase1-migrations": "node --test ./scripts/phase1-migrations.test.mjs",
-    "test:schema-drift": "node --test ./scripts/schema-drift.test.mjs"
+    "test:schema-drift": "node --test ./scripts/schema-drift.test.mjs",
+    "test:expand-only": "node --test ./scripts/expand-only.test.mjs"
   },
   "dependencies": {
     "@opentelemetry/api": "1.10.0",

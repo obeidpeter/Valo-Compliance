@@ -25,6 +25,7 @@ import {
   TEST_REFUND_POLICY_VERSION,
   type RefundProvider,
 } from "./valo-refund-provider";
+import { UnmatchedPaymentEvent } from "./valo-paystack-contract";
 import { setting } from "../../platform/settings";
 import { singleRow } from "../../platform/rows";
 import { queueMessage } from "../messages";
@@ -530,7 +531,7 @@ export async function processRefundQueue() {
 export async function handleRefundEvent(reference: string) {
   if (!refundProvider.configured()) return false;
   const [row] = await db.select().from(valoRefundRequests).where(eq(valoRefundRequests.reference, reference));
-  if (!row) throw new ValoProblem(409, "Unmatched refund event requires finance reconciliation.");
+  if (!row) throw new UnmatchedPaymentEvent("Unmatched refund event requires finance reconciliation.");
   // Ignore the event's claimed status/amount. Poll the canonical provider record.
   await db.update(valoRefundRequests).set({ nextAttemptAt: null }).where(eq(valoRefundRequests.id, row.id));
   await processRefund(row.id, refundProvider, true);

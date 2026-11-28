@@ -28,6 +28,13 @@ const nextConfig = {
           { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" },
         ],
       },
+      {
+        // This page's address holds an unsubscribe link's token (docs/architecture/messages.md, part 4).
+        // Nothing the page asks for, of Valo's own servers or anyone's, is told that address. This rule
+        // comes after the one above, so that its policy is the one the page is sent with.
+        source: "/unsubscribe",
+        headers: [{ key: "Referrer-Policy", value: "no-referrer" }],
+      },
     ];
   },
 };

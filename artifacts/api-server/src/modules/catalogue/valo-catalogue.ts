@@ -1,3 +1,13 @@
+import {
+  baseWord,
+  filedUnder,
+  neededWords,
+  plainText,
+  sameAs,
+  searchWords,
+  wantedWords,
+} from "./search-words";
+
 /** Public metadata only. Callers supply currently eligible releases or shipped
  * public directory pages, never candidate bodies or customer drafts. */
 export type ReleasedLibraryItem = {
@@ -32,50 +42,100 @@ export type CatalogueQuery = {
   /** Only the templates with these numbers, comma-separated, as the route validated them. */
   templateIds?: string | undefined;
 };
-const normal = (s: string) =>
-  s
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
-const aliases: Record<string, string> = {
-  bill: "invoice",
-  quote: "quotation",
-  employees: "staff",
-  employee: "staff",
-  workers: "staff",
-};
-function terms(s: string) {
-  return normal(s)
-    .split(" ")
-    .filter(Boolean)
-    .map((t) => aliases[t] ?? t);
+/** What a search compares of a text: its words as typed, for a word still being typed; its words as a
+ * search reads them; and those with every other word for the same thing. */
+function read(text: string) {
+  const words = searchWords(text);
+  return {
+    typed: plainText(text).split(" ").filter(Boolean),
+    words,
+    things: new Set(words.flatMap((word) => [word, ...(sameAs(word) ?? [])])),
+  };
 }
-export function relevance(item: ReleasedLibraryItem, q: string) {
-  const wanted = terms(q),
-    title = terms(item.title),
-    body = terms([item.title, item.summary, item.category ?? "", item.industry].join(" "));
-  if (!wanted.every((t) => body.some((w) => w.startsWith(t)))) return -1;
-  const phrase = normal(q),
-    name = normal(item.title);
-  return (
-    (name === phrase ? 1000 : name.startsWith(phrase) ? 200 : name.includes(phrase) ? 100 : 0) +
-    wanted.reduce(
-      (score, t) => score + (title.includes(t) ? 30 : title.some((w) => w.startsWith(t)) ? 10 : 1),
-      0,
-    )
+/** Whether a text has a word that begins with this one, or with the word it comes from. */
+function begins(text: ReturnType<typeof read>, word: string) {
+  const starts = [word, baseWord(word)].filter((start): start is string => start !== null);
+  return starts.some(
+    (start) => text.typed.some((w) => w.startsWith(start)) || text.words.some((w) => w.startsWith(start)),
   );
+}
+/** A text's words with each written as the one word the lists have for it, and without the small
+ * words when it has others: two texts that say the same thing in other words read the same. */
+const said = (words: readonly string[], same = true) =>
+  wantedWords(words).flatMap((word) => (same ? (sameAs(word) ?? [word]) : [word]));
+/** Where a title has the words of a search next to each other and in order: 0 at its start, and -1
+ * when it does not. Whole words only, so that "hospital" is not found in "hospitality". */
+function runAt(title: readonly string[], run: readonly string[]) {
+  for (let at = 0; at + run.length <= title.length; at++)
+    if (run.every((word, i) => title[at + i] === word)) return at;
+  return -1;
+}
+/**
+ * How well an item answers a search (docs/architecture/public-search.md): how many of the words it
+ * must have it has and lacks, and a score that is more the more of the wanted words its title has,
+ * and most when its title is the search, begins with it or has its words together.
+ *
+ * A word is found where the item has a word that begins with it, another word for the same thing, or
+ * the word the site files it under. An item's title, description, category, industry and kind are all
+ * read; "All industries" is not, since it names no industry. A word that says only that the searcher
+ * is a business rules no item out when the search has other words.
+ */
+export function searchScore(q: string) {
+  const all = searchWords(q),
+    wanted = wantedWords(all),
+    needed = neededWords(wanted);
+  const phrases = [said(all), said(all, false)];
+  return (item: ReleasedLibraryItem) => {
+    const title = read(item.title),
+      whole = read(
+        [
+          item.title,
+          item.summary,
+          item.category ?? "",
+          item.industry === "All industries" ? "" : item.industry,
+          item.type,
+        ].join(" "),
+      );
+    let score = 0,
+      has = 0,
+      lacks = 0;
+    for (const word of wanted) {
+      const same = sameAs(word) ?? [word],
+        filed = filedUnder(word);
+      const sameIn = (text: typeof whole) => same.every((w) => text.things.has(w)),
+        filedIn = (text: typeof whole) => !!filed && filed.every((w) => text.things.has(w));
+      if (!begins(whole, word) && !sameIn(whole) && !filedIn(whole)) {
+        if (needed.has(word)) lacks++;
+        continue;
+      }
+      if (needed.has(word)) has++;
+      score += sameIn(title) ? 30 : filedIn(title) ? 20 : begins(title, word) ? 10 : 1;
+    }
+    const names = [said(title.words), said(title.words, false)];
+    const together = Math.max(
+      ...phrases.map((phrase, i) => {
+        const name = names[i]!,
+          at = runAt(name, phrase);
+        return at < 0 ? 0 : at > 0 ? 100 : name.length === phrase.length ? 1000 : 200;
+      }),
+    );
+    return { has, lacks, score: score + together };
+  };
+}
+/** An item's score for a search, or -1 when it lacks a word it must have. */
+export function relevance(item: ReleasedLibraryItem, q: string) {
+  const found = searchScore(q)(item);
+  return found.lacks ? -1 : found.score;
 }
 export function paginateReleasedItems(released: ReleasedLibraryItem[], query: CatalogueQuery = {}) {
   const page = Number.isSafeInteger(query.page) && query.page! > 0 ? query.page! : 1;
   const q = query.q?.trim().slice(0, 120) ?? "";
   const numbers = query.templateIds ? new Set(query.templateIds.split(",")) : undefined;
-  const ranked = released
-    .map((item, index) => ({ item, index, score: q ? relevance(item, q) : 0 }))
+  const found = q ? searchScore(q) : () => ({ has: 0, lacks: 0, score: 0 });
+  const within = released
+    .map((item, index) => ({ item, index, ...found(item) }))
     .filter(
-      ({ item, score }) =>
-        score >= 0 &&
+      ({ item }) =>
         (!query.type || query.type === "all" || item.type === query.type) &&
         (!query.industry ||
           item.industry === "All industries" ||
@@ -84,6 +144,12 @@ export function paginateReleasedItems(released: ReleasedLibraryItem[], query: Ca
         (!query.access || query.access === "all" || item.access === query.access) &&
         (!numbers || (item.templateNumber !== undefined && numbers.has(item.templateNumber))),
     );
+  const every = within.filter((row) => row.lacks === 0);
+  // Nothing has every word it must have: the closest items are those that have at least one of them
+  // and lack the fewest (docs/architecture/public-search.md).
+  const some = every.length ? [] : within.filter((row) => row.has > 0);
+  const fewest = Math.min(...some.map((row) => row.lacks));
+  const ranked = every.length ? every : some.filter((row) => row.lacks === fewest);
   ranked.sort((a, b) => {
     if (query.sort === "name")
       return a.item.title.localeCompare(b.item.title, "en-NG") || a.item.id.localeCompare(b.item.id);
@@ -99,6 +165,7 @@ export function paginateReleasedItems(released: ReleasedLibraryItem[], query: Ca
     total: ranked.length,
     page,
     heldTemplates: Math.max(0, 40 - released.filter((i) => i.type === "template").length),
+    ...(some.length ? { closest: true } : {}),
   };
 }
 export function templateCategory(id: string) {

@@ -53,15 +53,19 @@ test(
 
       // Checkouts: two in one workspace and one in another, the last 59 minutes ago, coming to ₦3,550;
       // and one 61 minutes ago, which is not read.
-      const priceId = randomUUID();
-      await client.query(
-        `INSERT INTO valo_prices (id, content_version_id, title, amount_kobo, licence_version, licence_text,
-           tax_treatment, approval_reference, effective_from)
-         VALUES ($1, $2, 'Synthetic: an activity reading', 10000, 'synthetic-only',
-           'Synthetic test only. No approved sale.', 'No tax assertion.',
-           'CONTROLLED FIXTURE NOT COMMERCIAL APPROVAL', now())`,
-        [priceId, version.id],
-      );
+      // An order is made with its price's own amount, so each amount read here has a price of its own.
+      const priced = async (kobo: number) => {
+        const priceId = randomUUID();
+        await client.query(
+          `INSERT INTO valo_prices (id, content_version_id, title, amount_kobo, licence_version, licence_text,
+             tax_treatment, approval_reference, effective_from)
+           VALUES ($1, $2, 'Synthetic: an activity reading', $3, 'synthetic-only',
+             'Synthetic test only. No approved sale.', 'No tax assertion.',
+             'CONTROLLED FIXTURE NOT COMMERCIAL APPROVAL', now())`,
+          [priceId, version.id, kobo],
+        );
+        return priceId;
+      };
       const line = {
         title: "Synthetic: an activity reading",
         contentVersionId: version.id,
@@ -81,7 +85,7 @@ test(
             actor.identityId,
             `valo-test-${id}`,
             randomUUID(),
-            priceId,
+            await priced(kobo),
             line,
             kobo,
             ago,

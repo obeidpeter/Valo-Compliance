@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { and, desc, eq, inArray, isNull, ne, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, ne, notInArray, sql } from "drizzle-orm";
 import { valoTasks, valoReminderPreferences, valoReminderOutbox, valoRuleNotices } from "@workspace/db";
 import {
   CreateTaskBody,
@@ -126,7 +126,9 @@ async function cancelOutstanding(
     .where(
       and(
         eq(valoReminderOutbox.workspaceId, actor.workspaceId),
-        ne(valoReminderOutbox.status, "sent"),
+        // What was sent stays sent, and a reminder already cancelled keeps the reason it was cancelled for:
+        // its row in the workspace's log goes on saying why it stopped.
+        notInArray(valoReminderOutbox.status, ["sent", "cancelled"]),
         taskId ? eq(valoReminderOutbox.taskId, taskId) : undefined,
       ),
     );
@@ -469,23 +471,63 @@ export async function saveReminderPreferences(actor: WorkspaceActor, raw: unknow
   });
   return getReminderPreferences(actor);
 }
+/**
+ * Turns a workspace's reminders off from the unsubscribe link in one of them
+ * (docs/architecture/messages.md, part 4), as its owner would in the app: the choice is recorded with the
+ * notice in force, every reminder still waiting is cancelled, and the workspace's history names the
+ * reminder that carried the link. The days chosen are kept, for when reminders are turned on again. A
+ * workspace whose reminders are already off is left as it is.
+ */
+export async function turnRemindersOffByLink(tx: WorkspaceTx, actor: WorkspaceActor, reminderId: string) {
+  const [old] = await tx
+    .select()
+    .from(valoReminderPreferences)
+    .where(eq(valoReminderPreferences.workspaceId, actor.workspaceId));
+  if (!old?.enabled) return "already_off" as const;
+  const revision = old.revision + 1;
+  await recordConsentChange(tx, {
+    workspaceId: actor.workspaceId,
+    actorId: actor.identityId,
+    consent: "reminders",
+    choice: false,
+  });
+  await tx
+    .update(valoReminderPreferences)
+    .set({ enabled: false, revision, actorId: actor.identityId, updatedAt: new Date() })
+    .where(eq(valoReminderPreferences.workspaceId, actor.workspaceId));
+  await cancelOutstanding(tx, actor, undefined, "REMINDERS_OPTED_OUT");
+  await workspaceEvent(tx, actor, "reminders.stopped_by_link", reminderId, revision);
+  return "off" as const;
+}
 export async function listReminders(actor: WorkspaceActor) {
-  return workspaceReadTransaction(actor, async (tx) =>
-    ListRemindersResponse.parse(
-      (
-        await tx
-          .select()
-          .from(valoReminderOutbox)
-          .where(eq(valoReminderOutbox.workspaceId, actor.workspaceId))
-          .orderBy(desc(valoReminderOutbox.createdAt))
-          .limit(200)
-      ).map((row) => ({
+  // The delivery reports and the database schema they read load here, when a member reads the reminders,
+  // not with every reader of the tasks code.
+  const { deliveriesOf } = await import("../messages");
+  return workspaceReadTransaction(actor, async (tx) => {
+    const rows = await tx
+      .select()
+      .from(valoReminderOutbox)
+      .where(eq(valoReminderOutbox.workspaceId, actor.workspaceId))
+      .orderBy(desc(valoReminderOutbox.createdAt))
+      .limit(200);
+    // What the email service has reported about each reminder it accepted
+    // (docs/architecture/messages.md, part 3).
+    const reports = await deliveriesOf(
+      tx,
+      actor.workspaceId,
+      "reminder",
+      rows.filter((row) => row.status === "sent").map((row) => row.id),
+    );
+    return ListRemindersResponse.parse(
+      rows.map((row) => ({
         ...row,
         scheduledAt: row.scheduledAt.toISOString(),
         deliveredAt: row.deliveredAt?.toISOString() ?? null,
         nextAttemptAt: row.nextAttemptAt?.toISOString() ?? null,
         lastAttemptAt: row.lastAttemptAt?.toISOString() ?? null,
+        delivery: reports.get(row.id)?.delivery ?? null,
+        deliveryAt: reports.get(row.id)?.deliveryAt ?? null,
       })),
-    ),
-  );
+    );
+  });
 }

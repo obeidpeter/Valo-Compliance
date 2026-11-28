@@ -34,7 +34,7 @@ test("actual export entries and worker startup reject before database, queue or 
       export const valoMemberships={},valoContentVersions={},valoDocuments={},valoDocumentRevisions={},valoExportJobs={},
       valoExportRequests={},valoFileAssets={},valoExportObjects={},valoEvents={},valoPrivacyTombstones={},
       valoWorkspaceExports={},valoWorkspaceExportAttempts={},valoWorkspaces={},valoPrivacyCases={},valoPrivacyEvents={},valoProfileVersions={},
-      valoPrivacyHolds={},valoStaffAccessAudit={},valoMessages={},valoOrders={},valoRefundRequests={};
+      valoPrivacyHolds={},valoStaffAccessAudit={},valoMessages={},valoOrders={},valoRefundRequests={},valoNoticeDigests={};
       // Listening for a pooled connection's failure opens no connection, so it is not an effect.
       export const onConnectionFailure=()=>()=>{};`,
     ],
@@ -96,8 +96,8 @@ test("actual export entries and worker startup reject before database, queue or 
     [
       "commerce",
       `const hit=async()=>{globalThis.guardEffects.services++;};
-      export const processPaymentEvents=hit,reconcilePayments=hit,processRefundQueue=hit,
-      reconcileKnownDisputes=hit,reconcileDisputeActions=hit;`,
+      export const processPaymentEvents=hit,reconcilePayments=hit,runPaymentReconciliationJob=hit,
+      processRefundQueue=hit,reconcileKnownDisputes=hit,reconcileDisputeActions=hit;`,
     ],
     // The worker reaches the messages job through the messages module's index. The job itself is a
     // service effect here; the choice of its sender, which the worker makes as it starts, is the real one.
@@ -106,6 +106,23 @@ test("actual export entries and worker startup reject before database, queue or 
     [
       "valo-message-dispatcher",
       "export const dispatchDueMessages=async()=>{globalThis.guardEffects.services++},dispatchMessage=dispatchDueMessages;",
+    ],
+    // The job's other part records the email provider's delivery reports, and the log and the reminders
+    // read them: each is a service effect here too.
+    [
+      "valo-email-events",
+      "export const recordDeliveryReports=async()=>{globalThis.guardEffects.services++},deliveriesOf=recordDeliveryReports,emailEventsReady=recordDeliveryReports,recordEmailEvent=recordDeliveryReports;",
+    ],
+    // The job's first part records the days whose notices owe a workspace a message, and the dispatcher
+    // reads a day as it composes: each is a service effect here too.
+    [
+      "valo-notice-digests",
+      "export const oweNoticeDigests=async()=>{globalThis.guardEffects.services++},noticeDigestsReady=oweNoticeDigests,dayNotices=oweNoticeDigests;",
+    ],
+    // Whether an address is suppressed is a question put to the database, which a reminder's sender asks.
+    [
+      "valo-email-suppression",
+      "export const addressSuppressed=async()=>{globalThis.guardEffects.services++},SUPPRESSION_LASTS_MS=0;",
     ],
     // The worker reaches the daily source check through the sources module's index.
     ["sources", "export const reconcileSourceMonitoring=async()=>{globalThis.guardEffects.services++};"],

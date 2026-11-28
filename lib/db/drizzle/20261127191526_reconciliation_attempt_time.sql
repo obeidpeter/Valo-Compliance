@@ -1,0 +1,1 @@
+ALTER TABLE "valo_payment_reconciliations" ADD COLUMN "last_attempt_at" timestamp with time zone;

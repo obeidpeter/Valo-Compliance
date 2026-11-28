@@ -9,12 +9,12 @@ import { valoWorkspaces } from "./valo-workspaces";
  * owes its notice. A row keeps no message text: the dispatcher composes it from the record it is about as it
  * sends it, and reads the recipient's verified address then.
  *
- * - `kind` and `class`: what the message is, and whether it is necessary or optional. Both of slice 1's
- *   kinds are necessary.
+ * - `kind` and `class`: what the message is, and whether it is necessary or optional. Every kind there
+ *   is yet is necessary.
  * - `recipient_identity_id`: whose verified address the message goes to.
- * - `subject_id`: the record it is about: the order for a receipt, the refund for a refund notice. A
- *   workspace's record owes one message of each kind. The rule is each workspace's own, so no row in one
- *   workspace can stand in the way of another's.
+ * - `subject_id`: the record it is about: the order for a receipt, the refund for a refund notice, the
+ *   day's row in `valo_notice_digests` for a day's notices. A workspace's record owes one message of each
+ *   kind. The rule is each workspace's own, so no row in one workspace can stand in the way of another's.
  * - `status`: `queued`, then `sending` while one attempt holds its lease, then `accepted` once a sender took
  *   it. `held` waits for something that stops it now, such as the pause; `failed` and `cancelled` end it.
  *   An accepted message is never called delivered: nothing here records a delivery.
@@ -51,9 +51,12 @@ export const valoMessages = pgTable(
     uniqueIndex("valo_message_once").on(t.workspaceId, t.kind, t.subjectId),
     index("valo_message_dispatch_idx").on(t.status, t.nextAttemptAt),
     index("valo_message_workspace_idx").on(t.workspaceId, t.createdAt),
+    // A delivery report names a message by the provider's reference alone.
+    index("valo_message_provider_idx").on(t.providerMessageId),
     check(
       "valo_message_shape",
-      sql`(${t.kind}, ${t.class}) IN (('purchase_receipt', 'necessary'), ('refund_processed', 'necessary'))
+      sql`(${t.kind}, ${t.class}) IN (('purchase_receipt', 'necessary'), ('refund_processed', 'necessary'),
+          ('notices_digest', 'necessary'))
         AND ${t.status} IN ('queued', 'sending', 'held', 'accepted', 'failed', 'cancelled')
         AND (${t.reason} IS NULL OR ${t.reason} ~ '^[A-Z][A-Z0-9_]{2,63}$')
         AND ${t.attempts} BETWEEN 0 AND 5

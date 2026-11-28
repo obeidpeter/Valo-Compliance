@@ -5,6 +5,10 @@ import {
   authenticPaystackBody,
   verifiedTransaction,
   assertOrderMatch,
+  listedDayPath,
+  listedTransactions,
+  orderDifferences,
+  PAYSTACK_API,
   paystack,
   paystackEventFamily,
 } from "./valo-paystack-contract";
@@ -96,6 +100,70 @@ test("server verification rejects live domain, unsafe amounts and mismatched imm
     assert.throws(() => assertOrderMatch(order, verifiedTransaction.parse({ ...input, ...bad })), {
       status: 409,
     });
+});
+// PAY-007 (docs/architecture/reconciliation.md, slice 1): "alert on unmatched amounts". The daily check
+// names what the provider's answer says differently from the order, so that finance reads which it is.
+test("what the provider's answer says differently from an order is named: the amount, the transaction, or a reversal the provider does not hold", () => {
+  const order = {
+    id: randomUUID(),
+    workspaceId: randomUUID(),
+    reference: "valo-test-control",
+    amountKobo: 12345,
+    currency: "NGN",
+    status: "pending",
+    providerTransactionId: null as string | null,
+  };
+  const input = {
+    id: 123,
+    domain: "test",
+    reference: order.reference,
+    status: "success",
+    amount: 12345,
+    currency: "NGN",
+    metadata: { valoOrderId: order.id, workspaceId: order.workspaceId },
+  };
+  const answer = (patch: Record<string, unknown> = {}) => verifiedTransaction.parse({ ...input, ...patch });
+  // Nothing differs: whatever the provider says became of the payment, and for an order that already
+  // holds this transaction.
+  for (const status of ["success", "abandoned", "failed", "pending", "reversed"])
+    assert.deepEqual(orderDifferences(order, answer({ status })), []);
+  assert.deepEqual(orderDifferences({ ...order, providerTransactionId: "123" }, answer()), []);
+  // The amount, by a kobo either way, and the currency.
+  assert.deepEqual(orderDifferences(order, answer({ amount: 12346 })), ["AMOUNT_DIFFERENCE"]);
+  assert.deepEqual(orderDifferences(order, answer({ amount: 12344 })), ["AMOUNT_DIFFERENCE"]);
+  assert.deepEqual(orderDifferences({ ...order, currency: "USD" }, answer()), ["AMOUNT_DIFFERENCE"]);
+  // The transaction is another order's, another workspace's or another reference's, or it is not the
+  // one the order already holds.
+  for (const other of [
+    { reference: "another-order" },
+    { metadata: { ...input.metadata, valoOrderId: randomUUID() } },
+    { metadata: { ...input.metadata, workspaceId: randomUUID() } },
+  ])
+    assert.deepEqual(orderDifferences(order, answer(other)), ["TRANSACTION_DIFFERENCE"]);
+  assert.deepEqual(orderDifferences({ ...order, providerTransactionId: "124" }, answer()), [
+    "TRANSACTION_DIFFERENCE",
+  ]);
+  // Valo holds the order as reversed and the provider does not.
+  for (const status of ["success", "abandoned", "failed", "pending"])
+    assert.deepEqual(orderDifferences({ ...order, status: "reversed" }, answer({ status })), [
+      "REVERSAL_DIFFERENCE",
+    ]);
+  assert.deepEqual(orderDifferences({ ...order, status: "reversed" }, answer({ status: "reversed" })), []);
+  // Several at once are all named, in one order.
+  assert.deepEqual(
+    orderDifferences({ ...order, status: "reversed", providerTransactionId: "124" }, answer({ amount: 1 })),
+    ["AMOUNT_DIFFERENCE", "TRANSACTION_DIFFERENCE", "REVERSAL_DIFFERENCE"],
+  );
+  // Whatever the settlement's own comparison refuses is named here too.
+  for (const refused of [
+    { amount: 12346 },
+    { reference: "another-order" },
+    { metadata: { ...input.metadata, workspaceId: randomUUID() } },
+    { metadata: { ...input.metadata, valoOrderId: randomUUID() } },
+  ]) {
+    assert.throws(() => assertOrderMatch(order, answer(refused)), { status: 409 });
+    assert.notDeepEqual(orderDifferences(order, answer(refused)), []);
+  }
 });
 
 test("checkout asks Paystack only for a one-time charge, with no plan, split, subaccount or saved card", async () => {
@@ -216,6 +284,77 @@ test("no merchant call is made with a live key, in production, in a deployment o
   } finally {
     globalThis.fetch = realFetch;
     restore();
+  }
+});
+
+// PAY-007 (docs/architecture/reconciliation.md, slice 3b): Paystack's own list of a day's successful payments.
+test("a day's list of successful payments is asked for by its UTC day and a page, with no page size and only with a test key, and a page is read only as far as Valo uses it", async () => {
+  assert.equal(
+    listedDayPath("2026-11-26", 1),
+    "/transaction?status=success&from=2026-11-26T00%3A00%3A00.000Z&to=2026-11-27T00%3A00%3A00.000Z&page=1",
+  );
+  // The last day of a year ends at the first moment of the next.
+  assert.equal(
+    listedDayPath("2026-12-31", 3),
+    "/transaction?status=success&from=2026-12-31T00%3A00%3A00.000Z&to=2027-01-01T00%3A00%3A00.000Z&page=3",
+  );
+  for (const day of ["2026-11-31", "2026-02-29", "26-11-2026", "2026-11-26T00:00:00.000Z", ""])
+    assert.throws(() => listedDayPath(day, 1), { status: 400 }, day);
+  for (const page of [0, -1, 1.5, Number.NaN])
+    assert.throws(() => listedDayPath("2026-11-26", page), { status: 400 }, String(page));
+  // A page is read for each payment's id, test domain, status and reference, and for its page count. Nothing
+  // else it carries is kept, and the id is kept as text.
+  const item = {
+    id: 9001,
+    domain: "test",
+    status: "success",
+    reference: "valo-test-synthetic-1",
+    amount: 150000,
+    currency: "NGN",
+    customer: { email: "synthetic-buyer@example.invalid" },
+  };
+  const page = { data: [item], meta: { total: 1, perPage: 50, page: 1, pageCount: 1 } };
+  assert.deepEqual(listedTransactions.parse(page), {
+    data: [{ id: "9001", domain: "test", status: "success", reference: "valo-test-synthetic-1" }],
+    meta: { page: 1, pageCount: 1 },
+  });
+  // A page that names a payment outside test mode, or misses what Valo reads, is not used.
+  for (const [why, unusable] of [
+    ["a payment outside test mode", { ...page, data: [{ ...item, domain: "live" }] }],
+    ["no page count", { data: [item], meta: { page: 1 } }],
+    ["a payment with no reference", { ...page, data: [{ ...item, reference: "" }] }],
+    ["an id that is not a number", { ...page, data: [{ ...item, id: "9001 or more" }] }],
+  ] as const)
+    assert.equal(listedTransactions.safeParse(unusable).success, false, why);
+  // Through Paystack's own request: one GET for the page asked for, and none with a live key.
+  const saved = { ...process.env };
+  const realFetch = globalThis.fetch;
+  const asked: string[] = [];
+  globalThis.fetch = async (input, init) => {
+    asked.push(`${init?.method ?? "GET"} ${String(input)}`);
+    return Response.json({ status: true, data: [item], meta: page.meta });
+  };
+  try {
+    Object.assign(process.env, {
+      NODE_ENV: "development",
+      VALO_SANDBOX_CHECKOUT_ENABLED: "true",
+      PAYSTACK_SECRET_KEY: "sk_test_synthetic_control_not_a_credential",
+    });
+    delete process.env.REPLIT_DEPLOYMENT;
+    delete process.env.VALO_ISOLATED_RECOVERY;
+    const listed = await paystack.listSuccessful("2026-11-26", 2);
+    assert.deepEqual(
+      listed.data.map((transaction) => transaction.reference),
+      ["valo-test-synthetic-1"],
+    );
+    assert.deepEqual(asked, [`GET ${PAYSTACK_API}${listedDayPath("2026-11-26", 2)}`]);
+    process.env.PAYSTACK_SECRET_KEY = "sk_live_synthetic_control_not_a_credential";
+    await assert.rejects(paystack.listSuccessful("2026-11-26", 1), { status: 503 });
+    assert.equal(asked.length, 1, "no request reached the merchant with a live key");
+  } finally {
+    globalThis.fetch = realFetch;
+    for (const key of Object.keys(process.env)) if (!(key in saved)) delete process.env[key];
+    Object.assign(process.env, saved);
   }
 });
 

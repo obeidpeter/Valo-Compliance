@@ -32,6 +32,8 @@ import {
   valoEntitlements,
   valoPurchaseOutbox,
   valoMessages,
+  valoMessageDeliveries,
+  valoNoticeDigests,
   valoRefundRequests,
   valoPaymentReconciliations,
   valoPrivacyMessages,
@@ -45,7 +47,7 @@ import { valoDisputeInformation, valoDisputeActions } from "@workspace/db";
 import { ownedPaymentEvent } from "./valo-private-copy-inventory";
 import { valoPaymentConcerns, valoConcernMessages, valoPaymentConcernEvents } from "@workspace/db";
 import { setting } from "../../platform/settings";
-import { messagesReady } from "../messages";
+import { emailEventsReady, messagesReady, noticeDigestsReady } from "../messages";
 export const accessMessage =
   "Request received and saved. No account details have been confirmed. Replies are not yet dispatched from this development build.";
 const ack = (id: string) => ({
@@ -298,6 +300,48 @@ async function snapshotExport(
               .from(valoMessages)
               .where(eq(valoMessages.workspaceId, actor.workspaceId))
               .orderBy(valoMessages.id)
+              .limit(sink ? 500 : 5001)
+              .offset(offset),
+      );
+      // What the email service last reported about each message or reminder it took (part 3 of that
+      // design): the record's id is a message's above, or a reminder delivery's. A database the delivery
+      // migration has not reached has none to list.
+      const deliveriesListed = await emailEventsReady(tx);
+      await collect("messageDeliveries", async (offset) =>
+        !deliveriesListed
+          ? []
+          : tx
+              .select({
+                source: valoMessageDeliveries.source,
+                recordId: valoMessageDeliveries.recordId,
+                delivery: valoMessageDeliveries.delivery,
+                detail: valoMessageDeliveries.detail,
+                reportedAt: valoMessageDeliveries.reportedAt,
+                updatedAt: valoMessageDeliveries.updatedAt,
+              })
+              .from(valoMessageDeliveries)
+              .where(eq(valoMessageDeliveries.workspaceId, actor.workspaceId))
+              .orderBy(valoMessageDeliveries.id)
+              .limit(sink ? 500 : 5001)
+              .offset(offset),
+      );
+      // The days whose notices of changes owed the workspace a message (part 7 of that design): a message of
+      // the kind `notices_digest` above is about one, by its id. The notices themselves are shown on the
+      // workspace's home screen, and this file does not list them. A database the notice digests migration
+      // has not reached has none to list.
+      const noticeDaysListed = await noticeDigestsReady(tx);
+      await collect("noticeDays", async (offset) =>
+        !noticeDaysListed
+          ? []
+          : tx
+              .select({
+                id: valoNoticeDigests.id,
+                day: valoNoticeDigests.day,
+                createdAt: valoNoticeDigests.createdAt,
+              })
+              .from(valoNoticeDigests)
+              .where(eq(valoNoticeDigests.workspaceId, actor.workspaceId))
+              .orderBy(valoNoticeDigests.id)
               .limit(sink ? 500 : 5001)
               .offset(offset),
       );

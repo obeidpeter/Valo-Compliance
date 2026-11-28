@@ -16,6 +16,14 @@ import { delimiter, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
 import { repositoryRoot } from "./architecture-check";
+import {
+  EXPECTED_FAILURES,
+  applicableFailures,
+  failedTests,
+  judgeSteps,
+  type StepOutcome,
+  type TestRecord,
+} from "./rollback-failures";
 
 /**
  * `pnpm test:db`: runs CI's database job on this machine. Every step of the `postgres` job in
@@ -27,6 +35,9 @@ import { repositoryRoot } from "./architecture-check";
  *   pnpm test:db                 stop at the first failing step, as CI does
  *   pnpm test:db --keep-going    run every step and report each failure
  *   pnpm test:db --list          print the steps without starting a database
+ *   pnpm test:db --previous <checkout>
+ *                                run another release's database job, checked out in <checkout>,
+ *                                against this checkout's schema (OPS-008; docs/architecture/rollback.md)
  *
  * The workflow is the only list of database groups: a step added there runs here too.
  */
@@ -58,6 +69,19 @@ export const PASSED_THROUGH = [
   // How long the NFR-003 load test runs: VALO_LOAD_SECONDS=1800 is the requirement's 30 minutes.
   "VALO_LOAD_SECONDS",
 ];
+
+/**
+ * The steps of a job that set up its database: its migrations, its logins and their check, and the
+ * queue. Run with --previous, these come from this checkout, so that the previous release's own steps
+ * meet this release's schema, as they would once this release is deployed and then rolled back.
+ */
+const SCHEMA_SETUP = [
+  /\bdrizzle-kit migrate\b/,
+  /\blib\/db\/scripts\/[a-z-]+\.mjs\b/,
+  /\bsrc\/scripts\/queue-migration\.ts apply-development\b/,
+];
+export const setsUpTheDatabase = (step: Pick<PlannedStep, "run">) =>
+  SCHEMA_SETUP.some((pattern) => pattern.test(step.run ?? ""));
 
 /** Conditions that keep a step running after an earlier failure, as GitHub does. */
 const RUNS_AFTER_FAILURE = new Set(["${{ !cancelled() }}", "!cancelled()", "${{ always() }}", "always()"]);
@@ -327,11 +351,17 @@ async function startCluster(programs: string, service: DatabaseService): Promise
   }
 }
 
-function runStep(step: PlannedStep, env: Record<string, string>, log: WriteStream, timeoutMs: number) {
+function runStep(
+  step: PlannedStep,
+  env: Record<string, string>,
+  log: WriteStream,
+  timeoutMs: number,
+  cwd: string,
+) {
   return new Promise<number>((resolveExit) => {
     // GitHub's shell for `run` steps on Linux.
     const child = spawn("bash", ["--noprofile", "--norc", "-eo", "pipefail", "-c", step.run!], {
-      cwd: repositoryRoot,
+      cwd,
       env,
       stdio: ["ignore", "pipe", "pipe"],
     });
@@ -360,14 +390,41 @@ function within(folder: string, path: string) {
   return inner !== "" && !inner.startsWith("..") && !isAbsolute(inner);
 }
 
+/**
+ * The release whose job runs, and the folder each of its steps runs in: this checkout, or, with
+ * --previous, the other release's checkout, apart from the steps that set up the database.
+ */
+export function chooseRelease(args: string[], root = repositoryRoot) {
+  const at = args.indexOf("--previous");
+  const previous = at === -1 ? null : args[at + 1];
+  const rest = at === -1 ? args : args.filter((_arg, index) => index !== at && index !== at + 1);
+  const unknown = rest.filter((arg) => !["--keep-going", "--list"].includes(arg));
+  if (unknown.length || (at !== -1 && (!previous || previous.startsWith("--"))))
+    throw Error(
+      `DATABASE_TESTS_ARGUMENTS_INVALID: ${[...unknown, ...(previous ? [] : ["--previous"])].join(" ")}`,
+    );
+  const jobRoot = previous ? resolve(previous) : root;
+  if (previous && (jobRoot === resolve(root) || !existsSync(join(jobRoot, WORKFLOW))))
+    throw Error("DATABASE_TESTS_ARGUMENTS_INVALID: --previous names another checkout, with its own workflow");
+  return {
+    jobRoot,
+    previous: Boolean(previous),
+    folderFor: (step: Pick<PlannedStep, "run">) => (previous && !setsUpTheDatabase(step) ? jobRoot : root),
+  };
+}
+
 async function main(args: string[]) {
-  const unknown = args.filter((arg) => !["--keep-going", "--list"].includes(arg));
-  if (unknown.length) throw Error(`DATABASE_TESTS_ARGUMENTS_INVALID: ${unknown.join(" ")}`);
-  const job = readDatabaseJob(readFileSync(join(repositoryRoot, WORKFLOW), "utf8"));
+  const release = chooseRelease(args);
+  const { jobRoot } = release;
+  const job = readDatabaseJob(readFileSync(join(jobRoot, WORKFLOW), "utf8"), jobRoot);
   if (args.includes("--list")) {
     for (const [index, step] of job.steps.entries())
       process.stdout.write(
-        `${String(index + 1).padStart(2)} ${step.skip ? `skip (${step.skip})` : "run "}  ${step.name}\n`,
+        `${String(index + 1).padStart(2)} ${step.skip ? `skip (${step.skip})` : "run "}  ${step.name}${
+          release.previous && !step.skip
+            ? ` (${release.folderFor(step) === jobRoot ? "previous release" : "this schema"})`
+            : ""
+        }\n`,
       );
     return;
   }
@@ -378,7 +435,11 @@ async function main(args: string[]) {
   ];
   if (missing.length) throw Error(`DATABASE_TESTS_NEED: ${missing.join(" and ")}; CI installs both`);
   const programs = postgresPrograms();
-  const logs = join(repositoryRoot, "generated-artifacts", "database-tests");
+  const logs = join(
+    repositoryRoot,
+    "generated-artifacts",
+    release.previous ? "database-tests-previous" : "database-tests",
+  );
   rmSync(logs, { recursive: true, force: true });
   mkdirSync(logs, { recursive: true });
   const githubEnv = join(logs, "github-env");
@@ -391,17 +452,29 @@ async function main(args: string[]) {
   process.once("SIGINT", interrupted);
   process.once("SIGTERM", interrupted);
   process.stdout.write(
-    `database: ${cluster.version}, temporary, removed afterwards\nlogs: ${relative(repositoryRoot, logs)}\n`,
+    `database: ${cluster.version}, temporary, removed afterwards\nlogs: ${relative(repositoryRoot, logs)}\n${
+      release.previous ? `job: the release in ${jobRoot}, against this checkout's schema\n` : ""
+    }`,
   );
   // The job's test results must start empty, as on a fresh runner, so its citation check never
   // reads the results of an earlier run in this checkout.
   if (job.env.VALO_TEST_RESULTS_DIR) {
     const records = resolve(job.env.VALO_TEST_RESULTS_DIR);
-    if (!within(join(repositoryRoot, "generated-artifacts"), records))
+    if (!within(join(jobRoot, "generated-artifacts"), records))
       throw Error("DATABASE_JOB_UNSUPPORTED: VALO_TEST_RESULTS_DIR must be inside generated-artifacts");
     rmSync(records, { recursive: true, force: true });
   }
-  const keepGoing = args.includes("--keep-going");
+  // Run against this schema, the previous release's job always runs every step, so that each failure
+  // can be judged against the register of expected ones.
+  const keepGoing = args.includes("--keep-going") || release.previous;
+  const recordsDir = job.env.VALO_TEST_RESULTS_DIR ? resolve(job.env.VALO_TEST_RESULTS_DIR) : null;
+  if (release.previous && !recordsDir)
+    throw Error("DATABASE_JOB_UNSUPPORTED: the previous release's job records no test results");
+  const recordFiles = () =>
+    recordsDir && existsSync(recordsDir)
+      ? readdirSync(recordsDir).filter((name) => name.endsWith(".jsonl"))
+      : [];
+  const outcomes: StepOutcome[] = [];
   const results: { name: string; outcome: string }[] = [];
   let written: Record<string, string> = {};
   let failed = false;
@@ -419,11 +492,13 @@ async function main(args: string[]) {
       const logPath = join(logs, `${number}-${slug(step.name)}.log`);
       const log = createWriteStream(logPath);
       const started = Date.now();
+      const recordedBefore = new Set(recordFiles());
       const code = await runStep(
         step,
         stepEnvironment(process.env, job, cluster.url, written, step, githubEnv),
         log,
         20 * 60 * 1000,
+        release.folderFor(step),
       );
       await new Promise<void>((done) => log.end(() => done()));
       const before = Object.keys(written).length;
@@ -431,11 +506,22 @@ async function main(args: string[]) {
       // The job's nested-connection records must start empty, as on a fresh runner.
       if (Object.keys(written).length !== before && written.VALO_NESTED_REPORT_DIR) {
         const records = resolve(written.VALO_NESTED_REPORT_DIR);
-        if (!within(join(repositoryRoot, "generated-artifacts"), records))
+        if (!within(join(jobRoot, "generated-artifacts"), records))
           throw Error("DATABASE_JOB_UNSUPPORTED: VALO_NESTED_REPORT_DIR must be inside generated-artifacts");
         rmSync(records, { recursive: true, force: true });
       }
       const seconds = ((Date.now() - started) / 1000).toFixed(1);
+      if (release.previous) {
+        const records = recordFiles()
+          .filter((name) => !recordedBefore.has(name))
+          .flatMap((name) =>
+            readFileSync(join(recordsDir!, name), "utf8")
+              .split("\n")
+              .filter(Boolean)
+              .map((line) => JSON.parse(line) as TestRecord),
+          );
+        outcomes.push({ name: step.name, run: step.run!, code, failed: failedTests(records, jobRoot) });
+      }
       const outcome = code === 0 ? "pass" : "FAIL";
       results.push({ name: step.name, outcome });
       process.stdout.write(`${number} ${outcome.padEnd(4)} ${seconds.padStart(6)}s  ${step.name}\n`);
@@ -454,7 +540,39 @@ async function main(args: string[]) {
   process.stdout.write(
     `\n${count("pass")} passed, ${count("FAIL")} failed, ${count("not run")} not run, ${count("skip")} skipped (CI setup)\n`,
   );
-  if (failed) process.exitCode = 1;
+  if (!release.previous) {
+    if (failed) process.exitCode = 1;
+    return;
+  }
+  // OPS-008: the previous release runs on this schema when every failure is one the register expects.
+  const tags = (root: string) =>
+    (
+      JSON.parse(readFileSync(join(root, "lib/db/drizzle/meta/_journal.json"), "utf8")) as {
+        entries: { tag: string }[];
+      }
+    ).entries.map((entry) => entry.tag);
+  const expected = applicableFailures(
+    JSON.parse(readFileSync(join(repositoryRoot, EXPECTED_FAILURES), "utf8")),
+    tags(repositoryRoot),
+    tags(jobRoot),
+  );
+  const judged = judgeSteps(outcomes, expected);
+  for (const step of judged.steps)
+    process.stdout.write(
+      step.explained
+        ? `expected: ${step.name} (${step.expected ? `${step.expected} expected test failures` : "its cited tests failed as expected"})\n`
+        : `NOT EXPECTED: ${step.name}${step.unexpected.map((test) => `\n   ${test.file}: ${test.path.join(" > ")}`).join("")}\n`,
+    );
+  for (const test of judged.unused)
+    process.stdout.write(
+      `NOT SEEN: ${test.file}: ${test.path.join(" > ")} was expected to fail and did not\n`,
+    );
+  process.stdout.write(
+    judged.passed
+      ? "the previous release runs on this schema: every failure is one the register expects\n"
+      : "the previous release does not run on this schema as the register says\n",
+  );
+  if (!judged.passed) process.exitCode = 1;
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1]))

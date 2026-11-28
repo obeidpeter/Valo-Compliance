@@ -319,3 +319,6 @@ schemas:
       total: { type: integer }
       page: { type: integer }
       heldTemplates: { type: integer }
+      closest:
+        type: boolean
+        description: True when no item has every word of the search, and the items listed are the ones that have the most of its words (docs/architecture/public-search.md). Absent otherwise.

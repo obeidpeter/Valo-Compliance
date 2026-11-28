@@ -28,6 +28,7 @@ import { Breadcrumbs } from "@/components/breadcrumbs";
 import { WorkspaceNav } from "@/components/workspace-nav";
 import { useUnsavedNavigation } from "@/lib/use-unsaved-navigation";
 import { UnsavedNavigationDialog } from "@/components/unsaved-navigation-dialog";
+import { RecheckOffer } from "@/components/recheck-offer";
 
 const EMPTY: Profile = {
   businessName: "",
@@ -77,7 +78,8 @@ export default function ProfilePage() {
   const init = useRef(false);
   const prefillApplied = useRef<string | null>(null);
   const form = useRef<HTMLFormElement>(null),
-    leaving = useRef(false);
+    leaving = useRef(false),
+    offer = useRef<HTMLDivElement>(null);
   const navigation = useUnsavedNavigation(() => touched || save.isPending);
 
   useEffect(() => {
@@ -171,6 +173,12 @@ export default function ProfilePage() {
           if (leaving.current) {
             leaving.current = false;
             navigation.proceed();
+          } else if (next.recheck) {
+            // PRO-003: the save changed an answer the requirements check reads. The offer of a new
+            // check is above the form, so it is brought into view.
+            requestAnimationFrame(() =>
+              offer.current?.scrollIntoView({ behavior: "smooth", block: "center" }),
+            );
           }
         },
         onError: (err) => {
@@ -241,6 +249,10 @@ export default function ProfilePage() {
       <p className="mt-2 text-muted-foreground">
         Each save keeps a new version. &ldquo;I do not know&rdquo; is always an acceptable answer.
       </p>
+      {/* Always here, so that the offer a save brings is read out when it appears. */}
+      <div ref={offer} role="status">
+        <RecheckOffer recheck={ws.data?.recheck} className="mt-6" />
+      </div>
       {!online && (
         <Notice className="mt-6" title="You are offline">
           Keep filling out this form — your answers stay in this tab until you are back online to save.

@@ -117,11 +117,14 @@ test(
             "acceptedAt",
             "attempts",
             "createdAt",
+            "delivery",
+            "deliveryAt",
             "forYou",
             "id",
             "kind",
             "lastAttemptAt",
             "nextAttemptAt",
+            "noticesDay",
             "orderId",
             "orderReference",
             "reason",
@@ -131,7 +134,7 @@ test(
         },
       );
       await t.test(
-        "a message the stand-in took is called recorded, never accepted, and one an email service took is never called delivered",
+        "a message the stand-in took is called recorded, never accepted, and one an email service took has no delivery until that service reports one",
         async () => {
           const a = await workspace(),
             now = new Date();
@@ -164,10 +167,11 @@ test(
           await dispatchMessage(a.workspaceId, taken.message.id, namedSender("synthetic-email-service"), now);
           const accepted = await entry(a, taken.message.id);
           assert.deepEqual([accepted?.status, accepted?.acceptedAt], ["accepted", now.toISOString()]);
-          // Nothing the log says of any message is a delivery.
+          // No state is a delivery, and no message here has a report of one: no email service reported
+          // anything. What a report then shows is valo-email-events.integration.test.ts's to prove.
           const log = await listWorkspaceMessages(a);
           assert.ok(log.every((listed) => !["sent", "delivered"].includes(listed.status)));
-          assert.doesNotMatch(JSON.stringify(log), /deliver/i);
+          assert.ok(log.every((listed) => listed.delivery === null && listed.deliveryAt === null));
           // Nor does it name a sender, its reference for a message, or whom a message is for.
           const written = JSON.stringify(log);
           for (const hidden of [

@@ -30,7 +30,7 @@ No recorded evidence at all: none.
 
 ## Tests cited as evidence
 
-`docs/registers/ci-evidence.json` holds 821 citations of 576 tests for 126 requirements (decision 0010).
+`docs/registers/ci-evidence.json` holds 950 citations of 675 tests for 126 requirements (decision 0010).
 A CI job fails when a test cited for it does not pass, and each run's `readiness-report` artifact lists every citation's result.
 A citation is partial evidence: it never accepts a requirement.
 
@@ -38,9 +38,9 @@ A citation is partial evidence: it never accepts a requirement.
 | --- | ---: | --- |
 | ADM-001 | 4 | postgres |
 | ADM-002 | 4 | foundation, postgres |
-| ADM-003 | 18 | foundation, postgres, web-performance |
-| ADM-004 | 4 | foundation, postgres |
-| ADM-005 | 4 | foundation, postgres |
+| ADM-003 | 19 | foundation, postgres, web-performance |
+| ADM-004 | 6 | foundation, postgres |
+| ADM-005 | 12 | foundation, postgres |
 | ADM-006 | 10 | foundation, postgres, web-performance |
 | ADM-007 | 11 | foundation, postgres, web-performance |
 | ADM-008 | 14 | foundation, postgres, web-performance |
@@ -67,25 +67,25 @@ A citation is partial evidence: it never accepts a requirement.
 | DOC-002 | 3 | foundation, web-performance |
 | DOC-003 | 5 | foundation, postgres |
 | DOC-004 | 4 | postgres, web-performance |
-| DOC-005 | 8 | foundation, postgres, web-performance |
+| DOC-005 | 10 | foundation, postgres, web-performance |
 | DOC-006 | 4 | foundation, postgres |
 | DOC-007 | 11 | foundation, postgres |
 | DOC-008 | 1 | foundation |
 | DOC-009 | 6 | foundation, postgres |
-| EDP-001 | 6 | foundation, postgres |
-| EDP-002 | 11 | foundation, postgres |
-| EDP-003 | 8 | foundation |
-| EDP-004 | 5 | foundation, postgres |
-| EDP-005 | 10 | foundation, postgres |
-| EDP-006 | 6 | foundation |
-| EDP-007 | 11 | foundation, postgres |
-| EDP-008 | 7 | foundation |
+| EDP-001 | 8 | foundation, postgres |
+| EDP-002 | 13 | foundation, postgres |
+| EDP-003 | 15 | foundation |
+| EDP-004 | 10 | foundation, postgres |
+| EDP-005 | 14 | foundation, postgres |
+| EDP-006 | 15 | foundation, postgres |
+| EDP-007 | 12 | foundation, postgres |
+| EDP-008 | 8 | foundation |
 | EDP-009 | 6 | foundation, postgres |
 | EDP-010 | 21 | foundation, postgres, web-performance |
-| EDP-011 | 17 | foundation, postgres, web-performance |
+| EDP-011 | 21 | foundation, postgres, web-performance |
 | EDP-012 | 3 | foundation, postgres |
 | EDT-001 | 7 | foundation, web-performance |
-| EDT-002 | 12 | foundation, postgres |
+| EDT-002 | 13 | foundation, postgres |
 | EDT-003 | 7 | foundation, postgres, web-performance |
 | EDT-004 | 6 | foundation, postgres, web-performance |
 | EDT-005 | 13 | foundation, postgres, web-performance |
@@ -102,11 +102,11 @@ A citation is partial evidence: it never accepts a requirement.
 | NFR-003 | 4 | foundation, postgres |
 | NFR-004 | 5 | foundation, postgres |
 | NFR-005 | 3 | foundation |
-| NFR-006 | 17 | foundation, web-performance |
+| NFR-006 | 25 | foundation, web-performance |
 | NFR-007 | 3 | web-performance |
 | NFR-008 | 12 | foundation, web-performance |
 | NFR-009 | 8 | postgres, web-performance |
-| NFR-010 | 9 | foundation, web-performance |
+| NFR-010 | 10 | foundation, web-performance |
 | NFR-011 | 2 | foundation |
 | OPS-001 | 4 | foundation |
 | OPS-002 | 2 | postgres |
@@ -114,23 +114,23 @@ A citation is partial evidence: it never accepts a requirement.
 | OPS-004 | 5 | foundation, postgres |
 | OPS-005 | 1 | postgres |
 | OPS-006 | 1 | foundation |
-| OPS-008 | 2 | foundation |
-| PAY-001 | 2 | foundation, postgres |
+| OPS-008 | 9 | foundation |
+| PAY-001 | 4 | foundation, postgres |
 | PAY-002 | 3 | foundation, postgres |
 | PAY-003 | 3 | foundation, postgres |
 | PAY-004 | 3 | foundation, postgres |
 | PAY-005 | 2 | postgres |
-| PAY-006 | 2 | postgres |
-| PAY-007 | 1 | postgres |
+| PAY-006 | 4 | foundation, postgres, web-performance |
+| PAY-007 | 9 | foundation, postgres, web-performance |
 | PAY-008 | 5 | foundation, postgres |
 | PAY-009 | 12 | foundation, postgres, web-performance |
 | PAY-010 | 3 | foundation |
 | PRO-001 | 3 | foundation |
-| PRO-002 | 6 | foundation, postgres, web-performance |
-| PRO-003 | 2 | foundation, postgres |
-| PRV-001 | 12 | foundation, postgres, web-performance |
+| PRO-002 | 7 | foundation, postgres, web-performance |
+| PRO-003 | 9 | foundation, postgres, web-performance |
+| PRV-001 | 13 | foundation, postgres, web-performance |
 | PRV-002 | 2 | foundation |
-| PRV-003 | 16 | foundation, postgres, web-performance |
+| PRV-003 | 18 | foundation, postgres, web-performance |
 | RUL-001 | 28 | foundation, web-performance |
 | RUL-002 | 5 | foundation, web-performance |
 | RUL-003 | 3 | foundation |
@@ -140,26 +140,26 @@ A citation is partial evidence: it never accepts a requirement.
 | RUL-007 | 3 | foundation, postgres |
 | RUL-008 | 19 | foundation, postgres, web-performance |
 | RUL-009 | 4 | foundation, postgres |
-| SEC-001 | 6 | foundation, postgres |
+| SEC-001 | 9 | foundation, postgres |
 | SEC-002 | 11 | foundation, postgres |
 | SEC-003 | 15 | foundation, postgres, web-performance |
 | SEC-004 | 5 | foundation |
-| SEC-005 | 19 | foundation, postgres |
+| SEC-005 | 20 | foundation, postgres |
 | SEC-006 | 10 | foundation, postgres |
 | SEC-007 | 12 | foundation |
-| SEC-008 | 10 | foundation, postgres |
+| SEC-008 | 11 | foundation, postgres |
 | SRV-001 | 1 | foundation |
-| SRV-002 | 6 | foundation, postgres, web-performance |
+| SRV-002 | 8 | foundation, postgres, web-performance |
 | SRV-003 | 1 | foundation |
 | SRV-004 | 1 | foundation |
 | WEB-001 | 8 | web-performance |
-| WEB-002 | 5 | foundation, web-performance |
-| WEB-003 | 3 | foundation, postgres |
+| WEB-002 | 15 | foundation, web-performance |
+| WEB-003 | 10 | foundation, postgres, web-performance |
 | WEB-004 | 3 | foundation |
 | WRK-001 | 6 | postgres, web-performance |
 | WRK-002 | 2 | foundation |
-| WRK-003 | 9 | foundation, postgres, web-performance |
-| WRK-004 | 3 | postgres |
+| WRK-003 | 17 | foundation, postgres, web-performance |
+| WRK-004 | 12 | foundation, postgres, web-performance |
 | WRK-005 | 1 | foundation |
 | WRK-006 | 3 | foundation, postgres |
 

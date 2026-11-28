@@ -5,21 +5,63 @@ paths:
       operationId: listWorkspaceMessages
       responses:
         "200":
-          description: The workspace's messages and what became of each; accepted is not delivered, and recorded is not emailed
+          description: The workspace's messages and what became of each; accepted is not delivered, recorded is not emailed, and a delivery is only what the email service reported
           content:
             application/json:
               schema: { type: array, items: { $ref: "#/components/schemas/WorkspaceMessage" } }
+  /public/unsubscribe:
+    post:
+      operationId: unsubscribe
+      tags: [messages]
+      summary: Stop one kind of optional message, from the link in one of them; needs no account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UnsubscribeInput" }
+      responses:
+        "200":
+          description: That kind of message is off for the workspace the link was made for, whether or not it was before. The choice is recorded as the workspace's own.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UnsubscribeAck" }
+        "400":
+          description: Not a link Valo made, or one it no longer honours. Nothing was changed, and the answer does not say which.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiProblem" }
+        "429":
+          description: Too many tries with one workspace's links in a short time. This try changed nothing, and the answer says when to try again.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiProblem" }
 schemas:
+  UnsubscribeInput:
+    type: object
+    additionalProperties: false
+    required: [token]
+    properties:
+      # The token from the link, as it was written there.
+      token: { type: string, minLength: 1, maxLength: 181 }
+  UnsubscribeAck:
+    type: object
+    required: [consent, state]
+    properties:
+      # The kind of optional message that is now off.
+      consent: { type: string, enum: [reminders] }
+      state: { type: string, enum: ["off"] }
   WorkspaceMessage:
     type: object
-    required: [id, kind, orderId, orderReference, refundReference, forYou, status, reason, attempts, createdAt, lastAttemptAt, nextAttemptAt, acceptedAt]
+    required: [id, kind, orderId, orderReference, refundReference, noticesDay, forYou, status, reason, attempts, createdAt, lastAttemptAt, nextAttemptAt, acceptedAt, delivery, deliveryAt]
     properties:
       id: { type: string, format: uuid }
-      kind: { type: string, enum: [purchase_receipt, refund_processed] }
+      kind: { type: string, enum: [purchase_receipt, refund_processed, notices_digest] }
       # The order the message is about: a receipt's own, or a refund notice's refund's.
       orderId: { type: [string, "null"] }
       orderReference: { type: [string, "null"] }
       refundReference: { type: [string, "null"] }
+      # The Lagos day whose notices a notices message is about, as YYYY-MM-DD. Null for any other kind.
+      noticesDay: { type: [string, "null"] }
       # Whether the message is for the member asking, or for another member of the workspace.
       forYou: { type: boolean }
       # accepted: an email service took the message; nothing shows it reached an inbox.
@@ -31,3 +73,7 @@ schemas:
       lastAttemptAt: { type: [string, "null"] }
       nextAttemptAt: { type: [string, "null"] }
       acceptedAt: { type: [string, "null"] }
+      # What the email service last reported about an accepted message, and its time for that. Null while it
+      # has reported nothing, and always for a message that was only recorded.
+      delivery: { anyOf: [{ $ref: "#/components/schemas/MessageDelivery" }, { type: "null" }] }
+      deliveryAt: { type: [string, "null"] }

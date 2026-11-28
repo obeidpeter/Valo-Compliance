@@ -106,7 +106,8 @@ Rules that apply now:
   may call `runInWorkspaceScope`: the middleware with the workspace it resolved from
   the membership, a background job for one workspace with the workspace of the stored
   record it processes, reading that workspace's data in the scope and keeping its
-  bookkeeping outside. Never give the login or the scoped role another privilege or
+  bookkeeping outside, and the unsubscribe link's action with the workspace a link
+  Valo signed names. Never give the login or the scoped role another privilege or
   membership outside a reviewed migration, and in customer code never change the
   role, `search_path` or `valo.workspace_credential`, or use session-level `SET`
   (use `SET LOCAL`). A customer
@@ -140,13 +141,22 @@ Rules that apply now:
   that connection; the `reviewer-connection` repository rule enforces this. Never give the login
   another privilege or membership outside a reviewed migration, and never give its connection string
   to the API or the worker.
-- A requirements-check rule's version is released on the reviewed route (`applyStoredRuleRelease`)
-  or, in development, on the owner's sign-off (decision 0020, `modules/editorial/owner-rule-signoff.ts`).
+- A requirements-check rule's version is released on the reviewed route (`applyStoredRuleRelease`,
+  from the request `assembleReviewedRuleRelease` keeps once the rule's two reviews have passed) or, in
+  development, on the owner's sign-off (decision 0020, `modules/editorial/owner-rule-signoff.ts`).
   The rule table's trigger, `valo_guard_owner_signed_rule`, refuses an owner-signed release unless
   the development owner's sign-off of its exact manifest was made in the same transaction, on a
   source check under a day old; such a release changes only its status, and is never published
   again once superseded or withdrawn. Its sources are marked current only by `guideSourceDecision`,
   as a guide's are.
+- A rule is prepared for the reviewed route only from the repository's prepared rules
+  (`preparedRuleIds`), by `buildReviewedRule` (`docs/architecture/reviewed-route.md`, part 3). Each
+  rule's rights record adopts a version's wording by the owner's signature, which that route does not
+  have, so the route holds a rule until the owner chooses a rights record for it there
+  (`reviewedRouteRights`). Never set one without the owner's explicit, current choice of its exact
+  text. A rule's two reviews run only under a package of their own kind
+  (`finitePackagePreparers.rulePairs`), which admits nothing else: never admit a rule's pair under
+  another kind of package, or other work under that one.
 - A guide that says what the law requires is released only under the guidance policy
   (`guidancePolicy`, read from `docs/valo/policies/guidance-publication-policy.md`), never under
   the templates' policy; the owner's sign-off in the staff library and its readers check the same
@@ -156,6 +166,57 @@ Rules that apply now:
   current only by `guideSourceDecision`, from its text's amendment record
   (`guidance-amendments.ts`); record there only a search, a reading or a comparison that was
   really made, with what it did not cover.
+- A template that states the law, which is any template not prepared as an original form that quotes
+  no law, is checked only against the policy for templates that state the law (`templateLawPolicy`,
+  read from `docs/valo/policies/template-law-publication-policy.md`), never against the templates'
+  own policy (`releasePolicyKind`). Only the product owner approves it: it counts as approved only
+  while `templateLawPolicyApprovedHash` returns that file's own SHA-256, and today it returns none.
+  Never change that function without the owner's explicit, current approval of the file's exact
+  text. A template's claim map (`template-claim-map.ts`) places every sentence of its words; a term
+  the parties agree, a limit or a heading rests on no passage, and a contract states the parties and
+  use it assumes and the clauses it leaves open. Its two reviews are admitted only under a package of
+  their own kind (`law-template-review-pair-v1`), and a released one is shown only while that policy
+  stands.
+- An order keeps the terms it was made with. The database refuses any change to its amount,
+  currency, line, price or bundle, and to what says which order it is
+  (`valo_orders_keep_terms`, `docs/architecture/order-safety.md`). Only its status, provider
+  transaction, checkout address and last check change, and an erasure's mark replaces who placed
+  it. Never turn the trigger off to change an order: a correction is a finance decision with its
+  own record. A test goes beneath it only to plant the fault it is about, in a synthetic order of
+  its own.
+- An order is made from the price book. The database refuses a new order unless the price or the
+  bundle's version it names is in effect and its amount, currency and whole line are that offer's
+  (`valo_orders_made_from_price_book`, `docs/architecture/order-safety.md`, slice 2). Take an
+  order's terms from `priceOrderTerms` or `bundleOrderTerms`, in tests as in the application. A
+  change to what a line holds changes the trigger in the same migration.
+- An order is made, and a payment started or its saved page handed out, only after the provider
+  has been asked again about each earlier order of the workspace for the same edition that ended
+  abandoned or failed (`afterALookAtEndedOrders`, `docs/architecture/order-safety.md`, slice 4).
+  A new path that makes an order or starts a payment runs through it. The provider is asked
+  outside any transaction, and where it cannot be asked nothing new is made or started.
+- The daily payment check compares the provider's answer with the order before it settles
+  anything (`orderDifferences`, `docs/architecture/reconciliation.md`, slice 1). An answer that
+  differs is recorded as the check's finding, names what differs, and settles nothing. A provider
+  that gives no answer is not a difference: the attempt is counted, and the check reads
+  `NO_ANSWER` only after its third, an hour apart. Never correct an order, a payment or a grant
+  from the check's finding.
+- A finished payment check is history. Finance settles a difference only through
+  `settlePaymentCheck`, which records why in the staff access audit in the same transaction; the
+  database's guard `valo_payment_checks_kept` refuses a settlement made any other way, and any
+  other change to a finished check but an erasure's rewrite of its finding
+  (`docs/architecture/reconciliation.md`, slice 2). A test that needs a settled check settles it
+  as finance would.
+- A provider event that the event worker left for finance is settled only through
+  `settlePaymentEvent`, as a row of `valo_payment_event_settlements` with why in the staff access
+  audit in the same transaction; the event itself is never changed for it, and the database's guard
+  `valo_payment_event_settlements_kept` refuses a settlement made any other way, and any change to
+  or removal of one (`docs/architecture/reconciliation.md`, slice 3a). When the worker leaves an
+  event for finance, its `failure` says why, with a name `paymentEventFinding` gives.
+- Paystack's own list of a day's payments is read only by `listProviderTransactions`, outside any
+  transaction, once the day has ended (`docs/architecture/reconciliation.md`, slice 3b). What it
+  finds is recorded only as provider events that wait for finance, keyed as the webhook keys them so
+  that a payment is recorded once whichever way it came. Never correct an order, a payment or a
+  grant from the list.
 - Only the operator commands in `FINITE_WORK_BINDING_ENTRIES` hand the inference
   dispatcher its work-binding checks (`provideFiniteWorkBindings`), and only the real
   `assertFiniteWorkBindings`; the `inference-bindings` repository rule enforces this.
@@ -164,6 +225,28 @@ Rules that apply now:
   the dispatcher hands it to a sender, after checking again whatever could stop it. A row of
   `valo_messages` holds no message text and no address. The only sender is a stand-in that
   sends nothing: a sender that reaches a real address needs the owner's approval (section 1).
+- What an email provider reports about a message arrives signed at `routes/valo-email-webhook.ts`.
+  Keep of a report only what `valo_email_events` holds: never the address, the subject or the
+  provider's own words, and nothing of an open or a click. A message or reminder is called
+  delivered only where the provider reported it (`valo_message_deliveries`), and a message the
+  stand-in took never is.
+- An address whose email service sent a message back for good, or where one was marked as spam,
+  gets no more optional messages (`modules/messages/valo-email-suppression.ts`). Keep of it only
+  a keyed checksum, in `valo_email_suppressions`, never the address. A sender that reaches a real
+  address asks `addressSuppressed` of the recipient's address before it hands an optional message
+  to a provider, and sends nothing when it cannot ask. Customer code reaches the list only through
+  `valo_email_address_suppressed`, which answers yes or no.
+- An optional message never goes without its unsubscribe link, in its words and in its
+  `List-Unsubscribe` headers (`modules/messages/unsubscribe-token.ts`, `routes/valo-unsubscribe.ts`).
+  A link's token holds no identifier of a person, no time and nothing random, so a retried send
+  carries the same words. Opening a link changes nothing. Only a POST does: it turns that one kind of
+  message off for the link's workspace, as its owner, and records the choice. Answer every link Valo
+  does not honour alike, and log nothing of a link.
+- A notice of a change is emailed only as its workspace's one message for the day. A change writes
+  its notice where it happens, and sends nothing. The worker's task records each ended day in
+  `valo_notice_digests` and queues its message (`modules/messages/valo-notice-digests.ts`); a kind of
+  notice that should be emailed joins `emailedNotices` there, with the owner's approval of the
+  choice. The message holds Valo's own words for a change, never what a customer wrote.
 - API code is moving into one folder per capability under
   `artifacts/api-server/src/modules/`. Code outside a module imports it only through
   its `index.ts`; the `module-boundary` repository rule enforces this, and tests may
@@ -190,7 +273,9 @@ non-root user). It never uses a database from your environment and passes the st
 none of your credentials. Add a database group to the workflow and it runs there too;
 `--keep-going` reports every failing step. Every test file must be run by a package
 script that CI calls; `scripts/src/valo/test-inventory.test.ts` fails otherwise,
-unless the exception and its reason are recorded there. A test that is skipped or a todo in every
+unless the exception and its reason are recorded there. A test file that writes a safety switch every
+workspace shares, such as a staff pause, is run by a script that runs one file at a time
+(`--test-concurrency=1`); that inventory fails otherwise. A test that is skipped or a todo in every
 job that runs it fails the evidence job, unless `scripts/src/valo/skipped-tests.ts` records why it
 cannot run in CI. Tests create only
 synthetic records and never call real providers. A green local run is not hosted CI; check the actual
@@ -200,6 +285,17 @@ workflow run for the exact commit before reporting CI status.
 
 - Migrations in `lib/db/drizzle` are append-only. Never edit, rename or delete a
   migration that has been merged into the integration branch.
+- A migration only adds, so that the previous release still runs on the schema it
+  leaves (OPS-008, `docs/valo/release-and-rollback.md`). CI's rollback job refuses one
+  that removes, renames or narrows what the previous release may use, or changes data,
+  unless `lib/db/expand-only-exceptions.json` names the exact statement with a reviewed
+  reason, and a change of data its runbook, which the owner approves before merge. It
+  then runs the previous release's own database job against the new schema, where only
+  the failures `lib/db/rollback-expected-failures.json` records may happen: tests that
+  check the schema itself, or that set themselves up by writing rows straight into the
+  database in a shape the release's own code never writes and a new guard refuses; never
+  what the release does. Never add an exception or an expected failure to let a migration
+  through: make it only add, and remove the old shape in a later release.
 - Change the Drizzle schema, then run
   `pnpm --filter @workspace/db exec drizzle-kit generate --name <change>`. New
   files are timestamp-named. For functions, triggers or grants use

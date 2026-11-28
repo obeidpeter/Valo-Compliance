@@ -21,7 +21,11 @@ const decodeXML = (s: string) =>
  * not an assertion that somebody opened Word or certified accessibility.
  *
  * `notice` is the line the renderer prints at the top of every page of the PDF: a template's unless
- * the candidate is a guide. A caller that rendered in another mode names that mode's notice. */
+ * the candidate is a guide. A caller that rendered in another mode names that mode's notice.
+ *
+ * The files must hold the whole document the candidate's body is. A candidate whose body is not a
+ * document, such as a requirements-check rule, gives the document its files were rendered from
+ * (`document`), and they must hold that. */
 export async function inspectOperationalExports(
   candidate: PublicationBundle["candidate"],
   files: { docx: Buffer; pdf: Buffer },
@@ -30,10 +34,11 @@ export async function inspectOperationalExports(
     : candidate.contentClass === "sourced_guidance"
       ? GUIDANCE_NOTICE
       : TEMPLATE_NOTICE,
+  given?: unknown,
 ) {
   if (candidateDigest(candidate) !== candidate.hash || Buffer.byteLength(candidate.body) > 256 * 1024)
     throw Error("EXPORT_CANDIDATE_BINDING_INVALID");
-  const document = documentInput.parse(JSON.parse(candidate.body));
+  const document = documentInput.parse(given ?? JSON.parse(candidate.body));
   // A list prints each line as its own item, with a bullet between two of them, so each item is
   // looked for by itself.
   const expected = [

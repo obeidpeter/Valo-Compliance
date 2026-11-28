@@ -12,7 +12,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { pathToFileURL } from "node:url";
-import { chromium, expect } from "@playwright/test";
+import { chromium, expect, type Page } from "@playwright/test";
 import { chromiumLaunchPath } from "../platform/chromium";
 
 const root = resolve(import.meta.dirname, "../../../.."),
@@ -135,6 +135,20 @@ try {
   checks.push(
     "Each page is HTML in UTF-8, and a script, an image and a text file are sent with their own types; every one carries nosniff and the same-origin referrer policy",
   );
+  // The page an unsubscribe link opens has the link's token in its address
+  // (docs/architecture/messages.md, part 4). It alone is sent with a policy under which a request says
+  // to no one, Valo's own servers included, where it came from. The token here is this check's own.
+  const linkToken = "synthetic.unsubscribe.token",
+    linkPath = `/unsubscribe?t=${linkToken}`;
+  for (const path of [linkPath, "/unsubscribe"]) {
+    const answered = said(await fetch(origin + path));
+    assert.equal(answered.nosniff, "nosniff", path);
+    assert.equal(answered.referrer, "no-referrer", path);
+    assert.match(answered.type, /^text\/html; charset=utf-8$/i, path);
+  }
+  checks.push(
+    "The page an unsubscribe link opens is sent with the no-referrer policy, with a token in its address or without",
+  );
   // A folder is answered as an address the server does not have, never with a listing: the answer
   // names none of the folder's files, but those the page itself loads.
   for (const folder of ["chunks", "css", "media"]) {
@@ -238,6 +252,78 @@ try {
   }
   checks.push(
     "Chromium actually blocks injected non-nonced JavaScript while allowing a script bearing the server nonce, on the browser app's page and every server-rendered page",
+  );
+  // What a page's own requests say of where they came from, in the browser. A page with the usual
+  // policy tells Valo's own server its whole address, which shows that this check would see one. The
+  // page an unsubscribe link opens tells no one, and its request to stop the reminders still names the
+  // site that sent it, which is what the API checks before it acts (sameOriginMutation).
+  const requestsOf = async (path: string, act: (opened: Page) => Promise<void>) => {
+    const opened = await context.newPage();
+    const made: { url: string; method: string; referer: string | null; origin: string | null }[] = [];
+    opened.on("request", (request) => {
+      const headers = request.headers();
+      made.push({
+        url: request.url(),
+        method: request.method(),
+        referer: headers["referer"] ?? null,
+        origin: headers["origin"] ?? null,
+      });
+    });
+    try {
+      await opened.goto(origin + path);
+      await act(opened);
+      return made;
+    } finally {
+      await opened.close();
+    }
+  };
+  const usual = await requestsOf("/checker?from=synthetic-referrer-probe", async (opened) => {
+    await expect(opened.getByRole("link", { name: "Documents", exact: true }).first()).toBeVisible();
+  });
+  assert.ok(
+    usual.some((request) => request.referer === `${origin}/checker?from=synthetic-referrer-probe`),
+    "a page with the usual policy tells its own server its address, so this check sees a Referer",
+  );
+  const sent: unknown[] = [];
+  const fromLink = await requestsOf(linkPath, async (opened) => {
+    await opened.route(`${origin}/api/public/unsubscribe`, async (route) => {
+      sent.push(route.request().postDataJSON());
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ consent: "reminders", state: "off" }),
+      });
+    });
+    await opened.getByTestId("button-unsubscribe").click();
+    await expect(opened.getByTestId("unsubscribe-done")).toBeVisible();
+  });
+  assert.ok(fromLink.length > 1, "the page asks for its scripts and styles");
+  // A font is asked for by the stylesheet that names it, so its request names that stylesheet: a file of
+  // the build's, whose address holds nothing of the link. No other request names where it came from.
+  const stylesheet = /^\/_next\/static\/css\/[\w.-]+\.css$/;
+  assert.deepEqual(
+    fromLink.filter(
+      (request) =>
+        request.referer !== null &&
+        !(request.referer.startsWith(`${origin}/`) && stylesheet.test(request.referer.slice(origin.length))),
+    ),
+    [],
+    "no request of the unsubscribe page names the page it came from",
+  );
+  assert.deepEqual(
+    fromLink.filter((request) => request.url.includes(linkToken)).map((request) => request.url),
+    [origin + linkPath],
+    "the token is in the page's own address and in no other request's",
+  );
+  const stop = fromLink.filter((request) => request.method === "POST");
+  assert.deepEqual(
+    stop.map((request) => [request.url, request.origin]),
+    [[`${origin}/api/public/unsubscribe`, origin]],
+    "the one request to stop reminders names the site that sent it",
+  );
+  assert.deepEqual(sent, [{ token: linkToken }]);
+  checks.push(
+    "In Chromium, no request the unsubscribe page makes names the page as where it came from or holds the link's token in its address, and its one request to stop reminders carries the page's Origin; a page with the usual policy does send its address to its own server",
   );
   report.status = "passed_compiled_frontend_security_not_real_mfa";
 } catch (error) {

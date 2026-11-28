@@ -3,6 +3,9 @@ export type ReminderSender = {
   replayWindowMs?: number | undefined;
   send(input: {
     idempotencyKey: string;
+    /** The reminder and its workspace, which the message's unsubscribe link names. */
+    workspaceId: string;
+    reminderId: string;
     ownerIdentityId: string;
     title: string;
     dueDate: string;
@@ -10,3 +13,16 @@ export type ReminderSender = {
     signal: AbortSignal;
   }): Promise<{ providerMessageId: string }>;
 };
+
+/**
+ * Thrown by a sender that will not send, because Valo has stopped sending optional messages to the
+ * recipient's address: its email service sent a message back for good, or reported one as spam
+ * (docs/architecture/messages.md, part 3). Nothing was sent. The worker cancels the reminder with this
+ * reason, and does not try it again.
+ */
+export class ReminderAddressSuppressed extends Error {
+  constructor() {
+    super("EMAIL_ADDRESS_SUPPRESSED");
+    this.name = "ReminderAddressSuppressed";
+  }
+}

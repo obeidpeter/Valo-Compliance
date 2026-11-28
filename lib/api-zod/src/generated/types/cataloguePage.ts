@@ -12,4 +12,6 @@ export interface CataloguePage {
   total: number;
   page: number;
   heldTemplates: number;
+  /** True when no item has every word of the search, and the items listed are the ones that have the most of its words (docs/architecture/public-search.md). Absent otherwise. */
+  closest?: boolean;
 }

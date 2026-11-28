@@ -17,6 +17,7 @@ import {
   operationalReviewSchemaFor,
   assertBlindReviewInputs,
   GUIDE_REVIEW_INPUT_CEILING,
+  TEMPLATE_LAW_REVIEW_INPUT_CEILING,
   type OperationalServerEvidence,
 } from "../publication";
 export type { OperationalServerEvidence } from "../publication";
@@ -87,10 +88,18 @@ export function reviewPromptVersion(
 /**
  * The most a review request may measure before it is refused unsent. A guide's request carries the
  * official passages it rests on and what was searched for later amendments, so its limit is the one
- * the guidance policy states (decision 0017). Every other request keeps the templates' limit.
+ * the guidance policy states (decision 0017); a template that states the law carries the same, under
+ * the limit its own policy states (docs/architecture/reviewed-route.md, part 4). Every other request
+ * keeps the templates' limit.
  */
-export const reviewInputCeiling = (candidate: Pick<PublicationBundle["candidate"], "contentClass">) =>
-  candidate.contentClass === "sourced_guidance" ? GUIDE_REVIEW_INPUT_CEILING : REVIEW_INPUT_CEILING;
+export const reviewInputCeiling = (
+  candidate: Pick<PublicationBundle["candidate"], "contentClass" | "evidenceMode">,
+) =>
+  candidate.contentClass === "sourced_guidance"
+    ? GUIDE_REVIEW_INPUT_CEILING
+    : candidate.contentClass === "general_template" && candidate.evidenceMode === "regulatory"
+      ? TEMPLATE_LAW_REVIEW_INPUT_CEILING
+      : REVIEW_INPUT_CEILING;
 export function operationalReviewRequests(
   candidate: PublicationBundle["candidate"],
   rights: unknown,
@@ -226,6 +235,46 @@ export async function executeOperationalReviewPlan(
   candidate: PublicationBundle["candidate"],
   serverEvidence: OperationalServerEvidence,
 ) {
+  return executeReviewPlan(plan, candidate, serverEvidence, (input, entry) =>
+    operationalReviewRequests(
+      candidate,
+      input.rights,
+      input.provenance,
+      input.exports,
+      serverEvidence,
+      entry.reviewAsOf,
+      input.sources ?? [],
+    ).find((e) => e.role === entry.role),
+  );
+}
+/** What one of a review pair's requests sent the reviewer, read back from the request itself. */
+export type ReviewPlanInput = Record<string, unknown> & { sources?: PublicationBundle["sources"] };
+/** One of a review pair's requests, as a saved plan holds it. */
+export type ReviewPlanEntry = ReturnType<typeof operationalReviewRequests>[number];
+/** A saved plan of a review pair, of whatever kind of content: its manifest, its two requests and the
+ * private artifact that keeps them. */
+export type ReviewPlan<Evidence> = {
+  manifest: {
+    candidateHash: string;
+    serverEvidence: Evidence;
+    preparedAt: string;
+    expiresAt: string;
+    status: string;
+  };
+  entries: ReviewPlanEntry[];
+  artifact: { id: string; hash: string; extension: "json" };
+};
+/**
+ * Runs a saved review plan's two requests, each blind to the other, under the approved pair: the plan
+ * must be the one its artifact keeps, unexpired, bound to this candidate and its server evidence, and
+ * each request must be exactly the one `rebuild` makes again from the request's own inputs.
+ */
+export async function executeReviewPlan<Evidence>(
+  plan: ReviewPlan<Evidence>,
+  candidate: PublicationBundle["candidate"],
+  serverEvidence: Evidence,
+  rebuild: (input: ReviewPlanInput, entry: ReviewPlanEntry) => ReviewPlanEntry | undefined,
+) {
   const retained = await getPublicationArtifact(plan.artifact);
   if (
     sha256(Buffer.from(JSON.stringify({ manifest: plan.manifest, entries: plan.entries }))) !==
@@ -251,16 +300,8 @@ export async function executeOperationalReviewPlan(
   for (const entry of plan.entries) {
     const input = JSON.parse(entry.request.messages[1]!.content);
     if (digest(input.candidate) !== digest(candidate)) throw Error("REVIEW_PLAN_CANDIDATE_CHANGED");
-    const expected = operationalReviewRequests(
-      candidate,
-      input.rights,
-      input.provenance,
-      input.exports,
-      serverEvidence,
-      entry.reviewAsOf,
-      input.sources ?? [],
-    ).find((e) => e.role === entry.role)!;
-    if (digest(expected) !== digest(entry)) throw Error("REVIEW_PLAN_REQUEST_CHANGED");
+    const expected = rebuild(input, entry);
+    if (!expected || digest(expected) !== digest(entry)) throw Error("REVIEW_PLAN_REQUEST_CHANGED");
   }
   const hold = (code: string) =>
     Object.assign(Error(code), { reviewPlan: { manifest: plan.manifest, artifact: plan.artifact } });

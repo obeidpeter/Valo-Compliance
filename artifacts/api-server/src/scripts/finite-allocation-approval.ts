@@ -19,7 +19,7 @@ import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
  * `approve` authorizes spending up to the allocation's cap, so only the product owner runs it, or an
  * operator on their written instruction. Building or testing this command spends nothing.
  *
- *   tsx src/scripts/finite-allocation-approval.ts prepare <package.json> [--editorial-cases | --checker-challenges | --guide-pairs | --practical-guide-pairs | --reminder-inventory-pairs]
+ *   tsx src/scripts/finite-allocation-approval.ts prepare <package.json> [--editorial-cases | --checker-challenges | --guide-pairs | --practical-guide-pairs | --reminder-inventory-pairs | --rule-pairs | --law-template-pairs]
  *     Writes the current package to <package.json> and prints its id and limits. Writes nothing else.
  *     The package admits the template review pairs, or with --editorial-cases only the case-bound
  *     editorial cases' review pairs (decision 0015), or with --checker-challenges only the challenges
@@ -27,7 +27,11 @@ import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
  *     guides that say what the law requires (decision 0017): each approval covers one kind of work.
  *     A guide's review pair is admitted and sent only once the development owner has checked that
  *     exact candidate's official sources within the last day, and the publisher releases the guide
- *     only on such a check of it (decision 0018; docs/architecture/reviewed-route.md, part 2).
+ *     only on such a check of it (decision 0018; docs/architecture/reviewed-route.md, part 2). With
+ *     --rule-pairs it admits only the review pairs of requirements-check rules prepared in the repository
+ *     for the reviewed route (docs/architecture/reviewed-route.md, part 3), and with --law-template-pairs
+ *     only the review pairs of templates that state the law (part 4). Such a template's pair is admitted
+ *     and sent only while the policy for templates that state the law is the text the owner approved.
  *   tsx src/scripts/finite-allocation-approval.ts status
  *     Lists every recorded package approval. Read-only.
  *   VALO_RECORD_OWNER_INFERENCE_APPROVAL=owner-approved-exact-finite-package \
@@ -40,7 +44,7 @@ import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
  * Every mode needs NODE_ENV=development and refuses a deployment.
  */
 const usage =
-  "usage: finite-allocation-approval.ts prepare <package.json> [--editorial-cases | --checker-challenges | --guide-pairs | --practical-guide-pairs | --reminder-inventory-pairs] | status | approve <package.json> --confirm <id> --approved-by <name> --reference <text> [--hours n] | revoke --confirm <id>";
+  "usage: finite-allocation-approval.ts prepare <package.json> [--editorial-cases | --checker-challenges | --guide-pairs | --practical-guide-pairs | --reminder-inventory-pairs | --rule-pairs | --law-template-pairs] | status | approve <package.json> --confirm <id> --approved-by <name> --reference <text> [--hours n] | revoke --confirm <id>";
 const [mode, ...rest] = process.argv.slice(2);
 const option = (name: string) => {
   const index = rest.indexOf(name);
@@ -74,7 +78,9 @@ try {
         choice !== "--checker-challenges" &&
         choice !== "--guide-pairs" &&
         choice !== "--practical-guide-pairs" &&
-        choice !== "--reminder-inventory-pairs")
+        choice !== "--reminder-inventory-pairs" &&
+        choice !== "--rule-pairs" &&
+        choice !== "--law-template-pairs")
     )
       throw new Error(usage);
     const pkg = await prepareFiniteAllocationPackage(
@@ -85,11 +91,15 @@ try {
           ? finitePackagePreparers.checkerChallenges
           : choice === "--guide-pairs"
             ? finitePackagePreparers.guidePairs
-            : choice === "--reminder-inventory-pairs"
-              ? finitePackagePreparers.reminderInventoryPairs
-              : choice === "--practical-guide-pairs"
-                ? finitePackagePreparers.practicalPairs
-                : finitePackagePreparers.templatePairs,
+            : choice === "--rule-pairs"
+              ? finitePackagePreparers.rulePairs
+              : choice === "--law-template-pairs"
+                ? finitePackagePreparers.lawTemplatePairs
+                : choice === "--reminder-inventory-pairs"
+                  ? finitePackagePreparers.reminderInventoryPairs
+                  : choice === "--practical-guide-pairs"
+                    ? finitePackagePreparers.practicalPairs
+                    : finitePackagePreparers.templatePairs,
     );
     validateAllocationPackage(pkg);
     // `wx` never overwrites: a package the owner may already have read stays as it was.

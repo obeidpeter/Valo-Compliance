@@ -2,14 +2,18 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
+import { SEARCH_LENGTH } from "@/lib/page-filters";
+import { useAddressFilters } from "@/lib/use-address-filters";
 
 /**
  * Progressive client-side filter for the server-rendered Help questions. Operates directly on the
  * rendered `<section data-help-group>` and `<details data-testid="faq-N">` elements so the server
- * HTML keeps every question and link intact for non-JS visitors and accessibility checks.
+ * HTML keeps every question and link intact for non-JS visitors and accessibility checks. The search
+ * is kept in the page's address (WEB-002), so a link to a search opens with it applied.
  */
 export function HelpFilter({ total }: { total: number }) {
-  const [query, setQuery] = useState("");
+  const address = useAddressFilters("/help");
+  const query = address.draft;
   const [matches, setMatches] = useState(total);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -63,7 +67,8 @@ export function HelpFilter({ total }: { total: number }) {
             aria-keyshortcuts="/"
             placeholder="Search questions (press /)"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            maxLength={SEARCH_LENGTH}
+            onChange={(e) => address.setDraft(e.target.value)}
             data-testid="input-help-search"
           />
         </div>
@@ -71,7 +76,7 @@ export function HelpFilter({ total }: { total: number }) {
           <button
             type="button"
             className="btn btn-ghost btn-sm"
-            onClick={() => setQuery("")}
+            onClick={address.clear}
             data-testid="button-clear-help-search"
           >
             <X className="h-4 w-4" aria-hidden="true" /> Clear

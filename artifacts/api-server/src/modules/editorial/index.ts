@@ -1,6 +1,6 @@
 /**
  * The editorial module's public entry: the editorial pipeline and its model adapter, operational
- * authoring and review, release preparation for templates and for guides, the editorial lifecycle with its dispatch and sandbox,
+ * authoring and review, release preparation for templates, for templates that state the law and for guides, the editorial lifecycle with its dispatch and sandbox,
  * evaluation evidence, the 60-case evaluation's score, template cases, case-bound candidates and their
  * review pairs, and the rule release command. Code outside
  * artifacts/api-server/src/modules/editorial imports only this file (repository rule `module-boundary`);
@@ -22,6 +22,7 @@ export * from "./editorial-permission-evaluation";
 export * from "./editorial-template-cases";
 export * from "./external-action-boundary";
 export * from "./guidance-preparation";
+export * from "./law-template-preparation";
 export * from "./operational-preparation";
 export * from "./operational-review";
 export * from "./pipeline";
@@ -30,4 +31,7 @@ export * from "./review-meter";
 export * from "./review-preparation";
 export * from "./valo-rule-release";
 export * from "./owner-rule-signoff";
+export * from "./reviewed-rule";
+export * from "./reviewed-rule-preparation";
+export * from "./reviewed-rule-review";
 export * from "./reviewed-guide-checks";

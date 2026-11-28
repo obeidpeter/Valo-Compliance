@@ -24,6 +24,7 @@ import { FILE_FORMAT_NAMES } from "@/lib/file-formats";
 import { formatCount, formatDay } from "@/lib/format";
 import { formatProfileSummary } from "@/lib/profile-prefill";
 import { RESULT_LABELS, RESULT_TONES } from "@/lib/rich-checker";
+import { recheckHref, recheckWords } from "@/lib/recheck";
 import { buildWorkspaceAttention } from "@/lib/workspace-attention";
 import { cn } from "@/lib/utils";
 
@@ -64,12 +65,9 @@ export default function WorkspaceHome() {
       count: latestResult.result.items.filter((item) => item.label === label).length,
     })).filter((entry) => entry.count > 0);
   }, [latestResult]);
-  const profileMovedAhead = Boolean(
-    profile &&
-    latestResult?.profileRevision &&
-    ws.data &&
-    ws.data.profileRevision > latestResult.profileRevision,
-  );
+  // PRO-003: the server offers a new check when the profile has changed an answer the check reads
+  // since the latest saved result.
+  const recheck = ws.data?.recheck;
   const profileSummary = useMemo(() => (profile ? formatProfileSummary(profile) : null), [profile]);
   const showStarterMap = ws.isSuccess && documents === 0 && !profile;
   const upcomingTasks = (openTasks.data?.items ?? []).slice(0, 2);
@@ -80,10 +78,10 @@ export default function WorkspaceHome() {
       ws.isSuccess
         ? buildWorkspaceAttention({
             openTasks: openTasks.data?.items ?? [],
-            profileMovedAhead,
+            recheck,
           })
         : [],
-    [openTasks.data?.items, profileMovedAhead, ws.isSuccess],
+    [openTasks.data?.items, recheck, ws.isSuccess],
   );
 
   return (
@@ -298,17 +296,14 @@ export default function WorkspaceHome() {
                       ))}
                     </div>
                   )}
-                  {profileMovedAhead && (
+                  {recheck && (
                     <p
                       className="rounded-xl border border-[hsl(var(--ochre-border))] bg-[hsl(var(--ochre-soft))] px-3 py-2 text-xs text-[hsl(var(--ochre-foreground))]"
                       data-testid="status-profile-changed-since-check"
                     >
-                      Your business profile changed since this saved result.{" "}
-                      <Link
-                        href="/workspace/checker?prefill=profile"
-                        className="font-medium underline underline-offset-4"
-                      >
-                        Refresh with your profile
+                      Your business profile has changed since this saved result.{" "}
+                      <Link href={recheckHref(recheck)} className="font-medium underline underline-offset-4">
+                        {recheckWords(recheck).action}
                       </Link>
                       .
                     </p>

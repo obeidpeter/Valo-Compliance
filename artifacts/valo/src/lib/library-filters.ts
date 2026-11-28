@@ -1,4 +1,5 @@
 import type { ListPublicCatalogueParams, ListPublicCatalogueType } from "@workspace/api-client-react";
+import { clippedSearch } from "./page-filters";
 
 /** The kinds of item the library lists, with each filter button's label. */
 export const LIBRARY_TYPES: { v: ListPublicCatalogueType; l: string }[] = [
@@ -23,6 +24,7 @@ export const LIBRARY_CATEGORIES = [
   "Practical business guides",
   "Industry guidance",
   "Industry introductions",
+  "Industry packs",
   "Location guidance",
   "Industry directory",
   "Service enquiries",
@@ -43,7 +45,8 @@ export function libraryFilters(sp: URLSearchParams): LibraryFilters {
   const typeRaw = sp.get("type") ?? "all";
   const pageValue = Number(sp.get("page"));
   return {
-    q: sp.get("q") ?? "",
+    // As the box shows it and the API reads it, so that the page never has to correct its own address.
+    q: clippedSearch(sp.get("q") ?? ""),
     type: (LIBRARY_TYPES.some((t) => t.v === typeRaw) ? typeRaw : "all") as ListPublicCatalogueType,
     industry: sp.get("industry") ?? "",
     page: Number.isSafeInteger(pageValue) && pageValue > 0 ? pageValue : 1,

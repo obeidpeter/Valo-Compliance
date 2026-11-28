@@ -672,7 +672,7 @@ export async function exercisePremiumFormDocument(call: Call, editor: string) {
 /** A Paystack test merchant for the length of `run`, with Paystack itself stood in for: `answer`
  * gives the data for a path, or nothing for a failed request. Only requests to Paystack's API are
  * answered here; the settings and `fetch` are put back afterwards. */
-async function withStandInPaystack(
+export async function withStandInPaystack(
   answer: (path: string, body: Record<string, unknown> | undefined) => unknown,
   run: () => Promise<void>,
 ) {

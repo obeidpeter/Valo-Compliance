@@ -1,10 +1,18 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { lagosTime, naira, receiptMessage, refundMessage } from "./message-text";
+import { lagosDate, lagosTime, naira, noticesMessage, receiptMessage, refundMessage } from "./message-text";
 import { configuredMessageSender, standInSender, type OutgoingMessage } from "./message-sender";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { MESSAGE_ATTEMPT_LIMIT, MESSAGE_KINDS, messageRetryAt } from "./message-policy";
+import {
+  MESSAGE_ATTEMPT_LIMIT,
+  MESSAGE_KINDS,
+  NOTICES_MESSAGE_DAYS_BACK,
+  NOTICES_MESSAGE_HOUR,
+  NOTICES_NAMED,
+  messageRetryAt,
+  noticesOpenDay,
+} from "./message-policy";
 
 const outgoing = (key: string, signal = new AbortController().signal): OutgoingMessage => ({
   messageId: "00000000-0000-4000-8000-000000000001",
@@ -90,8 +98,118 @@ test("a refund message says a processed refund is not yet the bank's credit, and
   );
 });
 
+/** A day's notices as the message is given them: synthetic titles, in Valo's own words. */
+const dayOfNotices = {
+  day: "2026-11-18",
+  rules: [
+    { title: "Synthetic rule: file the annual return", kind: "withdrawn" as const },
+    { title: "Synthetic rule: register for tax", kind: "replaced" as const },
+  ],
+  moreRules: 0,
+  templates: [{ title: "Synthetic template: employment contract" }],
+  moreTemplates: 0,
+  corrections: 3,
+};
+
+test("a notices message names the day, each changed requirement and withdrawn template, and how many saved items to review, and links to the workspace page (EDP-011, WRK-004)", () => {
+  const message = noticesMessage(dayOfNotices, "https://valo.example.test");
+  assert.equal(message.subject, "Changes on 18 Nov 2026 that affect your Valo workspace");
+  assert.equal(
+    message.text,
+    [
+      "On 18 Nov 2026 Valo recorded changes that affect what you saved, made or bought in your workspace.",
+      "",
+      "Requirements Valo checks:",
+      "- Withdrawn: Synthetic rule: file the annual return",
+      "- Replaced by a later version: Synthetic rule: register for tax",
+      "",
+      "Templates:",
+      "- Withdrawn: Synthetic template: employment contract",
+      "",
+      "Saved items to review:",
+      "- 3 of your tasks, saved results, documents or purchases used a source or a version that is now held or withdrawn. What you saved and the files you made are unchanged.",
+      "",
+      "Each change, and what it affects, is on your workspace page: https://valo.example.test/workspace",
+      "",
+      "You receive this message because these changes affect what you saved, made or bought in Valo. It is a necessary message about your account, so it has no unsubscribe link.",
+    ].join("\n"),
+  );
+  // A part with nothing in it is left out, heading and all.
+  const rulesOnly = noticesMessage({ ...dayOfNotices, templates: [], corrections: 0 }, null);
+  assert.ok(rulesOnly.text.includes("Requirements Valo checks:"));
+  for (const absent of ["Templates:", "Saved items to review:", "http"])
+    assert.ok(!rulesOnly.text.includes(absent), absent);
+  // Without a configured address it says where to look instead of linking anywhere.
+  assert.ok(
+    rulesOnly.text.includes(
+      "Each change, and what it affects, is on your workspace page: open Valo and choose Workspace.",
+    ),
+  );
+  const correctionsOnly = noticesMessage({ ...dayOfNotices, rules: [], templates: [], corrections: 1 }, null);
+  assert.ok(correctionsOnly.text.includes("- 1 of your tasks, saved results, documents or purchases used"));
+  for (const absent of ["Requirements Valo checks:", "Templates:"])
+    assert.ok(!correctionsOnly.text.includes(absent), absent);
+  // A message holds no address and never says it was delivered.
+  for (const text of [message.text, rulesOnly.text, correctionsOnly.text]) {
+    assert.ok(!text.includes("@"));
+    assert.doesNotMatch(text, /deliver/i);
+  }
+});
+
+test("a notices message counts what it does not name, and writes each title on one line of its own (EDP-011)", () => {
+  const many = noticesMessage(
+    {
+      ...dayOfNotices,
+      rules: [{ title: "  Synthetic rule\nwith a break\r\n- Withdrawn: a forged line  ", kind: "withdrawn" }],
+      moreRules: 4,
+      templates: [{ title: "T".repeat(500) }],
+      moreTemplates: 1,
+      corrections: 0,
+    },
+    null,
+  );
+  const lines = many.text.split("\n");
+  // A title's own line breaks are spaces, so it cannot start a line of the message.
+  assert.ok(lines.includes("- Withdrawn: Synthetic rule with a break - Withdrawn: a forged line"));
+  assert.ok(lines.includes("- and 4 more requirements"));
+  assert.ok(lines.includes("- and 1 more template"));
+  assert.ok(lines.includes(`- Withdrawn: ${"T".repeat(200)}`));
+  assert.equal(lines.filter((line) => line.startsWith("- ")).length, 4);
+  // The day is written as the site writes a date, and only a real day is taken.
+  assert.equal(lagosDate("2026-01-05"), "5 Jan 2026");
+  assert.equal(lagosDate("2027-12-31"), "31 Dec 2027");
+  for (const bad of [
+    "2026-13-01",
+    "2026-00-10",
+    "2026-11-00",
+    "2026-11-32",
+    "18 Nov 2026",
+    "2026-11-18T00:00:00Z",
+    "",
+  ])
+    assert.throws(() => lagosDate(bad), /MESSAGE_DAY_INVALID/, bad);
+});
+
+test("a day's notices are emailed from 07:00 the next morning on a Lagos clock, for a week back, naming ten of each sort (EDP-011)", () => {
+  assert.equal(NOTICES_MESSAGE_HOUR, 7);
+  assert.equal(NOTICES_MESSAGE_DAYS_BACK, 7);
+  assert.equal(NOTICES_NAMED, 10);
+  // Lagos is an hour ahead of UTC all year. Until 07:00 there, the day before is not yet owed its message.
+  assert.equal(noticesOpenDay(new Date("2026-11-19T05:59:59Z")), "2026-11-18");
+  assert.equal(noticesOpenDay(new Date("2026-11-19T06:00:00Z")), "2026-11-19");
+  assert.equal(noticesOpenDay(new Date("2026-11-19T22:59:59Z")), "2026-11-19");
+  // Midnight in Lagos, and the turn of a year: still the old day until its morning.
+  assert.equal(noticesOpenDay(new Date("2026-12-31T23:30:00Z")), "2026-12-31");
+  assert.equal(noticesOpenDay(new Date("2027-01-01T05:59:59Z")), "2026-12-31");
+  assert.equal(noticesOpenDay(new Date("2027-01-01T06:00:00Z")), "2027-01-01");
+});
+
 test("each kind of message is necessary, and a message is offered five times at most, with a growing wait (WRK-003)", () => {
-  assert.deepEqual(MESSAGE_KINDS, { purchase_receipt: "necessary", refund_processed: "necessary" });
+  assert.deepEqual(MESSAGE_KINDS, {
+    purchase_receipt: "necessary",
+    refund_processed: "necessary",
+    notices_digest: "necessary",
+  });
   assert.equal(MESSAGE_ATTEMPT_LIMIT, 5);
   const now = new Date("2026-11-18T08:00:00Z");
   assert.deepEqual(
@@ -169,6 +287,20 @@ test("the design note shows the owner each message's words as the code composes 
         amountKobo: 1500000,
         processedAt: new Date("2026-11-20T13:30:00Z"),
         testMode: true,
+      },
+      origin,
+    ),
+    noticesMessage(
+      {
+        day: "2026-11-18",
+        rules: [
+          { title: "File the company's annual return", kind: "replaced" },
+          { title: "Register a food product", kind: "withdrawn" },
+        ],
+        moreRules: 0,
+        templates: [{ title: "Employment contract pack" }],
+        moreTemplates: 0,
+        corrections: 2,
       },
       origin,
     ),

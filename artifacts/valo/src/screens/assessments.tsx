@@ -35,6 +35,7 @@ import { WorkspaceNav } from "@/components/workspace-nav";
 import { AssessmentResultView } from "@/components/assessment-result";
 import { TaskForm, emptyDraft, type TaskDraft } from "@/components/task-form";
 import { EmptyState, ErrorState, Notice, Skel } from "@/components/states";
+import { RecheckOffer } from "@/components/recheck-offer";
 import { describeError } from "@/lib/api";
 import {
   filterSavedAssessments,
@@ -316,9 +317,8 @@ export function AssessmentDetail({ id }: { id: string }) {
   const s = a.data;
   const facts = s.facts as unknown as Record<string, unknown>;
   const untrackedItems = untrackedActionableItems(s.result.items, trackedRules);
-  const profileMovedAhead = Boolean(
-    ws.data?.profile && s.profileRevision && ws.data.profileRevision > s.profileRevision,
-  );
+  // PRO-003: the offer of a new check is shown on the result it follows, the workspace's latest.
+  const recheck = ws.data?.recheck?.assessmentId === s.id ? ws.data.recheck : undefined;
   // docs/architecture/rule-changes.md, slice 3: the rule versions this result lists that have changed
   // since it was saved. The result is shown as it was saved.
   const changes = new Map((s.ruleChanges ?? []).map((change) => [change.ruleId, change]));
@@ -402,23 +402,7 @@ export function AssessmentDetail({ id }: { id: string }) {
         </div>
       </div>
 
-      {profileMovedAhead && ws.data && (
-        <div className="no-print mt-6" data-testid="notice-result-profile-stale">
-          <Notice title="Your business profile changed since this check">
-            <p>
-              This result used version {s.profileRevision} of your business profile, and your saved profile is
-              now at version {ws.data.profileRevision}.
-            </p>
-            <Link
-              href="/workspace/checker?prefill=profile"
-              className="btn btn-ink btn-sm mt-3"
-              data-testid="link-recheck-updated-profile"
-            >
-              Check with updated profile
-            </Link>
-          </Notice>
-        </div>
-      )}
+      <RecheckOffer recheck={recheck} className="mt-6" />
 
       {changes.size > 0 && (
         <div className="no-print mt-6" data-testid="notice-result-rules-changed">

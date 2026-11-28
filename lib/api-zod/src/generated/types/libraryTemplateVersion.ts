@@ -9,7 +9,9 @@
 export interface LibraryTemplateVersion {
   versionId: string;
   templateId: string;
-  /** The title a staff-library template was released under, for a document copied from it. */
+  /** The title a staff-library template was released under, for a document copied from it or made from its form. */
   title?: string;
+  /** True for a document made by answering a staff-library template's form (forms v2), not copied from its text. */
+  form?: boolean;
   version: number;
 }

@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { MessageDelivery } from './messageDelivery';
 import type { ReminderRecordStatus } from './reminderRecordStatus';
 
 export interface ReminderRecord {
@@ -22,4 +23,7 @@ export interface ReminderRecord {
   reason: string | null;
   /** @nullable */
   deliveredAt: string | null;
+  delivery: MessageDelivery | null;
+  /** @nullable */
+  deliveryAt: string | null;
 }

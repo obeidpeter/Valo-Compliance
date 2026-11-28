@@ -1,13 +1,17 @@
 import type {
+  MessageDelivery,
   WorkspaceMessage,
   WorkspaceMessageKind,
   WorkspaceMessageStatus,
 } from "@workspace/api-client-react";
+import { deliveryNeedsHelp, deliveryWords } from "./delivery-words";
+import { formatDay } from "./format";
 
 /** What each kind of message is called. */
 export const MESSAGE_KIND: Record<WorkspaceMessageKind, string> = {
   purchase_receipt: "Receipt",
   refund_processed: "Refund notice",
+  notices_digest: "Changes that affect your workspace",
 };
 
 /**
@@ -15,7 +19,8 @@ export const MESSAGE_KIND: Record<WorkspaceMessageKind, string> = {
  *
  * "Accepted by email service" is not "delivered": Valo knows the email service took the message, and
  * does not know that it reached an inbox. "Not emailed" is a message Valo only recorded while it was
- * not sending emails: nothing left Valo, so it is never called accepted.
+ * not sending emails: nothing left Valo, so it is never called accepted. No state is called delivered:
+ * that word is the email service's own report (delivery-words.ts), shown only when it made one.
  */
 export const MESSAGE_STATUS: Record<WorkspaceMessageStatus, { label: string; means: string }> = {
   queued: { label: "Waiting", means: "Not sent yet." },
@@ -52,31 +57,51 @@ const REASONS: Record<string, string> = {
   RECIPIENT_NOT_A_MEMBER: "The person this message was for is no longer a member of this workspace.",
   PURCHASE_MESSAGE_HELD: "Valo is not sending messages about this purchase.",
   RECORD_NOT_FOUND: "The record this message was about is no longer in this workspace.",
+  NOTICES_NOT_FOUND: "The changes this message was about are no longer in this workspace.",
 };
 
 /** The reasons the customer cannot clear alone: the screen offers the way to report a problem. */
 const NEEDS_HELP = new Set(["ATTEMPT_LIMIT_REACHED", "REPLAY_WINDOW_PASSED"]);
 
-type Told = Pick<WorkspaceMessage, "status" | "reason">;
+type Told = Pick<WorkspaceMessage, "status" | "reason"> & { delivery?: MessageDelivery | null | undefined };
 
-/** What has happened to a message. A reason this screen does not know says only what the state means. */
-export function messageMeaning({ status, reason }: Told) {
-  return (reason && REASONS[reason]) || (MESSAGE_STATUS[status]?.means ?? "");
+/** What a message's row is labelled: the email service's report about it, or else its state. */
+export function messageLabel(message: Told) {
+  return deliveryWords(message)?.label ?? MESSAGE_STATUS[message.status]?.label ?? message.status;
+}
+
+/**
+ * What has happened to a message: what the email service reported about it, or else why it is in its
+ * state. A reason this screen does not know says only what the state means.
+ */
+export function messageMeaning(message: Told) {
+  return (
+    deliveryWords(message)?.means ||
+    (message.reason && REASONS[message.reason]) ||
+    (MESSAGE_STATUS[message.status]?.means ?? "")
+  );
 }
 
 /** Whether the customer needs someone at Valo to look at this message. */
-export function messageNeedsHelp({ reason }: Told) {
-  return reason !== null && NEEDS_HELP.has(reason);
+export function messageNeedsHelp(message: Told) {
+  return deliveryNeedsHelp(message) || (message.reason !== null && NEEDS_HELP.has(message.reason));
 }
 
-/** What a message is about, as its row's heading. */
-export function messageSubject(message: Pick<WorkspaceMessage, "kind" | "orderReference">) {
+/** What a message is about, as its row's heading. A day's notices are headed by their day. */
+export function messageSubject(
+  message: Pick<WorkspaceMessage, "kind" | "orderReference"> & { noticesDay?: string | null | undefined },
+) {
   const kind = MESSAGE_KIND[message.kind] ?? "Message";
+  if (message.kind === "notices_digest")
+    return message.noticesDay
+      ? `Changes on ${formatDay(message.noticesDay)} that affect your workspace`
+      : kind;
   return message.orderReference ? `${kind} for order ${message.orderReference}` : kind;
 }
 
 /** Where the record itself is, whatever became of its message. */
 export function recordStays({ kind }: Pick<WorkspaceMessage, "kind">) {
+  if (kind === "notices_digest") return "The notices themselves are on your Workspace page.";
   return kind === "refund_processed"
     ? "The refund itself is on your Purchases page."
     : "The receipt itself is on your Purchases page.";
