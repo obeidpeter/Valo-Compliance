@@ -2200,6 +2200,20 @@
       "proves": "On a real database the publisher refuses a guide bound to the templates' policy and a form bound to the guidance policy, and holds a guide under the guidance policy, which the owner has not approved; none of the three synthetic candidates is published."
     },
     {
+      "requirement": "EDP-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-law-policy.test.ts",
+      "test": "no text of the policy for templates that state the law is approved, so every such template is held",
+      "proves": "The policy for templates that state the law is read from its proposed file, allows only templates, Nigeria and subjects that take the enhanced checks, binds the file's checksum and each sentence the code depends on, and is not approved, because no approval of the file's text is recorded."
+    },
+    {
+      "requirement": "EDP-001",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/publication/publication-guards.integration.test.ts",
+      "test": "a template that rests on the law is checked only against its own policy, and held while no text of it is approved",
+      "proves": "On a real database the publisher holds a synthetic template that rests on the law under the policy for such templates, for want of the owner's approval among its reasons, and refuses it bound to the templates' own policy or to an approval the code does not record; an original form bound to that policy is refused too, and none is published."
+    },
+    {
       "requirement": "EDP-002",
       "job": "foundation",
       "file": "scripts/src/valo/publication.test.ts",
@@ -2340,6 +2354,20 @@
       "proves": "A rule prepared in the repository is built for the reviewed route with its source bound to today's capture of its official text and current on the text's amendment record, its claims, the guidance policy and a drafting record that says only what is known of how it was written; nothing but its two reviews holds it, and with two passing stand-in reviews the rule registry admits the release."
     },
     {
+      "requirement": "EDP-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-claim-map.test.ts",
+      "test": "TPL-31's map places every word of its retained draft, in order, with nothing left over",
+      "proves": "TPL-31's claim map places every word of the data processing agreement's retained draft in order, each sentence as a statement of the law or a reading of one, a term the parties agree, a practice, a limit or a heading, and states the law, so only the policy for templates that state the law can release it."
+    },
+    {
+      "requirement": "EDP-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-claim-map.test.ts",
+      "test": "the builder refuses a map that misplaces, leaves out or misclassifies a template's words",
+      "proves": "A template's claim map is refused when its words are out of order or not the template's, are left unplaced, state the law with no passage, give a term, a limit or a heading a passage, quote words not in the passage or a place it does not bear out, or let a number stand that the quotation lacks."
+    },
+    {
       "requirement": "EDP-004",
       "job": "foundation",
       "file": "scripts/src/valo/publication.test.ts",
@@ -2471,6 +2499,13 @@
       "file": "artifacts/api-server/src/modules/editorial/reviewed-rule-review.test.ts",
       "test": "a rule's two review requests carry the rule, its scenarios, its records and its sources, and each runs the enhanced checks",
       "proves": "A rule classed as governance content asks each of its two reviewers to run EDP-005's five enhanced checks, quoting the passage each relied on, and to answer in the enhanced review's shape."
+    },
+    {
+      "requirement": "EDP-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-claim-map.test.ts",
+      "test": "TPL-31 exposes what it assumes about its parties and its use, and the clauses it leaves open (EDP-005)",
+      "proves": "TPL-31, a contract, gives the parties and use it assumes and every clause it leaves for the parties to settle as the candidate's assumptions, each clause with a blank among them, and a contract's map without them is refused."
     },
     {
       "requirement": "EDP-006",
