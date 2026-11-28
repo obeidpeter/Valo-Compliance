@@ -1920,9 +1920,17 @@ test(
               prepareReviewedRuleCandidate("cac-business-name-814", { restore: laterVersion + 50 }),
               /RULE_VERSION_UNKNOWN/,
             );
+            // The repository's rule has moved on since the reviewed version: its next step is now another.
+            // A restore takes the stored version's words, never the repository's.
+            const movedOn = "A next step the repository's rule has now, in a synthetic change.";
+            assert.notEqual(reviewedRule.nextStep, movedOn);
+            const repositoryNow = ownerRuleCandidates.map((c) =>
+              c.rule.id === "cac-business-name-814" ? { ...c, rule: { ...c.rule, nextStep: movedOn } } : c,
+            );
             // The reviewed version is restored as the next one, through the same builder: its words again.
             const restoring = await prepareReviewedRuleCandidate("cac-business-name-814", {
               restore: reviewedRule.version,
+              candidates: repositoryNow,
             });
             assert.equal(restoring.state, "awaiting_reviews", restoring.reasons.join("; "));
             assert.ok(restoring.candidateArtifact && restoring.id);
@@ -1934,7 +1942,8 @@ test(
               candidateVersionId: restoring.id,
               candidateArtifact: restoring.candidateArtifact,
             };
-            const restored = await readReviewedRuleReadiness(restoredBinding);
+            // Built again from the version it restores, as stored, whatever the repository's rule says now.
+            const restored = await readReviewedRuleReadiness(restoredBinding, { candidates: repositoryNow });
             assert.deepEqual(restored.restores, {
               version: reviewedRule.version,
               manifestHash: assembled.manifestHash,
