@@ -1503,6 +1503,13 @@
       "requirement": "ADM-005",
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/publication/template-law-release.test.ts",
+      "test": "with every source current and a supposed approval of the policy, only its two reviews hold TPL-36",
+      "proves": "With a stand-in passage under a synthetic amendment record and a test's supposed approval of the policy, TPL-36's bundle clears its rights record and passes its ten mechanical checks, and the gate holds it for its two reviews alone."
+    },
+    {
+      "requirement": "ADM-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-law-release.test.ts",
       "test": "each condition of a template's rights record is measured again",
       "proves": "A template's rights record that is for another kind of content, accepts a customer licence, names another draft, route, permission, rule or policy file, rests on an unverified permission, has expired, no longer matches the template's review date or no longer measures what the template shares with its passages is refused, each for its own reason; the words measured are the template's own, and no record is made without the policy file it rests on."
     },
@@ -2452,6 +2459,20 @@
       "proves": "Each of TPL-29's sentences about the law rests on a recorded passage of the Data Protection Act or the directive, quoted exactly as a privacy guide's map quotes it, and with no passage supplied each is reported as missing evidence instead of becoming a claim."
     },
     {
+      "requirement": "EDP-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-claim-map.test.ts",
+      "test": "TPL-36's map places every word of its retained draft, in order, with nothing left over",
+      "proves": "TPL-36's claim map places every word of the product recall plan's retained draft in order, each sentence as a reading of the law, a practice, a limit of the plan or a heading, label or blank, and states the law, so only the policy for templates that state the law can release it."
+    },
+    {
+      "requirement": "EDP-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-claim-map.test.ts",
+      "test": "TPL-36's sentence about the law names a recorded passage, quoted as the food guides quote it",
+      "proves": "TPL-36's one sentence about the law rests on a recorded passage of the Agency's good manufacturing practice guidelines, quoted exactly as a food guide's map quotes it, and with no passage supplied it is reported as missing evidence instead of becoming a claim."
+    },
+    {
       "requirement": "EDP-004",
       "job": "foundation",
       "file": "scripts/src/valo/publication.test.ts",
@@ -2702,6 +2723,13 @@
       "file": "artifacts/api-server/src/modules/publication/template-law-release.test.ts",
       "test": "TPL-29's Word and PDF files hold its whole document and pass the export inspection",
       "proves": "TPL-29's document, rendered as Word and as PDF, holds its own words, its disclosure, scope, limits and source check date, and passes the export inspection."
+    },
+    {
+      "requirement": "EDP-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-law-release.test.ts",
+      "test": "TPL-36's Word and PDF files hold its whole document and pass the export inspection",
+      "proves": "TPL-36's document, rendered as Word and as PDF, holds its own words, its disclosure, scope, limits and source check date, and passes the export inspection."
     },
     {
       "requirement": "EDP-006",
