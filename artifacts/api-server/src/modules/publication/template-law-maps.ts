@@ -1,4 +1,5 @@
 import type { TemplateClaimMap } from "./template-claim-map";
+import { foodTemplateClaimMaps } from "./template-claims-food";
 import { privacyTemplateClaimMaps } from "./template-claims-privacy";
 
 /**
@@ -7,7 +8,10 @@ import { privacyTemplateClaimMaps } from "./template-claims-privacy";
  */
 
 /** Every template that states the law and has a claim map. A template without one is not built. */
-export const templateLawClaimMaps: readonly TemplateClaimMap[] = [...privacyTemplateClaimMaps];
+export const templateLawClaimMaps: readonly TemplateClaimMap[] = [
+  ...privacyTemplateClaimMaps,
+  ...foodTemplateClaimMaps,
+];
 export const mappedLawTemplateIds = templateLawClaimMaps.map((m) => m.id);
 
 /** Every passage a template's claim map names. */

@@ -489,6 +489,45 @@ Settled while building it (slice 4b, the privacy family):
   name under the Commission's, and one that only begins with it), to an http address or to one that
   cannot be read, fails the scope check; changed to another of the policy's hosts, it passes.
 
+Settled while building it (slices 4c and 4d, the commercial family, and governance and safety):
+- **A first reading of the fourteen drafts.** Each was read sentence by sentence: a drafter's first
+  reading, for the two reviews to check. None says in so many words what a text requires. Thirteen
+  sentences read the law as the guides' maps record a reading: a caution about how the law treats a
+  label, an internal arrangement or a business record. On this route a reading rests on an exact
+  passage, as a statement of the law does. Some other sentences sit on the line, such as an
+  instruction not to assume a rule applies. Counted as readings, they would rest on the same texts
+  as those below, so nothing changes for these templates.
+- **What that leaves, template by template.**
+  - TPL-13, TPL-14 and TPL-21, the service, consultancy and contractor agreements, say that a label
+    does not decide whether someone is employed in law, or their tax status. That rests on the Labour
+    Act, whose reference copy waits for the owner's decision (decision 0017, decision 8), as the
+    employment guides and templates do.
+  - TPL-14, TPL-18 and TPL-19, the consultancy, framework supply and sale of goods agreements, say
+    that calling a buyer a business does not take away the protections the law gives. That rests on
+    the consumer protection Act, whose only official copy is a scan the extractor misreads (decision
+    0017, decision 9), as TPL-30 and the consumer guides do.
+  - TPL-20, the partnership agreement, has six readings, all of partnership law. That is State law:
+    the Partnership Act 1890, as a statute of general application, or a State's own law. The policy's
+    point 2 leaves State law out, and none of its hosts serves it.
+  - TPL-15, TPL-23 and TPL-39, the non-disclosure agreement, the statement of work and the lease
+    checklist, and TPL-25, TPL-33, TPL-37 and TPL-40, the board resolution and the health and safety,
+    food hygiene and compliance records checklists, state no law. As with TPL-32, neither policy
+    releases them as written (the owner's point 7).
+  - TPL-36, the product recall plan, has one reading: that closing the business's own record decides
+    nothing an authority must decide. The food guide GUD-23 makes the same point on the Agency's
+    guidelines for good manufacturing practice, section 32.1(e), so TPL-36 is mapped on that
+    quotation.
+- **TPL-36's map** places 140 sentences: 1 reading, 24 practices, 3 limits of the plan and 112
+  titles, labels and blanks. Where the plan leaves the response to the product's risk assessment and
+  to the authority's directions, the sentence is recorded as a limit of the plan, not as a statement
+  of what an authority may direct. The policy file now names regulated sectors such as food among its
+  subjects, as its code already did.
+- **What a test can show without the guidelines' words.** As for TPL-29: TPL-36's map places every
+  word of its retained draft, and its sentence about the law names a recorded passage, quoted as the
+  food guide quotes it. Built from a stand-in passage, under a synthetic amendment record and a
+  test's supposed approval of the policy, only its two reviews hold it, and both its files pass their
+  inspection.
+
 ## What does not change
 
 - Every gate the publisher checks. Nothing here loosens one.
@@ -511,7 +550,8 @@ Each slice is its own pull request.
 | 3b | **The release request and restoring a version** (built). The request command and the restore. Database tests: a reviewed rule is planned and applied from its request. A restored version is released as the next one, and saved results keep their versions. | ADM-004 |
 | 4a | **A template's claim map, its preparer and the proposed policy.** The map's builder and checks, the preparer, and the policy as a file for the owner, with TPL-31, the data processing agreement, mapped first. The first part is built: the policy file, the map and its checks, TPL-31's map, its candidate, and the publisher's choice of policy. Unit tests build TPL-31 from stand-in passages, which the gate holds; a database test shows the publisher asks no other policy about such a template. The second part is built: the rights record, the mechanical checks, both files and the preparer, with its command. The third part is built: the two review requests and their package, and the release checks. The fourth part is built: preparing it from review work. | EDP-003, EDP-005, EDP-006, ADM-005 |
 | 4b | **The privacy family's maps** (built). TPL-29, the privacy notice, is mapped, and a link in a template's words is held to the policy's hosts. TPL-32 states no law and waits for the owner's decision; TPL-30 waits for a readable copy of the consumer protection Act. Unit tests build TPL-29 from stand-in passages, which only its two reviews then hold, and check its link and both its files. | EDP-003, EDP-005 |
-| 4c–4e | **The other families' maps:** commercial, governance and safety, and employment. | EDP-003, EDP-005 |
+| 4c–4d | **The commercial family, and governance and safety** (built). TPL-36, the product recall plan, is mapped. The other thirteen drafts are read and recorded: seven state no law, and six read texts Valo cannot bind today. Unit tests build TPL-36 from a stand-in passage, which only its two reviews then hold, and check both its files. | EDP-003, EDP-005 |
+| 4e | **The employment family:** TPL-16, TPL-17 and TPL-26 to TPL-28, which wait for the owner's decision about the Labour Act's reference copy. | EDP-003, EDP-005 |
 
 ## The owner's points
 
@@ -526,5 +566,11 @@ Each slice is its own pull request.
 6. Part 3: the rights basis for a rule released on the reviewed route. Each rule's rights record adopts
    a version's wording by the owner's signature, which this route does not have, so the route holds
    every rule until the owner chooses a rights record for it.
-7. Part 4: a template of a high-impact subject whose words state no law, such as TPL-32, the data
-   retention policy. Neither policy releases it as written: which, if either, should.
+7. Part 4: a template of a high-impact subject whose words state no law: TPL-32, the data retention
+   policy, and, from slices 4c and 4d, TPL-15, TPL-23, TPL-25, TPL-33, TPL-37, TPL-39 and TPL-40.
+   Neither policy releases them as written: which, if either, should.
+8. Part 4: the texts some templates' readings rest on that Valo cannot bind today. The consumer
+   protection Act's only official copy is a scan the extractor misreads (decision 0017, decision 9),
+   which holds TPL-14, TPL-18, TPL-19 and TPL-30 as it holds the consumer guides. Partnership law is
+   State law, outside the policy's point 2, which holds TPL-20. The Labour Act's copy (point 5) holds
+   TPL-13, TPL-14 and TPL-21 too.

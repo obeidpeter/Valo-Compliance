@@ -13,9 +13,10 @@ import { assembleLawTemplateBundle } from "./template-law-release";
 
 /**
  * Stand-ins for the tests of a template that states the law (docs/architecture/reviewed-route.md,
- * part 4). The Data Protection Act's words are not kept in the repository, so TPL-31 and TPL-29 are
- * built from stand-in passages: their words hold the quoted words and are otherwise not the Act's or
- * the directive's. None of it is evidence about the law.
+ * part 4). The words of the Data Protection Act, the Commission's directive and the Agency's good
+ * manufacturing practice guidelines are not kept in the repository, so TPL-31, TPL-29 and TPL-36 are
+ * built from stand-in passages: their words hold the quoted words and are otherwise not the official
+ * text's. None of it is evidence about the law.
  *
  * - A passage's identity is synthetic, an address and a checksum of no real file, with a synthetic
  *   amendment record standing for a search that found nothing later; or it is the one the repository's
@@ -53,6 +54,19 @@ export const noticeStandInWords: Record<string, string> = {
   "GAID-37":
     "Article 37: Exercise of Right to Data Portability (stand-in words) (2) The right to data portability shall apply where (stand-in words) instrument issued by the Commission.",
 };
+
+/** Stand-in words for the passage TPL-36's claim rests on. */
+export const recallStandInWords: Record<string, string> = {
+  "NAFDAC-GMP-32-1":
+    "32.1     Recall procedures\n(stand-in words) e. Recalled products should be securely held until they are destroyed (stand-in words) to ensure their safety.",
+};
+
+/** Each mapped template's stand-in words. */
+const standInWordsOf = {
+  "TPL-31": standInWords,
+  "TPL-29": noticeStandInWords,
+  "TPL-36": recallStandInWords,
+} as const;
 
 /** A recorded passage of the repository's captured texts, with stand-in words, read at `readAt`. */
 export function lawTemplateStandIn(
@@ -97,7 +111,7 @@ export const lawTemplateStandIns =
 /** A synthetic record for each text the synthetic stand-ins are passages of: a search that found nothing. */
 export function syntheticLawTemplateRecords(searchedAt: string): AmendmentRecord[] {
   return capturedTexts
-    .filter((t) => t.id === "NDPC-NDPA-2023" || t.id === "NDPC-GAID-2025")
+    .filter((t) => ["NDPC-NDPA-2023", "NDPC-GAID-2025", "NAFDAC-FSAN-GDL-006-03"].includes(t.id))
     .map((t) => ({
       instrument: t.id,
       title: t.title,
@@ -142,7 +156,7 @@ export const passingFormat = {
  */
 export async function assembledLawTemplate(options: {
   now: Date;
-  template?: "TPL-31" | "TPL-29";
+  template?: keyof typeof standInWordsOf;
   policy?: PublicationBundle["policy"];
   records?: readonly AmendmentRecord[];
   text?: Record<string, string>;
@@ -152,7 +166,7 @@ export async function assembledLawTemplate(options: {
   const { now } = options;
   const template = options.template ?? "TPL-31";
   const readAt = new Date(+now - 3_600_000).toISOString();
-  const text = options.text ?? (template === "TPL-29" ? noticeStandInWords : standInWords);
+  const text = options.text ?? standInWordsOf[template];
   const built = await buildLawTemplateCandidate(
     template,
     1,

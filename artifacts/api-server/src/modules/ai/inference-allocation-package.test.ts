@@ -406,7 +406,7 @@ test("only a package of templates that state the law admits their review pairs, 
   assert.equal(requestDigest(lawTemplates.allocation), requestDigest(additionalInferenceAllocation));
   assert.ok(
     lawTemplates.holds[0]!.startsWith(
-      "Supported review pairs of templates that state the law: TPL-31, TPL-29; ",
+      "Supported review pairs of templates that state the law: TPL-31, TPL-29, TPL-36; ",
     ),
     lawTemplates.holds[0],
   );
@@ -431,7 +431,7 @@ test("only a package of templates that state the law admits their review pairs, 
   };
   // A mapped template's planned pair, factual or challenge, belongs to the package of templates that
   // state the law, and no other package admits it, the templates' own among them.
-  for (const id of ["TPL-31", "TPL-29"]) {
+  for (const id of ["TPL-31", "TPL-29", "TPL-36"]) {
     assert.doesNotThrow(() => assertWorkPackageMembership(planned(id), lawTemplates, id));
     assert.doesNotThrow(() =>
       assertWorkPackageMembership(planned(id, { role: "challenge" }), lawTemplates, id),

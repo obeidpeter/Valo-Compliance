@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { sha256 } from "@workspace/valo-core";
 import { capturedPassages } from "./guidance-captured-texts";
+import { foodClaimMaps } from "./guidance-claims-food";
 import { privacyClaimMaps } from "./guidance-claims-privacy";
 import type { GuidePassage, GuidePassages } from "./guidance-passages";
 import { readTemplateIntake } from "./operational-intake";
@@ -11,6 +12,7 @@ import {
   type TemplateClaimMap,
   type TemplateSentence,
 } from "./template-claim-map";
+import { foodTemplateClaimMaps } from "./template-claims-food";
 import { privacyTemplateClaimMaps } from "./template-claims-privacy";
 import { lawTemplatePassageIds, mappedLawTemplateIds, templateLawClaimMaps } from "./template-law-maps";
 import { guidanceOfficialHosts } from "../../platform/guidance-hosts";
@@ -29,7 +31,7 @@ const supports = (m: TemplateClaimMap) =>
   m.sentences.flatMap((s) => ("support" in s ? (s.support ?? []) : []));
 
 test("TPL-31's map places every word of its retained draft, in order, with nothing left over", async () => {
-  assert.deepEqual(mappedLawTemplateIds, ["TPL-31", "TPL-29"]);
+  assert.deepEqual(mappedLawTemplateIds, ["TPL-31", "TPL-29", "TPL-36"]);
   const words = templateWords(await blocks());
   assert.equal(flat(tpl31.sentences.map((s) => s.text).join(" ")), flat(words));
   const built = buildTemplateClaims(tpl31, await blocks(), () => undefined);
@@ -123,6 +125,50 @@ test("each of TPL-29's sentences about the law names a recorded passage, quoted 
   const built = buildTemplateClaims(tpl29, await noticeBlocks(), () => undefined);
   assert.deepEqual(built.claims, []);
   assert.equal(built.missingEvidence.length, supports(tpl29).length);
+});
+
+const tpl36 = foodTemplateClaimMaps.find((m) => m.id === "TPL-36")!;
+const recallBlocks = async () => (await readTemplateIntake("TPL-36")).document.content.blocks;
+
+test("TPL-36's map places every word of its retained draft, in order, with nothing left over", async () => {
+  const words = templateWords(await recallBlocks());
+  assert.equal(flat(tpl36.sentences.map((s) => s.text).join(" ")), flat(words));
+  const built = buildTemplateClaims(tpl36, await recallBlocks(), () => undefined);
+  assert.equal(built.scope.template, "TPL-36");
+  assert.equal(built.scope.sentences, tpl36.sentences.length);
+  // A business's own recall procedure, not a contract. Its instructions are practices, what it
+  // leaves to the risk assessment and the authority's directions are its limits, and its one
+  // reading is that closing the business's record decides nothing an authority must decide.
+  assert.equal(tpl36.risk, "regulated_sector");
+  assert.equal(tpl36.contract, undefined);
+  assert.equal(built.statesLaw, true);
+  assert.deepEqual(built.assumptions, []);
+  assert.deepEqual(built.scope.byKind, {
+    source_statement: 0,
+    interpretation: 1,
+    party_term: 0,
+    optional_practice: 24,
+    template_limit: 3,
+    not_a_claim: 112,
+  });
+});
+
+test("TPL-36's sentence about the law names a recorded passage, quoted as the food guides quote it", async () => {
+  const recorded = new Set(capturedPassages.map((p) => p.id));
+  const guideQuotes = new Set(
+    foodClaimMaps.flatMap((m) =>
+      m.sentences.flatMap((s) => ("support" in s ? (s.support ?? []) : [])).map((q) => JSON.stringify(q)),
+    ),
+  );
+  for (const q of supports(tpl36)) {
+    assert.ok(recorded.has(q.passage), `${q.passage} is a recorded passage`);
+    assert.ok(guideQuotes.has(JSON.stringify(q)), `${q.passage} ${q.locator} is quoted as a guide quotes it`);
+  }
+  assert.deepEqual(lawTemplatePassageIds("TPL-36"), ["NAFDAC-GMP-32-1"]);
+  // With no passage supplied the map still builds, and its sentence about the law is reported unbound.
+  const built = buildTemplateClaims(tpl36, await recallBlocks(), () => undefined);
+  assert.deepEqual(built.claims, []);
+  assert.equal(built.missingEvidence.length, 1);
 });
 
 test("TPL-31 exposes what it assumes about its parties and its use, and the clauses it leaves open (EDP-005)", async () => {

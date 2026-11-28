@@ -19,8 +19,9 @@ part 4, proposes.
    released under the templates' own policy, never this one.
 2. **Where.** Nigeria as a whole. A template makes no claim about a state, the FCT or a local
    government until a later decision allows it.
-3. **Subjects.** Personal data, contracts, company governance, workplace safety, employment and tax.
-   Every one is treated as high impact: the enhanced checks always run.
+3. **Subjects.** Personal data, contracts, company governance, workplace safety, regulated sectors
+   such as food, employment and tax. Every one is treated as high impact: the enhanced checks always
+   run.
 4. **Every statement of law is tied to its source.** Each sentence that says what the law requires
    is bound to an exact passage of an official text that Valo holds a copy of. A sentence that
    interprets a passage is recorded as an interpretation. A term the parties choose is recorded as a

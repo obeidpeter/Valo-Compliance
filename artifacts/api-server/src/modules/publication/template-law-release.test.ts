@@ -161,6 +161,27 @@ test("with every source current and a supposed approval of the policy, only its 
   assert.deepEqual(bundle.candidate.assumptions, []);
 });
 
+test("with every source current and a supposed approval of the policy, only its two reviews hold TPL-36", async () => {
+  const { bundle, rightsProblems, eligibility } = await assembled({
+    template: "TPL-36",
+    policy: await approvedPolicy(),
+    records,
+  });
+  assert.equal(bundle.candidate.id, "TPL-36");
+  assert.equal(bundle.candidate.risk, "regulated_sector");
+  assert.equal(bundle.candidate.legalScopeStatus, "verified");
+  assert.deepEqual(bundle.candidate.missingEvidence, []);
+  assert.equal(bundle.candidate.claims.length, 1);
+  assert.ok(bundle.sources.every((s) => s.status === "approved"));
+  assert.deepEqual(rightsProblems, []);
+  assert.equal(bundle.rights.status, "cleared");
+  assert.deepEqual(failed(bundle), []);
+  assert.equal(eligibility.decision, "hold");
+  assert.deepEqual(guideOpenReasons(eligibility), [], eligibility.reasons.join(", "));
+  // A procedure, not a contract: it carries no parties' assumptions.
+  assert.deepEqual(bundle.candidate.assumptions, []);
+});
+
 test("a link in a template's own words goes only to one of the policy's official hosts", async () => {
   const base = await assembled({ template: "TPL-29", policy: await approvedPolicy(), records });
   const body = JSON.stringify(base.built.document);
@@ -447,7 +468,7 @@ test("a file that fails its inspection holds the template", async () => {
   assert.deepEqual(guideOpenReasons(eligibility), ["export_not_passed:pdf"]);
 });
 
-for (const template of ["TPL-31", "TPL-29"] as const)
+for (const template of ["TPL-31", "TPL-29", "TPL-36"] as const)
   test(`${template}'s Word and PDF files hold its whole document and pass the export inspection`, async () => {
     after(closeRenderer);
     const { built } = await assembled({ template, policy: await approvedPolicy(), records });
