@@ -1,22 +1,23 @@
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { candidateDigest, sha256, type PublicationBundle } from "@workspace/valo-core";
 import type { AmendmentRecord } from "./guidance-amendments";
-import { capturedPassages, capturedTexts } from "./guidance-captured-texts";
-import type { GuidePassage, GuidePassages } from "./guidance-passages";
 import { closeRenderer, renderDocument } from "../../lib/valo-render";
 import { controlledTermsSnapshot, keptAs } from "./guidance-release.fixtures";
 import { guideOpenReasons } from "./guidance-release";
 import { inspectOperationalExports } from "./operational-export-inspection";
 import { readTemplateIntake } from "./operational-intake";
-import { publicationWorkspaceRoot } from "./operational-policy";
 import { chatGPTPermissionRecord } from "./rights-applicability";
-import { buildLawTemplateCandidate, TEMPLATE_LAW_REVIEW_MEANING } from "./template-law-candidate";
+import { TEMPLATE_LAW_REVIEW_MEANING } from "./template-law-candidate";
 import { lawTemplateMechanicalChecks } from "./template-law-mechanical";
-import { TEMPLATE_LAW_POLICY_PATH, templateLawPolicy } from "./template-law-policy";
-import { assembleLawTemplateBundle } from "./template-law-release";
+import { templateLawPolicy } from "./template-law-policy";
+import {
+  assembledLawTemplate,
+  passingFormat,
+  standInWords,
+  supposedlyApprovedTemplateLawPolicy,
+  syntheticLawTemplateRecords,
+} from "./template-law-release.fixtures";
 import { templateWords } from "./template-claim-map";
 import {
   lawTemplateOwnWords,
@@ -28,129 +29,20 @@ import {
 
 /**
  * A template that states the law, short of its two reviews: its rights record, its mechanical checks
- * and its bundle (docs/architecture/reviewed-route.md, part 4). The Data Protection Act's words are not
- * kept in the repository, so TPL-31 is built from stand-in passages: their words hold the quoted words
- * and are otherwise not the Act's or the directive's. A synthetic amendment record stands for a search
- * that found nothing later, and a test's supposed approval of the policy file stands for the owner's.
- * None of it is evidence about the law.
+ * and its bundle (docs/architecture/reviewed-route.md, part 4). TPL-31 is built from stand-in passages
+ * (template-law-release.fixtures.ts): their words hold the quoted words and are otherwise not the Act's
+ * or the directive's. A synthetic amendment record stands for a search that found nothing later, and a
+ * test's supposed approval of the policy file stands for the owner's. None of it is evidence about the
+ * law.
  */
 const now = new Date("2026-11-27T10:00:00.000Z");
 const read = new Date(+now - 3_600_000).toISOString();
-const rawSha = "a".repeat(64);
-const standInUrl = "https://ndpc.gov.ng/synthetic-stand-in.pdf";
-const policyFile = readFileSync(resolve(publicationWorkspaceRoot(), TEMPLATE_LAW_POLICY_PATH), "utf8");
-
-const standIn = (id: string, words: string): GuidePassage => {
-  const recorded = capturedPassages.find((p) => p.id === id)!;
-  const of = capturedTexts.find((t) => t.id === recorded.text)!;
-  return {
-    id,
-    recordedLocator: recorded.recordedLocator,
-    text: words,
-    hash: sha256(words),
-    sections: [...recorded.sections],
-    instrument: {
-      id: of.id,
-      kind: of.kind,
-      url: standInUrl,
-      rawSha256: rawSha,
-      title: of.title,
-      issuingBody: of.issuingBody,
-      retrievedAt: read,
-      effectiveFrom: of.effectiveFrom,
-    },
-  };
-};
-const words = {
-  "NDPA-29":
-    "29.—(1) Where a data controller engages the services of a data (stand-in words) engaged data processor — (stand-in words).",
-  "GAID-34":
-    "Article 34: Data Processing Agreement (stand-in words) every data controller or data processor shall (stand-in words) carry out data processing.",
-  "NDPA-40": "40.—(1) Where a personal data breach has occurred (stand-in words) under this section.",
-};
-const passagesFrom =
-  (text: Record<string, string>): GuidePassages =>
-  (id) =>
-    text[id] ? standIn(id, text[id]!) : undefined;
-
-/** A synthetic record for each text the stand-ins are passages of: a recent search that found nothing. */
-const records: AmendmentRecord[] = capturedTexts
-  .filter((t) => t.id === "NDPC-NDPA-2023" || t.id === "NDPC-GAID-2025")
-  .map((t) => ({
-    instrument: t.id,
-    title: t.title,
-    url: standInUrl,
-    rawSha256: rawSha,
-    commencement: { printed: "synthetic", effectiveFrom: t.effectiveFrom },
-    searches: [
-      {
-        place: "A synthetic search for this test only",
-        url: "https://ndpc.gov.ng/synthetic-search",
-        searchedAt: read,
-        rawSha256: "b".repeat(64),
-        found: "Nothing: this search stands in for one that was not made.",
-      },
-    ],
-    amendments: [],
-    notRead: [],
-    conflicts: [],
-    limits: "Synthetic: no search was made.",
-  }));
-
-const approvedPolicy = async () => (await templateLawPolicy({ approvedHash: sha256(policyFile) })).policy;
-const passing = {
-  parsed: true,
-  disclosureIncluded: true,
-  scopeIncluded: true,
-  limitationsIncluded: true,
-  sourceDateIncluded: true,
-};
-
-async function assembled(
-  options: {
-    policy?: PublicationBundle["policy"];
-    records?: readonly AmendmentRecord[];
-    text?: Record<string, string>;
-    pdf?: typeof passing;
-  } = {},
-) {
-  const built = await buildLawTemplateCandidate(
-    "TPL-31",
-    1,
-    passagesFrom(options.text ?? words),
-    now,
-    options.records,
-  );
-  const snapshot = controlledTermsSnapshot(new Date(+now - 1_800_000));
-  const applicability = chatGPTPermissionRecord(
-    snapshot,
-    built.provenance.sourceText,
-    built.provenance.note,
-    now,
-    {
-      path: built.provenance.path,
-      notePath: "docs/content-candidates/r1-content-intake-manifest.json",
-      templateId: "TPL-31",
-    },
-  );
-  const policy = options.policy ?? (await templateLawPolicy()).policy;
-  const result = await assembleLawTemplateBundle({
-    built,
-    policy,
-    termsSnapshot: snapshot,
-    snapshotRef: keptAs(snapshot),
-    provenanceRef: keptAs(built.provenance),
-    applicability,
-    exportReport: {
-      passed: !options.pdf || Object.values(options.pdf).every(Boolean),
-      formats: { docx: passing, pdf: options.pdf ?? passing },
-    },
-    exportHashes: { docx: sha256("TPL-31 docx"), pdf: sha256("TPL-31 pdf") },
-    now,
-    ...(options.records ? { amendmentRecords: options.records } : {}),
-  });
-  return { built, snapshot, applicability, policy, ...result };
-}
+const words = standInWords;
+const records = syntheticLawTemplateRecords(read);
+const approvedPolicy = supposedlyApprovedTemplateLawPolicy;
+const passing = passingFormat;
+const assembled = (options: Omit<Parameters<typeof assembledLawTemplate>[0], "now" | "identity"> = {}) =>
+  assembledLawTemplate({ now, ...options });
 const failed = (bundle: PublicationBundle) =>
   bundle.mechanicalChecks.filter((c) => c.result !== "pass").map((c) => c.name);
 
