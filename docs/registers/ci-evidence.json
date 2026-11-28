@@ -1472,6 +1472,34 @@
       "proves": "In a disposable copy of the database, the real publisher releases a guide (GUD-02) only on the development owner's check of that exact candidate's sources from within the last day, and its stored version is then eligible under the guidance policy as the owner approved it, carries both passing synthetic reviews and its enhanced checks, and is bound to the captures the owner checked; a day-old check saves and releases nothing."
     },
     {
+      "requirement": "ADM-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-law-release.test.ts",
+      "test": "under the policy as it stands, TPL-31 is held for the owner's approval as well as its reviews",
+      "proves": "Assembled as it would be prepared today, TPL-31's bundle is held for the owner's approval of the policy for templates that state the law, on which its rights record and its scope check rest, as well as for its two reviews."
+    },
+    {
+      "requirement": "ADM-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-law-release.test.ts",
+      "test": "with every source current and a supposed approval of the policy, only its two reviews hold TPL-31",
+      "proves": "With stand-in passages under a synthetic amendment record and a test's supposed approval of the policy, TPL-31's bundle clears its rights record and passes its ten mechanical checks, and the gate holds it for its two reviews alone."
+    },
+    {
+      "requirement": "ADM-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-law-release.test.ts",
+      "test": "each condition of a template's rights record is measured again",
+      "proves": "A template's rights record that is for another kind of content, accepts a customer licence, names another draft, route, permission, rule or policy file, rests on an unverified permission, has expired, no longer matches the template's review date or no longer measures what the template shares with its passages is refused, each for its own reason; the words measured are the template's own, and no record is made without the policy file it rests on."
+    },
+    {
+      "requirement": "ADM-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-law-release.test.ts",
+      "test": "a file that fails its inspection holds the template",
+      "proves": "A template that states the law whose PDF file fails its inspection is held for that file, whatever else it passes."
+    },
+    {
       "requirement": "ADM-009",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/staff/valo-staff-roles.integration.test.ts",
@@ -2291,6 +2319,20 @@
       "proves": "A source whose stored copy cannot be read, or whose copy lacks the passage the guide rests on, is reported as holding the guide rather than passed over."
     },
     {
+      "requirement": "EDP-002",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/editorial/law-template-preparation.integration.test.ts",
+      "test": "a template that states the law is not prepared without a current capture of each of its sources, and nothing is kept",
+      "proves": "On a real database, a template that states the law whose sources have no current capture, or captures that do not hold the recorded passages, is not prepared and nothing is kept, as a template with no claim map or terms more than a day old is not."
+    },
+    {
+      "requirement": "EDP-002",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/editorial/law-template-preparation.integration.test.ts",
+      "test": "run as a process, the command for a template that states the law stops with a plain reason, and refuses a template with no claim map",
+      "proves": "Run as a process against a real database, the command for a template that states the law stops with a reason an operator can look up when no capture holds its passages, refuses a template with no claim map or a call without the terms file, and keeps nothing."
+    },
+    {
       "requirement": "EDP-003",
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/editorial/pipeline-contract.test.ts",
@@ -2508,6 +2550,13 @@
       "proves": "TPL-31, a contract, gives the parties and use it assumes and every clause it leaves for the parties to settle as the candidate's assumptions, each clause with a blank among them, and a contract's map without them is refused."
     },
     {
+      "requirement": "EDP-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-law-release.test.ts",
+      "test": "the mechanical checks are measured from the candidate itself, and a changed candidate fails them",
+      "proves": "A contract template that states the law fails its scope and required-fields checks when one of the clauses it leaves open is missing from what it exposes."
+    },
+    {
       "requirement": "EDP-006",
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/publication/operational-mechanical.test.ts",
@@ -2562,6 +2611,27 @@
       "file": "artifacts/api-server/src/modules/editorial/reviewed-rule-preparation.integration.test.ts",
       "test": "a rule prepared in the repository is kept for its two reviews only when nothing else holds it",
       "proves": "On a real database a rule prepared in the repository is kept for its reviews only when nothing else holds it: with no rights record for the reviewed route, or no copy of its source checked within the last day, no row or file is kept; once kept, through drafting's own login, as its next version, its Word and PDF files hold the whole rule sheet and read back exactly as they were inspected."
+    },
+    {
+      "requirement": "EDP-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-law-release.test.ts",
+      "test": "the mechanical checks are measured from the candidate itself, and a changed candidate fails them",
+      "proves": "A template that states the law has the gate's ten mechanical checks measured from the candidate itself: a body, assumption, limit, review date, quotation, claim or claim map that is not what its sources and claim map give fails exactly the checks that read it."
+    },
+    {
+      "requirement": "EDP-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-law-release.test.ts",
+      "test": "the checks hold the provider's terms, the policy and each source's decision to what they are now",
+      "proves": "A template that states the law fails its checks when the provider's pages are not the ones its permission quotes, when the policy the code reads today is not the candidate's or no longer names its sources' host, or when a source's decision is not the one its amendment record supports."
+    },
+    {
+      "requirement": "EDP-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-law-release.test.ts",
+      "test": "TPL-31's Word and PDF files hold its whole document and pass the export inspection",
+      "proves": "TPL-31's document, rendered as Word and as PDF, holds its own words, its disclosure, scope, limits and source check date, and passes the export inspection."
     },
     {
       "requirement": "EDP-007",
@@ -5656,6 +5726,13 @@
       "file": "artifacts/api-server/src/modules/catalogue/valo-catalogue.test.ts",
       "test": "a staff-library template's page shows its released details, its statement and only its released related guides",
       "proves": "A staff-library template's page says whether AI drafted it, that a Valo Content editor read the version, that Valo ran no AI review of it and that no Nigerian legal, tax or sector specialist reviewed it, and for a version released before its drafting was recorded says only what is known."
+    },
+    {
+      "requirement": "EDP-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/template-law-release.test.ts",
+      "test": "a template's words carry its notices, claim no professional review and hold no formula",
+      "proves": "A template that states the law fails its disclosures check when its words claim lawyer approval or lose the sentence saying what its review means, and its arithmetic check when its own words hold a formula."
     },
     {
       "requirement": "DOC-006",
