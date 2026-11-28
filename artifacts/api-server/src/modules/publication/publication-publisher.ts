@@ -23,6 +23,7 @@ import { guidanceCandidate } from "./guidance-candidate";
 import { guideReferences } from "./guidance-document";
 import { guideMechanicalChecks } from "./guidance-mechanical";
 import { guidancePolicy } from "./guidance-policy";
+import { releasePolicyKind, templateLawPolicy } from "./template-law-policy";
 import { originalFormSchema, formMarkdown } from "./operational-authoring-contract";
 import { operationalMechanicalChecks } from "./operational-mechanical";
 import { recheckOperationalExports } from "./operational-export-inspection";
@@ -88,14 +89,19 @@ export async function validateOperationalVersionInTransaction(
     .from(valoPublicationPolicies)
     .where(eq(valoPublicationPolicies.id, row.policyId));
   // A guide says what the law requires, so it is released only under the guidance policy, which the
-  // owner approves on its own (decision 0017). The templates' policy never releases one.
-  const guide = bundle.candidate.contentClass === "sourced_guidance";
-  const practical = bundle.candidate.contentClass === "practical_guide";
+  // owner approves on its own (decision 0017). A template that rests on the law is checked only against
+  // the templates' source-backed policy (docs/architecture/reviewed-route.md, part 4). The templates'
+  // own policy releases neither.
+  const kind = releasePolicyKind(bundle.candidate);
+  const guide = kind === "guidance";
+  const practical = kind === "practical_guide";
   const trusted = practical
     ? await practicalGuideReleasePolicy(bundle.candidate)
     : guide
       ? await guidancePolicy()
-      : await operationalPolicy();
+      : kind === "template_law"
+        ? await templateLawPolicy()
+        : await operationalPolicy();
   if (
     !trusted ||
     !policy ||
@@ -109,6 +115,10 @@ export async function validateOperationalVersionInTransaction(
     throw Error("STALE_RELEASE");
   const result = evaluatePublication(bundle, now);
   if (result.decision !== "eligible") throw Error(`PUBLICATION_HELD:${result.reasons.join(",")}`);
+  // The checks a template that rests on the law needs at release, its rights record, its mechanical
+  // checks and its claim map built again from its sources, are part 4's later slices. Until they
+  // exist none is released, whatever the gate finds.
+  if (kind === "template_law") throw Error("TEMPLATE_LAW_RELEASE_NOT_BUILT");
   if ((bundle.candidate.contentClass === "general_template") !== bundle.candidate.id.startsWith("TPL-"))
     throw Error("CONTENT_CLASS_ID_MISMATCH");
   const a = row.attestations as ReleaseAttestations;

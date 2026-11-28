@@ -356,6 +356,38 @@ Settled while building it (slice 3b, second part: restoring a version):
   - employment: TPL-16, TPL-17 and TPL-26 to TPL-28. These stay held, as the employment guides do,
     until the owner decides about the Labour Act's reference copy.
 
+Settled while building it (slice 4a, first part):
+- **The map's kinds.** A statement of the law, and Valo's reading of one, each rest on an exact
+  passage, as a guide's do. A term the parties agree, a limit of the template, and a title, label,
+  blank or signature line rest on none and make no claim. A practice, such as how to complete a
+  blank, may point to a passage, as a guide's may. The map covers the template's own words: each
+  paragraph, and each cell of its tables, in order.
+- **Which policy.** A template whose map places a statement of the law, or a reading of one, is the
+  source-backed policy's. The publisher checks any template not prepared as an original form that
+  quotes no law only against that policy, never the templates' own. Until its release checks are
+  built (its rights record, its mechanical checks and its map built again from its sources), the
+  publisher releases none, whatever the gate finds.
+- **The policy file** is [template-law-publication-policy.md](../valo/policies/template-law-publication-policy.md),
+  on the guidance policy's model, with the guides' official hosts. It is a proposal. It counts as
+  approved only while `templateLawPolicyApprovedHash` returns the file's own SHA-256, and that function
+  returns none, so every such template is held with `policy_not_owner_approved`.
+- **A contract's exposure.** The parties and use it assumes, and the clauses it leaves for the parties
+  to settle, are written in its map in Valo's own words. They are the candidate's assumptions, each
+  clause beginning "Left for the parties to settle:", and its file shows them. The candidate's
+  unresolved material issues stay for what holds it, since EDP-005's acceptance holds the whole
+  template on a material uncertainty. A map classed as contracts without them is refused.
+- **TPL-31's map** places 145 sentences: 2 readings of the law, 49 terms, 13 practices, 3 limits and 78
+  titles, labels and blanks. Its readings quote section 29(1) and section 40(1) of the Data Protection
+  Act and Article 34 of the directive in the very words the privacy guides' maps quote, so no new
+  quotation was written. It is classed as contracts, so the gate itself asks for its assumptions. The
+  Act's words are not kept in the repository, so its quotations are checked when it is prepared from
+  a capture, as the privacy guides' are.
+- **Its candidate** is built as a guide's is: each claim bound to the passage supplied, each source
+  with the decision its amendment record supports, the legal scope verified only when every sentence
+  about the law is bound and every source approved, and its sources checked again within 30 days.
+  After its own words it shows what it covers, its limits, what it assumes and leaves open, its
+  sources, how it was written and checked, and when its sources were checked.
+
 ## What does not change
 
 - Every gate the publisher checks. Nothing here loosens one.
@@ -376,7 +408,7 @@ Each slice is its own pull request.
 | 2b | **The owner's panel** (built). Staff → System → **Guides on the reviewed route**: the list, the candidate's text and passages, what holds it, and the check. Its contract and routes. Tests: the real-bindings database test lists GUD-02 as the owner reads it, with a stale or changed copy holding it and the owner's check counting for a day; unit tests of the inspection's states; and a browser test of the panel on a phone. | EDP-002, EDP-004, CMP-008 |
 | 3a | **A rule's bundle and its reviews** (built). The builder, the package kind and its binding checks. Database tests: a prepared rule's pair is admitted only under a package of its kind and runs with a stand-in model. A held rule keeps nothing. | EDP-003, EDP-004, EDP-006, ADM-004 |
 | 3b | **The release request and restoring a version** (built). The request command and the restore. Database tests: a reviewed rule is planned and applied from its request. A restored version is released as the next one, and saved results keep their versions. | ADM-004 |
-| 4a | **A template's claim map, its preparer and the proposed policy.** The map's builder and checks, the preparer, and the policy as a file for the owner, with TPL-31, the data processing agreement, mapped first. | EDP-003, EDP-005, EDP-006, ADM-005 |
+| 4a | **A template's claim map, its preparer and the proposed policy.** The map's builder and checks, the preparer, and the policy as a file for the owner, with TPL-31, the data processing agreement, mapped first. The first part is built: the policy file, the map and its checks, TPL-31's map, its candidate, and the publisher's choice of policy. Unit tests build TPL-31 from stand-in passages, which the gate holds; a database test shows the publisher asks no other policy about such a template. The second part: the rights record, the mechanical checks, both files, the preparer, the two review requests and their package, and the release checks. | EDP-003, EDP-005, EDP-006, ADM-005 |
 | 4b–4e | **The families' maps:** privacy, then commercial, governance and safety, and employment. | EDP-003, EDP-005 |
 
 ## The owner's points
@@ -384,7 +416,8 @@ Each slice is its own pull request.
 1. The AI budget for every review on this route.
 2. Part 2: the owner's own check of each guide's sources, within a day before its reviews and again
    before its release.
-3. Part 4: the source-backed policy for templates, as a file for the owner's approval.
+3. Part 4: the source-backed policy for templates, [proposed as a file](../valo/policies/template-law-publication-policy.md)
+   for the owner's approval. No text of it is approved, so every template that states the law is held.
 4. The words of the refusal of a replaced file, and of the owner's panel.
 5. The Labour Act's reference copy (decision 0017, decision 8). It holds the employment templates as
    it holds the employment guides.

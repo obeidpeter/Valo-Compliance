@@ -848,3 +848,86 @@ test(
     assert.equal(await status(formUnderGuidance), "candidate");
   },
 );
+
+/**
+ * A template that rests on the law is checked only against the source-backed policy for templates
+ * (docs/architecture/reviewed-route.md, part 4), whose text the owner has not approved. Nothing here
+ * is published: each attempt is refused at the policy or held by the gate, and the candidates are
+ * synthetic rows.
+ */
+test(
+  "a template that rests on the law is checked only against its own policy, and held while no text of it is approved",
+  { skip: process.env.VALO_RUN_DB_TESTS !== "synthetic-development-only", timeout: 60_000 },
+  async () => {
+    assert.equal(process.env.NODE_ENV, "development");
+    assert.ok(!process.env.REPLIT_DEPLOYMENT);
+    assert.ok(["localhost", "127.0.0.1", "[::1]"].includes(new URL(process.env.DATABASE_URL!).hostname));
+    const { db } = await import("@workspace/db");
+    const { publishOperationalVersion } = await import("./publication-publisher");
+    const { operationalPolicy } = await import("./operational-policy");
+    const { templateLawPolicy } = await import("./template-law-policy");
+    const { draftSynthetic } = await import("../../test-support/drafted-content");
+
+    const now = new Date();
+    const law = await templateLawPolicy(),
+      templates = await operationalPolicy();
+    assert.equal(law.policy.ownerApproved, false, "the owner has approved no text of the file");
+    // A test's supposed approval of the file's own text. A bundle that carries it is refused all the
+    // same: the publisher reads the approval the code records, which is none.
+    const supposed = await templateLawPolicy({ approvedHash: law.authority[0]!.hash });
+    assert.equal(supposed.policy.ownerApproved, true);
+    for (const { policy, authority } of [law, templates, supposed])
+      await db.execute(
+        sql`insert into valo_publication_policies(id,hash,policy,authority) values(${policy.version},${policy.hash},${JSON.stringify(policy)}::jsonb,${JSON.stringify(authority)}::jsonb) on conflict do nothing`,
+      );
+    const save = async (bundle: PublicationBundle) => {
+      const id = randomUUID(),
+        name = `synthetic-template-law-${id}`;
+      await draftSynthetic((tx) =>
+        tx.execute(
+          sql`insert into valo_content_versions(id,template_id,version,slug,policy_id,candidate_hash,bundle,attestations,status,review_by)
+            values(${id}::uuid,${name},${bundle.candidate.version},${name},${bundle.policy.version},${bundle.candidate.hash},${JSON.stringify(bundle)}::jsonb,'{}','candidate',${new Date(bundle.candidate.reviewBy!)})`,
+        ),
+      );
+      return id;
+    };
+    const status = async (id: string) =>
+      (await db.execute(sql`select status from valo_content_versions where id=${id}::uuid`)).rows[0]?.status;
+
+    // The shape of a template that rests on the law: a template held in the regulatory mode, with a
+    // source. It is a synthetic candidate, not TPL-31's.
+    const held = heldSourceBundle(now);
+    const template: PublicationBundle = {
+      ...held,
+      candidate: { ...held.candidate, contentClass: "general_template" },
+    };
+    assert.equal(template.candidate.evidenceMode, "regulatory");
+
+    // Under its own policy the publisher reaches the gate, which holds it, the policy among the reasons.
+    const underLaw = await save({ ...template, policy: law.policy });
+    await assert.rejects(
+      () => publishOperationalVersion(underLaw),
+      (error: Error) => {
+        assert.match(error.message, /^PUBLICATION_HELD:/);
+        assert.match(error.message, /policy_not_owner_approved/);
+        return true;
+      },
+    );
+    assert.equal(await status(underLaw), "candidate");
+
+    // Bound to the templates' own policy, or to an approval the code does not record, it is refused
+    // before the gate is asked.
+    for (const policy of [templates.policy, supposed.policy]) {
+      const id = await save({ ...template, policy });
+      await assert.rejects(() => publishOperationalVersion(id), /POLICY_NOT_TRUSTED/);
+      assert.equal(await status(id), "candidate");
+    }
+
+    // And an original form that quotes no law, bound to this policy, is refused the same way.
+    const form = heldSourceBundle(now, false);
+    assert.equal(form.candidate.evidenceMode, "original_operational");
+    const formUnderLaw = await save({ ...form, policy: law.policy });
+    await assert.rejects(() => publishOperationalVersion(formUnderLaw), /POLICY_NOT_TRUSTED/);
+    assert.equal(await status(formUnderLaw), "candidate");
+  },
+);

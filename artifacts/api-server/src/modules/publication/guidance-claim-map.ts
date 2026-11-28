@@ -58,7 +58,7 @@ function fail(code: string): never {
 const preview = (text: string) => text.slice(0, 60);
 
 /** The exact words of a passage from the one place `from` occurs to the end of the next `to`. */
-function quotation(passage: GuidePassage, from: string, to: string, guide: string) {
+export function quotation(passage: GuidePassage, from: string, to: string, guide: string) {
   const start = passage.text.indexOf(from);
   if (start < 0 || passage.text.indexOf(from, start + 1) >= 0)
     fail(`GUIDE_CLAIM_QUOTE_ANCHOR:${guide}:${passage.id}:${preview(from)}`);
@@ -87,7 +87,7 @@ export function statedNumbers(text: string) {
  * read that from a passage's words, so it is held to the pages recorded for the passage when it was
  * extracted ("PDF405–406 / A405–A406").
  */
-function printedPageRecorded(passage: GuidePassage, locator: string) {
+export function printedPageRecorded(passage: GuidePassage, locator: string) {
   const named = locator.match(/printed page A(\d+)/);
   if (!named) return !/printed page/i.test(locator);
   const recorded = passage.recordedLocator.match(/\/\s*A\s?(\d+)(?:\s*[–-]\s*A?\s?(\d+))?/);
@@ -99,7 +99,7 @@ function printedPageRecorded(passage: GuidePassage, locator: string) {
 }
 
 /** Whether words contain a stated number as a number of its own, not as part of a longer one. */
-function holdsNumber(words: string, n: string) {
+export function holdsNumber(words: string, n: string) {
   const exact = n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   return /\d/.test(n)
     ? new RegExp(`(?<![\\d.,])${exact}(?!\\d)`).test(words)

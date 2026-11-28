@@ -36,8 +36,9 @@ const q = (passage: string, from: string, to: string, locator: string): GuideSup
 });
 
 // The directive's articles, as their headings name them. A locator that is a heading is checked
-// against the passage's own words.
-const gaid = {
+// against the passage's own words. The templates' maps quote the same articles
+// (template-claims-privacy.ts).
+export const gaid = {
   a18: "Article 18: Data Processing Which Requires Consent",
   a19: "Article 19: Consent to Cookies and other Tracking Tools",
   a26: "Article 26: Reliance on Legitimate Interest",
@@ -181,7 +182,7 @@ const processor = q(
   "or another data processor ;",
   "heading: “data processor” means an individual",
 );
-const s29 = {
+export const s29 = {
   agreement: q(
     "NDPA-29",
     "(2) The measures under subsection (1) include a written agreement",
