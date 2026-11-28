@@ -1500,6 +1500,20 @@
       "proves": "A template that states the law whose PDF file fails its inspection is held for that file, whatever else it passes."
     },
     {
+      "requirement": "ADM-005",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/editorial/law-template-route.integration.test.ts",
+      "test": "a template that states the law, under a supposed approval of its policy, is prepared, measured for its reviews and passes every publisher check on a real database, with nothing published",
+      "proves": "On a real database, a reviewed TPL-31 version passes every check the publisher makes, in a transaction that is rolled back, only under the policy for templates that state the law as approved; with that approval supposed absent the publisher refuses it, and nothing is saved or published."
+    },
+    {
+      "requirement": "ADM-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/catalogue/valo-released-law-templates.test.ts",
+      "test": "a published template that states the law is shown only while its own policy stands and its permission is current",
+      "proves": "A released template that states the law is shown only while the policy it was released under is that policy as it stands and approved, its sources are current and the provider's permission for its wording is current, and never after its review date or once withdrawn."
+    },
+    {
       "requirement": "ADM-009",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/staff/valo-staff-roles.integration.test.ts",
@@ -2459,6 +2473,27 @@
       "proves": "A rule's review request that would carry another review's verdict, in its rights record, scenarios, provenance or sources, is refused, as is one whose server evidence names another candidate or source check, or that carries no sources."
     },
     {
+      "requirement": "EDP-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/ai/inference-allocation-package.test.ts",
+      "test": "only a package of templates that state the law admits their review pairs, and it admits nothing else",
+      "proves": "Only a package of its own kind admits the two planned reviews of a template that states the law, and that package admits no form's, guide's, rule's or other work, and no work that is not such a pair."
+    },
+    {
+      "requirement": "EDP-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/template-law-reviews.test.ts",
+      "test": "TPL-31's two review requests are within its policy's limit and carry its sources and their amendment basis",
+      "proves": "TPL-31's factual review and its separate challenge each run the five enhanced checks, within the limit its policy states, and are sent its sources whole, the measure of the words it repeats from them and each text's amendment basis, not the draft a second time."
+    },
+    {
+      "requirement": "EDP-004",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/editorial/law-template-route.integration.test.ts",
+      "test": "a template that states the law, under a supposed approval of its policy, is prepared, measured for its reviews and passes every publisher check on a real database, with nothing published",
+      "proves": "On a real database, TPL-31 prepared from stand-in passages under a supposed approval of its policy is built again for its two reviews, which are within its policy's limit and found unchanged by the dispatcher's check, and only a package of its own kind takes the pair; without the approval, the candidate and its planned pair are refused."
+    },
+    {
       "requirement": "EDP-005",
       "job": "foundation",
       "file": "scripts/src/valo/publication.test.ts",
@@ -2632,6 +2667,13 @@
       "file": "artifacts/api-server/src/modules/publication/template-law-release.test.ts",
       "test": "TPL-31's Word and PDF files hold its whole document and pass the export inspection",
       "proves": "TPL-31's document, rendered as Word and as PDF, holds its own words, its disclosure, scope, limits and source check date, and passes the export inspection."
+    },
+    {
+      "requirement": "EDP-006",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/editorial/law-template-route.integration.test.ts",
+      "test": "a template that states the law, under a supposed approval of its policy, is prepared, measured for its reviews and passes every publisher check on a real database, with nothing published",
+      "proves": "On a real database, the readiness check and the publisher each build TPL-31 again from its draft and its claim scope and run its ten mechanical checks again before its reviews and its release, and a version without its claim scope, or with a capture that is no longer current, is refused."
     },
     {
       "requirement": "EDP-007",

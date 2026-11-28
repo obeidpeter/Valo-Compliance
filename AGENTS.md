@@ -174,7 +174,9 @@ Rules that apply now:
   Never change that function without the owner's explicit, current approval of the file's exact
   text. A template's claim map (`template-claim-map.ts`) places every sentence of its words; a term
   the parties agree, a limit or a heading rests on no passage, and a contract states the parties and
-  use it assumes and the clauses it leaves open.
+  use it assumes and the clauses it leaves open. Its two reviews are admitted only under a package of
+  their own kind (`law-template-review-pair-v1`), and a released one is shown only while that policy
+  stands.
 - An order keeps the terms it was made with. The database refuses any change to its amount,
   currency, line, price or bundle, and to what says which order it is
   (`valo_orders_keep_terms`, `docs/architecture/order-safety.md`). Only its status, provider

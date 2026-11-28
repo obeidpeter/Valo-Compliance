@@ -108,10 +108,10 @@ and after its own preparation, and its own release command in place of step 5:
 [A rule on the reviewed route](rule-review-preparation.md) says how. Every rule is held today on its
 rights record, which only the owner can give for this route.
 
-A template that states the law is prepared by a command of its own:
-[A template that states the law, on the reviewed route](law-template-preparation.md) says how. Its two
-reviews and its release are not built yet, and every such template is held today on the policy for
-templates that state the law, which only the owner can approve.
+A template that states the law is prepared by a command of its own, and reviewed under a package of
+its own kind: [A template that states the law, on the reviewed route](law-template-preparation.md) says
+how. Every such template is held today on the policy for templates that state the law, which only the
+owner can approve.
 
 A candidate past its review date, or one whose version ID or version number is already saved, is
 refused from step 2 on; prepare it again. For content that is not general, the two reviews also
