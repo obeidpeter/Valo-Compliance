@@ -19,9 +19,8 @@ import { GUIDANCE_NOTICE, GUIDE_PART_PREFIX } from "@workspace/valo-core/printed
 import { printedCalendarDate } from "@workspace/valo-core/guided-runtime";
 import { documentInput } from "../../lib/valo-validation";
 import type { AmendmentRecord, GuidePassages, inspectOperationalExports } from "../publication";
-import type { CurrentSourceCapture } from "../sources";
 import type { OwnerRuleCandidate } from "./owner-rule-candidates";
-import { bindRuleSources, OWNER_RULE_QUOTE_WORDS } from "./rule-sources";
+import { bindRuleSources, OWNER_RULE_QUOTE_WORDS, type RuleSourceCapture } from "./rule-sources";
 
 /**
  * A requirements-check rule prepared in the repository, built for the reviewed route
@@ -69,7 +68,7 @@ const placeholderManifest = "0".repeat(64);
 export type ReviewedRuleContent = Omit<ReleasedRule, "manifestHash">;
 export type ReviewedRuleInput = {
   version: number;
-  captures: readonly CurrentSourceCapture[];
+  captures: readonly RuleSourceCapture[];
   passages: GuidePassages;
   records: readonly AmendmentRecord[];
   /** The guidance policy as the code reads it today. */
@@ -167,6 +166,27 @@ export function repositoryRuleDraftRun(
     candidateHash: bundle.candidate.hash,
     evidenceHash: digest(bundle.sources),
   };
+}
+
+/**
+ * What the requirements check gives for each of a rule's scenarios, with the rule alone in place, as
+ * the release plan runs them; the manifest is trusted for these runs only. Empty when the rule does not
+ * parse.
+ */
+export function ruleScenarioResults(prepared: OwnerRuleCandidate, rule: ReviewedRuleContent, now: Date) {
+  const parsed = ruleSchema.safeParse({ ...rule, manifestHash: placeholderManifest });
+  if (!parsed.success) return [];
+  return planRuleRelease({
+    candidate: parsed.data,
+    current: [],
+    scenarios: prepared.scenarios,
+    profiles: [],
+    latestVersion: rule.version - 1,
+    now,
+    // The day in Lagos; each scenario is run on its own date.
+    asOfDate: new Date(+now + 3_600_000).toISOString().slice(0, 10),
+    trustedManifestHashes: new Set<string>(),
+  }).scenarios;
 }
 
 /**
@@ -308,22 +328,7 @@ export function ruleMechanicalChecks(input: {
     (t) => t.trim().length > 0,
   );
 
-  // The scenarios run through the requirements check with this rule alone in place, as the release
-  // plan runs them; the manifest is trusted for these runs only.
-  const plan = parsedRule.success
-    ? planRuleRelease({
-        candidate: parsedRule.data,
-        current: [],
-        scenarios: prepared.scenarios,
-        profiles: [],
-        latestVersion: rule.version - 1,
-        now,
-        // The day in Lagos; each scenario is run on its own date.
-        asOfDate: new Date(+now + 3_600_000).toISOString().slice(0, 10),
-        trustedManifestHashes: new Set<string>(),
-      })
-    : null;
-  const scenarios = plan?.scenarios ?? [];
+  const scenarios = ruleScenarioResults(prepared, rule, now);
 
   const facts = {
     schema: {

@@ -9,6 +9,11 @@ import type { CurrentSourceCapture } from "../sources";
 import type { OwnerRuleCandidate } from "./owner-rule-candidates";
 
 const day = 86_400_000;
+/**
+ * What binding a rule's sources reads of a capture: the official address it is a copy of, when it was
+ * checked and its snapshot. The passages are read from the captures' text beforehand.
+ */
+export type RuleSourceCapture = Pick<CurrentSourceCapture, "leadId" | "url" | "snapshotId" | "checkedAt">;
 /** The guidance policy's point 7: no more than this many words in a row from a passage. */
 export const OWNER_RULE_QUOTE_WORDS = 20;
 export const unique = <T>(values: T[]) => [...new Set(values)];
@@ -29,7 +34,7 @@ const wordCount = (text: string) => text.trim().split(/\s+/u).filter(Boolean).le
 export function bindRuleSources(
   candidate: OwnerRuleCandidate,
   input: {
-    captures: readonly CurrentSourceCapture[];
+    captures: readonly RuleSourceCapture[];
     passages: GuidePassages;
     records: readonly AmendmentRecord[];
     now: Date;
