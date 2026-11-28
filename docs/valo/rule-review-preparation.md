@@ -1,10 +1,10 @@
-# Preparing a rule for its two reviews
+# A rule on the reviewed route
 
-This note is for the person who runs commands in the development environment. It covers the first
-steps on the reviewed route for a requirements-check rule prepared in the repository: building it into
-a candidate that is ready for its two AI reviews, and running those reviews
-([the reviewed route](../architecture/reviewed-route.md), part 3). Releasing a reviewed rule on this
-route is not built yet.
+This note is for the person who runs commands in the development environment. It covers the reviewed
+route for a requirements-check rule prepared in the repository: building it into a candidate that is
+ready for its two AI reviews, running those reviews, and releasing the rule once both have passed
+([the reviewed route](../architecture/reviewed-route.md), part 3). Restoring an earlier version is not
+built yet.
 
 Preparing calls no AI model, approves nothing and releases nothing. The reviews run only under a
 package of rule reviews the owner approves. Today no rule is kept at all: see "Why every rule is held
@@ -80,6 +80,37 @@ and records and must be exactly the candidate that was kept. What stops it:
 - `CANDIDATE_ALREADY_SAVED`: a version of the rule is stored under its number. Prepare it again.
 - `CANDIDATE_UNAVAILABLE_OR_STALE`: the candidate's review date has passed. Prepare it again.
 - `WORK_OUTSIDE_PACKAGE`: the package is not of the rules' kind.
+
+## Releasing a reviewed rule
+
+Once both reviews have run, the rule's release request is assembled from that run, then planned and
+applied. Run each command from the repository root, as above.
+
+1. `... rule-release.ts request <batch id> <result artifact id> <sha256> [--reason "<what changed>"]`
+   reads the report `--execute` printed. It builds the rule again, checks each review against the
+   batch, and makes the rule's bundle with both reviews. It calls no model and releases nothing. It
+   prints one line of JSON:
+   - `state: "ready"`: the request is kept as a private file, named by `request`, with the rule's
+     `manifestHash`.
+   - `state: "held"`: a review held, or found something. `reasons` lists what the gate holds, and
+     nothing is kept. Prepare the rule again for another pair of reviews.
+   A version that replaces a released one needs `--reason`, of 20 to 1,000 characters: the businesses
+   that saved a result under the earlier version are told it.
+2. `... rule-release.ts plan --request=<id>:<sha256>` plans the release: whether the registry would
+   admit it, its scenarios, and how many saved profiles' results would change. It changes nothing.
+3. `... rule-release.ts apply --request=<id>:<sha256> --confirm <manifest hash>` releases it as the
+   rule's next version. Its sources' copies are checked again first.
+
+What stops it:
+
+- `REVIEW_NOT_SETTLED_BY_APPROVED_BATCH`, `REVIEW_BINDING_CHANGED` or `REVIEWS_NOT_INDEPENDENT`: a
+  review is not the one the batch settled for this candidate. Use the report `--execute` printed.
+- `RULE_RELEASE_REASON_INVALID` or `RULE_RELEASE_REASON_REQUIRED`: the reason is too short or too long,
+  or a released version is being replaced without one.
+- `RULE_RELEASE_BLOCKED:<reasons>`: the plan is not ready, for the reasons given.
+- `RULE_RELEASE_NOT_CONFIRMED`: the hash given to `--confirm` is not the request's manifest hash.
+- `RULE_RELEASE_VERSION_CHANGED`: another version of the rule was stored first. Prepare it again.
+- The stops of the section above, since the rule is built again first.
 
 ## Why every rule is held today
 

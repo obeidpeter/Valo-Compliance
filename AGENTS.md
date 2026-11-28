@@ -141,8 +141,9 @@ Rules that apply now:
   that connection; the `reviewer-connection` repository rule enforces this. Never give the login
   another privilege or membership outside a reviewed migration, and never give its connection string
   to the API or the worker.
-- A requirements-check rule's version is released on the reviewed route (`applyStoredRuleRelease`)
-  or, in development, on the owner's sign-off (decision 0020, `modules/editorial/owner-rule-signoff.ts`).
+- A requirements-check rule's version is released on the reviewed route (`applyStoredRuleRelease`,
+  from the request `assembleReviewedRuleRelease` keeps once the rule's two reviews have passed) or, in
+  development, on the owner's sign-off (decision 0020, `modules/editorial/owner-rule-signoff.ts`).
   The rule table's trigger, `valo_guard_owner_signed_rule`, refuses an owner-signed release unless
   the development owner's sign-off of its exact manifest was made in the same transaction, on a
   source check under a day old; such a release changes only its status, and is never published

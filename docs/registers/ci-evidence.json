@@ -2606,6 +2606,13 @@
       "proves": "A guide the gate calls eligible is listed on the site only while the policy it was released under is the guidance policy as it stands with the owner's approval; once that approval no longer stands, or the policy file is edited and approved anew, or a source or the provider permission is no longer current, or its review date passes, it is not listed. The guide is an object in memory, built under the policy as the owner approved it, with made-up reviews; the approval's absence is supposed inside the test; nothing is published."
     },
     {
+      "requirement": "EDP-007",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/reviewed-rule.test.ts",
+      "test": "a rule with today's capture of its source, a current amendment record and a rights record for this route waits only for its two reviews, and the registry admits it once they pass",
+      "proves": "A rule's bundle on the reviewed route is eligible only once both reviews have passed with nothing found: a review that holds, or passes with a finding, leaves its manifest under review and the gate holds it."
+    },
+    {
       "requirement": "EDP-009",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/editorial/editorial-lifecycle.integration.test.ts",
@@ -5194,6 +5201,13 @@
       "file": "artifacts/api-server/src/modules/editorial/owner-rule-signoff.integration.test.ts",
       "test": "the development owner watches a prepared rule's sources, signs the exact version shown, supersedes it and withdraws it",
       "proves": "A prepared rule stays out of the checker until its sources are watched and read and the recently verified development owner signs the exact version shown; the checker then gives it with the owner's release notice, the next signed version supersedes it, and a withdrawal takes it out of the checker."
+    },
+    {
+      "requirement": "ADM-004",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/managed-callers-real-bindings.integration.test.ts",
+      "test": "actual managed callers with real PostgreSQL, source/candidate/case checks and zero-network SDK",
+      "proves": "In a disposable copy of the database, a rule prepared for the reviewed route whose two stand-in reviews settled under an approved package of rule reviews is assembled into a release request only from that batch's own settled reviews, then planned and applied as the rule's next version, which the registry admits as an editorial release; two records of one review, a reason too short and a wrong confirmation are refused."
     },
     {
       "requirement": "ADM-007",

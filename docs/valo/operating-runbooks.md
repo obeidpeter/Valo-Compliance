@@ -104,9 +104,9 @@ kind and after its own preparation. [Preparing a guide for its two reviews](guid
 says what differs.
 
 A requirements-check rule from the repository takes steps 2 to 4, under a package of its own kind
-and after its own preparation: [Preparing a rule for its two reviews](rule-review-preparation.md) says
-how. Its release request is not built yet, so step 5 does not apply to a rule. Every rule is held today
-on its rights record, which only the owner can give for this route.
+and after its own preparation, and its own release command in place of step 5:
+[A rule on the reviewed route](rule-review-preparation.md) says how. Every rule is held today on its
+rights record, which only the owner can give for this route.
 
 A candidate past its review date, or one whose version ID or version number is already saved, is
 refused from step 2 on; prepare it again. For content that is not general, the two reviews also
