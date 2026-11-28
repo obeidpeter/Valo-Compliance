@@ -8,7 +8,7 @@ import { guideOpenReasons } from "./guidance-release";
 import { inspectOperationalExports } from "./operational-export-inspection";
 import { readTemplateIntake } from "./operational-intake";
 import { chatGPTPermissionRecord } from "./rights-applicability";
-import { TEMPLATE_LAW_REVIEW_MEANING } from "./template-law-candidate";
+import { rebuildLawTemplateCandidate, TEMPLATE_LAW_REVIEW_MEANING } from "./template-law-candidate";
 import { lawTemplateMechanicalChecks } from "./template-law-mechanical";
 import { templateLawPolicy } from "./template-law-policy";
 import {
@@ -254,6 +254,28 @@ test("the checks hold the provider's terms, the policy and each source's decisio
     officialHosts: base.policy.officialHosts.filter((host) => host !== "ndpc.gov.ng"),
   };
   assert.deepEqual(await failing(base, { policy: narrowed, trustedPolicy: narrowed }), ["scope"]);
+  // A source is not the copy its recorded passage describes: another address, title, reading or date
+  // from which it has effect.
+  for (const change of [
+    { url: `${base.bundle.sources[0]!.url}?another-copy` },
+    { title: `${base.bundle.sources[0]!.title} (another copy)` },
+    { retrievedAt: new Date(Date.parse(base.bundle.sources[0]!.retrievedAt) - 60_000).toISOString() },
+    { effectiveFrom: "2020-01-01" },
+  ])
+    assert.deepEqual(
+      await failing(base, {
+        sources: base.bundle.sources.map((s, i) => (i === 0 ? { ...s, ...change } : s)),
+      }),
+      ["scope"],
+      Object.keys(change)[0],
+    );
+  // A source has no recorded passage.
+  assert.deepEqual(
+    await failing(base, {
+      claimScope: { ...base.built.claimScope, passages: base.built.claimScope.passages.slice(1) },
+    }),
+    ["scope"],
+  );
   // A source carries a decision its amendment record does not support.
   assert.deepEqual(
     await failing(base, {
@@ -269,6 +291,26 @@ test("the checks hold the provider's terms, the policy and each source's decisio
       amendmentRecords: undefined,
     }),
     ["scope"],
+  );
+});
+
+test("a stored candidate is built again only from the passages its claim scope records", async () => {
+  const base = await assembled({ policy: await approvedPolicy(), records });
+  const rebuilt = await rebuildLawTemplateCandidate(base.bundle, base.built.claimScope, now, records);
+  assert.equal(JSON.stringify(rebuilt.document), base.bundle.candidate.body);
+  // Not from a source that is not the copy its recorded passage describes, nor under another
+  // template's claim scope.
+  const anotherCopy = {
+    ...base.bundle,
+    sources: base.bundle.sources.map((s, i) => (i === 0 ? { ...s, title: `${s.title} (another copy)` } : s)),
+  };
+  await assert.rejects(
+    rebuildLawTemplateCandidate(anotherCopy, base.built.claimScope, now, records),
+    /TEMPLATE_CLAIM_SCOPE_CHANGED/,
+  );
+  await assert.rejects(
+    rebuildLawTemplateCandidate(base.bundle, { ...base.built.claimScope, template: "TPL-13" }, now, records),
+    /TEMPLATE_CLAIM_SCOPE_CHANGED/,
   );
 });
 

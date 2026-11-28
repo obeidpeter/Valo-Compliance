@@ -213,6 +213,52 @@ export async function buildLawTemplateCandidate(
 }
 
 /**
+ * The passages a candidate's claim scope records, each with the words and checksum of the candidate's
+ * own source for it, and what does not match: a recorded passage that describes no source of the
+ * candidate, or a source with no recorded passage.
+ */
+export function lawTemplateScopePassages(
+  bundle: Pick<PublicationBundle, "sources">,
+  scope: Pick<TemplateClaimScope, "passages">,
+) {
+  const problems: string[] = [];
+  const held = new Map<string, GuidePassage>();
+  for (const recorded of scope.passages) {
+    const source = bundle.sources.find((s) => s.id === recorded.id);
+    if (
+      !source ||
+      source.url !== recorded.instrument.url ||
+      source.title !== recorded.instrument.title ||
+      source.retrievedAt !== recorded.instrument.retrievedAt ||
+      source.effectiveFrom !== recorded.instrument.effectiveFrom
+    ) {
+      problems.push(`the recorded passage ${recorded.id} does not describe a source of the candidate`);
+      continue;
+    }
+    held.set(recorded.id, { ...recorded, text: source.text, hash: source.hash });
+  }
+  if (held.size !== bundle.sources.length) problems.push("a source has no recorded passage");
+  return { held, problems };
+}
+
+/**
+ * A stored candidate built again, as its reviews and its release read it: from its retained draft,
+ * today's claim map, and the passages its claim scope records, with the words of its own sources. The
+ * caller compares what is built with what is stored; anything that differs holds the candidate.
+ */
+export async function rebuildLawTemplateCandidate(
+  bundle: Pick<PublicationBundle, "candidate" | "sources">,
+  scope: TemplateClaimScope,
+  now = new Date(),
+  records?: readonly AmendmentRecord[],
+) {
+  const { held, problems } = lawTemplateScopePassages(bundle, scope);
+  if (problems.length || scope.template !== bundle.candidate.id) throw Error("TEMPLATE_CLAIM_SCOPE_CHANGED");
+  const passages: GuidePassages = (id) => held.get(id);
+  return buildLawTemplateCandidate(bundle.candidate.id, bundle.candidate.version, passages, now, records);
+}
+
+/**
  * Builds a candidate's claims and source decisions again from its own sources and its recorded claim
  * scope, with today's claim map and amendment records, and says what differs, as a guide's check
  * does. An empty list means the candidate's claims and assumptions are exactly what the map yields
@@ -231,22 +277,8 @@ export async function lawTemplateClaimScopeProblems(
   if (scope.template !== c.id || scope.mapDigest !== digest(map))
     problems.push("the claim map has changed since the candidate was built");
   if (map.risk !== c.risk) problems.push("the candidate's risk class is not the claim map's");
-  const held = new Map<string, GuidePassage>();
-  for (const recorded of scope.passages) {
-    const source = bundle.sources.find((s) => s.id === recorded.id);
-    if (
-      !source ||
-      source.url !== recorded.instrument.url ||
-      source.title !== recorded.instrument.title ||
-      source.retrievedAt !== recorded.instrument.retrievedAt ||
-      source.effectiveFrom !== recorded.instrument.effectiveFrom
-    ) {
-      problems.push(`the recorded passage ${recorded.id} does not describe a source of the candidate`);
-      continue;
-    }
-    held.set(recorded.id, { ...recorded, text: source.text, hash: source.hash });
-  }
-  if (held.size !== bundle.sources.length) problems.push("a source has no recorded passage");
+  const { held, problems: unheld } = lawTemplateScopePassages(bundle, scope);
+  problems.push(...unheld);
   if (problems.length) return problems;
 
   const intake = await readTemplateIntake(c.id, c.version);

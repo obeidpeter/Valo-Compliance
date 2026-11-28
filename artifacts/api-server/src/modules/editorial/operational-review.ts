@@ -17,6 +17,7 @@ import {
   operationalReviewSchemaFor,
   assertBlindReviewInputs,
   GUIDE_REVIEW_INPUT_CEILING,
+  TEMPLATE_LAW_REVIEW_INPUT_CEILING,
   type OperationalServerEvidence,
 } from "../publication";
 export type { OperationalServerEvidence } from "../publication";
@@ -87,10 +88,18 @@ export function reviewPromptVersion(
 /**
  * The most a review request may measure before it is refused unsent. A guide's request carries the
  * official passages it rests on and what was searched for later amendments, so its limit is the one
- * the guidance policy states (decision 0017). Every other request keeps the templates' limit.
+ * the guidance policy states (decision 0017); a template that states the law carries the same, under
+ * the limit its own policy states (docs/architecture/reviewed-route.md, part 4). Every other request
+ * keeps the templates' limit.
  */
-export const reviewInputCeiling = (candidate: Pick<PublicationBundle["candidate"], "contentClass">) =>
-  candidate.contentClass === "sourced_guidance" ? GUIDE_REVIEW_INPUT_CEILING : REVIEW_INPUT_CEILING;
+export const reviewInputCeiling = (
+  candidate: Pick<PublicationBundle["candidate"], "contentClass" | "evidenceMode">,
+) =>
+  candidate.contentClass === "sourced_guidance"
+    ? GUIDE_REVIEW_INPUT_CEILING
+    : candidate.contentClass === "general_template" && candidate.evidenceMode === "regulatory"
+      ? TEMPLATE_LAW_REVIEW_INPUT_CEILING
+      : REVIEW_INPUT_CEILING;
 export function operationalReviewRequests(
   candidate: PublicationBundle["candidate"],
   rights: unknown,

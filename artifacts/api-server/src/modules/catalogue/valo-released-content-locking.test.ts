@@ -11,6 +11,7 @@ import { workspaceActorFromRecord } from "../../platform/workspace-context";
 test("template downloads read storage outside the transaction that holds the source lock", async (t) => {
   const core = await import("@workspace/valo-core");
   const guide = await import("../publication/guidance-document");
+  const { releasePolicyKind } = await import("../publication/template-law-policy");
   let inTransaction = false,
     permitted = true,
     lockedStatus = "published",
@@ -115,6 +116,12 @@ test("template downloads read storage outside the transaction that holds the sou
       guidancePolicy: async () => {
         record("guidance policy file");
         return { policy: { hash: "guidance-policy-hash", ownerApproved: false } };
+      },
+      // Which policy a released item answers to is the real rule; this test's form answers to the
+      // templates' policy, never the one for templates that state the law.
+      releasePolicyKind,
+      templateLawPolicy: async () => {
+        throw Error("Unexpected policy read for templates that state the law, for a form");
       },
       getPublicationArtifact: async (ref: { id: string }) => {
         record(`storage ${ref.id}`);

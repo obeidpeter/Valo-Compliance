@@ -386,6 +386,103 @@ test("only a rule package admits a rule's review pairs, and a rule package admit
   assert.throws(() => assertWorkPackageMembership(challenge, rules, null), /WORK_OUTSIDE_PACKAGE/);
 });
 
+test("only a package of templates that state the law admits their review pairs, and it admits nothing else", async () => {
+  const at = new Date();
+  const templates = await prepareFiniteAllocationPackage(at),
+    guides = await prepareFiniteAllocationPackage(at, finitePackagePreparers.guidePairs),
+    rules = await prepareFiniteAllocationPackage(at, finitePackagePreparers.rulePairs),
+    checker = await prepareFiniteAllocationPackage(at, finitePackagePreparers.checkerChallenges),
+    editorial = await prepareFiniteAllocationPackage(at, finitePackagePreparers.editorialCases),
+    lawTemplates = await prepareFiniteAllocationPackage(at, finitePackagePreparers.lawTemplatePairs);
+  validateAllocationPackage(lawTemplates);
+  assert.deepEqual(lawTemplates.supportedPreparers, ["law-template-review-pair-v1"]);
+  assert.equal(
+    new Set([templates, guides, rules, checker, editorial, lawTemplates].map(allocationPackageId)).size,
+    6,
+  );
+  // The same inventory, allocation and attempt limits as the other packages: only the kind differs.
+  assert.deepEqual(lawTemplates.contentIds, templates.contentIds);
+  assert.deepEqual(lawTemplates.laneAttemptLimits, templates.laneAttemptLimits);
+  assert.equal(requestDigest(lawTemplates.allocation), requestDigest(additionalInferenceAllocation));
+  assert.ok(
+    lawTemplates.holds[0]!.startsWith("Supported review pairs of templates that state the law: TPL-31; "),
+    lawTemplates.holds[0],
+  );
+  assert.match(
+    lawTemplates.holds[0]!,
+    /under the policy for templates that state the law as the owner approved it/,
+  );
+  assert.match(lawTemplates.holds[1]!, /never legal, tax or regulatory review/);
+
+  const planned = (templateId: string, change: Partial<FiniteWork> = {}): FiniteWork => {
+    const w = { ...work(), ...change };
+    w.bindings = {
+      ...w.bindings,
+      candidateArtifact: {
+        id: "33333333-3333-4333-8333-333333333333",
+        hash: "d".repeat(64),
+        extension: "json",
+        templateId,
+      },
+    };
+    return w;
+  };
+  // TPL-31's planned pair, factual or challenge, belongs to the package of templates that state the law.
+  assert.doesNotThrow(() => assertWorkPackageMembership(planned("TPL-31"), lawTemplates, "TPL-31"));
+  assert.doesNotThrow(() =>
+    assertWorkPackageMembership(planned("TPL-31", { role: "challenge" }), lawTemplates, "TPL-31"),
+  );
+  // No other package admits it, the templates' own among them.
+  for (const other of [templates, guides, rules, checker, editorial])
+    assert.throws(
+      () => assertWorkPackageMembership(planned("TPL-31"), other, "TPL-31"),
+      /WORK_OUTSIDE_PACKAGE/,
+    );
+  // Its work must be a planned review pair of the template its candidate names, and nothing more.
+  const unplanned = planned("TPL-31");
+  delete unplanned.bindings.operationalPlan;
+  const unbound = planned("TPL-31");
+  unbound.bindings.candidateVersionId = null;
+  const withCase = planned("TPL-31");
+  withCase.bindings.caseId = "EVAL-EDP-C001";
+  const withCorpus = planned("TPL-31");
+  withCorpus.bindings.corpus = "editorial";
+  for (const outside of [
+    planned("TPL-31", { pair: null }),
+    planned("TPL-31", { retryOf: "earlier" }),
+    planned("TPL-31", { role: "customer" }),
+    planned("TPL-31", { lane: "editorial_evaluation" }),
+    planned("TPL-13"),
+    unplanned,
+    unbound,
+    withCase,
+    withCorpus,
+  ])
+    assert.throws(() => assertWorkPackageMembership(outside, lawTemplates, "TPL-31"), /WORK_OUTSIDE_PACKAGE/);
+  // Nor does a package whose frozen inventory does not name the template.
+  const withoutIt = { ...lawTemplates, contentIds: lawTemplates.contentIds.filter((id) => id !== "TPL-31") };
+  assert.throws(
+    () => assertWorkPackageMembership(planned("TPL-31"), withoutIt, "TPL-31"),
+    /WORK_OUTSIDE_PACKAGE/,
+  );
+  // And it admits nothing else: not a form's pair, a guide's, a rule's or a template with no claim map,
+  // even one planned for its own prepared candidate.
+  for (const id of ["TPL-07", "TPL-13", "GUD-01", "CAC-BUSINESS-NAME-814"]) {
+    assert.throws(() => assertWorkPackageMembership(work(), lawTemplates, id), /WORK_OUTSIDE_PACKAGE/);
+    assert.throws(() => assertWorkPackageMembership(planned(id), lawTemplates, id), /WORK_OUTSIDE_PACKAGE/);
+  }
+  const customerCase = lawTemplates.corpora.find((c) => c.name === "customer-ai")!.cases[0]!;
+  const customer: FiniteWork = {
+    ...work(),
+    lane: "customer",
+    role: "customer",
+    pair: null,
+    caseHash: customerCase.hash,
+    bindings: { candidateVersionId: null, corpus: "customer-ai", caseId: customerCase.id, sourceFiles: [] },
+  };
+  assert.throws(() => assertWorkPackageMembership(customer, lawTemplates, null), /WORK_OUTSIDE_PACKAGE/);
+});
+
 test("a package names one known preparer set", async () => {
   await assert.rejects(
     () => prepareFiniteAllocationPackage(new Date(), ["another-preparer"] as never),
@@ -397,6 +494,7 @@ test("a package names one known preparer set", async () => {
     ["editorial-case-pair-v1", "operational-template-pair-v1"],
     ["guide-review-pair-v1", "operational-template-pair-v1"],
     ["rule-review-pair-v1", "guide-review-pair-v1"],
+    ["law-template-review-pair-v1", "operational-template-pair-v1"],
     ["x"],
   ])
     assert.throws(

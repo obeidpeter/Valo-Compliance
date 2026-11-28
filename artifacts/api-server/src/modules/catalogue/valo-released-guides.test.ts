@@ -26,6 +26,7 @@ test("a published guide is shown only while its policy stands, its sources are c
   const { publicationWorkspaceRoot } = await import("../publication/operational-policy");
   const { assembledGuide, withMadeUpReviews } = await import("../publication/guidance-release.fixtures");
   const guideDocument = await import("../publication/guidance-document");
+  const { releasePolicyKind } = await import("../publication/template-law-policy");
 
   const policyFile = readFileSync(
     resolve(publicationWorkspaceRoot(), policyModule.GUIDANCE_POLICY_PATH),
@@ -134,6 +135,12 @@ test("a published guide is shown only while its policy stands, its sources are c
       guidancePolicy: async () => {
         world.policyReads++;
         return { policy: world.guidance };
+      },
+      // Which policy a released item answers to is the real rule; no guide answers to the policy for
+      // templates that state the law.
+      releasePolicyKind,
+      templateLawPolicy: async () => {
+        throw Error("Unexpected policy read for templates that state the law, for a guide");
       },
       currentOperationalPermission: async () => world.permissionCurrent,
       getPublicationArtifact: async () => Buffer.from(""),

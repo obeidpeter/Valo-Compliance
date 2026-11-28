@@ -131,7 +131,13 @@ async function main() {
     if (mode === "--prepare-customer") {
       if (!batchId) throw Error("FINITE_RUN_ARGUMENTS_INVALID");
       const options = parseFinitePreparationOptions(extra);
-      if (options.candidates.length || options.guidePairs || options.practicalPairs || options.rulePairs)
+      if (
+        options.candidates.length ||
+        options.guidePairs ||
+        options.practicalPairs ||
+        options.rulePairs ||
+        options.lawTemplatePairs
+      )
         throw Error("FINITE_RUN_ARGUMENTS_INVALID");
       const { prepareCustomerFiniteManifest } = await import("../modules/ai-lanes");
       const existing = options.packageId
@@ -190,7 +196,8 @@ async function main() {
         options.retry ||
         options.guidePairs ||
         options.practicalPairs ||
-        options.rulePairs
+        options.rulePairs ||
+        options.lawTemplatePairs
       )
         throw Error("FINITE_RUN_ARGUMENTS_INVALID");
       const { prepareEditorialCaseManifest, isControlledFailureEditorialCase } =
@@ -257,7 +264,8 @@ async function main() {
         options.retry ||
         options.guidePairs ||
         options.practicalPairs ||
-        options.rulePairs
+        options.rulePairs ||
+        options.lawTemplatePairs
       )
         throw Error("FINITE_RUN_ARGUMENTS_INVALID");
       const { prepareCheckerChallengeManifest } = await import("../modules/rules");
@@ -557,13 +565,15 @@ async function main() {
           // --guide-pairs chooses the kind of a new package; an approved package has its kind already.
           ((preparationOptions!.guidePairs ||
             preparationOptions!.practicalPairs ||
-            preparationOptions!.rulePairs) &&
+            preparationOptions!.rulePairs ||
+            preparationOptions!.lawTemplatePairs) &&
             batchId !== "new") ||
           !preparationOptions!.candidates.length)) ||
       (selection &&
         (preparationOptions!.guidePairs ||
           preparationOptions!.practicalPairs ||
-          preparationOptions!.rulePairs)) ||
+          preparationOptions!.rulePairs ||
+          preparationOptions!.lawTemplatePairs)) ||
       (mode === "--execute" && (!batchId || !/^[-a-zA-Z0-9_:]{1,160}$/.test(batchId)))
     )
       throw Error("FINITE_RUN_ARGUMENTS_INVALID");
@@ -578,25 +588,31 @@ async function main() {
               ? finitePackagePreparers.guidePairs
               : preparationOptions!.rulePairs
                 ? finitePackagePreparers.rulePairs
-                : preparationOptions!.reminderInventoryPairs
-                  ? finitePackagePreparers.reminderInventoryPairs
-                  : preparationOptions!.practicalPairs
-                    ? finitePackagePreparers.practicalPairs
-                    : finitePackagePreparers.templatePairs,
+                : preparationOptions!.lawTemplatePairs
+                  ? finitePackagePreparers.lawTemplatePairs
+                  : preparationOptions!.reminderInventoryPairs
+                    ? finitePackagePreparers.reminderInventoryPairs
+                    : preparationOptions!.practicalPairs
+                      ? finitePackagePreparers.practicalPairs
+                      : finitePackagePreparers.templatePairs,
           )),
         packageId = allocationPackageId(allocationPackage);
-      // A package admits one kind of work: the templates' review pairs, the guides' or the rules'.
+      // A package admits one kind of work: the templates' review pairs, the guides', the rules' or those
+      // of templates that state the law.
       const guidePackage =
         requestDigest(allocationPackage.supportedPreparers) ===
         requestDigest(finitePackagePreparers.guidePairs);
       const rulePackage =
         requestDigest(allocationPackage.supportedPreparers) ===
         requestDigest(finitePackagePreparers.rulePairs);
+      const lawTemplatePackage =
+        requestDigest(allocationPackage.supportedPreparers) ===
+        requestDigest(finitePackagePreparers.lawTemplatePairs);
       const practicalReviewLimits = practicalReviewLimitsFor(allocationPackage.supportedPreparers);
       const practicalPackage = !!practicalReviewLimits;
       if (
         allocationPackage.supportedPreparers[0] === finitePackagePreparers.editorialCases[0] ||
-        (selection && (guidePackage || practicalPackage || rulePackage)) ||
+        (selection && (guidePackage || practicalPackage || rulePackage || lawTemplatePackage)) ||
         (practicalReviewLimits &&
           preparationOptions!.candidates.length > practicalReviewLimits.articleIds.length)
       )
@@ -615,9 +631,21 @@ async function main() {
           const guide = mappedGuideIds.includes(saved.templateId);
           const practical = isPracticalGuideId(saved.templateId);
           const rule = isPreparedRuleId(saved.templateId);
-          if (!guide && !practical && !rule && !supportsOperationalInferenceTemplate(saved.templateId))
+          const lawTemplate = mappedLawTemplateIds.includes(saved.templateId);
+          if (
+            !guide &&
+            !practical &&
+            !rule &&
+            !lawTemplate &&
+            !supportsOperationalInferenceTemplate(saved.templateId)
+          )
             throw Error("CANDIDATE_REQUEST_PREPARER_UNAVAILABLE");
-          if (guide !== guidePackage || practical !== practicalPackage || rule !== rulePackage)
+          if (
+            guide !== guidePackage ||
+            practical !== practicalPackage ||
+            rule !== rulePackage ||
+            lawTemplate !== lawTemplatePackage
+          )
             throw Error("CANDIDATE_OUTSIDE_PACKAGE_KIND");
           console.error(
             JSON.stringify({

@@ -24,6 +24,8 @@ import { guideReferences } from "./guidance-document";
 import { guideMechanicalChecks } from "./guidance-mechanical";
 import { guidancePolicy } from "./guidance-policy";
 import { releasePolicyKind, templateLawPolicy } from "./template-law-policy";
+import { rebuildLawTemplateCandidate, type TemplateClaimScope } from "./template-law-candidate";
+import { lawTemplateMechanicalChecks } from "./template-law-mechanical";
 import { originalFormSchema, formMarkdown } from "./operational-authoring-contract";
 import { operationalMechanicalChecks } from "./operational-mechanical";
 import { recheckOperationalExports } from "./operational-export-inspection";
@@ -95,6 +97,7 @@ export async function validateOperationalVersionInTransaction(
   const kind = releasePolicyKind(bundle.candidate);
   const guide = kind === "guidance";
   const practical = kind === "practical_guide";
+  const lawTemplate = kind === "template_law";
   const trusted = practical
     ? await practicalGuideReleasePolicy(bundle.candidate)
     : guide
@@ -115,10 +118,6 @@ export async function validateOperationalVersionInTransaction(
     throw Error("STALE_RELEASE");
   const result = evaluatePublication(bundle, now);
   if (result.decision !== "eligible") throw Error(`PUBLICATION_HELD:${result.reasons.join(",")}`);
-  // The checks a template that rests on the law needs at release, its rights record, its mechanical
-  // checks and its claim map built again from its sources, are part 4's later slices. Until they
-  // exist none is released, whatever the gate finds.
-  if (kind === "template_law") throw Error("TEMPLATE_LAW_RELEASE_NOT_BUILT");
   if ((bundle.candidate.contentClass === "general_template") !== bundle.candidate.id.startsWith("TPL-"))
     throw Error("CONTENT_CLASS_ID_MISMATCH");
   const a = row.attestations as ReleaseAttestations;
@@ -152,28 +151,41 @@ export async function validateOperationalVersionInTransaction(
       throw Error("INTAKE_AUTHORING_LINEAGE_MISMATCH");
     recorded = { original: intake.section.body, provenance };
   }
+  // A template that states the law is built again from its retained draft and the passages its claim
+  // scope records, with the words of its own sources (docs/architecture/reviewed-route.md, part 4).
+  if (lawTemplate && !a.claimScope) throw Error("TEMPLATE_CLAIM_SCOPE_MISSING");
+  const lawScope = lawTemplate
+    ? (JSON.parse((await getPublicationArtifact(a.claimScope!)).toString()) as TemplateClaimScope)
+    : null;
+  const lawBuilt = lawScope ? await rebuildLawTemplateCandidate(bundle, lawScope, now) : null;
   // A guide lists the sources its claims point to, so it is rebuilt with them.
-  const original = practical
-    ? await practicalGuideCandidate(
-        bundle.candidate.id,
-        row.version,
-        new Date(bundle.candidate.sourceCheckDate),
-        recorded,
-      )
-    : bundle.candidate.contentClass === "sourced_guidance"
-      ? await guidanceCandidate(
+  const original = lawBuilt
+    ? {
+        document: lawBuilt.document,
+        scope: lawBuilt.candidate.scope,
+        limitations: lawBuilt.candidate.limitations,
+      }
+    : practical
+      ? await practicalGuideCandidate(
           bundle.candidate.id,
           row.version,
           new Date(bundle.candidate.sourceCheckDate),
           recorded,
-          guideReferences(bundle),
         )
-      : await templateCandidate(
-          bundle.candidate.id,
-          row.version,
-          new Date(bundle.candidate.sourceCheckDate),
-          recorded,
-        );
+      : bundle.candidate.contentClass === "sourced_guidance"
+        ? await guidanceCandidate(
+            bundle.candidate.id,
+            row.version,
+            new Date(bundle.candidate.sourceCheckDate),
+            recorded,
+            guideReferences(bundle),
+          )
+        : await templateCandidate(
+            bundle.candidate.id,
+            row.version,
+            new Date(bundle.candidate.sourceCheckDate),
+            recorded,
+          );
   if (
     row.version !== bundle.candidate.version ||
     bundle.candidate.body !== JSON.stringify(original.document) ||
@@ -207,7 +219,9 @@ export async function validateOperationalVersionInTransaction(
     (practical && (rights.kind !== "practical-business-guide-v1" || Boolean(provenance.generation))) ||
     (guide
       ? rights.kind !== "valo-guide-rights-1" || rights.sourcedGuidance !== true
-      : !rights.originalOperationalOnly) ||
+      : lawTemplate
+        ? rights.kind !== "valo-template-law-rights-1" || rights.statesLaw !== true
+        : !rights.originalOperationalOnly) ||
     rights.customerLicenceAccepted !== false ||
     rights.provenanceHash !== a.provenance.hash ||
     Date.parse(rights.validUntil) <= +now
@@ -221,11 +235,11 @@ export async function validateOperationalVersionInTransaction(
       throw Error("APPLICABLE_TERMS_SNAPSHOT_MISSING");
   }
   if (guide && !a.claimScope) throw Error("GUIDE_CLAIM_SCOPE_MISSING");
-  const measuredChecks = guide
-    ? await guideMechanicalChecks({
+  const measuredChecks = lawScope
+    ? await lawTemplateMechanicalChecks({
         bundle,
         canonicalBody: JSON.stringify(original.document),
-        claimScope: JSON.parse((await getPublicationArtifact(a.claimScope!)).toString()) as GuideClaimScope,
+        claimScope: lawScope,
         provenance,
         provenanceArtifactHash: a.provenance.hash,
         rights,
@@ -234,16 +248,29 @@ export async function validateOperationalVersionInTransaction(
         trustedPolicy: trusted.policy,
         now,
       })
-    : operationalMechanicalChecks({
-        candidate: bundle.candidate,
-        policy: bundle.policy,
-        provenance,
-        provenanceArtifactHash: a.provenance.hash,
-        rights,
-        applicability,
-        snapshot: provider,
-        sources: bundle.sources,
-      });
+    : guide
+      ? await guideMechanicalChecks({
+          bundle,
+          canonicalBody: JSON.stringify(original.document),
+          claimScope: JSON.parse((await getPublicationArtifact(a.claimScope!)).toString()) as GuideClaimScope,
+          provenance,
+          provenanceArtifactHash: a.provenance.hash,
+          rights,
+          applicability,
+          snapshot: provider,
+          trustedPolicy: trusted.policy,
+          now,
+        })
+      : operationalMechanicalChecks({
+          candidate: bundle.candidate,
+          policy: bundle.policy,
+          provenance,
+          provenanceArtifactHash: a.provenance.hash,
+          rights,
+          applicability,
+          snapshot: provider,
+          sources: bundle.sources,
+        });
   if (
     measuredChecks.some((check) => check.result !== "pass") ||
     digest(measuredChecks) !== digest(bundle.mechanicalChecks)

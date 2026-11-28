@@ -16,6 +16,8 @@ import {
   guidancePolicy,
   guidePageText,
   guideReferences,
+  releasePolicyKind,
+  templateLawPolicy,
 } from "../publication";
 import { createDocumentInTransaction, getDocument } from "../documents";
 import { authorizeWorkspaceWrite, type WorkspaceActor } from "../workspaces";
@@ -107,6 +109,10 @@ export async function liveReleasedVersions() {
     ({ bundle }) => bundle.candidate.contentClass === "sourced_guidance",
   );
   const currentGuidance = needsGuidancePolicy ? (await guidancePolicy()).policy : undefined;
+  const needsTemplateLawPolicy = visible.some(
+    ({ bundle }) => releasePolicyKind(bundle.candidate) === "template_law",
+  );
+  const currentTemplateLaw = needsTemplateLawPolicy ? (await templateLawPolicy()).policy : undefined;
   const checked = await Promise.all(
     visible.map(async ({ row: r, bundle }) => {
       if (!(await sourceTargetAllowed(db, "content", r.content.id, r.content.bundle))) return null;
@@ -129,6 +135,16 @@ export async function liveReleasedVersions() {
         if (
           !currentGuidance ||
           !guidePolicyStands(r.policy.hash, currentGuidance) ||
+          !(await currentOperationalPermission(r.content))
+        )
+          return null;
+      }
+      // So does a template that states the law, to the policy for such templates, as it stands now
+      // (docs/architecture/reviewed-route.md, part 4).
+      if (releasePolicyKind(candidate) === "template_law") {
+        if (
+          !currentTemplateLaw ||
+          !guidePolicyStands(r.policy.hash, currentTemplateLaw) ||
           !(await currentOperationalPermission(r.content))
         )
           return null;

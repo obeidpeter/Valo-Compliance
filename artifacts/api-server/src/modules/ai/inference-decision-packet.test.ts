@@ -154,6 +154,27 @@ test("preparation options preserve explicit retries and never accept approval or
       () => parseFinitePreparationOptions(["--rule-pairs", option]),
       /FINITE_PREPARATION_OPTIONS_INVALID/,
     );
+  // And one for the review pairs of templates that state the law, alone as well.
+  assert.deepEqual(parseFinitePreparationOptions(["--law-template-pairs", `--candidate=${one}`]), {
+    retry: false,
+    packageId: undefined,
+    candidates: [{ id: "55555555-5555-4555-8555-555555555555", hash: "1".repeat(64), extension: "json" }],
+    guidePairs: false,
+    lawTemplatePairs: true,
+  });
+  for (const option of [
+    "--guide-pairs",
+    "--practical-guide-pairs",
+    "--reminder-inventory-pairs",
+    "--rule-pairs",
+    "--with-schema-retry",
+    `--package=${packageId}`,
+    "--law-template-pairs",
+  ])
+    assert.throws(
+      () => parseFinitePreparationOptions(["--law-template-pairs", option]),
+      /FINITE_PREPARATION_OPTIONS_INVALID/,
+    );
   for (const args of [
     ["--approved=true"],
     ["--quota=100"],

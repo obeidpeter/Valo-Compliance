@@ -26,6 +26,7 @@ import {
 } from "../../lib/retained-content-sections";
 import {
   mappedGuideIds,
+  mappedLawTemplateIds,
   operationalInferenceTemplateIds,
   supportsOperationalInferenceTemplate,
 } from "../publication";
@@ -52,8 +53,9 @@ export type FiniteAllocationPackage = {
  * approval covers one kind of work: the template review pairs (with the customer cases the
  * original package already covered), the case-bound editorial cases (decision 0015), the review
  * pairs of guides that say what the law requires (decision 0017), the challenges of the
- * requirements check's frozen scenarios (RUL-008), or the review pairs of requirements-check rules
- * prepared for the reviewed route (docs/architecture/reviewed-route.md, part 3).
+ * requirements check's frozen scenarios (RUL-008), the review pairs of requirements-check rules
+ * prepared for the reviewed route (docs/architecture/reviewed-route.md, part 3), or the review pairs of
+ * templates that state the law (part 4).
  */
 export const finitePackagePreparers = {
   templatePairs: ["operational-template-pair-v1"],
@@ -63,6 +65,7 @@ export const finitePackagePreparers = {
   practicalPairs: ["practical-business-guide-pair-v1"],
   reminderInventoryPairs: ["practical-reminder-inventory-pair-v1"],
   rulePairs: ["rule-review-pair-v1"],
+  lawTemplatePairs: ["law-template-review-pair-v1"],
 } as const;
 export type FinitePackagePreparers = (typeof finitePackagePreparers)[keyof typeof finitePackagePreparers];
 /**
@@ -119,6 +122,7 @@ export async function prepareFiniteAllocationPackage(
   const checkerChallenges = selected === finitePackagePreparers.checkerChallenges;
   const guidePairs = selected === finitePackagePreparers.guidePairs;
   const rulePairs = selected === finitePackagePreparers.rulePairs;
+  const lawTemplatePairs = selected === finitePackagePreparers.lawTemplatePairs;
   const practical = practicalReviewLimitsFor(selected);
   const sources = await Promise.all(
     scopePaths.map(async (path) => {
@@ -188,25 +192,32 @@ export async function prepareFiniteAllocationPackage(
               "Template review pairs, customer cases, other content and other evaluation lanes are outside this package.",
               "The allocation is a maximum additional spend, not a guarantee of completing every permitted attempt.",
             ]
-          : rulePairs
+          : lawTemplatePairs
             ? [
-                `Supported rule review pairs: ${preparedRuleIds.join(", ")}; each requires a rule prepared in the repository and built for the reviewed route from current captures of its official sources, under the guidance policy as the owner approved it and with a rights record the owner chose for that route.`,
-                "Each pair is built again from the rule's own sources and records and checked before admission and dispatch. A review is an AI check, never legal, tax or regulatory review.",
-                "Template review pairs, guides, editorial cases, checker challenges, customer cases and other content are outside this package.",
+                `Supported review pairs of templates that state the law: ${mappedLawTemplateIds.join(", ")}; each requires a prepared candidate bound to current captures of its official sources, under the policy for templates that state the law as the owner approved it.`,
+                "Each pair is built again from the template's retained draft and its own sources, and its ten mechanical checks run again, before admission and dispatch. A review is an AI check, never legal, tax or regulatory review.",
+                "Template review pairs of original forms, guides, rules, editorial cases, checker challenges, customer cases and other content are outside this package.",
                 "The allocation is a maximum additional spend, not a guarantee of completing every permitted attempt.",
               ]
-            : guidePairs
+            : rulePairs
               ? [
-                  `Supported guide review pairs: ${mappedGuideIds.join(", ")}; each requires a prepared candidate bound to current captures of its official sources, under the guidance policy as the owner approved it.`,
-                  guideReviewsNeedOwnerCheck,
-                  "Template review pairs, editorial cases, customer cases and other content are outside this package.",
+                  `Supported rule review pairs: ${preparedRuleIds.join(", ")}; each requires a rule prepared in the repository and built for the reviewed route from current captures of its official sources, under the guidance policy as the owner approved it and with a rights record the owner chose for that route.`,
+                  "Each pair is built again from the rule's own sources and records and checked before admission and dispatch. A review is an AI check, never legal, tax or regulatory review.",
+                  "Template review pairs, guides, editorial cases, checker challenges, customer cases and other content are outside this package.",
                   "The allocation is a maximum additional spend, not a guarantee of completing every permitted attempt.",
                 ]
-              : [
-                  `Supported exact operational preparers: ${operationalInferenceTemplateIds.join(", ")}; each requires a saved candidate and verified private evidence.`,
-                  "Other content and all evaluation lanes require their real request preparers and eligibility checks before delegated admission.",
-                  "The allocation is a maximum additional spend, not a guarantee of completing every permitted attempt.",
-                ],
+              : guidePairs
+                ? [
+                    `Supported guide review pairs: ${mappedGuideIds.join(", ")}; each requires a prepared candidate bound to current captures of its official sources, under the guidance policy as the owner approved it.`,
+                    guideReviewsNeedOwnerCheck,
+                    "Template review pairs, editorial cases, customer cases and other content are outside this package.",
+                    "The allocation is a maximum additional spend, not a guarantee of completing every permitted attempt.",
+                  ]
+                : [
+                    `Supported exact operational preparers: ${operationalInferenceTemplateIds.join(", ")}; each requires a saved candidate and verified private evidence.`,
+                    "Other content and all evaluation lanes require their real request preparers and eligibility checks before delegated admission.",
+                    "The allocation is a maximum additional spend, not a guarantee of completing every permitted attempt.",
+                  ],
   };
 }
 export function allocationPackageId(value: FiniteAllocationPackage) {
@@ -312,6 +323,32 @@ export function assertWorkPackageMembership(
     if (
       work.lane !== "publication" ||
       !contentId ||
+      workContentId(work) !== contentId ||
+      !work.pair ||
+      !["factual", "challenge"].includes(work.role) ||
+      work.retryOf !== undefined ||
+      !work.bindings.candidateVersionId ||
+      !work.bindings.operationalPlan ||
+      work.bindings.caseId !== null ||
+      work.bindings.corpus !== null
+    )
+      throw Error("WORK_OUTSIDE_PACKAGE");
+    return;
+  }
+  // A package of templates that state the law admits their review pairs and nothing else, and no other
+  // package admits them: the owner approves spending on such templates by approving a package of this
+  // kind. The binding checks build each pair again from the template's draft and its own sources, and run
+  // its mechanical checks again, before admission and dispatch (docs/architecture/reviewed-route.md,
+  // part 4).
+  const lawTemplatePairs =
+    requestDigest(pkg.supportedPreparers) === requestDigest(finitePackagePreparers.lawTemplatePairs);
+  if (Boolean(contentId && mappedLawTemplateIds.includes(contentId)) !== lawTemplatePairs)
+    throw Error("WORK_OUTSIDE_PACKAGE");
+  if (lawTemplatePairs) {
+    if (
+      work.lane !== "publication" ||
+      !contentId ||
+      !pkg.contentIds.includes(contentId) ||
       workContentId(work) !== contentId ||
       !work.pair ||
       !["factual", "challenge"].includes(work.role) ||

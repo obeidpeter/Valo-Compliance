@@ -47,5 +47,7 @@ export * from "./rights-applicability";
 export * from "./source-facts";
 export * from "./template-law-candidate";
 export * from "./template-law-maps";
+export * from "./template-law-mechanical";
 export * from "./template-law-policy";
 export * from "./template-law-release";
+export * from "./template-law-rights";

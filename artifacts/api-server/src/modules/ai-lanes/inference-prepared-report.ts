@@ -11,6 +11,7 @@ export function parseFinitePreparationOptions(extra: string[]) {
     practicalPairs = false,
     reminderInventoryPairs = false,
     rulePairs = false,
+    lawTemplatePairs = false,
     packageId: string | undefined;
   // Prepared candidates are private artifacts until their reviews pass (decision 0014), so each
   // is named by its exact artifact: --candidate=<artifact id>:<artifact sha256>.
@@ -22,6 +23,8 @@ export function parseFinitePreparationOptions(extra: string[]) {
     // A new package for the review pairs of requirements-check rules on the reviewed route
     // (docs/architecture/reviewed-route.md, part 3).
     else if (option === "--rule-pairs") rulePairs = true;
+    // A new package for the review pairs of templates that state the law (reviewed-route.md, part 4).
+    else if (option === "--law-template-pairs") lawTemplatePairs = true;
     else if (option === "--practical-guide-pairs" || option === "--reminder-inventory-pairs") {
       if (practicalPairs) throw Error("FINITE_PREPARATION_OPTIONS_INVALID");
       practicalPairs = true;
@@ -36,8 +39,8 @@ export function parseFinitePreparationOptions(extra: string[]) {
     } else throw Error("FINITE_PREPARATION_OPTIONS_INVALID");
   }
   if (
-    [guidePairs, practicalPairs, rulePairs].filter(Boolean).length > 1 ||
-    ((guidePairs || practicalPairs || rulePairs) && (retry || packageId)) ||
+    [guidePairs, practicalPairs, rulePairs, lawTemplatePairs].filter(Boolean).length > 1 ||
+    ((guidePairs || practicalPairs || rulePairs || lawTemplatePairs) && (retry || packageId)) ||
     (practicalPairs && candidates.length > 2)
   )
     throw Error("FINITE_PREPARATION_OPTIONS_INVALID");
@@ -49,6 +52,7 @@ export function parseFinitePreparationOptions(extra: string[]) {
     ...(practicalPairs ? { practicalPairs: true as const } : {}),
     ...(reminderInventoryPairs ? { reminderInventoryPairs: true as const } : {}),
     ...(rulePairs ? { rulePairs: true as const } : {}),
+    ...(lawTemplatePairs ? { lawTemplatePairs: true as const } : {}),
   };
 }
 /** Select one immutable pair or customer case; never silently pick a candidate.

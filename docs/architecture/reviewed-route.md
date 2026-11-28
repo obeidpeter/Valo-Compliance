@@ -366,7 +366,7 @@ Settled while building it (slice 4a, first part):
   source-backed policy's. The publisher checks any template not prepared as an original form that
   quotes no law only against that policy, never the templates' own. Until its release checks are
   built (its rights record, its mechanical checks and its map built again from its sources), the
-  publisher releases none, whatever the gate finds.
+  publisher releases none, whatever the gate finds. The third part, below, builds them.
 - **The policy file** is [template-law-publication-policy.md](../valo/policies/template-law-publication-policy.md),
   on the guidance policy's model, with the guides' official hosts. It is a proposal. It counts as
   approved only while `templateLawPolicyApprovedHash` returns the file's own SHA-256, and that function
@@ -410,6 +410,38 @@ Settled while building it (slice 4a, second part):
   also shown failing on its own. Database tests show the preparer keeps nothing it cannot bind, and
   that its command, run as a process, stops with a reason an operator can look up.
 
+Settled while building it (slice 4a, third part):
+- **Its reviews.** A package of its own kind, `law-template-review-pair-v1`, admits the two reviews of
+  a mapped template that states the law and nothing else, and no other package admits them, the
+  templates' own among them. Before admission and before sending, the dispatcher reads the prepared
+  candidate and builds it again: its document from its retained draft and the passages its claim
+  scope records, with the words of its own sources; its ten mechanical checks against the policy as
+  it stands; and both files' inspection. So a review is planned, admitted or sent only while the
+  owner's approval of the policy stands. No person signs each template (the policy's point 10), so
+  nothing else is asked for.
+- **What a reviewer is sent** is what a guide's reviewer is: the candidate, with what it assumes and
+  leaves open, its sources whole, the measure of the words it repeats from them, the draft's checksum
+  in place of the draft, and each text's amendment basis. A request is measured against the policy's
+  own limit, 64,000, and refused before it is sent if it measures more. A contract is not general
+  content, so each review runs the five enhanced checks.
+- **Its release.** The publisher checks such a template against its own policy, as before, and now
+  releases it on the checks a guide's release has: the template built again from its retained draft
+  and its claim scope, a rights record of its own kind, its ten mechanical checks measured again, its
+  two reviews and the enhanced checks they ran, both files, and a current capture of each source. The
+  final check before the write reads the same policy again.
+- **Showing it.** A released template that states the law is shown only while the policy it was
+  released under is that policy as it stands, approved, and while the provider's permission for its
+  wording is current, as a guide is.
+- **What a test can show without the Act's words.** A database test prepares TPL-31 from stand-in
+  passages that carry the identity the repository's amendment records describe, under a supposed
+  approval of the policy with a version of its own: the readiness check builds both requests within
+  the limit, the dispatcher's check finds them unchanged, only a package of its kind takes the pair,
+  and with two made-up reviews the version passes every publisher check in a transaction that is rolled
+  back. With the supposition taken away, the candidate, its planned pair and the version are each
+  refused. Unit tests show the package's membership and the operator's option that asks for one, the
+  requests, the candidate built again only from the passages its claim scope records, the final check
+  reading the template's own policy, and when the site shows such a template.
+
 ## What does not change
 
 - Every gate the publisher checks. Nothing here loosens one.
@@ -430,7 +462,7 @@ Each slice is its own pull request.
 | 2b | **The owner's panel** (built). Staff → System → **Guides on the reviewed route**: the list, the candidate's text and passages, what holds it, and the check. Its contract and routes. Tests: the real-bindings database test lists GUD-02 as the owner reads it, with a stale or changed copy holding it and the owner's check counting for a day; unit tests of the inspection's states; and a browser test of the panel on a phone. | EDP-002, EDP-004, CMP-008 |
 | 3a | **A rule's bundle and its reviews** (built). The builder, the package kind and its binding checks. Database tests: a prepared rule's pair is admitted only under a package of its kind and runs with a stand-in model. A held rule keeps nothing. | EDP-003, EDP-004, EDP-006, ADM-004 |
 | 3b | **The release request and restoring a version** (built). The request command and the restore. Database tests: a reviewed rule is planned and applied from its request. A restored version is released as the next one, and saved results keep their versions. | ADM-004 |
-| 4a | **A template's claim map, its preparer and the proposed policy.** The map's builder and checks, the preparer, and the policy as a file for the owner, with TPL-31, the data processing agreement, mapped first. The first part is built: the policy file, the map and its checks, TPL-31's map, its candidate, and the publisher's choice of policy. Unit tests build TPL-31 from stand-in passages, which the gate holds; a database test shows the publisher asks no other policy about such a template. The second part is built: the rights record, the mechanical checks, both files and the preparer, with its command. The third part: the two review requests and their package, and the release checks. | EDP-003, EDP-005, EDP-006, ADM-005 |
+| 4a | **A template's claim map, its preparer and the proposed policy.** The map's builder and checks, the preparer, and the policy as a file for the owner, with TPL-31, the data processing agreement, mapped first. The first part is built: the policy file, the map and its checks, TPL-31's map, its candidate, and the publisher's choice of policy. Unit tests build TPL-31 from stand-in passages, which the gate holds; a database test shows the publisher asks no other policy about such a template. The second part is built: the rights record, the mechanical checks, both files and the preparer, with its command. The third part is built: the two review requests and their package, and the release checks. | EDP-003, EDP-005, EDP-006, ADM-005 |
 | 4b–4e | **The families' maps:** privacy, then commercial, governance and safety, and employment. | EDP-003, EDP-005 |
 
 ## The owner's points
