@@ -442,6 +442,22 @@ Settled while building it (slice 4a, third part):
   requests, the candidate built again only from the passages its claim scope records, the final check
   reading the template's own policy, and when the site shows such a template.
 
+Settled while building it (slice 4a, fourth part):
+- **From review work.** A held version of a mapped template that states the law is prepared from its
+  open row of review work, as a guide's is ([source-register.md](source-register.md), slice 4): the
+  worker takes a fresh copy of the provider's terms and runs this template's own preparer, which reads
+  the daily check's captures of its sources. A candidate that nothing but its two reviews holds is kept
+  and the request names it. Otherwise the request is not ready, with the reasons the gate named, or
+  failed, with the code the preparer stopped with, and nothing is kept. While no text of the policy is
+  approved, nothing is kept.
+- **What a test can show without the Act's words.** A database test asks three times from the review
+  work of a held version of TPL-31. With no capture of its sources, the worker's run stops with
+  `TEMPLATE_HAS_NO_BOUND_SOURCE`, a code no other preparer gives. With stand-in captures of both
+  sources, carrying the identity the repository's amendment records describe, the template is built as
+  its next version and is not ready, for `policy_not_owner_approved`. Under a test's supposed approval
+  of the policy, its candidate is kept for its two reviews and the request names it. Nothing is kept
+  the first two times, and nothing is sent, spent or published.
+
 ## What does not change
 
 - Every gate the publisher checks. Nothing here loosens one.
@@ -462,7 +478,7 @@ Each slice is its own pull request.
 | 2b | **The owner's panel** (built). Staff → System → **Guides on the reviewed route**: the list, the candidate's text and passages, what holds it, and the check. Its contract and routes. Tests: the real-bindings database test lists GUD-02 as the owner reads it, with a stale or changed copy holding it and the owner's check counting for a day; unit tests of the inspection's states; and a browser test of the panel on a phone. | EDP-002, EDP-004, CMP-008 |
 | 3a | **A rule's bundle and its reviews** (built). The builder, the package kind and its binding checks. Database tests: a prepared rule's pair is admitted only under a package of its kind and runs with a stand-in model. A held rule keeps nothing. | EDP-003, EDP-004, EDP-006, ADM-004 |
 | 3b | **The release request and restoring a version** (built). The request command and the restore. Database tests: a reviewed rule is planned and applied from its request. A restored version is released as the next one, and saved results keep their versions. | ADM-004 |
-| 4a | **A template's claim map, its preparer and the proposed policy.** The map's builder and checks, the preparer, and the policy as a file for the owner, with TPL-31, the data processing agreement, mapped first. The first part is built: the policy file, the map and its checks, TPL-31's map, its candidate, and the publisher's choice of policy. Unit tests build TPL-31 from stand-in passages, which the gate holds; a database test shows the publisher asks no other policy about such a template. The second part is built: the rights record, the mechanical checks, both files and the preparer, with its command. The third part is built: the two review requests and their package, and the release checks. | EDP-003, EDP-005, EDP-006, ADM-005 |
+| 4a | **A template's claim map, its preparer and the proposed policy.** The map's builder and checks, the preparer, and the policy as a file for the owner, with TPL-31, the data processing agreement, mapped first. The first part is built: the policy file, the map and its checks, TPL-31's map, its candidate, and the publisher's choice of policy. Unit tests build TPL-31 from stand-in passages, which the gate holds; a database test shows the publisher asks no other policy about such a template. The second part is built: the rights record, the mechanical checks, both files and the preparer, with its command. The third part is built: the two review requests and their package, and the release checks. The fourth part is built: preparing it from review work. | EDP-003, EDP-005, EDP-006, ADM-005 |
 | 4b–4e | **The families' maps:** privacy, then commercial, governance and safety, and employment. | EDP-003, EDP-005 |
 
 ## The owner's points

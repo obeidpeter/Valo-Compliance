@@ -10,8 +10,9 @@ import type { ArtifactRef } from "../publication/publication-artifacts";
  * row of review work on a held template, for its next candidate. The worker takes a copy of the AI
  * provider's terms through a stand-in for the provider's pages, runs the template's preparer with its
  * mechanical checks, and the row then points at the prepared candidate, which waits for its two
- * reviews. Nothing calls a model, spends, sends or publishes. Every row is synthetic, and the stored
- * files are kept in memory. The test processes the holds it made to the end, as the worker would.
+ * reviews. A guide's request goes to the guides' own preparer. Nothing calls a model, spends, sends or
+ * publishes. Every row is synthetic, and the stored files are kept in memory. The test processes the
+ * holds it made to the end, as the worker would.
  */
 test(
   "a Content editor asks for a held template's next candidate from its review work, and the worker prepares it with its checks and nothing sent or published",
@@ -78,7 +79,8 @@ test(
         await db.execute(
           sql`insert into valo_staff_assignments(id,identity_id,role,active,granted_by,reason) values(${randomUUID()}::uuid,${actor.identityId},${area},true,'synthetic-ci','Controlled CI fixture only')`,
         );
-      // Held versions: of two templates the preparer serves, of a template it does not, and of a rule.
+      // Held versions: of two templates the preparer serves, of a template it does not, of a guide, and
+      // of a rule.
       const now = new Date(),
         b = heldSourceBundle(now),
         policyId = `${prefix}-unapproved`;
@@ -93,10 +95,11 @@ test(
         );
         return id;
       };
-      const [template, other, unserved] = [
+      const [template, other, unserved, guide] = [
         await version("TPL-10"),
         await version("TPL-11"),
         await version(prefix),
+        await version("GUD-20"),
       ];
       const ruleId = randomUUID();
       await db.execute(sql`insert into valo_rule_releases(id,rule_id,version,status,rule,publication_bundle,manifest_hash,published_at)
@@ -116,35 +119,37 @@ test(
         ["content", template],
         ["content", other],
         ["content", unserved],
+        ["content", guide],
         ["rule", ruleId],
       ] as const)
         await hold(kind, id);
       const queue = () => review.listSourceReview(fresh(staff), { preparable: preparation.reviewPreparable });
       const row = async (key: string, kind = "content") =>
         (await queue()).open.find((item) => item.targetKind === kind && item.targetKey === key)!;
-      const [onTemplate, onOther, onUnserved, onRule] = [
+      const [onTemplate, onOther, onUnserved, onRule, onGuide] = [
         await row("TPL-10"),
         await row("TPL-11"),
         await row(prefix),
         await row(`${prefix}-rule`, "rule"),
+        await row("GUD-20"),
       ];
       // Only a template or guide that has a preparer can be prepared from.
       assert.deepEqual(
-        [onTemplate, onOther, onUnserved, onRule].map((item) => [item.preparable, item.preparation]),
+        [onTemplate, onOther, onUnserved, onRule, onGuide].map((item) => [item.preparable, item.preparation]),
         [
           [true, null],
           [true, null],
           [false, null],
           [false, null],
+          [true, null],
         ],
       );
-      assert.deepEqual(["TPL-10", "GUIDE-C01", "GUD-01", "TPL-16", prefix].map(preparation.reviewPreparer), [
-        "template",
-        "template",
-        "guide",
-        null,
-        null,
-      ]);
+      // A template that states the law has a preparer of its own (review-preparation-law-template
+      // .integration.test.ts); one with no claim map has none.
+      assert.deepEqual(
+        ["TPL-10", "GUIDE-C01", "GUD-01", "TPL-31", "TPL-16", prefix].map(preparation.reviewPreparer),
+        ["template", "template", "guide", "law_template", null, null],
+      );
       const before = await counts();
 
       // Only an active Content editor asks, and only on open work on a template or guide with a preparer.
@@ -264,6 +269,31 @@ test(
       assert.equal(await preparation.prepareRequestedCandidates({ readPage: page() }), true);
       const exhausted = (await row("TPL-11")).preparation!;
       assert.deepEqual([exhausted.status, exhausted.reasons], ["failed", ["PREPARATION_ATTEMPTS_EXHAUSTED"]]);
+
+      // A guide is prepared by the guides' preparer, from the daily check's captures of its sources.
+      // GUD-20 rests on one guideline whose words are not kept in the repository, and nothing captures
+      // it here, so the preparation stops with the code that preparer's command prints, which no other
+      // preparer gives, and nothing is kept.
+      const { currentSourceCaptures } = await import("../sources/source-current-captures");
+      const { guidePassageIds } = await import("../publication/guidance-bundle");
+      const { passageLead } = await import("../publication/guidance-captures");
+      const leads = [...new Set(guidePassageIds("GUD-20").flatMap((passage) => passageLead(passage) ?? []))];
+      assert.deepEqual(leads, ["NAFDAC-FSAN-GDL-001-03"]);
+      assert.deepEqual(await currentSourceCaptures(leads), []);
+      const guidesKept = async () =>
+        Number(
+          (
+            await db.execute(
+              sql`select count(*)::int as n from valo_prepared_candidates where template_id='GUD-20'`,
+            )
+          ).rows[0]!.n,
+        );
+      const guidesBefore = await guidesKept();
+      await preparation.requestReviewPreparation(fresh(staff), onGuide.id);
+      assert.equal(await preparation.prepareRequestedCandidates({ readPage: page() }), true);
+      const unbound = (await row("GUD-20")).preparation!;
+      assert.deepEqual([unbound.status, unbound.reasons], ["failed", ["GUIDE_HAS_NO_BOUND_SOURCE"]]);
+      assert.equal(await guidesKept(), guidesBefore);
 
       // A request whose review work closed before its turn prepares nothing.
       await preparation.requestReviewPreparation(fresh(staff), onTemplate.id);

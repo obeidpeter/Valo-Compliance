@@ -199,8 +199,9 @@ Slice 3:
 
 Slice 4:
 - A Content editor asks for the next candidate from an open row on a held template or guide that has a
-  preparer: an operational template or practical guide the template preparer serves, or a guide with a
-  claim map. Rules are not prepared from the queue: a rule's next version is prepared by its own commands
+  preparer: an operational template or practical guide the template preparer serves, a guide with a
+  claim map, or a template that states the law with a claim map, which has a preparer of its own
+  ([reviewed-route.md](reviewed-route.md), part 4). Rules are not prepared from the queue: a rule's next version is prepared by its own commands
   and released on the reviewed route or the owner's sign-off. Staff-library entries keep their own holds.
 - The request is a record of its own (`valo_source_review_preparations`, migration
   `20261125183409_source_review_preparations`): who asked, for which row and when, where it stands, and
@@ -221,7 +222,8 @@ Slice 4:
     templates and guides awaiting their reviews, and the request names it;
   - **held:** a template's candidate failed a check, and it was saved as a held version, as its command
     saves one;
-  - **not ready:** a guide's candidate was not ready, for the reasons the gate named, and nothing was kept;
+  - **not ready:** the candidate of a guide, or of a template that states the law, was not ready, for the
+    reasons the gate named, and nothing was kept;
   - **failed:** the preparation stopped with a code, and nothing was kept;
   - **closed:** the review work closed before the request's turn, and nothing was prepared.
 - A preparation calls no model, writes no inference budget, sends nothing and publishes nothing. The
