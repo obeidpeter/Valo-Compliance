@@ -6,9 +6,9 @@ import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
-import type { NextFunction, Request, Response } from "express";
 import { expect, type Page } from "@playwright/test";
-import { ready, startApp, type Api } from "../test-support/app-in-browser";
+import { ready, startApp } from "../test-support/app-in-browser";
+import { startRealApi } from "../test-support/real-api-in-browser";
 
 /**
  * The tasks a business owner is given in a usability session, done in a browser against the real
@@ -38,100 +38,9 @@ test(
   "a business owner's first tasks work in a browser against the real API and database",
   { skip: !enabled, timeout: 300_000 },
   async (t) => {
-    assert.equal(process.env.NODE_ENV, "development");
-    assert.ok(!process.env.REPLIT_DEPLOYMENT);
-    assert.ok(["localhost", "127.0.0.1", "[::1]"].includes(new URL(process.env.DATABASE_URL!).hostname));
-
-    // The server takes the account from this header in place of the identity provider's session.
-    const identityHeader = "x-synthetic-identity";
     const owner = `synthetic-tester-${randomUUID()}`;
-    t.mock.module("@clerk/express", {
-      namedExports: {
-        clerkMiddleware: () => (_req: Request, _res: Response, next: NextFunction) => next(),
-        getAuth: (req: Request) => {
-          const id = req.header(identityHeader) === owner ? owner : null;
-          return { userId: id, sessionId: id ? `sess_${id}` : null, sessionClaims: null, has: () => false };
-        },
-        clerkClient: {
-          sessions: {
-            getSession: async (id: string) => ({ status: "active", userId: id.slice("sess_".length) }),
-          },
-          users: {
-            getUser: async (id: string) => ({
-              id,
-              banned: false,
-              locked: false,
-              twoFactorEnabled: false,
-              primaryEmailAddressId: "primary",
-              emailAddresses: [
-                {
-                  id: "primary",
-                  emailAddress: "synthetic-accessibility@example.test",
-                  verification: { status: "verified" },
-                },
-              ],
-            }),
-          },
-        },
-      },
-    });
-    const { default: app } = await import("../app");
-    const { pool } = await import("@workspace/db");
-    const { resolveWorkspace } = await import("../modules/workspaces");
-    const { executeExport, getExport } = await import("../modules/exports");
-    const server = app.listen(0, "127.0.0.1");
-    await new Promise<void>((resolve) => server.once("listening", resolve));
-    const address = server.address();
-    assert.ok(address && typeof address !== "string");
-    const api = `http://127.0.0.1:${address.port}`;
+    const { api, answered, made, through, refused, closePage, close: stop } = await startRealApi(t, [owner]);
     const previousOrigin = process.env.VALO_TRUSTED_ORIGIN;
-
-    /** What the server answered, for the checks below: method, path and status of each request. */
-    const answered: { method: string; path: string; status: number; headers: Record<string, string> }[] = [];
-    /** The files being made for the page, each settling to what went wrong, or to nothing. */
-    const made: Promise<unknown>[] = [];
-    let closing = false;
-    /** Passes each request the page makes to the real API, as the account given, and hands back its answer. */
-    const through =
-      (account: string | null): Api =>
-      async (route, method, path, query) => {
-        try {
-          const headers = await route.request().allHeaders();
-          delete headers.host;
-          if (account) headers[identityHeader] = account;
-          const search = query.toString();
-          const reply = await route.fetch({ url: `${api}/api${path}${search ? `?${search}` : ""}`, headers });
-          answered.push({ method, path, status: reply.status(), headers: reply.headers() });
-          // In place of the queue's worker: a file the page asked for is made by the worker's own
-          // function, after the page has its answer, so the page shows it waiting and then ready.
-          if (
-            account &&
-            method === "POST" &&
-            /^\/v1\/documents\/[^/]+\/exports$/.test(path) &&
-            reply.status() === 202
-          ) {
-            const { id } = (await reply.json()) as { id: string };
-            made.push(
-              (async () => {
-                const { job } = await getExport(await resolveWorkspace(account), id);
-                await executeExport(job.id, job.workspaceId, job.queueId);
-              })().then(
-                () => null,
-                (error: unknown) => error,
-              ),
-            );
-          }
-          await route.fulfill({ response: reply });
-        } catch (error) {
-          // A request still on its way when its page is closed has no one to answer.
-          if (!closing) throw error;
-        }
-      };
-    /** The requests the server refused or failed, which no step below expects. */
-    const refused = () =>
-      answered
-        .filter((each) => each.status >= 400)
-        .map((each) => `${each.status} ${each.method} ${each.path}`);
 
     const signedOut = await startApp("signed-out");
     const signedIn = await startApp("signed-in");
@@ -179,9 +88,7 @@ test(
           assert.deepEqual(unknown, []);
           assert.deepEqual(refused(), []);
         } finally {
-          closing = true;
-          await close();
-          closing = false;
+          await closePage(close);
         }
       }
 
@@ -362,9 +269,7 @@ test(
         );
         throw error;
       } finally {
-        closing = true;
-        await close();
-        closing = false;
+        await closePage(close);
       }
     } finally {
       await Promise.all(made);
@@ -373,10 +278,7 @@ test(
       await signedOut.close();
       if (previousOrigin === undefined) delete process.env.VALO_TRUSTED_ORIGIN;
       else process.env.VALO_TRUSTED_ORIGIN = previousOrigin;
-      await new Promise<void>((resolve, reject) =>
-        server.close((error) => (error ? reject(error) : resolve())),
-      );
-      await pool.end();
+      await stop();
     }
   },
 );
