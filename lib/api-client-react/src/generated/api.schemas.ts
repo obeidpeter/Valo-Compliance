@@ -3313,9 +3313,18 @@ export const LibraryExportFormat = {
 export interface LibraryTemplateVersion {
   versionId: string;
   templateId: string;
-  /** The title a staff-library template was released under, for a document copied from it. */
+  /** The title a staff-library template was released under, for a document copied from it or made from its form. */
   title?: string;
+  /** True for a document made by answering a staff-library template's form (forms v2), not copied from its text. */
+  form?: boolean;
   version: number;
+}
+
+export interface LibraryQuestions {
+  /** @pattern ^TPL-[0-9]{2}$ */
+  templateId: string;
+  /** The guided template's name, such as Invoice. */
+  title: string;
 }
 
 export interface LibraryExport {
@@ -3332,6 +3341,8 @@ export interface LibraryExport {
   expiresAt: string | null;
   downloadUrl: string;
   template: LibraryTemplateVersion | null;
+  /** For a file made from Valo's own questions for a guided template, which template: such a document came from no released version, so its `template` is null. Null for any other file. */
+  questions: LibraryQuestions | null;
 }
 
 export interface SessionMfaVerification {

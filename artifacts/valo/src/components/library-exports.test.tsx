@@ -20,6 +20,7 @@ const fromTemplate: LibraryExport = {
   expiresAt: null,
   downloadUrl: "/api/v1/exports/00000000-0000-4000-8000-00000000e001/file",
   template: { versionId: "00000000-0000-4000-8000-00000000b001", templateId: "TPL-07", version: 3 },
+  questions: null,
 };
 const blank: LibraryExport = {
   ...fromTemplate,
@@ -83,4 +84,35 @@ test("an empty business library says no export is ready yet", () => {
   const html = render([]);
   assert.ok(html.includes("No files yet."), html);
   assert.ok(!html.includes("Made from template"), html);
+});
+
+test("a file made from Valo's own questions, or from a released template's form, names where it came from", () => {
+  // DOC-005: a document made by answering Valo's own questions for an invoice came from no released
+  // version; its file names the questions, not "no template". One made by answering a released
+  // template's form names that release, and says it was made from it, not copied.
+  const questions: LibraryExport = {
+    ...fromTemplate,
+    documentTitle: "Synthetic invoice",
+    template: null,
+    questions: { templateId: "TPL-01", title: "Invoice" },
+  };
+  const form: LibraryExport = {
+    ...fromTemplate,
+    id: "00000000-0000-4000-8000-00000000e003",
+    documentTitle: "Synthetic form invoice",
+    template: {
+      versionId: "00000000-0000-4000-8000-00000000b003",
+      templateId: "TPL-01",
+      title: "Synthetic invoice form",
+      version: 2,
+      form: true,
+    },
+  };
+  const html = render([questions, form]);
+  const first = html.slice(html.indexOf("Synthetic invoice<"), html.indexOf("Synthetic form invoice"));
+  const second = html.slice(html.indexOf("Synthetic form invoice"));
+  assert.ok(first.includes("Made from Valo&#x27;s “Invoice” questions"), first);
+  assert.ok(!first.includes("Not made from a template"), first);
+  assert.ok(second.includes("Made from the template “Synthetic invoice form”, version 2"), second);
+  assert.ok(!second.includes("Copied from"), second);
 });

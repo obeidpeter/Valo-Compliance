@@ -5624,6 +5624,9 @@ export const CreateDocumentExportResponse = zod.object({
 })
 
 
+export const listWorkspaceExportsResponseQuestionsOneTemplateIdRegExp = new RegExp('^TPL-[0-9]{2}$');
+
+
 export const ListWorkspaceExportsResponseItem = zod.object({
   "id": zod.uuid(),
   "documentId": zod.uuid(),
@@ -5638,9 +5641,14 @@ export const ListWorkspaceExportsResponseItem = zod.object({
   "template": zod.union([zod.object({
   "versionId": zod.uuid(),
   "templateId": zod.string(),
-  "title": zod.string().optional().describe('The title a staff-library template was released under, for a document copied from it.'),
+  "title": zod.string().optional().describe('The title a staff-library template was released under, for a document copied from it or made from its form.'),
+  "form": zod.boolean().optional().describe('True for a document made by answering a staff-library template\'s form (forms v2), not copied from its text.'),
   "version": zod.int()
-}),zod.null()])
+}),zod.null()]),
+  "questions": zod.union([zod.object({
+  "templateId": zod.string().regex(listWorkspaceExportsResponseQuestionsOneTemplateIdRegExp),
+  "title": zod.string().describe('The guided template\'s name, such as Invoice.')
+}),zod.null()]).describe('For a file made from Valo\'s own questions for a guided template, which template: such a document came from no released version, so its `template` is null. Null for any other file.')
 })
 export const ListWorkspaceExportsResponse = zod.array(ListWorkspaceExportsResponseItem)
 

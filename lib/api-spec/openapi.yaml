@@ -4473,7 +4473,7 @@ components:
     LibraryExport:
       type: object
       additionalProperties: false
-      required: [id, documentId, documentTitle, revisionId, revision, format, finished, readyAt, expiresAt, downloadUrl, template]
+      required: [id, documentId, documentTitle, revisionId, revision, format, finished, readyAt, expiresAt, downloadUrl, template, questions]
       properties:
         id: { type: string, format: uuid }
         documentId: { type: string, format: uuid }
@@ -4489,6 +4489,18 @@ components:
           anyOf:
             - { $ref: "#/components/schemas/LibraryTemplateVersion" }
             - { type: "null" }
+        questions:
+          description: "For a file made from Valo's own questions for a guided template, which template: such a document came from no released version, so its `template` is null. Null for any other file."
+          anyOf:
+            - { $ref: "#/components/schemas/LibraryQuestions" }
+            - { type: "null" }
+    LibraryQuestions:
+      type: object
+      additionalProperties: false
+      required: [templateId, title]
+      properties:
+        templateId: { type: string, pattern: "^TPL-[0-9]{2}$" }
+        title: { type: string, description: "The guided template's name, such as Invoice." }
     LibraryTemplateVersion:
       type: object
       additionalProperties: false
@@ -4496,7 +4508,8 @@ components:
       properties:
         versionId: { type: string, format: uuid }
         templateId: { type: string }
-        title: { type: string, description: "The title a staff-library template was released under, for a document copied from it." }
+        title: { type: string, description: "The title a staff-library template was released under, for a document copied from it or made from its form." }
+        form: { type: boolean, description: "True for a document made by answering a staff-library template's form (forms v2), not copied from its text." }
         version: { type: integer }
     SessionMfaVerification:
       type: object

@@ -1,6 +1,8 @@
 import { reconcileExportOrphans } from "./valo-export-recovery";
 import { checkFormContent, savedVersionGaps, serializeRevision } from "../documents";
 import { documentComplete } from "@workspace/valo-core/document-completeness";
+import { guidedDataFromBlocks } from "@workspace/valo-core/guided-runtime";
+import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
 import { randomUUID } from "node:crypto";
 import { and, eq, gt, isNull, ne, or, desc, sql } from "drizzle-orm";
 import {
@@ -169,6 +171,40 @@ async function libraryCopies() {
  * title it was released under: its address name means nothing to a reader. */
 const copyTemplate = (copy: { edition: string; slug: string; title: string; version: number } | undefined) =>
   copy ? { versionId: copy.edition, templateId: copy.slug, title: copy.title, version: copy.version } : null;
+/** The template version a library file names: a released version, a staff-library copy's release, or
+ * the release whose form a document answered. */
+type LibraryTemplate = {
+  versionId: string;
+  templateId: string;
+  version: number;
+  title?: string;
+  form?: boolean;
+};
+/** The staff-library release each of the workspace's documents was copied from or started from, by
+ * document, read through the owner's function as the copies are. A form document (forms v2) answers
+ * its release's form, and keeps that edition whatever happens to it since. */
+async function documentEditions() {
+  const { rows } = await db.execute<{ document: string; edition: string; title: string; version: number }>(
+    sql`select document, edition, title, version from public.valo_workspace_document_editions()`,
+  );
+  return new Map(rows.map((row) => [row.document, row]));
+}
+/** The guided template whose questions a saved version was answered from: a released form's (forms v2)
+ * or Valo's own questions (forms v1), which came from no released version. Nothing for a version that
+ * holds neither, such as a blank document or one whose questions were turned into typed text. */
+function guidedTemplateOf(title: string, content: unknown) {
+  const saved = documentInput.safeParse({ title, content });
+  if (!saved.success) return null;
+  const answers = saved.data.content.formAnswers;
+  if (answers) return { form: true as const, templateId: answers.templateId };
+  try {
+    const data = guidedDataFromBlocks(saved.data.content.blocks);
+    return data ? { form: false as const, templateId: data.templateId } : null;
+  } catch {
+    // Blocks that no longer read as Valo's questions name none: the file is shown as made from no template.
+    return null;
+  }
+}
 /** The business library (DOC-005): the workspace's newest ready exports, each with the saved
  * revision it was made from and the template version its document came from. A document keeps
  * that link through every later revision, and whether or not the version is still released. Only
@@ -182,7 +218,9 @@ export async function listWorkspaceExports(actor: WorkspaceActor) {
       job: valoExportJobs,
       asset: valoFileAssets,
       title: valoDocumentRevisions.title,
+      content: valoDocumentRevisions.content,
       templateVersionId: valoDocuments.templateVersionId,
+      formEdition: valoDocuments.formEdition,
       templateId: valoContentVersions.templateId,
       templateVersion: valoContentVersions.version,
     })
@@ -213,26 +251,52 @@ export async function listWorkspaceExports(actor: WorkspaceActor) {
     .orderBy(desc(valoFileAssets.createdAt))
     .limit(50);
   // A document copied from a staff-library template names the release it came from
-  // (docs/architecture/library-entries.md, slice 3).
-  const copies = rows.some((row) => !row.templateVersionId) ? await libraryCopies() : new Map();
+  // (docs/architecture/library-entries.md, slice 3), and so does one started from a released form.
+  const unreleased = rows.some((row) => !row.templateVersionId);
+  const copies: Awaited<ReturnType<typeof libraryCopies>> = unreleased ? await libraryCopies() : new Map();
+  const editions: Awaited<ReturnType<typeof documentEditions>> = rows.some((row) => row.formEdition)
+    ? await documentEditions()
+    : new Map();
   return rows
     .filter(({ asset }) => !exportIsExpired(asset, now.getTime()))
-    .map(({ job, asset, title, templateVersionId, templateId, templateVersion }) => ({
-      id: job.id,
-      documentId: job.documentId,
-      documentTitle: title,
-      revisionId: job.revisionId,
-      revision: job.revision,
-      format: job.format,
-      finished: job.finished,
-      readyAt: asset.createdAt.toISOString(),
-      expiresAt: asset.retentionAt?.toISOString() ?? null,
-      downloadUrl: `/api/v1/exports/${job.id}/file`,
-      template:
+    .map(({ job, asset, title, content, templateVersionId, templateId, templateVersion, formEdition }) => {
+      const released =
         templateVersionId && templateId && templateVersion
           ? { versionId: templateVersionId, templateId, version: templateVersion }
-          : copyTemplate(copies.get(job.documentId)),
-    }));
+          : null;
+      const copied = released ? null : copyTemplate(copies.get(job.documentId));
+      const edition = formEdition ? editions.get(job.documentId) : undefined;
+      const guided = guidedTemplateOf(title, content);
+      const form =
+        !released && !copied && edition
+          ? {
+              versionId: edition.edition,
+              templateId: guided?.form ? guided.templateId : edition.edition,
+              title: edition.title,
+              version: edition.version,
+              form: true,
+            }
+          : null;
+      const template: LibraryTemplate | null = released ?? copied ?? form;
+      return {
+        id: job.id,
+        documentId: job.documentId,
+        documentTitle: title,
+        revisionId: job.revisionId,
+        revision: job.revision,
+        format: job.format,
+        finished: job.finished,
+        readyAt: asset.createdAt.toISOString(),
+        expiresAt: asset.retentionAt?.toISOString() ?? null,
+        downloadUrl: `/api/v1/exports/${job.id}/file`,
+        template,
+        // Valo's own questions (forms v1) came from no released version: the file names the questions.
+        questions:
+          !released && !copied && !form && guided && !guided.form
+            ? { templateId: guided.templateId, title: GUIDED_SPECS_V1[guided.templateId].title }
+            : null,
+      };
+    });
 }
 export async function requestExport(actor: WorkspaceActor, documentId: string, key: string, raw: unknown) {
   developmentExportsOnly();

@@ -999,6 +999,7 @@ const answers: Record<string, unknown> = {
       expiresAt: at(25),
       downloadUrl: "/api/v1/exports/00000000-0000-4000-8000-00000000a601/file",
       template: null,
+      questions: null,
     },
   ]),
   [`GET /v1/documents/${DOCUMENT}/exports`]: api.ListDocumentExportsResponse.parse([

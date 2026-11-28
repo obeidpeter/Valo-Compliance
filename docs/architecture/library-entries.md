@@ -124,6 +124,12 @@ separated by a bar is a table. The document records the release it was copied fr
 beside the document's files, by the title it was released under (DOC-005). The copy is the
 customer's own work. A later release or a withdrawal never changes it (DOC-007, EDT-010).
 
+A document made by answering a released template's form (forms v2) is named the same way, as made
+from that release, not copied from it. One made by answering Valo's own questions (forms v1) came
+from no release, and its files say so in those words: "Made from Valo's “Invoice” questions". Before,
+both said "Not made from a template", which the recorded free journey showed
+(docs/architecture/acceptance-pack.md).
+
 A text too long for a document is not copied: more than 100 blocks, or a block over 8,000 characters.
 The page then says that the template is available as its Word file only.
 

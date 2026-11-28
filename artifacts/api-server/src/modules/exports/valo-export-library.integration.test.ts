@@ -11,7 +11,9 @@ import {
   valoManualLibrary,
   valoStaffAssignments,
 } from "@workspace/db";
-import { createDocument, saveDocument } from "../documents";
+import { compileGuidedContent } from "@workspace/valo-core/guided-runtime";
+import { completeGuidedTestData } from "@workspace/valo-core/guided-test-data";
+import { createDocument, saveDocument, startFormDocument } from "../documents";
 import { resolveWorkspace } from "../workspaces";
 import {
   requestExport,
@@ -24,6 +26,7 @@ import { financeHeldFixture } from "../commerce/valo-finance-test-fixture";
 import { syntheticDocument } from "../../lib/valo-test-fixtures";
 import { createReleasedTemplateDraft } from "../catalogue";
 import { templateDetailColumns } from "../../test-support/template-details";
+import { proposedFormText } from "../manual-library/form-text-maps";
 
 // DOC-005 accepts "successful exports appear in the business library and remain linked to the
 // template version used." The template version here is a held synthetic fixture that was never
@@ -184,6 +187,73 @@ test(
         (await inScope(() => listWorkspaceExports(owner))).find((e) => e.id === copied)?.template?.versionId,
         edition,
       );
+      // None of those files came from Valo's own questions.
+      assert.ok((await inScope(() => listWorkspaceExports(owner))).every((e) => e.questions === null));
+
+      // An invoice answered from Valo's own questions (forms v1) came from no released version: its
+      // file names the questions, where it said it was made from no template.
+      const answered = await createDocument(owner, {
+        title: "Invoice",
+        content: compileGuidedContent(completeGuidedTestData("TPL-01")),
+      });
+      const fromQuestions = await exportRevision(answered.id, answered.revisionId, "pdf");
+      for (const library of [
+        await listWorkspaceExports(owner),
+        await inScope(() => listWorkspaceExports(owner)),
+      ]) {
+        const file = library.find((e) => e.id === fromQuestions)!;
+        assert.equal(file.template, null);
+        assert.deepEqual(file.questions, { templateId: "TPL-01", title: "Invoice" });
+      }
+
+      // An invoice answered from a released form (forms v2) names that release, as made from its form.
+      const formEdition = randomUUID();
+      await db.insert(valoManualLibrary).values({
+        id: formEdition,
+        itemId: formEdition,
+        version: 1,
+        slug: "manual-" + formEdition,
+        kind: "template",
+        title: "Invoice",
+        body: "Synthetic invoice description",
+        digest: "b".repeat(64),
+        fileFormat: "docx",
+        fileBytes: Buffer.from("synthetic"),
+        formText: (await proposedFormText("TPL-01"))!,
+        ...templateDetailColumns,
+        createdBy: editor,
+      });
+      await db
+        .update(valoManualLibrary)
+        .set({ state: "published", publishedBy: editor, publishedAt: new Date() })
+        .where(eq(valoManualLibrary.id, formEdition));
+      try {
+        const started = await inScope(() => startFormDocument(owner, { templateId: "TPL-01" }));
+        assert.ok(started.form, "the invoice started from a released form");
+        const fromForm = await exportRevision(started.id, started.revisionId, "pdf");
+        const file = (await inScope(() => listWorkspaceExports(owner))).find((e) => e.id === fromForm)!;
+        assert.deepEqual(file.template, {
+          versionId: started.form.edition,
+          templateId: "TPL-01",
+          title: "Invoice",
+          version: (
+            await db.select().from(valoManualLibrary).where(eq(valoManualLibrary.id, started.form.edition))
+          )[0]!.version,
+          form: true,
+        });
+        assert.equal(file.questions, null);
+        // A copy is still a copy, not a form.
+        assert.equal(
+          (await inScope(() => listWorkspaceExports(owner))).find((e) => e.id === copied)?.template?.form,
+          undefined,
+        );
+      } finally {
+        // Withdrawn, the edition starts no other test's form.
+        await db
+          .update(valoManualLibrary)
+          .set({ state: "withdrawn", closedBy: editor, closedAt: new Date() })
+          .where(eq(valoManualLibrary.id, formEdition));
+      }
     } finally {
       await pool.end();
     }

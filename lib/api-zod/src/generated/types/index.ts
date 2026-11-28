@@ -197,6 +197,7 @@ export * from './industryCoverage';
 export * from './inventoryOverlap';
 export * from './libraryExport';
 export * from './libraryExportFormat';
+export * from './libraryQuestions';
 export * from './libraryTemplateVersion';
 export * from './listAcceptanceCasesCorpus';
 export * from './listAcceptanceCasesParams';
