@@ -2,9 +2,8 @@
 
 This note is for the person who runs commands in the development environment. It covers the reviewed
 route for a requirements-check rule prepared in the repository: building it into a candidate that is
-ready for its two AI reviews, running those reviews, and releasing the rule once both have passed
-([the reviewed route](../architecture/reviewed-route.md), part 3). Restoring an earlier version is not
-built yet.
+ready for its two AI reviews, running those reviews, releasing the rule once both have passed, and
+restoring an earlier version ([the reviewed route](../architecture/reviewed-route.md), part 3).
 
 Preparing calls no AI model, approves nothing and releases nothing. The reviews run only under a
 package of rule reviews the owner approves. Today no rule is kept at all: see "Why every rule is held
@@ -111,6 +110,23 @@ What stops it:
 - `RULE_RELEASE_NOT_CONFIRMED`: the hash given to `--confirm` is not the request's manifest hash.
 - `RULE_RELEASE_VERSION_CHANGED`: another version of the rule was stored first. Prepare it again.
 - The stops of the section above, since the rule is built again first.
+
+## Restoring an earlier version
+
+`... rule-release.ts restore <rule> <version>` prepares a stored version of the rule, earlier than its
+latest, as its next version: that version's words, condition and calculation, with the repository's
+sources, claims, scenarios and records, built from today's copies of its sources. It prints one line of
+JSON, as the preparation above does, with `restores` naming the version. Then run its two reviews and
+release it as above: its release request's reason begins "Restores version N of this rule", and
+`--reason` adds to it.
+
+What stops it:
+
+- `RULE_VERSION_UNKNOWN`: no version of the rule is stored under that number.
+- `RULE_VERSION_ALREADY_CURRENT`: that is the rule's latest version.
+- `RULE_RESTORE_SOURCES_CHANGED`: that version quotes its sources otherwise than the repository does.
+  Restore its text by preparing it in the repository.
+- A failed critical scenario, at `plan`: the restored rule must give today's scenarios their results.
 
 ## Why every rule is held today
 

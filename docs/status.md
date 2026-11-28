@@ -30,7 +30,7 @@ No recorded evidence at all: none.
 
 ## Tests cited as evidence
 
-`docs/registers/ci-evidence.json` holds 907 citations of 636 tests for 126 requirements (decision 0010).
+`docs/registers/ci-evidence.json` holds 908 citations of 637 tests for 126 requirements (decision 0010).
 A CI job fails when a test cited for it does not pass, and each run's `readiness-report` artifact lists every citation's result.
 A citation is partial evidence: it never accepts a requirement.
 
@@ -39,7 +39,7 @@ A citation is partial evidence: it never accepts a requirement.
 | ADM-001 | 4 | postgres |
 | ADM-002 | 4 | foundation, postgres |
 | ADM-003 | 18 | foundation, postgres, web-performance |
-| ADM-004 | 5 | foundation, postgres |
+| ADM-004 | 6 | foundation, postgres |
 | ADM-005 | 4 | foundation, postgres |
 | ADM-006 | 10 | foundation, postgres, web-performance |
 | ADM-007 | 11 | foundation, postgres, web-performance |

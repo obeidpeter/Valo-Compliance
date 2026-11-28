@@ -5207,7 +5207,14 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/lib/managed-callers-real-bindings.integration.test.ts",
       "test": "actual managed callers with real PostgreSQL, source/candidate/case checks and zero-network SDK",
-      "proves": "In a disposable copy of the database, a rule prepared for the reviewed route whose two stand-in reviews settled under an approved package of rule reviews is assembled into a release request only from that batch's own settled reviews, then planned and applied as the rule's next version, which the registry admits as an editorial release; two records of one review, a reason too short and a wrong confirmation are refused."
+      "proves": "In a disposable copy of the database, a rule prepared for the reviewed route whose two stand-in reviews settled under an approved package of rule reviews is assembled into a release request only from that batch's own settled reviews, then planned and applied as the rule's next version, which the registry admits as an editorial release; two records of one review, a reason too short and a wrong confirmation are refused; and a stored earlier version is restored as the next version, through the same builder, two reviews of its own and a request whose reason names the version it restores, while every earlier version and a result saved under the later one are kept."
+    },
+    {
+      "requirement": "ADM-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/reviewed-rule.test.ts",
+      "test": "a restore takes a stored version's words, condition and calculation, and keeps the repository's sources, claims and scenarios",
+      "proves": "Restoring a stored version of a rule on the reviewed route takes that version's words, condition and calculation with the repository's sources, claims, scenarios and rights, builds as the next version waiting only for its reviews, and refuses another rule's version or one that quotes its sources otherwise."
     },
     {
       "requirement": "ADM-007",
